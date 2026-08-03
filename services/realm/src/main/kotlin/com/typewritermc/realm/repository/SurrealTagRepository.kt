@@ -22,10 +22,13 @@ class SurrealTagRepository(
     }
 
     override suspend fun getTag(id: RecordId): Tag? {
-        val result = database.get().query(
-            $$"SELECT * FROM $tag",
-            mapOf("tag" to id.surrealId("tag")),
-        ).take(0)
+        val result =
+            database
+                .get()
+                .query(
+                    $$"SELECT * FROM $tag",
+                    mapOf("tag" to id.surrealId("tag")),
+                ).take(0)
 
         return TagRecord.parseList(result).firstOrNull()?.toTag()
     }
@@ -33,13 +36,16 @@ class SurrealTagRepository(
     override suspend fun findMissing(ids: List<RecordId>): List<RecordId> {
         if (ids.isEmpty()) return emptyList()
 
-        val result = database.get().query(
-            $$"""
+        val result =
+            database
+                .get()
+                .query(
+                    $$"""
                 $tags.filter(|$tag| !record::exists($tag))
-            """.trimIndent(),
-            mapOf("tags" to ids.surrealId("tag")),
-        ).take(0)
-        return result.array.map { it.get(com.surrealdb.RecordId::class.java).toSkirRecordId() }
+                    """.trimIndent(),
+                    mapOf("tags" to ids.surrealId("tag")),
+                ).take(0)
+        return result.array.map { it.recordId.toSkirRecordId() }
     }
 
     override suspend fun createTag(
@@ -47,9 +53,13 @@ class SurrealTagRepository(
         color: Color,
         parentIds: List<RecordId>,
         placement: Placement,
-    ): RepositoryResult<Tag> = repositoryMutation(parentIds) {
-        val result = database.get().query(
-            $$"""
+    ): RepositoryResult<Tag> =
+        repositoryMutation(parentIds) {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 LET $distinct_parent_tags = array::distinct($parent_tags);
@@ -69,25 +79,29 @@ class SurrealTagRepository(
 
                 RETURN SELECT * FROM $tag.id;
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf(
-                "name" to name,
-                "color" to color.argb.toUInt().toLong(),
-                "x" to placement.x,
-                "y" to placement.y,
-                "width" to placement.width,
-                "height" to placement.height,
-                "parent_tags" to parentIds.surrealId("tag"),
-            ),
-        ).takeTransaction(5)
+                        """.trimIndent(),
+                        mapOf(
+                            "name" to name,
+                            "color" to color.argb.toUInt().toLong(),
+                            "x" to placement.x,
+                            "y" to placement.y,
+                            "width" to placement.width,
+                            "height" to placement.height,
+                            "parent_tags" to parentIds.surrealId("tag"),
+                        ),
+                    ).takeTransaction(5)
 
-        TagRecord.parseList(result).singleOrNull()?.toTag()
-            ?: error("Tag creation returned no record")
-    }
+            TagRecord.parseList(result).singleOrNull()?.toTag()
+                ?: error("Tag creation returned no record")
+        }
 
-    override suspend fun updateTag(tag: Tag): RepositoryResult<Tag> = repositoryMutation(tag.parentIds) {
-        val result = database.get().query(
-            $$"""
+    override suspend fun updateTag(tag: Tag): RepositoryResult<Tag> =
+        repositoryMutation(tag.parentIds) {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 IF !record::exists($tag) {
@@ -118,26 +132,33 @@ class SurrealTagRepository(
                 RETURN SELECT * FROM $tag.id;
 
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf(
-                "tag" to tag.tagId.surrealId("tag"),
-                "name" to tag.name,
-                "color" to tag.color.argb.toUInt().toLong(),
-                "x" to tag.placement.x,
-                "y" to tag.placement.y,
-                "width" to tag.placement.width,
-                "height" to tag.placement.height,
-                "parent_tags" to tag.parentIds.surrealId("tag"),
-            ),
-        ).takeTransaction(8)
+                        """.trimIndent(),
+                        mapOf(
+                            "tag" to tag.tagId.surrealId("tag"),
+                            "name" to tag.name,
+                            "color" to
+                                tag.color.argb
+                                    .toUInt()
+                                    .toLong(),
+                            "x" to tag.placement.x,
+                            "y" to tag.placement.y,
+                            "width" to tag.placement.width,
+                            "height" to tag.placement.height,
+                            "parent_tags" to tag.parentIds.surrealId("tag"),
+                        ),
+                    ).takeTransaction(8)
 
-        TagRecord.parseList(result).singleOrNull()?.toTag()
-            ?: error("Tag update returned no record")
-    }
+            TagRecord.parseList(result).singleOrNull()?.toTag()
+                ?: error("Tag update returned no record")
+        }
 
-    override suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion> = repositoryMutation {
-        val result = database.get().query(
-            $$"""
+    override suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion> =
+        repositoryMutation {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 IF !record::exists($tag) {
@@ -152,32 +173,46 @@ class SurrealTagRepository(
 
                 RETURN { childTagIds: $child_tags, bookIds: $books };
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("tag" to id.surrealId("tag")),
-        ).takeTransaction(7)
+                        """.trimIndent(),
+                        mapOf("tag" to id.surrealId("tag")),
+                    ).takeTransaction(7)
 
-        TagDeletionRecord.parse(result).toTagDeletion()
-    }
+            TagDeletionRecord.parse(result).toTagDeletion()
+        }
 
-    override suspend fun moveTag(id: RecordId, x: Int?, y: Int?): RepositoryResult<Tag> = updatePlacement(
-        id = id,
-        assignments = $$"placement.x = $x ?? placement.x, placement.y = $y ?? placement.y",
-        bindings = mapOf("x" to x, "y" to y),
-    )
+    override suspend fun moveTag(
+        id: RecordId,
+        x: Int?,
+        y: Int?,
+    ): RepositoryResult<Tag> =
+        updatePlacement(
+            id = id,
+            assignments = $$"placement.x = $x ?? placement.x, placement.y = $y ?? placement.y",
+            bindings = mapOf("x" to x, "y" to y),
+        )
 
-    override suspend fun resizeTag(id: RecordId, width: Int?, height: Int?): RepositoryResult<Tag> = updatePlacement(
-        id = id,
-        assignments = $$"placement.width = $width ?? placement.width, placement.height = $height ?? placement.height",
-        bindings = mapOf("width" to width, "height" to height),
-    )
+    override suspend fun resizeTag(
+        id: RecordId,
+        width: Int?,
+        height: Int?,
+    ): RepositoryResult<Tag> =
+        updatePlacement(
+            id = id,
+            assignments = $$"placement.width = $width ?? placement.width, placement.height = $height ?? placement.height",
+            bindings = mapOf("width" to width, "height" to height),
+        )
 
     private suspend fun updatePlacement(
         id: RecordId,
         assignments: String,
         bindings: Map<String, Int?>,
-    ): RepositoryResult<Tag> = repositoryMutation {
-        val result = database.get().query(
-            $$"""
+    ): RepositoryResult<Tag> =
+        repositoryMutation {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 IF !record::exists($tag) {
@@ -187,11 +222,11 @@ class SurrealTagRepository(
                 UPDATE ONLY $tag SET $$assignments RETURN AFTER;
 
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("tag" to id.surrealId("tag")) + bindings,
-        ).takeTransaction(2)
+                        """.trimIndent(),
+                        mapOf("tag" to id.surrealId("tag")) + bindings,
+                    ).takeTransaction(2)
 
-        TagRecord.parseList(result).singleOrNull()?.toTag()
-            ?: error("Tag placement update returned no record")
-    }
+            TagRecord.parseList(result).singleOrNull()?.toTag()
+                ?: error("Tag placement update returned no record")
+        }
 }
