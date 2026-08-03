@@ -72,9 +72,10 @@ val DeferredProviderTest by testSuite {
         test("get suspends until value is set") {
             val provider = DeferredProvider<String>()
 
-            val deferred = async {
-                provider.get()
-            }
+            val deferred =
+                async {
+                    provider.get()
+                }
 
             delay(50.milliseconds)
             provider.set("delayed-value")
@@ -120,7 +121,10 @@ val DeferredProviderTest by testSuite {
         }
 
         test("works with complex types") {
-            data class ComplexType(val id: Int, val name: String)
+            data class ComplexType(
+                val id: Int,
+                val name: String,
+            )
 
             val provider = DeferredProvider<ComplexType>()
             val value = ComplexType(42, "test")
@@ -134,9 +138,10 @@ val DeferredProviderTest by testSuite {
         test("multiple coroutines waiting on get all receive the value") {
             val provider = DeferredProvider<String>()
 
-            val results = (1..5).map {
-                async { provider.get() }
-            }
+            val results =
+                (1..5).map {
+                    async { provider.get() }
+                }
 
             delay(50.milliseconds)
             provider.set("shared")

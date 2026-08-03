@@ -43,36 +43,42 @@ class Realm(
             database.set(databaseProvider.connect())
         }
         val snapshot = states.value
-        val ready = snapshot.state as? RegistrarState.Ready
-            ?: error("Registrar must be ready before Realm starts")
+        val ready =
+            snapshot.state as? RegistrarState.Ready
+                ?: error("Registrar must be ready before Realm starts")
         replaceRouter(snapshot.attempt, ready)
-        registrarMonitor = scope.launch {
-            states.collectLatest { snapshot ->
-                val state = snapshot.state
-                if (state is RegistrarState.Ready) {
-                    replaceRouterWithRetry(snapshot.attempt, state)
+        registrarMonitor =
+            scope.launch {
+                states.collectLatest { snapshot ->
+                    val state = snapshot.state
+                    if (state is RegistrarState.Ready) {
+                        replaceRouterWithRetry(snapshot.attempt, state)
+                    }
                 }
             }
-        }
     }
 
-    suspend fun shutdown() = telemetry.mainSpan(
-        name = "realm.shutdown",
-        unhandledFailureSlug = ErrorSlug.of("realm-shutdown-failed"),
-    ) {
-        registrarMonitor?.cancelAndJoin()
-        registrarMonitor = null
-        lifecycle.withLock {
-            val active = router
-            router = null
-            routerSession = null
-            active?.stop()?.requireSuccess("stop")
+    suspend fun shutdown() =
+        telemetry.mainSpan(
+            name = "realm.shutdown",
+            unhandledFailureSlug = ErrorSlug.of("realm-shutdown-failed"),
+        ) {
+            registrarMonitor?.cancelAndJoin()
+            registrarMonitor = null
+            lifecycle.withLock {
+                val active = router
+                router = null
+                routerSession = null
+                active?.stop()?.requireSuccess("stop")
+            }
+            it.annotate { operationOutcome("completed") }
         }
-        it.annotate { operationOutcome("completed") }
-    }
 
     context(main: MainSpanScope)
-    private suspend fun replaceRouterWithRetry(attempt: Long, ready: RegistrarState.Ready) {
+    private suspend fun replaceRouterWithRetry(
+        attempt: Long,
+        ready: RegistrarState.Ready,
+    ) {
         while (true) {
             try {
                 telemetry.mainSpan(
@@ -90,17 +96,21 @@ class Realm(
     }
 
     context(main: MainSpanScope)
-    private suspend fun replaceRouter(attempt: Long, ready: RegistrarState.Ready) = lifecycle.withLock {
+    private suspend fun replaceRouter(
+        attempt: Long,
+        ready: RegistrarState.Ready,
+    ) = lifecycle.withLock {
         val session = RouterSession(attempt, ready.connectionGeneration)
         if (routerSession == session) return@withLock
         val previous = router
         router = null
         routerSession = null
         previous?.stop()?.requireSuccess("replace")
-        val address = RealmAddress(
-            realmId = ready.session.identity.serviceId,
-            organizationId = ready.session.binding.organizationId,
-        )
+        val address =
+            RealmAddress(
+                realmId = ready.session.identity.serviceId,
+                organizationId = ready.session.binding.organizationId,
+            )
         val replacement = ready.session.communicator.createRouter(routeFactory.create(address), scope)
         replacement.start().requireSuccess("start")
         router = replacement
@@ -108,7 +118,10 @@ class Realm(
     }
 }
 
-private data class RouterSession(val attempt: Long, val connectionGeneration: Long)
+private data class RouterSession(
+    val attempt: Long,
+    val connectionGeneration: Long,
+)
 
 private fun RouterResult.requireSuccess(operation: String) {
     if (this is RouterResult.Failure) error("Realm router $operation failed: $error")

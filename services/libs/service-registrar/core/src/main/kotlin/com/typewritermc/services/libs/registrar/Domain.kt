@@ -6,19 +6,26 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 sealed interface ServiceRole {
     val version: String
 
-    data class Engine(override val version: String) : ServiceRole {
+    data class Engine(
+        override val version: String,
+    ) : ServiceRole {
         init {
             requireTrimmedNonblank(version, "version")
         }
     }
 
-    data class Realm(override val version: String) : ServiceRole {
+    data class Realm(
+        override val version: String,
+    ) : ServiceRole {
         init {
             requireTrimmedNonblank(version, "version")
         }
     }
 
-    data class Custom(val name: String, override val version: String) : ServiceRole {
+    data class Custom(
+        val name: String,
+        override val version: String,
+    ) : ServiceRole {
         init {
             requireTrimmedNonblank(name, "name")
             require(CUSTOM_ROLE.matches(name)) { "name must be a backend identifier" }
@@ -29,10 +36,10 @@ sealed interface ServiceRole {
 
 /** Durable public identity attributes. */
 class ServiceIdentity(
-        val serviceId: String,
-        val displayName: String,
-        val username: String,
-        roles: List<ServiceRole>,
+    val serviceId: String,
+    val displayName: String,
+    val username: String,
+    roles: List<ServiceRole>,
 ) {
     val roles: List<ServiceRole> = roles.toList()
 
@@ -44,11 +51,11 @@ class ServiceIdentity(
     }
 
     override fun equals(other: Any?): Boolean =
-            other is ServiceIdentity &&
-                    serviceId == other.serviceId &&
-                    displayName == other.displayName &&
-                    username == other.username &&
-                    roles == other.roles
+        other is ServiceIdentity &&
+            serviceId == other.serviceId &&
+            displayName == other.displayName &&
+            username == other.username &&
+            roles == other.roles
 
     override fun hashCode(): Int {
         var result = serviceId.hashCode()
@@ -57,14 +64,13 @@ class ServiceIdentity(
         return 31 * result + roles.hashCode()
     }
 
-    override fun toString(): String =
-            "ServiceIdentity(serviceId=$serviceId, displayName=$displayName, username=$username, roles=$roles)"
+    override fun toString(): String = "ServiceIdentity(serviceId=$serviceId, displayName=$displayName, username=$username, roles=$roles)"
 }
 
 /** Organization associated with a service. */
 data class OrganizationBinding(
-        val organizationId: String,
-        val organizationName: String?,
+    val organizationId: String,
+    val organizationName: String?,
 ) {
     init {
         requireTrimmedNonblank(organizationId, "organizationId")
@@ -73,45 +79,67 @@ data class OrganizationBinding(
 
 /** Stable resources exposed while registration is ready. */
 data class ReadySession(
-        val identity: ServiceIdentity,
-        val binding: OrganizationBinding,
-        val communicator: Communicator
+    val identity: ServiceIdentity,
+    val binding: OrganizationBinding,
+    val communicator: Communicator,
 )
 
 /** A value whose disclosure must be explicit. */
-sealed class RedactedSecret private constructor(private val value: String) {
+sealed class RedactedSecret private constructor(
+    private val value: String,
+) {
     init {
         require(value.isNotBlank()) { "secret must not be blank" }
     }
+
     /** Deliberately reveals the secret value. */
     fun reveal(): String = value
+
     final override fun toString(): String = "[REDACTED]"
-    class AppPassword(value: String) : RedactedSecret(value)
-    class AccessToken(value: String) : RedactedSecret(value)
-    class SentinelJwt(value: String) : RedactedSecret(value)
-    class SentinelSeed(value: String) : RedactedSecret(value)
+
+    class AppPassword(
+        value: String,
+    ) : RedactedSecret(value)
+
+    class AccessToken(
+        value: String,
+    ) : RedactedSecret(value)
+
+    class SentinelJwt(
+        value: String,
+    ) : RedactedSecret(value)
+
+    class SentinelSeed(
+        value: String,
+    ) : RedactedSecret(value)
 }
 
 /** Durable identity material. */
 class IdentityCredentials(
-        val identity: ServiceIdentity,
-        private val appPassword: RedactedSecret.AppPassword
+    val identity: ServiceIdentity,
+    private val appPassword: RedactedSecret.AppPassword,
 ) {
     /** Deliberately reveals the identity app password. */
     fun revealAppPassword(): String = appPassword.reveal()
-    override fun toString(): String =
-            "IdentityCredentials(identity=$identity, appPassword=[REDACTED])"
+
+    override fun toString(): String = "IdentityCredentials(identity=$identity, appPassword=[REDACTED])"
 }
 
 /** Short-lived operator registration token. */
-class RegistrationToken(private val value: String) {
+class RegistrationToken(
+    private val value: String,
+) {
     init {
         requireTrimmedNonblank(value, "registrationToken")
     }
+
     /** Deliberately reveals the registration token. */
     fun reveal(): String = value
+
     override fun equals(other: Any?): Boolean = other is RegistrationToken && value == other.value
+
     override fun hashCode(): Int = value.hashCode()
+
     override fun toString(): String = "[REDACTED]"
 }
 
@@ -131,7 +159,10 @@ internal fun validateRoles(roles: List<ServiceRole>) {
     }
 }
 
-private fun requireTrimmedNonblank(value: String, name: String) {
+private fun requireTrimmedNonblank(
+    value: String,
+    name: String,
+) {
     require(value.isNotBlank() && value == value.trim()) { "$name must be trimmed and nonblank" }
 }
 

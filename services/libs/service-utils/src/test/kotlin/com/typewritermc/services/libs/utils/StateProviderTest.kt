@@ -49,9 +49,10 @@ val StateProviderTest by testSuite {
         test("awaitValue() suspends until predicate becomes satisfied") {
             val provider = StateProvider(0)
 
-            val deferred = async {
-                provider.awaitValue { it >= 5 }
-            }
+            val deferred =
+                async {
+                    provider.awaitValue { it >= 5 }
+                }
 
             testScope.advanceTimeBy(10.milliseconds)
             provider.set(3)
@@ -74,12 +75,14 @@ val StateProviderTest by testSuite {
         test("concurrent set() calls result in last value being visible") {
             val provider = StateProvider(0)
 
-            val job1 = launch {
-                repeat(100) { provider.set(it) }
-            }
-            val job2 = launch {
-                repeat(100) { provider.set(it + 1000) }
-            }
+            val job1 =
+                launch {
+                    repeat(100) { provider.set(it) }
+                }
+            val job2 =
+                launch {
+                    repeat(100) { provider.set(it + 1000) }
+                }
 
             job1.join()
             job2.join()
@@ -94,12 +97,14 @@ val StateProviderTest by testSuite {
             val collected1 = mutableListOf<Int>()
             val collected2 = mutableListOf<Int>()
 
-            val job1 = launch {
-                provider.state.take(3).toList(collected1)
-            }
-            val job2 = launch {
-                provider.state.take(3).toList(collected2)
-            }
+            val job1 =
+                launch {
+                    provider.state.take(3).toList(collected1)
+                }
+            val job2 =
+                launch {
+                    provider.state.take(3).toList(collected2)
+                }
 
             testScope.advanceTimeBy(10.milliseconds)
             provider.set(1)
@@ -126,9 +131,10 @@ val StateProviderTest by testSuite {
         test("awaitNonNull() suspends until value becomes non-null") {
             val provider = StateProvider<String?>(null)
 
-            val deferred = async {
-                provider.awaitNonNull()
-            }
+            val deferred =
+                async {
+                    provider.awaitNonNull()
+                }
 
             testScope.advanceTimeBy(10.milliseconds)
             provider.set("now set")
@@ -139,9 +145,10 @@ val StateProviderTest by testSuite {
         test("awaitNonNull() returns new value after update from null") {
             val provider = StateProvider<String?>(null)
 
-            val deferred = async {
-                provider.awaitNonNull()
-            }
+            val deferred =
+                async {
+                    provider.awaitNonNull()
+                }
 
             testScope.advanceTimeBy(10.milliseconds)
             provider.set("first")
@@ -170,9 +177,10 @@ val StateProviderTest by testSuite {
 
             provider.set(null)
 
-            val deferred = async {
-                provider.awaitNonNull()
-            }
+            val deferred =
+                async {
+                    provider.awaitNonNull()
+                }
 
             testScope.advanceTimeBy(10.milliseconds)
             provider.set("restored")

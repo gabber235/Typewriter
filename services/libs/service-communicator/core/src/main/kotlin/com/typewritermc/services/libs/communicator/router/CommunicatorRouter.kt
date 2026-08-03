@@ -4,26 +4,56 @@ import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.*
+import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ResponseClassification
+import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
+import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
-import com.typewritermc.services.libs.communicator.transport.*
-import com.typewritermc.services.libs.telemetry.*
-import com.typewritermc.services.libs.utils.findExceptionalThrowable as exceptionalCause
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable as rethrowExceptional
+import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.MessageTransport
+import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
+import com.typewritermc.services.libs.communicator.transport.TransportSubscription
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SluggedException
+import com.typewritermc.services.libs.telemetry.consumerSpan
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import com.typewritermc.services.libs.utils.findExceptionalThrowable as exceptionalCause
+import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable as rethrowExceptional
 
 /** Marks the typed communicator routes DSL. */
 @DslMarker
@@ -98,19 +128,29 @@ enum class RouterState { NEW, STARTING, RUNNING, STOPPING, STOPPED }
 /** Result of a router lifecycle operation. */
 sealed interface RouterResult {
     data object Success : RouterResult
-    data class Failure(val error: RouterError) : RouterResult
+
+    data class Failure(
+        val error: RouterError,
+    ) : RouterResult
 }
 
 /** Typed router lifecycle failure. */
 sealed interface RouterError {
     val cause: Throwable?
 
-    data class Startup(override val cause: Throwable?) : RouterError
-    data class Shutdown(override val cause: Throwable) : RouterError
+    data class Startup(
+        override val cause: Throwable?,
+    ) : RouterError
+
+    data class Shutdown(
+        override val cause: Throwable,
+    ) : RouterError
 }
 
 /** Validated collection of typed routes. */
-class CommunicatorRoutes internal constructor(internal val routes: List<Route>)
+class CommunicatorRoutes internal constructor(
+    internal val routes: List<Route>,
+)
 
 /** Builder for typed communicator routes. */
 @CommunicatorRoutesDsl
@@ -161,8 +201,7 @@ class CommunicatorRoutesBuilder internal constructor() {
 }
 
 /** Builds a validated collection of typed communicator routes. */
-fun communicatorRoutes(block: CommunicatorRoutesBuilder.() -> Unit): CommunicatorRoutes =
-    CommunicatorRoutesBuilder().apply(block).build()
+fun communicatorRoutes(block: CommunicatorRoutesBuilder.() -> Unit): CommunicatorRoutes = CommunicatorRoutesBuilder().apply(block).build()
 
 internal data class Route(
     val pattern: AddressPattern,
@@ -181,11 +220,14 @@ class CommunicatorRouter internal constructor(
     parentScope: CoroutineScope,
     private val options: RouterOptions = RouterOptions(),
 ) {
-    private val definitions = routes.routes.also { all ->
-        require(all.indices.none { left ->
-            ((left + 1) until all.size).any { right -> all[left].pattern.overlaps(all[right].pattern) }
-        }) { "Overlapping route subscription patterns" }
-    }
+    private val definitions =
+        routes.routes.also { all ->
+            require(
+                all.indices.none { left ->
+                    ((left + 1) until all.size).any { right -> all[left].pattern.overlaps(all[right].pattern) }
+                },
+            ) { "Overlapping route subscription patterns" }
+        }
     private val job = Job(parentScope.coroutineContext[Job])
     private val scope = CoroutineScope(parentScope.coroutineContext + job)
     private val permits = Semaphore(options.maxInFlight)
@@ -221,19 +263,21 @@ class CommunicatorRouter internal constructor(
             RouterResult.Success
         } catch (failure: Throwable) {
             val startupFailure = if (failure is StartupFailure) requireNotNull(failure.cause) else failure
-            val closeFailures = withContext(NonCancellable) {
-                val failures = acquired.mapNotNull { (_, subscription) ->
-                    try {
-                        subscription.close()
-                        null
-                    } catch (cleanup: Throwable) {
-                        cleanup
-                    }
+            val closeFailures =
+                withContext(NonCancellable) {
+                    val failures =
+                        acquired.mapNotNull { (_, subscription) ->
+                            try {
+                                subscription.close()
+                                null
+                            } catch (cleanup: Throwable) {
+                                cleanup
+                            }
+                        }
+                    lifecycle.withLock { mutableState.value = RouterState.STOPPED }
+                    job.cancel()
+                    failures
                 }
-                lifecycle.withLock { mutableState.value = RouterState.STOPPED }
-                job.cancel()
-                failures
-            }
             val exceptional = (listOf(failure) + closeFailures).firstNotNullOfOrNull(::exceptionalCause)
             if (exceptional != null) {
                 (listOf(startupFailure) + closeFailures).forEach { if (it !== exceptional) exceptional.addSuppressed(it) }
@@ -251,137 +295,160 @@ class CommunicatorRouter internal constructor(
         return result.await()
     }
 
-    private suspend fun beginShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> = lifecycle.withLock {
-        completion?.let { return@withLock false to it }
-        check(state == RouterState.RUNNING) { "Router is not running" }
-        mutableState.value = RouterState.STOPPING
-        val deferred = CompletableDeferred<RouterResult>()
-        completion = deferred
-        true to deferred
-    }
+    private suspend fun beginShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> =
+        lifecycle.withLock {
+            completion?.let { return@withLock false to it }
+            check(state == RouterState.RUNNING) { "Router is not running" }
+            mutableState.value = RouterState.STOPPING
+            val deferred = CompletableDeferred<RouterResult>()
+            completion = deferred
+            true to deferred
+        }
 
-    private suspend fun performShutdown(result: CompletableDeferred<RouterResult>, drain: Boolean) {
+    private suspend fun performShutdown(
+        result: CompletableDeferred<RouterResult>,
+        drain: Boolean,
+    ) {
         var final: RouterResult = RouterResult.Success
         var exceptional: Throwable? = null
         try {
             withContext(NonCancellable) {
                 val snapshot = lifecycle.withLock { runtimes }
                 val closeFailures = java.util.Collections.synchronizedList(mutableListOf<Pair<Runtime, Throwable>>())
-                val drained = withTimeoutOrNull(options.shutdownTimeout) {
-                    coroutineScope {
-                        snapshot.map { runtime ->
-                            async {
-                                try {
-                                    runtime.subscription.close()
-                                } catch (failure: Throwable) {
-                                    if (currentCoroutineContext().isActive) closeFailures += runtime to failure
-                                }
-                            }
-                        }.joinAll()
-                    }
-                    if (!drain) {
-                        snapshot.forEach(Runtime::cancel)
-                        return@withTimeoutOrNull true
-                    }
-                    snapshot.map { it.collector }.joinAll()
-                    snapshot.flatMap { it.workers }.joinAll()
-                    true
-                } == true
+                val drained =
+                    withTimeoutOrNull(options.shutdownTimeout) {
+                        coroutineScope {
+                            snapshot
+                                .map { runtime ->
+                                    async {
+                                        try {
+                                            runtime.subscription.close()
+                                        } catch (failure: Throwable) {
+                                            if (currentCoroutineContext().isActive) closeFailures += runtime to failure
+                                        }
+                                    }
+                                }.joinAll()
+                        }
+                        if (!drain) {
+                            snapshot.forEach(Runtime::cancel)
+                            return@withTimeoutOrNull true
+                        }
+                        snapshot.map { it.collector }.joinAll()
+                        snapshot.flatMap { it.workers }.joinAll()
+                        true
+                    } == true
                 if (!drained) snapshot.forEach(Runtime::cancel)
 
                 exceptional = closeFailures.firstNotNullOfOrNull { exceptionalCause(it.second) }
-                val ordinaryCloseFailures = closeFailures.filter { exceptionalCause(it.second) == null }
-                    .map { (runtime, failure) -> sluggedClose(runtime.route, failure) }
+                val ordinaryCloseFailures =
+                    closeFailures
+                        .filter { exceptionalCause(it.second) == null }
+                        .map { (runtime, failure) -> sluggedClose(runtime.route, failure) }
                 var closeFailure: Throwable? = null
                 ordinaryCloseFailures.forEach { closeFailure = aggregate(closeFailure, it) }
                 exceptional?.let { primary ->
                     closeFailures.forEach { (_, failure) -> if (failure !== primary) primary.addSuppressed(failure) }
                 }
-                final = if (!drained) {
-                    val timeout = ShutdownTimeout(options.shutdownTimeout)
-                    closeFailure?.let(timeout::addSuppressed)
-                    RouterResult.Failure(RouterError.Shutdown(timeout))
-                } else if (closeFailure != null) {
-                    RouterResult.Failure(RouterError.Shutdown(requireNotNull(closeFailure)))
-                } else RouterResult.Success
+                final =
+                    if (!drained) {
+                        val timeout = ShutdownTimeout(options.shutdownTimeout)
+                        closeFailure?.let(timeout::addSuppressed)
+                        RouterResult.Failure(RouterError.Shutdown(timeout))
+                    } else if (closeFailure != null) {
+                        RouterResult.Failure(RouterError.Shutdown(requireNotNull(closeFailure)))
+                    } else {
+                        RouterResult.Success
+                    }
             }
         } finally {
             withContext(NonCancellable) {
                 job.cancel()
                 lifecycle.withLock { mutableState.value = RouterState.STOPPED }
-                if (exceptional != null) result.completeExceptionally(requireNotNull(exceptional)) else result.complete(
-                    final
-                )
+                if (exceptional != null) {
+                    result.completeExceptionally(requireNotNull(exceptional))
+                } else {
+                    result.complete(
+                        final,
+                    )
+                }
             }
         }
         exceptional?.let { throw it }
     }
 
-
-    private fun startRuntime(route: Route, subscription: TransportSubscription): Runtime {
+    private fun startRuntime(
+        route: Route,
+        subscription: TransportSubscription,
+    ): Runtime {
         val parallelism = route.parallelism ?: options.defaultRouteParallelism
         val routePermits = Semaphore(parallelism)
-        val channel = Channel<InboundMessage>(parallelism, onUndeliveredElement = {
-            permits.release()
-            routePermits.release()
-        })
-        val workers = List(parallelism) {
-            scope.launch {
-                for (message in channel) {
-                    try {
-                        route.process(this@CommunicatorRouter, message)
-                    } catch (failure: Throwable) {
-                        val exceptional = exceptionalCause(failure)
-                        if (exceptional != null) {
-                            shutdownRouter()
-                            throw exceptional
+        val channel =
+            Channel<InboundMessage>(parallelism, onUndeliveredElement = {
+                permits.release()
+                routePermits.release()
+            })
+        val workers =
+            List(parallelism) {
+                scope.launch {
+                    for (message in channel) {
+                        try {
+                            route.process(this@CommunicatorRouter, message)
+                        } catch (failure: Throwable) {
+                            val exceptional = exceptionalCause(failure)
+                            if (exceptional != null) {
+                                shutdownRouter()
+                                throw exceptional
+                            }
+                        } finally {
+                            permits.release()
+                            routePermits.release()
                         }
-                    } finally {
-                        permits.release()
-                        routePermits.release()
                     }
                 }
             }
-        }
-        val collector = scope.launch {
-            try {
-                subscription.deliveries.collect { delivery ->
-                    when (delivery) {
-                        is TransportDelivery.Message -> {
-                            routePermits.acquire()
-                            try {
-                                permits.acquire()
+        val collector =
+            scope.launch {
+                try {
+                    subscription.deliveries.collect { delivery ->
+                        when (delivery) {
+                            is TransportDelivery.Message -> {
+                                routePermits.acquire()
                                 try {
-                                    channel.send(delivery.message)
+                                    permits.acquire()
+                                    try {
+                                        channel.send(delivery.message)
+                                    } catch (failure: Throwable) {
+                                        permits.release()
+                                        throw failure
+                                    }
                                 } catch (failure: Throwable) {
-                                    permits.release()
+                                    routePermits.release()
                                     throw failure
                                 }
-                            } catch (failure: Throwable) {
-                                routePermits.release()
-                                throw failure
+                            }
+
+                            is TransportDelivery.Failure -> {
+                                terminalRouteShutdown(route, transportException(delivery.error))
+                                return@collect
+                            }
+
+                            TransportDelivery.Completed -> {
+                                terminalRouteShutdown(route, RouteCompleted(route.pattern.value))
+                                return@collect
                             }
                         }
-
-                        is TransportDelivery.Failure -> {
-                            terminalRouteShutdown(route, transportException(delivery.error))
-                            return@collect
-                        }
-
-                        TransportDelivery.Completed -> {
-                            terminalRouteShutdown(route, RouteCompleted(route.pattern.value))
-                            return@collect
-                        }
                     }
+                } finally {
+                    channel.close()
                 }
-            } finally {
-                channel.close()
             }
-        }
         return Runtime(route, subscription, channel, collector, workers)
     }
 
-    private suspend fun terminalRouteShutdown(route: Route, cause: Throwable) {
+    private suspend fun terminalRouteShutdown(
+        route: Route,
+        cause: Throwable,
+    ) {
         try {
             telemetry.consumerSpan<Unit>(
                 "route receive",
@@ -396,11 +463,15 @@ class CommunicatorRouter internal constructor(
         shutdownRouter()
     }
 
-    private suspend fun shutdownRouter() = withContext(NonCancellable) {
-        val (owned, result) = beginShutdown()
-        if (owned) performShutdown(result, drain = false)
-        else result.await()
-    }
+    private suspend fun shutdownRouter() =
+        withContext(NonCancellable) {
+            val (owned, result) = beginShutdown()
+            if (owned) {
+                performShutdown(result, drain = false)
+            } else {
+                result.await()
+            }
+        }
 
     internal suspend fun <A : Any, Q : Any, R : Any> unary(
         contract: UnaryContract<A, Q, R>,
@@ -443,8 +514,15 @@ class CommunicatorRouter internal constructor(
         message: InboundMessage,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = replying(
-        contract.name, contract.requestAddress, null, contract.requestCodec, contract.responseCodec,
-        contract.responsePolicy, contract.failureSlug, message, handler,
+        contract.name,
+        contract.requestAddress,
+        null,
+        contract.requestCodec,
+        contract.responseCodec,
+        contract.responsePolicy,
+        contract.failureSlug,
+        message,
+        handler,
     )
 
     private suspend fun <A : Any, Q : Any, R : Any> replying(
@@ -474,24 +552,27 @@ class CommunicatorRouter internal constructor(
         message: InboundMessage,
         handler: suspend (MainSpanScope, A, Q) -> R,
     ) = consume(name, template.template, slug, message) { main ->
-        val replyTo = message.replyTo ?: throw SluggedException.wrap(
-            slug,
-            IllegalStateException("Missing reply address"),
-        )
-        val response = try {
-            handler(main, requireNotNull(template.match(message.address)), requestCodec.decode(message.payload))
-        } catch (original: Throwable) {
-            rethrowExceptional(original)
-            sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
-            throw original
-        }
-        val classification = try {
-            policy.classify(response)
-        } catch (original: Throwable) {
-            rethrowExceptional(original)
-            sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
-            throw original
-        }
+        val replyTo =
+            message.replyTo ?: throw SluggedException.wrap(
+                slug,
+                IllegalStateException("Missing reply address"),
+            )
+        val response =
+            try {
+                handler(main, requireNotNull(template.match(message.address)), requestCodec.decode(message.payload))
+            } catch (original: Throwable) {
+                rethrowExceptional(original)
+                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
+                throw original
+            }
+        val classification =
+            try {
+                policy.classify(response)
+            } catch (original: Throwable) {
+                rethrowExceptional(original)
+                sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
+                throw original
+            }
         annotateResponse(main, classification)
         sendReply(name, responseTemplate, responseCodec, slug, replyTo, response, classification)
         if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
@@ -521,7 +602,10 @@ class CommunicatorRouter internal constructor(
         }
     }
 
-    private fun annotateResponse(main: MainSpanScope, classification: ResponseClassification) {
+    private fun annotateResponse(
+        main: MainSpanScope,
+        classification: ResponseClassification,
+    ) {
         main.annotate {
             domainOutcome(classification.variant.value)
             operationOutcome(classification.outcome.name.lowercase())
@@ -537,9 +621,16 @@ class CommunicatorRouter internal constructor(
         response: R,
         classification: ResponseClassification,
     ) {
-        val sent = communicator.sendResponse(
-            name.value, template, replyTo, response, codec, classification, slug,
-        )
+        val sent =
+            communicator.sendResponse(
+                name.value,
+                template,
+                replyTo,
+                response,
+                codec,
+                classification,
+                slug,
+            )
         if (sent is CommunicationResult.Failure) {
             throw SluggedException.wrap(sent.error.slug, sent.error.cause ?: IllegalStateException("Reply failed"))
         }
@@ -554,21 +645,41 @@ class CommunicatorRouter internal constructor(
     ) {
         val parent = propagators.textMapPropagator.extract(Context.current(), message.headers, MessageHeadersGetter)
         telemetry.consumerSpan(
-            "${name.value} receive", slug, parent,
-            messagingAttributes(name.value, template).toBuilder()
-                .put("messaging.destination.name", message.address.value).build(),
+            "${name.value} receive",
+            slug,
+            parent,
+            messagingAttributes(name.value, template)
+                .toBuilder()
+                .put("messaging.destination.name", message.address.value)
+                .build(),
         ) { main -> block(main) }
     }
 
-    private fun messagingAttributes(name: String, template: String): Attributes =
-        Attributes.builder().put("messaging.system", transport.system.value)
-            .put("messaging.destination.template", template).put("messaging.operation.name", name)
-            .put("messaging.operation.type", "receive").build()
+    private fun messagingAttributes(
+        name: String,
+        template: String,
+    ): Attributes =
+        Attributes
+            .builder()
+            .put("messaging.system", transport.system.value)
+            .put("messaging.destination.template", template)
+            .put("messaging.operation.name", name)
+            .put("messaging.operation.type", "receive")
+            .build()
 
-    private class StartupFailure(cause: Throwable) : RuntimeException(cause)
+    private class StartupFailure(
+        cause: Throwable,
+    ) : RuntimeException(cause)
+
     private class ReturnedInternalFailure : RuntimeException("Handler returned internal error")
-    private class RouteCompleted(pattern: String) : RuntimeException("Required route $pattern completed")
-    private class ShutdownTimeout(timeout: Duration) : RuntimeException("Router shutdown timed out after $timeout")
+
+    private class RouteCompleted(
+        pattern: String,
+    ) : RuntimeException("Required route $pattern completed")
+
+    private class ShutdownTimeout(
+        timeout: Duration,
+    ) : RuntimeException("Router shutdown timed out after $timeout")
 
     private data class Runtime(
         val route: Route,
@@ -589,23 +700,33 @@ class CommunicatorRouter internal constructor(
     }
 }
 
-private fun sluggedClose(route: Route, failure: Throwable): Throwable = SluggedException.wrap(
-    ErrorSlug.of("route-close-failed"),
-    IllegalStateException("Failed to close ${route.pattern.value}", failure),
-)
+private fun sluggedClose(
+    route: Route,
+    failure: Throwable,
+): Throwable =
+    SluggedException.wrap(
+        ErrorSlug.of("route-close-failed"),
+        IllegalStateException("Failed to close ${route.pattern.value}", failure),
+    )
 
-private fun transportException(error: TransportError): Throwable = error.cause ?: when (error) {
-    is TransportError.Timeout -> TransportTimeoutException()
-    is TransportError.Unavailable -> TransportUnavailableException()
-    is TransportError.NoResponders -> TransportNoRespondersException()
-    is TransportError.Failure -> error.cause
-}
+private fun transportException(error: TransportError): Throwable =
+    error.cause ?: when (error) {
+        is TransportError.Timeout -> TransportTimeoutException()
+        is TransportError.Unavailable -> TransportUnavailableException()
+        is TransportError.NoResponders -> TransportNoRespondersException()
+        is TransportError.Failure -> error.cause
+    }
 
 private class TransportTimeoutException : RuntimeException("Transport timed out")
+
 private class TransportUnavailableException : RuntimeException("Transport unavailable")
+
 private class TransportNoRespondersException : RuntimeException("Transport has no responders")
 
-private fun aggregate(primary: Throwable?, next: Throwable): Throwable {
+private fun aggregate(
+    primary: Throwable?,
+    next: Throwable,
+): Throwable {
     if (primary == null) return next
     if (primary !== next) primary.addSuppressed(next)
     return primary
@@ -614,7 +735,8 @@ private fun aggregate(primary: Throwable?, next: Throwable): Throwable {
 private fun AddressPattern.overlaps(other: AddressPattern): Boolean {
     val segments = value.split('.')
     val otherSegments = other.value.split('.')
-    return segments.size == otherSegments.size && segments.zip(otherSegments).all { (left, right) ->
-        left == right || left == "*" || right == "*"
-    }
+    return segments.size == otherSegments.size &&
+        segments.zip(otherSegments).all { (left, right) ->
+            left == right || left == "*" || right == "*"
+        }
 }

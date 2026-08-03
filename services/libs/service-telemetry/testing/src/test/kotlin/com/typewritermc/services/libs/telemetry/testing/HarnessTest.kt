@@ -119,7 +119,11 @@ val HarnessTest by testSuite {
     }
 }
 
-private enum class IdentityOutcome(val wireValue: String) { Created("created") }
+private enum class IdentityOutcome(
+    val wireValue: String,
+) {
+    Created("created"),
+}
 
 private fun MainAttributes.identityOutcome(outcome: IdentityOutcome) {
     attribute("identity.outcome", outcome.wireValue)

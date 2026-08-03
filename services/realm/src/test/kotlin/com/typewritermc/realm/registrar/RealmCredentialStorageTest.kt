@@ -21,19 +21,20 @@ import kotlinx.serialization.encodeToByteArray
 import java.io.File
 import java.nio.file.Files
 
-private fun credentials(id: String = "service-id") = IdentityCredentials(
-    ServiceIdentity(
-        id,
-        "Realm Service",
-        "realm-user",
-        listOf(
-            ServiceRole.Engine("1.2.3"),
-            ServiceRole.Realm("4.5.6"),
-            ServiceRole.Custom("custom_role", "7.8.9"),
+private fun credentials(id: String = "service-id") =
+    IdentityCredentials(
+        ServiceIdentity(
+            id,
+            "Realm Service",
+            "realm-user",
+            listOf(
+                ServiceRole.Engine("1.2.3"),
+                ServiceRole.Realm("4.5.6"),
+                ServiceRole.Custom("custom_role", "7.8.9"),
+            ),
         ),
-    ),
-    RedactedSecret.AppPassword("private-password"),
-)
+        RedactedSecret.AppPassword("private-password"),
+    )
 
 @Serializable
 private data class TestStoredCredential(
@@ -67,7 +68,8 @@ val RealmCredentialStorageTest by testSuite {
                 loaded.credentials.identity.serviceId shouldBe "service-id"
                 loaded.credentials.identity.displayName shouldBe "Realm Service"
                 loaded.credentials.identity.username shouldBe "realm-user"
-                loaded.credentials.identity.roles.shouldContainExactly(runtimeRole)
+                loaded.credentials.identity.roles
+                    .shouldContainExactly(runtimeRole)
                 loaded.credentials.revealAppPassword() shouldBe "private-password"
             }
         }
@@ -79,13 +81,14 @@ val RealmCredentialStorageTest by testSuite {
                 storage(cbor, credentialFile).store(credentials()) shouldBe CredentialStoreResult.Success
 
                 val record = cbor.decodeFromByteArray<TestStoredCredential>(credentialFile.readBytes())
-                record shouldBe TestStoredCredential(
-                    formatVersion = 1,
-                    serviceId = "service-id",
-                    displayName = "Realm Service",
-                    username = "realm-user",
-                    token = "private-password",
-                )
+                record shouldBe
+                    TestStoredCredential(
+                        formatVersion = 1,
+                        serviceId = "service-id",
+                        displayName = "Realm Service",
+                        username = "realm-user",
+                        token = "private-password",
+                    )
             }
         }
     }
@@ -115,13 +118,14 @@ val RealmCredentialStorageTest by testSuite {
     }
 
     test("unknown version returns explicit failure") {
-        val record = TestStoredCredential(
-            formatVersion = 2,
-            serviceId = "service-id",
-            displayName = "Realm Service",
-            username = "realm-user",
-            token = "private-password",
-        )
+        val record =
+            TestStoredCredential(
+                formatVersion = 2,
+                serviceId = "service-id",
+                displayName = "Realm Service",
+                username = "realm-user",
+                token = "private-password",
+            )
         withCredentialFile { _, credentialFile ->
             credentialFile.writeBytes(cbor.encodeToByteArray(record))
             runTest {
@@ -171,10 +175,11 @@ private fun TestScope.storage(
     file: File,
     role: ServiceRole = ServiceRole.Realm("1.0.0"),
     maximumBytes: Long = 64 * 1024,
-): RealmCredentialStorage = RealmCredentialStorage(
-    cbor,
-    file,
-    role,
-    maximumBytes,
-    StandardTestDispatcher(testScheduler),
-)
+): RealmCredentialStorage =
+    RealmCredentialStorage(
+        cbor,
+        file,
+        role,
+        maximumBytes,
+        StandardTestDispatcher(testScheduler),
+    )

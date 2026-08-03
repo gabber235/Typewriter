@@ -24,11 +24,12 @@ val ErrorsTest by testSuite {
 
     test("sync helper wraps once at the innermost source") {
         val cause = IllegalArgumentException("broken")
-        val thrown = shouldThrow<SluggedException> {
-            withErrorSlug(ErrorSlug.of("outer-failed")) {
-                withErrorSlug(ErrorSlug.of("inner-failed")) { throw cause }
+        val thrown =
+            shouldThrow<SluggedException> {
+                withErrorSlug(ErrorSlug.of("outer-failed")) {
+                    withErrorSlug(ErrorSlug.of("inner-failed")) { throw cause }
+                }
             }
-        }
         thrown.slug.value shouldBe "inner-failed"
         thrown.cause shouldBeSameInstanceAs cause
     }
@@ -36,9 +37,10 @@ val ErrorsTest by testSuite {
     test("suspend helper wraps once and leaves cancellation unwrapped") {
         runTest {
             val cause = IllegalArgumentException("broken")
-            val thrown = shouldThrow<SluggedException> {
-                withErrorSlugSuspending(ErrorSlug.of("suspend-failed")) { throw cause }
-            }
+            val thrown =
+                shouldThrow<SluggedException> {
+                    withErrorSlugSuspending(ErrorSlug.of("suspend-failed")) { throw cause }
+                }
             thrown.cause shouldBeSameInstanceAs cause
 
             val cancellation = CancellationException("cancel")

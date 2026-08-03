@@ -26,8 +26,7 @@ class DeferredProvider<T> {
 
     fun getOrNull(): T? = if (deferred.isCompleted) deferred.getCompleted() else null
 
-    fun require(message: () -> String) =
-        if (deferred.isCompleted) deferred.getCompleted() else throw IllegalStateException(message())
+    fun require(message: () -> String) = if (deferred.isCompleted) deferred.getCompleted() else throw IllegalStateException(message())
 
     fun set(value: T) {
         if (!deferred.complete(value)) {

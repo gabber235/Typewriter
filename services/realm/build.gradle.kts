@@ -49,51 +49,57 @@ buildConfig {
     buildConfigField<String>("SURREALDB_SERVER_VERSION", libs.versions.surrealdb.server)
 }
 
-val verifyPatchIndex = tasks.register("verifyPatchIndex") {
-    group = "verification"
-    description = "Verifies that the patch index matches the packaged patch files"
+val verifyPatchIndex =
+    tasks.register("verifyPatchIndex") {
+        group = "verification"
+        description = "Verifies that the patch index matches the packaged patch files"
 
-    val patchesDirectory = file("src/main/resources/schema/patches")
-    val indexFile = patchesDirectory.resolve("_index.txt")
-    inputs.dir(patchesDirectory)
+        val patchesDirectory = file("src/main/resources/schema/patches")
+        val indexFile = patchesDirectory.resolve("_index.txt")
+        inputs.dir(patchesDirectory)
 
-    doLast {
-        val indexedPatches = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
-        val packagedPatches = patchesDirectory.listFiles()
-            .orEmpty()
-            .filter { it.isFile && it.extension == "surql" }
-            .map { it.name }
-            .sorted()
+        doLast {
+            val indexedPatches = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
+            val packagedPatches =
+                patchesDirectory
+                    .listFiles()
+                    .orEmpty()
+                    .filter { it.isFile && it.extension == "surql" }
+                    .map { it.name }
+                    .sorted()
 
-        check(indexedPatches == packagedPatches) {
-            "Patch index must list every packaged patch once and in ascending order"
+            check(indexedPatches == packagedPatches) {
+                "Patch index must list every packaged patch once and in ascending order"
+            }
         }
     }
-}
 
-val verifyRealmSchemaIndex = tasks.register("verifyRealmSchemaIndex") {
-    group = "verification"
-    description = "Verifies that the Realm schema index lists every packaged schema resource"
+val verifyRealmSchemaIndex =
+    tasks.register("verifyRealmSchemaIndex") {
+        group = "verification"
+        description = "Verifies that the Realm schema index lists every packaged schema resource"
 
-    val schemaDirectory = file("src/main/resources/schema/realm")
-    val indexFile = schemaDirectory.resolve("_index.txt")
-    inputs.dir(schemaDirectory)
+        val schemaDirectory = file("src/main/resources/schema/realm")
+        val indexFile = schemaDirectory.resolve("_index.txt")
+        inputs.dir(schemaDirectory)
 
-    doLast {
-        val indexedResources = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
-        val packagedResources = schemaDirectory.walkTopDown()
-            .filter { it.isFile && it.extension == "surql" }
-            .map { it.relativeTo(schemaDirectory).invariantSeparatorsPath }
-            .toSet()
+        doLast {
+            val indexedResources = indexFile.readLines().map(String::trim).filter(String::isNotEmpty)
+            val packagedResources =
+                schemaDirectory
+                    .walkTopDown()
+                    .filter { it.isFile && it.extension == "surql" }
+                    .map { it.relativeTo(schemaDirectory).invariantSeparatorsPath }
+                    .toSet()
 
-        check(indexedResources.size == indexedResources.distinct().size) {
-            "Realm schema index must not contain duplicate resources"
-        }
-        check(indexedResources.toSet() == packagedResources) {
-            "Realm schema index must list every packaged schema resource exactly once"
+            check(indexedResources.size == indexedResources.distinct().size) {
+                "Realm schema index must not contain duplicate resources"
+            }
+            check(indexedResources.toSet() == packagedResources) {
+                "Realm schema index must list every packaged schema resource exactly once"
+            }
         }
     }
-}
 
 tasks.processResources {
     dependsOn(verifyPatchIndex, verifyRealmSchemaIndex)

@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.telemetry
 
+import com.typewritermc.services.libs.utils.findExceptionalThrowable
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -8,52 +9,80 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.semconv.ExceptionAttributes
-import com.typewritermc.services.libs.utils.findExceptionalThrowable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 private val mainScopeKey: ContextKey<MainSpanScope> = ContextKey.named("service-telemetry-main-scope")
+
 fun Context.mainSpanScope(): MainSpanScope? = get(mainScopeKey)
 
-private fun ServiceTelemetry.start(name: String, kind: SpanKind, parent: Context, attributes: Attributes): Span =
-    tracer.spanBuilder(name).setSpanKind(kind).setParent(parent).setAllAttributes(attributes).startSpan()
+private fun ServiceTelemetry.start(
+    name: String,
+    kind: SpanKind,
+    parent: Context,
+    attributes: Attributes,
+): Span =
+    tracer
+        .spanBuilder(name)
+        .setSpanKind(kind)
+        .setParent(parent)
+        .setAllAttributes(attributes)
+        .startSpan()
 
-private fun installed(parent: Context, span: Span, main: MainSpanScope): Context =
-    parent.with(span).with(mainScopeKey, main)
+private fun installed(
+    parent: Context,
+    span: Span,
+    main: MainSpanScope,
+): Context = parent.with(span).with(mainScopeKey, main)
 
 private fun cancelled(span: Span) {
     span.setAttribute("operation.cancelled", true)
 }
 
-private fun rethrowExceptional(span: Span, thrown: Throwable) {
+private fun rethrowExceptional(
+    span: Span,
+    thrown: Throwable,
+) {
     val exceptional = findExceptionalThrowable(thrown) ?: return
     if (exceptional is CancellationException) cancelled(span)
     throw exceptional
 }
 
-private fun recordFailure(span: Span, thrown: Throwable, fallback: ErrorSlug?): Throwable {
-    val classified = when {
-        thrown is SluggedException -> thrown
-        fallback != null -> SluggedException.wrap(fallback, thrown)
-        else -> null
-    }
+private fun recordFailure(
+    span: Span,
+    thrown: Throwable,
+    fallback: ErrorSlug?,
+): Throwable {
+    val classified =
+        when {
+            thrown is SluggedException -> thrown
+            fallback != null -> SluggedException.wrap(fallback, thrown)
+            else -> null
+        }
     val cause = classified?.cause ?: thrown
     span.setAttribute("error", true)
     span.setAttribute("error.type", cause.javaClass.name)
     classified?.let { span.setAttribute("exception.slug", it.slug.value) }
     span.recordException(cause)
     span.setStatus(StatusCode.ERROR, (classified?.slug?.value ?: cause.javaClass.name).take(255))
-    (thrown.suppressed.asSequence() + (classified?.suppressed?.asSequence()
-        ?: emptySequence()) + cause.suppressed.asSequence()).distinct().filterIsInstance<SluggedException>().forEach {
-            val additional = it.cause ?: it
-            span.addEvent(
-                "exception.additional",
-                Attributes.builder().put("exception.slug", it.slug.value)
-                    .put(ExceptionAttributes.EXCEPTION_TYPE, additional.javaClass.name)
-                    .put(ExceptionAttributes.EXCEPTION_MESSAGE, additional.message ?: additional.javaClass.simpleName)
-                    .put(ExceptionAttributes.EXCEPTION_STACKTRACE, additional.stackTraceToString()).build(),
-            )
-        }
+    (
+        thrown.suppressed.asSequence() + (
+            classified?.suppressed?.asSequence()
+                ?: emptySequence()
+        ) + cause.suppressed.asSequence()
+    ).distinct().filterIsInstance<SluggedException>().forEach {
+        val additional = it.cause ?: it
+        span.addEvent(
+            "exception.additional",
+            Attributes
+                .builder()
+                .put("exception.slug", it.slug.value)
+                .put(ExceptionAttributes.EXCEPTION_TYPE, additional.javaClass.name)
+                .put(ExceptionAttributes.EXCEPTION_MESSAGE, additional.message ?: additional.javaClass.simpleName)
+                .put(ExceptionAttributes.EXCEPTION_STACKTRACE, additional.stackTraceToString())
+                .build(),
+        )
+    }
     return classified ?: thrown
 }
 
@@ -63,7 +92,7 @@ fun <T> ServiceTelemetry.mainSpanBlocking(
     kind: SpanKind = SpanKind.INTERNAL,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: context(MainSpanScope) (MainSpanScope) -> T
+    block: context(MainSpanScope) (MainSpanScope) -> T,
 ): T {
     val span = start(name, kind, parent, attributes)
     val main = MainScope(this, span)
@@ -84,7 +113,7 @@ suspend fun <T> ServiceTelemetry.mainSpan(
     kind: SpanKind = SpanKind.INTERNAL,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: suspend context(MainSpanScope) (MainSpanScope) -> T
+    block: suspend context(MainSpanScope) (MainSpanScope) -> T,
 ): T {
     val span = start(name, kind, parent, attributes)
     val main = MainScope(this, span)
@@ -104,7 +133,7 @@ fun <T> ServiceTelemetry.serverSpanBlocking(
     unhandledFailureSlug: ErrorSlug,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: context(MainSpanScope) (MainSpanScope) -> T
+    block: context(MainSpanScope) (MainSpanScope) -> T,
 ) = mainSpanBlocking(name, unhandledFailureSlug, SpanKind.SERVER, parent, attributes, block)
 
 suspend fun <T> ServiceTelemetry.serverSpan(
@@ -112,7 +141,7 @@ suspend fun <T> ServiceTelemetry.serverSpan(
     unhandledFailureSlug: ErrorSlug,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: suspend context(MainSpanScope) (MainSpanScope) -> T
+    block: suspend context(MainSpanScope) (MainSpanScope) -> T,
 ) = mainSpan(name, unhandledFailureSlug, SpanKind.SERVER, parent, attributes, block)
 
 suspend fun <T> ServiceTelemetry.consumerSpan(
@@ -120,7 +149,7 @@ suspend fun <T> ServiceTelemetry.consumerSpan(
     unhandledFailureSlug: ErrorSlug,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: suspend context(MainSpanScope) (MainSpanScope) -> T
+    block: suspend context(MainSpanScope) (MainSpanScope) -> T,
 ) = mainSpan(name, unhandledFailureSlug, SpanKind.CONSUMER, parent, attributes, block)
 
 suspend fun <T> ServiceTelemetry.jobSpan(
@@ -128,7 +157,7 @@ suspend fun <T> ServiceTelemetry.jobSpan(
     unhandledFailureSlug: ErrorSlug,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
-    block: suspend context(MainSpanScope) (MainSpanScope) -> T
+    block: suspend context(MainSpanScope) (MainSpanScope) -> T,
 ) = mainSpan(name, unhandledFailureSlug, SpanKind.INTERNAL, parent, attributes, block)
 
 context(main: MainSpanScope)
@@ -136,7 +165,7 @@ fun <T> childSpanBlocking(
     name: String,
     kind: SpanKind = SpanKind.INTERNAL,
     attributes: Attributes = Attributes.empty(),
-    block: context(MainSpanScope, ChildSpanScope) (ChildSpanScope) -> T
+    block: context(MainSpanScope, ChildSpanScope) (ChildSpanScope) -> T,
 ): T {
     val parent = Context.current()
     val owner = main as? MainScope ?: error("Main span scope was not created by ServiceTelemetry")
@@ -144,7 +173,11 @@ fun <T> childSpanBlocking(
     val span = owner.telemetry.start(name, kind, parent, attributes)
     val child = ChildScope(span)
     try {
-        parent.with(span).with(mainScopeKey, main).makeCurrent().use { return context(main, child) { block(child) } }
+        parent
+            .with(span)
+            .with(mainScopeKey, main)
+            .makeCurrent()
+            .use { return context(main, child) { block(child) } }
     } catch (failure: Throwable) {
         rethrowExceptional(span, failure)
         throw recordFailure(span, failure, null)
@@ -158,7 +191,7 @@ suspend fun <T> childSpan(
     name: String,
     kind: SpanKind = SpanKind.INTERNAL,
     attributes: Attributes = Attributes.empty(),
-    block: suspend context(MainSpanScope, ChildSpanScope) (ChildSpanScope) -> T
+    block: suspend context(MainSpanScope, ChildSpanScope) (ChildSpanScope) -> T,
 ): T {
     val parent = Context.current()
     val owner = main as? MainScope ?: error("Main span scope was not created by ServiceTelemetry")

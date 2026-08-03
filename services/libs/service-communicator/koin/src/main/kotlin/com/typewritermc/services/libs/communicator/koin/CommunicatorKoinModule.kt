@@ -18,9 +18,10 @@ import org.koin.dsl.module
  * The application must bind [OpenTelemetry], [ServiceTelemetry], [NatsConfigurationProvider], and
  * [NatsAuthenticationProvider]. Connection and router lifecycle remain application-owned.
  */
-fun communicatorModule(routerOptions: RouterOptions = RouterOptions()): Module = module {
-    single { routerOptions }
-    single { NatsConnection(get(), get()) }
-    single<MessageTransport> { NatsMessageTransport(get()) }
-    single { Communicator(get(), get(), get<OpenTelemetry>().propagators) }
-}
+fun communicatorModule(routerOptions: RouterOptions = RouterOptions()): Module =
+    module {
+        single { routerOptions }
+        single { NatsConnection(get(), get()) }
+        single<MessageTransport> { NatsMessageTransport(get()) }
+        single { Communicator(get(), get(), get<OpenTelemetry>().propagators) }
+    }

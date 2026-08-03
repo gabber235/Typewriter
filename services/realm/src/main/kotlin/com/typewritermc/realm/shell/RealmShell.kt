@@ -27,16 +27,20 @@ class RealmShell(
     private val telemetry: ServiceTelemetry,
 ) {
     fun run() {
-        val terminal = TerminalBuilder.builder()
-            .system(true)
-            .build()
+        val terminal =
+            TerminalBuilder
+                .builder()
+                .system(true)
+                .build()
 
         val completer = RealmShellCompleter(RealmRootCommand(context))
 
-        val reader = LineReaderBuilder.builder()
-            .terminal(terminal)
-            .completer(completer)
-            .build()
+        val reader =
+            LineReaderBuilder
+                .builder()
+                .terminal(terminal)
+                .completer(completer)
+                .build()
 
         val appender = setupLogbackAppender(reader)
 
@@ -53,15 +57,16 @@ class RealmShell(
 
     internal fun runLoop(reader: org.jline.reader.LineReader): ShellExitReason {
         while (!context.isStopRequested()) {
-            val line = try {
-                reader.readLine("realm> ")
-            } catch (_: UserInterruptException) {
-                reader.printAbove("Interrupted by user (Ctrl+C)")
-                return ShellExitReason.INTERRUPTED
-            } catch (_: EndOfFileException) {
-                reader.printAbove("End of input (Ctrl+D)")
-                return ShellExitReason.END_OF_INPUT
-            }
+            val line =
+                try {
+                    reader.readLine("realm> ")
+                } catch (_: UserInterruptException) {
+                    reader.printAbove("Interrupted by user (Ctrl+C)")
+                    return ShellExitReason.INTERRUPTED
+                } catch (_: EndOfFileException) {
+                    reader.printAbove("End of input (Ctrl+D)")
+                    return ShellExitReason.END_OF_INPUT
+                }
 
             if (line.isBlank()) continue
 
@@ -70,7 +75,10 @@ class RealmShell(
         return ShellExitReason.STOP_REQUESTED
     }
 
-    internal fun executeCommand(line: String, reader: org.jline.reader.LineReader) {
+    internal fun executeCommand(
+        line: String,
+        reader: org.jline.reader.LineReader,
+    ) {
         try {
             telemetry.mainSpanBlocking(
                 name = "realm.shell.command",
@@ -105,30 +113,33 @@ class RealmShell(
         }
     }
 
-    private fun recordShellFailure(failure: Throwable): Nothing = telemetry.mainSpanBlocking(
-        name = "realm.shell.exit",
-        unhandledFailureSlug = ErrorSlug.of("realm-shell-failed"),
-        parent = Context.root(),
-    ) { main ->
-        main.annotate { operationOutcome("failed") }
-        throw failure
-    }
+    private fun recordShellFailure(failure: Throwable): Nothing =
+        telemetry.mainSpanBlocking(
+            name = "realm.shell.exit",
+            unhandledFailureSlug = ErrorSlug.of("realm-shell-failed"),
+            parent = Context.root(),
+        ) { main ->
+            main.annotate { operationOutcome("failed") }
+            throw failure
+        }
 
     private fun setupLogbackAppender(reader: org.jline.reader.LineReader): RealmShellLogbackAppender {
         val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
         val rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
 
-        val consoleAppender = rootLogger.getAppender("CONSOLE") as? ConsoleAppender
-            ?: error("CONSOLE appender not found in logback configuration")
+        val consoleAppender =
+            rootLogger.getAppender("CONSOLE") as? ConsoleAppender
+                ?: error("CONSOLE appender not found in logback configuration")
 
         rootLogger.detachAppender(consoleAppender)
 
-        val appender = RealmShellLogbackAppender(consoleAppender).apply {
-            context = loggerContext
-            name = "REALM_SHELL"
-            attach(reader)
-            start()
-        }
+        val appender =
+            RealmShellLogbackAppender(consoleAppender).apply {
+                context = loggerContext
+                name = "REALM_SHELL"
+                attach(reader)
+                start()
+            }
 
         rootLogger.addAppender(appender)
         return appender
@@ -144,7 +155,9 @@ class RealmShell(
     }
 }
 
-internal enum class ShellExitReason(val attributeValue: String) {
+internal enum class ShellExitReason(
+    val attributeValue: String,
+) {
     STOP_REQUESTED("stop_requested"),
     INTERRUPTED("interrupted"),
     END_OF_INPUT("end_of_input"),
@@ -152,25 +165,27 @@ internal enum class ShellExitReason(val attributeValue: String) {
 
 internal fun tokenizeRealmCommand(line: String): List<String> = CommandLineParser.tokenize(line.trim())
 
-private fun org.jline.reader.LineReader.asCliktTerminal(): Terminal = Terminal(
-    terminalInterface = object : TerminalInterface {
-        override fun info(
-            ansiLevel: AnsiLevel?,
-            hyperlinks: Boolean?,
-            outputInteractive: Boolean?,
-            inputInteractive: Boolean?,
-        ) = TerminalInfo(
-            ansiLevel = ansiLevel ?: AnsiLevel.NONE,
-            ansiHyperLinks = hyperlinks ?: false,
-            outputInteractive = outputInteractive ?: true,
-            inputInteractive = inputInteractive ?: true,
-            supportsAnsiCursor = false,
-        )
+private fun org.jline.reader.LineReader.asCliktTerminal(): Terminal =
+    Terminal(
+        terminalInterface =
+            object : TerminalInterface {
+                override fun info(
+                    ansiLevel: AnsiLevel?,
+                    hyperlinks: Boolean?,
+                    outputInteractive: Boolean?,
+                    inputInteractive: Boolean?,
+                ) = TerminalInfo(
+                    ansiLevel = ansiLevel ?: AnsiLevel.NONE,
+                    ansiHyperLinks = hyperlinks ?: false,
+                    outputInteractive = outputInteractive ?: true,
+                    inputInteractive = inputInteractive ?: true,
+                    supportsAnsiCursor = false,
+                )
 
-        override fun completePrintRequest(request: PrintRequest) {
-            printAbove(request.text)
-        }
+                override fun completePrintRequest(request: PrintRequest) {
+                    printAbove(request.text)
+                }
 
-        override fun readLineOrNull(hideInput: Boolean): String? = null
-    },
-)
+                override fun readLineOrNull(hideInput: Boolean): String? = null
+            },
+    )

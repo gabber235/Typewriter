@@ -9,12 +9,13 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.coroutines.flow.flowOf
 
-private val identity = ServiceIdentity(
-    "service-id",
-    "Service Name",
-    "service-user",
-    listOf(ServiceRole.Realm("1.0.0")),
-)
+private val identity =
+    ServiceIdentity(
+        "service-id",
+        "Service Name",
+        "service-user",
+        listOf(ServiceRole.Realm("1.0.0")),
+    )
 
 val RegistrarConsoleObserverTest by testSuite {
     test("displays only changed non-null binding tokens") {
@@ -26,7 +27,7 @@ val RegistrarConsoleObserverTest by testSuite {
                 RegistrarSnapshot(2, 0, RegistrarState.AwaitingBinding(identity, RegistrationToken("TOKEN12345"))),
                 RegistrarSnapshot(3, 0, RegistrarState.AwaitingBinding(identity, RegistrationToken("TOKEN12345"))),
                 RegistrarSnapshot(4, 0, RegistrarState.AwaitingBinding(identity, RegistrationToken("OTHER12345"))),
-            )
+            ),
         )
         displayed.shouldContainExactly("TOKEN12345", "OTHER12345")
     }

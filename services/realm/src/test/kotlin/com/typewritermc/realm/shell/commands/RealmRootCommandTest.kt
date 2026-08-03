@@ -12,10 +12,11 @@ import java.time.Instant
 
 val RealmRootCommandTest by testSuite {
     test("help displays the command catalog") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
 
         val result = RealmRootCommand(context).test("help")
 
@@ -26,10 +27,11 @@ val RealmRootCommandTest by testSuite {
     }
 
     test("stop requests only local shell termination") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
 
         val result = RealmRootCommand(context).test("stop")
 

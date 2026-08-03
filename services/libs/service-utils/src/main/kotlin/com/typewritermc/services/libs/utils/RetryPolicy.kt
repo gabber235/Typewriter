@@ -7,7 +7,10 @@ import kotlin.time.Duration.Companion.nanoseconds
 /** Calculates bounded retry delays without owning time, randomness, or execution. */
 sealed interface RetryPolicy {
     /** Returns the delay for a zero-based [attempt] and normalized [jitterSample]. */
-    fun delayFor(attempt: Long, jitterSample: Double = 0.5): Duration
+    fun delayFor(
+        attempt: Long,
+        jitterSample: Double = 0.5,
+    ): Duration
 
     companion object {
         /** Creates a policy that always returns [delay]. */
@@ -33,8 +36,13 @@ sealed interface RetryPolicy {
     }
 }
 
-private class FixedRetryPolicy(private val delay: Duration) : RetryPolicy {
-    override fun delayFor(attempt: Long, jitterSample: Double): Duration {
+private class FixedRetryPolicy(
+    private val delay: Duration,
+) : RetryPolicy {
+    override fun delayFor(
+        attempt: Long,
+        jitterSample: Double,
+    ): Duration {
         validateInputs(attempt, jitterSample)
         return delay
     }
@@ -46,7 +54,10 @@ private class ExponentialRetryPolicy(
     private val multiplier: Double,
     private val jitterRatio: Double,
 ) : RetryPolicy {
-    override fun delayFor(attempt: Long, jitterSample: Double): Duration {
+    override fun delayFor(
+        attempt: Long,
+        jitterSample: Double,
+    ): Duration {
         validateInputs(attempt, jitterSample)
         val growthFactor = multiplier.pow(attempt.toDouble())
         val unjittered = (initial * growthFactor).coerceAtMost(maximum)
@@ -57,11 +68,17 @@ private class ExponentialRetryPolicy(
     }
 }
 
-private fun requirePositiveFinite(duration: Duration, name: String) {
+private fun requirePositiveFinite(
+    duration: Duration,
+    name: String,
+) {
     require(duration.isFinite() && duration > Duration.ZERO) { "$name must be finite and positive" }
 }
 
-private fun validateInputs(attempt: Long, jitterSample: Double) {
+private fun validateInputs(
+    attempt: Long,
+    jitterSample: Double,
+) {
     require(attempt >= 0) { "attempt must be nonnegative" }
     require(jitterSample in 0.0..1.0) { "jitterSample must be between 0 and 1" }
 }

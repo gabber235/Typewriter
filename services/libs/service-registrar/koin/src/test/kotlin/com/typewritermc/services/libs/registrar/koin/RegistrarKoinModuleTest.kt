@@ -28,16 +28,17 @@ val RegistrarKoinModuleTest by testSuite {
         val telemetry = OpenTelemetry.noop()
         val ledger = RegistrarActionLedger()
         val scope = CoroutineScope(SupervisorJob())
-        val application = koinApplication {
-            modules(
-                module {
-                    single<OpenTelemetry> { telemetry }
-                    single<ServiceTelemetry> { telemetry.serviceTelemetry("registrar-test") }
-                    single<CredentialStorage> { FakeCredentialStorage(ledger = ledger) }
-                },
-                registrarModule(configuration(), scope),
-            )
-        }
+        val application =
+            koinApplication {
+                modules(
+                    module {
+                        single<OpenTelemetry> { telemetry }
+                        single<ServiceTelemetry> { telemetry.serviceTelemetry("registrar-test") }
+                        single<CredentialStorage> { FakeCredentialStorage(ledger = ledger) }
+                    },
+                    registrarModule(configuration(), scope),
+                )
+            }
         try {
             application.koin.get<ServiceRegistrar>() shouldBeSameInstanceAs
                 application.koin.get<ServiceRegistrar>()
@@ -52,12 +53,13 @@ val RegistrarKoinModuleTest by testSuite {
     }
 }
 
-private fun configuration() = RegistrarConfiguration(
-    identityIssueUri = URI("https://api.example.test/service/identity/issue"),
-    sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
-    oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
-    oauthClientId = "typewriter-services",
-    oauthScopes = setOf("openid"),
-    natsServerUri = URI("nats://nats.example.test:4222"),
-    roles = listOf(ServiceRole.Realm("1.0.0")),
-)
+private fun configuration() =
+    RegistrarConfiguration(
+        identityIssueUri = URI("https://api.example.test/service/identity/issue"),
+        sentinelCredentialsUri = URI("https://api.example.test/auth/sentinel"),
+        oauthTokenUri = URI("https://auth.example.test/application/o/token/"),
+        oauthClientId = "typewriter-services",
+        oauthScopes = setOf("openid"),
+        natsServerUri = URI("nats://nats.example.test:4222"),
+        roles = listOf(ServiceRole.Realm("1.0.0")),
+    )

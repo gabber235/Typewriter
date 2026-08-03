@@ -3,7 +3,12 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
-import com.typewritermc.realm.RealmQualifier.*
+import com.typewritermc.realm.RealmQualifier.DATABASE
+import com.typewritermc.realm.RealmQualifier.DB_DATABASE
+import com.typewritermc.realm.RealmQualifier.DB_NAMESPACE
+import com.typewritermc.realm.RealmQualifier.DB_PASSWORD
+import com.typewritermc.realm.RealmQualifier.DB_URL
+import com.typewritermc.realm.RealmQualifier.DB_USERNAME
 import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
 import com.typewritermc.realm.schema.DatabaseProvider
@@ -26,7 +31,14 @@ import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
 import io.opentelemetry.api.OpenTelemetry
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialFormat
@@ -49,72 +61,76 @@ fun main() {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val openTelemetry = realmOpenTelemetry()
     val registrarConfiguration = realmRegistrarConfiguration()
-    val module = module {
-        single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
-        single { applicationScope } onClose { it?.cancel() }
+    val module =
+        module {
+            single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
+            single { applicationScope } onClose { it?.cancel() }
 
-        single(named(DB_URL)) { getProperty("REALM_DB_URL", "ws://localhost:8235") }
-        single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "root") }
-        single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "root") }
-        single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
-        single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
-        single<RealmDatabaseProvider> {
-            DatabaseProvider(
-                url = get(named(DB_URL)),
-                username = get(named(DB_USERNAME)),
-                password = get(named(DB_PASSWORD)),
-                namespace = get(named(DB_NAMESPACE)),
-                database = get(named(DB_DATABASE)),
+            single(named(DB_URL)) { getProperty("REALM_DB_URL", "ws://localhost:8235") }
+            single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "root") }
+            single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "root") }
+            single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
+            single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
+            single<RealmDatabaseProvider> {
+                DatabaseProvider(
+                    url = get(named(DB_URL)),
+                    username = get(named(DB_USERNAME)),
+                    password = get(named(DB_PASSWORD)),
+                    namespace = get(named(DB_NAMESPACE)),
+                    database = get(named(DB_DATABASE)),
+                )
+            }
+            single { Realm(get(named(DATABASE)), get(), get(), get(), get()) }
+            single {
+                Cbor {
+                    ignoreUnknownKeys = true
+                }
+            } binds arrayOf(Cbor::class, BinaryFormat::class, SerialFormat::class)
+
+            single {
+                Json {
+                    ignoreUnknownKeys = true
+                }
+            } binds arrayOf(Json::class, StringFormat::class, SerialFormat::class)
+
+            single {
+                RealmCredentialStorage(
+                    get(),
+                    Paths.get(".credential").toFile(),
+                    ServiceRole.Realm(REALM_VERSION),
+                )
+            } bind CredentialStorage::class
+
+            single(named(DATABASE)) {
+                DeferredProvider<Surreal>()
+            } onClose { it?.getOrNull()?.close() }
+
+            single<BindingTokenOutput> { MordantBindingTokenOutput() }
+            single { RegistrarConsoleObserver(get()) }
+            single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
+            single { RealmShell(get(), get()) }
+        }
+
+    val application =
+        startKoin {
+            environmentProperties()
+            modules(
+                module,
+                serviceTelemetryModule("com.typewritermc.realm", REALM_VERSION),
+                registrarModule(registrarConfiguration, applicationScope),
+                REALM_ROUTES_MODULE,
             )
         }
-        single { Realm(get(named(DATABASE)), get(), get(), get(), get()) }
-        single {
-            Cbor {
-                ignoreUnknownKeys = true
-            }
-        } binds arrayOf(Cbor::class, BinaryFormat::class, SerialFormat::class)
-
-        single {
-            Json {
-                ignoreUnknownKeys = true
-            }
-        } binds arrayOf(Json::class, StringFormat::class, SerialFormat::class)
-
-        single {
-            RealmCredentialStorage(
-                get(),
-                Paths.get(".credential").toFile(),
-                ServiceRole.Realm(REALM_VERSION),
-            )
-        } bind CredentialStorage::class
-
-        single(named(DATABASE)) {
-            DeferredProvider<Surreal>()
-        } onClose { it?.getOrNull()?.close() }
-
-        single<BindingTokenOutput> { MordantBindingTokenOutput() }
-        single { RegistrarConsoleObserver(get()) }
-        single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
-        single { RealmShell(get(), get()) }
-    }
-
-    val application = startKoin {
-        environmentProperties()
-        modules(
-            module,
-            serviceTelemetryModule("com.typewritermc.realm", REALM_VERSION),
-            registrarModule(registrarConfiguration, applicationScope),
-            REALM_ROUTES_MODULE,
-        )
-    }
     val registrar = application.koin.get<ServiceRegistrar>()
     val realm = application.koin.get<Realm>()
     val telemetry = application.koin.get<ServiceTelemetry>()
     val consoleObserver = application.koin.get<RegistrarConsoleObserver>()
-    val consoleObserverJob = applicationScope.launch(start = CoroutineStart.UNDISPATCHED) {
-        consoleObserver.observe(registrar.states)
-    }
+    val consoleObserverJob =
+        applicationScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            consoleObserver.observe(registrar.states)
+        }
     val closed = AtomicBoolean()
+
     fun shutdown() {
         if (!closed.compareAndSet(false, true)) return
         try {
@@ -138,7 +154,10 @@ fun main() {
     }
 }
 
-private suspend fun stopRealm(realm: Realm, registrar: ServiceRegistrar) {
+private suspend fun stopRealm(
+    realm: Realm,
+    registrar: ServiceRegistrar,
+) {
     val routeFailure = runCatching { realm.shutdown() }.exceptionOrNull()
     val registrarFailure = runCatching { registrar.stop().requireSuccess("stop") }.exceptionOrNull()
     val primary = routeFailure ?: registrarFailure ?: return
@@ -148,7 +167,11 @@ private suspend fun stopRealm(realm: Realm, registrar: ServiceRegistrar) {
     throw primary
 }
 
-private suspend fun startRealm(telemetry: ServiceTelemetry, registrar: ServiceRegistrar, realm: Realm) = telemetry.mainSpan(
+private suspend fun startRealm(
+    telemetry: ServiceTelemetry,
+    registrar: ServiceRegistrar,
+    realm: Realm,
+) = telemetry.mainSpan(
     name = "realm.start",
     unhandledFailureSlug = ErrorSlug.of("realm-start-failed"),
 ) { main ->
@@ -171,19 +194,21 @@ private fun realmRegistrarConfiguration(): RegistrarConfiguration {
         sentinelCredentialsUri = apiBase.resolve("/auth/sentinel"),
         oauthTokenUri = authBase.resolve("/application/o/token/"),
         oauthClientId = realmSetting("JWT_CLIENT_ID", "typewriter-services")!!,
-        oauthScopes = realmSetting("JWT_SCOPES", "openid profile entitlements")!!
-            .split(' ')
-            .filter(String::isNotBlank)
-            .toSet(),
+        oauthScopes =
+            realmSetting("JWT_SCOPES", "openid profile entitlements")!!
+                .split(' ')
+                .filter(String::isNotBlank)
+                .toSet(),
         natsServerUri = URI(realmSetting("NATS_URL", "nats://nats.seamlezz.com:4222")!!),
         roles = listOf(ServiceRole.Realm(REALM_VERSION)),
     )
 }
 
-private fun <T> RegistrarResult<T>.requireSuccess(operation: String): T = when (this) {
-    is RegistrarResult.Success -> value
-    is RegistrarResult.Failure -> error("Registrar $operation failed: $failure")
-}
+private fun <T> RegistrarResult<T>.requireSuccess(operation: String): T =
+    when (this) {
+        is RegistrarResult.Success -> value
+        is RegistrarResult.Failure -> error("Registrar $operation failed: $failure")
+    }
 
 private fun RegistrarStopResult.requireSuccess(operation: String) {
     if (this is RegistrarStopResult.Failure) error("Registrar $operation failed: $failures")

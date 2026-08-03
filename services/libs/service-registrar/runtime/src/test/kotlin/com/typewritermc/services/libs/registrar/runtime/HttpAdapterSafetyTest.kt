@@ -15,10 +15,11 @@ val HttpAdapterSafetyTest by testSuite {
         }
     }
     test("sentinel credentials diagnostics redact both secrets") {
-        val credentials = SentinelCredentials(
-            RedactedSecret.SentinelJwt("private-jwt"),
-            RedactedSecret.SentinelSeed("private-seed"),
-        )
+        val credentials =
+            SentinelCredentials(
+                RedactedSecret.SentinelJwt("private-jwt"),
+                RedactedSecret.SentinelSeed("private-seed"),
+            )
         credentials.toString() shouldBe "SentinelCredentials(jwt=[REDACTED], seed=[REDACTED])"
     }
 }

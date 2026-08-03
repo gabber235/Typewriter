@@ -18,10 +18,13 @@ class SurrealBookRepository(
     }
 
     override suspend fun getBook(id: RecordId): Book? {
-        val result = database.get().query(
-            $$"SELECT * FROM type::record('book', $id)",
-            mapOf("id" to id.surrealId("book")),
-        ).take(0)
+        val result =
+            database
+                .get()
+                .query(
+                    $$"SELECT * FROM type::record('book', $id)",
+                    mapOf("id" to id.surrealId("book")),
+                ).take(0)
         return BookRecord.parseList(result).firstOrNull()?.toBook()
     }
 
@@ -30,9 +33,13 @@ class SurrealBookRepository(
         icon: String,
         color: Color,
         tagIds: List<RecordId>,
-    ): RepositoryResult<Book> = repositoryMutation(tagIds) {
-        val result = database.get().query(
-            $$"""
+    ): RepositoryResult<Book> =
+        repositoryMutation(tagIds) {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 LET $distinct_tags = array::distinct($tags);
@@ -53,22 +60,26 @@ class SurrealBookRepository(
                 RETURN SELECT * FROM $book.id;
 
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf(
-                "title" to title,
-                "icon" to icon,
-                "color" to color.argb.toUInt().toLong(),
-                "tags" to tagIds.surrealId("tag"),
-            ),
-        ).takeTransaction(5)
+                        """.trimIndent(),
+                        mapOf(
+                            "title" to title,
+                            "icon" to icon,
+                            "color" to color.argb.toUInt().toLong(),
+                            "tags" to tagIds.surrealId("tag"),
+                        ),
+                    ).takeTransaction(5)
 
-        BookRecord.parseList(result).singleOrNull()?.toBook()
-            ?: error("Book creation returned no record")
-    }
+            BookRecord.parseList(result).singleOrNull()?.toBook()
+                ?: error("Book creation returned no record")
+        }
 
-    override suspend fun updateBook(book: Book): RepositoryResult<Book> = repositoryMutation(book.tagIds) {
-        val result = database.get().query(
-            $$"""
+    override suspend fun updateBook(book: Book): RepositoryResult<Book> =
+        repositoryMutation(book.tagIds) {
+            val result =
+                database
+                    .get()
+                    .query(
+                        $$"""
                 BEGIN TRANSACTION;
 
                 LET $target_tags = array::distinct($tags);
@@ -98,17 +109,20 @@ class SurrealBookRepository(
 
                 RETURN SELECT * FROM $book.id;
                 COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf(
-                "book" to book.bookId.surrealId("book"),
-                "title" to book.title,
-                "icon" to book.icon,
-                "color" to book.color.argb.toUInt().toLong(),
-                "tags" to book.tagIds.surrealId("tag"),
-            ),
-        ).takeTransaction(8)
+                        """.trimIndent(),
+                        mapOf(
+                            "book" to book.bookId.surrealId("book"),
+                            "title" to book.title,
+                            "icon" to book.icon,
+                            "color" to
+                                book.color.argb
+                                    .toUInt()
+                                    .toLong(),
+                            "tags" to book.tagIds.surrealId("tag"),
+                        ),
+                    ).takeTransaction(8)
 
-        BookRecord.parseList(result).singleOrNull()?.toBook()
-            ?: error("Book update returned no record")
-    }
+            BookRecord.parseList(result).singleOrNull()?.toBook()
+                ?: error("Book update returned no record")
+        }
 }

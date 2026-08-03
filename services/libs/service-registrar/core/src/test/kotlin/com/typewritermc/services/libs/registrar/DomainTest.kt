@@ -27,7 +27,11 @@ val DomainTest by testSuite {
     }
 }
 
-private fun configuration(roles: List<ServiceRole>, identityUri: URI = URI("https://example.test/issue"), bindingSeconds: Int = 120) = RegistrarConfiguration(
+private fun configuration(
+    roles: List<ServiceRole>,
+    identityUri: URI = URI("https://example.test/issue"),
+    bindingSeconds: Int = 120,
+) = RegistrarConfiguration(
     identityIssueUri = identityUri,
     sentinelCredentialsUri = URI("https://example.test/sentinel"),
     oauthTokenUri = URI("https://example.test/token"),

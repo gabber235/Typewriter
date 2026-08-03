@@ -25,13 +25,14 @@ internal data class TagRecord(
     val placement: PlacementRecord = PlacementRecord(),
     val parent_tags: List<RecordId> = emptyList(),
 ) {
-    fun toTag(): Tag = Tag(
-        tagId = id.toSkirRecordId(),
-        name = name,
-        color = Color(argb = color.toInt()),
-        parentIds = parent_tags.map(RecordId::toSkirRecordId),
-        placement = placement.toPlacement(),
-    )
+    fun toTag(): Tag =
+        Tag(
+            tagId = id.toSkirRecordId(),
+            name = name,
+            color = Color(argb = color.toInt()),
+            parentIds = parent_tags.map(RecordId::toSkirRecordId),
+            placement = placement.toPlacement(),
+        )
 
     companion object {
         fun parseList(result: Value): List<TagRecord> = result.parseRecords(TagRecord::class.java)
@@ -42,10 +43,11 @@ internal data class TagDeletionRecord(
     val childTagIds: List<RecordId> = emptyList(),
     val bookIds: List<RecordId> = emptyList(),
 ) {
-    fun toTagDeletion(): TagDeletion = TagDeletion(
-        childTagIds = childTagIds.map(RecordId::toSkirRecordId),
-        bookIds = bookIds.map(RecordId::toSkirRecordId),
-    )
+    fun toTagDeletion(): TagDeletion =
+        TagDeletion(
+            childTagIds = childTagIds.map(RecordId::toSkirRecordId),
+            bookIds = bookIds.map(RecordId::toSkirRecordId),
+        )
 
     companion object {
         fun parse(result: Value): TagDeletionRecord = result.get(TagDeletionRecord::class.java)

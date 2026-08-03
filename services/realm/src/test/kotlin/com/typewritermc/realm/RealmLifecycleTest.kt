@@ -86,15 +86,19 @@ private class RealmLifecycleFixture(
     private val tags = SurrealTagRepository(database)
     private val books = SurrealBookRepository(database)
     private val pages = SurrealPageRepository(database)
-    val realm = Realm(
-        database = database,
-        databaseProvider = TestDatabaseProvider(),
-        routeFactory = RealmRouteFactory(books, pages, tags),
-        scope = scope,
-        telemetry = telemetry.telemetry,
-    )
+    val realm =
+        Realm(
+            database = database,
+            databaseProvider = TestDatabaseProvider(),
+            routeFactory = RealmRouteFactory(books, pages, tags),
+            scope = scope,
+            telemetry = telemetry.telemetry,
+        )
 
-    fun ready(attempt: Long, generation: Long): ReadyState {
+    fun ready(
+        attempt: Long,
+        generation: Long,
+    ): ReadyState {
         val transport = FakeMessageTransport()
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
         val identity = ServiceIdentity("realm", "Realm", "realm", listOf(ServiceRole.Realm("1.0.0")))
@@ -127,9 +131,10 @@ private data class ReadyState(
 
 private class TestDatabaseProvider : RealmDatabaseProvider {
     context(_: MainSpanScope)
-    override fun connect(): Surreal = Surreal().apply {
-        connect("memory")
-        useNs("realm_lifecycle_test").useDb("realm_lifecycle_test")
-        SchemaMigrator(this).migrate()
-    }
+    override fun connect(): Surreal =
+        Surreal().apply {
+            connect("memory")
+            useNs("realm_lifecycle_test").useDb("realm_lifecycle_test")
+            SchemaMigrator(this).migrate()
+        }
 }

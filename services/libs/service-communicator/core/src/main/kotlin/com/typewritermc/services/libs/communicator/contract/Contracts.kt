@@ -7,7 +7,9 @@ import kotlin.time.Duration.Companion.seconds
 
 /** Stable low-cardinality operation name. */
 @JvmInline
-value class OperationName private constructor(val value: String) {
+value class OperationName private constructor(
+    val value: String,
+) {
     /** Creates a validated operation name. */
     companion object {
         fun of(value: String): OperationName {
@@ -19,7 +21,9 @@ value class OperationName private constructor(val value: String) {
 
 /** Stable response variant name. */
 @JvmInline
-value class ResponseVariant private constructor(val value: String) {
+value class ResponseVariant private constructor(
+    val value: String,
+) {
     /** Creates a validated response variant. */
     companion object {
         fun of(value: String): ResponseVariant {
@@ -31,11 +35,16 @@ value class ResponseVariant private constructor(val value: String) {
 
 /** Semantic outcome of a typed response. */
 enum class ResponseOutcome {
-    SUCCESS, DOMAIN_ERROR, INTERNAL_ERROR,
+    SUCCESS,
+    DOMAIN_ERROR,
+    INTERNAL_ERROR,
 }
 
 /** Semantic response outcome and stable variant. */
-data class ResponseClassification(val outcome: ResponseOutcome, val variant: ResponseVariant)
+data class ResponseClassification(
+    val outcome: ResponseOutcome,
+    val variant: ResponseVariant,
+)
 
 /** Classifies a typed response into its semantic outcome and stable variant. */
 fun interface ResponseClassifier<Response : Any> {
@@ -57,6 +66,7 @@ class ResponsePolicy<Response : Any>(
 /** Binary payload encoder and decoder. */
 interface PayloadCodec<Value : Any> {
     fun encode(value: Value): ByteArray
+
     fun decode(payload: ByteArray): Value
 }
 
@@ -104,6 +114,11 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
 
 /** A watch's single initial response or subsequent update. */
 sealed interface WatchMessage<out Initial : Any, out Update : Any> {
-    data class Initial<Value : Any>(val value: Value) : WatchMessage<Value, Nothing>
-    data class Update<Value : Any>(val value: Value) : WatchMessage<Nothing, Value>
+    data class Initial<Value : Any>(
+        val value: Value,
+    ) : WatchMessage<Value, Nothing>
+
+    data class Update<Value : Any>(
+        val value: Value,
+    ) : WatchMessage<Nothing, Value>
 }

@@ -29,6 +29,7 @@ fun Response.takeTransaction(index: Int): Value {
     throw exception
 }
 
-class TransactionException(index: Int, cause: Throwable) :
-    RuntimeException("Failed to run transaction, statement $index", cause) {
-}
+class TransactionException(
+    index: Int,
+    cause: Throwable,
+) : RuntimeException("Failed to run transaction, statement $index", cause)

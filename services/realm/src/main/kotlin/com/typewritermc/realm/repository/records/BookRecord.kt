@@ -13,13 +13,14 @@ internal data class BookRecord(
     val color: Long = 0L,
     val tags: List<RecordId> = emptyList(),
 ) {
-    fun toBook(): Book = Book(
-        bookId = id.toSkirRecordId(),
-        title = title,
-        icon = icon,
-        color = Color(argb = color.toInt()),
-        tagIds = tags.map(RecordId::toSkirRecordId),
-    )
+    fun toBook(): Book =
+        Book(
+            bookId = id.toSkirRecordId(),
+            title = title,
+            icon = icon,
+            color = Color(argb = color.toInt()),
+            tagIds = tags.map(RecordId::toSkirRecordId),
+        )
 
     companion object {
         fun parseList(result: Value): List<BookRecord> = result.parseRecords(BookRecord::class.java)

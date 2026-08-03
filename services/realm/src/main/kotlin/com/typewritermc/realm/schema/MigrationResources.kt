@@ -13,7 +13,6 @@ private val PATCH_FILENAME_PATTERN = Regex("^[0-9]{4}_[a-z0-9_]+\\.surql$")
 internal class MigrationResources(
     private val loadText: (String) -> String? = ::loadClasspathResource,
 ) {
-
     fun loadMigrationSchema(): String = loadRequiredResource(MIGRATION_SCHEMA_PATH)
 
     fun loadRealmSchema(): List<SchemaResource> {
@@ -43,7 +42,12 @@ internal class MigrationResources(
 
     private fun loadIndex(path: String): List<String> {
         val index = loadText(path) ?: throw MissingMigrationResourceException(path)
-        val filenames = index.lineSequence().map(String::trim).filter(String::isNotEmpty).toList()
+        val filenames =
+            index
+                .lineSequence()
+                .map(String::trim)
+                .filter(String::isNotEmpty)
+                .toList()
         require(filenames.size == filenames.distinct().size) {
             "Resource index contains duplicate filenames: $path"
         }
@@ -80,8 +84,9 @@ internal data class DatabasePatch(
     val checksum: String,
 )
 
-internal class MissingMigrationResourceException(path: String) :
-    IllegalStateException("Migration resource not found: $path")
+internal class MissingMigrationResourceException(
+    path: String,
+) : IllegalStateException("Migration resource not found: $path")
 
 private fun loadClasspathResource(path: String): String? =
     MigrationResources::class.java.classLoader
@@ -89,6 +94,8 @@ private fun loadClasspathResource(path: String): String? =
         ?.bufferedReader()
         ?.use { it.readText() }
 
-private fun String.sha256(): String = MessageDigest.getInstance("SHA-256")
-    .digest(toByteArray(Charsets.UTF_8))
-    .joinToString("") { byte -> "%02x".format(byte) }
+private fun String.sha256(): String =
+    MessageDigest
+        .getInstance("SHA-256")
+        .digest(toByteArray(Charsets.UTF_8))
+        .joinToString("") { byte -> "%02x".format(byte) }

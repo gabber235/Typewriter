@@ -18,9 +18,10 @@ import org.koin.dsl.module
 val TelemetryKoinModuleTest by testSuite {
     test("module resolves one singleton from application-owned OpenTelemetry") {
         sdkFixture { sdk, _ ->
-            val app = koinApplication {
-                modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm", "2.0.0"))
-            }
+            val app =
+                koinApplication {
+                    modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm", "2.0.0"))
+                }
             try {
                 app.koin.get<ServiceTelemetry>() shouldBeSameInstanceAs app.koin.get<ServiceTelemetry>()
             } finally {
@@ -40,9 +41,13 @@ val TelemetryKoinModuleTest by testSuite {
 
     test("instrumentation metadata reaches spans") {
         sdkFixture { sdk, exporter ->
-            val app = koinApplication {
-                modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm.instrumentation", "2.1.0", "https://schema.example/v1"))
-            }
+            val app =
+                koinApplication {
+                    modules(
+                        module { single<OpenTelemetry> { sdk } },
+                        serviceTelemetryModule("realm.instrumentation", "2.1.0", "https://schema.example/v1"),
+                    )
+                }
             try {
                 app.koin.get<ServiceTelemetry>().mainSpanBlocking("main", ErrorSlug.of("main-failed")) { _ -> }
                 val scope = exporter.finishedSpanItems.single().instrumentationScopeInfo
@@ -57,13 +62,18 @@ val TelemetryKoinModuleTest by testSuite {
 
     test("closing Koin does not shut down application SDK") {
         sdkFixture { sdk, exporter ->
-            val app = koinApplication {
-                modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm"))
-            }
+            val app =
+                koinApplication {
+                    modules(module { single<OpenTelemetry> { sdk } }, serviceTelemetryModule("realm"))
+                }
             app.koin.get<ServiceTelemetry>()
             app.close()
 
-            sdk.getTracer("after-koin").spanBuilder("still-works").startSpan().end()
+            sdk
+                .getTracer("after-koin")
+                .spanBuilder("still-works")
+                .startSpan()
+                .end()
             exporter.finishedSpanItems.single().name shouldBe "still-works"
         }
     }
@@ -71,9 +81,11 @@ val TelemetryKoinModuleTest by testSuite {
 
 private fun sdkFixture(block: (OpenTelemetrySdk, InMemorySpanExporter) -> Unit) {
     val exporter = InMemorySpanExporter.create()
-    val provider = SdkTracerProvider.builder()
-        .addSpanProcessor(SimpleSpanProcessor.create(exporter))
-        .build()
+    val provider =
+        SdkTracerProvider
+            .builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(exporter))
+            .build()
     val sdk = OpenTelemetrySdk.builder().setTracerProvider(provider).build()
     try {
         block(sdk, exporter)

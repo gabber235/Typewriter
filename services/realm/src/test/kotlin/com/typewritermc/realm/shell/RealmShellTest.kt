@@ -27,10 +27,11 @@ val RealmShellTest by testSuite {
     }
 
     test("malformed input is reported without preventing the next command") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
         val reader = mockk<LineReader>(relaxed = true)
 
         TelemetryTestHarness.create().use { harness ->
@@ -51,10 +52,11 @@ val RealmShellTest by testSuite {
     }
 
     test("shell command is a bounded root span") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
         val reader = mockk<LineReader>(relaxed = true)
 
         TelemetryTestHarness.create().use { harness ->
@@ -71,10 +73,11 @@ val RealmShellTest by testSuite {
     }
 
     test("shell exit is a bounded root span with its outcome") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
 
         TelemetryTestHarness.create().use { harness ->
             val shell = RealmShell(context, harness.telemetry)
@@ -88,10 +91,11 @@ val RealmShellTest by testSuite {
     }
 
     test("end of input returns a bounded shell exit reason") {
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+            )
         val reader = mockk<LineReader>(relaxed = true)
         every { reader.readLine("realm> ") } throws EndOfFileException()
 

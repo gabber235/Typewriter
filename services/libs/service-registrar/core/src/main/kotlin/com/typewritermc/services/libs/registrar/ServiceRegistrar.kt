@@ -48,34 +48,43 @@ class ServiceRegistrar(
     private var retainedIssuedCredentials: IdentityCredentials? = null
     private var activeCredentials: IdentityCredentials? = null
     private var stopResult: RegistrarStopResult? = null
+
     @Volatile private var lifecycleState = LifecycleState.IDLE
     private var attempt = 0L
 
     val states: StateFlow<RegistrarSnapshot> = mutableStates
 
-    suspend fun start(): RegistrarResult<Unit> = lifecycle.withLock {
-        when (lifecycleState) {
-            LifecycleState.IDLE -> {
-                lifecycleState = LifecycleState.ACTIVE
-                coordinator = scope.launch { coordinate() }
-                RegistrarResult.Success(Unit)
+    suspend fun start(): RegistrarResult<Unit> =
+        lifecycle.withLock {
+            when (lifecycleState) {
+                LifecycleState.IDLE -> {
+                    lifecycleState = LifecycleState.ACTIVE
+                    coordinator = scope.launch { coordinate() }
+                    RegistrarResult.Success(Unit)
+                }
+
+                LifecycleState.STOPPED -> {
+                    RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
+                }
+
+                LifecycleState.ACTIVE, LifecycleState.RETRY_RESERVED -> {
+                    RegistrarResult.Success(Unit)
+                }
             }
-            LifecycleState.STOPPED -> RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
-            LifecycleState.ACTIVE, LifecycleState.RETRY_RESERVED -> RegistrarResult.Success(Unit)
         }
-    }
 
     suspend fun retry(): RegistrarResult<Unit> {
-        val previous = lifecycle.withLock {
-            if (lifecycleState == LifecycleState.STOPPED) {
-                return RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
+        val previous =
+            lifecycle.withLock {
+                if (lifecycleState == LifecycleState.STOPPED) {
+                    return RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
+                }
+                if (lifecycleState != LifecycleState.ACTIVE || mutableStates.value.state !is RegistrarState.Failed) {
+                    return RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
+                }
+                lifecycleState = LifecycleState.RETRY_RESERVED
+                coordinator
             }
-            if (lifecycleState != LifecycleState.ACTIVE || mutableStates.value.state !is RegistrarState.Failed) {
-                return RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
-            }
-            lifecycleState = LifecycleState.RETRY_RESERVED
-            coordinator
-        }
         previous?.join()
         return lifecycle.withLock {
             if (lifecycleState == LifecycleState.STOPPED) {
@@ -92,9 +101,11 @@ class ServiceRegistrar(
     }
 
     suspend fun awaitReady(): RegistrarResult<ReadySession> {
-        val terminal = states.first {
-            it.state is RegistrarState.Ready || it.state is RegistrarState.Failed || it.state is RegistrarState.Stopped
-        }.state
+        val terminal =
+            states
+                .first {
+                    it.state is RegistrarState.Ready || it.state is RegistrarState.Failed || it.state is RegistrarState.Stopped
+                }.state
         return when (terminal) {
             is RegistrarState.Ready -> RegistrarResult.Success(terminal.session)
             is RegistrarState.Failed -> RegistrarResult.Failure(terminal.failure)
@@ -103,29 +114,33 @@ class ServiceRegistrar(
         }
     }
 
-    suspend fun stop(): RegistrarStopResult = lifecycle.withLock {
-        stopResult?.let { return@withLock it }
-        lifecycleState = LifecycleState.STOPPED
-        coordinator?.cancel()
-        withContext(NonCancellable) {
-            transition(RegistrarState.Stopping)
-            val deadline = TimeSource.Monotonic.markNow() + configuration.shutdownTimeout
-            val failures = mutableListOf<RegistrarStopFailure>()
-            if (!withinBudget(deadline) { coordinator?.join() }) failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
-            coordinator = null
-            try {
-                failures += cleanup(runtime, sendShutdown = true, deadline = deadline)
-            } finally {
-                runtime = null
-                retainedIssuedCredentials = null
-                activeCredentials = null
+    suspend fun stop(): RegistrarStopResult =
+        lifecycle.withLock {
+            stopResult?.let { return@withLock it }
+            lifecycleState = LifecycleState.STOPPED
+            coordinator?.cancel()
+            withContext(NonCancellable) {
+                transition(RegistrarState.Stopping)
+                val deadline = TimeSource.Monotonic.markNow() + configuration.shutdownTimeout
+                val failures = mutableListOf<RegistrarStopFailure>()
+                if (!withinBudget(deadline) { coordinator?.join() }) {
+                    failures +=
+                        RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
+                }
+                coordinator = null
+                try {
+                    failures += cleanup(runtime, sendShutdown = true, deadline = deadline)
+                } finally {
+                    runtime = null
+                    retainedIssuedCredentials = null
+                    activeCredentials = null
+                }
+                val result = failures.toStopResult()
+                stopResult = result
+                transition(RegistrarState.Stopped(result))
+                result
             }
-            val result = failures.toStopResult()
-            stopResult = result
-            transition(RegistrarState.Stopped(result))
-            result
         }
-    }
 
     private suspend fun coordinate() {
         try {
@@ -173,18 +188,19 @@ class ServiceRegistrar(
     }
 
     private suspend fun runAttempt() {
-        val ready = telemetry.mainSpan(
-            "registrar.attempt",
-            ErrorSlug.of("registrar-attempt-failed"),
-            parent = Context.root(),
-            attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
-        ) { main ->
-            val result = establishReady()
-            main.annotate {
-                domainOutcome(if (result == null) mutableStates.value.state.attemptOutcome() else "ready")
-            }
-            result
-        } ?: return
+        val ready =
+            telemetry.mainSpan(
+                "registrar.attempt",
+                ErrorSlug.of("registrar-attempt-failed"),
+                parent = Context.root(),
+                attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
+            ) { main ->
+                val result = establishReady()
+                main.annotate {
+                    domainOutcome(if (result == null) mutableStates.value.state.attemptOutcome() else "ready")
+                }
+                result
+            } ?: return
         superviseReady(ready)
     }
 
@@ -192,27 +208,36 @@ class ServiceRegistrar(
         val acquired = acquireCredentials() ?: return null
         activeCredentials = acquired
         var setupStage = RegistrarStage.CONNECTING
-        val created = retryPhase({ failure -> failure.runtimeCreateStage(setupStage) }) {
-            runtimeFactory.create(acquired, RuntimeSetupProgressSink {
-                setupProgress(it)
-                setupStage = it.stage
-            }).asRuntimeResult()
-        } ?: return null
+        val created =
+            retryPhase({ failure -> failure.runtimeCreateStage(setupStage) }) {
+                runtimeFactory
+                    .create(
+                        acquired,
+                        RuntimeSetupProgressSink {
+                            setupProgress(it)
+                            setupStage = it.stage
+                        },
+                    ).asRuntimeResult()
+            } ?: return null
         runtime = created
         if (retryPhase(RegistrarStage.CONNECTING) { created.connect() } == null) return null
         awaitConnected(created)
         while (true) {
             val binding = superviseBinding(created, acquired.identity) ?: return null
             transition(RegistrarState.Reauthorizing(binding))
-            val reauthorized = retryPhase(RegistrarStage.REAUTHORIZING) {
-                created.reconnectForBoundPermissions()
-            }
+            val reauthorized =
+                retryPhase(RegistrarStage.REAUTHORIZING) {
+                    created.reconnectForBoundPermissions()
+                }
             if (reauthorized == null) return null
             when (val confirmed = retryPhase(RegistrarStage.BINDING) { created.queryBinding() } ?: return null) {
                 is BindingStatus.Bound -> {
                     return beginReadySupervision(created, acquired.identity, confirmed.binding)
                 }
-                is BindingStatus.Unbound -> transition(RegistrarState.AwaitingBinding(acquired.identity, confirmed.token))
+
+                is BindingStatus.Unbound -> {
+                    transition(RegistrarState.AwaitingBinding(acquired.identity, confirmed.token))
+                }
             }
         }
     }
@@ -223,22 +248,31 @@ class ServiceRegistrar(
         binding: OrganizationBinding,
     ): ReadySupervision? {
         val session = ReadySession(identity, binding, active.communicator)
-        val generation = when (restoreHeartbeat(active, session)) {
-            HeartbeatResult.TERMINAL -> return null
-            HeartbeatResult.RECONNECTED -> 2L
-            HeartbeatResult.HEALTHY -> 1L
-        }
+        val generation =
+            when (restoreHeartbeat(active, session)) {
+                HeartbeatResult.TERMINAL -> return null
+                HeartbeatResult.RECONNECTED -> 2L
+                HeartbeatResult.HEALTHY -> 1L
+            }
         transition(RegistrarState.Ready(session, generation))
         return ReadySupervision(active, session, generation)
     }
 
     private fun setupProgress(progress: RuntimeSetupProgress) {
         when (progress) {
-            RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN -> activeCredentials?.identity?.let {
-                transition(RegistrarState.AcquiringAccessToken(it))
+            RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN -> {
+                activeCredentials?.identity?.let {
+                    transition(RegistrarState.AcquiringAccessToken(it))
+                }
             }
-            RuntimeSetupProgress.ACQUIRING_SENTINEL_CREDENTIALS -> transition(RegistrarState.AcquiringSentinelCredentials)
-            RuntimeSetupProgress.CONNECTING -> transition(RegistrarState.Connecting(attempt))
+
+            RuntimeSetupProgress.ACQUIRING_SENTINEL_CREDENTIALS -> {
+                transition(RegistrarState.AcquiringSentinelCredentials)
+            }
+
+            RuntimeSetupProgress.CONNECTING -> {
+                transition(RegistrarState.Connecting(attempt))
+            }
         }
     }
 
@@ -248,15 +282,29 @@ class ServiceRegistrar(
         var backoffIndex = 0L
         while (true) {
             when (val loaded = credentialStorage.load()) {
-                CredentialLoadResult.Missing -> break
-                is CredentialLoadResult.Loaded -> return loaded.credentials
+                CredentialLoadResult.Missing -> {
+                    break
+                }
+
+                is CredentialLoadResult.Loaded -> {
+                    return loaded.credentials
+                }
+
                 is CredentialLoadResult.Failure -> {
                     val failure = RegistrarFailure.CredentialStorage(loaded.error)
                     if (!loaded.error.recoverable) {
                         terminal(failure)
                         return null
                     }
-                    retryDelay(RegistrarStage.STORAGE, failure, backoffIndex = backoffIndex.also { backoffIndex = saturatingIncrement(backoffIndex) })
+                    retryDelay(
+                        RegistrarStage.STORAGE,
+                        failure,
+                        backoffIndex =
+                            backoffIndex.also {
+                                backoffIndex =
+                                    saturatingIncrement(backoffIndex)
+                            },
+                    )
                 }
             }
         }
@@ -266,6 +314,7 @@ class ServiceRegistrar(
                 transition(RegistrarState.Failed(RegistrarFailure.IdentityIssuance(issued.error), issued.error.outcomeMayBeAmbiguous))
                 null
             }
+
             is IdentityIssueResult.Success -> {
                 retainedIssuedCredentials = issued.credentials
                 persist(issued.credentials)
@@ -282,49 +331,111 @@ class ServiceRegistrar(
                     retainedIssuedCredentials = null
                     return value
                 }
+
                 is CredentialStoreResult.Failure -> {
                     val failure = RegistrarFailure.CredentialStorage(stored.error)
                     if (!stored.error.recoverable) {
                         terminal(failure)
                         return null
                     }
-                    retryDelay(RegistrarStage.STORAGE, failure, backoffIndex = backoffIndex.also { backoffIndex = saturatingIncrement(backoffIndex) })
+                    retryDelay(
+                        RegistrarStage.STORAGE,
+                        failure,
+                        backoffIndex =
+                            backoffIndex.also {
+                                backoffIndex =
+                                    saturatingIncrement(backoffIndex)
+                            },
+                    )
                 }
             }
         }
     }
 
-    private suspend fun superviseBinding(active: RegistrarRuntime, identity: ServiceIdentity): OrganizationBinding? {
+    private suspend fun superviseBinding(
+        active: RegistrarRuntime,
+        identity: ServiceIdentity,
+    ): OrganizationBinding? {
         var bindingBackoffIndex = 0L
         while (true) {
             awaitConnected(active)
-            val event = withTimeoutOrNull(configuration.bindingRefreshInterval) {
-                merge(
-                    active.watchBinding().map { BindingEvent.Observation(it) },
-                    active.connectivity.map { BindingEvent.Connectivity(it) },
-                ).first { it !is BindingEvent.Connectivity || it.value != RuntimeConnectivity.CONNECTED }
-            }
+            val event =
+                withTimeoutOrNull(configuration.bindingRefreshInterval) {
+                    merge(
+                        active.watchBinding().map { BindingEvent.Observation(it) },
+                        active.connectivity.map { BindingEvent.Connectivity(it) },
+                    ).first { it !is BindingEvent.Connectivity || it.value != RuntimeConnectivity.CONNECTED }
+                }
             when (event) {
-                null -> when (val queried = active.queryBinding()) {
-                    is RuntimeResult.Success -> when (val status = queried.value) {
-                        is BindingStatus.Bound -> return status.binding
-                        is BindingStatus.Unbound -> {
-                            bindingBackoffIndex = 0L
-                            transition(RegistrarState.AwaitingBinding(identity, status.token))
+                null -> {
+                    when (val queried = active.queryBinding()) {
+                        is RuntimeResult.Success -> {
+                            when (val status = queried.value) {
+                                is BindingStatus.Bound -> {
+                                    return status.binding
+                                }
+
+                                is BindingStatus.Unbound -> {
+                                    bindingBackoffIndex = 0L
+                                    transition(RegistrarState.AwaitingBinding(identity, status.token))
+                                }
+                            }
+                        }
+
+                        is RuntimeResult.Failure -> {
+                            if (!handleFailure(
+                                    RegistrarStage.BINDING,
+                                    queried.failure,
+                                    bindingBackoffIndex.also {
+                                        bindingBackoffIndex =
+                                            saturatingIncrement(bindingBackoffIndex)
+                                    },
+                                )
+                            ) {
+                                return null
+                            }
                         }
                     }
-                    is RuntimeResult.Failure -> if (!handleFailure(RegistrarStage.BINDING, queried.failure, bindingBackoffIndex.also { bindingBackoffIndex = saturatingIncrement(bindingBackoffIndex) })) return null
                 }
-                is BindingEvent.Connectivity -> awaitConnected(active)
-                is BindingEvent.Observation -> when (val result = event.value) {
-                    is RuntimeResult.Failure -> if (!handleFailure(RegistrarStage.BINDING, result.failure, bindingBackoffIndex.also { bindingBackoffIndex = saturatingIncrement(bindingBackoffIndex) })) return null
-                    is RuntimeResult.Success -> when (val observation = result.value) {
-                        is BindingObservation.Bound -> return observation.binding
-                        is BindingObservation.Initial -> when (val status = observation.status) {
-                            is BindingStatus.Bound -> return status.binding
-                            is BindingStatus.Unbound -> {
-                                bindingBackoffIndex = 0L
-                                transition(RegistrarState.AwaitingBinding(identity, status.token))
+
+                is BindingEvent.Connectivity -> {
+                    awaitConnected(active)
+                }
+
+                is BindingEvent.Observation -> {
+                    when (val result = event.value) {
+                        is RuntimeResult.Failure -> {
+                            if (!handleFailure(
+                                    RegistrarStage.BINDING,
+                                    result.failure,
+                                    bindingBackoffIndex.also {
+                                        bindingBackoffIndex =
+                                            saturatingIncrement(bindingBackoffIndex)
+                                    },
+                                )
+                            ) {
+                                return null
+                            }
+                        }
+
+                        is RuntimeResult.Success -> {
+                            when (val observation = result.value) {
+                                is BindingObservation.Bound -> {
+                                    return observation.binding
+                                }
+
+                                is BindingObservation.Initial -> {
+                                    when (val status = observation.status) {
+                                        is BindingStatus.Bound -> {
+                                            return status.binding
+                                        }
+
+                                        is BindingStatus.Unbound -> {
+                                            bindingBackoffIndex = 0L
+                                            transition(RegistrarState.AwaitingBinding(identity, status.token))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -338,9 +449,10 @@ class ServiceRegistrar(
         val session = supervision.session
         var generation = supervision.connectionGeneration
         while (true) {
-            val degraded = withTimeoutOrNull(configuration.heartbeatInterval) {
-                active.connectivity.first { it != RuntimeConnectivity.CONNECTED }
-            }
+            val degraded =
+                withTimeoutOrNull(configuration.heartbeatInterval) {
+                    active.connectivity.first { it != RuntimeConnectivity.CONNECTED }
+                }
             if (degraded == null) {
                 generation = heartbeat(active, session, generation) ?: return
                 transition(RegistrarState.Ready(session, generation))
@@ -355,67 +467,94 @@ class ServiceRegistrar(
         active: RegistrarRuntime,
         session: ReadySession,
         generation: Long,
-    ): Long? = telemetry.mainSpan(
-        "registrar.heartbeat",
-        ErrorSlug.of("registrar-heartbeat-failed"),
-        parent = Context.root(),
-        attributes = readyAttributes(session, generation),
-    ) { main ->
-        when (restoreHeartbeat(active, session)) {
-            HeartbeatResult.TERMINAL -> {
-                main.annotate { domainOutcome("terminal") }
-                null
-            }
-            HeartbeatResult.RECONNECTED -> {
-                main.annotate { domainOutcome("reconnected") }
-                saturatingIncrement(generation)
-            }
-            HeartbeatResult.HEALTHY -> {
-                main.annotate { domainOutcome("healthy") }
-                generation
+    ): Long? =
+        telemetry.mainSpan(
+            "registrar.heartbeat",
+            ErrorSlug.of("registrar-heartbeat-failed"),
+            parent = Context.root(),
+            attributes = readyAttributes(session, generation),
+        ) { main ->
+            when (restoreHeartbeat(active, session)) {
+                HeartbeatResult.TERMINAL -> {
+                    main.annotate { domainOutcome("terminal") }
+                    null
+                }
+
+                HeartbeatResult.RECONNECTED -> {
+                    main.annotate { domainOutcome("reconnected") }
+                    saturatingIncrement(generation)
+                }
+
+                HeartbeatResult.HEALTHY -> {
+                    main.annotate { domainOutcome("healthy") }
+                    generation
+                }
             }
         }
-    }
 
     private suspend fun recoverReady(
         active: RegistrarRuntime,
         session: ReadySession,
         generation: Long,
-    ): Long? = telemetry.mainSpan(
-        "registrar.recovery",
-        ErrorSlug.of("registrar-recovery-failed"),
-        parent = Context.root(),
-        attributes = readyAttributes(session, generation),
-    ) { main ->
-        awaitConnected(active, session)
-        val heartbeatGeneration = when (restoreHeartbeat(active, session)) {
-            HeartbeatResult.TERMINAL -> {
-                main.annotate { domainOutcome("terminal") }
-                return@mainSpan null
-            }
-            HeartbeatResult.RECONNECTED -> saturatingIncrement(generation)
-            HeartbeatResult.HEALTHY -> generation
-        }
-        main.annotate { domainOutcome("recovered") }
-        saturatingIncrement(heartbeatGeneration)
-    }
+    ): Long? =
+        telemetry.mainSpan(
+            "registrar.recovery",
+            ErrorSlug.of("registrar-recovery-failed"),
+            parent = Context.root(),
+            attributes = readyAttributes(session, generation),
+        ) { main ->
+            awaitConnected(active, session)
+            val heartbeatGeneration =
+                when (restoreHeartbeat(active, session)) {
+                    HeartbeatResult.TERMINAL -> {
+                        main.annotate { domainOutcome("terminal") }
+                        return@mainSpan null
+                    }
 
-    private suspend fun restoreHeartbeat(active: RegistrarRuntime, session: ReadySession): HeartbeatResult {
+                    HeartbeatResult.RECONNECTED -> {
+                        saturatingIncrement(generation)
+                    }
+
+                    HeartbeatResult.HEALTHY -> {
+                        generation
+                    }
+                }
+            main.annotate { domainOutcome("recovered") }
+            saturatingIncrement(heartbeatGeneration)
+        }
+
+    private suspend fun restoreHeartbeat(
+        active: RegistrarRuntime,
+        session: ReadySession,
+    ): HeartbeatResult {
         var backoffIndex = 0L
         var reconnected = false
-        while (true) when (val heartbeat = active.sendHeartbeat()) {
-            is RuntimeResult.Success -> return if (reconnected) HeartbeatResult.RECONNECTED else HeartbeatResult.HEALTHY
-            is RuntimeResult.Failure -> {
-                if (!heartbeat.failure.recoverable()) {
-                    terminal(heartbeat.failure)
-                    return HeartbeatResult.TERMINAL
+        while (true) {
+            when (val heartbeat = active.sendHeartbeat()) {
+                is RuntimeResult.Success -> {
+                    return if (reconnected) HeartbeatResult.RECONNECTED else HeartbeatResult.HEALTHY
                 }
-                retryDelay(RegistrarStage.HEARTBEAT, heartbeat.failure, session, backoffIndex.also { backoffIndex = saturatingIncrement(backoffIndex) })
-                if (retryPhase(RegistrarStage.REAUTHORIZING) { active.reconnectForBoundPermissions() } == null) {
-                    return HeartbeatResult.TERMINAL
+
+                is RuntimeResult.Failure -> {
+                    if (!heartbeat.failure.recoverable()) {
+                        terminal(heartbeat.failure)
+                        return HeartbeatResult.TERMINAL
+                    }
+                    retryDelay(
+                        RegistrarStage.HEARTBEAT,
+                        heartbeat.failure,
+                        session,
+                        backoffIndex.also {
+                            backoffIndex =
+                                saturatingIncrement(backoffIndex)
+                        },
+                    )
+                    if (retryPhase(RegistrarStage.REAUTHORIZING) { active.reconnectForBoundPermissions() } == null) {
+                        return HeartbeatResult.TERMINAL
+                    }
+                    awaitConnected(active, session)
+                    reconnected = true
                 }
-                awaitConnected(active, session)
-                reconnected = true
             }
         }
     }
@@ -434,17 +573,44 @@ class ServiceRegistrar(
         active.connectivity.first { it == RuntimeConnectivity.CONNECTED }
     }
 
-    private suspend fun <V> retryPhase(stage: RegistrarStage, operation: suspend () -> RuntimeResult<V>): V? = retryPhase({ stage }, operation)
+    private suspend fun <V> retryPhase(
+        stage: RegistrarStage,
+        operation: suspend () -> RuntimeResult<V>,
+    ): V? = retryPhase({ stage }, operation)
 
-    private suspend fun <V> retryPhase(stage: (RegistrarFailure) -> RegistrarStage, operation: suspend () -> RuntimeResult<V>): V? {
+    private suspend fun <V> retryPhase(
+        stage: (RegistrarFailure) -> RegistrarStage,
+        operation: suspend () -> RuntimeResult<V>,
+    ): V? {
         var backoffIndex = 0L
-        while (true) when (val result = operation()) {
-            is RuntimeResult.Success -> return result.value
-            is RuntimeResult.Failure -> if (!handleFailure(stage(result.failure), result.failure, backoffIndex.also { backoffIndex = saturatingIncrement(backoffIndex) })) return null
+        while (true) {
+            when (val result = operation()) {
+                is RuntimeResult.Success -> {
+                    return result.value
+                }
+
+                is RuntimeResult.Failure -> {
+                    if (!handleFailure(
+                            stage(result.failure),
+                            result.failure,
+                            backoffIndex.also {
+                                backoffIndex =
+                                    saturatingIncrement(backoffIndex)
+                            },
+                        )
+                    ) {
+                        return null
+                    }
+                }
+            }
         }
     }
 
-    private suspend fun handleFailure(stage: RegistrarStage, failure: RegistrarFailure, backoffIndex: Long): Boolean {
+    private suspend fun handleFailure(
+        stage: RegistrarStage,
+        failure: RegistrarFailure,
+        backoffIndex: Long,
+    ): Boolean {
         if (!failure.recoverable()) {
             terminal(failure)
             return false
@@ -474,43 +640,62 @@ class ServiceRegistrar(
         }
     }
 
-    private suspend fun cleanup(active: RegistrarRuntime?, sendShutdown: Boolean, deadline: TimeSource.Monotonic.ValueTimeMark?): List<RegistrarStopFailure> {
+    private suspend fun cleanup(
+        active: RegistrarRuntime?,
+        sendShutdown: Boolean,
+        deadline: TimeSource.Monotonic.ValueTimeMark?,
+    ): List<RegistrarStopFailure> {
         if (active == null) return emptyList()
         val failures = mutableListOf<RegistrarStopFailure>()
         var exceptional: Throwable? = null
         if (sendShutdown && active.currentConnectivity == RuntimeConnectivity.CONNECTED) {
             try {
                 var shutdown: RuntimeResult<Unit>? = null
-                if (!withinBudget(deadline) { shutdown = active.sendShutdown() }) failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_TIMEOUT)
-                else when (shutdown) {
-                    is RuntimeResult.Failure -> failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_FAILED)
-                    is RuntimeResult.Success -> Unit
-                    null -> error("completed shutdown has no result")
+                if (!withinBudget(deadline) { shutdown = active.sendShutdown() }) {
+                    failures +=
+                        RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_TIMEOUT)
+                } else {
+                    when (shutdown) {
+                        is RuntimeResult.Failure -> failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_FAILED)
+                        is RuntimeResult.Success -> Unit
+                        null -> error("completed shutdown has no result")
+                    }
                 }
             } catch (thrown: Throwable) {
                 val found = findExceptionalThrowable(thrown)
-                if (found == null) failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_THROWN)
-                else exceptional = combineExceptional(exceptional, found)
+                if (found == null) {
+                    failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_THROWN)
+                } else {
+                    exceptional = combineExceptional(exceptional, found)
+                }
             }
         }
         try {
             var close: RuntimeCloseResult? = null
-            if (!withinBudget(deadline) { close = active.close() }) failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_TIMEOUT)
-            else when (val result = close) {
-                is RuntimeCloseResult.Failure -> failures += result.failures
-                RuntimeCloseResult.Success -> Unit
-                null -> error("completed close has no result")
+            if (!withinBudget(deadline) { close = active.close() }) {
+                failures +=
+                    RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_TIMEOUT)
+            } else {
+                when (val result = close) {
+                    is RuntimeCloseResult.Failure -> failures += result.failures
+                    RuntimeCloseResult.Success -> Unit
+                    null -> error("completed close has no result")
+                }
             }
         } catch (thrown: Throwable) {
             val found = findExceptionalThrowable(thrown)
-            if (found == null) failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_THROWN)
-            else exceptional = combineExceptional(exceptional, found)
+            if (found == null) {
+                failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_THROWN)
+            } else {
+                exceptional = combineExceptional(exceptional, found)
+            }
         }
         exceptional?.let { throw it }
         return failures
     }
 
     private fun terminal(failure: RegistrarFailure) = transition(RegistrarState.Failed(failure, false))
+
     private fun transition(state: RegistrarState) = mutableStates.update { RegistrarSnapshot(it.sequence + 1, attempt, state) }
 }
 
@@ -522,64 +707,91 @@ private data class ReadySupervision(
     val connectionGeneration: Long,
 )
 
-private fun RegistrarState.attemptOutcome(): String = when (this) {
-    is RegistrarState.Failed -> "failed"
-    is RegistrarState.Stopped -> "stopped"
-    else -> "incomplete"
-}
+private fun RegistrarState.attemptOutcome(): String =
+    when (this) {
+        is RegistrarState.Failed -> "failed"
+        is RegistrarState.Stopped -> "stopped"
+        else -> "incomplete"
+    }
 
-private fun readyAttributes(session: ReadySession, generation: Long): Attributes = Attributes.builder()
-    .put("service.id", session.identity.serviceId)
-    .put("user.org.id", session.binding.organizationId)
-    .put("registrar.connection.generation", generation)
-    .build()
+private fun readyAttributes(
+    session: ReadySession,
+    generation: Long,
+): Attributes =
+    Attributes
+        .builder()
+        .put("service.id", session.identity.serviceId)
+        .put("user.org.id", session.binding.organizationId)
+        .put("registrar.connection.generation", generation)
+        .build()
 
 private fun saturatingIncrement(value: Long): Long = if (value == Long.MAX_VALUE) value else value + 1
 
-private fun combineExceptional(primary: Throwable?, additional: Throwable): Throwable {
+private fun combineExceptional(
+    primary: Throwable?,
+    additional: Throwable,
+): Throwable {
     if (primary == null) return additional
     if (primary !== additional) primary.addSuppressed(additional)
     return primary
 }
 
 private sealed interface BindingEvent {
-    data class Observation(val value: RuntimeResult<BindingObservation>) : BindingEvent
-    data class Connectivity(val value: RuntimeConnectivity) : BindingEvent
+    data class Observation(
+        val value: RuntimeResult<BindingObservation>,
+    ) : BindingEvent
+
+    data class Connectivity(
+        val value: RuntimeConnectivity,
+    ) : BindingEvent
 }
 
 private fun List<RegistrarStopFailure>.toStopResult(): RegistrarStopResult =
     if (isEmpty()) RegistrarStopResult.Success else RegistrarStopResult.Failure(toList())
 
-private fun RegistrarFailure.recoverable(): Boolean = when (this) {
-    is RegistrarFailure.CredentialStorage -> error.recoverable
-    is RegistrarFailure.AccessToken -> recoverable
-    is RegistrarFailure.Sentinel -> recoverable
-    is RegistrarFailure.Messaging -> recoverable
-    else -> false
-}
+private fun RegistrarFailure.recoverable(): Boolean =
+    when (this) {
+        is RegistrarFailure.CredentialStorage -> error.recoverable
+        is RegistrarFailure.AccessToken -> recoverable
+        is RegistrarFailure.Sentinel -> recoverable
+        is RegistrarFailure.Messaging -> recoverable
+        else -> false
+    }
 
-private fun RuntimeCreateResult.asRuntimeResult(): RuntimeResult<RegistrarRuntime> = when (this) {
-    is RuntimeCreateResult.Success -> RuntimeResult.Success(runtime)
-    is RuntimeCreateResult.Failure -> RuntimeResult.Failure(failure)
-}
+private fun RuntimeCreateResult.asRuntimeResult(): RuntimeResult<RegistrarRuntime> =
+    when (this) {
+        is RuntimeCreateResult.Success -> RuntimeResult.Success(runtime)
+        is RuntimeCreateResult.Failure -> RuntimeResult.Failure(failure)
+    }
 
 private enum class HeartbeatResult { HEALTHY, RECONNECTED, TERMINAL }
 
-private val RuntimeSetupProgress.stage: RegistrarStage get() = when (this) {
-    RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN -> RegistrarStage.ACCESS_TOKEN
-    RuntimeSetupProgress.ACQUIRING_SENTINEL_CREDENTIALS -> RegistrarStage.SENTINEL
-    RuntimeSetupProgress.CONNECTING -> RegistrarStage.CONNECTING
-}
+private val RuntimeSetupProgress.stage: RegistrarStage get() =
+    when (this) {
+        RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN -> RegistrarStage.ACCESS_TOKEN
+        RuntimeSetupProgress.ACQUIRING_SENTINEL_CREDENTIALS -> RegistrarStage.SENTINEL
+        RuntimeSetupProgress.CONNECTING -> RegistrarStage.CONNECTING
+    }
 
-private fun RegistrarFailure.runtimeCreateStage(fallback: RegistrarStage): RegistrarStage = when (this) {
-    is RegistrarFailure.AccessToken -> RegistrarStage.ACCESS_TOKEN
-    is RegistrarFailure.Sentinel -> RegistrarStage.SENTINEL
-    else -> fallback
-}
+private fun RegistrarFailure.runtimeCreateStage(fallback: RegistrarStage): RegistrarStage =
+    when (this) {
+        is RegistrarFailure.AccessToken -> RegistrarStage.ACCESS_TOKEN
+        is RegistrarFailure.Sentinel -> RegistrarStage.SENTINEL
+        else -> fallback
+    }
 
-private suspend fun withinBudget(deadline: TimeSource.Monotonic.ValueTimeMark?, block: suspend () -> Unit): Boolean {
-    if (deadline == null) { block(); return true }
+private suspend fun withinBudget(
+    deadline: TimeSource.Monotonic.ValueTimeMark?,
+    block: suspend () -> Unit,
+): Boolean {
+    if (deadline == null) {
+        block()
+        return true
+    }
     val remaining = -deadline.elapsedNow()
     if (remaining.isNegative() || remaining == kotlin.time.Duration.ZERO) return false
-    return withTimeoutOrNull(remaining) { block(); true } ?: false
+    return withTimeoutOrNull(remaining) {
+        block()
+        true
+    } ?: false
 }

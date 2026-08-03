@@ -6,7 +6,15 @@ import skirout.library.v1.book.Book
 
 interface BookRepository {
     suspend fun listBooks(): List<Book>
+
     suspend fun getBook(id: RecordId): Book?
-    suspend fun createBook(title: String, icon: String, color: Color, tagIds: List<RecordId>): RepositoryResult<Book>
+
+    suspend fun createBook(
+        title: String,
+        icon: String,
+        color: Color,
+        tagIds: List<RecordId>,
+    ): RepositoryResult<Book>
+
     suspend fun updateBook(book: Book): RepositoryResult<Book>
 }

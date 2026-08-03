@@ -11,47 +11,51 @@ import java.util.Base64
 
 internal class MissingNatsNonceException : IllegalStateException("NATS server nonce is required")
 
-internal fun serviceNatsConfiguration(configuration: RegistrarConfiguration, credentials: IdentityCredentials) =
-    NatsConnectionConfiguration(
-        serverUrl = configuration.natsServerUri.toString(),
-        clientName = credentials.identity.serviceId,
-        inboxPrefix = "_INBOX.${credentials.identity.serviceId}.",
-        shutdownTimeout = configuration.shutdownTimeout,
-    )
+internal fun serviceNatsConfiguration(
+    configuration: RegistrarConfiguration,
+    credentials: IdentityCredentials,
+) = NatsConnectionConfiguration(
+    serverUrl = configuration.natsServerUri.toString(),
+    clientName = credentials.identity.serviceId,
+    inboxPrefix = "_INBOX.${credentials.identity.serviceId}.",
+    shutdownTimeout = configuration.shutdownTimeout,
+)
 
 internal fun serviceNatsAuthenticationProvider(
     accessTokens: AccessTokenCache,
     sentinel: SentinelCache,
     credentials: IdentityCredentials,
-): NatsAuthenticationProvider = NatsAuthenticationProvider { challenge ->
-    val access = accessTokens.get()
-    if (access is AccessTokenResult.Failure) throw RegistrarAuthenticationException(access.failure)
-    access as AccessTokenResult.Success
-    val sentinelResult = sentinel.get()
-    if (sentinelResult is SentinelResult.Failure) throw RegistrarAuthenticationException(sentinelResult.failure)
-    sentinelResult as SentinelResult.Success
-    try {
-        authenticateService(challenge, access.token, sentinelResult.credentials)
-    } catch (_: MissingNatsNonceException) {
-        throw RegistrarAuthenticationException(
-            com.typewritermc.services.libs.registrar.RegistrarFailure.Messaging(
-                com.typewritermc.services.libs.registrar.MessagingOperation.CONNECT,
-                recoverable = false,
-            ),
-        )
+): NatsAuthenticationProvider =
+    NatsAuthenticationProvider { challenge ->
+        val access = accessTokens.get()
+        if (access is AccessTokenResult.Failure) throw RegistrarAuthenticationException(access.failure)
+        access as AccessTokenResult.Success
+        val sentinelResult = sentinel.get()
+        if (sentinelResult is SentinelResult.Failure) throw RegistrarAuthenticationException(sentinelResult.failure)
+        sentinelResult as SentinelResult.Success
+        try {
+            authenticateService(challenge, access.token, sentinelResult.credentials)
+        } catch (_: MissingNatsNonceException) {
+            throw RegistrarAuthenticationException(
+                com.typewritermc.services.libs.registrar.RegistrarFailure.Messaging(
+                    com.typewritermc.services.libs.registrar.MessagingOperation.CONNECT,
+                    recoverable = false,
+                ),
+            )
+        }
     }
-}
 
 internal suspend fun authenticateService(
     challenge: NatsAuthenticationChallenge,
     accessToken: com.typewritermc.services.libs.registrar.RedactedSecret.AccessToken,
     sentinel: SentinelCredentials,
-): NatsAuthentication = createServiceAuthentication(
-    challenge.hasNonce,
-    { challenge.signNonce(it) },
-    accessToken,
-    sentinel,
-)
+): NatsAuthentication =
+    createServiceAuthentication(
+        challenge.hasNonce,
+        { challenge.signNonce(it) },
+        accessToken,
+        sentinel,
+    )
 
 internal suspend fun createServiceAuthentication(
     hasNonce: Boolean,

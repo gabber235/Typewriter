@@ -5,13 +5,31 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.*
+import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ResponseClassification
+import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
+import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
+import com.typewritermc.services.libs.communicator.contract.ResponseVariant
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
-import com.typewritermc.services.libs.communicator.transport.*
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.MessageTransport
+import com.typewritermc.services.libs.communicator.transport.MessagingSystem
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
+import com.typewritermc.services.libs.communicator.transport.TransportSubscription
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.jobSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
@@ -42,48 +60,55 @@ import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-private data class Target(val id: String)
+private data class Target(
+    val id: String,
+)
 
 private val requestAddress =
     addressTemplate("service.{id}.get", { addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
 private val updateAddress =
     addressTemplate("service.{id}.updates", { addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
-private val strings = object : PayloadCodec<String> {
-    override fun encode(value: String) = value.encodeToByteArray()
-    override fun decode(payload: ByteArray) = payload.decodeToString().also { if (it == "bad") error("decode") }
-}
-private val successPolicy = ResponsePolicy(
-    "internal",
-    {
-        ResponseClassification(
-            if (it == "internal") ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-            ResponseVariant.of(it)
-        )
-    },
-)
-private val unary = UnaryContract(
-    OperationName.of("book.get"),
-    requestAddress,
-    strings,
-    strings,
-    successPolicy,
-    2.seconds,
-    ErrorSlug.of("book-get-failed")
-)
+private val strings =
+    object : PayloadCodec<String> {
+        override fun encode(value: String) = value.encodeToByteArray()
+
+        override fun decode(payload: ByteArray) = payload.decodeToString().also { if (it == "bad") error("decode") }
+    }
+private val successPolicy =
+    ResponsePolicy(
+        "internal",
+        {
+            ResponseClassification(
+                if (it == "internal") ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
+                ResponseVariant.of(it),
+            )
+        },
+    )
+private val unary =
+    UnaryContract(
+        OperationName.of("book.get"),
+        requestAddress,
+        strings,
+        strings,
+        successPolicy,
+        2.seconds,
+        ErrorSlug.of("book-get-failed"),
+    )
 private val event =
     EventContract(OperationName.of("book.changed"), requestAddress, strings, ErrorSlug.of("book-publish-failed"))
-private val watch = WatchContract(
-    OperationName.of("book.watch"),
-    requestAddress,
-    updateAddress,
-    strings,
-    strings,
-    strings,
-    successPolicy,
-    successPolicy,
-    2.seconds,
-    ErrorSlug.of("book-watch-failed")
-)
+private val watch =
+    WatchContract(
+        OperationName.of("book.watch"),
+        requestAddress,
+        updateAddress,
+        strings,
+        strings,
+        strings,
+        successPolicy,
+        successPolicy,
+        2.seconds,
+        ErrorSlug.of("book-watch-failed"),
+    )
 private val propagators = ContextPropagators.create(W3CTraceContextPropagator.getInstance())
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -120,7 +145,7 @@ val CommunicatorTest by testSuite {
                     unary,
                     Target("alpha"),
                     "request",
-                    timeout = 25.milliseconds
+                    timeout = 25.milliseconds,
                 ) shouldBe CommunicationResult.Success("ok")
             }
         }
@@ -129,33 +154,38 @@ val CommunicatorTest by testSuite {
     test("unary maps codecs and every transport error") {
         runTest {
             fixture().use { (client, fake, _) ->
-                val brokenEncode = UnaryContract(
-                    unary.name,
-                    requestAddress,
-                    throwingCodec(true),
-                    strings,
-                    successPolicy,
-                    1.seconds,
-                    unary.failureSlug
-                )
-                (client.request(
-                    brokenEncode,
-                    Target("a"),
-                    "x"
-                ) as CommunicationResult.Failure).error::class shouldBe CommunicationError.Encode::class
+                val brokenEncode =
+                    UnaryContract(
+                        unary.name,
+                        requestAddress,
+                        throwingCodec(true),
+                        strings,
+                        successPolicy,
+                        1.seconds,
+                        unary.failureSlug,
+                    )
+                (
+                    client.request(
+                        brokenEncode,
+                        Target("a"),
+                        "x",
+                    ) as CommunicationResult.Failure
+                ).error::class shouldBe CommunicationError.Encode::class
                 fake.respondWith { message, _ ->
                     TransportResult.Success(
                         InboundMessage(
                             message.address,
-                            "bad".encodeToByteArray()
-                        )
+                            "bad".encodeToByteArray(),
+                        ),
                     )
                 }
-                (client.request(
-                    unary,
-                    Target("a"),
-                    "x"
-                ) as CommunicationResult.Failure).error::class shouldBe CommunicationError.Decode::class
+                (
+                    client.request(
+                        unary,
+                        Target("a"),
+                        "x",
+                    ) as CommunicationResult.Failure
+                ).error::class shouldBe CommunicationError.Decode::class
                 listOf(
                     TransportError.Timeout() to CommunicationError.Timeout::class,
                     TransportError.Unavailable() to CommunicationError.Unavailable::class,
@@ -163,11 +193,13 @@ val CommunicatorTest by testSuite {
                     TransportError.Failure(IllegalStateException()) to CommunicationError.Transport::class,
                 ).forEach { (transport, expected) ->
                     fake.failNextRequest(transport)
-                    (client.request(
-                        unary,
-                        Target("a"),
-                        "x"
-                    ) as CommunicationResult.Failure).error::class shouldBe expected
+                    (
+                        client.request(
+                            unary,
+                            Target("a"),
+                            "x",
+                        ) as CommunicationResult.Failure
+                    ).error::class shouldBe expected
                 }
             }
         }
@@ -180,28 +212,31 @@ val CommunicatorTest by testSuite {
                     client.publish(
                         event,
                         Target("a"),
-                        "value"
+                        "value",
                     )
                 }
                 val published = (fake.actions.single() as FakeMessageTransport.Action.Publish).message
                 published.headers["traceparent"].size shouldBe 1
                 fake.failNextPublish(TransportError.Unavailable())
-                (client.publish(
-                    event,
-                    Target("a"),
-                    "value"
-                ) as CommunicationResult.Failure).error::class shouldBe CommunicationError.Unavailable::class
+                (
+                    client.publish(
+                        event,
+                        Target("a"),
+                        "value",
+                    ) as CommunicationResult.Failure
+                ).error::class shouldBe CommunicationError.Unavailable::class
             }
         }
     }
 
     test("outbound injection replaces stale headers owned by configured propagators") {
         runTest {
-            val staleHeaders = MessageHeaders.of(
-                "traceparent" to "stale-parent",
-                "tracestate" to "stale-state",
-                "baggage" to "stale=value",
-            )
+            val staleHeaders =
+                MessageHeaders.of(
+                    "traceparent" to "stale-parent",
+                    "tracestate" to "stale-state",
+                    "baggage" to "stale=value",
+                )
             fixture().use { (client, fake, harness) ->
                 harness.telemetry.jobSpan("parent", ErrorSlug.of("parent-failed")) { _ ->
                     client.publish(event, Target("a"), "value", staleHeaders)
@@ -213,14 +248,20 @@ val CommunicatorTest by testSuite {
                 headers["baggage"] shouldBe listOf("stale=value")
             }
 
-            val traceAndBaggage = ContextPropagators.create(
-                TextMapPropagator.composite(
-                    W3CTraceContextPropagator.getInstance(),
-                    W3CBaggagePropagator.getInstance(),
-                ),
-            )
+            val traceAndBaggage =
+                ContextPropagators.create(
+                    TextMapPropagator.composite(
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance(),
+                    ),
+                )
             fixture(traceAndBaggage).use { (client, fake, harness) ->
-                val context = Baggage.builder().put("fresh", "value").build().storeInContext(Context.current())
+                val context =
+                    Baggage
+                        .builder()
+                        .put("fresh", "value")
+                        .build()
+                        .storeInContext(Context.current())
                 context.makeCurrent().use {
                     harness.telemetry.jobSpan("parent", ErrorSlug.of("parent-failed")) { _ ->
                         client.publish(event, Target("a"), "value", staleHeaders)
@@ -239,8 +280,8 @@ val CommunicatorTest by testSuite {
                     TransportResult.Success(
                         InboundMessage(
                             message.address,
-                            "ok".encodeToByteArray()
-                        )
+                            "ok".encodeToByteArray(),
+                        ),
                     )
                 }
                 client.request(unary, Target("secret"), "body", MessageHeaders.of("X-Secret" to "hidden"))
@@ -250,8 +291,14 @@ val CommunicatorTest by testSuite {
                 span.parentSpanId shouldBe "0000000000000000"
                 span.attributes[AttributeKey.stringKey("messaging.destination.name")] shouldBe "service.secret.get"
                 span.attributes[AttributeKey.stringKey("messaging.destination.template")] shouldBe "service.{id}.get"
-                span.attributes.asMap().values.contains("body") shouldBe false
-                span.attributes.asMap().values.contains("hidden") shouldBe false
+                span.attributes
+                    .asMap()
+                    .values
+                    .contains("body") shouldBe false
+                span.attributes
+                    .asMap()
+                    .values
+                    .contains("hidden") shouldBe false
             }
         }
     }
@@ -277,22 +324,24 @@ val CommunicatorTest by testSuite {
         runTest {
             fixture().use { (client, _, harness) ->
                 val programmerError = IllegalStateException("classifier")
-                val policy = ResponsePolicy<String>("internal") { value ->
-                    if (value == "update") throw programmerError
-                    ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
-                }
-                val contract = WatchContract(
-                    watch.name,
-                    requestAddress,
-                    updateAddress,
-                    strings,
-                    strings,
-                    strings,
-                    successPolicy,
-                    policy,
-                    watch.timeout,
-                    watch.failureSlug
-                )
+                val policy =
+                    ResponsePolicy<String>("internal") { value ->
+                        if (value == "update") throw programmerError
+                        ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal"))
+                    }
+                val contract =
+                    WatchContract(
+                        watch.name,
+                        requestAddress,
+                        updateAddress,
+                        strings,
+                        strings,
+                        strings,
+                        successPolicy,
+                        policy,
+                        watch.timeout,
+                        watch.failureSlug,
+                    )
                 val thrown = shouldThrow<Throwable> { client.publishUpdate(contract, Target("a"), "update") }
                 generateSequence(thrown) { it.cause }.contains(programmerError) shouldBe true
                 val span = harness.finishedSpans().single()
@@ -310,8 +359,8 @@ val CommunicatorTest by testSuite {
                     TransportResult.Success(
                         InboundMessage(
                             message.address,
-                            "internal".encodeToByteArray()
-                        )
+                            "internal".encodeToByteArray(),
+                        ),
                     )
                 }
                 client.request(unary, Target("a"), "x") shouldBe CommunicationResult.Success("internal")
@@ -336,17 +385,17 @@ val CommunicatorTest by testSuite {
                     TransportDelivery.Message(
                         InboundMessage(
                             MessageAddress.of("service.b.updates"),
-                            "wrong".encodeToByteArray()
-                        )
-                    )
+                            "wrong".encodeToByteArray(),
+                        ),
+                    ),
                 )
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
                             MessageAddress.of("service.a.updates"),
-                            "ok".encodeToByteArray()
-                        )
-                    )
+                            "ok".encodeToByteArray(),
+                        ),
+                    ),
                 )
                 collected.await() shouldBe listOf(CommunicationResult.Success(WatchMessage.Initial("ok")))
                 fake.actions.count { it is FakeMessageTransport.Action.SubscriptionClose } shouldBe 1
@@ -361,16 +410,17 @@ val CommunicatorTest by testSuite {
                 fake.respondWith { message, _ ->
                     fake.deliver(
                         TransportDelivery.Message(
-                            InboundMessage(MessageAddress.of("service.a.updates"), "early".encodeToByteArray())
-                        )
+                            InboundMessage(MessageAddress.of("service.a.updates"), "early".encodeToByteArray()),
+                        ),
                     )
                     TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
                 }
 
-                client.watch(watch, Target("a"), "start").take(2).toList() shouldBe listOf(
-                    CommunicationResult.Success(WatchMessage.Initial("initial")),
-                    CommunicationResult.Success(WatchMessage.Update("early")),
-                )
+                client.watch(watch, Target("a"), "start").take(2).toList() shouldBe
+                    listOf(
+                        CommunicationResult.Success(WatchMessage.Initial("initial")),
+                        CommunicationResult.Success(WatchMessage.Update("early")),
+                    )
                 fake.activeSubscriptionCount shouldBe 0
             }
         }
@@ -382,19 +432,20 @@ val CommunicatorTest by testSuite {
                 fake.respondWith { message, _ ->
                     TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
                 }
-                val isolated = WatchContract(
-                    watch.name,
-                    watch.requestAddress,
-                    watch.updateAddress,
-                    watch.requestCodec,
-                    watch.initialCodec,
-                    watch.updateCodec,
-                    watch.initialPolicy,
-                    watch.updateClassifier,
-                    watch.timeout,
-                    watch.failureSlug,
-                    updateFilter = { request, update -> request == update },
-                )
+                val isolated =
+                    WatchContract(
+                        watch.name,
+                        watch.requestAddress,
+                        watch.updateAddress,
+                        watch.requestCodec,
+                        watch.initialCodec,
+                        watch.updateCodec,
+                        watch.initialPolicy,
+                        watch.updateClassifier,
+                        watch.timeout,
+                        watch.failureSlug,
+                        updateFilter = { request, update -> request == update },
+                    )
                 val values = async { client.watch(isolated, Target("a"), "wanted").take(2).toList() }
                 runCurrent()
 
@@ -409,10 +460,11 @@ val CommunicatorTest by testSuite {
                     ),
                 )
 
-                values.await() shouldBe listOf(
-                    CommunicationResult.Success(WatchMessage.Initial("initial")),
-                    CommunicationResult.Success(WatchMessage.Update("wanted")),
-                )
+                values.await() shouldBe
+                    listOf(
+                        CommunicationResult.Success(WatchMessage.Initial("initial")),
+                        CommunicationResult.Success(WatchMessage.Update("wanted")),
+                    )
             }
         }
     }
@@ -421,9 +473,10 @@ val CommunicatorTest by testSuite {
         runTest {
             val deliveryFailure = IllegalStateException("deliveries")
             throwingWatchFixture(flow { throw deliveryFailure }).use { (client, subscription, _) ->
-                val thrown = shouldThrow<IllegalStateException> {
-                    client.watch(watch, Target("a"), "start").toList()
-                }
+                val thrown =
+                    shouldThrow<IllegalStateException> {
+                        client.watch(watch, Target("a"), "start").toList()
+                    }
 
                 thrown shouldBeSameInstanceAs deliveryFailure
                 subscription.closed shouldBe true
@@ -435,9 +488,10 @@ val CommunicatorTest by testSuite {
         runTest {
             val closeFailure = IllegalStateException("close")
             throwingWatchFixture(flowOf(TransportDelivery.Completed), closeFailure).use { (client, _, _) ->
-                val thrown = shouldThrow<IllegalStateException> {
-                    client.watch(watch, Target("a"), "start").toList()
-                }
+                val thrown =
+                    shouldThrow<IllegalStateException> {
+                        client.watch(watch, Target("a"), "start").toList()
+                    }
 
                 thrown shouldBeSameInstanceAs closeFailure
             }
@@ -449,9 +503,10 @@ val CommunicatorTest by testSuite {
             val deliveryFailure = IllegalStateException("deliveries")
             val closeFailure = IllegalArgumentException("close")
             throwingWatchFixture(flow { throw deliveryFailure }, closeFailure).use { (client, _, _) ->
-                val thrown = shouldThrow<IllegalStateException> {
-                    client.watch(watch, Target("a"), "start").toList()
-                }
+                val thrown =
+                    shouldThrow<IllegalStateException> {
+                        client.watch(watch, Target("a"), "start").toList()
+                    }
 
                 thrown shouldBeSameInstanceAs deliveryFailure
                 thrown.suppressed.toList() shouldBe listOf(closeFailure)
@@ -485,30 +540,34 @@ val CommunicatorTest by testSuite {
                         InboundMessage(
                             MessageAddress.of("service.a.updates"),
                             "bad".encodeToByteArray(),
-                            headers = incoming
-                        )
-                    )
+                            headers = incoming,
+                        ),
+                    ),
                 )
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
                             MessageAddress.of("service.a.updates"),
-                            "ok".encodeToByteArray()
-                        )
-                    )
+                            "ok".encodeToByteArray(),
+                        ),
+                    ),
                 )
                 fake.deliver(TransportDelivery.Failure(TransportError.Unavailable()))
                 val results = values.await()
-                results.map { it::class } shouldBe listOf(
-                    CommunicationResult.Success::class,
-                    CommunicationResult.Failure::class,
-                    CommunicationResult.Success::class,
-                    CommunicationResult.Failure::class
-                )
-                harness.finishedSpans()
+                results.map { it::class } shouldBe
+                    listOf(
+                        CommunicationResult.Success::class,
+                        CommunicationResult.Failure::class,
+                        CommunicationResult.Success::class,
+                        CommunicationResult.Failure::class,
+                    )
+                harness
+                    .finishedSpans()
                     .single { it.name == "book.watch receive" && it.parentSpanId == "2222222222222222" }
-                harness.finishedSpans()
-                    .last { it.name == "book.watch receive" }.status.statusCode shouldBe StatusCode.ERROR
+                harness
+                    .finishedSpans()
+                    .last { it.name == "book.watch receive" }
+                    .status.statusCode shouldBe StatusCode.ERROR
                 fake.actions.count { it is FakeMessageTransport.Action.SubscriptionClose } shouldBe 1
                 harness.assertNoActiveSpans()
             }
@@ -519,10 +578,11 @@ val CommunicatorTest by testSuite {
 private data class Fixture(
     val client: Communicator,
     val fake: FakeMessageTransport,
-    val harness: TelemetryTestHarness
+    val harness: TelemetryTestHarness,
 ) : AutoCloseable {
     override fun close() {
-        fake.close(); harness.close()
+        fake.close()
+        harness.close()
     }
 }
 
@@ -561,23 +621,29 @@ private fun throwingWatchFixture(
     closeFailure: Throwable? = null,
 ): ThrowingWatchFixture {
     val subscription = TestSubscription(deliveries, closeFailure)
-    val transport = object : MessageTransport {
-        override val system = MessagingSystem.of("test")
+    val transport =
+        object : MessageTransport {
+            override val system = MessagingSystem.of("test")
 
-        override suspend fun publish(message: OutboundMessage): TransportResult<Unit> =
-            error("Unexpected publish")
+            override suspend fun publish(message: OutboundMessage): TransportResult<Unit> = error("Unexpected publish")
 
-        override suspend fun request(message: OutboundMessage, timeout: kotlin.time.Duration) =
-            TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
+            override suspend fun request(
+                message: OutboundMessage,
+                timeout: kotlin.time.Duration,
+            ) = TransportResult.Success(InboundMessage(message.address, "initial".encodeToByteArray()))
 
-        override suspend fun subscribe(pattern: AddressPattern, options: SubscriptionOptions) =
-            TransportResult.Success(subscription)
-    }
+            override suspend fun subscribe(
+                pattern: AddressPattern,
+                options: SubscriptionOptions,
+            ) = TransportResult.Success(subscription)
+        }
     val harness = TelemetryTestHarness.create()
     return ThrowingWatchFixture(Communicator(transport, harness.telemetry, propagators), subscription, harness)
 }
 
-private fun throwingCodec(encode: Boolean) = object : PayloadCodec<String> {
-    override fun encode(value: String): ByteArray = if (encode) error("encode") else value.encodeToByteArray()
-    override fun decode(payload: ByteArray): String = if (!encode) error("decode") else payload.decodeToString()
-}
+private fun throwingCodec(encode: Boolean) =
+    object : PayloadCodec<String> {
+        override fun encode(value: String): ByteArray = if (encode) error("encode") else value.encodeToByteArray()
+
+        override fun decode(payload: ByteArray): String = if (!encode) error("decode") else payload.decodeToString()
+    }

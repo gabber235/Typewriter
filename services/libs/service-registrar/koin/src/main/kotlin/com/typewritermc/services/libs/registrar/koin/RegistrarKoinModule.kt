@@ -22,27 +22,28 @@ fun registrarModule(
     configuration: RegistrarConfiguration,
     scope: CoroutineScope,
     httpConfiguration: JdkHttpTransportConfiguration = JdkHttpTransportConfiguration(),
-): Module = module {
-    single { configuration }
-    single<HttpTransport> { JdkHttpTransport(httpConfiguration) }
-    single { ServiceHttpClient(get(), get(), get<OpenTelemetry>().propagators) }
-    single<IdentityIssuer> { TypewriterIdentityIssuer(get(), configuration.identityIssueUri) }
-    single<RegistrarRuntimeFactory> {
-        TypewriterRegistrarRuntimeFactory(
-            configuration,
-            get(),
-            get<ServiceTelemetry>(),
-            get<OpenTelemetry>().propagators,
-        )
+): Module =
+    module {
+        single { configuration }
+        single<HttpTransport> { JdkHttpTransport(httpConfiguration) }
+        single { ServiceHttpClient(get(), get(), get<OpenTelemetry>().propagators) }
+        single<IdentityIssuer> { TypewriterIdentityIssuer(get(), configuration.identityIssueUri) }
+        single<RegistrarRuntimeFactory> {
+            TypewriterRegistrarRuntimeFactory(
+                configuration,
+                get(),
+                get<ServiceTelemetry>(),
+                get<OpenTelemetry>().propagators,
+            )
+        }
+        single {
+            ServiceRegistrar(
+                configuration,
+                scope,
+                get<CredentialStorage>(),
+                get<IdentityIssuer>(),
+                get<RegistrarRuntimeFactory>(),
+                get<ServiceTelemetry>(),
+            )
+        }
     }
-    single {
-        ServiceRegistrar(
-            configuration,
-            scope,
-            get<CredentialStorage>(),
-            get<IdentityIssuer>(),
-            get<RegistrarRuntimeFactory>(),
-            get<ServiceTelemetry>(),
-        )
-    }
-}

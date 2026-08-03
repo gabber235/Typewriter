@@ -15,9 +15,10 @@ class NatsAuthentication(
         }
     }
 
-    override fun equals(other: Any?): Boolean = other is NatsAuthentication &&
-        authToken == other.authToken && username == other.username && password == other.password &&
-        jwt == other.jwt && signature == other.signature && nkey == other.nkey
+    override fun equals(other: Any?): Boolean =
+        other is NatsAuthentication &&
+            authToken == other.authToken && username == other.username && password == other.password &&
+            jwt == other.jwt && signature == other.signature && nkey == other.nkey
 
     override fun hashCode(): Int {
         var result = authToken.hashCode()

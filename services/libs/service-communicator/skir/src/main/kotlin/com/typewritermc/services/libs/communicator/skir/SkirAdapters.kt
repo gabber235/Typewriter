@@ -17,11 +17,12 @@ import kotlin.time.Duration.Companion.seconds
 /** Adapts this serializer to a codec with explicit unknown-value handling. */
 fun <Value : Any> Serializer<Value>.asPayloadCodec(
     unrecognizedValues: UnrecognizedValuesPolicy = UnrecognizedValuesPolicy.DROP,
-): PayloadCodec<Value> = object : PayloadCodec<Value> {
-    override fun encode(value: Value): ByteArray = toBytes(value).toByteArray()
+): PayloadCodec<Value> =
+    object : PayloadCodec<Value> {
+        override fun encode(value: Value): ByteArray = toBytes(value).toByteArray()
 
-    override fun decode(payload: ByteArray): Value = fromBytes(payload, unrecognizedValues)
-}
+        override fun decode(payload: ByteArray): Value = fromBytes(payload, unrecognizedValues)
+    }
 
 /** Creates a validated unary contract while keeping address and failure semantics explicit. */
 fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
@@ -31,15 +32,16 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
     responsePolicy: ResponsePolicy<Response>,
     failureSlug: ErrorSlug,
     timeout: Duration = 10.seconds,
-): UnaryContract<Address, Request, Response> = UnaryContract(
-    name,
-    address,
-    method.requestSerializer.asPayloadCodec(),
-    method.responseSerializer.asPayloadCodec(),
-    responsePolicy,
-    timeout,
-    failureSlug,
-)
+): UnaryContract<Address, Request, Response> =
+    UnaryContract(
+        name,
+        address,
+        method.requestSerializer.asPayloadCodec(),
+        method.responseSerializer.asPayloadCodec(),
+        responsePolicy,
+        timeout,
+        failureSlug,
+    )
 
 /** Creates a watch contract from an initial request method and separate update serializer. */
 fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContract(
@@ -53,16 +55,17 @@ fun <Address : Any, Request : Any, Initial : Any, Update : Any> skirWatchContrac
     failureSlug: ErrorSlug,
     timeout: Duration = 10.seconds,
     updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
-): WatchContract<Address, Request, Initial, Update> = WatchContract(
-    name,
-    requestAddress,
-    updateAddress,
-    method.requestSerializer.asPayloadCodec(),
-    method.responseSerializer.asPayloadCodec(),
-    updateSerializer.asPayloadCodec(),
-    initialPolicy,
-    updateClassifier,
-    timeout,
-    failureSlug,
-    updateFilter,
-)
+): WatchContract<Address, Request, Initial, Update> =
+    WatchContract(
+        name,
+        requestAddress,
+        updateAddress,
+        method.requestSerializer.asPayloadCodec(),
+        method.responseSerializer.asPayloadCodec(),
+        updateSerializer.asPayloadCodec(),
+        initialPolicy,
+        updateClassifier,
+        timeout,
+        failureSlug,
+        updateFilter,
+    )

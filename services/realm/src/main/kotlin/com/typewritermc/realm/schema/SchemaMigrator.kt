@@ -12,22 +12,24 @@ internal class SchemaMigrator(
     private val db: Surreal,
     private val resources: MigrationResources = MigrationResources(),
 ) {
-
     context(_: MainSpanScope)
-    fun migrate() = childSpanBlocking("realm.schema.migrate") {
-        withErrorSlug(SCHEMA_MIGRATION_FAILURE) {
-            applySchema(resources.loadMigrationSchema(), "migration.surql")
-            PatchRunner(db).run(resources.loadPatches())
-            resources.loadRealmSchema().forEach { resource ->
-                applySchema(resource.script, resource.path)
+    fun migrate() =
+        childSpanBlocking("realm.schema.migrate") {
+            withErrorSlug(SCHEMA_MIGRATION_FAILURE) {
+                applySchema(resources.loadMigrationSchema(), "migration.surql")
+                PatchRunner(db).run(resources.loadPatches())
+                resources.loadRealmSchema().forEach { resource ->
+                    applySchema(resource.script, resource.path)
+                }
             }
         }
-    }
 
     context(_: MainSpanScope)
-    private fun applySchema(schema: String, schemaName: String) =
-        childSpanBlocking("realm.schema.apply") { child ->
-            child.annotate { attribute("schema.name", schemaName) }
-            db.execute(schema)
-        }
+    private fun applySchema(
+        schema: String,
+        schemaName: String,
+    ) = childSpanBlocking("realm.schema.apply") { child ->
+        child.annotate { attribute("schema.name", schemaName) }
+        db.execute(schema)
+    }
 }

@@ -1,7 +1,12 @@
 package com.typewritermc.services.libs.communicator.koin
 
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.nats.*
+import com.typewritermc.services.libs.communicator.nats.NatsAuthentication
+import com.typewritermc.services.libs.communicator.nats.NatsAuthenticationProvider
+import com.typewritermc.services.libs.communicator.nats.NatsConfigurationProvider
+import com.typewritermc.services.libs.communicator.nats.NatsConnection
+import com.typewritermc.services.libs.communicator.nats.NatsConnectionConfiguration
+import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
 import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -33,20 +38,25 @@ val CommunicatorKoinModuleTest by testSuite {
         "OpenTelemetry",
         "ServiceTelemetry",
         "configuration provider",
-        "authentication provider"
+        "authentication provider",
     ).forEach { missing ->
         test("missing $missing fails resolution") {
             val telemetry = OpenTelemetry.noop()
-            val dependencies = module {
-                if (missing != "OpenTelemetry") single<OpenTelemetry> { telemetry }
-                if (missing != "ServiceTelemetry") single { telemetry.serviceTelemetry("test") }
-                if (missing != "configuration provider") single<NatsConfigurationProvider> {
-                    NatsConfigurationProvider { NatsConnectionConfiguration("nats://localhost:4222") }
+            val dependencies =
+                module {
+                    if (missing != "OpenTelemetry") single<OpenTelemetry> { telemetry }
+                    if (missing != "ServiceTelemetry") single { telemetry.serviceTelemetry("test") }
+                    if (missing != "configuration provider") {
+                        single<NatsConfigurationProvider> {
+                            NatsConfigurationProvider { NatsConnectionConfiguration("nats://localhost:4222") }
+                        }
+                    }
+                    if (missing != "authentication provider") {
+                        single<NatsAuthenticationProvider> {
+                            NatsAuthenticationProvider { NatsAuthentication() }
+                        }
+                    }
                 }
-                if (missing != "authentication provider") single<NatsAuthenticationProvider> {
-                    NatsAuthenticationProvider { NatsAuthentication() }
-                }
-            }
             val app = koinApplication { modules(dependencies, communicatorModule()) }
             try {
                 shouldThrowAny { app.koin.get<Communicator>() }
@@ -59,26 +69,29 @@ val CommunicatorKoinModuleTest by testSuite {
     test("closing Koin does not invoke application providers") {
         var configurationInvocations = 0
         var authenticationInvocations = 0
-        val configurationProvider = NatsConfigurationProvider {
-            configurationInvocations++
-            NatsConnectionConfiguration("nats://localhost:4222")
-        }
-        val authenticationProvider = NatsAuthenticationProvider {
-            authenticationInvocations++
-            NatsAuthentication()
-        }
+        val configurationProvider =
+            NatsConfigurationProvider {
+                configurationInvocations++
+                NatsConnectionConfiguration("nats://localhost:4222")
+            }
+        val authenticationProvider =
+            NatsAuthenticationProvider {
+                authenticationInvocations++
+                NatsAuthentication()
+            }
         val telemetry = OpenTelemetry.noop()
-        val app = koinApplication {
-            modules(
-                module {
-                    single<OpenTelemetry> { telemetry }
-                    single<ServiceTelemetry> { telemetry.serviceTelemetry("test") }
-                    single { configurationProvider }
-                    single { authenticationProvider }
-                },
-                communicatorModule(),
-            )
-        }
+        val app =
+            koinApplication {
+                modules(
+                    module {
+                        single<OpenTelemetry> { telemetry }
+                        single<ServiceTelemetry> { telemetry.serviceTelemetry("test") }
+                        single { configurationProvider }
+                        single { authenticationProvider }
+                    },
+                    communicatorModule(),
+                )
+            }
 
         app.koin.get<Communicator>()
         app.close()
@@ -88,17 +101,18 @@ val CommunicatorKoinModuleTest by testSuite {
     }
 }
 
-private fun application(options: RouterOptions = RouterOptions()) = koinApplication {
-    val telemetry = OpenTelemetry.noop()
-    modules(
-        module {
-            single<OpenTelemetry> { telemetry }
-            single<ServiceTelemetry> { telemetry.serviceTelemetry("test") }
-            single<NatsConfigurationProvider> {
-                NatsConfigurationProvider { NatsConnectionConfiguration("nats://localhost:4222") }
-            }
-            single<NatsAuthenticationProvider> { NatsAuthenticationProvider { NatsAuthentication() } }
-        },
-        communicatorModule(options),
-    )
-}
+private fun application(options: RouterOptions = RouterOptions()) =
+    koinApplication {
+        val telemetry = OpenTelemetry.noop()
+        modules(
+            module {
+                single<OpenTelemetry> { telemetry }
+                single<ServiceTelemetry> { telemetry.serviceTelemetry("test") }
+                single<NatsConfigurationProvider> {
+                    NatsConfigurationProvider { NatsConnectionConfiguration("nats://localhost:4222") }
+                }
+                single<NatsAuthenticationProvider> { NatsAuthenticationProvider { NatsAuthentication() } }
+            },
+            communicatorModule(options),
+        )
+    }

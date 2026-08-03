@@ -51,9 +51,10 @@ val DatabaseProviderTest by testSuite {
         }
 
         test("different server version is rejected") {
-            val error = shouldThrow<UnsupportedDatabaseVersionException> {
-                requireSupportedDatabaseVersion("3.1.5")
-            }
+            val error =
+                shouldThrow<UnsupportedDatabaseVersionException> {
+                    requireSupportedDatabaseVersion("3.1.5")
+                }
 
             error.message shouldBe
                 "Realm requires SurrealDB $SURREALDB_SERVER_VERSION but connected to 3.1.5"

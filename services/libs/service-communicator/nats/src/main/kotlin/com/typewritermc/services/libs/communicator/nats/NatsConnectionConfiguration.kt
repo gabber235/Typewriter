@@ -21,7 +21,9 @@ data class NatsConnectionConfiguration(
         val uri = runCatching { URI(serverUrl) }.getOrElse { throw IllegalArgumentException("Invalid NATS server URL", it) }
         require(uri.scheme in supportedSchemes && !uri.host.isNullOrBlank()) { "Invalid NATS server URL '$serverUrl'" }
         require(clientName == null || clientName.isNotBlank()) { "NATS client name must not be blank" }
-        require(inboxPrefix.isNotBlank() && inboxPrefix.none(Char::isWhitespace)) { "NATS inbox prefix must not be blank or contain whitespace" }
+        require(
+            inboxPrefix.isNotBlank() && inboxPrefix.none(Char::isWhitespace),
+        ) { "NATS inbox prefix must not be blank or contain whitespace" }
         connectTimeout.toPositiveMilliseconds("NATS connect timeout")
         reconnectDelay.toPositiveMilliseconds("NATS reconnect delay")
         require(shutdownTimeout.isFinite() && shutdownTimeout.isPositive()) { "NATS shutdown timeout must be positive and finite" }

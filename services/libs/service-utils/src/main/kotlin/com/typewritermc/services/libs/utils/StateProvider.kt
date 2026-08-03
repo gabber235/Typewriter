@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.first
  * Unlike DeferredProvider (set once), StateProvider can be updated.
  * Use for states that transition (e.g., Initializing → Pending → Bound).
  */
-class StateProvider<T>(initial: T) {
+class StateProvider<T>(
+    initial: T,
+) {
     private val flow = MutableStateFlow(initial)
 
     val state: StateFlow<T> = flow
@@ -32,5 +34,4 @@ suspend fun <T : Any> StateProvider<T?>.awaitNonNull(): T = awaitValue { it != n
 /**
  * Returns the current value if non-null, otherwise throws IllegalStateException.
  */
-fun <T : Any> StateProvider<T?>.require(): T =
-    get() ?: throw IllegalStateException("StateProvider value is null")
+fun <T : Any> StateProvider<T?>.require(): T = get() ?: throw IllegalStateException("StateProvider value is null")

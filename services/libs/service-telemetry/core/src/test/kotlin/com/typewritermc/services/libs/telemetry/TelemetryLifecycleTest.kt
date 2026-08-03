@@ -28,7 +28,11 @@ import java.util.concurrent.TimeUnit
 val TelemetryLifecycleTest by testSuite {
     test("blocking context is current and restored") {
         TestTelemetry().use { test ->
-            val outer = test.openTelemetry.getTracer("outer").spanBuilder("outer").startSpan()
+            val outer =
+                test.openTelemetry
+                    .getTracer("outer")
+                    .spanBuilder("outer")
+                    .startSpan()
             try {
                 outer.makeCurrent().use {
                     test.telemetry.mainSpanBlocking("main", slug("main-failed")) { _ ->
@@ -126,9 +130,10 @@ val TelemetryLifecycleTest by testSuite {
     test("cancellation is unwrapped non-error and always ends") {
         TestTelemetry().use { test ->
             val cancellation = CancellationException("shutdown")
-            val thrown = shouldThrow<CancellationException> {
-                test.telemetry.mainSpanBlocking("main", slug("main-failed")) { _ -> throw cancellation }
-            }
+            val thrown =
+                shouldThrow<CancellationException> {
+                    test.telemetry.mainSpanBlocking("main", slug("main-failed")) { _ -> throw cancellation }
+                }
             thrown shouldBeSameInstanceAs cancellation
             val span = test.span("main")
             span.status.statusCode shouldBe StatusCode.UNSET
@@ -140,13 +145,14 @@ val TelemetryLifecycleTest by testSuite {
     test("source slug propagates through child and main without double wrapping") {
         TestTelemetry().use { test ->
             val cause = IllegalArgumentException("private details")
-            val thrown = shouldThrow<SluggedException> {
-                test.telemetry.mainSpanBlocking("main", slug("main-fallback")) { _ ->
-                    childSpanBlocking("child") { _ ->
-                        withErrorSlug(slug("repository-load-failed")) { throw cause }
+            val thrown =
+                shouldThrow<SluggedException> {
+                    test.telemetry.mainSpanBlocking("main", slug("main-fallback")) { _ ->
+                        childSpanBlocking("child") { _ ->
+                            withErrorSlug(slug("repository-load-failed")) { throw cause }
+                        }
                     }
                 }
-            }
             thrown.cause shouldBeSameInstanceAs cause
             thrown.slug.value shouldBe "repository-load-failed"
             listOf(test.span("main"), test.span("child")).forEach { span ->
@@ -161,11 +167,12 @@ val TelemetryLifecycleTest by testSuite {
     test("plain child failure receives fallback only at main boundary") {
         TestTelemetry().use { test ->
             val cause = IllegalStateException("secret response body")
-            val thrown = shouldThrow<SluggedException> {
-                test.telemetry.mainSpanBlocking("main", slug("main-unhandled")) { _ ->
-                    childSpanBlocking("child") { _ -> throw cause }
+            val thrown =
+                shouldThrow<SluggedException> {
+                    test.telemetry.mainSpanBlocking("main", slug("main-unhandled")) { _ ->
+                        childSpanBlocking("child") { _ -> throw cause }
+                    }
                 }
-            }
             thrown.cause shouldBeSameInstanceAs cause
             val child = test.span("child")
             val main = test.span("main")
@@ -269,7 +276,8 @@ val TelemetryLifecycleTest by testSuite {
                 test.telemetry.mainSpanBlocking("main", slug("main-failed")) { main ->
                     main.annotate {
                         val attributes = this
-                        executor.submit { attributes.attribute("concurrent.value", true) }
+                        executor
+                            .submit { attributes.attribute("concurrent.value", true) }
                             .get(2, TimeUnit.SECONDS)
                     }
                 }
@@ -284,13 +292,14 @@ val TelemetryLifecycleTest by testSuite {
     test("suspend failures and cancellation follow boundary policy") {
         TestTelemetry().use { test ->
             val cause = IllegalStateException("failure")
-            val classified = shouldThrow<SluggedException> {
-                test.telemetry.mainSpan("failed", slug("suspend-fallback")) { _ ->
-                    childSpan("child") { _ ->
-                        withErrorSlugSuspending(slug("suspend-source-failed")) { throw cause }
+            val classified =
+                shouldThrow<SluggedException> {
+                    test.telemetry.mainSpan("failed", slug("suspend-fallback")) { _ ->
+                        childSpan("child") { _ ->
+                            withErrorSlugSuspending(slug("suspend-source-failed")) { throw cause }
+                        }
                     }
                 }
-            }
             classified.cause shouldBeSameInstanceAs cause
             test.span("failed").attributes[AttributeKey.stringKey("exception.slug")] shouldBe
                 "suspend-source-failed"
@@ -344,13 +353,16 @@ private class TestVirtualMachineError : VirtualMachineError("test fatal")
 
 private class TestTelemetry : AutoCloseable {
     private val exporter = InMemorySpanExporter.create()
-    private val provider = SdkTracerProvider.builder()
-        .addSpanProcessor(SimpleSpanProcessor.create(exporter))
-        .build()
+    private val provider =
+        SdkTracerProvider
+            .builder()
+            .addSpanProcessor(SimpleSpanProcessor.create(exporter))
+            .build()
     val openTelemetry: OpenTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(provider).build()
     val telemetry = ServiceTelemetry(openTelemetry, InstrumentationScope("test", "1.2.3"))
 
     fun spans(): List<SpanData> = exporter.finishedSpanItems
+
     fun span(name: String): SpanData = spans().single { it.name == name }
 
     override fun close() {
@@ -359,7 +371,10 @@ private class TestTelemetry : AutoCloseable {
         exporter.close()
     }
 
-    private fun await(operation: String, result: CompletableResultCode) {
+    private fun await(
+        operation: String,
+        result: CompletableResultCode,
+    ) {
         result.join(10, TimeUnit.SECONDS)
         check(result.isDone) { "Telemetry $operation timed out" }
         check(result.isSuccess) { "Telemetry $operation failed" }

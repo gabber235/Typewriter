@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets
 class RealmShellLogbackAppender(
     private val delegate: ConsoleAppender<ILoggingEvent>,
 ) : AppenderBase<ILoggingEvent>() {
-
     @Volatile
     private var lineReader: LineReader? = null
 

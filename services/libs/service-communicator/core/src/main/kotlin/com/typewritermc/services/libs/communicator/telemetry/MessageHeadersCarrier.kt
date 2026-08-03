@@ -8,17 +8,26 @@ import io.opentelemetry.context.propagation.TextMapSetter
 object MessageHeadersGetter : TextMapGetter<MessageHeaders> {
     override fun keys(carrier: MessageHeaders): Iterable<String> = carrier.map { it.first }
 
-    override fun get(carrier: MessageHeaders?, key: String): String? = carrier?.first(key)
+    override fun get(
+        carrier: MessageHeaders?,
+        key: String,
+    ): String? = carrier?.first(key)
 }
 
 /** Propagator setter that immutably replaces values owned by the propagator. */
-class MessageHeadersSetter(initial: MessageHeaders, ownedFields: Collection<String> = emptyList()) :
-    TextMapSetter<Unit> {
+class MessageHeadersSetter(
+    initial: MessageHeaders,
+    ownedFields: Collection<String> = emptyList(),
+) : TextMapSetter<Unit> {
     /** Current immutable headers after all injections. */
     var headers: MessageHeaders = ownedFields.fold(initial) { headers, field -> headers.remove(field) }
         private set
 
-    override fun set(carrier: Unit?, key: String, value: String) {
+    override fun set(
+        carrier: Unit?,
+        key: String,
+        value: String,
+    ) {
         headers = headers.set(key, value)
     }
 }

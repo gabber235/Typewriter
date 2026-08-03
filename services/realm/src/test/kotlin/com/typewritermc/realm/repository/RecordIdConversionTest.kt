@@ -7,8 +7,12 @@ import com.typewritermc.realm.repository.utils.toSkirRecordId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import skirout.kernel.v1.record_id.*
-import java.util.*
+import skirout.kernel.v1.record_id.ObjectRecordIdKey
+import skirout.kernel.v1.record_id.ObjectRecordIdValue
+import skirout.kernel.v1.record_id.RecordId
+import skirout.kernel.v1.record_id.RecordIdKey
+import skirout.kernel.v1.record_id.RecordIdValue
+import java.util.UUID
 import com.surrealdb.RecordId as SurrealRecordId
 
 val RecordIdConversionTest by testSuite {
@@ -24,30 +28,33 @@ val RecordIdConversionTest by testSuite {
     }
 
     test("array and object keys retain nested values") {
-        val array = RecordIdKey.ArrayWrapper(
-            listOf(
-                RecordIdValue.NumberWrapper(4),
-                RecordIdValue.StringWrapper("chapter"),
-                RecordIdValue.BooleanWrapper(true),
-                RecordIdValue.NULL,
-            ),
-        )
-        val objectKey = RecordIdKey.ObjectWrapper(
-            listOf(
-                ObjectRecordIdKey(key = "name", value = RecordIdValue.StringWrapper("alpha")),
-                ObjectRecordIdKey(
-                    key = "nested",
-                    value = RecordIdValue.ObjectWrapper(
-                        listOf(
-                            ObjectRecordIdValue(
-                                key = "enabled",
-                                value = RecordIdValue.BooleanWrapper(true),
+        val array =
+            RecordIdKey.ArrayWrapper(
+                listOf(
+                    RecordIdValue.NumberWrapper(4),
+                    RecordIdValue.StringWrapper("chapter"),
+                    RecordIdValue.BooleanWrapper(true),
+                    RecordIdValue.NULL,
+                ),
+            )
+        val objectKey =
+            RecordIdKey.ObjectWrapper(
+                listOf(
+                    ObjectRecordIdKey(key = "name", value = RecordIdValue.StringWrapper("alpha")),
+                    ObjectRecordIdKey(
+                        key = "nested",
+                        value =
+                            RecordIdValue.ObjectWrapper(
+                                listOf(
+                                    ObjectRecordIdValue(
+                                        key = "enabled",
+                                        value = RecordIdValue.BooleanWrapper(true),
+                                    ),
+                                ),
                             ),
-                        ),
                     ),
                 ),
-            ),
-        )
+            )
 
         rid(array).surrealId("book").toString() shouldBe "book:[4, 'chapter', true, NULL]"
 
@@ -62,8 +69,11 @@ val RecordIdConversionTest by testSuite {
             database.useNs("record_id_test").useDb("record_id_test")
 
             val array = database.query("RETURN type::record('book', [4, 'chapter']);").take(0).recordId
-            val objectKey = database.query("RETURN type::record('book', { name: 'alpha', order: 2 });")
-                .take(0).recordId
+            val objectKey =
+                database
+                    .query("RETURN type::record('book', { name: 'alpha', order: 2 });")
+                    .take(0)
+                    .recordId
 
             array.toSkirRecordId().surrealId("book").toString() shouldBe "book:[4, 'chapter']"
             shouldThrow<UnsupportedOperationException> {
@@ -74,15 +84,16 @@ val RecordIdConversionTest by testSuite {
 
     test("table validation reports every distinct wrong table") {
         listOf(rid("page", "one"), rid("tag", "two"), rid("page", "three")).invalidRecordId("book") shouldBe
-                skirout.kernel.v1.errors.InvalidRecordIdError(
-                    expectedTable = "book",
-                    givenTables = listOf("page", "tag"),
-                )
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = "book",
+                givenTables = listOf("page", "tag"),
+            )
         listOf(rid("book", "one")).invalidRecordId("book") shouldBe null
-        rid("page", "one").invalidRecordId("book") shouldBe skirout.kernel.v1.errors.InvalidRecordIdError(
-            expectedTable = "book",
-            givenTables = listOf("page"),
-        )
+        rid("page", "one").invalidRecordId("book") shouldBe
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = "book",
+                givenTables = listOf("page"),
+            )
         shouldThrow<IllegalArgumentException> { rid("page", "one").surrealId("book") }
     }
 
@@ -96,4 +107,7 @@ val RecordIdConversionTest by testSuite {
 
 private fun rid(key: RecordIdKey) = RecordId(table = "book", key = key)
 
-private fun rid(table: String, key: String) = RecordId(table = table, key = RecordIdKey.StringWrapper(key))
+private fun rid(
+    table: String,
+    key: String,
+) = RecordId(table = table, key = RecordIdKey.StringWrapper(key))

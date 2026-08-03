@@ -1,6 +1,11 @@
 package com.typewritermc.services.libs.http.jdk
 
-import com.typewritermc.services.libs.http.core.*
+import com.typewritermc.services.libs.http.core.HttpError
+import com.typewritermc.services.libs.http.core.HttpHeaders
+import com.typewritermc.services.libs.http.core.HttpRequest
+import com.typewritermc.services.libs.http.core.HttpResponse
+import com.typewritermc.services.libs.http.core.HttpResult
+import com.typewritermc.services.libs.http.core.HttpTransport
 import com.typewritermc.services.libs.utils.await
 import kotlinx.coroutines.CancellationException
 import java.io.ByteArrayOutputStream
@@ -37,25 +42,48 @@ data class JdkHttpTransportConfiguration(
 }
 
 /** Java 21 asynchronous HTTP transport. Closing is idempotent and subsequent execution fails immediately. */
-class JdkHttpTransport(private val configuration: JdkHttpTransportConfiguration = JdkHttpTransportConfiguration()) : HttpTransport, AutoCloseable {
+class JdkHttpTransport(
+    private val configuration: JdkHttpTransportConfiguration = JdkHttpTransportConfiguration(),
+) : HttpTransport,
+    AutoCloseable {
     private val closed = AtomicBoolean()
     private val executor: ExecutorService = Executors.newCachedThreadPool()
-    private val client = HttpClient.newBuilder().executor(executor).connectTimeout(configuration.connectTimeout.toJavaDuration())
-        .followRedirects(HttpClient.Redirect.NEVER).build()
+    private val client =
+        HttpClient
+            .newBuilder()
+            .executor(executor)
+            .connectTimeout(configuration.connectTimeout.toJavaDuration())
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .build()
 
     override suspend fun execute(request: HttpRequest): HttpResult {
         check(!closed.get()) { "JdkHttpTransport is closed" }
         val body = request.body
         val requestLimit = request.maximumRequestBytes ?: configuration.defaultMaximumRequestBytes
         if (body.size.toLong() > requestLimit) return HttpResult.Failure(HttpError.RequestTooLarge(requestLimit, body.size.toLong()))
-        val builder = java.net.http.HttpRequest.newBuilder(request.uri)
-            .timeout((request.timeout ?: configuration.defaultRequestTimeout).toJavaDuration())
+        val builder =
+            java.net.http.HttpRequest
+                .newBuilder(request.uri)
+                .timeout((request.timeout ?: configuration.defaultRequestTimeout).toJavaDuration())
         request.headers.forEach { (name, value) -> builder.header(name, value) }
         builder.method(request.method.name, if (body.isEmpty()) BodyPublishers.noBody() else BodyPublishers.ofByteArray(body))
         val limit = request.maximumResponseBytes ?: configuration.defaultMaximumResponseBytes
         return try {
             val response = client.sendAsync(builder.build(), BodyHandler { LimitedBodySubscriber(limit) }).await()
-            HttpResult.Success(HttpResponse(response.statusCode(), HttpHeaders.of(response.headers().map().flatMap { (name, values) -> values.map { name to it } }), response.body()))
+            HttpResult.Success(
+                HttpResponse(
+                    response.statusCode(),
+                    HttpHeaders.of(
+                        response.headers().map().flatMap { (name, values) ->
+                            values.map {
+                                name to
+                                    it
+                            }
+                        },
+                    ),
+                    response.body(),
+                ),
+            )
         } catch (failure: Throwable) {
             rethrowExceptional(failure)
             when (val cause = unwrap(failure)) {
@@ -73,30 +101,64 @@ class JdkHttpTransport(private val configuration: JdkHttpTransportConfiguration 
     }
 }
 
-private tailrec fun unwrap(failure: Throwable): Throwable = if (failure.cause != null && failure is java.util.concurrent.CompletionException) unwrap(failure.cause!!) else failure
+private tailrec fun unwrap(failure: Throwable): Throwable =
+    if (failure.cause != null &&
+        failure is java.util.concurrent.CompletionException
+    ) {
+        unwrap(failure.cause!!)
+    } else {
+        failure
+    }
+
 private fun rethrowExceptional(failure: Throwable) {
     var current: Throwable? = failure
     while (current != null) {
-        if (current is CancellationException || current is VirtualMachineError || current is ThreadDeath || current is LinkageError) throw current
+        if (current is CancellationException || current is VirtualMachineError || current is ThreadDeath ||
+            current is LinkageError
+        ) {
+            throw current
+        }
         current = current.cause
     }
 }
+
 private class ResponseLimitException : RuntimeException()
-private class LimitedBodySubscriber(private val maximum: Long) : BodySubscriber<ByteArray> {
+
+private class LimitedBodySubscriber(
+    private val maximum: Long,
+) : BodySubscriber<ByteArray> {
     private val future = java.util.concurrent.CompletableFuture<ByteArray>()
     private val output = ByteArrayOutputStream()
     private var subscription: Flow.Subscription? = null
     private var count = 0L
+
     override fun getBody(): CompletionStage<ByteArray> = future
-    override fun onSubscribe(subscription: Flow.Subscription) { this.subscription = subscription; subscription.request(1) }
+
+    override fun onSubscribe(subscription: Flow.Subscription) {
+        this.subscription = subscription
+        subscription.request(1)
+    }
+
     override fun onNext(items: List<ByteBuffer>) {
         for (item in items) {
             count += item.remaining()
-            if (count > maximum) { subscription?.cancel(); future.completeExceptionally(ResponseLimitException()); return }
-            val bytes = ByteArray(item.remaining()); item.get(bytes); output.write(bytes)
+            if (count > maximum) {
+                subscription?.cancel()
+                future.completeExceptionally(ResponseLimitException())
+                return
+            }
+            val bytes = ByteArray(item.remaining())
+            item.get(bytes)
+            output.write(bytes)
         }
         subscription?.request(1)
     }
-    override fun onError(throwable: Throwable) { future.completeExceptionally(throwable) }
-    override fun onComplete() { future.complete(output.toByteArray()) }
+
+    override fun onError(throwable: Throwable) {
+        future.completeExceptionally(throwable)
+    }
+
+    override fun onComplete() {
+        future.complete(output.toByteArray())
+    }
 }

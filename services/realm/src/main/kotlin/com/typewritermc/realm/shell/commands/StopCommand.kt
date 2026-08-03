@@ -8,6 +8,7 @@ class StopCommand(
     private val context: RealmShellContext,
 ) : CliktCommand(name = "stop") {
     override fun help(context: Context) = "Exit the Realm shell"
+
     override fun run() {
         echo("Exiting Realm shell")
         context.requestStop()

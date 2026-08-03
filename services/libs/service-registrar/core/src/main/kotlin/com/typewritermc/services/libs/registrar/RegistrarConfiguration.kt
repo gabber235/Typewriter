@@ -33,7 +33,14 @@ class RegistrarConfiguration(
         require(oauthClientId.isNotBlank() && oauthClientId == oauthClientId.trim())
         require(this.oauthScopes.isNotEmpty() && this.oauthScopes.all { it.isNotBlank() && it == it.trim() })
         validateRoles(this.roles)
-        listOf(bindingRefreshInterval, heartbeatInterval, accessTokenRefreshSkew, sentinelRefreshAfter, sentinelMaximumStaleness, shutdownTimeout).forEach {
+        listOf(
+            bindingRefreshInterval,
+            heartbeatInterval,
+            accessTokenRefreshSkew,
+            sentinelRefreshAfter,
+            sentinelMaximumStaleness,
+            shutdownTimeout,
+        ).forEach {
             require(it.isFinite() && it.isPositive()) { "durations must be positive and finite" }
         }
         require(bindingRefreshInterval < 150.seconds) { "binding refresh must be below the registration lease" }
@@ -41,6 +48,11 @@ class RegistrarConfiguration(
     }
 }
 
-private fun requireUri(uri: URI, schemes: Set<String>) {
-    require(uri.isAbsolute && uri.scheme.lowercase() in schemes && !uri.host.isNullOrBlank() && uri.userInfo == null) { "invalid endpoint URI" }
+private fun requireUri(
+    uri: URI,
+    schemes: Set<String>,
+) {
+    require(
+        uri.isAbsolute && uri.scheme.lowercase() in schemes && !uri.host.isNullOrBlank() && uri.userInfo == null,
+    ) { "invalid endpoint URI" }
 }

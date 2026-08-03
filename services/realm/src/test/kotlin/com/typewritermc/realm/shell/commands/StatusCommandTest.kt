@@ -25,32 +25,35 @@ import kotlin.time.Duration.Companion.seconds
 
 val StatusCommandTest by testSuite {
     test("displays each startup lifecycle state") {
-        val states = listOf(
-            RegistrarState.Idle to "Status: Idle",
-            RegistrarState.LoadingIdentity to "Status: Loading Identity",
-            RegistrarState.IssuingIdentity to "Status: Issuing Identity",
-            RegistrarState.PersistingIdentity(identity) to "Status: Persisting Identity",
-            RegistrarState.AcquiringAccessToken(identity) to "Status: Acquiring Access Token",
-            RegistrarState.AcquiringSentinelCredentials to "Status: Acquiring Sentinel Credentials",
-            RegistrarState.Connecting(3) to "Connection Attempt: 3",
-            RegistrarState.Reauthorizing(OrganizationBinding("organization123", null)) to "Status: Reauthorizing",
-        )
+        val states =
+            listOf(
+                RegistrarState.Idle to "Status: Idle",
+                RegistrarState.LoadingIdentity to "Status: Loading Identity",
+                RegistrarState.IssuingIdentity to "Status: Issuing Identity",
+                RegistrarState.PersistingIdentity(identity) to "Status: Persisting Identity",
+                RegistrarState.AcquiringAccessToken(identity) to "Status: Acquiring Access Token",
+                RegistrarState.AcquiringSentinelCredentials to "Status: Acquiring Sentinel Credentials",
+                RegistrarState.Connecting(3) to "Connection Attempt: 3",
+                RegistrarState.Reauthorizing(OrganizationBinding("organization123", null)) to "Status: Reauthorizing",
+            )
 
         states.forEach { (state, expected) ->
-            val context = RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
-                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
-            )
+            val context =
+                RealmShellContext(
+                    startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                    registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                )
             StatusCommand(context).test().output shouldContain expected
         }
     }
 
     test("displays awaiting binding without revealing the registration token") {
         val state = RegistrarState.AwaitingBinding(identity, RegistrationToken("SECRET12345"))
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+            )
 
         val output = StatusCommand(context).test().output
 
@@ -62,10 +65,11 @@ val StatusCommandTest by testSuite {
 
     test("displays ready service and organization identity") {
         val state = RegistrarState.Ready(readySession(), connectionGeneration = 4)
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
-        )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+            )
 
         val output = StatusCommand(context).test().output
 
@@ -77,16 +81,18 @@ val StatusCommandTest by testSuite {
     }
 
     test("displays degraded stage failure and retry context") {
-        val state = RegistrarState.Degraded(
-            session = readySession(),
-            stage = RegistrarStage.HEARTBEAT,
-            failure = RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT),
-            retry = RetrySchedule(attempt = 7, delay = 5.seconds),
-        )
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
-        )
+        val state =
+            RegistrarState.Degraded(
+                session = readySession(),
+                stage = RegistrarStage.HEARTBEAT,
+                failure = RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT),
+                retry = RetrySchedule(attempt = 7, delay = 5.seconds),
+            )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+            )
 
         val output = StatusCommand(context).test().output
 
@@ -98,14 +104,16 @@ val StatusCommandTest by testSuite {
     }
 
     test("displays terminal failure") {
-        val state = RegistrarState.Failed(
-            failure = RegistrarFailure.Internal("registration_unavailable"),
-            identityOutcomeMayBeAmbiguous = true,
-        )
-        val context = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
-        )
+        val state =
+            RegistrarState.Failed(
+                failure = RegistrarFailure.Internal("registration_unavailable"),
+                identityOutcomeMayBeAmbiguous = true,
+            )
+        val context =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+            )
 
         val output = StatusCommand(context).test().output
 
@@ -115,17 +123,19 @@ val StatusCommandTest by testSuite {
     }
 
     test("displays stopping and stopped states") {
-        val stoppingContext = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Stopping)),
-        )
+        val stoppingContext =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Stopping)),
+            )
         StatusCommand(stoppingContext).test().output shouldContain "Status: Stopping"
 
         val stopped = RegistrarState.Stopped(RegistrarStopResult.Success)
-        val stoppedContext = RealmShellContext(
-            startTime = Instant.parse("2026-08-02T12:00:00Z"),
-            registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, stopped)),
-        )
+        val stoppedContext =
+            RealmShellContext(
+                startTime = Instant.parse("2026-08-02T12:00:00Z"),
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, stopped)),
+            )
         val output = StatusCommand(stoppedContext).test().output
 
         output shouldContain "Status: Stopped"
@@ -133,15 +143,17 @@ val StatusCommandTest by testSuite {
     }
 }
 
-private val identity = ServiceIdentity(
-    serviceId = "service123",
-    displayName = "Realm Service",
-    username = "realm_service",
-    roles = listOf(ServiceRole.Realm("1.0.0")),
-)
+private val identity =
+    ServiceIdentity(
+        serviceId = "service123",
+        displayName = "Realm Service",
+        username = "realm_service",
+        roles = listOf(ServiceRole.Realm("1.0.0")),
+    )
 
-private fun readySession() = ReadySession(
-    identity = identity,
-    binding = OrganizationBinding("organization123", "Test Organization"),
-    communicator = mockk<Communicator>(),
-)
+private fun readySession() =
+    ReadySession(
+        identity = identity,
+        binding = OrganizationBinding("organization123", "Test Organization"),
+        communicator = mockk<Communicator>(),
+    )

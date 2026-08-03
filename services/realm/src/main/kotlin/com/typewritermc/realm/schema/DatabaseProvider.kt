@@ -22,7 +22,6 @@ class DatabaseProvider(
     private val namespace: String,
     private val database: String,
 ) : RealmDatabaseProvider {
-
     init {
         require(url.isNotBlank()) { "Database URL must not be blank" }
         require(username.isBlank() == password.isBlank()) {
@@ -33,33 +32,34 @@ class DatabaseProvider(
     }
 
     context(_: MainSpanScope)
-    override fun connect(): Surreal = childSpanBlocking("realm.database.connect") { child ->
-        withErrorSlug(DATABASE_CONNECT_FAILURE) {
-            child.annotate {
-                attribute("db.url", url)
-                attribute("db.namespace", namespace)
-                attribute("db.database", database)
-            }
-            val db = Surreal()
-
-            try {
-                db.connect(url)
-                val serverVersion = db.version()
-                requireSupportedDatabaseVersion(serverVersion)
-                child.annotate { attribute("db.version", serverVersion) }
-                if (username.isNotBlank()) {
-                    db.signin(RootCredential(username, password))
+    override fun connect(): Surreal =
+        childSpanBlocking("realm.database.connect") { child ->
+            withErrorSlug(DATABASE_CONNECT_FAILURE) {
+                child.annotate {
+                    attribute("db.url", url)
+                    attribute("db.namespace", namespace)
+                    attribute("db.database", database)
                 }
+                val db = Surreal()
 
-                db.useNs(namespace).useDb(database)
-                SchemaMigrator(db).migrate()
-                db
-            } catch (failure: Throwable) {
-                runCatching(db::close).exceptionOrNull()?.let(failure::addSuppressed)
-                throw failure
+                try {
+                    db.connect(url)
+                    val serverVersion = db.version()
+                    requireSupportedDatabaseVersion(serverVersion)
+                    child.annotate { attribute("db.version", serverVersion) }
+                    if (username.isNotBlank()) {
+                        db.signin(RootCredential(username, password))
+                    }
+
+                    db.useNs(namespace).useDb(database)
+                    SchemaMigrator(db).migrate()
+                    db
+                } catch (failure: Throwable) {
+                    runCatching(db::close).exceptionOrNull()?.let(failure::addSuppressed)
+                    throw failure
+                }
             }
         }
-    }
 }
 
 internal fun requireSupportedDatabaseVersion(version: String) {
@@ -72,5 +72,7 @@ internal fun requireSupportedDatabaseVersion(version: String) {
     }
 }
 
-internal class UnsupportedDatabaseVersionException(expected: String, actual: String) :
-    IllegalStateException("Realm requires SurrealDB $expected but connected to $actual")
+internal class UnsupportedDatabaseVersionException(
+    expected: String,
+    actual: String,
+) : IllegalStateException("Realm requires SurrealDB $expected but connected to $actual")

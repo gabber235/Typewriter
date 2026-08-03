@@ -75,11 +75,12 @@ val RetryPolicyTest by testSuite {
         }
 
         test("jitter edges and midpoint produce bounded ratios") {
-            val policy = RetryPolicy.exponential(
-                initial = 10.seconds,
-                maximum = 1_000.seconds,
-                jitterRatio = 0.2,
-            )
+            val policy =
+                RetryPolicy.exponential(
+                    initial = 10.seconds,
+                    maximum = 1_000.seconds,
+                    jitterRatio = 0.2,
+                )
 
             policy.delayFor(0, 0.0) shouldBe 8.seconds
             policy.delayFor(0, 0.5) shouldBe 10.seconds
@@ -87,11 +88,12 @@ val RetryPolicyTest by testSuite {
         }
 
         test("jitter remains positive and maximum bounded at extremes") {
-            val policy = RetryPolicy.exponential(
-                initial = 10.nanoseconds,
-                maximum = 100.nanoseconds,
-                jitterRatio = 1.0,
-            )
+            val policy =
+                RetryPolicy.exponential(
+                    initial = 10.nanoseconds,
+                    maximum = 100.nanoseconds,
+                    jitterRatio = 1.0,
+                )
 
             policy.delayFor(0, 0.0) shouldBe 1.nanoseconds
             policy.delayFor(Long.MAX_VALUE, 1.0) shouldBe 100.nanoseconds

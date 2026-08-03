@@ -46,18 +46,22 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeSource
 
-private val runtimeCredentials = IdentityCredentials(
-    ServiceIdentity("service-id", "Service Name", "service-user", listOf(ServiceRole.Realm("1.0.0"))),
-    RedactedSecret.AppPassword("app-password"),
-)
+private val runtimeCredentials =
+    IdentityCredentials(
+        ServiceIdentity("service-id", "Service Name", "service-user", listOf(ServiceRole.Realm("1.0.0"))),
+        RedactedSecret.AppPassword("app-password"),
+    )
 
 private class FakeNatsLifecycle : NatsLifecycle {
     override val state = MutableStateFlow(NatsConnectionState.Connected)
     var connectResult: NatsLifecycleResult = NatsLifecycleResult.Success
     var reconnectResult: NatsLifecycleResult = NatsLifecycleResult.Success
     var shutdownResult: NatsLifecycleResult = NatsLifecycleResult.Success
+
     override suspend fun connect() = connectResult
+
     override suspend fun reconnect() = reconnectResult
+
     override suspend fun shutdown() = shutdownResult
 }
 
@@ -80,29 +84,31 @@ private data class RuntimeFixture(
 private suspend fun runtimeFixture(): RuntimeFixture {
     var exchanges = 0
     var fetches = 0
-    val access = AccessTokenCache(
-        runtimeCredentials,
-        AccessTokenExchanger {
-            exchanges++
-            AccessTokenResult.Success(RedactedSecret.AccessToken("access-token"), 3600)
-        },
-        TimeSource.Monotonic,
-        1.minutes,
-    )
-    val sentinel = SentinelCache(
-        SentinelProvider {
-            fetches++
-            SentinelResult.Success(
-                SentinelCredentials(
-                    RedactedSecret.SentinelJwt("sentinel-jwt"),
-                    RedactedSecret.SentinelSeed("sentinel-seed"),
+    val access =
+        AccessTokenCache(
+            runtimeCredentials,
+            AccessTokenExchanger {
+                exchanges++
+                AccessTokenResult.Success(RedactedSecret.AccessToken("access-token"), 3600)
+            },
+            TimeSource.Monotonic,
+            1.minutes,
+        )
+    val sentinel =
+        SentinelCache(
+            SentinelProvider {
+                fetches++
+                SentinelResult.Success(
+                    SentinelCredentials(
+                        RedactedSecret.SentinelJwt("sentinel-jwt"),
+                        RedactedSecret.SentinelSeed("sentinel-seed"),
+                    ),
                 )
-            )
-        },
-        1.hours,
-        2.hours,
-        TimeSource.Monotonic,
-    )
+            },
+            1.hours,
+            2.hours,
+            TimeSource.Monotonic,
+        )
     access.get()
     sentinel.get()
     val transport = FakeMessageTransport()
@@ -127,10 +133,16 @@ private suspend fun runtimeFixture(): RuntimeFixture {
 }
 
 private fun status(binding: ServiceBinding) = GetServiceStatusResponse.createStatus(binding = binding)
-private fun response(response: GetServiceStatusResponse): suspend (com.typewritermc.services.libs.communicator.transport.OutboundMessage, kotlin.time.Duration) -> TransportResult<InboundMessage> =
+
+private fun response(
+    response: GetServiceStatusResponse,
+): suspend (
+    com.typewritermc.services.libs.communicator.transport.OutboundMessage,
+    kotlin.time.Duration,
+) -> TransportResult<InboundMessage> =
     { message, _ ->
         TransportResult.Success(
-            InboundMessage(message.address, GetServiceStatusResponse.serializer.toBytes(response).toByteArray())
+            InboundMessage(message.address, GetServiceStatusResponse.serializer.toBytes(response).toByteArray()),
         )
     }
 
@@ -138,15 +150,24 @@ val RegistrarMessagingRuntimeTest by testSuite {
     test("query uses exact status subject and maps bound name") {
         val fixture = runtimeFixture()
         try {
-            fixture.transport.respondWith(response(status(ServiceBinding.createBound(
-                organizationId = "organization-id",
-                organizationName = "Organization",
-            ))))
+            fixture.transport.respondWith(
+                response(
+                    status(
+                        ServiceBinding.createBound(
+                            organizationId = "organization-id",
+                            organizationName = "Organization",
+                        ),
+                    ),
+                ),
+            )
             val result = fixture.runtime.queryBinding() as RuntimeResult.Success
             val bound = result.value as BindingStatus.Bound
             bound.binding.organizationId shouldBe "organization-id"
             bound.binding.organizationName shouldBe "Organization"
-            val action = fixture.transport.actions.filterIsInstance<FakeMessageTransport.Action.Request>().single()
+            val action =
+                fixture.transport.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Request>()
+                    .single()
             action.message.address.value shouldBe "cloud.to.service.service-id.status"
         } finally {
             fixture.close()
@@ -154,58 +175,66 @@ val RegistrarMessagingRuntimeTest by testSuite {
     }
 
     test("query preserves a blank organization name") {
-        val mapped = mapStatus(
-            status(ServiceBinding.createBound(organizationId = "organization-id", organizationName = "")),
-            MessagingOperation.BINDING_QUERY,
-        ) as RuntimeResult.Success
+        val mapped =
+            mapStatus(
+                status(ServiceBinding.createBound(organizationId = "organization-id", organizationName = "")),
+                MessagingOperation.BINDING_QUERY,
+            ) as RuntimeResult.Success
         ((mapped.value as BindingStatus.Bound).binding.organizationName) shouldBe ""
     }
 
     test("unbound status preserves null token") {
-        val mapped = mapStatus(
-            status(ServiceBinding.createUnbound(registrationToken = null)),
-            MessagingOperation.BINDING_QUERY,
-        ) as RuntimeResult.Success
+        val mapped =
+            mapStatus(
+                status(ServiceBinding.createUnbound(registrationToken = null)),
+                MessagingOperation.BINDING_QUERY,
+            ) as RuntimeResult.Success
         (mapped.value as BindingStatus.Unbound).token shouldBe null
     }
 
     test("unbound status maps a valid token") {
-        val mapped = mapStatus(
-            status(ServiceBinding.createUnbound(registrationToken = "TOKEN12345")),
-            MessagingOperation.BINDING_QUERY,
-        ) as RuntimeResult.Success
+        val mapped =
+            mapStatus(
+                status(ServiceBinding.createUnbound(registrationToken = "TOKEN12345")),
+                MessagingOperation.BINDING_QUERY,
+            ) as RuntimeResult.Success
         (mapped.value as BindingStatus.Unbound).token?.reveal() shouldBe "TOKEN12345"
     }
 
     test("blank registration token is protocol incompatible") {
-        val mapped = mapStatus(
-            status(ServiceBinding.createUnbound(registrationToken = "")),
-            MessagingOperation.BINDING_QUERY,
-        ) as RuntimeResult.Failure
+        val mapped =
+            mapStatus(
+                status(ServiceBinding.createUnbound(registrationToken = "")),
+                MessagingOperation.BINDING_QUERY,
+            ) as RuntimeResult.Failure
         (mapped.failure is RegistrarFailure.ProtocolIncompatible) shouldBe true
     }
 
     test("service not found is terminal typed failure") {
-        val mapped = mapStatus(
-            GetServiceStatusResponse.createServiceNotFoundError(),
-            MessagingOperation.BINDING_QUERY,
-        ) as RuntimeResult.Failure
+        val mapped =
+            mapStatus(
+                GetServiceStatusResponse.createServiceNotFoundError(),
+                MessagingOperation.BINDING_QUERY,
+            ) as RuntimeResult.Failure
         mapped.failure shouldBe RegistrarFailure.ServiceNotFound
     }
 
     test("internal status is recoverable messaging failure for its operation") {
-        val mapped = mapStatus(
-            GetServiceStatusResponse.createInternalError(),
-            MessagingOperation.BINDING_WATCH,
-        ) as RuntimeResult.Failure
+        val mapped =
+            mapStatus(
+                GetServiceStatusResponse.createInternalError(),
+                MessagingOperation.BINDING_WATCH,
+            ) as RuntimeResult.Failure
         mapped.failure shouldBe RegistrarFailure.Messaging(MessagingOperation.BINDING_WATCH)
     }
 
     test("unknown status and binding are protocol incompatible") {
         (mapStatus(GetServiceStatusResponse.UNKNOWN, MessagingOperation.BINDING_QUERY) as RuntimeResult.Failure)
-            .failure.let { it is RegistrarFailure.ProtocolIncompatible } shouldBe true
+            .failure
+            .let { it is RegistrarFailure.ProtocolIncompatible } shouldBe true
         (mapBinding(ServiceBinding.UNKNOWN) as RuntimeResult.Failure)
-            .failure.let { it is RegistrarFailure.ProtocolIncompatible } shouldBe true
+            .failure
+            .let { it is RegistrarFailure.ProtocolIncompatible } shouldBe true
     }
 
     test("watch subscribes to bound subject before status and maps initial then update") {
@@ -213,33 +242,42 @@ val RegistrarMessagingRuntimeTest by testSuite {
             val fixture = runtimeFixture()
             try {
                 fixture.transport.respondWith(
-                    response(status(ServiceBinding.createUnbound(registrationToken = "TOKEN12345")))
+                    response(status(ServiceBinding.createUnbound(registrationToken = "TOKEN12345"))),
                 )
-                val collected = async { fixture.runtime.watchBinding().take(2).toList() }
-                runCurrent()
-                fixture.transport.actions.take(2).map { action ->
-                    when (action) {
-                        is FakeMessageTransport.Action.Subscribe -> "subscribe:${action.pattern.value}"
-                        is FakeMessageTransport.Action.Request -> "request:${action.message.address.value}"
-                        else -> "other"
+                val collected =
+                    async {
+                        fixture.runtime
+                            .watchBinding()
+                            .take(2)
+                            .toList()
                     }
-                }.shouldContainExactly(
-                    "subscribe:cloud.from.service.service-id.registration.bound",
-                    "request:cloud.to.service.service-id.status",
-                )
-                val notification = ServiceBoundNotification(
-                    organizationId = "organization-id",
-                    organizationName = "Organization",
-                )
+                runCurrent()
+                fixture.transport.actions
+                    .take(2)
+                    .map { action ->
+                        when (action) {
+                            is FakeMessageTransport.Action.Subscribe -> "subscribe:${action.pattern.value}"
+                            is FakeMessageTransport.Action.Request -> "request:${action.message.address.value}"
+                            else -> "other"
+                        }
+                    }.shouldContainExactly(
+                        "subscribe:cloud.from.service.service-id.registration.bound",
+                        "request:cloud.to.service.service-id.status",
+                    )
+                val notification =
+                    ServiceBoundNotification(
+                        organizationId = "organization-id",
+                        organizationName = "Organization",
+                    )
                 fixture.transport.deliver(
                     com.typewritermc.services.libs.communicator.transport.TransportDelivery.Message(
                         InboundMessage(
                             com.typewritermc.services.libs.communicator.address.MessageAddress.of(
-                                "cloud.from.service.service-id.registration.bound"
+                                "cloud.from.service.service-id.registration.bound",
                             ),
                             ServiceBoundNotification.serializer.toBytes(notification).toByteArray(),
-                        )
-                    )
+                        ),
+                    ),
                 )
                 val values = collected.await()
                 val initial = (values[0] as RuntimeResult.Success).value as BindingObservation.Initial
@@ -256,9 +294,13 @@ val RegistrarMessagingRuntimeTest by testSuite {
         val fixture = runtimeFixture()
         try {
             fixture.runtime.sendHeartbeat() shouldBe RuntimeResult.Success(Unit)
-            val published = fixture.transport.actions.filterIsInstance<FakeMessageTransport.Action.Publish>().single()
+            val published =
+                fixture.transport.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .single()
             published.message.address.value shouldBe "cloud.to.service.service-id.heartbeat"
-            ServiceHeartbeatNotification.serializer.fromBytes(published.message.payload)
+            ServiceHeartbeatNotification.serializer
+                .fromBytes(published.message.payload)
                 .shouldBe(ServiceHeartbeatNotification())
         } finally {
             fixture.close()
@@ -269,9 +311,13 @@ val RegistrarMessagingRuntimeTest by testSuite {
         val fixture = runtimeFixture()
         try {
             fixture.runtime.sendShutdown() shouldBe RuntimeResult.Success(Unit)
-            val published = fixture.transport.actions.filterIsInstance<FakeMessageTransport.Action.Publish>().single()
+            val published =
+                fixture.transport.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .single()
             published.message.address.value shouldBe "cloud.to.service.service-id.shutdown"
-            ServiceShutdownNotification.serializer.fromBytes(published.message.payload)
+            ServiceShutdownNotification.serializer
+                .fromBytes(published.message.payload)
                 .shouldBe(ServiceShutdownNotification())
             fixture.transport.failNextPublish(TransportError.Unavailable())
             val failed = fixture.runtime.sendShutdown() as RuntimeResult.Failure
@@ -284,9 +330,10 @@ val RegistrarMessagingRuntimeTest by testSuite {
     test("connect failure invalidates both credential caches") {
         val fixture = runtimeFixture()
         try {
-            fixture.nats.connectResult = NatsLifecycleResult.Failure(
-                NatsLifecycleError.Connection(IllegalStateException("offline"))
-            )
+            fixture.nats.connectResult =
+                NatsLifecycleResult.Failure(
+                    NatsLifecycleError.Connection(IllegalStateException("offline")),
+                )
             (fixture.runtime.connect() is RuntimeResult.Failure) shouldBe true
             fixture.runtime.connectivity.first() shouldBe RuntimeConnectivity.CONNECTED
             val beforeTokens = fixture.tokenExchanges()
@@ -303,9 +350,10 @@ val RegistrarMessagingRuntimeTest by testSuite {
     test("reconnect failure is recoverable messaging failure") {
         val fixture = runtimeFixture()
         try {
-            fixture.nats.reconnectResult = NatsLifecycleResult.Failure(
-                NatsLifecycleError.Connection(IllegalStateException("offline"))
-            )
+            fixture.nats.reconnectResult =
+                NatsLifecycleResult.Failure(
+                    NatsLifecycleError.Connection(IllegalStateException("offline")),
+                )
             val result = fixture.runtime.reconnectForBoundPermissions() as RuntimeResult.Failure
             result.failure shouldBe RegistrarFailure.Messaging(MessagingOperation.REAUTHORIZE)
         } finally {
@@ -316,12 +364,13 @@ val RegistrarMessagingRuntimeTest by testSuite {
     test("close reports lifecycle shutdown failure") {
         val fixture = runtimeFixture()
         try {
-            fixture.nats.shutdownResult = NatsLifecycleResult.Failure(
-                NatsLifecycleError.Shutdown(IllegalStateException("failed"))
-            )
+            fixture.nats.shutdownResult =
+                NatsLifecycleResult.Failure(
+                    NatsLifecycleError.Shutdown(IllegalStateException("failed")),
+                )
             val result = fixture.runtime.close() as RuntimeCloseResult.Failure
             result.failures.shouldContainExactly(
-                RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_FAILED)
+                RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_FAILED),
             )
         } finally {
             fixture.close()
@@ -336,15 +385,19 @@ val RegistrarMessagingRuntimeTest by testSuite {
     }
 
     test("service authentication maps exact fields and redacts diagnostics") {
-        val authentication = createServiceAuthentication(
-            true,
-            { seed -> seed shouldBe "sentinel-seed"; "signed-nonce" },
-            RedactedSecret.AccessToken("access-token"),
-            SentinelCredentials(
-                RedactedSecret.SentinelJwt("sentinel-jwt"),
-                RedactedSecret.SentinelSeed("sentinel-seed"),
-            ),
-        )
+        val authentication =
+            createServiceAuthentication(
+                true,
+                { seed ->
+                    seed shouldBe "sentinel-seed"
+                    "signed-nonce"
+                },
+                RedactedSecret.AccessToken("access-token"),
+                SentinelCredentials(
+                    RedactedSecret.SentinelJwt("sentinel-jwt"),
+                    RedactedSecret.SentinelSeed("sentinel-seed"),
+                ),
+            )
         authentication.username shouldBe null
         authentication.password shouldBe "access-token"
         authentication.jwt shouldBe "sentinel-jwt"

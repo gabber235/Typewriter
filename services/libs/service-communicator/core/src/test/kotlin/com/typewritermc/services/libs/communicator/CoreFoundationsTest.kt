@@ -5,24 +5,35 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
-import com.typewritermc.services.libs.communicator.transport.*
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import java.util.*
+import java.util.Locale
 
-data class ExampleAddress(val service: String, val organization: String)
-
-private val template = addressTemplate(
-    "realm.{service}.organization.{organization}",
-    { addressValuesOf("service" to it.service, "organization" to it.organization) },
-    { ExampleAddress(it.require("service"), it.require("organization")) },
+data class ExampleAddress(
+    val service: String,
+    val organization: String,
 )
 
-private val codec = object : PayloadCodec<String> {
-    override fun encode(value: String): ByteArray = value.encodeToByteArray()
-    override fun decode(payload: ByteArray): String = payload.decodeToString()
-}
+private val template =
+    addressTemplate(
+        "realm.{service}.organization.{organization}",
+        { addressValuesOf("service" to it.service, "organization" to it.organization) },
+        { ExampleAddress(it.require("service"), it.require("organization")) },
+    )
+
+private val codec =
+    object : PayloadCodec<String> {
+        override fun encode(value: String): ByteArray = value.encodeToByteArray()
+
+        override fun decode(payload: ByteArray): String = payload.decodeToString()
+    }
 
 val CoreFoundationsTest by testSuite {
     test("addresses render and structurally match") {

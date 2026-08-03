@@ -30,9 +30,10 @@ class RealmRouteFactory(
     }
 }
 
-val REALM_ROUTES_MODULE = module {
-    single<TagRepository> { SurrealTagRepository(get(qualifier(DATABASE))) }
-    single<BookRepository> { SurrealBookRepository(get(qualifier(DATABASE))) }
-    single<PageRepository> { SurrealPageRepository(get(qualifier(DATABASE))) }
-    single { RealmRouteFactory(get(), get(), get()) }
-}
+val REALM_ROUTES_MODULE =
+    module {
+        single<TagRepository> { SurrealTagRepository(get(qualifier(DATABASE))) }
+        single<BookRepository> { SurrealBookRepository(get(qualifier(DATABASE))) }
+        single<PageRepository> { SurrealPageRepository(get(qualifier(DATABASE))) }
+        single { RealmRouteFactory(get(), get(), get()) }
+    }

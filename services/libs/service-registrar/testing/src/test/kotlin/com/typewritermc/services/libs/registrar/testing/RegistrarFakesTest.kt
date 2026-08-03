@@ -19,19 +19,28 @@ val RegistrarFakesTest by testSuite {
     test("binding watches are independent cold collections with cancellation evidence") {
         runTest {
             TelemetryTestHarness.create().use { harness ->
-                val runtime = FakeRegistrarRuntime(
-                    Communicator(FakeMessageTransport(), harness.telemetry, ContextPropagators.noop()),
+                val runtime =
+                    FakeRegistrarRuntime(
+                        Communicator(FakeMessageTransport(), harness.telemetry, ContextPropagators.noop()),
+                    )
+                runtime.enqueueWatch(
+                    RuntimeResult.Success(
+                        BindingObservation.Initial(
+                            com.typewritermc.services.libs.registrar.BindingStatus
+                                .Unbound(null),
+                        ),
+                    ),
                 )
-                runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Initial(com.typewritermc.services.libs.registrar.BindingStatus.Unbound(null))))
                 val cold = runtime.watchBinding()
                 runtime.actions shouldBe emptyList()
                 val collector = launch { cold.first() }
                 runCurrent()
                 runtime.activeWatchCount shouldBe 0
-                runtime.actions.map { it::class } shouldBe listOf(
-                    RegistrarAction.WatchBinding::class,
-                    RegistrarAction.CancelBindingWatch::class,
-                )
+                runtime.actions.map { it::class } shouldBe
+                    listOf(
+                        RegistrarAction.WatchBinding::class,
+                        RegistrarAction.CancelBindingWatch::class,
+                    )
                 collector.join()
             }
         }

@@ -4,8 +4,13 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 
 /** Explicit communication success or infrastructure failure. */
 sealed interface CommunicationResult<out Value> {
-    data class Success<Value>(val value: Value) : CommunicationResult<Value>
-    data class Failure(val error: CommunicationError) : CommunicationResult<Nothing>
+    data class Success<Value>(
+        val value: Value,
+    ) : CommunicationResult<Value>
+
+    data class Failure(
+        val error: CommunicationError,
+    ) : CommunicationResult<Nothing>
 }
 
 /** Typed communication failures. Cancellation is never represented as a value. */

@@ -54,60 +54,71 @@ import skirout.library.v1.tag.WatchTagResponse
 import skirout.library.v1.tag.WatchTags
 import skirout.library.v1.tag.WatchTagsResponse
 
-data class RealmAddress(val realmId: String, val organizationId: String)
+data class RealmAddress(
+    val realmId: String,
+    val organizationId: String,
+)
 
-internal class LibraryContracts(private val address: RealmAddress) {
-    val watchBooks = watch(
-        WatchBooks,
-        WatchBooksResponse.serializer,
-        "book.watch",
-        "book.watch",
-        WatchBooksResponse.createInternalError(),
-    )
-    val watchBook = watch(
-        WatchBook,
-        WatchBookResponse.serializer,
-        "book.resource.watch",
-        "book.resource.watch",
-        WatchBookResponse.createInternalError(),
-        updateFilter = ::matchesBook,
-    )
+internal class LibraryContracts(
+    private val address: RealmAddress,
+) {
+    val watchBooks =
+        watch(
+            WatchBooks,
+            WatchBooksResponse.serializer,
+            "book.watch",
+            "book.watch",
+            WatchBooksResponse.createInternalError(),
+        )
+    val watchBook =
+        watch(
+            WatchBook,
+            WatchBookResponse.serializer,
+            "book.resource.watch",
+            "book.resource.watch",
+            WatchBookResponse.createInternalError(),
+            updateFilter = ::matchesBook,
+        )
     val createBook = unary(CreateBook, "book.create", CreateBookResponse.createInternalError())
     val updateBook = unary(UpdateBook, "book.update", UpdateBookResponse.createInternalError())
 
     val searchPages = unary(SearchPages, "page.search", SearchPagesResponse.createInternalError())
-    val watchPage = watch(
-        WatchPage,
-        WatchPageResponse.serializer,
-        "page.watch",
-        "page.watch",
-        WatchPageResponse.createInternalError(),
-        updateFilter = ::matchesPage,
-    )
+    val watchPage =
+        watch(
+            WatchPage,
+            WatchPageResponse.serializer,
+            "page.watch",
+            "page.watch",
+            WatchPageResponse.createInternalError(),
+            updateFilter = ::matchesPage,
+        )
     val createPage = unary(CreatePage, "page.create", CreatePageResponse.createInternalError())
     val updatePage = unary(UpdatePage, "page.update", UpdatePageResponse.createInternalError())
     val deletePage = unary(DeletePage, "page.delete", DeletePageResponse.createInternalError())
-    val changePagesChapters = unary(
-        ChangePagesChapters,
-        "pages.chapters",
-        ChangePagesChaptersResponse.createInternalError(),
-    )
+    val changePagesChapters =
+        unary(
+            ChangePagesChapters,
+            "pages.chapters",
+            ChangePagesChaptersResponse.createInternalError(),
+        )
 
-    val watchTags = watch(
-        WatchTags,
-        WatchTagsResponse.serializer,
-        "tag.watch",
-        "tag.watch",
-        WatchTagsResponse.createInternalError(),
-    )
-    val watchTag = watch(
-        WatchTag,
-        WatchTagResponse.serializer,
-        "tag.resource.watch",
-        "tag.resource.watch",
-        WatchTagResponse.createInternalError(),
-        updateFilter = ::matchesTag,
-    )
+    val watchTags =
+        watch(
+            WatchTags,
+            WatchTagsResponse.serializer,
+            "tag.watch",
+            "tag.watch",
+            WatchTagsResponse.createInternalError(),
+        )
+    val watchTag =
+        watch(
+            WatchTag,
+            WatchTagResponse.serializer,
+            "tag.resource.watch",
+            "tag.resource.watch",
+            WatchTagResponse.createInternalError(),
+            updateFilter = ::matchesTag,
+        )
     val createTag = unary(CreateTag, "tag.create", CreateTagResponse.createInternalError())
     val updateTag = unary(UpdateTag, "tag.update", UpdateTagResponse.createInternalError())
     val deleteTag = unary(DeleteTag, "tag.delete", DeleteTagResponse.createInternalError())
@@ -118,13 +129,14 @@ internal class LibraryContracts(private val address: RealmAddress) {
         method: Method<Request, Response>,
         suffix: String,
         internalFailureResponse: Response,
-    ): UnaryContract<RealmAddress, Request, Response> = skirUnaryContract(
-        method = method,
-        name = OperationName.of(suffix),
-        address = requestAddress(suffix).subscribedAt(address),
-        responsePolicy = responsePolicy(internalFailureResponse),
-        failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
-    )
+    ): UnaryContract<RealmAddress, Request, Response> =
+        skirUnaryContract(
+            method = method,
+            name = OperationName.of(suffix),
+            address = requestAddress(suffix).subscribedAt(address),
+            responsePolicy = responsePolicy(internalFailureResponse),
+            failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
+        )
 
     private fun <Request : Any, Response : Any> watch(
         method: Method<Request, Response>,
@@ -134,66 +146,84 @@ internal class LibraryContracts(private val address: RealmAddress) {
         internalFailureResponse: Response,
         classifier: ResponseClassifier<Response> = responseClassifier(),
         updateFilter: (Request, Response) -> Boolean = { _, _ -> true },
-    ): WatchContract<RealmAddress, Request, Response, Response> = skirWatchContract(
-        method = method,
-        updateSerializer = updateSerializer,
-        name = OperationName.of(operation),
-        requestAddress = requestAddress(suffix).subscribedAt(address),
-        updateAddress = updateAddress(suffix),
-        initialPolicy = responsePolicy(internalFailureResponse),
-        updateClassifier = classifier,
-        failureSlug = ErrorSlug.of(operation.replace('.', '-') + "-failed"),
-        updateFilter = updateFilter,
-    )
+    ): WatchContract<RealmAddress, Request, Response, Response> =
+        skirWatchContract(
+            method = method,
+            updateSerializer = updateSerializer,
+            name = OperationName.of(operation),
+            requestAddress = requestAddress(suffix).subscribedAt(address),
+            updateAddress = updateAddress(suffix),
+            initialPolicy = responsePolicy(internalFailureResponse),
+            updateClassifier = classifier,
+            failureSlug = ErrorSlug.of(operation.replace('.', '-') + "-failed"),
+            updateFilter = updateFilter,
+        )
 }
 
-private fun requestAddress(suffix: String): AddressTemplate<RealmAddress> = realmAddress(
-    "service.to.{realm}.organization.{organization}.realm.$suffix",
-)
+private fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
+    realmAddress(
+        "service.to.{realm}.organization.{organization}.realm.$suffix",
+    )
 
-private fun updateAddress(suffix: String): AddressTemplate<RealmAddress> = realmAddress(
-    "service.from.{realm}.organization.{organization}.realm.$suffix",
-)
+private fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
+    realmAddress(
+        "service.from.{realm}.organization.{organization}.realm.$suffix",
+    )
 
-private fun realmAddress(pattern: String): AddressTemplate<RealmAddress> = addressTemplate(
-    pattern,
-    { address ->
-        addressValuesOf(
-            "realm" to address.realmId,
-            "organization" to address.organizationId,
-        )
-    },
-    { values -> RealmAddress(values.require("realm"), values.require("organization")) },
-)
+private fun realmAddress(pattern: String): AddressTemplate<RealmAddress> =
+    addressTemplate(
+        pattern,
+        { address ->
+            addressValuesOf(
+                "realm" to address.realmId,
+                "organization" to address.organizationId,
+            )
+        },
+        { values -> RealmAddress(values.require("realm"), values.require("organization")) },
+    )
 
 private fun <Response : Any> responsePolicy(internalFailureResponse: Response): ResponsePolicy<Response> =
     ResponsePolicy(internalFailureResponse, responseClassifier())
 
-private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> = ResponseClassifier { response ->
-    val wrapper = requireNotNull(response::class.simpleName).removeSuffix("Wrapper")
-    val words = wrapper.replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2").lowercase()
-    val outcome = when (wrapper) {
-        "InternalError" -> ResponseOutcome.INTERNAL_ERROR
-        "Success", "List", "Initial", "Add", "Update", "Remove" -> ResponseOutcome.SUCCESS
-        else -> ResponseOutcome.DOMAIN_ERROR
+private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> =
+    ResponseClassifier { response ->
+        val wrapper = requireNotNull(response::class.simpleName).removeSuffix("Wrapper")
+        val words = wrapper.replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2").lowercase()
+        val outcome =
+            when (wrapper) {
+                "InternalError" -> ResponseOutcome.INTERNAL_ERROR
+                "Success", "List", "Initial", "Add", "Update", "Remove" -> ResponseOutcome.SUCCESS
+                else -> ResponseOutcome.DOMAIN_ERROR
+            }
+        ResponseClassification(outcome, ResponseVariant.of(words))
     }
-    ResponseClassification(outcome, ResponseVariant.of(words))
-}
 
-private fun matchesBook(request: WatchBookRequest, response: WatchBookResponse): Boolean = when (response) {
-    is WatchBookResponse.UpdateWrapper -> response.value.bookId == request.bookId
-    is WatchBookResponse.RemoveWrapper -> response.value == request.bookId
-    else -> true
-}
+private fun matchesBook(
+    request: WatchBookRequest,
+    response: WatchBookResponse,
+): Boolean =
+    when (response) {
+        is WatchBookResponse.UpdateWrapper -> response.value.bookId == request.bookId
+        is WatchBookResponse.RemoveWrapper -> response.value == request.bookId
+        else -> true
+    }
 
-private fun matchesPage(request: WatchPageRequest, response: WatchPageResponse): Boolean = when (response) {
-    is WatchPageResponse.UpdateWrapper -> response.value.pageId == request.pageId
-    is WatchPageResponse.RemoveWrapper -> response.value == request.pageId
-    else -> true
-}
+private fun matchesPage(
+    request: WatchPageRequest,
+    response: WatchPageResponse,
+): Boolean =
+    when (response) {
+        is WatchPageResponse.UpdateWrapper -> response.value.pageId == request.pageId
+        is WatchPageResponse.RemoveWrapper -> response.value == request.pageId
+        else -> true
+    }
 
-private fun matchesTag(request: WatchTagRequest, response: WatchTagResponse): Boolean = when (response) {
-    is WatchTagResponse.UpdateWrapper -> response.value.tagId == request.tagId
-    is WatchTagResponse.RemoveWrapper -> response.value == request.tagId
-    else -> true
-}
+private fun matchesTag(
+    request: WatchTagRequest,
+    response: WatchTagResponse,
+): Boolean =
+    when (response) {
+        is WatchTagResponse.UpdateWrapper -> response.value.tagId == request.tagId
+        is WatchTagResponse.RemoveWrapper -> response.value == request.tagId
+        else -> true
+    }

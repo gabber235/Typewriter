@@ -2,7 +2,12 @@ package com.typewritermc.services.libs.communicator.testing
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.transport.*
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
+import com.typewritermc.services.libs.communicator.transport.TransportSubscription
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
@@ -25,14 +30,15 @@ val FakeMessageTransportTest by testSuite {
             fake.failNextSubscribe(TransportError.Failure(IllegalStateException()))
             (fake.subscribe(AddressPattern.of("book.*")) is TransportResult.Failure) shouldBe true
             (fake.subscribe(AddressPattern.of("book.*")) is TransportResult.Success) shouldBe true
-            fake.actions.map { it::class.simpleName } shouldBe listOf(
-                "Publish",
-                "Publish",
-                "Request",
-                "Request",
-                "Subscribe",
-                "Subscribe"
-            )
+            fake.actions.map { it::class.simpleName } shouldBe
+                listOf(
+                    "Publish",
+                    "Publish",
+                    "Request",
+                    "Request",
+                    "Subscribe",
+                    "Subscribe",
+                )
         }
     }
 
@@ -70,10 +76,11 @@ val FakeMessageTransportTest by testSuite {
             val payload = byteArrayOf(1, 2)
             fake.publish(OutboundMessage(MessageAddress.of("book.one"), payload))
             payload[0] = 9
-            ((fake.actions.single() as FakeMessageTransport.Action.Publish).message.payload.toList()) shouldBe listOf<Byte>(
-                1,
-                2
-            )
+            ((fake.actions.single() as FakeMessageTransport.Action.Publish).message.payload.toList()) shouldBe
+                listOf<Byte>(
+                    1,
+                    2,
+                )
         }
     }
 }

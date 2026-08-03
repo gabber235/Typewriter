@@ -19,17 +19,31 @@ private const val TEST_REALM_SCHEMA = "DEFINE TABLE OVERWRITE realm_probe SCHEMA
 val SchemaMigratorTest by testSuite {
     test("migration applies every patch once and records its checksum") {
         SchemaFixture().use { fixture ->
-            val resources = fixture.resources(
-                "0001_create_probe" to "CREATE patch_probe CONTENT { value: true };",
-            )
+            val resources =
+                fixture.resources(
+                    "0001_create_probe" to "CREATE patch_probe CONTENT { value: true };",
+                )
 
             fixture.migrate(resources)
             fixture.migrate(resources)
 
-            fixture.database.query("SELECT * FROM patch_probe").take(0).getArray().len() shouldBe 1
-            val history = fixture.database.query("SELECT checksum FROM _patch").take(0).getArray()
+            fixture.database
+                .query("SELECT * FROM patch_probe")
+                .take(0)
+                .getArray()
+                .len() shouldBe 1
+            val history =
+                fixture.database
+                    .query("SELECT checksum FROM _patch")
+                    .take(0)
+                    .getArray()
             history.len() shouldBe 1
-            history.get(0).getObject().get("checksum").getString().length shouldBe 64
+            history
+                .get(0)
+                .getObject()
+                .get("checksum")
+                .getString()
+                .length shouldBe 64
         }
     }
 
@@ -43,7 +57,11 @@ val SchemaMigratorTest by testSuite {
                 )
             }
 
-            fixture.database.query("SELECT * FROM patch_probe").take(0).getArray().len() shouldBe 1
+            fixture.database
+                .query("SELECT * FROM patch_probe")
+                .take(0)
+                .getArray()
+                .len() shouldBe 1
         }
     }
 
@@ -55,7 +73,11 @@ val SchemaMigratorTest by testSuite {
                 )
             }
 
-            fixture.database.query("SELECT * FROM _patch").take(0).getArray().len() shouldBe 0
+            fixture.database
+                .query("SELECT * FROM _patch")
+                .take(0)
+                .getArray()
+                .len() shouldBe 0
             shouldThrowAny { fixture.database.query("SELECT * FROM rollback_probe").take(0) }
         }
     }
@@ -64,8 +86,15 @@ val SchemaMigratorTest by testSuite {
         SchemaFixture().use { fixture ->
             fixture.migrate(fixture.resources())
 
-            fixture.database.query("INFO FOR TABLE realm_probe").take(0).isObject shouldBe true
-            fixture.database.query("SELECT * FROM _patch").take(0).getArray().len() shouldBe 0
+            fixture.database
+                .query("INFO FOR TABLE realm_probe")
+                .take(0)
+                .isObject shouldBe true
+            fixture.database
+                .query("SELECT * FROM _patch")
+                .take(0)
+                .getArray()
+                .len() shouldBe 0
         }
     }
 
@@ -96,21 +125,23 @@ val SchemaMigratorTest by testSuite {
 }
 
 private class SchemaFixture : AutoCloseable {
-    val database = Surreal().apply {
-        connect("memory")
-        useNs("test").useDb("test")
-    }
+    val database =
+        Surreal().apply {
+            connect("memory")
+            useNs("test").useDb("test")
+        }
     val telemetry = TelemetryTestHarness.create()
 
     fun resources(vararg patches: Pair<String, String>): MigrationResources {
         val patchFiles = patches.map { (id, _) -> "$id.surql" }
-        val content = buildMap {
-            put("schema/migration.surql", TEST_MIGRATION_SCHEMA)
-            put("schema/realm/_index.txt", "realm_probe.surql")
-            put("schema/realm/realm_probe.surql", TEST_REALM_SCHEMA)
-            put("schema/patches/_index.txt", patchFiles.joinToString("\n"))
-            patches.forEach { (id, script) -> put("schema/patches/$id.surql", script) }
-        }
+        val content =
+            buildMap {
+                put("schema/migration.surql", TEST_MIGRATION_SCHEMA)
+                put("schema/realm/_index.txt", "realm_probe.surql")
+                put("schema/realm/realm_probe.surql", TEST_REALM_SCHEMA)
+                put("schema/patches/_index.txt", patchFiles.joinToString("\n"))
+                patches.forEach { (id, script) -> put("schema/patches/$id.surql", script) }
+            }
         return MigrationResources(content::get)
     }
 

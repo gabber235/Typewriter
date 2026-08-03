@@ -9,8 +9,11 @@ import org.jline.reader.ParsedLine
 class RealmShellCompleter(
     private val rootCommand: BaseCliktCommand<*>,
 ) : Completer {
-
-    override fun complete(reader: LineReader, line: ParsedLine, candidates: MutableList<Candidate>) {
+    override fun complete(
+        reader: LineReader,
+        line: ParsedLine,
+        candidates: MutableList<Candidate>,
+    ) {
         val words = line.words().filter { it.isNotBlank() }
         val currentWord = line.word() ?: ""
 
@@ -29,9 +32,10 @@ class RealmShellCompleter(
     private fun resolveCommand(words: List<String>): BaseCliktCommand<*> {
         var current: BaseCliktCommand<*> = rootCommand
         for (word in words) {
-            val subcommand = current.registeredSubcommands().find {
-                it.commandName == word
-            } ?: break
+            val subcommand =
+                current.registeredSubcommands().find {
+                    it.commandName == word
+                } ?: break
             current = subcommand
         }
         return current

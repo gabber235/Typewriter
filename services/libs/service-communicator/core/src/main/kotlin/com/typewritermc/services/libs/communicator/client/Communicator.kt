@@ -1,7 +1,13 @@
 package com.typewritermc.services.libs.communicator.client
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
-import com.typewritermc.services.libs.communicator.contract.*
+import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ResponseClassification
+import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
+import com.typewritermc.services.libs.communicator.contract.UnaryContract
+import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -9,15 +15,28 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterOptions
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersSetter
-import com.typewritermc.services.libs.communicator.transport.*
-import com.typewritermc.services.libs.telemetry.*
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.MessageTransport
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SluggedException
+import com.typewritermc.services.libs.telemetry.TypedAttributes
+import com.typewritermc.services.libs.telemetry.childSpan
+import com.typewritermc.services.libs.telemetry.consumerSpan
+import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.telemetry.mainSpanScope
+import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
@@ -40,15 +59,16 @@ class Communicator(
         routes: CommunicatorRoutes,
         parentScope: CoroutineScope,
         options: RouterOptions = RouterOptions(),
-    ): CommunicatorRouter = CommunicatorRouter(
-        transport = transport,
-        routes = routes,
-        communicator = this,
-        telemetry = telemetry,
-        propagators = propagators,
-        parentScope = parentScope,
-        options = options,
-    )
+    ): CommunicatorRouter =
+        CommunicatorRouter(
+            transport = transport,
+            routes = routes,
+            communicator = this,
+            telemetry = telemetry,
+            propagators = propagators,
+            parentScope = parentScope,
+            options = options,
+        )
 
     /** Performs a typed unary request. */
     suspend fun <Address : Any, Request : Any, Response : Any> request(
@@ -62,40 +82,45 @@ class Communicator(
         require(effectiveTimeout.isPositive() && effectiveTimeout.isFinite()) {
             "Request timeout must be positive and finite"
         }
-        val result = operation(
-            contract.name.value,
-            "request",
-            contract.failureSlug,
-            SpanKind.CLIENT,
-            contract.requestAddress.template
-        ) { annotate ->
-            val payload = classify(
-                block = { contract.requestCodec.encode(request) },
-                error = { CommunicationError.Encode(contract.failureSlug, it) })
-            val message = outbound(contract.requestAddress.render(address), payload, headers)
-            annotate { attribute("messaging.destination.name", message.address.value) }
-            val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout))
-            val response = classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
-                CommunicationError.Decode(contract.failureSlug, it)
-            })
-            val classification = contract.responsePolicy.classify(response)
-            annotate {
-                attribute("domain.outcome", classification.variant.value)
-                attribute("operation.outcome", classification.outcome.name.lowercase())
-            }
-            if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-                throw Classified(
-                    CommunicationError.Transport(
-                        contract.failureSlug,
-                        InternalResponseException(response)
+        val result =
+            operation(
+                contract.name.value,
+                "request",
+                contract.failureSlug,
+                SpanKind.CLIENT,
+                contract.requestAddress.template,
+            ) { annotate ->
+                val payload =
+                    classify(
+                        block = { contract.requestCodec.encode(request) },
+                        error = { CommunicationError.Encode(contract.failureSlug, it) },
                     )
-                )
+                val message = outbound(contract.requestAddress.render(address), payload, headers)
+                annotate { attribute("messaging.destination.name", message.address.value) }
+                val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout))
+                val response =
+                    classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
+                        CommunicationError.Decode(contract.failureSlug, it)
+                    })
+                val classification = contract.responsePolicy.classify(response)
+                annotate {
+                    attribute("domain.outcome", classification.variant.value)
+                    attribute("operation.outcome", classification.outcome.name.lowercase())
+                }
+                if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
+                    throw Classified(
+                        CommunicationError.Transport(
+                            contract.failureSlug,
+                            InternalResponseException(response),
+                        ),
+                    )
+                }
+                response
             }
-            response
-        }
         if (result is CommunicationResult.Failure && result.error.cause is InternalResponseException) {
             val internal = result.error.cause as InternalResponseException
-            @Suppress("UNCHECKED_CAST") return CommunicationResult.Success(internal.response as Response)
+            @Suppress("UNCHECKED_CAST")
+            return CommunicationResult.Success(internal.response as Response)
         }
         return result
     }
@@ -106,20 +131,23 @@ class Communicator(
         address: Address,
         event: Event,
         headers: MessageHeaders = MessageHeaders.Empty,
-    ): CommunicationResult<Unit> = operation(
-        contract.name.value,
-        "publish",
-        contract.failureSlug,
-        SpanKind.PRODUCER,
-        contract.address.template,
-    ) { annotate ->
-        val payload = classify(
-            block = { contract.codec.encode(event) },
-            error = { CommunicationError.Encode(contract.failureSlug, it) })
-        val message = outbound(contract.address.render(address), payload, headers)
-        annotate { attribute("messaging.destination.name", message.address.value) }
-        classifyTransport(contract.failureSlug, transport.publish(message))
-    }
+    ): CommunicationResult<Unit> =
+        operation(
+            contract.name.value,
+            "publish",
+            contract.failureSlug,
+            SpanKind.PRODUCER,
+            contract.address.template,
+        ) { annotate ->
+            val payload =
+                classify(
+                    block = { contract.codec.encode(event) },
+                    error = { CommunicationError.Encode(contract.failureSlug, it) },
+                )
+            val message = outbound(contract.address.render(address), payload, headers)
+            annotate { attribute("messaging.destination.name", message.address.value) }
+            classifyTransport(contract.failureSlug, transport.publish(message))
+        }
 
     /** Publishes an independent typed watch update. */
     suspend fun <Address : Any, Request : Any, Initial : Any, Update : Any> publishUpdate(
@@ -144,7 +172,7 @@ class Communicator(
                 classification,
                 contract.failureSlug,
                 headers,
-                annotate
+                annotate,
             )
         }.normalizeInternalResponse()
     }
@@ -158,9 +186,10 @@ class Communicator(
         classification: ResponseClassification,
         failureSlug: ErrorSlug,
         headers: MessageHeaders = MessageHeaders.Empty,
-    ): CommunicationResult<Unit> = operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
-        publishResponse(destination, response, codec, classification, failureSlug, headers, annotate)
-    }.normalizeInternalResponse()
+    ): CommunicationResult<Unit> =
+        operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
+            publishResponse(destination, response, codec, classification, failureSlug, headers, annotate)
+        }.normalizeInternalResponse()
 
     private suspend fun <Response : Any> publishResponse(
         destination: com.typewritermc.services.libs.communicator.address.MessageAddress,
@@ -184,10 +213,13 @@ class Communicator(
     }
 
     private fun CommunicationResult<Unit>.normalizeInternalResponse(): CommunicationResult<Unit> =
-        if (this is CommunicationResult.Failure && error.cause is InternalResponseException) CommunicationResult.Success(
-            Unit
-        )
-        else this
+        if (this is CommunicationResult.Failure && error.cause is InternalResponseException) {
+            CommunicationResult.Success(
+                Unit,
+            )
+        } else {
+            this
+        }
 
     /** Creates a cold-typed watch flow; every collector owns a subscription. */
     fun <Address : Any, Request : Any, Initial : Any, Update : Any> watch(
@@ -195,123 +227,140 @@ class Communicator(
         address: Address,
         request: Request,
         headers: MessageHeaders = MessageHeaders.Empty,
-    ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> = flow {
-        val updateAddress = contract.updateAddress.render(address)
-        val subscriptionResult = operation(
-            contract.name.value,
-            "subscribe",
-            contract.failureSlug,
-            SpanKind.CONSUMER,
-            contract.updateAddress.template,
-        ) { annotate ->
-            annotate { attribute("messaging.destination.name", updateAddress.value) }
-            classifyTransport(contract.failureSlug, transport.subscribe(AddressPattern.of(updateAddress.value)))
-        }
-        val subscription = when (subscriptionResult) {
-            is CommunicationResult.Failure -> {
-                emit(subscriptionResult)
-                return@flow
-            }
+    ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
+        flow {
+            val updateAddress = contract.updateAddress.render(address)
+            val subscriptionResult =
+                operation(
+                    contract.name.value,
+                    "subscribe",
+                    contract.failureSlug,
+                    SpanKind.CONSUMER,
+                    contract.updateAddress.template,
+                ) { annotate ->
+                    annotate { attribute("messaging.destination.name", updateAddress.value) }
+                    classifyTransport(contract.failureSlug, transport.subscribe(AddressPattern.of(updateAddress.value)))
+                }
+            val subscription =
+                when (subscriptionResult) {
+                    is CommunicationResult.Failure -> {
+                        emit(subscriptionResult)
+                        return@flow
+                    }
 
-            is CommunicationResult.Success -> subscriptionResult.value
-        }
-        val exactFailure = AtomicReference<Throwable?>(null)
-        try {
-            coroutineScope {
-                val bufferedDeliveries = Channel<TransportDelivery>(capacity = 64)
-                val deliveryCollector = launch(start = CoroutineStart.UNDISPATCHED) {
+                    is CommunicationResult.Success -> {
+                        subscriptionResult.value
+                    }
+                }
+            val exactFailure = AtomicReference<Throwable?>(null)
+            try {
+                coroutineScope {
+                    val bufferedDeliveries = Channel<TransportDelivery>(capacity = 64)
+                    val deliveryCollector =
+                        launch(start = CoroutineStart.UNDISPATCHED) {
+                            try {
+                                subscription.deliveries.collect(bufferedDeliveries::send)
+                                bufferedDeliveries.close()
+                            } catch (failure: Throwable) {
+                                rethrowExceptional(failure)
+                                exactFailure.set(failure)
+                                bufferedDeliveries.close(failure)
+                            }
+                        }
+                    var primaryFailure: Throwable? = null
                     try {
-                        subscription.deliveries.collect(bufferedDeliveries::send)
-                        bufferedDeliveries.close()
-                    } catch (failure: Throwable) {
-                        rethrowExceptional(failure)
-                        exactFailure.set(failure)
-                        bufferedDeliveries.close(failure)
-                    }
-                }
-                var primaryFailure: Throwable? = null
-                try {
-                    val initial = request(
-                        UnaryContract(
-                            contract.name,
-                            contract.requestAddress,
-                            contract.requestCodec,
-                            contract.initialCodec,
-                            contract.initialPolicy,
-                            contract.timeout,
-                            contract.failureSlug,
-                        ),
-                        address,
-                        request,
-                        headers,
-                    )
-                    when (initial) {
-                        is CommunicationResult.Failure -> {
-                            emit(initial)
-                            return@coroutineScope
-                        }
-
-                        is CommunicationResult.Success -> emit(
-                            CommunicationResult.Success(WatchMessage.Initial(initial.value))
-                        )
-                    }
-                    for (delivery in bufferedDeliveries) {
-                        when (delivery) {
-                            TransportDelivery.Completed -> break
-                            is TransportDelivery.Failure -> {
-                                emit(terminalWatchFailure(contract, updateAddress.value, delivery.error))
-                                break
+                        val initial =
+                            request(
+                                UnaryContract(
+                                    contract.name,
+                                    contract.requestAddress,
+                                    contract.requestCodec,
+                                    contract.initialCodec,
+                                    contract.initialPolicy,
+                                    contract.timeout,
+                                    contract.failureSlug,
+                                ),
+                                address,
+                                request,
+                                headers,
+                            )
+                        when (initial) {
+                            is CommunicationResult.Failure -> {
+                                emit(initial)
+                                return@coroutineScope
                             }
 
-                            is TransportDelivery.Message -> {
-                                val decoded = decodeUpdate(contract, delivery.message)
-                                val update = (decoded as? CommunicationResult.Success)?.value
-                                if (update is WatchMessage.Update && !contract.updateFilter(request, update.value)) {
-                                    continue
+                            is CommunicationResult.Success -> {
+                                emit(
+                                    CommunicationResult.Success(WatchMessage.Initial(initial.value)),
+                                )
+                            }
+                        }
+                        for (delivery in bufferedDeliveries) {
+                            when (delivery) {
+                                TransportDelivery.Completed -> {
+                                    break
                                 }
-                                emit(decoded)
+
+                                is TransportDelivery.Failure -> {
+                                    emit(terminalWatchFailure(contract, updateAddress.value, delivery.error))
+                                    break
+                                }
+
+                                is TransportDelivery.Message -> {
+                                    val decoded = decodeUpdate(contract, delivery.message)
+                                    val update = (decoded as? CommunicationResult.Success)?.value
+                                    if (update is WatchMessage.Update && !contract.updateFilter(request, update.value)) {
+                                        continue
+                                    }
+                                    emit(decoded)
+                                }
                             }
                         }
-                    }
-                } catch (failure: Throwable) {
-                    val originalFailure = exactFailure.get()?.takeIf { deliveryFailure ->
-                        generateSequence(failure) { it.cause }.any { it === deliveryFailure }
-                    } ?: failure
-                    primaryFailure = originalFailure
-                    throw originalFailure
-                } finally {
-                    withContext(NonCancellable) {
-                        try {
-                            subscription.close()
-                        } catch (cleanupFailure: Throwable) {
-                            rethrowExceptional(cleanupFailure)
-                            val primary = primaryFailure
-                            if (primary == null) {
-                                exactFailure.set(cleanupFailure)
-                                primaryFailure = cleanupFailure
-                            } else {
-                                primary.addSuppressed(cleanupFailure)
+                    } catch (failure: Throwable) {
+                        val originalFailure =
+                            exactFailure.get()?.takeIf { deliveryFailure ->
+                                generateSequence(failure) { it.cause }.any { it === deliveryFailure }
+                            } ?: failure
+                        primaryFailure = originalFailure
+                        throw originalFailure
+                    } finally {
+                        withContext(NonCancellable) {
+                            try {
+                                subscription.close()
+                            } catch (cleanupFailure: Throwable) {
+                                rethrowExceptional(cleanupFailure)
+                                val primary = primaryFailure
+                                if (primary == null) {
+                                    exactFailure.set(cleanupFailure)
+                                    primaryFailure = cleanupFailure
+                                } else {
+                                    primary.addSuppressed(cleanupFailure)
+                                }
+                            }
+                            try {
+                                deliveryCollector.cancelAndJoin()
+                            } catch (cleanupFailure: Throwable) {
+                                rethrowExceptional(cleanupFailure)
+                                val primary = primaryFailure
+                                if (primary == null) {
+                                    primaryFailure = cleanupFailure
+                                } else {
+                                    primary.addSuppressed(cleanupFailure)
+                                }
                             }
                         }
-                        try {
-                            deliveryCollector.cancelAndJoin()
-                        } catch (cleanupFailure: Throwable) {
-                            rethrowExceptional(cleanupFailure)
-                            val primary = primaryFailure
-                            if (primary == null) primaryFailure = cleanupFailure
-                            else primary.addSuppressed(cleanupFailure)
-                        }
+                        primaryFailure?.let { throw it }
                     }
-                    primaryFailure?.let { throw it }
                 }
+            } catch (failure: Throwable) {
+                val originalFailure =
+                    exactFailure.get()?.takeIf { exact ->
+                        generateSequence(failure) { it.cause }.any { it === exact }
+                    }
+                throw originalFailure ?: failure
             }
-        } catch (failure: Throwable) {
-            val originalFailure = exactFailure.get()?.takeIf { exact ->
-                generateSequence(failure) { it.cause }.any { it === exact }
-            }
-            throw originalFailure ?: failure
         }
-    }
 
     private suspend fun <Initial : Any, Update : Any> decodeUpdate(
         contract: WatchContract<*, *, Initial, Update>,
@@ -319,32 +368,37 @@ class Communicator(
     ): CommunicationResult<WatchMessage<Initial, Update>> {
         val parent = propagators.textMapPropagator.extract(Context.current(), message.headers, MessageHeadersGetter)
         return try {
-            val value = telemetry.consumerSpan(
-                "${contract.name.value} receive",
-                contract.failureSlug,
-                parent,
-                attributes("receive", contract.name.value, contract.updateAddress.template).toBuilder()
-                    .put("messaging.destination.name", message.address.value).build(),
-            ) { main ->
-                val update = classify(block = { contract.updateCodec.decode(message.payload) }, error = {
-                    CommunicationError.Decode(contract.failureSlug, it)
-                })
-                val classification = contract.updateClassifier.classify(update)
-                main.annotate {
-                    domainOutcome(classification.variant.value)
-                    operationOutcome(classification.outcome.name.lowercase())
+            val value =
+                telemetry.consumerSpan(
+                    "${contract.name.value} receive",
+                    contract.failureSlug,
+                    parent,
+                    attributes("receive", contract.name.value, contract.updateAddress.template)
+                        .toBuilder()
+                        .put("messaging.destination.name", message.address.value)
+                        .build(),
+                ) { main ->
+                    val update =
+                        classify(block = { contract.updateCodec.decode(message.payload) }, error = {
+                            CommunicationError.Decode(contract.failureSlug, it)
+                        })
+                    val classification = contract.updateClassifier.classify(update)
+                    main.annotate {
+                        domainOutcome(classification.variant.value)
+                        operationOutcome(classification.outcome.name.lowercase())
+                    }
+                    if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
+                        val error = CommunicationError.Transport(contract.failureSlug, InternalResponseException(update))
+                        throw SluggedException.wrap(error.slug, Classified(error))
+                    }
+                    update
                 }
-                if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-                    val error = CommunicationError.Transport(contract.failureSlug, InternalResponseException(update))
-                    throw SluggedException.wrap(error.slug, Classified(error))
-                }
-                update
-            }
             CommunicationResult.Success(WatchMessage.Update(value))
         } catch (failure: Throwable) {
             val internal = failure.causes().filterIsInstance<InternalResponseException>().firstOrNull()
             if (internal != null) {
-                @Suppress("UNCHECKED_CAST") CommunicationResult.Success(WatchMessage.Update(internal.response as Update))
+                @Suppress("UNCHECKED_CAST")
+                CommunicationResult.Success(WatchMessage.Update(internal.response as Update))
             } else {
                 recover(failure)
             }
@@ -356,17 +410,18 @@ class Communicator(
         destination: String,
         transportError: TransportError,
     ): CommunicationResult.Failure {
-        val result = operation<Unit>(
-            contract.name.value,
-            "receive",
-            contract.failureSlug,
-            SpanKind.CONSUMER,
-            contract.updateAddress.template,
-        ) { annotate ->
-            annotate { attribute("messaging.destination.name", destination) }
-            val error = transportError.toCommunicationError(contract.failureSlug)
-            throw SluggedException.wrap(error.slug, Classified(error))
-        }
+        val result =
+            operation<Unit>(
+                contract.name.value,
+                "receive",
+                contract.failureSlug,
+                SpanKind.CONSUMER,
+                contract.updateAddress.template,
+            ) { annotate ->
+                annotate { attribute("messaging.destination.name", destination) }
+                val error = transportError.toCommunicationError(contract.failureSlug)
+                throw SluggedException.wrap(error.slug, Classified(error))
+            }
         check(result is CommunicationResult.Failure)
         return result
     }
@@ -378,33 +433,35 @@ class Communicator(
         kind: SpanKind,
         template: String?,
         block: suspend (annotate: (TypedAttributes.() -> Unit) -> Unit) -> Value,
-    ): CommunicationResult<Value> = try {
-        val attributes = attributes(type, name, template)
-        val currentMain = Context.current().mainSpanScope()
-        val value = if (currentMain == null) {
-            telemetry.mainSpan(
-                "$name $type",
-                slug,
-                kind,
-                attributes = attributes
-            ) { main -> block { annotation -> main.annotate { annotation(this) } } }
-        } else {
-            context(currentMain) {
-                childSpan("$name $type", kind, attributes) { child ->
-                    block { annotation ->
-                        child.annotate {
-                            annotation(
-                                this
-                            )
+    ): CommunicationResult<Value> =
+        try {
+            val attributes = attributes(type, name, template)
+            val currentMain = Context.current().mainSpanScope()
+            val value =
+                if (currentMain == null) {
+                    telemetry.mainSpan(
+                        "$name $type",
+                        slug,
+                        kind,
+                        attributes = attributes,
+                    ) { main -> block { annotation -> main.annotate { annotation(this) } } }
+                } else {
+                    context(currentMain) {
+                        childSpan("$name $type", kind, attributes) { child ->
+                            block { annotation ->
+                                child.annotate {
+                                    annotation(
+                                        this,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
+            CommunicationResult.Success(value)
+        } catch (failure: Throwable) {
+            recover(failure)
         }
-        CommunicationResult.Success(value)
-    } catch (failure: Throwable) {
-        recover(failure)
-    }
 
     private fun outbound(
         address: com.typewritermc.services.libs.communicator.address.MessageAddress,
@@ -418,28 +475,46 @@ class Communicator(
         return OutboundMessage(address, payload, replyTo, setter.headers)
     }
 
-    private fun attributes(type: String, name: String, template: String?): Attributes {
+    private fun attributes(
+        type: String,
+        name: String,
+        template: String?,
+    ): Attributes {
         val attributes =
-            Attributes.builder().put("messaging.system", transport.system.value).put("messaging.operation.name", name)
+            Attributes
+                .builder()
+                .put("messaging.system", transport.system.value)
+                .put("messaging.operation.name", name)
                 .put("messaging.operation.type", type)
         if (template != null) attributes.put("messaging.destination.template", template)
         return attributes.build()
     }
 
-    private fun <Value> classify(block: () -> Value, error: (Throwable) -> CommunicationError): Value = try {
-        block()
-    } catch (failure: Throwable) {
-        rethrowExceptional(failure)
-        throw SluggedException.wrap(error(failure).slug, Classified(error(failure)))
-    }
-
-    private fun <Value> classifyTransport(slug: ErrorSlug, result: TransportResult<Value>): Value = when (result) {
-        is TransportResult.Success -> result.value
-        is TransportResult.Failure -> {
-            val error = result.error.toCommunicationError(slug)
-            throw SluggedException.wrap(error.slug, Classified(error))
+    private fun <Value> classify(
+        block: () -> Value,
+        error: (Throwable) -> CommunicationError,
+    ): Value =
+        try {
+            block()
+        } catch (failure: Throwable) {
+            rethrowExceptional(failure)
+            throw SluggedException.wrap(error(failure).slug, Classified(error(failure)))
         }
-    }
+
+    private fun <Value> classifyTransport(
+        slug: ErrorSlug,
+        result: TransportResult<Value>,
+    ): Value =
+        when (result) {
+            is TransportResult.Success -> {
+                result.value
+            }
+
+            is TransportResult.Failure -> {
+                val error = result.error.toCommunicationError(slug)
+                throw SluggedException.wrap(error.slug, Classified(error))
+            }
+        }
 
     private fun recover(failure: Throwable): CommunicationResult.Failure {
         rethrowExceptional(failure)
@@ -447,24 +522,31 @@ class Communicator(
         return CommunicationResult.Failure(classified.error)
     }
 
-    private class Classified(val error: CommunicationError) : RuntimeException(error.cause)
-    private class InternalResponseException(val response: Any) : RuntimeException("Typed internal-error response")
+    private class Classified(
+        val error: CommunicationError,
+    ) : RuntimeException(error.cause)
+
+    private class InternalResponseException(
+        val response: Any,
+    ) : RuntimeException("Typed internal-error response")
 }
 
-private fun TransportError.toCommunicationError(slug: ErrorSlug): CommunicationError = when (this) {
-    is TransportError.Timeout -> CommunicationError.Timeout(slug, cause)
-    is TransportError.Unavailable -> CommunicationError.Unavailable(slug, cause)
-    is TransportError.NoResponders -> CommunicationError.NoResponders(slug, cause)
-    is TransportError.Failure -> CommunicationError.Transport(slug, cause)
-}
-
-private fun Throwable.causes(): Sequence<Throwable> = sequence {
-    val visited = mutableSetOf<Throwable>()
-    var current: Throwable? = this@causes
-    while (current != null && visited.add(current)) {
-        yield(current)
-        current = current.cause
+private fun TransportError.toCommunicationError(slug: ErrorSlug): CommunicationError =
+    when (this) {
+        is TransportError.Timeout -> CommunicationError.Timeout(slug, cause)
+        is TransportError.Unavailable -> CommunicationError.Unavailable(slug, cause)
+        is TransportError.NoResponders -> CommunicationError.NoResponders(slug, cause)
+        is TransportError.Failure -> CommunicationError.Transport(slug, cause)
     }
-}
+
+private fun Throwable.causes(): Sequence<Throwable> =
+    sequence {
+        val visited = mutableSetOf<Throwable>()
+        var current: Throwable? = this@causes
+        while (current != null && visited.add(current)) {
+            yield(current)
+            current = current.cause
+        }
+    }
 
 private fun rethrowExceptional(failure: Throwable) = rethrowExceptionalThrowable(failure)

@@ -2,7 +2,13 @@ package com.typewritermc.services.libs.communicator.nats
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.transport.*
+import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
+import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.communicator.transport.TransportError
+import com.typewritermc.services.libs.communicator.transport.TransportResult
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
@@ -22,31 +28,34 @@ import kotlin.time.Duration.Companion.seconds
 @ExperimentalCoroutinesApi
 val NatsAdapterTest by testSuite {
     test("authentication never prints secrets and retains value equality") {
-        val authentication = NatsAuthentication(
-            authToken = "auth-secret",
-            username = "user-secret",
-            password = "password-secret",
-            jwt = "jwt-secret",
-            signature = "signature-secret",
-            nkey = "nkey-secret",
-        )
+        val authentication =
+            NatsAuthentication(
+                authToken = "auth-secret",
+                username = "user-secret",
+                password = "password-secret",
+                jwt = "jwt-secret",
+                signature = "signature-secret",
+                nkey = "nkey-secret",
+            )
 
-        authentication shouldBe NatsAuthentication(
-            "auth-secret",
-            "user-secret",
-            "password-secret",
-            "jwt-secret",
-            "signature-secret",
-            "nkey-secret",
-        )
-        authentication.hashCode() shouldBe NatsAuthentication(
-            "auth-secret",
-            "user-secret",
-            "password-secret",
-            "jwt-secret",
-            "signature-secret",
-            "nkey-secret",
-        ).hashCode()
+        authentication shouldBe
+            NatsAuthentication(
+                "auth-secret",
+                "user-secret",
+                "password-secret",
+                "jwt-secret",
+                "signature-secret",
+                "nkey-secret",
+            )
+        authentication.hashCode() shouldBe
+            NatsAuthentication(
+                "auth-secret",
+                "user-secret",
+                "password-secret",
+                "jwt-secret",
+                "signature-secret",
+                "nkey-secret",
+            ).hashCode()
         authentication.toString() shouldBe "NatsAuthentication([REDACTED])"
     }
 
@@ -56,26 +65,30 @@ val NatsAdapterTest by testSuite {
         shouldThrow<IllegalArgumentException> {
             NatsConnectionConfiguration(
                 "nats://localhost",
-                connectTimeout = Duration.ZERO
+                connectTimeout = Duration.ZERO,
             )
         }
         NatsConnectionConfiguration(
             "nats://localhost:4222",
-            maxReconnects = 0
+            maxReconnects = 0,
         ).serverUrl shouldBe "nats://localhost:4222"
     }
 
     test("configuration normalizes NATS attempt and millisecond values") {
-        val zero = NatsConnectionConfiguration(
-            "nats://localhost", connectTimeout = 1.microseconds, maxReconnects = 0, reconnectDelay = 1501.microseconds,
-        )
+        val zero =
+            NatsConnectionConfiguration(
+                "nats://localhost",
+                connectTimeout = 1.microseconds,
+                maxReconnects = 0,
+                reconnectDelay = 1501.microseconds,
+            )
         zero.natsMaxConnectionAttempts shouldBe 1
         zero.normalizedConnectTimeout shouldBe 1.milliseconds
         zero.normalizedReconnectDelay shouldBe 2.milliseconds
         NatsConnectionConfiguration("nats://localhost", maxReconnects = 4).natsMaxConnectionAttempts shouldBe 5
         NatsConnectionConfiguration(
             "nats://localhost",
-            maxReconnects = Int.MAX_VALUE
+            maxReconnects = Int.MAX_VALUE,
         ).natsMaxConnectionAttempts shouldBe Int.MAX_VALUE
     }
 
@@ -104,18 +117,20 @@ val NatsAdapterTest by testSuite {
     test("authentication maps nonce signing and connected state only after success") {
         val client = FakeClient()
         var challengeHasNonce = false
-        val factory = FakeFactory(client) { auth ->
-            val mapped = auth(true) { "signed:$it" }
-            mapped.signature shouldBe "signed:seed"
-        }
-        val connection = NatsConnection(
-            { NatsConnectionConfiguration("nats://localhost") },
-            { challenge ->
-                challengeHasNonce = challenge.hasNonce
-                NatsAuthentication(jwt = "jwt", signature = challenge.signNonce("seed"), nkey = "public")
-            },
-            factory,
-        )
+        val factory =
+            FakeFactory(client) { auth ->
+                val mapped = auth(true) { "signed:$it" }
+                mapped.signature shouldBe "signed:seed"
+            }
+        val connection =
+            NatsConnection(
+                { NatsConnectionConfiguration("nats://localhost") },
+                { challenge ->
+                    challengeHasNonce = challenge.hasNonce
+                    NatsAuthentication(jwt = "jwt", signature = challenge.signNonce("seed"), nkey = "public")
+                },
+                factory,
+            )
         connection.state.value shouldBe NatsConnectionState.Disconnected
         connection.connect() shouldBe NatsLifecycleResult.Success
         challengeHasNonce shouldBe true
@@ -136,11 +151,15 @@ val NatsAdapterTest by testSuite {
         val replacementClient = FakeClient()
         val clients = ArrayDeque(listOf(firstClient, replacementClient))
         var configurations = 0
-        val connection = NatsConnection(
-            { configurations++; NatsConnectionConfiguration("nats://localhost") },
-            { NatsAuthentication() },
-            { _, _ -> clients.removeFirst() },
-        )
+        val connection =
+            NatsConnection(
+                {
+                    configurations++
+                    NatsConnectionConfiguration("nats://localhost")
+                },
+                { NatsAuthentication() },
+                { _, _ -> clients.removeFirst() },
+            )
         connection.connect()
         connection.reconnect()
         configurations shouldBe 2
@@ -163,23 +182,28 @@ val NatsAdapterTest by testSuite {
     }
 
     test("publish and request preserve headers reply and timeout without retry") {
-        val client = FakeClient(
-            requestResponse = NatsClientMessage(
-                "reply",
-                null,
-                mapOf("X" to listOf("a", "b")),
-                "return",
-                null,
-                null,
-            ),
-        )
+        val client =
+            FakeClient(
+                requestResponse =
+                    NatsClientMessage(
+                        "reply",
+                        null,
+                        mapOf("X" to listOf("a", "b")),
+                        "return",
+                        null,
+                        null,
+                    ),
+            )
         val connection = connection(client)
         connection.connect()
         val transport = NatsMessageTransport(connection)
-        val outbound = OutboundMessage(
-            MessageAddress.of("work"), byteArrayOf(1), MessageAddress.of("inbox"),
-            MessageHeaders.of("X" to "a", "X" to "b"),
-        )
+        val outbound =
+            OutboundMessage(
+                MessageAddress.of("work"),
+                byteArrayOf(1),
+                MessageAddress.of("inbox"),
+                MessageHeaders.of("X" to "a", "X" to "b"),
+            )
         transport.publish(outbound) shouldBe TransportResult.Success(Unit)
         val result = transport.request(outbound.copy(replyTo = null), 1250.milliseconds) as TransportResult.Success
         result.value.payload shouldBe byteArrayOf()
@@ -203,32 +227,37 @@ val NatsAdapterTest by testSuite {
         val client = FakeClient(requestFailure = IllegalStateException("broken"))
         val connection = connection(client)
         connection.connect()
-        (NatsMessageTransport(connection).request(
-            outbound(),
-            1.seconds
-        ) as TransportResult.Failure).error::class shouldBe TransportError.Failure::class
+        (
+            NatsMessageTransport(connection).request(
+                outbound(),
+                1.seconds,
+            ) as TransportResult.Failure
+        ).error::class shouldBe TransportError.Failure::class
         client.requestCalls shouldBe 1
     }
 
     test("subscribe maps options flushes and closes once") {
-        val subscription = FakeSubscription(
-            flowOf(
-                NatsClientMessage(
-                    "jobs.one",
-                    byteArrayOf(2),
-                    mapOf("X" to listOf("v")),
-                    null,
-                    null,
-                    null
-                )
+        val subscription =
+            FakeSubscription(
+                flowOf(
+                    NatsClientMessage(
+                        "jobs.one",
+                        byteArrayOf(2),
+                        mapOf("X" to listOf("v")),
+                        null,
+                        null,
+                        null,
+                    ),
+                ),
             )
-        )
         val client = FakeClient(subscription = subscription)
         val connection = connection(client)
         connection.connect()
-        val result = NatsMessageTransport(connection).subscribe(
-            AddressPattern.of("jobs.*"), SubscriptionOptions(ConsumerGroup.of("workers")),
-        ) as TransportResult.Success
+        val result =
+            NatsMessageTransport(connection).subscribe(
+                AddressPattern.of("jobs.*"),
+                SubscriptionOptions(ConsumerGroup.of("workers")),
+            ) as TransportResult.Success
         client.events.takeLast(2) shouldBe listOf("subscribe:jobs.*:workers", "flush")
         val deliveries = mutableListOf<TransportDelivery>()
         result.value.deliveries.collect(deliveries::add)
@@ -285,6 +314,7 @@ private class FakeClient(
     var publishCalls = 0
     var requestCalls = 0
     var onConnect: suspend () -> Unit = {}
+
     override suspend fun connect(): Result<Unit> {
         events += "connect"
         onConnect()
@@ -310,30 +340,43 @@ private class FakeClient(
         publishCalls++
     }
 
-    override suspend fun request(message: NatsClientMessage, timeoutMs: Long): NatsClientMessage {
+    override suspend fun request(
+        message: NatsClientMessage,
+        timeoutMs: Long,
+    ): NatsClientMessage {
         requestCalls++
         requestTimeouts += timeoutMs
         requestFailure?.let { throw it }
         return requestResponse
     }
 
-    override suspend fun subscribe(subject: String, queueGroup: String?): NatsClientSubscription {
+    override suspend fun subscribe(
+        subject: String,
+        queueGroup: String?,
+    ): NatsClientSubscription {
         events += "subscribe:$subject:$queueGroup"
         return subscription
     }
 }
 
-private class FakeSubscription(override val messages: Flow<NatsClientMessage>) : NatsClientSubscription {
+private class FakeSubscription(
+    override val messages: Flow<NatsClientMessage>,
+) : NatsClientSubscription {
     override val isActive: StateFlow<Boolean> = MutableStateFlow(true)
     var unsubscribeCalls = 0
+
     override suspend fun unsubscribe() {
         unsubscribeCalls++
     }
 }
 
-private fun connection(client: FakeClient) = NatsConnection(
-    { NatsConnectionConfiguration("nats://localhost") }, { NatsAuthentication() }, FakeFactory(client),
-)
+private fun connection(client: FakeClient) =
+    NatsConnection(
+        { NatsConnectionConfiguration("nats://localhost") },
+        { NatsAuthentication() },
+        FakeFactory(client),
+    )
 
 private fun outbound() = OutboundMessage(MessageAddress.of("work"), byteArrayOf())
+
 private fun status(code: Int) = NatsClientMessage("reply", null, null, null, code, "status")

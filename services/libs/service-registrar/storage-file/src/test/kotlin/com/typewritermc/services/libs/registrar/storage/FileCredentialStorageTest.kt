@@ -14,19 +14,20 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 
-private fun credentials(id: String = "service-id") = IdentityCredentials(
-    ServiceIdentity(
-        id,
-        "Service Name",
-        "service-user",
-        listOf(
-            ServiceRole.Engine("1.2.3"),
-            ServiceRole.Realm("4.5.6"),
-            ServiceRole.Custom("custom_role", "7.8.9"),
+private fun credentials(id: String = "service-id") =
+    IdentityCredentials(
+        ServiceIdentity(
+            id,
+            "Service Name",
+            "service-user",
+            listOf(
+                ServiceRole.Engine("1.2.3"),
+                ServiceRole.Realm("4.5.6"),
+                ServiceRole.Custom("custom_role", "7.8.9"),
+            ),
         ),
-    ),
-    RedactedSecret.AppPassword("private-password"),
-)
+        RedactedSecret.AppPassword("private-password"),
+    )
 
 val FileCredentialStorageTest by testSuite {
     test("missing file returns Missing") {
@@ -45,10 +46,11 @@ val FileCredentialStorageTest by testSuite {
         val directory = Files.createTempDirectory("registrar-storage")
         try {
             runTest {
-                val storage = FileCredentialStorage(
-                    directory.resolve("identity.json"),
-                    dispatcher = StandardTestDispatcher(testScheduler),
-                )
+                val storage =
+                    FileCredentialStorage(
+                        directory.resolve("identity.json"),
+                        dispatcher = StandardTestDispatcher(testScheduler),
+                    )
                 storage.store(credentials()) shouldBe CredentialStoreResult.Success
                 val loaded = storage.load() as CredentialLoadResult.Loaded
                 loaded.credentials.identity.serviceId shouldBe "service-id"
@@ -70,10 +72,11 @@ val FileCredentialStorageTest by testSuite {
         val directory = Files.createTempDirectory("registrar-storage")
         try {
             runTest {
-                val storage = FileCredentialStorage(
-                    directory.resolve("identity.json"),
-                    dispatcher = StandardTestDispatcher(testScheduler),
-                )
+                val storage =
+                    FileCredentialStorage(
+                        directory.resolve("identity.json"),
+                        dispatcher = StandardTestDispatcher(testScheduler),
+                    )
                 storage.store(credentials("first")) shouldBe CredentialStoreResult.Success
                 storage.store(credentials("second")) shouldBe CredentialStoreResult.Success
                 val loaded = storage.load() as CredentialLoadResult.Loaded
@@ -122,11 +125,12 @@ val FileCredentialStorageTest by testSuite {
             val path = directory.resolve("identity.json")
             Files.write(path, ByteArray(33) { 1 })
             runTest {
-                val result = FileCredentialStorage(
-                    path,
-                    maximumBytes = 32,
-                    dispatcher = StandardTestDispatcher(testScheduler),
-                ).load()
+                val result =
+                    FileCredentialStorage(
+                        path,
+                        maximumBytes = 32,
+                        dispatcher = StandardTestDispatcher(testScheduler),
+                    ).load()
                 ((result as CredentialLoadResult.Failure).error is CredentialStorageError.Corrupt) shouldBe true
             }
         } finally {

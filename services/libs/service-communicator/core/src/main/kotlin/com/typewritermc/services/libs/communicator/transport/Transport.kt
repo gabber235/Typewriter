@@ -3,7 +3,10 @@ package com.typewritermc.services.libs.communicator.transport
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.ArrayList
+import java.util.Collections
+import java.util.LinkedHashMap
+import java.util.Locale
 import kotlin.time.Duration
 
 /** Immutable, case-insensitive, multi-value message headers with validated names and values. */
@@ -20,7 +23,10 @@ class MessageHeaders private constructor(
     fun contains(name: String): Boolean = entries.containsKey(canonicalName(name))
 
     /** Returns a new collection with [value] appended under [name]. */
-    fun plus(name: String, value: String): MessageHeaders {
+    fun plus(
+        name: String,
+        value: String,
+    ): MessageHeaders {
         validateHeaderName(name)
         validateHeaderValue(value)
         val canonicalName = canonicalName(name)
@@ -39,7 +45,10 @@ class MessageHeaders private constructor(
     }
 
     /** Returns a new collection replacing all values under [name] with [value]. */
-    fun set(name: String, value: String): MessageHeaders {
+    fun set(
+        name: String,
+        value: String,
+    ): MessageHeaders {
         validateHeaderName(name)
         validateHeaderValue(value)
         val updated = LinkedHashMap(entries)
@@ -48,17 +57,17 @@ class MessageHeaders private constructor(
     }
 
     /** Iterates stable display names and immutable value lists. */
-    override fun iterator(): Iterator<Pair<String, List<String>>> =
-        entries.values.map { it.displayName to it.values }.iterator()
+    override fun iterator(): Iterator<Pair<String, List<String>>> = entries.values.map { it.displayName to it.values }.iterator()
 
     override fun equals(other: Any?): Boolean = other is MessageHeaders && canonicalValues() == other.canonicalValues()
 
     override fun hashCode(): Int = canonicalValues().hashCode()
 
-    override fun toString(): String = entries.values.joinToString(
-        prefix = "MessageHeaders(",
-        postfix = ")",
-    ) { "${it.displayName}=${it.values}" }
+    override fun toString(): String =
+        entries.values.joinToString(
+            prefix = "MessageHeaders(",
+            postfix = ")",
+        ) { "${it.displayName}=${it.values}" }
 
     private fun canonicalValues(): Map<String, List<String>> = entries.mapValues { it.value.values }
 
@@ -70,7 +79,10 @@ class MessageHeaders private constructor(
             headers.fold(Empty) { result, (name, value) -> result.plus(name, value) }
     }
 
-    private data class HeaderEntry(val displayName: String, val values: List<String>)
+    private data class HeaderEntry(
+        val displayName: String,
+        val values: List<String>,
+    )
 }
 
 /** Outbound envelope. The payload and headers are owned by the caller and compared by content. */
@@ -81,7 +93,8 @@ data class OutboundMessage(
     val headers: MessageHeaders = MessageHeaders.Empty,
 ) {
     override fun equals(other: Any?): Boolean =
-        other is OutboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo && headers == other.headers
+        other is OutboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo &&
+            headers == other.headers
 
     override fun hashCode(): Int {
         var result = address.hashCode()
@@ -100,7 +113,8 @@ data class InboundMessage(
     val headers: MessageHeaders = MessageHeaders.Empty,
 ) {
     override fun equals(other: Any?): Boolean =
-        other is InboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo && headers == other.headers
+        other is InboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo &&
+            headers == other.headers
 
     override fun hashCode(): Int {
         var result = address.hashCode()
@@ -113,7 +127,9 @@ data class InboundMessage(
 
 /** Stable identifier for a messaging transport. */
 @JvmInline
-value class MessagingSystem private constructor(val value: String) {
+value class MessagingSystem private constructor(
+    val value: String,
+) {
     companion object {
         fun of(value: String): MessagingSystem {
             require(value.matches(Regex("[a-z][a-z0-9-]*"))) { "Invalid messaging system '$value'" }
@@ -124,7 +140,9 @@ value class MessagingSystem private constructor(val value: String) {
 
 /** A validated transport-neutral subscription consumer group. */
 @JvmInline
-value class ConsumerGroup private constructor(val value: String) {
+value class ConsumerGroup private constructor(
+    val value: String,
+) {
     /** Creates a non-blank consumer group. */
     companion object {
         fun of(value: String): ConsumerGroup {
@@ -136,42 +154,73 @@ value class ConsumerGroup private constructor(val value: String) {
 }
 
 /** Options applied while creating a transport subscription. */
-data class SubscriptionOptions(val consumerGroup: ConsumerGroup? = null)
+data class SubscriptionOptions(
+    val consumerGroup: ConsumerGroup? = null,
+)
 
 /** Explicit success or transport failure. */
 sealed interface TransportResult<out Value> {
-    data class Success<Value>(val value: Value) : TransportResult<Value>
-    data class Failure(val error: TransportError) : TransportResult<Nothing>
+    data class Success<Value>(
+        val value: Value,
+    ) : TransportResult<Value>
+
+    data class Failure(
+        val error: TransportError,
+    ) : TransportResult<Nothing>
 }
 
 /** Failures adapters return explicitly; cancellation is thrown unchanged. */
 sealed interface TransportError {
     val cause: Throwable?
 
-    data class Timeout(override val cause: Throwable? = null) : TransportError
-    data class Unavailable(override val cause: Throwable? = null) : TransportError
-    data class NoResponders(override val cause: Throwable? = null) : TransportError
-    data class Failure(override val cause: Throwable) : TransportError
+    data class Timeout(
+        override val cause: Throwable? = null,
+    ) : TransportError
+
+    data class Unavailable(
+        override val cause: Throwable? = null,
+    ) : TransportError
+
+    data class NoResponders(
+        override val cause: Throwable? = null,
+    ) : TransportError
+
+    data class Failure(
+        override val cause: Throwable,
+    ) : TransportError
 }
 
 /** A delivered message, terminal failure, or clean completion. */
 sealed interface TransportDelivery {
-    data class Message(val message: InboundMessage) : TransportDelivery
-    data class Failure(val error: TransportError) : TransportDelivery
+    data class Message(
+        val message: InboundMessage,
+    ) : TransportDelivery
+
+    data class Failure(
+        val error: TransportError,
+    ) : TransportDelivery
+
     data object Completed : TransportDelivery
 }
 
 /** A subscription whose deliveries stop on cancellation or explicit suspending close. */
 interface TransportSubscription {
     val deliveries: Flow<TransportDelivery>
+
     suspend fun close()
 }
 
 /** Adapter SPI whose operational failures are returned and whose cancellation remains explicit. */
 interface MessageTransport {
     val system: MessagingSystem
+
     suspend fun publish(message: OutboundMessage): TransportResult<Unit>
-    suspend fun request(message: OutboundMessage, timeout: Duration): TransportResult<InboundMessage>
+
+    suspend fun request(
+        message: OutboundMessage,
+        timeout: Duration,
+    ): TransportResult<InboundMessage>
+
     suspend fun subscribe(
         pattern: AddressPattern,
         options: SubscriptionOptions = SubscriptionOptions(),
