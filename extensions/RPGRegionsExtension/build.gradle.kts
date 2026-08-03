@@ -1,7 +1,9 @@
 import com.typewritermc.loader.ExtensionFlag
 
 repositories {
-    maven("https://repo.convallyria.com/releases")
+    maven("https://repo.convallyria.com/releases") {
+        content { includeGroupAndSubgroups("net.islandearth") }
+    }
 }
 
 dependencies {

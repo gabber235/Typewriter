@@ -9,12 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-      - name: Test extension
+      - name: Test and Build Extension
         working-directory: ./extensions
-        run: ./gradlew :${{ inputs.extension }}:test --scan --stacktrace --warning-mode all
-        shell: bash
-
-      - name: Build Extension
-        working-directory: ./extensions
-        run: ./gradlew :${{ inputs.extension }}:buildRelease --scan --stacktrace --warning-mode all
+        run: ./gradlew :${{ inputs.extension }}:test :${{ inputs.extension }}:buildRelease --scan --stacktrace --warning-mode all
         shell: bash

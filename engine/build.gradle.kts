@@ -42,7 +42,9 @@ allprojects {
     repositories {
         mavenCentral()
         // PacketEvents
-        maven("https://repo.codemc.io/repository/maven-snapshots/")
+        maven("https://repo.codemc.io/repository/maven-snapshots/") {
+            content { includeGroupAndSubgroups("com.github.retrooper") }
+        }
     }
 
 

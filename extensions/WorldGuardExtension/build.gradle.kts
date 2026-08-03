@@ -1,5 +1,10 @@
 repositories {
-    maven("https://maven.enginehub.org/repo/")
+    maven("https://maven.enginehub.org/repo/") {
+        content {
+            includeGroupAndSubgroups("com.sk89q")
+            includeGroupAndSubgroups("org.enginehub")
+        }
+    }
 }
 
 dependencies {

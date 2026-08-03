@@ -2,67 +2,92 @@ name: Manual Build Jars
 
 on: [workflow_dispatch]
 
+permissions:
+  contents: read
+
 jobs:
   build-engine:
     name: Build Typewriter Engine
     uses: ./.github/workflows/build-engine.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   build-extension-basic:
     name: Build Basic Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: BasicExtension
 
   build-extension-citizens:
     name: Build Citizens Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: CitizensExtension
 
   build-extension-entity:
     name: Build EntityExtension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: EntityExtension
 
   build-extension-mythic-mobs:
     name: Build MythicMobs Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: MythicMobsExtension
 
   build-extension-quest:
     name: Build Quest Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: QuestExtension
 
   build-extension-road-network:
     name: Build RoadNetwork Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: RoadNetworkExtension
 
   build-extension-rpg-regions:
     name: Build RPGRegions Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: RPGRegionsExtension
 
   build-extension-superior-skyblock:
     name: Build SuperiorSkyblock Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: SuperiorSkyblockExtension
 
   build-extension-vault:
     name: Build Vault Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: VaultExtension
 
   build-extension-worldguard:
     name: Build WorldGuard Extension
     uses: ./.github/workflows/build-extension.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     with:
       extension: WorldGuardExtension

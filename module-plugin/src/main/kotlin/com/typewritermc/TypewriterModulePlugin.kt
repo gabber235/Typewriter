@@ -48,13 +48,16 @@ class TypewriterModulePlugin : Plugin<Project> {
         // Add PacketEvents repository
         repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-releases/")
+            it.content { content -> content.includeGroupAndSubgroups("com.github.retrooper") }
         }
         repositories.maven {
             it.setUrl("https://repo.codemc.io/repository/maven-snapshots/")
+            it.content { content -> content.includeGroupAndSubgroups("com.github.retrooper") }
         }
         // Add EntityLib repository
         repositories.maven {
             it.setUrl("https://maven.typewritermc.com/external/")
+            it.content { content -> content.includeGroupAndSubgroups("me.tofaa2") }
         }
 
 
@@ -64,6 +67,7 @@ class TypewriterModulePlugin : Plugin<Project> {
             extension.channel.url?.let { url ->
                 repositories.maven {
                     it.setUrl(url)
+                    it.content { content -> content.includeGroupAndSubgroups("com.typewritermc") }
                 }
             }
             val engineVersion = extension.engineVersion.substringBefore("-beta")
@@ -76,10 +80,21 @@ class TypewriterModulePlugin : Plugin<Project> {
                 // Add Paper repository
                 repositories.maven {
                     it.setUrl("https://repo.papermc.io/repository/maven-public/")
+                    it.content { content ->
+                        content.includeGroupAndSubgroups("io.papermc")
+                        content.includeGroup("com.mojang")
+                        content.includeGroup("net.md-5")
+                    }
                 }
                 // Add Geyser repository
                 repositories.maven {
                     it.setUrl("https://repo.opencollab.dev/main/")
+                    it.content { content ->
+                        content.includeGroupAndSubgroups("org.geysermc")
+                        // Geyser's own transitives live here too.
+                        content.includeGroupAndSubgroups("org.cloudburstmc")
+                        content.includeGroupAndSubgroups("com.nukkitx")
+                    }
                 }
             }
         }

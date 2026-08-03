@@ -1,7 +1,9 @@
 import com.typewritermc.loader.ExtensionFlag
 
 repositories {
-    maven("https://mvn.lumine.io/repository/maven-public/")
+    maven("https://mvn.lumine.io/repository/maven-public/") {
+        content { includeGroupAndSubgroups("io.lumine") }
+    }
 }
 
 dependencies {

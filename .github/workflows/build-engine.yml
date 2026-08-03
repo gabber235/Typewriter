@@ -1,6 +1,14 @@
 name: Build Typewriter Engine
 
-on: [workflow_call]
+on:
+  workflow_call:
+    secrets:
+      GRADLE_ENCRYPTION_KEY:
+        required: false
+        description: Encrypts the configuration cache so setup-gradle can restore it between runs
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -32,6 +40,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: ${{ github.event_name == 'pull_request' }}
           cache-cleanup: always
           build-scan-publish: ${{ github.event_name != 'pull_request' }}
