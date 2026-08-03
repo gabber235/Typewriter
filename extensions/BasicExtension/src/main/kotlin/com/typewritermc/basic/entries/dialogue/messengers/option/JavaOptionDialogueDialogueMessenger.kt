@@ -11,6 +11,8 @@ import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.entry.entries.EventTrigger
 import com.typewritermc.engine.paper.entry.matches
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
@@ -59,7 +61,7 @@ private val delayOptionShow: Int by snippet(
 class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: OptionDialogueEntry) :
     DialogueMessenger<OptionDialogueEntry>(player, context, entry) {
 
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
 
     private val typeDuration = entry.duration.get(player)
 
@@ -106,7 +108,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
         totalDuration = typingDuration + optionsShowingDuration
 
         super.init()
-        confirmationKeyHandler = confirmationKey.handler(player) {
+        confirmation = player.awaitConfirmation {
             completeOrFinish()
         }
         // Set the index here so we ensure that the context value is written into the context.
@@ -171,10 +173,12 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
             typePercentage,
             minLines = resultingLines,
             padding = "",
-            maxLineLength = optionMaxLineLength
+            maxLineLength = optionMaxLineLength,
+            audience = player
         )
 
         val message = optionFormat.asMiniWithResolvers(
+            player,
             Placeholder.parsed("speaker", speakerDisplayName),
             Placeholder.component("text", text),
             Placeholder.component("options", formatOptions(rawText)),
@@ -209,6 +213,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
 
             val format = if (isSelected) selectedOption else unselectedOption
             lines += format.asMiniWithResolvers(
+                player,
                 Placeholder.parsed("prefix", prefix),
                 Placeholder.parsed("option_text", option.text.get(player).parsePlaceholders(player))
             )
@@ -223,7 +228,7 @@ class JavaOptionDialogueDialogueMessenger(player: Player, context: InteractionCo
 
     override fun dispose() {
         super.dispose()
-        confirmationKeyHandler?.dispose()
-        confirmationKeyHandler = null
+        confirmation?.dispose()
+        confirmation = null
     }
 }

@@ -8,10 +8,10 @@ import com.typewritermc.core.utils.around
 import com.typewritermc.core.utils.formatted
 import com.typewritermc.core.utils.loopingDistance
 import com.typewritermc.engine.paper.entry.TriggerableEntry
-import com.typewritermc.engine.paper.entry.dialogue.ConfirmationKeyHandler
 import com.typewritermc.engine.paper.entry.dialogue.TickContext
-import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
 import com.typewritermc.engine.paper.facts.FactsModifier
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.interaction.startBlockingMessages
 import com.typewritermc.engine.paper.interaction.stopBlockingMessages
@@ -86,7 +86,7 @@ class StageFactsPresetApplier(
 ) :
     FactsPresetApplier<StageFactsPresetEntry>(player, entry, modifier, serializer) {
 
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
     private var currentIndex = 0
 
     override val appliedChildren: List<Ref<FactsPresetEntry>>
@@ -111,7 +111,7 @@ class StageFactsPresetApplier(
 
         player.startBlockingMessages()
 
-        confirmationKeyHandler = confirmationKey.handler(player) {
+        confirmation = player.awaitConfirmation {
             handleConfirmation()
         }
 
@@ -150,6 +150,7 @@ class StageFactsPresetApplier(
 
     private fun displayMessage() {
         val message = stageFormat.asMiniWithResolvers(
+            player,
             Placeholder.component("options", formatOptions()),
         )
 
@@ -183,6 +184,7 @@ class StageFactsPresetApplier(
             }
 
             lines += format.asMiniWithResolvers(
+                player,
                 Placeholder.parsed("prefix", prefix),
                 Placeholder.parsed("option_text", option.get()?.name?.formatted ?: "<gray>Unknown")
             )
@@ -193,7 +195,7 @@ class StageFactsPresetApplier(
 
     override fun dispose() {
         serializer.push("$currentIndex")
-        confirmationKeyHandler?.dispose()
+        confirmation?.dispose()
         player.stopBlockingMessages()
         player.chatHistory.resendMessages(player)
         super.dispose()

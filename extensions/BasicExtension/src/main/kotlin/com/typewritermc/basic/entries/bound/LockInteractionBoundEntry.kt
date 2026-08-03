@@ -97,6 +97,7 @@ class LockInteractionBound(
     private var playerState: PlayerState? = null
     private var previousPosition: Position = Position.ORIGIN
     private var interceptor: InterceptionBundle? = null
+    private var confirmationInput: ConfirmationRegistration? = null
 
     override suspend fun initialize() {
         super.initialize()
@@ -136,6 +137,8 @@ class LockInteractionBound(
                 }
 
                 if (!packet.isJump && !packet.isShift) return@PLAYER_INPUT
+                // A player with a confirmation open has that press picked up by the registered input.
+                if (player.keyOffered != null) return@PLAYER_INPUT
                 DialogueTrigger.NEXT_OR_SKIP_ANIMATION.triggerFor(player, player.interactionContext ?: context())
             }
             // We want to fake the player's location on the client because otherwise they will interact with
@@ -173,9 +176,13 @@ class LockInteractionBound(
                 BedrockLockInteractionBoundHandler(player, it, startPosition)
             } ?: JavaLockInteractionBoundHandler(player, targetPosition !is ConstVar<*>, startPosition)
         handler?.initialize()
+
+        confirmationInput = player.takeOverConfirmationInput(PlayerInputConfirmationInput(player))
     }
 
     private suspend fun dispose() {
+        confirmationInput?.dispose()
+        confirmationInput = null
         interceptor?.cancel()
         interceptor = null
         handler?.dispose()

@@ -4,6 +4,8 @@ import com.typewritermc.basic.entries.dialogue.SpokenDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
@@ -37,7 +39,7 @@ val spokenInstructionTicksBase: Long by snippet("dialogue.spoken.instruction.tic
 
 class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: SpokenDialogueEntry) :
     DialogueMessenger<SpokenDialogueEntry>(player, context, entry) {
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
 
     private var speakerDisplayName = ""
     private var text = ""
@@ -57,7 +59,7 @@ class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionCo
         text = entry.text.get(player).parsePlaceholders(player)
         typingDuration = typingDurationType.totalDuration(text.stripped(), entry.duration.get(player))
 
-        confirmationKeyHandler = confirmationKey.handler(player) {
+        confirmation = player.awaitConfirmation {
             completeOrFinish()
         }
     }
@@ -76,8 +78,8 @@ class JavaSpokenDialogueDialogueMessenger(player: Player, context: InteractionCo
 
     override fun dispose() {
         super.dispose()
-        confirmationKeyHandler?.dispose()
-        confirmationKeyHandler = null
+        confirmation?.dispose()
+        confirmation = null
     }
 }
 
@@ -118,10 +120,12 @@ fun Player.sendSpokenDialogue(
         percentage,
         padding = spokenPadding,
         minLines = spokenMinLines.coerceAtLeast(resultingLines),
-        maxLineLength = spokenMaxLineLength
+        maxLineLength = spokenMaxLineLength,
+        audience = this
     )
 
     val component = spokenFormat.asMiniWithResolvers(
+        this,
         Placeholder.parsed("speaker", speakerDisplayName),
         Placeholder.component("message", message),
         Placeholder.parsed("next_color", nextColor),

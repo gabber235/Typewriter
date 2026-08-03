@@ -142,6 +142,7 @@ class CameraCinematicAction(
     private var interceptor: InterceptionBundle? = null
     private var listener: Listener? = null
     private var boundStateSubscription: InteractionBoundStateOverrideSubscription? = null
+    private var confirmationInput: ConfirmationRegistration? = null
 
     private var lastFrame: Int = 0
 
@@ -194,6 +195,11 @@ class CameraCinematicAction(
         // we don't want to quit the temporal interaction because we went out of bounds.
         if (boundStateSubscription == null) {
             boundStateSubscription = overrideBoundState(InteractionBoundState.IGNORING, priority = Int.MAX_VALUE)
+        }
+
+        // While spectating, the player input packet is the only input the server still receives.
+        if (confirmationInput == null) {
+            confirmationInput = takeOverConfirmationInput(PlayerInputConfirmationInput(this))
         }
 
         if (originalState == null) {
@@ -275,6 +281,9 @@ class CameraCinematicAction(
     }
 
     private suspend fun Player.teardown() {
+        confirmationInput?.dispose()
+        confirmationInput = null
+
         listener?.unregister()
         listener = null
 

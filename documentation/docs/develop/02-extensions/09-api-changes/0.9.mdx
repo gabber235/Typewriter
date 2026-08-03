@@ -306,6 +306,83 @@ The engine loads these classes by the name it is given and nothing else. An exte
 module plugin still writes the old name, so its nested classes will not be found.
 :::
 
+## The Confirmation Key Is Asked For Rather Than Listened For
+
+The confirmation key used to be a dialogue concept that listened for a bukkit event directly. A
+cinematic skip needs one as well, and a player whose camera has been taken over stops sending most of
+their input, so which key reaches the server is not something a caller can work out on its own.
+
+`ConfirmationKey` therefore moved to `com.typewritermc.engine.paper.interaction`, and asking for a
+press goes through `Confirmations`:
+
+```kotlin showLineNumbers
+// highlight-red
+private var handler: ConfirmationKeyHandler? = null
+// highlight-green
+private var confirmation: Confirmation? = null
+
+override fun init() {
+    // highlight-red
+    handler = confirmationKey.handler(player) { completeOrFinish() }
+    // highlight-green
+    confirmation = player.awaitConfirmation { completeOrFinish() }
+}
+
+override fun dispose() {
+    // highlight-red
+    handler?.dispose()
+    // highlight-green
+    confirmation?.dispose()
+}
+```
+
+`ConfirmationKeyHandler`, `ConfirmationKey.handler` and the four handler classes are gone with it.
+Pass a preferred key as the first argument of `awaitConfirmation` if the caller has a reason to want
+one; it is used whenever the player's input can carry it.
+
+### Taking A Player's Input Over
+
+Anything that puts a player in a state where their client stops sending its usual packets registers
+what is left, so that a confirmation asked for in the meantime picks a key that still arrives:
+
+```kotlin showLineNumbers
+private var input: ConfirmationRegistration? = null
+
+input = player.takeOverConfirmationInput(PlayerInputConfirmationInput(player))
+// and when the camera is handed back
+input?.dispose()
+```
+
+### `<confirmation_key>` Is Parsed Per Audience
+
+The tag used to be resolved once, off the configured key, for every message on the server. It now
+names the key that the player being shown the message is asked for, so the message has to be parsed
+for that player:
+
+```kotlin showLineNumbers
+// highlight-red
+val component = format.asMiniWithResolvers(Placeholder.parsed("speaker", speaker))
+// highlight-green
+val component = format.asMiniWithResolvers(player, Placeholder.parsed("speaker", speaker))
+```
+
+`asMini`, `asMiniWithResolvers` and `asPartialFormattedMini` all take an audience, and the tag reads
+the key off whoever the message is being parsed for. Pass it on when one message is built out of
+another, or the inner one falls back to the configured key. Parsing for a player also gets bedrock
+right: a keybind tag renders nothing on bedrock, so those players are given the name of the key
+instead.
+
+Parsing without an audience still works and still falls back to the configured key.
+
+### `SkipConfirmationKey` Is Gone
+
+The cinematic skip had a two value enum of its own, which is now the same `ConfirmationKey` as
+everything else. Pages do not need editing: `SNEAK` and `SWAP_HANDS` are names in both, so a skip
+entry keeps the key it was saved with, and the other three become available to it.
+
+`CinematicSkippableEvent.confirmationKey` is a `ConfirmationKey` with it, and carries the key the
+player was actually offered rather than the one the entry asked for.
+
 ## Questing Extension Changes
 The Questing extension has undergone several changes in its API and structure. Below are the key updates:
 

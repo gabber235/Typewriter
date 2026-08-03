@@ -1,10 +1,8 @@
 package com.typewritermc.basic.entries.cinematic
 
-import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEntityAction
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
 import com.typewritermc.core.books.pages.Colors
 import com.typewritermc.core.extension.annotations.Entry
+import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Segments
 import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.entry.Criteria
@@ -14,20 +12,15 @@ import com.typewritermc.engine.paper.entry.entries.Segment
 import com.typewritermc.engine.paper.entry.temporal.SimpleCinematicAction
 import com.typewritermc.engine.paper.entry.temporal.TemporalSetFrameTrigger
 import com.typewritermc.engine.paper.entry.triggerFor
-import com.typewritermc.engine.paper.interaction.InterceptionBundle
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.ConfirmationKey
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.interactionContext
-import com.typewritermc.engine.paper.interaction.interceptPackets
-import com.typewritermc.engine.paper.plugin
-import com.typewritermc.engine.paper.utils.isFloodgate
-import lirand.api.extensions.events.SimpleListener
-import lirand.api.extensions.events.listen
-import lirand.api.extensions.events.unregister
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.HandlerList
-import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerEvent
-import org.bukkit.event.player.PlayerSwapHandItemsEvent
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Entry("skip_cinematic", "Allows players to manually skip the cinematic", Colors.RED, "mdi:skip-next")
 /**
@@ -45,7 +38,8 @@ class SkipCinematicEntry(
     override val id: String = "",
     override val name: String = "",
     override val criteria: List<Criteria> = emptyList(),
-    val confirmationKey: SkipConfirmationKey = SkipConfirmationKey.SNEAK,
+    @Help("Which key skips, for as long as the player's input can carry it.")
+    val confirmationKey: ConfirmationKey = ConfirmationKey.SNEAK,
     @Segments(icon = "mdi:skip-next", color = Colors.RED)
     val segments: List<SkipSegment> = emptyList(),
 ) : CinematicEntry {
@@ -59,66 +53,52 @@ data class SkipSegment(
     override val endFrame: Int = 0,
 ) : Segment
 
-enum class SkipConfirmationKey(val keybind: String, val bedrockKeybind: String) {
-    SNEAK("<key:key.sneak>", "Sneak"),
-    SWAP_HANDS("<key:key.swapOffhand>", "Swap Offhand"),
-    ;
-
-    fun keybind(player: Player): String {
-        return if (player.isFloodgate) bedrockKeybind else keybind
-    }
-}
-
 class SkipCinematicAction(
     private val player: Player,
     val entry: SkipCinematicEntry,
 ) : SimpleCinematicAction<SkipSegment>() {
     override val segments: List<SkipSegment> = entry.segments
-    private var bundle: InterceptionBundle? = null
-    private var listener: Listener? = null
+    private var confirmation: Confirmation? = null
+    private var announcedKey: ConfirmationKey? = null
+    private val skipped = AtomicBoolean(false)
 
     override suspend fun startSegment(segment: SkipSegment) {
         super.startSegment(segment)
+        skipped.set(false)
 
-        when (entry.confirmationKey) {
-            SkipConfirmationKey.SNEAK -> {
-                bundle = player.interceptPackets {
-                    Play.Client.PLAYER_INPUT { event ->
-                        val packet = WrapperPlayClientPlayerInput(event)
-                        if (!packet.isShift) return@PLAYER_INPUT
-                        TemporalSetFrameTrigger(segment.endFrame).triggerFor(
-                            player,
-                            player.interactionContext ?: context()
-                        )
-                    }
-                }
-            }
-
-            SkipConfirmationKey.SWAP_HANDS -> {
-                val listener = SimpleListener()
-                this.listener = listener
-                plugin.listen<PlayerSwapHandItemsEvent>(listener) {
-                    if (it.player.uniqueId != player.uniqueId) return@listen
-                    TemporalSetFrameTrigger(segment.endFrame).triggerFor(player, player.interactionContext ?: context())
-                    it.isCancelled = true
-                }
-            }
+        val confirmation = player.awaitConfirmation(entry.confirmationKey) {
+            // A second press would land before the segment is torn down and pull the cinematic back.
+            if (!skipped.compareAndSet(false, true)) return@awaitConfirmation
+            TemporalSetFrameTrigger(segment.endFrame).triggerFor(player, player.interactionContext ?: context())
         }
+        this.confirmation = confirmation
 
-        CinematicSkippableEvent(player, true, entry.confirmationKey).callEvent()
+        announce(confirmation.key)
+    }
+
+    override suspend fun tickSegment(segment: SkipSegment, frame: Int) {
+        super.tickSegment(segment, frame)
+        // A camera starting later takes the announced key away with it.
+        val key = confirmation?.key ?: return
+        if (key == announcedKey) return
+        announce(key)
     }
 
     override suspend fun stopSegment(segment: SkipSegment) {
         super.stopSegment(segment)
-        CinematicSkippableEvent(player, false, entry.confirmationKey).callEvent()
-        bundle?.cancel()
-        bundle = null
-        listener?.unregister()
-        listener = null
+        CinematicSkippableEvent(player, false, confirmation?.key ?: entry.confirmationKey).callEvent()
+        confirmation?.dispose()
+        confirmation = null
+        announcedKey = null
+    }
+
+    private fun announce(key: ConfirmationKey) {
+        announcedKey = key
+        CinematicSkippableEvent(player, true, key).callEvent()
     }
 }
 
-class CinematicSkippableEvent(player: Player, val canSkip: Boolean, val confirmationKey: SkipConfirmationKey) :
+class CinematicSkippableEvent(player: Player, val canSkip: Boolean, val confirmationKey: ConfirmationKey) :
     PlayerEvent(player, !Bukkit.isPrimaryThread()) {
     override fun getHandlers(): HandlerList = HANDLER_LIST
 

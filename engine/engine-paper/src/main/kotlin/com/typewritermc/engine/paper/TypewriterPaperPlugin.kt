@@ -110,6 +110,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf(::ResendTokenRegistry)
             singleOf(::ActionBarBlockerHandler)
             singleOf(::PacketInterceptor)
+            singleOf(::Confirmations)
             singleOf(::EntityHandler)
             singleOf(::TypewriterCommandManager)
             singleOf(::PlayerSkinCache)

@@ -4,6 +4,8 @@ import com.typewritermc.basic.entries.dialogue.TimedDialogueEntry
 import com.typewritermc.core.interaction.InteractionContext
 import com.typewritermc.engine.paper.entry.dialogue.*
 import com.typewritermc.engine.paper.extensions.placeholderapi.parsePlaceholders
+import com.typewritermc.engine.paper.interaction.Confirmation
+import com.typewritermc.engine.paper.interaction.awaitConfirmation
 import com.typewritermc.engine.paper.interaction.chatHistory
 import com.typewritermc.engine.paper.snippets.snippet
 import com.typewritermc.engine.paper.utils.*
@@ -43,7 +45,7 @@ val timedMaxLineLength: Int by snippet("dialogue.timed.maxLineLength", 40)
 
 class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionContext, entry: TimedDialogueEntry) :
     DialogueMessenger<TimedDialogueEntry>(player, context, entry) {
-    private var confirmationKeyHandler: ConfirmationKeyHandler? = null
+    private var confirmation: Confirmation? = null
 
     private var speakerDisplayName = ""
     private var text = ""
@@ -75,9 +77,20 @@ class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionCon
         waitDuration = entry.waitDuration.get(player)
         totalDuration = typingDuration + waitDuration
 
-        confirmationKeyHandler = confirmationKey.handler(player) {
-            if (state != MessengerState.RUNNING) return@handler
-            if (!canSkip) return@handler
+        refreshConfirmation()
+    }
+
+    /** Only holds a confirmation while the dialogue can be skipped, as [canSkip] can change while it runs. */
+    private fun refreshConfirmation() {
+        if (canSkip == (confirmation != null)) return
+        if (!canSkip) {
+            confirmation?.dispose()
+            confirmation = null
+            return
+        }
+        confirmation = player.awaitConfirmation {
+            if (state != MessengerState.RUNNING) return@awaitConfirmation
+            if (!canSkip) return@awaitConfirmation
             completeOrFinish()
         }
     }
@@ -85,6 +98,7 @@ class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionCon
     override fun tick(context: TickContext) {
         if (state != MessengerState.RUNNING) return
         playedTime += context.deltaTime
+        refreshConfirmation()
 
         if (playedTime >= totalDuration) {
             state = MessengerState.FINISHED
@@ -104,8 +118,8 @@ class JavaTimedDialogueDialogueMessenger(player: Player, context: InteractionCon
 
     override fun dispose() {
         super.dispose()
-        confirmationKeyHandler?.dispose()
-        confirmationKeyHandler = null
+        confirmation?.dispose()
+        confirmation = null
     }
 }
 
@@ -147,6 +161,7 @@ fun Player.sendTimedDialogue(
         val timeUnit = if (remainingSeconds == 1) timedCountdownTimeUnitSingular else timedCountdownTimeUnitPlural
         val countdownFormat = if (allowSkip) timedCountdownWithSkip else timedCountdownWithoutSkip
         countdownFormat.asMiniWithResolvers(
+            this,
             Placeholder.parsed("skip_text", timedCountdownSkipText),
             Placeholder.parsed("continue_text", timedCountdownContinueText),
             Placeholder.parsed("seconds", remainingSeconds.toString()),
@@ -163,18 +178,21 @@ fun Player.sendTimedDialogue(
             percentage,
             padding = timedPadding,
             minLines = timedMinLines.coerceAtLeast(resultingLines),
-            maxLineLength = timedMaxLineLength
+            maxLineLength = timedMaxLineLength,
+            audience = this
         )
     } else {
         text.asPartialFormattedMini(
             1.0,
             padding = timedPadding,
             minLines = timedMinLines.coerceAtLeast(resultingLines),
-            maxLineLength = timedMaxLineLength
+            maxLineLength = timedMaxLineLength,
+            audience = this
         )
     }
 
     val component = timedFormat.asMiniWithResolvers(
+        this,
         Placeholder.parsed("speaker", speakerDisplayName),
         Placeholder.component("message", message),
         Placeholder.parsed("countdown_text", countdownText),

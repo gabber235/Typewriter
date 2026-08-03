@@ -128,7 +128,8 @@ class JavaInputDialogueDialogueMessenger<IntermediateType : Any, ContextType : A
             percentage,
             padding = inputPadding,
             minLines = inputMinLength.coerceAtLeast(resultingLines),
-            maxLineLength = inputMaxLineLength
+            maxLineLength = inputMaxLineLength,
+            audience = this
         )
 
         val charactersLeft = (50 - infoText.stripped().length).coerceAtLeast(0)

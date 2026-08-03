@@ -3,12 +3,12 @@
 package com.typewritermc.engine.paper.utils
 
 import com.github.retrooper.packetevents.manager.server.ServerVersion
-import com.typewritermc.engine.paper.entry.dialogue.confirmationKey
+import com.typewritermc.engine.paper.interaction.confirmationKeyTag
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.*
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.kyori.adventure.text.minimessage.tag.Tag
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags
@@ -55,18 +55,30 @@ private val mm: MiniMessage by lazy {
         .tags(
             TagResolver.builder()
                 .resolvers(resolvers)
-                .tag("confirmation_key") { _, _ -> Tag.preProcessParsed(confirmationKey.keybind) }
                 .resolver(Placeholder.parsed("line", "<#ECFFF8><bold>│</bold></#ECFFF8><white>"))
+                .resolver(confirmationKeyTag)
                 .build()
         )
         .build()
 }
 
+private fun String.deserialize(audience: Audience?, vararg resolvers: TagResolver): Component {
+    if (audience == null) return mm.deserialize(this, *resolvers)
+    return mm.deserialize(this, audience, *resolvers)
+}
+
 fun Component.asMini() = mm.serialize(this)
 
-fun String.asMini() = mm.deserialize(this)
+fun String.asMini() = deserialize(null)
 
-fun String.asMiniWithResolvers(vararg resolvers: TagResolver) = mm.deserialize(this, *resolvers)
+/** Parses for one audience, so a tag like `<confirmation_key>` can answer for them. */
+fun String.asMini(audience: Audience) = deserialize(audience)
+
+fun String.asMiniWithResolvers(vararg resolvers: TagResolver) = deserialize(null, *resolvers)
+
+/** Parses for one audience, so a tag like `<confirmation_key>` can answer for them. */
+fun String.asMiniWithResolvers(audience: Audience, vararg resolvers: TagResolver) =
+    deserialize(audience, *resolvers)
 
 fun String.replaceTagPlaceholders(placeholder: String, value: String): String =
     this.replaceTagPlaceholders(mapOf(placeholder to value))
@@ -82,10 +94,10 @@ fun String.replaceTagPlaceholders(placeholders: Map<String, String>): String {
     }
 }
 
-fun CommandSender.sendMini(message: String) = sendMessage(message.asMini())
+fun CommandSender.sendMini(message: String) = sendMessage(message.asMini(this))
 
 fun CommandSender.sendMiniWithResolvers(message: String, vararg resolvers: TagResolver) =
-    sendMessage(message.asMiniWithResolvers(*resolvers))
+    sendMessage(message.asMiniWithResolvers(this, *resolvers))
 
 fun CommandSender.msg(message: String) = sendMini("<red><bold>Typewriter »<reset><white> $message")
 
@@ -109,11 +121,12 @@ fun String.asPartialFormattedMini(
     minLines: Int = 3,
     maxLineLength: Int = 40,
     padding: String = "    ",
+    audience: Audience? = null,
 ): Component {
 
     return replace("\n", "\n<reset><white>")
         .limitLineLength(maxLineLength)
-        .asMini()
+        .deserialize(audience)
         .splitPercentage(percentage)
         .addPaddingBeforeLines(padding)
         .minimalLines(minLines)
