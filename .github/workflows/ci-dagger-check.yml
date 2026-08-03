@@ -34,6 +34,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Create environment file
+        run: cp .env.example .env
+
       - name: Run Dagger checks
         uses: dagger/dagger-for-github@v8.4.1
         with:
