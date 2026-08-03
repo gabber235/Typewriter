@@ -54,9 +54,9 @@ class Books extends _$Books {
     final request = skir.WatchBooksRequest();
     yield* ref.watchRequest(
       subject:
-          "realm.to.${realmId.id}.organization.${organizationId.id}.book.watch",
+          "service.to.${realmId.id}.organization.${organizationId.id}.realm.book.watch",
       listenSubject:
-          "realm.from.${realmId.id}.organization.${organizationId.id}.book.watch",
+          "service.from.${realmId.id}.organization.${organizationId.id}.realm.book.watch",
       requestBytes: skir.WatchBooksRequest.serializer.toBytes(request),
       serializer: skir.WatchBooksResponse.serializer,
       transformer: (previous, response) {
@@ -107,7 +107,7 @@ class Books extends _$Books {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.book.create",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.book.create",
         skir.CreateBookRequest.serializer.toBytes(request),
         skir.CreateBookResponse.serializer,
       );
@@ -156,7 +156,7 @@ class Books extends _$Books {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.book.update",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.book.update",
         skir.UpdateBookRequest.serializer.toBytes(request),
         skir.UpdateBookResponse.serializer,
       );
@@ -206,7 +206,7 @@ class Books extends _$Books {
       priority: priority,
     );
     final response = await ref.requestSkir(
-      "realm.to.${realmId.id}.organization.${organizationId.id}.page.create",
+      "service.to.${realmId.id}.organization.${organizationId.id}.realm.page.create",
       skir.CreatePageRequest.serializer.toBytes(request),
       skir.CreatePageResponse.serializer,
     );
@@ -235,7 +235,7 @@ class Books extends _$Books {
 
     final request = skir.DeletePageRequest(pageId: pageId);
     final response = await ref.requestSkir(
-      "realm.to.${realmId.id}.organization.${organizationId.id}.page.delete",
+      "service.to.${realmId.id}.organization.${organizationId.id}.realm.page.delete",
       skir.DeletePageRequest.serializer.toBytes(request),
       skir.DeletePageResponse.serializer,
     );
@@ -269,7 +269,7 @@ class Books extends _$Books {
       newChapter: newChapter,
     );
     final response = await ref.requestSkir(
-      "realm.to.${realmId.id}.organization.${organizationId.id}.pages.chapters",
+      "service.to.${realmId.id}.organization.${organizationId.id}.realm.pages.chapters",
       skir.ChangePagesChaptersRequest.serializer.toBytes(request),
       skir.ChangePagesChaptersResponse.serializer,
     );

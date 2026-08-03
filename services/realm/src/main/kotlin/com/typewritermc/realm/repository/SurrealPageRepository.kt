@@ -1,234 +1,161 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.realm.repository.utils.PageRecord
-import com.typewritermc.realm.repository.utils.name
-import com.typewritermc.realm.repository.utils.requireValidId
+import com.typewritermc.realm.repository.records.PageRecord
+import com.typewritermc.realm.repository.utils.surrealId
+import com.typewritermc.realm.repository.utils.databaseValue
 import com.typewritermc.realm.repository.utils.takeTransaction
 import com.typewritermc.services.libs.utils.DeferredProvider
-import protokt.v1.typewriter.models.v1.Page
-import protokt.v1.typewriter.models.v1.PageType
+import skirout.kernel.v1.record_id.RecordId
+import skirout.library.v1.page.Page
+import skirout.library.v1.page.PageType
 
 class SurrealPageRepository(
-    private val db: DeferredProvider<Surreal>
+    private val database: DeferredProvider<Surreal>,
 ) : PageRepository {
-
-    override suspend fun listPages(bookId: String): List<Page> {
-        requireValidId("Book", bookId)
-
-        val result = db.get().queryBind(
-            $$"SELECT * FROM page WHERE book_id = type::record('book', $bookId) ORDER BY priority ASC, name ASC",
-            mapOf("bookId" to bookId)
-        ).take(0)
-
-        return PageRecord.parseList(result).map { it.toPage() }
+    override suspend fun searchPages(bookId: RecordId, search: String?): List<Page> {
+        val query = if (search == null) {
+            $$"SELECT * FROM page WHERE book = $book ORDER BY priority, name, id"
+        } else {
+            // TODO make this a full text search properly, including chapters.
+            $$"SELECT * FROM page WHERE book = $book AND string::lowercase(name) CONTAINS $search ORDER BY priority, name, id"
+        }
+        val bindings = buildMap {
+            put("book", bookId.surrealId("book"))
+            if (search != null) put("search", search.lowercase())
+        }
+        val result = database.get().query(query, bindings).take(0)
+        return PageRecord.parseList(result).map(PageRecord::toPage)
     }
 
-    override suspend fun searchPages(bookId: String, search: String): List<Page> {
-        requireValidId("Book", bookId)
-
-        val searchLower = search.lowercase()
-        val result = db.get().queryBind(
-            $$"SELECT * FROM page WHERE book_id = type::record('book', $bookId) AND string::lowercase(name) CONTAINS $search ORDER BY priority ASC",
-            mapOf("bookId" to bookId, "search" to searchLower)
+    override suspend fun getPage(id: RecordId): Page? {
+        val result = database.get().query(
+            $$"SELECT * FROM $page",
+            mapOf("page" to id.surrealId("page")),
         ).take(0)
 
-        return PageRecord.parseList(result).map { it.toPage() }
-    }
-
-    override suspend fun getPage(id: String): Page? {
-        requireValidId("Page", id)
-
-        val result = db.get().queryBind(
-            $$"SELECT * FROM type::record('page', $id)",
-            mapOf("id" to id)
-        ).take(0)
-
-        if (result.isNone) return null
-
-        val records = PageRecord.parseList(result)
-        return records.firstOrNull()?.toPage()
+        return PageRecord.parseList(result).firstOrNull()?.toPage()
     }
 
     override suspend fun createPage(
-        bookId: String,
+        bookId: RecordId,
         name: String,
         type: PageType,
         chapter: String,
-        priority: Int
-    ): Page {
-        requireValidId("Book", bookId)
-
-        val typeStr = type.name()
-        val result = db.get().queryBind(
+        priority: Int,
+    ): RepositoryResult<Page> = repositoryMutation(listOf(bookId)) {
+        val result = database.get().query(
             $$"""
-            CREATE page SET
-                name = $name,
-                book_id = type::record('book', $bookId),
-                type = $type,
-                chapter = $chapter,
-                priority = $priority
+                CREATE ONLY page SET
+                    book = $book,
+                    name = $name,
+                    type = $type,
+                    chapter = $chapter,
+                    priority = $priority
             """.trimIndent(),
             mapOf(
+                "book" to bookId.surrealId("book"),
                 "name" to name,
-                "bookId" to bookId,
-                "type" to typeStr,
+                "type" to type.databaseValue(),
                 "chapter" to chapter,
-                "priority" to priority
-            )
+                "priority" to priority,
+            ),
         ).take(0)
 
-        val records = PageRecord.parseList(result)
-        val record = records.firstOrNull() ?: throw IllegalStateException("Failed to create page")
-        return record.toPage()
+        PageRecord.parseList(result).singleOrNull()?.toPage()
+            ?: error("Page creation returned no record")
     }
 
-    override suspend fun updatePage(page: Page): Page {
-        requireValidId("Page", page.pageId)
-
-        val typeStr = page.type.name()
-
-        val result = db.get().queryBind(
+    override suspend fun updatePage(page: Page): RepositoryResult<Page> = repositoryMutation {
+        val result = database.get().query(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::record('page', $id);
-                UPDATE $page_record SET
+                IF !record::exists($page) {
+                    THROW "page-not-found-error";
+                };
+
+                UPDATE ONLY $page SET
                     name = $name,
                     type = $type,
                     chapter = $chapter,
                     priority = $priority;
-                RETURN SELECT * FROM $page_record;
+
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf(
-                "id" to page.pageId,
-                "name" to page.name.orEmpty(),
-                "type" to typeStr,
-                "chapter" to page.chapter.orEmpty(),
-                "priority" to (page.priority ?: 0)
-            )
-        ).takeTransaction(0)
+                "page" to page.pageId.surrealId("page"),
+                "name" to page.name,
+                "type" to page.type.databaseValue(),
+                "chapter" to page.chapter,
+                "priority" to page.priority,
+            ),
+        ).takeTransaction(2)
 
-        return PageRecord.parseList(result).firstOrNull()?.toPage()
-            ?: throw IllegalStateException("Failed to update page")
+        PageRecord.parseList(result).singleOrNull()?.toPage()
+            ?: error("Page update returned no record")
     }
 
-    override suspend fun deletePage(id: String): Boolean {
-        requireValidId("Page", id)
-
-        return db.get().queryBind(
+    override suspend fun deletePage(id: RecordId): RepositoryResult<Unit> = repositoryMutation {
+        database.get().query(
             $$"""
                 BEGIN TRANSACTION;
-                LET $page_record = type::record('page', $id);
 
-                IF !record::exists($page_record) {
-                    RETURN false;
+                IF !record::exists($page) {
+                    THROW "page-not-found-error";
                 };
 
-                DELETE $page_record;
-                RETURN true;
+                DELETE $page;
+
                 COMMIT TRANSACTION;
             """.trimIndent(),
-            mapOf("id" to id)
-        ).takeTransaction(0).boolean
+            mapOf("page" to id.surrealId("page")),
+        ).takeTransaction(2)
     }
 
-    override suspend fun changePageChapter(pageId: String, chapter: String): Boolean {
-        requireValidId("Page", pageId)
+    override suspend fun changePagesChapters(
+        bookId: RecordId,
+        oldChapter: String,
+        newChapter: String,
+    ): RepositoryResult<List<Page>> {
+        if (oldChapter == newChapter) return RepositoryResult.Success(emptyList())
 
-        return db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $page_record = type::record('page', $id);
+        return repositoryMutation(listOf(bookId)) {
+            val result = database.get().query(
+                $$"""
+                    BEGIN TRANSACTION;
 
-                IF !record::exists($page_record) {
-                    RETURN false;
-                };
+                    IF !record::exists($book) {
+                        THROW "book-not-found-error";
+                    };
 
-                UPDATE $page_record SET chapter = $chapter;
-                RETURN true;
-                COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("id" to pageId, "chapter" to chapter)
-        ).takeTransaction(0).boolean
-    }
+                    LET $prefix = string::concat($old_chapter, '.');
 
-    override suspend fun changePagePriority(pageId: String, priority: Int): Boolean {
-        requireValidId("Page", pageId)
+                    -- Update exact matches
+                    LET $exact = (UPDATE page
+                        SET chapter = $new_chapter
+                        WHERE book = $book AND chapter = $old_chapter
+                        RETURN AFTER);
 
-        return db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $page_record = type::record('page', $id);
+                    -- Update prefix matches (old_chapter.xxx -> new_chapter.xxx)
+                    LET $prefixed = (UPDATE page
+                        SET chapter = IF $new_chapter == ""
+                            THEN string::slice(chapter, string::len($old_chapter) + 1)
+                            ELSE string::concat($new_chapter, string::slice(chapter, string::len($old_chapter)))
+                        END
+                        WHERE book = $book AND string::starts_with(chapter, $prefix)
+                        RETURN AFTER);
 
-                IF !record::exists($page_record) {
-                    RETURN false;
-                };
+                    RETURN ($exact + $prefixed);
+                    COMMIT TRANSACTION;
+                """.trimIndent(),
+                mapOf(
+                    "book" to bookId.surrealId("book"),
+                    "old_chapter" to oldChapter,
+                    "new_chapter" to newChapter,
+                ),
+            ).takeTransaction(5)
 
-                UPDATE $page_record SET priority = $priority;
-                RETURN true;
-                COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("id" to pageId, "priority" to priority)
-        ).takeTransaction(0).boolean
-    }
-
-    override suspend fun renamePage(pageId: String, name: String): Boolean {
-        requireValidId("Page", pageId)
-
-        return db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $page_record = type::record('page', $id);
-
-                IF !record::exists($page_record) {
-                    RETURN false;
-                };
-
-                UPDATE $page_record SET name = $name;
-                RETURN true;
-                COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("id" to pageId, "name" to name)
-        ).takeTransaction(0).boolean
-    }
-
-    override suspend fun changePagesChapters(bookId: String, oldChapter: String, newChapter: String): Int {
-        requireValidId("Book", bookId)
-
-        if (oldChapter == newChapter) return 0
-
-        val result = db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $book_record = type::record('book', $book_id);
-                LET $prefix = string::concat($old_chapter, '.');
-
-                -- Update exact matches
-                LET $exact = (UPDATE page
-                    SET chapter = $new_chapter
-                    WHERE book_id = $book_record AND chapter = $old_chapter
-                    RETURN id);
-
-                -- Update prefix matches (old_chapter.xxx -> new_chapter.xxx)
-                LET $prefixed = (UPDATE page
-                    SET chapter = IF $new_chapter == ""
-                        THEN string::slice(chapter, string::len($old_chapter) + 1)
-                        ELSE string::concat($new_chapter, string::slice(chapter, string::len($old_chapter)))
-                    END
-                    WHERE book_id = $book_record AND string::starts_with(chapter, $prefix)
-                    RETURN id);
-
-                RETURN array::len($exact) + array::len($prefixed);
-                COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf(
-                "book_id" to bookId,
-                "old_chapter" to oldChapter,
-                "new_chapter" to newChapter
-            )
-        ).takeTransaction(0)
-
-        return result.long.toInt()
+            PageRecord.parseList(result).map(PageRecord::toPage)
+        }
     }
 }

@@ -61,27 +61,55 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
         response.tags,
         ["service:engine_one", "organization:writers"]
     );
-    assert!(
-        response
-            .permissions
-            .publish
-            .allow
-            .contains(&"cloud.to.service.engine_one.organization.writers.>".into())
-    );
-    assert!(
-        response
-            .permissions
-            .publish
-            .allow
-            .contains(&"service.from.engine_one.organization.writers.realm.>".into())
-    );
-    assert!(
-        response
-            .permissions
-            .subscribe
-            .allow
-            .contains(&"service.to.engine_one.organization.writers.realm.>".into())
-    );
+    let publish = &response.permissions.publish.allow;
+    for suffix in ["status", "heartbeat", "shutdown"] {
+        assert!(publish.contains(&format!(
+            "cloud.to.service.engine_one.organization.writers.{suffix}"
+        )));
+    }
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "page.watch",
+        "tag.watch",
+        "tag.resource.watch",
+    ] {
+        assert!(publish.contains(&format!(
+            "service.from.engine_one.organization.writers.realm.{suffix}"
+        )));
+    }
+
+    let subscribe = &response.permissions.subscribe.allow;
+    for suffix in ["configuration", "command"] {
+        assert!(subscribe.contains(&format!(
+            "cloud.from.service.engine_one.organization.writers.{suffix}"
+        )));
+    }
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "book.create",
+        "book.update",
+        "page.search",
+        "page.watch",
+        "page.create",
+        "page.update",
+        "page.delete",
+        "pages.chapters",
+        "tag.watch",
+        "tag.resource.watch",
+        "tag.create",
+        "tag.update",
+        "tag.delete",
+        "tag.move",
+        "tag.resize",
+    ] {
+        assert!(subscribe.contains(&format!(
+            "service.to.engine_one.organization.writers.realm.{suffix}"
+        )));
+    }
+    assert!(publish.iter().all(|subject| !subject.ends_with("realm.>")));
+    assert!(subscribe.iter().all(|subject| !subject.ends_with("realm.>")));
     Ok(())
 }
 

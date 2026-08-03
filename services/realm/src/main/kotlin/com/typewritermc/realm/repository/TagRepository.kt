@@ -1,14 +1,27 @@
 package com.typewritermc.realm.repository
 
-import protokt.v1.typewriter.models.v1.Placement
-import protokt.v1.typewriter.models.v1.Tag
+import skirout.kernel.v1.color.Color
+import skirout.kernel.v1.record_id.RecordId
+import skirout.library.v1.tag.Placement
+import skirout.library.v1.tag.Tag
 
 interface TagRepository {
     suspend fun listTags(): List<Tag>
-    suspend fun getTag(id: String): Tag?
-    suspend fun createTag(name: String, color: Int, parentIds: List<String>, placement: Placement): Tag
-    suspend fun updateTag(tag: Tag): Tag
-    suspend fun deleteTag(id: String): Boolean
-    suspend fun moveTag(id: String, x: Int?, y: Int?): Boolean
-    suspend fun resizeTag(id: String, width: Int?, height: Int?): Boolean
+    suspend fun getTag(id: RecordId): Tag?
+    suspend fun findMissing(ids: List<RecordId>): List<RecordId>
+    suspend fun createTag(
+        name: String,
+        color: Color,
+        parentIds: List<RecordId>,
+        placement: Placement,
+    ): RepositoryResult<Tag>
+    suspend fun updateTag(tag: Tag): RepositoryResult<Tag>
+    suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion>
+    suspend fun moveTag(id: RecordId, x: Int?, y: Int?): RepositoryResult<Tag>
+    suspend fun resizeTag(id: RecordId, width: Int?, height: Int?): RepositoryResult<Tag>
 }
+
+data class TagDeletion(
+    val childTagIds: List<RecordId>,
+    val bookIds: List<RecordId>,
+)

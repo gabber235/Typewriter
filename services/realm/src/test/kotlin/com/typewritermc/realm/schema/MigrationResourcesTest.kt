@@ -17,14 +17,13 @@ val MigrationResourcesTest by testSuite {
 
     test("packaged Realm schema catalog exposes its dependency order") {
         MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe listOf(
-            "kernel/color.surql",
-            "kernel/slug.surql",
-            "book.surql",
-            "tag/functions.surql",
-            "tag/tag.surql",
-            "relations/inherits.surql",
+                "book/book.surql",
+                "kernel/color.surql",
+                "kernel/id.surql",
+                "page/page.surql",
             "relations/bears.surql",
-            "page.surql",
+            "relations/inherits.surql",
+            "tag/tag.surql",
         )
     }
 

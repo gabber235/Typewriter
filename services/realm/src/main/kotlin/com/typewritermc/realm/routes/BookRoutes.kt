@@ -1,137 +1,148 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.BookRepository
-import com.typewritermc.services.libs.communicator.routing.NatsRouting
-import com.typewritermc.services.libs.registrar.Credential
-import com.typewritermc.services.libs.registrar.RegistrationState
-import com.typewritermc.services.libs.telemetry.timed
-import com.typewritermc.services.libs.utils.DeferredProvider
-import com.typewritermc.services.libs.utils.StateProvider
-import io.opentelemetry.api.trace.StatusCode
-import protokt.v1.typewriter.api.v1.*
-import protokt.v1.typewriter.models.v1.Error
+import com.typewritermc.realm.repository.RepositoryResult
+import com.typewritermc.realm.repository.TagRepository
+import com.typewritermc.realm.repository.utils.invalidRecordId
+import com.typewritermc.services.libs.communicator.result.CommunicationResult
+import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.childSpan
+import skirout.kernel.v1.color.Color
+import skirout.library.v1.book.*
 
-class BookRoutes(
-    private val bookRepository: BookRepository,
-    private val credentials: DeferredProvider<Credential>,
-    private val registrationStateProvider: StateProvider<RegistrationState>,
+internal class BookRoutes(
+    private val books: BookRepository,
+    private val tags: TagRepository,
+    private val contracts: LibraryContracts,
+    private val realmAddress: RealmAddress,
 ) {
-    fun configure(): NatsRouting.() -> Unit = {
-        val serviceId = credentials.require { "BookRoutes requires the credentials to be set to register" }.id
-        val orgId = when (val state = registrationStateProvider.get()) {
-            is RegistrationState.Bound -> state.organizationId
-            else -> error("Service must be bound to an organization before routes can be configured")
+    fun register(builder: CommunicatorRoutesBuilder) = with(builder) {
+        watch(contracts.watchBooks) {
+            val result = childSpan("db.book.list") { books.listBooks() }
+            WatchBooksResponse.ListWrapper(result)
         }
-        route("realm.to.${serviceId}.organization.${orgId}") {
-            handle("book.list") {
-                receive(ListBooksRequest)
-                span.setAttribute("operation", "book.list")
-
-                val books = span.timed("db.book.list") {
-                    bookRepository.listBooks()
-                }
-                span.setAttribute("result.count", books.size.toLong())
-
-                val response = ListBooksResponse {
-                    result = ListBooksResponse.Result.Books(ListBooks { this.books = books })
-                }
-                reply(response)
+        watch(contracts.watchBook) { call ->
+            call.request.bookId.invalidRecordId("book")?.let {
+                return@watch WatchBookResponse.InvalidRecordIdErrorWrapper(it)
             }
-
-            handle("book.get") {
-                val request = receive(GetBookRequest)
-                span.setAttribute("operation", "book.get")
-
-                val bookId = request.bookId.ifBlank {
-                    return@handle reply(GetBookResponse {
-                        result = GetBookResponse.Result.Error(Error { message = "book id is required" })
-                    })
-                }
-                span.setAttribute("book.id", bookId)
-
-                val book = span.timed("db.book.get") {
-                    bookRepository.getBook(bookId)
-                }
-
-                val response = if (book != null) {
-                    GetBookResponse { result = GetBookResponse.Result.Book(book) }
-                } else {
-                    span.setStatus(StatusCode.ERROR, "Book not found: $bookId")
-                    GetBookResponse {
-                        result = GetBookResponse.Result.Error(Error { message = "Book not found: $bookId" })
-                    }
-                }
-                reply(response)
-            }
-
-            handle("book.update") {
-                val request = receive(UpdateBookRequest)
-                span.setAttribute("operation", "book.update")
-
-                val book = request.book
-                if (book == null) {
-                    span.setStatus(StatusCode.ERROR, "Book is required")
-                    val response = UpdateBookResponse {
-                        result = UpdateBookResponse.Result.Error(Error { message = "Book is required" })
-                    }
-                    reply(response)
-                    return@handle
-                }
-                span.setAttribute("book.id", book.bookId)
-
-                val updatedBook = span.timed("db.book.update") {
-                    bookRepository.updateBook(book)
-                }
-                val response = UpdateBookResponse { result = UpdateBookResponse.Result.Book(updatedBook) }
-                reply(response)
-            }
-
-            handle("book.create") {
-                val request = receive(CreateBookRequest)
-
-                span.setAttribute("operation", "book.create")
-
-                val title = request.title
-                    ?: return@handle reply(CreateBookResponse {
-                        result = CreateBookResponse.Result.Error(Error { message = "title is required" })
-                    })
-                val icon = request.icon?.ifEmpty { "book" } ?: "book"
-                val colorValue = request.color?.value?.toInt() ?: 0
-
-                span.setAttribute("book.title", title)
-                span.setAttribute("book.icon", icon)
-                span.setAttribute("book.has_color", request.color != null)
-                request.color?.let {
-                    span.setAttribute("book.color", (it.value ?: 0u).toLong())
-                }
-                span.setAttribute("book.tag_count", request.tagIds.size.toLong())
-
-                try {
-                    val book = span.timed("db.book.create") {
-                        bookRepository.createBook(
-                            title = title,
-                            icon = icon,
-                            color = colorValue,
-                            tagIds = request.tagIds
-                        )
-                    }
-
-                    span.setAttribute("book.id", book.bookId)
-                    span.setAttribute("result.tag_count", book.tagIds.size.toLong())
-
-                    val response = CreateBookResponse {
-                        result = CreateBookResponse.Result.Book(book)
-                    }
-                    reply(response)
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, e.message ?: "Failed to create book")
-                    val response = CreateBookResponse {
-                        result =
-                            CreateBookResponse.Result.Error(Error { message = e.message ?: "Failed to create book" })
-                    }
-                    reply(response)
-                }
-            }
+            val book = childSpan("db.book.get") { books.getBook(call.request.bookId) }
+                ?: return@watch WatchBookResponse.createBookNotFoundError(bookId = call.request.bookId)
+            WatchBookResponse.InitialWrapper(book)
         }
+        unary(contracts.createBook) { call -> create(call) }
+        unary(contracts.updateBook) { call -> update(call) }
     }
+
+    context(main: MainSpanScope)
+    private suspend fun create(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+                RealmAddress,
+                CreateBookRequest,
+                CreateBookResponse,
+                >,
+    ): CreateBookResponse {
+        val request = call.request
+        if (request.title.isBlank()) {
+            return CreateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+        }
+        request.tagIds.invalidRecordId("tag")?.let {
+            return CreateBookResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        val missing = childSpan("db.tag.validate") { tags.findMissing(request.tagIds) }
+        if (missing.isNotEmpty()) return CreateBookResponse.createTagsNotFoundError(tagIds = missing)
+        val result = childSpan("db.book.create") {
+            books.createBook(
+                title = request.title,
+                icon = request.icon?.takeIf(String::isNotBlank) ?: "book",
+                color = request.color ?: Color(argb = 0),
+                tagIds = request.tagIds,
+            )
+        }
+        val book = when (result) {
+            is RepositoryResult.Success -> result.value
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "book-title-invalid-error" ->
+                    CreateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+                "book-icon-required-error" ->
+                    CreateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+                "tags-not-found-error" -> CreateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
+                else -> error("Unexpected book creation domain error: ${result.slug}")
+            }
+        }
+        call.communicator.publishUpdate(
+            contracts.watchBooks,
+            realmAddress,
+            WatchBooksResponse.AddWrapper(book),
+        ).requirePublished()
+        return CreateBookResponse.SuccessWrapper(book)
+    }
+
+    context(main: MainSpanScope)
+    private suspend fun update(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+                RealmAddress,
+                UpdateBookRequest,
+                UpdateBookResponse,
+                >,
+    ): UpdateBookResponse {
+        val request = call.request
+        request.bookId.invalidRecordId("book")?.let {
+            return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        request.tagIds?.let { ids ->
+            ids.invalidRecordId("tag")?.let {
+                return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
+            }
+        }
+        val existing = childSpan("db.book.get") { books.getBook(request.bookId) }
+            ?: return UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
+        if (request.title?.isBlank() == true) {
+            return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+        }
+        if (request.icon?.isBlank() == true) {
+            return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+        }
+        val tagIds = request.tagIds ?: existing.tagIds
+        val missing = childSpan("db.tag.validate") { tags.findMissing(tagIds) }
+        if (missing.isNotEmpty()) return UpdateBookResponse.createTagsNotFoundError(tagIds = missing)
+        val result = childSpan("db.book.update") {
+            books.updateBook(
+                Book(
+                    bookId = existing.bookId,
+                    title = request.title ?: existing.title,
+                    icon = request.icon ?: existing.icon,
+                    color = request.color ?: existing.color,
+                    tagIds = tagIds,
+                ),
+            )
+        }
+        val updated = when (result) {
+            is RepositoryResult.Success -> result.value
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "book-not-found-error" -> UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
+                "book-title-invalid-error" ->
+                    UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+                "book-icon-required-error" ->
+                    UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+                "tags-not-found-error" -> UpdateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
+                else -> error("Unexpected book update domain error: ${result.slug}")
+            }
+        }
+        call.communicator.publishUpdate(
+            contracts.watchBooks,
+            realmAddress,
+            WatchBooksResponse.UpdateWrapper(updated),
+        ).requirePublished()
+        call.communicator.publishUpdate(
+            contracts.watchBook,
+            realmAddress,
+            WatchBookResponse.UpdateWrapper(updated),
+        ).requirePublished()
+        return UpdateBookResponse.SuccessWrapper(updated)
+    }
+}
+
+internal fun CommunicationResult<Unit>.requirePublished() {
+    if (this is CommunicationResult.Failure) error("Watch publication failed: $error")
 }

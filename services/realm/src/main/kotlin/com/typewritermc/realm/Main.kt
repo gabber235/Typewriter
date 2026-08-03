@@ -7,11 +7,13 @@ import com.typewritermc.realm.RealmQualifier.*
 import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
 import com.typewritermc.realm.schema.DatabaseProvider
+import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.registrar.CredentialStorage
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.RegistrarResult
+import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.registrar.console.BindingTokenOutput
@@ -56,7 +58,7 @@ fun main() {
         single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "root") }
         single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
         single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
-        single {
+        single<RealmDatabaseProvider> {
             DatabaseProvider(
                 url = get(named(DB_URL)),
                 username = get(named(DB_USERNAME)),
@@ -65,7 +67,7 @@ fun main() {
                 database = get(named(DB_DATABASE)),
             )
         }
-        single { Realm(get(named(DATABASE)), get(), get()) }
+        single { Realm(get(named(DATABASE)), get(), get(), get(), get()) }
         single {
             Cbor {
                 ignoreUnknownKeys = true
@@ -106,6 +108,7 @@ fun main() {
         )
     }
     val registrar = application.koin.get<ServiceRegistrar>()
+    val realm = application.koin.get<Realm>()
     val telemetry = application.koin.get<ServiceTelemetry>()
     val consoleObserver = application.koin.get<RegistrarConsoleObserver>()
     val consoleObserverJob = applicationScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -114,22 +117,35 @@ fun main() {
     val closed = AtomicBoolean()
     fun shutdown() {
         if (!closed.compareAndSet(false, true)) return
-        runBlocking {
-            consoleObserverJob.cancelAndJoin()
-            registrar.stop()
+        try {
+            runBlocking {
+                consoleObserverJob.cancelAndJoin()
+                stopRealm(realm, registrar)
+            }
+        } finally {
+            application.close()
         }
-        application.close()
     }
     val shutdownHook = Thread { shutdown() }
     Runtime.getRuntime().addShutdownHook(shutdownHook)
 
     try {
-        runBlocking { startRealm(telemetry, registrar, application.koin.get()) }
+        runBlocking { startRealm(telemetry, registrar, realm) }
         application.koin.get<RealmShell>().run()
     } finally {
         runCatching { Runtime.getRuntime().removeShutdownHook(shutdownHook) }
         shutdown()
     }
+}
+
+private suspend fun stopRealm(realm: Realm, registrar: ServiceRegistrar) {
+    val routeFailure = runCatching { realm.shutdown() }.exceptionOrNull()
+    val registrarFailure = runCatching { registrar.stop().requireSuccess("stop") }.exceptionOrNull()
+    val primary = routeFailure ?: registrarFailure ?: return
+    if (routeFailure != null && registrarFailure != null && registrarFailure !== routeFailure) {
+        primary.addSuppressed(registrarFailure)
+    }
+    throw primary
 }
 
 private suspend fun startRealm(telemetry: ServiceTelemetry, registrar: ServiceRegistrar, realm: Realm) = telemetry.mainSpan(
@@ -141,13 +157,9 @@ private suspend fun startRealm(telemetry: ServiceTelemetry, registrar: ServiceRe
         stage("koin") { outcome("ready") }
     }
     registrar.start().requireSuccess("start")
-    val session = registrar.awaitReady().requireSuccess("await readiness")
-    main.annotate {
-        stage("registration") { outcome("ready") }
-        attribute("service.id", session.identity.serviceId)
-        attribute("user.org.id", session.binding.organizationId)
-    }
-    realm.initialize()
+    registrar.awaitReady().requireSuccess("await readiness")
+    main.annotate { stage("registration") { outcome("ready") } }
+    realm.start(registrar.states)
     main.annotate { stage("database") { outcome("ready") } }
 }
 
@@ -171,4 +183,8 @@ private fun realmRegistrarConfiguration(): RegistrarConfiguration {
 private fun <T> RegistrarResult<T>.requireSuccess(operation: String): T = when (this) {
     is RegistrarResult.Success -> value
     is RegistrarResult.Failure -> error("Registrar $operation failed: $failure")
+}
+
+private fun RegistrarStopResult.requireSuccess(operation: String) {
+    if (this is RegistrarStopResult.Failure) error("Registrar $operation failed: $failures")
 }

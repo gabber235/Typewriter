@@ -75,9 +75,9 @@ class Tags extends _$Tags {
     final request = skir.WatchTagsRequest();
     yield* ref.watchRequest(
       subject:
-          "realm.to.${realmId.id}.organization.${organizationId.id}.tag.watch",
+          "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.watch",
       listenSubject:
-          "realm.from.${realmId.id}.organization.${organizationId.id}.tag.watch",
+          "service.from.${realmId.id}.organization.${organizationId.id}.realm.tag.watch",
       requestBytes: skir.WatchTagsRequest.serializer.toBytes(request),
       serializer: skir.WatchTagsResponse.serializer,
       transformer: (previous, response) {
@@ -130,7 +130,7 @@ class Tags extends _$Tags {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.create",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.create",
         skir.CreateTagRequest.serializer.toBytes(request),
         skir.CreateTagResponse.serializer,
       );
@@ -181,7 +181,7 @@ class Tags extends _$Tags {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.update",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.update",
         skir.UpdateTagRequest.serializer.toBytes(request),
         skir.UpdateTagResponse.serializer,
       );
@@ -226,7 +226,7 @@ class Tags extends _$Tags {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.delete",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.delete",
         skir.DeleteTagRequest.serializer.toBytes(request),
         skir.DeleteTagResponse.serializer,
       );
@@ -271,7 +271,7 @@ class Tags extends _$Tags {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.move",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.move",
         skir.MoveTagRequest.serializer.toBytes(request),
         skir.MoveTagResponse.serializer,
       );
@@ -329,7 +329,7 @@ class Tags extends _$Tags {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.tag.resize",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.resize",
         skir.ResizeTagRequest.serializer.toBytes(request),
         skir.ResizeTagResponse.serializer,
       );

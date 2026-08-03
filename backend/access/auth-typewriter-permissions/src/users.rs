@@ -287,6 +287,39 @@ fn add_organization_realm_permissions(
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.create"));
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.delete"));
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
+
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "book.create",
+        "book.update",
+        "page.search",
+        "page.watch",
+        "page.create",
+        "page.update",
+        "page.delete",
+        "pages.chapters",
+        "tag.watch",
+        "tag.resource.watch",
+        "tag.create",
+        "tag.update",
+        "tag.delete",
+        "tag.move",
+        "tag.resize",
+    ] {
+        allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
+    }
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "page.watch",
+        "tag.watch",
+        "tag.resource.watch",
+    ] {
+        allow_subscribe.push(format!(
+            "service.from.*.organization.{org_id}.realm.{suffix}",
+        ));
+    }
 }
 
 #[cfg(test)]

@@ -76,7 +76,7 @@ class BookPages extends _$BookPages {
       search: search.trim().isEmpty ? null : search,
     );
     final response = await ref.requestSkir(
-      "realm.to.${realmId.id}.organization.${organizationId.id}.page.search",
+      "service.to.${realmId.id}.organization.${organizationId.id}.realm.page.search",
       skir.SearchPagesRequest.serializer.toBytes(request),
       skir.SearchPagesResponse.serializer,
     );
@@ -108,9 +108,9 @@ class Pages extends _$Pages {
     final request = skir.WatchPageRequest(pageId: pageId);
     yield* ref.watchRequest(
       subject:
-          "realm.to.${realmId.id}.organization.${organizationId.id}.page.watch",
+          "service.to.${realmId.id}.organization.${organizationId.id}.realm.page.watch",
       listenSubject:
-          "realm.from.${realmId.id}.organization.${organizationId.id}.page.watch",
+          "service.from.${realmId.id}.organization.${organizationId.id}.realm.page.watch",
       requestBytes: skir.WatchPageRequest.serializer.toBytes(request),
       serializer: skir.WatchPageResponse.serializer,
       transformer: (previous, response) {
@@ -168,7 +168,7 @@ class Pages extends _$Pages {
 
     try {
       final response = await ref.requestSkir(
-        "realm.to.${realmId.id}.organization.${organizationId.id}.page.update",
+        "service.to.${realmId.id}.organization.${organizationId.id}.realm.page.update",
         skir.UpdatePageRequest.serializer.toBytes(request),
         skir.UpdatePageResponse.serializer,
       );

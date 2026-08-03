@@ -18,7 +18,6 @@
 
     <!-- Quiet down noisy libraries -->
     <logger name="io.nats" level="INFO"/>
-    <logger name="com.google.protobuf" level="INFO"/>
 
     <!-- Root logger -->
     <root level="DEBUG">

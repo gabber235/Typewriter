@@ -1,256 +1,195 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.PageRepository
-import com.typewritermc.services.libs.communicator.routing.NatsRouting
-import com.typewritermc.services.libs.registrar.Credential
-import com.typewritermc.services.libs.registrar.RegistrationState
-import com.typewritermc.services.libs.telemetry.timed
-import com.typewritermc.services.libs.utils.DeferredProvider
-import com.typewritermc.services.libs.utils.StateProvider
-import com.typewritermc.services.libs.utils.extensions.nullIfBlank
-import io.opentelemetry.api.trace.StatusCode
-import protokt.v1.typewriter.api.v1.*
-import protokt.v1.typewriter.models.v1.Error
+import com.typewritermc.realm.repository.RepositoryResult
+import com.typewritermc.realm.repository.utils.invalidRecordId
+import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.services.libs.telemetry.MainSpanScope
+import com.typewritermc.services.libs.telemetry.childSpan
+import skirout.library.v1.page.ChangePagesChaptersResponse
+import skirout.library.v1.page.CreatePageResponse
+import skirout.library.v1.page.DeletePageResponse
+import skirout.library.v1.page.Page
+import skirout.library.v1.page.PageType
+import skirout.library.v1.page.PageValidationError
+import skirout.library.v1.page.SearchPagesResponse
+import skirout.library.v1.page.UpdatePageResponse
+import skirout.library.v1.page.WatchPageResponse
 
-class PageRoutes(
-    private val pageRepository: PageRepository,
-    private val credentials: DeferredProvider<Credential>,
-    private val registrationStateProvider: StateProvider<RegistrationState>,
+internal class PageRoutes(
+    private val pages: PageRepository,
+    private val books: BookRepository,
+    private val contracts: LibraryContracts,
+    private val realmAddress: RealmAddress,
 ) {
-    fun configure(): NatsRouting.() -> Unit = {
-        val serviceId = credentials.require { "PageRoutes requires the credentials to be set to register" }.id
-        val orgId = when (val state = registrationStateProvider.get()) {
-            is RegistrationState.Bound -> state.organizationId
-            else -> error("Service must be bound to an organization before routes can be configured")
+    fun register(builder: CommunicatorRoutesBuilder) = with(builder) {
+        unary(contracts.searchPages) { call ->
+            call.request.bookId.invalidRecordId("book")?.let {
+                return@unary SearchPagesResponse.InvalidRecordIdErrorWrapper(it)
+            }
+            val book = childSpan("db.book.get") { books.getBook(call.request.bookId) }
+                ?: return@unary SearchPagesResponse.createBookNotFoundError(bookId = call.request.bookId)
+            val result = childSpan("db.page.search") {
+                pages.searchPages(book.bookId, call.request.search?.takeIf(String::isNotBlank))
+            }
+            SearchPagesResponse.SuccessWrapper(result)
         }
-        route("realm.to.${serviceId}.organization.${orgId}") {
-            handle("page.search") {
-                val request = receive(SearchPagesRequest)
-                span.setAttribute("operation", "page.search")
-
-                val bookId = request.bookId.ifBlank {
-                    return@handle reply(SearchPagesResponse {
-                        result = SearchPagesResponse.Result.Error(Error { message = "bookId is required" })
-                    })
-                }
-                span.setAttribute("book.id", bookId)
-                val search = request.search?.nullIfBlank()
-                span.setAttribute("search.query", search)
-
-                val pages = if (search != null) span.timed("db.page.search") {
-                    pageRepository.searchPages(bookId, search)
-                } else span.timed("db.page.list") {
-                    pageRepository.listPages(bookId)
-                }
-                span.setAttribute("result.count", pages.size.toLong())
-
-                val response = SearchPagesResponse {
-                    result = SearchPagesResponse.Result.Pages(SearchPagesResult { this.pages = pages })
-                }
-                reply(response)
+        watch(contracts.watchPage) { call ->
+            call.request.pageId.invalidRecordId("page")?.let {
+                return@watch WatchPageResponse.InvalidRecordIdErrorWrapper(it)
             }
+            val page = childSpan("db.page.get") { pages.getPage(call.request.pageId) }
+                ?: return@watch WatchPageResponse.createPageNotFoundError(pageId = call.request.pageId)
+            WatchPageResponse.InitialWrapper(page)
+        }
+        unary(contracts.createPage) { call -> create(call) }
+        unary(contracts.updatePage) { call -> update(call) }
+        unary(contracts.deletePage) { call -> delete(call) }
+        unary(contracts.changePagesChapters) { call -> changeChapters(call) }
+    }
 
-            handle("page.get") {
-                val request = receive(GetPageRequest)
-                span.setAttribute("operation", "page.get")
-
-                val pageId = request.pageId.ifBlank {
-                    return@handle reply(GetPageResponse {
-                        result = GetPageResponse.Result.Error(Error { message = "page id is required" })
-                    })
-                }
-
-                span.setAttribute("page.id", pageId)
-
-                val page = span.timed("db.page.get") {
-                    pageRepository.getPage(pageId)
-                }
-
-                val response = if (page != null) {
-                    span.setAttribute("page.book_id", page.bookId)
-                    GetPageResponse { result = GetPageResponse.Result.Page(page) }
-                } else {
-                    span.setStatus(StatusCode.ERROR, "Page not found: ${request.pageId}")
-                    GetPageResponse {
-                        result = GetPageResponse.Result.Error(Error { message = "Page not found: ${request.pageId}" })
-                    }
-                }
-                reply(response)
-            }
-
-            handle("page.create") {
-                val request = receive(CreatePageRequest)
-                span.setAttribute("operation", "page.create")
-
-                val bookId = request.bookId.ifBlank {
-                    return@handle reply(CreatePageResponse {
-                        result = CreatePageResponse.Result.Error(Error { message = "bookId is required" })
-                    })
-                }
-                val name = request.name?.nullIfBlank()
-                    ?: return@handle reply(CreatePageResponse {
-                        result = CreatePageResponse.Result.Error(Error { message = "name is required" })
-                    })
-                val chapter = request.chapter ?: ""
-                val priority = request.priority ?: 0
-
-                span.setAttribute("book.id", bookId)
-                span.setAttribute("page.name", name)
-                span.setAttribute("page.type", request.type.name)
-
-                val page = span.timed("db.page.create") {
-                    pageRepository.createPage(
-                        bookId = bookId,
-                        name = name,
-                        type = request.type,
-                        chapter = chapter,
-                        priority = priority
-                    )
-                }
-                span.setAttribute("page.id", page.pageId)
-
-                val response = CreatePageResponse { result = CreatePageResponse.Result.PageId(page.pageId) }
-                reply(response)
-            }
-
-            handle("page.update") {
-                val request = receive(UpdatePageRequest)
-                span.setAttribute("operation", "page.update")
-
-                val page = request.page
-                if (page == null) {
-                    span.setStatus(StatusCode.ERROR, "Page is required")
-                    val response = UpdatePageResponse {
-                        result = UpdatePageResponse.Result.Error(Error { message = "Page is required" })
-                    }
-                    reply(response)
-                    return@handle
-                }
-                span.setAttribute("page.id", page.pageId)
-
-                val updatedPage = span.timed("db.page.update") {
-                    pageRepository.updatePage(page)
-                }
-                val response = UpdatePageResponse { result = UpdatePageResponse.Result.Page(updatedPage) }
-                reply(response)
-            }
-
-            handle("page.delete") {
-                val request = receive(DeletePageRequest)
-                span.setAttribute("operation", "page.delete")
-
-                val pageId = request.pageId.ifBlank {
-                    return@handle reply(DeletePageResponse {
-                        result = DeletePageResponse.Result.Error(Error { message = "pageId is required" })
-                    })
-                }
-
-                span.setAttribute("page.id", pageId)
-
-                val success = span.timed("db.page.delete") {
-                    pageRepository.deletePage(pageId)
-                }
-                span.setAttribute("result.success", success)
-
-                val response = DeletePageResponse { result = DeletePageResponse.Result.Success(success) }
-                reply(response)
-            }
-
-            handle("page.chapter") {
-                val request = receive(ChangePageChapterRequest)
-                span.setAttribute("operation", "page.chapter")
-
-                val pageId = request.pageId.ifBlank {
-                    return@handle reply(ChangePageChapterResponse {
-                        result = ChangePageChapterResponse.Result.Error(Error { message = "pageId is required" })
-                    })
-                }
-                val chapter = request.chapter
-
-                span.setAttribute("page.id", pageId)
-                span.setAttribute("chapter", chapter)
-
-                val success = span.timed("db.page.change_chapter") {
-                    pageRepository.changePageChapter(pageId, chapter)
-                }
-                span.setAttribute("result.success", success)
-
-                val response = ChangePageChapterResponse { result = ChangePageChapterResponse.Result.Success(success) }
-                reply(response)
-            }
-
-            handle("page.priority") {
-                val request = receive(ChangePagePriorityRequest)
-                span.setAttribute("operation", "page.priority")
-
-                val pageId = request.pageId.ifBlank {
-                    return@handle reply(ChangePagePriorityResponse {
-                        result = ChangePagePriorityResponse.Result.Error(Error { message = "pageId is required" })
-                    })
-                }
-                val priority = request.priority
-
-                span.setAttribute("page.id", pageId)
-                span.setAttribute("priority", priority.toLong())
-
-                val success = span.timed("db.page.change_priority") {
-                    pageRepository.changePagePriority(pageId, priority)
-                }
-                span.setAttribute("result.success", success)
-
-                val response =
-                    ChangePagePriorityResponse { result = ChangePagePriorityResponse.Result.Success(success) }
-                reply(response)
-            }
-
-            handle("page.rename") {
-                val request = receive(RenamePageRequest)
-                span.setAttribute("operation", "page.rename")
-
-                val pageId = request.pageId.ifBlank {
-                    return@handle reply(RenamePageResponse {
-                        result = RenamePageResponse.Result.Error(Error { message = "pageId is required" })
-                    })
-                }
-                val name = request.name
-
-                span.setAttribute("page.id", pageId)
-                span.setAttribute("page.name", name)
-
-                val success = span.timed("db.page.rename") {
-                    pageRepository.renamePage(pageId, name)
-                }
-                span.setAttribute("result.success", success)
-
-                val response = RenamePageResponse { result = RenamePageResponse.Result.Success(success) }
-                reply(response)
-            }
-
-            handle("pages.chapters") {
-                val request = receive(ChangePagesChaptersRequest)
-                span.setAttribute("operation", "pages.chapters")
-
-                val bookId = request.bookId.ifBlank {
-                    return@handle reply(ChangePagesChaptersResponse {
-                        result = ChangePagesChaptersResponse.Result.Error(Error { message = "bookId is required" })
-                    })
-                }
-                val oldChapter = request.oldChapter
-                val newChapter = request.newChapter
-
-                span.setAttribute("book.id", bookId)
-                span.setAttribute("old_chapter", oldChapter)
-                span.setAttribute("new_chapter", newChapter)
-
-                val count = span.timed("db.pages.change_chapters") {
-                    pageRepository.changePagesChapters(bookId, oldChapter, newChapter)
-                }
-                span.setAttribute("result.count", count.toLong())
-
-                val response =
-                    ChangePagesChaptersResponse { result = ChangePagesChaptersResponse.Result.Success(count > 0) }
-                reply(response)
+    context(main: MainSpanScope)
+    private suspend fun create(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+            RealmAddress,
+            skirout.library.v1.page.CreatePageRequest,
+            CreatePageResponse,
+            >,
+    ): CreatePageResponse {
+        val request = call.request
+        request.bookId.invalidRecordId("book")?.let {
+            return CreatePageResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        validate(request.name, request.type)?.let { return CreatePageResponse.ValidationErrorWrapper(it) }
+        val book = childSpan("db.book.get") { books.getBook(request.bookId) }
+            ?: return CreatePageResponse.createBookNotFoundError(bookId = request.bookId)
+        val result = childSpan("db.page.create") {
+            pages.createPage(
+                bookId = book.bookId,
+                name = request.name,
+                type = request.type,
+                chapter = request.chapter.orEmpty(),
+                priority = request.priority ?: 0,
+            )
+        }
+        val page = when (result) {
+            is RepositoryResult.Success -> result.value
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "book-not-found-error" -> CreatePageResponse.createBookNotFoundError(bookId = request.bookId)
+                "page-name-invalid-error" ->
+                    CreatePageResponse.ValidationErrorWrapper(PageValidationError.NAME_REQUIRED)
+                else -> error("Unexpected page creation domain error: ${result.slug}")
             }
         }
+        publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
+        return CreatePageResponse.SuccessWrapper(page)
+    }
+
+    context(main: MainSpanScope)
+    private suspend fun update(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+            RealmAddress,
+            skirout.library.v1.page.UpdatePageRequest,
+            UpdatePageResponse,
+            >,
+    ): UpdatePageResponse {
+        val request = call.request
+        request.pageId.invalidRecordId("page")?.let {
+            return UpdatePageResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        val existing = childSpan("db.page.get") { pages.getPage(request.pageId) }
+            ?: return UpdatePageResponse.createPageNotFoundError(pageId = request.pageId)
+        validate(request.name ?: existing.name, request.type ?: existing.type)?.let {
+            return UpdatePageResponse.ValidationErrorWrapper(it)
+        }
+        val result = childSpan("db.page.update") {
+            pages.updatePage(
+                Page(
+                    pageId = existing.pageId,
+                    bookId = existing.bookId,
+                    name = request.name ?: existing.name,
+                    type = request.type ?: existing.type,
+                    chapter = request.chapter ?: existing.chapter,
+                    priority = request.priority ?: existing.priority,
+                ),
+            )
+        }
+        val page = when (result) {
+            is RepositoryResult.Success -> result.value
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "page-not-found-error" -> UpdatePageResponse.createPageNotFoundError(pageId = request.pageId)
+                "page-name-invalid-error" ->
+                    UpdatePageResponse.ValidationErrorWrapper(PageValidationError.NAME_REQUIRED)
+                else -> error("Unexpected page update domain error: ${result.slug}")
+            }
+        }
+        publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
+        return UpdatePageResponse.SuccessWrapper(page)
+    }
+
+    context(main: MainSpanScope)
+    private suspend fun delete(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+            RealmAddress,
+            skirout.library.v1.page.DeletePageRequest,
+            DeletePageResponse,
+            >,
+    ): DeletePageResponse {
+        val id = call.request.pageId
+        id.invalidRecordId("page")?.let {
+            return DeletePageResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        when (val result = childSpan("db.page.delete") { pages.deletePage(id) }) {
+            is RepositoryResult.Success -> Unit
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "page-not-found-error" -> DeletePageResponse.createPageNotFoundError(pageId = id)
+                else -> error("Unexpected page deletion domain error: ${result.slug}")
+            }
+        }
+        publishPage(call.communicator, WatchPageResponse.RemoveWrapper(id))
+        return DeletePageResponse.createSuccess()
+    }
+
+    context(main: MainSpanScope)
+    private suspend fun changeChapters(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+            RealmAddress,
+            skirout.library.v1.page.ChangePagesChaptersRequest,
+            ChangePagesChaptersResponse,
+            >,
+    ): ChangePagesChaptersResponse {
+        val request = call.request
+        request.bookId.invalidRecordId("book")?.let {
+            return ChangePagesChaptersResponse.InvalidRecordIdErrorWrapper(it)
+        }
+        val book = childSpan("db.book.get") { books.getBook(request.bookId) }
+            ?: return ChangePagesChaptersResponse.createBookNotFoundError(bookId = request.bookId)
+        val result = childSpan("db.page.change_chapters") {
+            pages.changePagesChapters(book.bookId, request.oldChapter, request.newChapter)
+        }
+        val updated = when (result) {
+            is RepositoryResult.Success -> result.value
+            is RepositoryResult.DomainFailure -> return when (result.slug) {
+                "book-not-found-error" ->
+                    ChangePagesChaptersResponse.createBookNotFoundError(bookId = request.bookId)
+                else -> error("Unexpected chapter mutation domain error: ${result.slug}")
+            }
+        }
+        for (page in updated) publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
+        return ChangePagesChaptersResponse.createSuccess(updatedCount = updated.size)
+    }
+
+    private suspend fun publishPage(
+        communicator: com.typewritermc.services.libs.communicator.client.Communicator,
+        response: WatchPageResponse,
+    ) {
+        communicator.publishUpdate(contracts.watchPage, realmAddress, response).requirePublished()
+    }
+
+    private fun validate(name: String, type: PageType): PageValidationError? = when {
+        name.isBlank() -> PageValidationError.NAME_REQUIRED
+        type is PageType.Unknown -> PageValidationError.PAGE_TYPE_UNKNOWN
+        else -> null
     }
 }

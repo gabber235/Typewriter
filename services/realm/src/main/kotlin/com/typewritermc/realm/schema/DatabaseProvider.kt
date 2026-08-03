@@ -10,13 +10,18 @@ import com.typewritermc.services.libs.telemetry.withErrorSlug
 
 private val DATABASE_CONNECT_FAILURE = ErrorSlug.of("realm-database-connect-failed")
 
+interface RealmDatabaseProvider {
+    context(_: MainSpanScope)
+    fun connect(): Surreal
+}
+
 class DatabaseProvider(
     private val url: String,
     private val username: String,
     private val password: String,
     private val namespace: String,
     private val database: String,
-) {
+) : RealmDatabaseProvider {
 
     init {
         require(url.isNotBlank()) { "Database URL must not be blank" }
@@ -28,7 +33,7 @@ class DatabaseProvider(
     }
 
     context(_: MainSpanScope)
-    fun connect(): Surreal = childSpanBlocking("realm.database.connect") { child ->
+    override fun connect(): Surreal = childSpanBlocking("realm.database.connect") { child ->
         withErrorSlug(DATABASE_CONNECT_FAILURE) {
             child.annotate {
                 attribute("db.url", url)

@@ -1,17 +1,24 @@
 package com.typewritermc.realm.repository
 
-import protokt.v1.typewriter.models.v1.Page
-import protokt.v1.typewriter.models.v1.PageType
+import skirout.kernel.v1.record_id.RecordId
+import skirout.library.v1.page.Page
+import skirout.library.v1.page.PageType
 
 interface PageRepository {
-    suspend fun listPages(bookId: String): List<Page>
-    suspend fun searchPages(bookId: String, search: String): List<Page>
-    suspend fun getPage(id: String): Page?
-    suspend fun createPage(bookId: String, name: String, type: PageType, chapter: String, priority: Int): Page
-    suspend fun updatePage(page: Page): Page
-    suspend fun deletePage(id: String): Boolean
-    suspend fun changePageChapter(pageId: String, chapter: String): Boolean
-    suspend fun changePagePriority(pageId: String, priority: Int): Boolean
-    suspend fun renamePage(pageId: String, name: String): Boolean
-    suspend fun changePagesChapters(bookId: String, oldChapter: String, newChapter: String): Int
+    suspend fun searchPages(bookId: RecordId, search: String?): List<Page>
+    suspend fun getPage(id: RecordId): Page?
+    suspend fun createPage(
+        bookId: RecordId,
+        name: String,
+        type: PageType,
+        chapter: String,
+        priority: Int,
+    ): RepositoryResult<Page>
+    suspend fun updatePage(page: Page): RepositoryResult<Page>
+    suspend fun deletePage(id: RecordId): RepositoryResult<Unit>
+    suspend fun changePagesChapters(
+        bookId: RecordId,
+        oldChapter: String,
+        newChapter: String,
+    ): RepositoryResult<List<Page>>
 }

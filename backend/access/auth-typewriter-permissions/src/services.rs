@@ -150,20 +150,51 @@ fn handle_bound_binding(
 
     tags.push(format!("organization:{org_id}"));
 
-    // TODO: Don't make this broad, make it narrow.
-    allow_publish.push(format!(
-        "cloud.to.service.{service_id}.organization.{org_id}.>",
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.service.{service_id}.organization.{org_id}.>",
-    ));
+    for suffix in ["status", "heartbeat", "shutdown"] {
+        allow_publish.push(format!(
+            "cloud.to.service.{service_id}.organization.{org_id}.{suffix}",
+        ));
+    }
+    for suffix in ["configuration", "command"] {
+        allow_subscribe.push(format!(
+            "cloud.from.service.{service_id}.organization.{org_id}.{suffix}",
+        ));
+    }
 
-    allow_publish.push(format!(
-        "service.from.{service_id}.organization.{org_id}.realm.>",
-    ));
-    allow_subscribe.push(format!(
-        "service.to.{service_id}.organization.{org_id}.realm.>",
-    ));
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "book.create",
+        "book.update",
+        "page.search",
+        "page.watch",
+        "page.create",
+        "page.update",
+        "page.delete",
+        "pages.chapters",
+        "tag.watch",
+        "tag.resource.watch",
+        "tag.create",
+        "tag.update",
+        "tag.delete",
+        "tag.move",
+        "tag.resize",
+    ] {
+        allow_subscribe.push(format!(
+            "service.to.{service_id}.organization.{org_id}.realm.{suffix}",
+        ));
+    }
+    for suffix in [
+        "book.watch",
+        "book.resource.watch",
+        "page.watch",
+        "tag.watch",
+        "tag.resource.watch",
+    ] {
+        allow_publish.push(format!(
+            "service.from.{service_id}.organization.{org_id}.realm.{suffix}",
+        ));
+    }
 }
 
 fn handle_unbound_binding(service_id: &str, allow_subscribe: &mut Vec<String>) {

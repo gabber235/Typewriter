@@ -2,7 +2,12 @@ DEFINE TABLE OVERWRITE tag SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
 DEFINE FIELD OVERWRITE name ON tag TYPE string
-    ASSERT fn::is_id($value);
+    ASSERT {
+        IF !fn::is_id($value) {
+            THROW "tag-name-invalid-error"
+        };
+        RETURN true;
+    };
 
 DEFINE FIELD OVERWRITE color ON tag TYPE int
     DEFAULT $gray
@@ -20,11 +25,21 @@ DEFINE FIELD OVERWRITE placement.y ON tag TYPE int
 
 DEFINE FIELD OVERWRITE placement.width ON tag TYPE int
     DEFAULT ALWAYS 3
-    ASSERT $value > 0;
+    ASSERT {
+        IF $value <= 0 {
+            THROW "tag-width-invalid-error"
+        };
+        RETURN true;
+    };
 
 DEFINE FIELD OVERWRITE placement.height ON tag TYPE int
     DEFAULT ALWAYS 1
-    ASSERT $value > 0;
+    ASSERT {
+        IF $value <= 0 {
+            THROW "tag-height-invalid-error"
+        };
+        RETURN true;
+    };
 
-DEFINE FIELD OVERWRITE parentIds ON tag
+DEFINE FIELD OVERWRITE parent_tags ON tag
     COMPUTED ->inherits->tag;

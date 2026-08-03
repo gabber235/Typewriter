@@ -1,184 +1,114 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
-import com.typewritermc.realm.repository.utils.BookRecord
-import com.typewritermc.realm.repository.utils.requireValidId
+import com.typewritermc.realm.repository.records.BookRecord
+import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import com.typewritermc.services.libs.utils.DeferredProvider
-import protokt.v1.typewriter.models.v1.Book
+import skirout.kernel.v1.color.Color
+import skirout.kernel.v1.record_id.RecordId
+import skirout.library.v1.book.Book
 
 class SurrealBookRepository(
-    private val db: DeferredProvider<Surreal>
+    private val database: DeferredProvider<Surreal>,
 ) : BookRepository {
-
     override suspend fun listBooks(): List<Book> {
-        val result = db.get().query("SELECT * FROM book")
-            .takeTransaction(0)
-
-        if (result.isNone) return emptyList()
-
-        return BookRecord.parseList(result).map { it.toBook() }
+        val result = database.get().query("SELECT * FROM book ORDER BY title, id").take(0)
+        return BookRecord.parseList(result).map(BookRecord::toBook)
     }
 
-    override suspend fun getBook(id: String): Book? {
-        requireValidId("Book", id)
-
-        val result = db.get().queryBind(
+    override suspend fun getBook(id: RecordId): Book? {
+        val result = database.get().query(
             $$"SELECT * FROM type::record('book', $id)",
-            mapOf("id" to id)
-        ).takeTransaction(0)
-
-        if (result.isNone) return null
-
+            mapOf("id" to id.surrealId("book")),
+        ).take(0)
         return BookRecord.parseList(result).firstOrNull()?.toBook()
     }
 
     override suspend fun createBook(
         title: String,
         icon: String,
-        color: Int,
-        tagIds: List<String>
-    ): Book {
-        val colorLong = color.toUInt().toLong()
-
-        // Create book and relationships in a single transaction
-        val result = db.get().queryBind(
-            $$"""
-            BEGIN TRANSACTION;
-            LET $book = CREATE book SET
-                title = $title,
-                icon = $icon,
-                color = $color;
-
-            LET $tags = $tag_ids.map(|$id| type::record('tag', $id));
-            FOR $tag IN $tags {
-                IF record::exists($tag) {
-                    RELATE $book->bears->$tag;
-                };
-            };
-
-            RETURN SELECT * FROM $book.id;
-            COMMIT TRANSACTION;
-            """.trimIndent(),
-            mapOf("title" to title, "icon" to icon, "color" to colorLong, "tag_ids" to tagIds)
-        ).takeTransaction(0)
-
-        if (result.isNone) {
-            throw IllegalStateException("Failed to create book: no result returned")
-        }
-
-        val records = BookRecord.parseList(result)
-        return records.firstOrNull()?.toBook()
-            ?: throw IllegalStateException("Failed to create book: no book record returned")
-
-    }
-
-    override suspend fun updateBook(book: Book): Book {
-        val colorLong = (book.color?.value ?: 0u).toLong()
-
-        requireValidId("Book", book.bookId)
-
-        val result = db.get().queryBind(
+        color: Color,
+        tagIds: List<RecordId>,
+    ): RepositoryResult<Book> = repositoryMutation(tagIds) {
+        val result = database.get().query(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::record('book', $id);
-                UPDATE $book_record SET
+
+                LET $distinct_tags = array::distinct($tags);
+
+                IF $distinct_tags.any(|$tag| !record::exists($tag)) {
+                    THROW "tags-not-found-error";
+                };
+
+                LET $book = CREATE ONLY book SET
                     title = $title,
                     icon = $icon,
                     color = $color;
 
-                LET $target_tags = $tag_ids.map(|$id| type::record('tag', $id));
-                LET $current_tags = SELECT VALUE ->bears->tag FROM ONLY $book_record;
-
-                LET $new_tags = array::complement($target_tags, $current_tags);
-                LET $remove_tags = array::complement($current_tags, $target_tags);
-
-                FOR $tag IN $new_tags {
-                    RELATE $book_record->bears->$tag;
+                FOR $tag IN $distinct_tags {
+                    RELATE $book->bears->$tag;
                 };
 
-                FOR $tag IN $remove_tags {
-                    DELETE bears WHERE in = $book_record AND out = $tag;
-                };
-
-                RETURN SELECT * FROM $book_record;
+                RETURN SELECT * FROM $book.id;
 
                 COMMIT TRANSACTION;
             """.trimIndent(),
             mapOf(
-                "id" to book.bookId,
-                "title" to book.title.orEmpty(),
-                "icon" to book.icon.orEmpty(),
-                "color" to colorLong,
-                "tag_ids" to book.tagIds
-            )
-        ).takeTransaction(0)
-        return BookRecord.parseList(result).firstOrNull()?.toBook()
-            ?: throw IllegalStateException("Failed to update book")
+                "title" to title,
+                "icon" to icon,
+                "color" to color.argb.toUInt().toLong(),
+                "tags" to tagIds.surrealId("tag"),
+            ),
+        ).takeTransaction(5)
+
+        BookRecord.parseList(result).singleOrNull()?.toBook()
+            ?: error("Book creation returned no record")
     }
 
-    override suspend fun deleteBook(id: String): Boolean {
-        requireValidId("Book", id)
-
-        return db.get().queryBind(
+    override suspend fun updateBook(book: Book): RepositoryResult<Book> = repositoryMutation(book.tagIds) {
+        val result = database.get().query(
             $$"""
                 BEGIN TRANSACTION;
-                LET $book_record = type::record('book', $id);
 
-                IF !record::exists($book_record) {
-                    RETURN false;
+                LET $target_tags = array::distinct($tags);
+
+                IF !record::exists($book) {
+                    THROW "book-not-found-error";
                 };
-                DELETE bears WHERE in = $book_record;
-                DELETE $book_record;
-                RETURN true;
-                COMMIT TRANSACTION;
-                """.trimIndent(),
-            mapOf("id" to id)
-        ).takeTransaction(0).boolean
-    }
 
-    override suspend fun addTagToBook(bookId: String, tagId: String): Boolean {
-        requireValidId("Book", bookId)
-        requireValidId("Tag", tagId)
-
-        return db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $book_record = type::record('book', $bookId);
-                LET $tag_record = type::record('tag', $tagId);
-                IF !record::exists($book_record) || !record::exists($tag_record) {
-                    RETURN false;
+                IF $target_tags.any(|$tag| !record::exists($tag)) {
+                    THROW "tags-not-found-error";
                 };
-                RELATE $book_record->bears->$tag_record;
-                RETURN true;
+
+                UPDATE $book SET
+                    title = $title,
+                    icon = $icon,
+                    color = $color;
+
+                LET $current_tags = SELECT VALUE ->bears->tag FROM ONLY $book;
+
+                FOR $tag IN array::complement($target_tags, $current_tags) {
+                    RELATE $book->bears->$tag;
+                };
+
+                FOR $tag IN array::complement($current_tags, $target_tags) {
+                    DELETE bears WHERE in = $book AND out = $tag;
+                };
+
+                RETURN SELECT * FROM $book.id;
                 COMMIT TRANSACTION;
             """.trimIndent(),
-            mapOf("bookId" to bookId, "tagId" to tagId)
-        )
-            .takeTransaction(0).boolean
-    }
+            mapOf(
+                "book" to book.bookId.surrealId("book"),
+                "title" to book.title,
+                "icon" to book.icon,
+                "color" to book.color.argb.toUInt().toLong(),
+                "tags" to book.tagIds.surrealId("tag"),
+            ),
+        ).takeTransaction(8)
 
-    override suspend fun removeTagFromBook(bookId: String, tagId: String): Boolean {
-        requireValidId("Book", bookId)
-        requireValidId("Tag", tagId)
-
-        return db.get().queryBind(
-            $$"""
-                BEGIN TRANSACTION;
-                LET $book_record = type::record('book', $bookId);
-                LET $tag_record = type::record('tag', $tagId);
-
-                LET $bears = SELECT VALUE id FROM bears WHERE in = $book_record AND out = $tag_record;
-
-                IF array::is_empty($bears) {
-                    RETURN false;
-                };
-
-                DELETE array::first($bears);
-                RETURN true;
-                COMMIT TRANSACTION;
-                """.trimIndent(),
-            mapOf("bookId" to bookId, "tagId" to tagId)
-        ).takeTransaction(0).boolean
+        BookRecord.parseList(result).singleOrNull()?.toBook()
+            ?: error("Book update returned no record")
     }
 }

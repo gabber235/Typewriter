@@ -141,6 +141,9 @@ async fn member_receives_all_organization_capabilities(
         "cloud.to.user.panel_user.organization.writers.members.remove",
         "cloud.to.user.panel_user.organization.writers.services.bind",
         "cloud.to.organization.writers.realm.create",
+        "service.to.*.organization.writers.realm.book.create",
+        "service.to.*.organization.writers.realm.pages.chapters",
+        "service.to.*.organization.writers.realm.tag.resize",
     ] {
         assert!(publish.iter().any(|subject| subject == required));
     }
@@ -150,6 +153,9 @@ async fn member_receives_all_organization_capabilities(
         "cloud.from.organization.writers.members.watch",
         "cloud.from.organization.writers.services.watch",
         "cloud.from.organization.writers.realm.list",
+        "service.from.*.organization.writers.realm.book.resource.watch",
+        "service.from.*.organization.writers.realm.page.watch",
+        "service.from.*.organization.writers.realm.tag.resource.watch",
     ] {
         assert!(subscribe.iter().any(|subject| subject == required));
     }
