@@ -11,6 +11,24 @@ application {
     mainClass.set("com.typewritermc.realm.RealmMain")
 }
 
+fun registerRealmRunProfile(profile: String) {
+    val profileName = profile.replaceFirstChar(Char::uppercase)
+    val configurationFile = layout.projectDirectory.file("config/$profile.properties")
+    tasks.register<JavaExec>("run$profileName") {
+        group = "application"
+        description = "Runs Realm with the $profile configuration"
+        dependsOn(tasks.named("classes"))
+        classpath = sourceSets.main.get().runtimeClasspath
+        mainClass.set(application.mainClass)
+        standardInput = System.`in`
+        environment("REALM_CONFIG_FILE", configurationFile.asFile.absolutePath)
+        inputs.file(configurationFile)
+    }
+}
+
+registerRealmRunProfile("local")
+registerRealmRunProfile("production")
+
 dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)

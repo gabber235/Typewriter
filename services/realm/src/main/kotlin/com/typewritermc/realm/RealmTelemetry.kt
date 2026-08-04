@@ -11,6 +11,8 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
 
+private val realmSettings by lazy(RealmSettings::system)
+
 fun realmOpenTelemetry(): OpenTelemetrySdk {
     val resource =
         Resource.getDefault().merge(
@@ -55,7 +57,4 @@ private fun realmSamplerRatio(): Double = realmSetting("OTEL_TRACES_SAMPLER_ARG"
 internal fun realmSetting(
     name: String,
     default: String? = null,
-): String? =
-    System.getProperty(name)?.takeIf(String::isNotBlank)
-        ?: System.getenv(name)?.takeIf(String::isNotBlank)
-        ?: default
+): String? = realmSettings.get(name, default)
