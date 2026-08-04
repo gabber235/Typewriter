@@ -88,6 +88,10 @@ val ServiceRegistrarLifecycleTest by testSuite {
                         .filterIsInstance<RegistrarAction.CreateRuntime>()
                         .single()
                 store.referenceId shouldBe create.credentialReferenceId
+                val bodies = f.harness.finishedLogs().mapNotNull { it.bodyValue?.asString() }
+                bodies.contains("Loading the saved service identity") shouldBe true
+                bodies.contains("Requesting a new service identity") shouldBe true
+                bodies.contains("Service registration is ready") shouldBe true
             }
         }
     }
@@ -101,6 +105,11 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 runCurrent()
                 (f.registrar.states.value.state as RegistrarState.Failed).identityOutcomeMayBeAmbiguous shouldBe true
                 f.ledger.actions.count { it is RegistrarAction.IssueIdentity } shouldBe 1
+                f.harness
+                    .finishedLogs()
+                    .last()
+                    .bodyValue
+                    ?.asString() shouldBe "Service registration failed"
             }
         }
     }
@@ -152,6 +161,10 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 f.ledger.actions
                     .filterIsInstance<RegistrarAction.Delay>()
                     .map { it.duration } shouldBe listOf(1.seconds, 2.seconds)
+                f.harness
+                    .finishedLogs()
+                    .mapNotNull { it.bodyValue?.asString() }
+                    .count { it.startsWith("Service registration is unavailable") } shouldBe 2
             }
         }
     }
@@ -399,6 +412,22 @@ val ServiceRegistrarLifecycleTest by testSuite {
         runTest {
             credentials().toString().contains("password") shouldBe false
             RegistrarState.AwaitingBinding(identity(), RegistrationToken("secret")).toString().contains("secret") shouldBe false
+            fixture(this).use { f ->
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(
+                        BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("registration-secret"))),
+                    ),
+                )
+                f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
+                f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
+                f.issuer.enqueue(IdentityIssueResult.Success(credentials()))
+                f.registrar.start()
+                runCurrent()
+
+                val exported = f.harness.finishedLogs().joinToString { "${it.bodyValue} ${it.attributes.asMap()}" }
+                exported.contains("registration-secret") shouldBe false
+                exported.contains("password") shouldBe false
+            }
         }
     }
 }
