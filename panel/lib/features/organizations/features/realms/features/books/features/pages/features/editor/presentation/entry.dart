@@ -146,48 +146,57 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       );
     }
 
-    final backgroundColor = isDeprecated
-        ? Color.alphaBlend(
-            definition.blueprint.color.withValues(alpha: 0.7),
-            Surface.colorOf(context),
-          )
-        : definition.blueprint.color;
+    return HookBuilder(
+      builder: (context) {
+        final backgroundColor = isDeprecated
+            ? Color.alphaBlend(
+                definition.blueprint.color.withValues(alpha: 0.7),
+                Surface.colorOf(context),
+              )
+            : definition.blueprint.color;
 
-    final highlightColor = isFocused
-        ? _entryFocusColor
-        : backgroundColor.onBrightness(Brightness.dark);
+        final adaptedBackgroundColor = useMemoized(
+          () => backgroundColor.onBrightness(Brightness.dark),
+          [backgroundColor],
+        );
 
-    return AnimatedOpacity(
-      duration: 400.ms,
-      curve: Curves.easeOutCubic,
-      opacity: isAccepting ? 0.5 : 1,
-      child: Material(
-        borderRadius: context.shapes.mediumBorderRadius,
-        color: backgroundColor,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCirc,
-          decoration: BoxDecoration(
-            borderRadius: context.shapes.smallBorderRadius,
-            border: Border.all(
-              color: isSelected ? highlightColor : backgroundColor,
-              width: 3,
+        final highlightColor = isFocused
+            ? _entryFocusColor
+            : adaptedBackgroundColor;
+
+        return AnimatedOpacity(
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+          opacity: isAccepting ? 0.5 : 1,
+          child: Material(
+            borderRadius: context.shapes.mediumBorderRadius,
+            color: backgroundColor,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCirc,
+              decoration: BoxDecoration(
+                borderRadius: context.shapes.smallBorderRadius,
+                border: Border.all(
+                  color: isSelected ? highlightColor : backgroundColor,
+                  width: 3,
+                ),
+              ),
+              margin: EdgeInsets.all(context.spacing.space1),
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCirc,
+                alignment: Alignment.topCenter,
+                child: InnerElementNode(
+                  name: definition.name,
+                  blueprint: definition.blueprint,
+                  color: highlightColor,
+                  isDeprecated: isDeprecated,
+                ),
+              ),
             ),
           ),
-          margin: EdgeInsets.all(context.spacing.space1),
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCirc,
-            alignment: Alignment.topCenter,
-            child: InnerElementNode(
-              name: definition.name,
-              blueprint: definition.blueprint,
-              color: highlightColor,
-              isDeprecated: isDeprecated,
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
