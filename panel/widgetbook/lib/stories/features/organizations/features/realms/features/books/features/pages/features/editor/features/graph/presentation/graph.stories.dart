@@ -12,85 +12,109 @@ class SimpleDragData extends GraphDragData {
   final GraphIdentifier graphId;
 }
 
-Widget _node<D extends GraphDragData>(
-  BuildContext context,
-  String text,
-  Color color, {
-  required D data,
-  double padding = 8,
-}) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      return HookBuilder(
-        builder: (context) {
-          final controller = useAnimationController(duration: 200.ms);
+class _SimpleNode<D extends GraphDragData> extends StatefulWidget {
+  const _SimpleNode({
+    required this.text,
+    required this.color,
+    required this.data,
+    this.padding = 8,
+    super.key,
+  });
 
-          final child = Container(
-            width: constraints.maxWidth,
-            height: constraints.maxHeight,
-            decoration: BoxDecoration(
-              color: .alphaBlend(
-                color.withValues(alpha: 0.2),
-                Theme.of(context).colorScheme.surfaceContainerLowest,
-              ),
-              border: .all(color: color, width: 2),
-              borderRadius: .circular(8),
+  final String text;
+  final Color color;
+  final double padding;
+  final D data;
+
+  @override
+  State<_SimpleNode> createState() => _SimpleNodeState();
+}
+
+class _SimpleNodeState extends State<_SimpleNode<GraphDragData>>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(vsync: this, duration: 200.ms);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final child = Container(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          decoration: BoxDecoration(
+            color: .alphaBlend(
+              widget.color.withValues(alpha: 0.2),
+              Theme.of(context).colorScheme.surfaceContainerLowest,
             ),
-            padding: EdgeInsets.all(padding),
-            child: FittedBox(
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: color,
-                  letterSpacing: 1.5,
-                  fontVariations: [extraBoldWeight],
-                ),
+            border: .all(color: widget.color, width: 2),
+            borderRadius: .circular(8),
+          ),
+          padding: EdgeInsets.all(widget.padding),
+          child: FittedBox(
+            child: Text(
+              widget.text,
+              style: TextStyle(
+                color: widget.color,
+                letterSpacing: 1.5,
+                fontVariations: [extraBoldWeight],
               ),
             ),
-          );
+          ),
+        );
 
-          final themes = InheritedTheme.capture(
-            from: context,
-            to: Navigator.of(context, rootNavigator: true).context,
-          );
+        final themes = InheritedTheme.capture(
+          from: context,
+          to: Navigator.of(context, rootNavigator: true).context,
+        );
 
-          final graphDrag = GraphDrag.maybeOf(context);
+        final graphDrag = GraphDrag.maybeOf(context);
 
-          return Draggable(
-            data: data,
-            onDragStarted: () {
-              // Because we initially start dragging over itself, we know that we are dragging inside the graph.
-              // And want to prevent the feedback from being shown.
-              // However the graph doesn't know that we are dragging on it yet.
-              graphDrag?.draggingInsideGraph.value = true;
+        return Draggable(
+          data: widget.data,
+          onDragStarted: () {
+            // Because we initially start dragging over itself, we know that we are dragging inside the graph.
+            // And want to prevent the feedback from being shown.
+            // However the graph doesn't know that we are dragging on it yet.
+            graphDrag?.draggingInsideGraph.value = true;
+          },
+          feedback: HookBuilder(
+            builder: (context) {
+              useListenable(graphDrag?.draggingInsideGraph);
+              return graphDrag?.draggingInsideGraph.value ?? false
+                  ? SizedBox()
+                  : Opacity(opacity: 0.5, child: themes.wrap(child));
             },
-            feedback: HookBuilder(
-              builder: (context) {
-                useListenable(graphDrag?.draggingInsideGraph);
-                return graphDrag?.draggingInsideGraph.value ?? false
-                    ? SizedBox()
-                    : Opacity(opacity: 0.5, child: themes.wrap(child));
-              },
-            ),
-            child: GestureDetector(
-              onTap: () async {
-                await controller.forward();
-                await controller.reverse();
-              },
-              child: child
-                  .animate(controller: controller, autoPlay: false)
-                  .scaleXY(
-                    duration: 200.ms,
-                    begin: 1,
-                    end: 1.2,
-                    curve: Curves.easeInOut,
-                  ),
-            ),
-          );
-        },
-      );
-    },
-  );
+          ),
+          child: GestureDetector(
+            onTap: () async {
+              await controller.forward();
+              await controller.reverse();
+            },
+            child: child
+                .animate(controller: controller, autoPlay: false)
+                .scaleXY(
+                  duration: 200.ms,
+                  begin: 1,
+                  end: 1.2,
+                  curve: Curves.easeInOut,
+                ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 @widgetbook.UseCase(name: "Simple Graph", type: Graph)
@@ -104,10 +128,9 @@ Widget simpleGraphUseCase(BuildContext context) {
         y: 20,
         width: 3,
         height: 2,
-        builder: (_) => _node(
-          context,
-          "Start",
-          Colors.blue,
+        builder: (_) => _SimpleNode(
+          text: "Start",
+          color: Colors.blue,
           data: const SimpleDragData(graphId: GraphIdentifier("start")),
         ),
         priority: 1,
@@ -118,10 +141,9 @@ Widget simpleGraphUseCase(BuildContext context) {
         y: 20,
         width: 3,
         height: 2,
-        builder: (_) => _node(
-          context,
-          "End",
-          Colors.red,
+        builder: (_) => _SimpleNode(
+          text: "End",
+          color: Colors.red,
           data: const SimpleDragData(graphId: GraphIdentifier("end")),
         ),
         priority: 1,
@@ -162,10 +184,9 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         y: 1,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Entry Point",
-          Colors.blue,
+        builder: (_) => _SimpleNode(
+          text: "Entry Point",
+          color: Colors.blue,
           data: const SimpleDragData(graphId: GraphIdentifier("entry")),
         ),
         priority: 1,
@@ -176,10 +197,9 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         y: 0,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Process A",
-          Colors.orange,
+        builder: (_) => _SimpleNode(
+          text: "Process A",
+          color: Colors.orange,
           data: const SimpleDragData(graphId: GraphIdentifier("process1")),
         ),
         priority: 1,
@@ -190,10 +210,9 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         y: 2,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Process B",
-          Colors.orange,
+        builder: (_) => _SimpleNode(
+          text: "Process B",
+          color: Colors.orange,
           data: const SimpleDragData(graphId: GraphIdentifier("process2")),
         ),
         priority: 1,
@@ -204,10 +223,9 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         y: 1,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Decision",
-          Colors.pink,
+        builder: (_) => _SimpleNode(
+          text: "Decision",
+          color: Colors.pink,
           data: const SimpleDragData(graphId: GraphIdentifier("decision")),
         ),
         priority: 1,
@@ -218,10 +236,9 @@ Widget complexFlowGraphUseCase(BuildContext context) {
         y: 1,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Output",
-          Colors.green,
+        builder: (_) => _SimpleNode(
+          text: "Output",
+          color: Colors.green,
           data: const SimpleDragData(graphId: GraphIdentifier("output")),
         ),
         priority: 1,
@@ -308,10 +325,9 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
         y: 3,
         width: 3,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "React App",
-          Colors.blue,
+        builder: (_) => _SimpleNode(
+          text: "React App",
+          color: Colors.blue,
           data: const SimpleDragData(graphId: GraphIdentifier("frontend1")),
         ),
         priority: 1,
@@ -322,10 +338,9 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
         y: 5,
         width: 3,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Vue App",
-          Colors.blue,
+        builder: (_) => _SimpleNode(
+          text: "Vue App",
+          color: Colors.blue,
           data: const SimpleDragData(graphId: GraphIdentifier("frontend2")),
         ),
         priority: 1,
@@ -336,10 +351,9 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
         y: 4,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "API",
-          Colors.green,
+        builder: (_) => _SimpleNode(
+          text: "API",
+          color: Colors.green,
           data: const SimpleDragData(graphId: GraphIdentifier("api")),
         ),
         priority: 1,
@@ -350,10 +364,9 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
         y: 3,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "DB",
-          Colors.orange,
+        builder: (_) => _SimpleNode(
+          text: "DB",
+          color: Colors.orange,
           data: const SimpleDragData(graphId: GraphIdentifier("database")),
         ),
         priority: 1,
@@ -364,10 +377,9 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
         y: 5,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Cache",
-          Colors.orange,
+        builder: (_) => _SimpleNode(
+          text: "Cache",
+          color: Colors.orange,
           data: const SimpleDragData(graphId: GraphIdentifier("cache")),
         ),
         priority: 1,
@@ -472,10 +484,9 @@ Widget largeGridGraphUseCase(BuildContext context) {
           y: j * 3,
           width: 2,
           height: 1,
-          builder: (_) => _node(
-            context,
-            "$i,$j",
-            Colors.teal,
+          builder: (_) => _SimpleNode(
+            text: "$i,$j",
+            color: Colors.teal,
             padding: 2,
             data: SimpleDragData(graphId: GraphIdentifier(id)),
           ),
@@ -529,10 +540,9 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
         y: 3,
         width: 2,
         height: 2,
-        builder: (_) => _node(
-          context,
-          "Center",
-          Colors.blue,
+        builder: (_) => _SimpleNode(
+          text: "Center",
+          color: Colors.blue,
           data: const SimpleDragData(graphId: GraphIdentifier("center")),
         ),
         priority: 1,
@@ -543,10 +553,9 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
         y: 0,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Top",
-          Colors.red,
+        builder: (_) => _SimpleNode(
+          text: "Top",
+          color: Colors.red,
           data: const SimpleDragData(graphId: GraphIdentifier("top")),
         ),
         priority: 1,
@@ -557,10 +566,9 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
         y: 7,
         width: 2,
         height: 1,
-        builder: (_) => _node(
-          context,
-          "Bottom",
-          Colors.green,
+        builder: (_) => _SimpleNode(
+          text: "Bottom",
+          color: Colors.green,
           data: const SimpleDragData(graphId: GraphIdentifier("bottom")),
         ),
         priority: 1,
@@ -571,10 +579,9 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
         y: 4,
         width: 2,
         height: 2,
-        builder: (_) => _node(
-          context,
-          "Left",
-          Colors.orange,
+        builder: (_) => _SimpleNode(
+          text: "Left",
+          color: Colors.orange,
           data: const SimpleDragData(graphId: GraphIdentifier("left")),
         ),
         priority: 1,
@@ -585,10 +592,9 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
         y: 2,
         width: 2,
         height: 2,
-        builder: (_) => _node(
-          context,
-          "Right",
-          Colors.purple,
+        builder: (_) => _SimpleNode(
+          text: "Right",
+          color: Colors.purple,
           data: const SimpleDragData(graphId: GraphIdentifier("right")),
         ),
         priority: 1,
