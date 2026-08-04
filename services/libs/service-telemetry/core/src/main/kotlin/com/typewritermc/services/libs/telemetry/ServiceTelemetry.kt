@@ -1,6 +1,9 @@
+@file:Suppress("ForbiddenImport")
+
 package com.typewritermc.services.libs.telemetry
 
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.logs.Logger
 import io.opentelemetry.api.trace.Tracer
 
 data class InstrumentationScope(
@@ -20,6 +23,15 @@ class ServiceTelemetry(
     internal val tracer: Tracer =
         openTelemetry
             .tracerBuilder(instrumentation.name)
+            .apply {
+                instrumentation.version?.let(::setInstrumentationVersion)
+                instrumentation.schemaUrl?.let(::setSchemaUrl)
+            }.build()
+
+    internal val logger: Logger =
+        openTelemetry
+            .logsBridge
+            .loggerBuilder(instrumentation.name)
             .apply {
                 instrumentation.version?.let(::setInstrumentationVersion)
                 instrumentation.schemaUrl?.let(::setSchemaUrl)

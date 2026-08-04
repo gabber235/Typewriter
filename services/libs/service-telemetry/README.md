@@ -1,6 +1,6 @@
 # Service Telemetry
 
-Kotlin-first OpenTelemetry instrumentation primitives for Typewriter services. The library owns span instrumentation and context propagation; applications own the OpenTelemetry SDK, resources, sampling, exporters, global registration, and shutdown.
+OpenTelemetry instrumentation primitives for Typewriter services. OpenTelemetry spans and span events are the source of truth. Selected events are also emitted as correlated OpenTelemetry log records. Applications own the SDK, resources, sampling, exporters, global registration, and shutdown.
 
 ## Artifacts
 
@@ -8,6 +8,7 @@ Kotlin-first OpenTelemetry instrumentation primitives for Typewriter services. T
 dependencies {
     implementation("com.typewritermc:service-telemetry-core")
     implementation("com.typewritermc:service-telemetry-koin") // optional
+    implementation("com.typewritermc:service-telemetry-console") // application shells only
     testImplementation("com.typewritermc:service-telemetry-testing")
 }
 ```
@@ -46,7 +47,7 @@ suspend fun handle(message: Message) {
 }
 ```
 
-`main.annotate` always enriches the stable unit-of-work span. `child.annotate` is for operation detail. Successful and expected-domain outcomes remain OTel `UNSET`; escaping classified failures become `ERROR`. Cancellation is ended and rethrown without being classified as an application error.
+`main.annotate` always enriches the stable operation span. `child.annotate` is for operation detail. Successful and expected domain outcomes remain OTel `UNSET`; escaping classified failures become `ERROR`. Cancellation is ended and rethrown without being classified as an application error.
 
 Define service-specific vocabulary as typed extensions:
 
@@ -58,7 +59,69 @@ fun MainAttributes.identityOutcome(outcome: IdentityOutcome) {
 
 ## Error classification
 
-`withErrorSlug` and `withErrorSlugSuspending` wrap ordinary failures in `SluggedException`. Existing slugged failures are rethrown unchanged, so nested layers do not double-wrap or replace the source classification. Main boundaries require an `unhandledFailureSlug` for otherwise unclassified failures.
+`withErrorSlug` and `withErrorSlugSuspending` wrap ordinary failures in `SluggedException`. Existing slugged failures are rethrown unchanged, so nested layers do not wrap twice or replace the source classification. Main boundaries require an `unhandledFailureSlug` for otherwise unclassified failures.
+
+## Operational events
+
+Mark a main span with a presentation only when its lifecycle should be visible to an operator. The boundary adds `operation.started`, `operation.completed`, `operation.cancelled`, or `operation.failed` events and projects them into logs.
+
+```kotlin
+telemetry.mainSpan(
+    name = "realm.start",
+    unhandledFailureSlug = ErrorSlug.of("realm-start-failed"),
+    presentation = SpanPresentation("Realm startup"),
+) {
+    startRealm()
+}
+```
+
+Add progress to the active span. The event is always trace data. A projection also makes it a correlated log record and a concise console line.
+
+```kotlin
+main.event(
+    name = "workflow.stage.started",
+    projection = EventProjection.log(
+        severity = LogSeverity.INFO,
+        body = "Connecting to the Realm database",
+    ),
+) {
+    attribute("workflow.stage", "database")
+}
+```
+
+The default projection is `TraceOnly`:
+
+```kotlin
+main.event("realm.schema.migration.applied") {
+    attribute("realm.schema.version", version)
+}
+```
+
+Build the event once through this API. First party service code must not call `Span.addEvent`, the OpenTelemetry Logs API, SLF4J, `println`, `System.out`, or `System.err` directly.
+
+## Choosing a signal
+
+| Need | Instrument |
+| --- | --- |
+| Work with duration | Main span or child span |
+| Queryable context learned during work | Span attribute |
+| Meaningful moment inside work | Span event |
+| Moment needed for search, alerts, or operators | Projected span event |
+| Escaping failure | Standard exception event through a span boundary |
+| Numeric trend or distribution | Metric |
+| Warning from a dependency | Third party diagnostic bridge |
+
+Repeated healthy checks and unchanged states should stay trace only or be omitted. Never record credentials, authorization values, request bodies, registration tokens, or URI queries.
+
+## Application SDK wiring
+
+Applications use one `SdkTracerProvider` and one `SdkLoggerProvider`. Traces use the OTLP trace exporter. Logs use an immediate console processor and a batch OTLP processor. A projected event remains available when trace sampling is disabled because log sampling is independent.
+
+The console exporter renders only timestamp, severity, body, and a warning or error reference. It never renders attribute maps or stack traces. Application shells provide a `ConsoleLogOutput` so interactive shells can print above the active prompt.
+
+Dependency diagnostics use `OpenTelemetryLogbackAppender`. The default level is `WARN`. Applications may expose a diagnostic level setting for temporary investigation. Dependency records remain logs and are not converted into span events.
+
+OpenTelemetry SDK self diagnostics use `installOpenTelemetrySdkDiagnostics`. They write concise warning and error lines directly through `ConsoleLogOutput`. They never enter the OpenTelemetry logs pipeline because an exporter failure must not recursively generate another export attempt.
 
 ## Koin
 
@@ -75,7 +138,7 @@ Closing Koin does not close the SDK.
 
 ## Testing
 
-`TelemetryTestHarness` creates an isolated, non-global in-memory SDK:
+`TelemetryTestHarness` creates an isolated in memory SDK:
 
 ```kotlin
 TelemetryTestHarness.create().use { harness ->

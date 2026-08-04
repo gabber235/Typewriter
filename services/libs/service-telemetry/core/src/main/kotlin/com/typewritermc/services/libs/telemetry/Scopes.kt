@@ -1,3 +1,5 @@
+@file:Suppress("ForbiddenMethodCall")
+
 package com.typewritermc.services.libs.telemetry
 
 import io.opentelemetry.api.common.AttributeKey
@@ -11,6 +13,12 @@ import java.util.concurrent.ConcurrentHashMap
 interface MainSpanScope {
     fun annotate(block: MainAttributes.() -> Unit)
 
+    fun event(
+        name: String,
+        projection: EventProjection = EventProjection.TraceOnly,
+        block: TelemetryEventAttributes.() -> Unit = {},
+    )
+
     fun recordDegraded(
         slug: ErrorSlug,
         cause: Throwable,
@@ -19,6 +27,12 @@ interface MainSpanScope {
 
 interface ChildSpanScope {
     fun annotate(block: ChildAttributes.() -> Unit)
+
+    fun event(
+        name: String,
+        projection: EventProjection = EventProjection.TraceOnly,
+        block: TelemetryEventAttributes.() -> Unit = {},
+    )
 }
 
 /** Messaging keys not available in the pinned stable semantic-conventions artifact. */
@@ -189,11 +203,14 @@ internal fun requireStableSegment(value: String) {
 internal class MainScope(
     internal val telemetry: ServiceTelemetry,
     private val span: Span,
+    private val spanName: String,
+    private val presentation: SpanPresentation?,
 ) : MainSpanScope {
     private val lock = Any()
     private var active = true
     private val counters = ConcurrentHashMap<String, Long>()
     private val mutation = SpanMutation { action -> mutate(action) }
+    private val startedAt = System.nanoTime()
 
     init {
         val spanContext = span.spanContext
@@ -207,6 +224,70 @@ internal class MainScope(
         ensureActive()
         MainAttributes(mutation, ::increment).block()
     }
+
+    override fun event(
+        name: String,
+        projection: EventProjection,
+        block: TelemetryEventAttributes.() -> Unit,
+    ) = mutate { activeSpan -> telemetry.recordEvent(activeSpan, name, projection, block) }
+
+    fun recordStarted() {
+        val visible = presentation ?: return
+        event(
+            name = "operation.started",
+            projection = EventProjection.log(LogSeverity.INFO, "${visible.displayName} started"),
+        ) {
+            attribute("span.name", spanName)
+            attribute("operation.outcome", "started")
+        }
+    }
+
+    fun recordCompleted() {
+        val visible = presentation ?: return
+        event(
+            name = "operation.completed",
+            projection = EventProjection.log(LogSeverity.INFO, "${visible.displayName} completed"),
+        ) {
+            attribute("span.name", spanName)
+            attribute("operation.outcome", "completed")
+            attribute("operation.duration_ms", durationMillis())
+        }
+    }
+
+    fun recordCancelled() {
+        val visible = presentation ?: return
+        event(
+            name = "operation.cancelled",
+            projection = EventProjection.log(LogSeverity.INFO, "${visible.displayName} cancelled"),
+        ) {
+            attribute("span.name", spanName)
+            attribute("operation.outcome", "cancelled")
+            attribute("operation.duration_ms", durationMillis())
+        }
+    }
+
+    fun recordFailed(failure: Throwable) {
+        val visible = presentation ?: return
+        val slug = (failure as? SluggedException)?.slug?.value
+        val cause = (failure as? SluggedException)?.cause ?: failure
+        event(
+            name = "operation.failed",
+            projection =
+                EventProjection.log(
+                    LogSeverity.ERROR,
+                    "${visible.displayName} failed",
+                ),
+        ) {
+            attribute("span.name", spanName)
+            attribute("operation.outcome", "failed")
+            attribute("operation.duration_ms", durationMillis())
+            attribute("error.type", cause.javaClass.name)
+            slug?.let { attribute("exception.slug", it) }
+            exception(cause)
+        }
+    }
+
+    private fun durationMillis(): Long = (System.nanoTime() - startedAt).coerceAtLeast(0) / 1_000_000
 
     override fun recordDegraded(
         slug: ErrorSlug,
@@ -258,6 +339,7 @@ internal class MainScope(
 }
 
 internal class ChildScope(
+    private val telemetry: ServiceTelemetry,
     private val span: Span,
 ) : ChildSpanScope {
     private val lock = Any()
@@ -268,6 +350,12 @@ internal class ChildScope(
         synchronized(lock) { requireActive() }
         ChildAttributes(mutation).block()
     }
+
+    override fun event(
+        name: String,
+        projection: EventProjection,
+        block: TelemetryEventAttributes.() -> Unit,
+    ) = mutate { activeSpan -> telemetry.recordEvent(activeSpan, name, projection, block) }
 
     fun close() {
         synchronized(lock) {

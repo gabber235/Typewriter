@@ -1,3 +1,5 @@
+@file:Suppress("ForbiddenMethodCall")
+
 package com.typewritermc.services.libs.telemetry
 
 import com.typewritermc.services.libs.utils.findExceptionalThrowable
@@ -92,16 +94,25 @@ fun <T> ServiceTelemetry.mainSpanBlocking(
     kind: SpanKind = SpanKind.INTERNAL,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
+    presentation: SpanPresentation? = null,
     block: context(MainSpanScope) (MainSpanScope) -> T,
 ): T {
     val span = start(name, kind, parent, attributes)
-    val main = MainScope(this, span)
+    val main = MainScope(this, span, name, presentation)
     val context = installed(parent, span, main)
+    main.recordStarted()
     try {
-        context.makeCurrent().use { return context(main) { block(main) } }
+        context.makeCurrent().use {
+            val result = context(main) { block(main) }
+            main.recordCompleted()
+            return result
+        }
     } catch (failure: Throwable) {
+        if (findExceptionalThrowable(failure) is CancellationException) main.recordCancelled()
         rethrowExceptional(span, failure)
-        throw recordFailure(span, failure, unhandledFailureSlug)
+        val recorded = recordFailure(span, failure, unhandledFailureSlug)
+        main.recordFailed(recorded)
+        throw recorded
     } finally {
         main.close()
     }
@@ -113,16 +124,25 @@ suspend fun <T> ServiceTelemetry.mainSpan(
     kind: SpanKind = SpanKind.INTERNAL,
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
+    presentation: SpanPresentation? = null,
     block: suspend context(MainSpanScope) (MainSpanScope) -> T,
 ): T {
     val span = start(name, kind, parent, attributes)
-    val main = MainScope(this, span)
+    val main = MainScope(this, span, name, presentation)
     val otelContext = installed(parent, span, main)
+    main.recordStarted()
     try {
-        return withContext(otelContext.asContextElement()) { context(main) { block(main) } }
+        return withContext(otelContext.asContextElement()) {
+            val result = context(main) { block(main) }
+            main.recordCompleted()
+            result
+        }
     } catch (failure: Throwable) {
+        if (findExceptionalThrowable(failure) is CancellationException) main.recordCancelled()
         rethrowExceptional(span, failure)
-        throw recordFailure(span, failure, unhandledFailureSlug)
+        val recorded = recordFailure(span, failure, unhandledFailureSlug)
+        main.recordFailed(recorded)
+        throw recorded
     } finally {
         main.close()
     }
@@ -134,7 +154,14 @@ fun <T> ServiceTelemetry.serverSpanBlocking(
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
     block: context(MainSpanScope) (MainSpanScope) -> T,
-) = mainSpanBlocking(name, unhandledFailureSlug, SpanKind.SERVER, parent, attributes, block)
+) = mainSpanBlocking(
+    name = name,
+    unhandledFailureSlug = unhandledFailureSlug,
+    kind = SpanKind.SERVER,
+    parent = parent,
+    attributes = attributes,
+    block = block,
+)
 
 suspend fun <T> ServiceTelemetry.serverSpan(
     name: String,
@@ -142,7 +169,14 @@ suspend fun <T> ServiceTelemetry.serverSpan(
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
     block: suspend context(MainSpanScope) (MainSpanScope) -> T,
-) = mainSpan(name, unhandledFailureSlug, SpanKind.SERVER, parent, attributes, block)
+) = mainSpan(
+    name = name,
+    unhandledFailureSlug = unhandledFailureSlug,
+    kind = SpanKind.SERVER,
+    parent = parent,
+    attributes = attributes,
+    block = block,
+)
 
 suspend fun <T> ServiceTelemetry.consumerSpan(
     name: String,
@@ -150,7 +184,14 @@ suspend fun <T> ServiceTelemetry.consumerSpan(
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
     block: suspend context(MainSpanScope) (MainSpanScope) -> T,
-) = mainSpan(name, unhandledFailureSlug, SpanKind.CONSUMER, parent, attributes, block)
+) = mainSpan(
+    name = name,
+    unhandledFailureSlug = unhandledFailureSlug,
+    kind = SpanKind.CONSUMER,
+    parent = parent,
+    attributes = attributes,
+    block = block,
+)
 
 suspend fun <T> ServiceTelemetry.jobSpan(
     name: String,
@@ -158,7 +199,14 @@ suspend fun <T> ServiceTelemetry.jobSpan(
     parent: Context = Context.current(),
     attributes: Attributes = Attributes.empty(),
     block: suspend context(MainSpanScope) (MainSpanScope) -> T,
-) = mainSpan(name, unhandledFailureSlug, SpanKind.INTERNAL, parent, attributes, block)
+) = mainSpan(
+    name = name,
+    unhandledFailureSlug = unhandledFailureSlug,
+    kind = SpanKind.INTERNAL,
+    parent = parent,
+    attributes = attributes,
+    block = block,
+)
 
 context(main: MainSpanScope)
 fun <T> childSpanBlocking(
@@ -171,7 +219,7 @@ fun <T> childSpanBlocking(
     val owner = main as? MainScope ?: error("Main span scope was not created by ServiceTelemetry")
     owner.ensureActive()
     val span = owner.telemetry.start(name, kind, parent, attributes)
-    val child = ChildScope(span)
+    val child = ChildScope(owner.telemetry, span)
     try {
         parent
             .with(span)
@@ -197,7 +245,7 @@ suspend fun <T> childSpan(
     val owner = main as? MainScope ?: error("Main span scope was not created by ServiceTelemetry")
     owner.ensureActive()
     val span = owner.telemetry.start(name, kind, parent, attributes)
-    val child = ChildScope(span)
+    val child = ChildScope(owner.telemetry, span)
     val otelContext = parent.with(span).with(mainScopeKey, main)
     try {
         return withContext(otelContext.asContextElement()) { context(main, child) { block(child) } }

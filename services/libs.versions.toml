@@ -75,7 +75,6 @@ opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-sdk-testing = { module = "io.opentelemetry:opentelemetry-sdk-testing" }
 opentelemetry-kotlin = { module = "io.opentelemetry:opentelemetry-extension-kotlin" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
-opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
 opentelemetry-semconv = { module = "io.opentelemetry.semconv:opentelemetry-semconv", version.ref = "opentelemetry-semconv" }
 
 [plugins]
