@@ -13,13 +13,10 @@ import com.typewritermc.engine.paper.entry.entries.GenericEntityActivityEntry
 
 @Entry("fixed_position_activity", "A fixed position activity", Colors.BLUE, "mdi:map-marker-account")
 /**
- * The `FixedPositionActivityEntry` pins the entity to a specific position.
- *
- * The entity is placed at the target position immediately, and stays there for as long as the
- * activity is active.
+ * The `FixedPositionActivityEntry` places the entity at a specific position immediately.
  *
  * ## How could this be used?
- * This could be used to make an entity appear at a specific location instantly.
+ * This could be used to teleport an entity between questing locations.
  */
 class FixedPositionActivityEntry(
     override val id: String = "",
