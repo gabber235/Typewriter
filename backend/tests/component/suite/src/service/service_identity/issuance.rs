@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use component_test::{TestContext, TestResult, component_test};
 use json_matcher::{JsonMatcher, assert_jm, create_json_matcher};
 use typewriter_component_test::prelude::{DatabaseHandle, SkirHttpExt};
@@ -170,6 +172,42 @@ async fn unavailable_provider_returns_service_unavailable_without_persistence(
     assert!(matches!(
         response.body,
         IssueServiceIdentityResponse::IdentityProviderUnavailableError(_)
+    ));
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    assert_jm!(database.query_json("SELECT * FROM service").await?, []);
+    Ok(())
+}
+
+#[component_test(ServiceIdentity)]
+async fn rejected_provider_response_returns_internal_error_without_persistence(
+    context: &mut TestContext<ServiceIdentity>,
+) -> TestResult {
+    context
+        .http_mock::<Authentik>()?
+        .expect()
+        .post()
+        .path_query("/api/v3/core/users/service_account/")
+        .status(http::StatusCode::BAD_REQUEST)
+        .response_json(&serde_json::json!({
+            "non_field_errors": ["Unable to create user"]
+        }))?
+        .register()?;
+
+    let response = tokio::time::timeout(
+        Duration::from_secs(2),
+        issue(context, &request(vec![engine_role()])),
+    )
+    .await
+    .map_err(|_| {
+        anyhow::anyhow!("identity response timed out after rejected provider response")
+    })??;
+
+    assert_eq!(response.status, http::StatusCode::INTERNAL_SERVER_ERROR);
+    assert!(matches!(
+        response.body,
+        IssueServiceIdentityResponse::InternalError(_)
     ));
     let database = context
         .extension::<DatabaseHandle>()

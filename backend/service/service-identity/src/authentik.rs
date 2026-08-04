@@ -67,8 +67,7 @@ impl AccountProvider for AuthentikClient {
         let status = response.get_status_code();
         otel_wasi::attribute!("provider.response.status_code" = status as i64);
         otel_wasi::main_attribute!("identity.provider.create.status_code" = status as i64);
-        classify_create_status(status)?;
-        let body = response_body(response).await?;
+        let body = complete_response(response, classify_create_status(status)).await?;
         let result = parse_create_response(&body)?;
         Ok(ProvisionedAccount {
             username: result.username,
@@ -94,13 +93,8 @@ impl AccountProvider for AuthentikClient {
         otel_wasi::attribute!("provider.response.status_code" = status as i64);
         otel_wasi::main_attribute!("identity.provider.delete.status_code" = status as i64);
 
-        if status == 204 {
-            Ok(())
-        } else if status >= 500 {
-            Err(ProviderError::Unavailable)
-        } else {
-            Err(ProviderError::Internal)
-        }
+        complete_response(response, classify_delete_status(status)).await?;
+        Ok(())
     }
 }
 
@@ -116,6 +110,14 @@ fn create_request_json(name: &str) -> Result<Vec<u8>, ProviderError> {
 fn classify_create_status(status: u16) -> Result<(), ProviderError> {
     match status {
         200 => Ok(()),
+        500..=599 => Err(ProviderError::Unavailable),
+        _ => Err(ProviderError::Internal),
+    }
+}
+
+fn classify_delete_status(status: u16) -> Result<(), ProviderError> {
+    match status {
+        204 => Ok(()),
         500..=599 => Err(ProviderError::Unavailable),
         _ => Err(ProviderError::Internal),
     }
@@ -272,6 +274,15 @@ async fn response_body(response: Response) -> Result<Vec<u8>, ProviderError> {
     Ok(body)
 }
 
+async fn complete_response(
+    response: Response,
+    classification: Result<(), ProviderError>,
+) -> Result<Vec<u8>, ProviderError> {
+    let body = response_body(response).await;
+    classification?;
+    body
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -317,6 +328,23 @@ mod tests {
         for status in 500..=599 {
             assert!(matches!(
                 classify_create_status(status),
+                Err(ProviderError::Unavailable)
+            ));
+        }
+    }
+
+    #[test]
+    fn classifies_delete_statuses() {
+        assert!(classify_delete_status(204).is_ok());
+        for status in [100, 199, 200, 203, 205, 299, 300, 399, 400, 499] {
+            assert!(matches!(
+                classify_delete_status(status),
+                Err(ProviderError::Internal)
+            ));
+        }
+        for status in 500..=599 {
+            assert!(matches!(
+                classify_delete_status(status),
                 Err(ProviderError::Unavailable)
             ));
         }
