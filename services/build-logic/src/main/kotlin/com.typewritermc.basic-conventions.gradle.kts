@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     id("de.infix.testBalloon")
     id("org.jlleitschuh.gradle.ktlint")
+    id("dev.detekt")
 }
 
 group = "com.typewritermc"
@@ -11,6 +12,15 @@ repositories {
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+val servicesDirectory =
+    generateSequence(rootProject.projectDir) { it.parentFile }
+        .first { File(it, "build-logic").isDirectory && File(it, "libs.versions.toml").isFile }
+
+detekt {
+    buildUponDefaultConfig = false
+    allRules = false
+    config.setFrom(File(servicesDirectory, "config/detekt/observability.yml"))
+}
 
 ktlint {
     version.set(libs.findVersion("ktlint").get().requiredVersion)

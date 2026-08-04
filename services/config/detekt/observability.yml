@@ -1,0 +1,24 @@
+style:
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - value: 'org.slf4j.*'
+        reason: 'Third party logging belongs in the approved OpenTelemetry bridge.'
+      - value: 'ch.qos.logback.*'
+        reason: 'Logback belongs in the approved diagnostic bridge and application shell wiring.'
+      - value: 'io.github.oshai.kotlinlogging.*'
+        reason: 'First party services use spans and projected span events.'
+      - value: 'io.opentelemetry.api.logs.*'
+        reason: 'The service telemetry implementation owns direct log record creation.'
+      - value: 'io.opentelemetry.exporter.logging.LoggingSpanExporter'
+        reason: 'Raw spans must not be rendered as console text.'
+  ForbiddenMethodCall:
+    active: true
+    methods:
+      - 'kotlin.io.print'
+      - 'kotlin.io.println'
+      - 'java.io.PrintStream.print'
+      - 'java.io.PrintStream.println'
+      - 'java.lang.System.getOut'
+      - 'java.lang.System.getErr'
+      - 'io.opentelemetry.api.trace.Span.addEvent'

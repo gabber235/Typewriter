@@ -22,12 +22,12 @@ func (m *Typewriter) servicesGradleContainer(source *dagger.Workspace) *dagger.C
 }
 
 // +check
-func (m *Typewriter) ServicesLint(source *dagger.Workspace) *dagger.Container {
+func (m *Typewriter) ServicesCheck(source *dagger.Workspace) *dagger.Container {
 	container := m.servicesGradleContainer(source)
 	for _, root := range serviceGradleRoots {
 		container = container.
 			WithWorkdir("/workspace/services/" + root).
-			WithExec([]string{"./gradlew", "ktlintCheck", "--no-daemon"})
+			WithExec([]string{"./gradlew", "check", "--no-daemon"})
 	}
 	return container
 }
