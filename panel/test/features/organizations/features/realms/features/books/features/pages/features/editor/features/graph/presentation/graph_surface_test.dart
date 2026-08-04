@@ -139,6 +139,42 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets("recursively reduces and fades dots while zooming out", (
+      tester,
+    ) async {
+      await tester.pumpTestApp(
+        child: SizedBox(
+          width: 800,
+          height: 600,
+          child: Graph(data: _data(elements: const [])),
+        ),
+      );
+
+      RenderGraphSurface surface() =>
+          tester.renderObject<RenderGraphSurface>(find.byType(GraphSurface));
+
+      final viewer = tester.widget<InteractiveViewer>(
+        find.byType(InteractiveViewer),
+      );
+      final transformation = viewer.transformationController!;
+
+      expect(surface().dotPattern, (stride: 1, fadingOpacity: 1, radius: 2));
+
+      transformation.value = Matrix4.diagonal3Values(0.4, 0.4, 1);
+      await tester.pump();
+      expect(surface().dotPattern.stride, 1);
+      expect(surface().dotPattern.fadingOpacity, closeTo(0.678, 0.001));
+      expect(surface().dotPattern.radius, closeTo(2.5, 0.001));
+
+      transformation.value = Matrix4.diagonal3Values(0.25, 0.25, 1);
+      await tester.pump();
+      expect(surface().dotPattern, (stride: 2, fadingOpacity: 1, radius: 4));
+
+      transformation.value = Matrix4.diagonal3Values(0.125, 0.125, 1);
+      await tester.pump();
+      expect(surface().dotPattern, (stride: 4, fadingOpacity: 1, radius: 8));
+    });
   });
 }
 

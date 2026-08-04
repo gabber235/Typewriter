@@ -130,6 +130,16 @@ class RenderGraphSurface extends RenderBox
   @visibleForTesting
   List<GraphPlacedEdge> get visibleEdges => graphLayout.edgesFor(visibleIds);
 
+  @visibleForTesting
+  ({int stride, double fadingOpacity, double radius}) get dotPattern {
+    final pattern = _dotPattern;
+    return (
+      stride: pattern.stride,
+      fadingOpacity: pattern.fadingOpacity,
+      radius: pattern.radius,
+    );
+  }
+
   @override
   void setupParentData(RenderBox child) {
     if (child.parentData is! GraphSurfaceParentData) {
@@ -166,15 +176,41 @@ class RenderGraphSurface extends RenderBox
   }
 
   void _paintDots(PaintingContext context, Offset offset) {
-    final paint = Paint()..color = dotColor;
     final cellSize = graphLayout.data.cellSize;
-    final startX = (viewport.left / cellSize).ceil() * cellSize;
-    final startY = (viewport.top / cellSize).ceil() * cellSize;
-    for (var x = startX; x <= viewport.right; x += cellSize) {
-      for (var y = startY; y <= viewport.bottom; y += cellSize) {
-        context.canvas.drawCircle(offset + Offset(x, y), 2, paint);
+    final pattern = _dotPattern;
+    final spacing = cellSize * pattern.stride;
+    final nextStride = pattern.stride * 2;
+    final startX = (viewport.left / spacing).ceil() * spacing;
+    final startY = (viewport.top / spacing).ceil() * spacing;
+    final opaquePaint = Paint()..color = dotColor;
+    final fadingPaint = Paint()
+      ..color = dotColor.withValues(alpha: dotColor.a * pattern.fadingOpacity);
+    for (var x = startX; x <= viewport.right; x += spacing) {
+      final column = (x / cellSize).round();
+      for (var y = startY; y <= viewport.bottom; y += spacing) {
+        final row = (y / cellSize).round();
+        final isRetained = column % nextStride == 0 && row % nextStride == 0;
+        if (!isRetained && pattern.fadingOpacity <= 0) continue;
+        context.canvas.drawCircle(
+          offset + Offset(x, y),
+          pattern.radius,
+          isRetained ? opaquePaint : fadingPaint,
+        );
       }
     }
+  }
+
+  _DotPattern get _dotPattern {
+    const maximumDotsAcross = 32;
+    final visibleGridIntervals =
+        max(viewport.width, viewport.height) / graphLayout.data.cellSize;
+    final level = max(0.0, log(visibleGridIntervals / maximumDotsAcross) / ln2);
+    final completedLevels = level.floor();
+    return _DotPattern(
+      stride: 1 << completedLevels,
+      fadingOpacity: 1 - (level - completedLevels),
+      radius: (2 * pow(2, level)).toDouble(),
+    );
   }
 
   void _paintEdges(PaintingContext context, Offset offset) {
@@ -203,4 +239,16 @@ class RenderGraphSurface extends RenderBox
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     return defaultHitTestChildren(result, position: position);
   }
+}
+
+class _DotPattern {
+  const _DotPattern({
+    required this.stride,
+    required this.fadingOpacity,
+    required this.radius,
+  });
+
+  final int stride;
+  final double fadingOpacity;
+  final double radius;
 }

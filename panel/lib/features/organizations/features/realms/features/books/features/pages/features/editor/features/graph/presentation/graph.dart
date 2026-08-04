@@ -18,7 +18,7 @@ class Graph extends HookConsumerWidget {
   final GraphMoveCommit? onElementsMoved;
   final GraphResizeCommit? onElementsResized;
 
-  static const double kGraphMinScale = 0.6;
+  static const double kGraphMinScale = 0.1;
   static const double kGraphMaxScale = 2.5;
   static const double kGraphViewportOverscan = 200;
 
