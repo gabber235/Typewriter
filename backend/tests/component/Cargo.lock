@@ -3507,7 +3507,7 @@ checksum = "e62e29dfe041afb8ed2a6c9737ab57db4907285d999ef8ad3a59092a36bdc846"
 [[package]]
 name = "opentelemetry-wasi"
 version = "0.27.0"
-source = "git+https://github.com/gabber235/opentelemetry-wasi?rev=1284d7ad00f536784622efc79feb1c1874dce922#1284d7ad00f536784622efc79feb1c1874dce922"
+source = "git+https://github.com/gabber235/opentelemetry-wasi?rev=27b2a0242bb480e2bb0b01de20a05e462afdd741#27b2a0242bb480e2bb0b01de20a05e462afdd741"
 dependencies = [
  "anyhow",
  "base64",
@@ -3548,7 +3548,7 @@ dependencies = [
 [[package]]
 name = "otel-wasi"
 version = "0.2.1"
-source = "git+https://github.com/Seamlezz/otel-wasi?rev=6daaf6880b332f433c6d83a6c7b376869c7535bf#6daaf6880b332f433c6d83a6c7b376869c7535bf"
+source = "git+https://github.com/Seamlezz/otel-wasi?rev=7c7537a33d216feb84835e111405a90460ec6297#7c7537a33d216feb84835e111405a90460ec6297"
 dependencies = [
  "opentelemetry",
  "opentelemetry-wasi",
@@ -3562,7 +3562,7 @@ dependencies = [
 [[package]]
 name = "otel-wasi-macros"
 version = "0.2.1"
-source = "git+https://github.com/Seamlezz/otel-wasi?rev=6daaf6880b332f433c6d83a6c7b376869c7535bf#6daaf6880b332f433c6d83a6c7b376869c7535bf"
+source = "git+https://github.com/Seamlezz/otel-wasi?rev=7c7537a33d216feb84835e111405a90460ec6297#7c7537a33d216feb84835e111405a90460ec6297"
 dependencies = [
  "proc-macro2",
  "quote",

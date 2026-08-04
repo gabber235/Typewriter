@@ -42,7 +42,7 @@ wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }
 wstd = "0.6"
 
 opentelemetry = "0.31"
-otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "6daaf6880b332f433c6d83a6c7b376869c7535bf" }
+otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "7c7537a33d216feb84835e111405a90460ec6297" }
 tracing = "0.1"
 tracing-opentelemetry = "0.32"
 
