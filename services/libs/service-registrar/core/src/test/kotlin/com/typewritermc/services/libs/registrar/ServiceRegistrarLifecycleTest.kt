@@ -197,15 +197,22 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("attempt span ends when ready supervision begins") {
+    test("attempt span inherits the start caller and ends when ready supervision begins") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
                 f.readyScript()
-                f.registrar.start()
+                val parent =
+                    f.harness.openTelemetry.tracerProvider
+                        .get("test")
+                        .spanBuilder("realm.start")
+                        .startSpan()
+                parent.makeCurrent().use { f.registrar.start() }
                 runCurrent()
+                parent.end()
 
                 val attempt = f.harness.finishedSpans().single { it.name == "registrar.attempt" }
-                attempt.parentSpanId shouldBe SpanId.getInvalid()
+                attempt.parentSpanId shouldBe parent.spanContext.spanId
+                attempt.spanContext.traceId shouldBe parent.spanContext.traceId
                 f.harness.activeSpanCount() shouldBe 0
                 f.registrar.states.value.state
                     .shouldBeInstanceOf<RegistrarState.Ready>()

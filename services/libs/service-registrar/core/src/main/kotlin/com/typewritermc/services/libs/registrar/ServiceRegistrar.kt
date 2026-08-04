@@ -60,7 +60,8 @@ class ServiceRegistrar(
             when (lifecycleState) {
                 LifecycleState.IDLE -> {
                     lifecycleState = LifecycleState.ACTIVE
-                    coordinator = scope.launch { coordinate() }
+                    val parent = Context.current()
+                    coordinator = scope.launch { coordinate(parent) }
                     RegistrarResult.Success(Unit)
                 }
 
@@ -96,7 +97,8 @@ class ServiceRegistrar(
             }
             lifecycleState = LifecycleState.ACTIVE
             attempt = saturatingIncrement(attempt)
-            coordinator = scope.launch { coordinate() }
+            val parent = Context.current()
+            coordinator = scope.launch { coordinate(parent) }
             RegistrarResult.Success(Unit)
         }
     }
@@ -149,9 +151,9 @@ class ServiceRegistrar(
             }
         }
 
-    private suspend fun coordinate() {
+    private suspend fun coordinate(parent: Context) {
         try {
-            runAttempt()
+            runAttempt(parent)
             if (mutableStates.value.state is RegistrarState.Failed) {
                 withContext(NonCancellable) { cleanupCurrentAttempt() }
             }
@@ -194,12 +196,12 @@ class ServiceRegistrar(
         }
     }
 
-    private suspend fun runAttempt() {
+    private suspend fun runAttempt(parent: Context) {
         val ready =
             telemetry.mainSpan(
                 "registrar.attempt",
                 ErrorSlug.of("registrar-attempt-failed"),
-                parent = Context.root(),
+                parent = parent,
                 attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
             ) { main ->
                 val result = establishReady(main)
