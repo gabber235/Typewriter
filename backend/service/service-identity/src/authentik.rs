@@ -9,6 +9,7 @@ use crate::bindings::wasi::http::types::{
 use crate::identity::{AccountProvider, ProviderError, ProvisionedAccount};
 
 const MAX_RESPONSE_BODY: usize = 64 * 1024;
+const MAX_ERROR_FIELDS: usize = 16;
 
 pub struct AuthentikClient;
 
@@ -157,6 +158,12 @@ async fn send(
         .set("content-type", &[b"application/json".to_vec()])
         .map_err(|_| ProviderError::Internal)?;
 
+    if let Some(length) = content_length_header(body.as_deref()) {
+        headers
+            .set("content-length", &[length])
+            .map_err(|_| ProviderError::Internal)?;
+    }
+
     let (stream, body_result) = if let Some(bytes) = body {
         let (mut tx, rx) = bindings::wit_stream::new();
         let (tx_done, rx_done) = bindings::wit_future::new(|| todo!());
@@ -230,6 +237,10 @@ fn method_name(method: &Method) -> String {
     }
 }
 
+fn content_length_header(body: Option<&[u8]>) -> Option<Vec<u8>> {
+    body.map(|bytes| bytes.len().to_string().into_bytes())
+}
+
 fn push_bounded(body: &mut Vec<u8>, byte: u8, limit: usize) -> Result<(), ()> {
     if body.len() >= limit {
         return Err(());
@@ -279,8 +290,38 @@ async fn complete_response(
     classification: Result<(), ProviderError>,
 ) -> Result<Vec<u8>, ProviderError> {
     let body = response_body(response).await;
+    if classification.is_err() {
+        if let Ok(response_body) = body.as_deref() {
+            record_rejection(response_body);
+        }
+    }
     classification?;
     body
+}
+
+fn record_rejection(body: &[u8]) {
+    let (valid_json, fields) = rejection_metadata(body);
+    otel_wasi::attribute!("provider.response.error_body.valid_json" = valid_json);
+    if let Some(fields) = fields {
+        otel_wasi::attribute!("provider.response.error_fields" = fields);
+    }
+}
+
+fn rejection_metadata(body: &[u8]) -> (bool, Option<String>) {
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return (false, None);
+    };
+    let serde_json::Value::Object(object) = value else {
+        return (true, None);
+    };
+    let mut fields = object
+        .keys()
+        .filter(|field| field.len() <= 64)
+        .cloned()
+        .collect::<Vec<_>>();
+    fields.sort_unstable();
+    fields.truncate(MAX_ERROR_FIELDS);
+    (true, (!fields.is_empty()).then(|| fields.join(",")))
 }
 
 #[cfg(test)]
@@ -289,11 +330,15 @@ mod tests {
 
     #[test]
     fn create_json_matches_authentik_contract() {
-        let value: serde_json::Value =
-            serde_json::from_slice(&create_request_json("service-abc").unwrap()).unwrap();
+        let body = create_request_json("service-abc").unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(
             value,
             serde_json::json!({"name":"service-abc","create_group":false,"expiring":false})
+        );
+        assert_eq!(
+            content_length_header(Some(&body)),
+            Some(body.len().to_string().into_bytes())
         );
     }
 
@@ -314,6 +359,16 @@ mod tests {
         assert!(push_bounded(&mut body, 1, 1).is_ok());
         assert!(push_bounded(&mut body, 2, 1).is_err());
         assert_eq!(body, vec![1]);
+    }
+
+    #[test]
+    fn rejection_metadata_records_only_sorted_field_names() {
+        let body = br#"{"name":["required"],"non_field_errors":["invalid"]}"#;
+        assert_eq!(
+            rejection_metadata(body),
+            (true, Some("name,non_field_errors".to_string()))
+        );
+        assert_eq!(rejection_metadata(b"not json"), (false, None));
     }
 
     #[test]
