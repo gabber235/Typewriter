@@ -1,7 +1,9 @@
 @file:JvmName("RealmMain")
+@file:Suppress("ForbiddenImport")
 
 package com.typewritermc.realm
 
+import ch.qos.logback.classic.Level
 import com.surrealdb.Surreal
 import com.typewritermc.realm.RealmQualifier.DATABASE
 import com.typewritermc.realm.RealmQualifier.DB_DATABASE
@@ -13,6 +15,7 @@ import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseProvider
+import com.typewritermc.realm.shell.RealmConsoleLogOutput
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.registrar.CredentialStorage
@@ -26,7 +29,12 @@ import com.typewritermc.services.libs.registrar.console.MordantBindingTokenOutpu
 import com.typewritermc.services.libs.registrar.console.RegistrarConsoleObserver
 import com.typewritermc.services.libs.registrar.koin.registrarModule
 import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.EventProjection
+import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SpanPresentation
+import com.typewritermc.services.libs.telemetry.console.installOpenTelemetryLogback
+import com.typewritermc.services.libs.telemetry.console.installOpenTelemetrySdkDiagnostics
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
@@ -55,16 +63,21 @@ import org.koin.environmentProperties
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.system.exitProcess
 
 @OptIn(ExperimentalSerializationApi::class)
 fun main() {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    val openTelemetry = realmOpenTelemetry()
+    val consoleOutput = RealmConsoleLogOutput()
+    val sdkDiagnostics = installOpenTelemetrySdkDiagnostics(consoleOutput)
+    val openTelemetry = realmOpenTelemetry(consoleOutput)
+    val logback = installOpenTelemetryLogback(openTelemetry, realmDiagnosticLevel())
     val registrarConfiguration = realmRegistrarConfiguration()
     val module =
         module {
             single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
             single { applicationScope } onClose { it?.cancel() }
+            single { consoleOutput }
 
             single(named(DB_URL)) { getProperty("REALM_DB_URL", "ws://localhost:8235") }
             single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "root") }
@@ -108,7 +121,7 @@ fun main() {
             single<BindingTokenOutput> { MordantBindingTokenOutput() }
             single { RegistrarConsoleObserver(get()) }
             single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
-            single { RealmShell(get(), get()) }
+            single { RealmShell(get(), get(), get()) }
         }
 
     val application =
@@ -136,7 +149,7 @@ fun main() {
         try {
             runBlocking {
                 consoleObserverJob.cancelAndJoin()
-                stopRealm(realm, registrar)
+                stopRealm(telemetry, realm, registrar)
             }
         } finally {
             application.close()
@@ -145,23 +158,44 @@ fun main() {
     val shutdownHook = Thread { shutdown() }
     Runtime.getRuntime().addShutdownHook(shutdownHook)
 
+    var processFailure: Exception? = null
     try {
-        runBlocking { startRealm(telemetry, registrar, realm) }
-        application.koin.get<RealmShell>().run()
+        try {
+            runBlocking { startRealm(telemetry, registrar, realm) }
+            application.koin.get<RealmShell>().run()
+        } catch (failure: Exception) {
+            processFailure = failure
+        }
     } finally {
         runCatching { Runtime.getRuntime().removeShutdownHook(shutdownHook) }
-        shutdown()
+        try {
+            shutdown()
+        } catch (failure: Exception) {
+            processFailure?.addSuppressed(failure) ?: run { processFailure = failure }
+        } finally {
+            try {
+                logback.close()
+            } finally {
+                sdkDiagnostics.close()
+            }
+        }
     }
+    if (processFailure != null) exitProcess(1)
 }
 
 private suspend fun stopRealm(
+    telemetry: ServiceTelemetry,
     realm: Realm,
     registrar: ServiceRegistrar,
+) = telemetry.mainSpan(
+    name = "realm.shutdown",
+    unhandledFailureSlug = ErrorSlug.of("realm-shutdown-failed"),
+    presentation = SpanPresentation("Realm shutdown"),
 ) {
-    val routeFailure = runCatching { realm.shutdown() }.exceptionOrNull()
+    val realmFailure = runCatching { realm.shutdown() }.exceptionOrNull()
     val registrarFailure = runCatching { registrar.stop().requireSuccess("stop") }.exceptionOrNull()
-    val primary = routeFailure ?: registrarFailure ?: return
-    if (routeFailure != null && registrarFailure != null && registrarFailure !== routeFailure) {
+    val primary = realmFailure ?: registrarFailure ?: return@mainSpan
+    if (realmFailure != null && registrarFailure != null && registrarFailure !== realmFailure) {
         primary.addSuppressed(registrarFailure)
     }
     throw primary
@@ -174,17 +208,46 @@ private suspend fun startRealm(
 ) = telemetry.mainSpan(
     name = "realm.start",
     unhandledFailureSlug = ErrorSlug.of("realm-start-failed"),
+    presentation = SpanPresentation("Realm startup"),
 ) { main ->
     main.annotate {
         attribute("service.version", REALM_VERSION)
         stage("koin") { outcome("ready") }
     }
+    main.event(
+        name = "workflow.stage.started",
+        projection = EventProjection.log(LogSeverity.INFO, "Registering the Realm service"),
+    ) {
+        attribute("workflow.stage", "registration")
+    }
     registrar.start().requireSuccess("start")
     registrar.awaitReady().requireSuccess("await readiness")
     main.annotate { stage("registration") { outcome("ready") } }
+    main.event(
+        name = "workflow.stage.completed",
+        projection = EventProjection.log(LogSeverity.INFO, "Realm registration completed"),
+    ) {
+        attribute("workflow.stage", "registration")
+        attribute("operation.outcome", "completed")
+    }
+    main.event(
+        name = "workflow.stage.started",
+        projection = EventProjection.log(LogSeverity.INFO, "Connecting to the Realm database"),
+    ) {
+        attribute("workflow.stage", "database")
+    }
     realm.start(registrar.states)
     main.annotate { stage("database") { outcome("ready") } }
+    main.event(
+        name = "workflow.stage.completed",
+        projection = EventProjection.log(LogSeverity.INFO, "Realm database is ready"),
+    ) {
+        attribute("workflow.stage", "database")
+        attribute("operation.outcome", "completed")
+    }
 }
+
+private fun realmDiagnosticLevel(): Level = Level.toLevel(realmSetting("TYPEWRITER_DIAGNOSTIC_LEVEL", "WARN"), Level.WARN)
 
 private fun realmRegistrarConfiguration(): RegistrarConfiguration {
     val apiBase = URI(realmSetting("API_BASE_URL", "https://api.typewritermc.com")!!)

@@ -1,19 +1,24 @@
 package com.typewritermc.realm
 
+import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
+import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecordExporter
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.exporter.logging.LoggingSpanExporter
+import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.logs.SdkLoggerProvider
+import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor
+import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
+import java.util.concurrent.TimeUnit
 
 private val realmSettings by lazy(RealmSettings::system)
 
-fun realmOpenTelemetry(): OpenTelemetrySdk {
+fun realmOpenTelemetry(console: ConsoleLogOutput): OpenTelemetrySdk {
     val resource =
         Resource.getDefault().merge(
             Resource
@@ -22,26 +27,36 @@ fun realmOpenTelemetry(): OpenTelemetrySdk {
                 .put(ServiceAttributes.SERVICE_VERSION, REALM_VERSION)
                 .build(),
         )
-    val provider =
+    val tracerProvider =
         SdkTracerProvider
             .builder()
             .setResource(resource)
             .setSampler(realmSampler())
-            .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+    val loggerProvider =
+        SdkLoggerProvider
+            .builder()
+            .setResource(resource)
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(console)))
 
     realmSetting("OTEL_EXPORTER_OTLP_ENDPOINT")?.let { endpoint ->
-        val exporter = OtlpGrpcSpanExporter.builder().setEndpoint(endpoint).build()
-        provider.addSpanProcessor(BatchSpanProcessor.builder(exporter).build())
+        val spanExporter = OtlpGrpcSpanExporter.builder().setEndpoint(endpoint).build()
+        tracerProvider.addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
+        val logExporter = OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build()
+        loggerProvider.addLogRecordProcessor(BatchLogRecordProcessor.builder(logExporter).build())
     }
 
     return OpenTelemetrySdk
         .builder()
-        .setTracerProvider(provider.build())
+        .setTracerProvider(tracerProvider.build())
+        .setLoggerProvider(loggerProvider.build())
         .buildAndRegisterGlobal()
 }
 
 fun closeRealmOpenTelemetry(openTelemetry: OpenTelemetry) {
-    (openTelemetry as? OpenTelemetrySdk)?.sdkTracerProvider?.shutdown()
+    val sdk = openTelemetry as? OpenTelemetrySdk ?: return
+    sdk.sdkTracerProvider.forceFlush().join(10, TimeUnit.SECONDS)
+    sdk.sdkLoggerProvider.forceFlush().join(10, TimeUnit.SECONDS)
+    sdk.shutdown().join(10, TimeUnit.SECONDS)
 }
 
 private fun realmSampler(): Sampler =

@@ -11,6 +11,7 @@ import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DeferredProvider
@@ -60,8 +61,8 @@ class Realm(
 
     suspend fun shutdown() =
         telemetry.mainSpan(
-            name = "realm.shutdown",
-            unhandledFailureSlug = ErrorSlug.of("realm-shutdown-failed"),
+            name = "realm.routes.shutdown",
+            unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
         ) {
             registrarMonitor?.cancelAndJoin()
             registrarMonitor = null
