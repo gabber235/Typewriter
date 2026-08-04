@@ -1,67 +1,95 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class GraphData {
-  GraphData({
+  factory GraphData({
+    required double cellSize,
+    required List<GraphElement> elements,
+    required List<GraphEdge> edges,
+  }) {
+    if (!cellSize.isFinite || cellSize <= 0) {
+      throw ArgumentError.value(
+        cellSize,
+        "cellSize",
+        "Must be finite and positive",
+      );
+    }
+
+    final immutableElements = List<GraphElement>.unmodifiable(elements);
+    final immutableEdges = List<GraphEdge>.unmodifiable(edges);
+    final keyedElements = <GraphIdentifier, GraphElement>{};
+    for (final element in immutableElements) {
+      if (element.id.id.trim().isEmpty) {
+        throw ArgumentError.value(
+          element.id,
+          "elements",
+          "Identifiers must not be empty",
+        );
+      }
+      if (element.width <= 0 || element.height <= 0) {
+        throw ArgumentError.value(
+          element,
+          "elements",
+          "Dimensions must be positive",
+        );
+      }
+      if (keyedElements.containsKey(element.id)) {
+        throw ArgumentError.value(
+          element.id,
+          "elements",
+          "Identifiers must be unique",
+        );
+      }
+      keyedElements[element.id] = element;
+    }
+
+    final connectedEdges = <GraphIdentifier, List<GraphEdge>>{};
+    final edgeIds = <String>{};
+    for (final edge in immutableEdges) {
+      if (edge.id.trim().isEmpty ||
+          edge.source.id.trim().isEmpty ||
+          edge.target.id.trim().isEmpty) {
+        throw ArgumentError.value(
+          edge,
+          "edges",
+          "Identifiers must not be empty",
+        );
+      }
+      if (!edgeIds.add(edge.id)) {
+        throw ArgumentError.value(
+          edge.id,
+          "edges",
+          "Identifiers must be unique",
+        );
+      }
+      (connectedEdges[edge.source] ??= []).add(edge);
+      (connectedEdges[edge.target] ??= []).add(edge);
+    }
+
+    return GraphData._(
+      cellSize: cellSize,
+      elements: immutableElements,
+      edges: immutableEdges,
+      keyedElements: Map.unmodifiable(keyedElements),
+      elementsConnectedEdges: Map.unmodifiable({
+        for (final entry in connectedEdges.entries)
+          entry.key: List<GraphEdge>.unmodifiable(entry.value),
+      }),
+    );
+  }
+
+  const GraphData._({
     required this.cellSize,
     required this.elements,
     required this.edges,
-  }) : keyedElements = Map.fromIterable(
-         elements,
-         key: (element) => element.id,
-       ) {
-    for (final edge in edges) {
-      (elementsConnectedEdges[edge.source] ??= <GraphEdge>[]).add(edge);
-      (elementsConnectedEdges[edge.target] ??= <GraphEdge>[]).add(edge);
-    }
-  }
+    required this.keyedElements,
+    required this.elementsConnectedEdges,
+  });
 
   final double cellSize;
   final List<GraphElement> elements;
   final List<GraphEdge> edges;
   final Map<GraphIdentifier, GraphElement> keyedElements;
-  final Map<GraphIdentifier, List<GraphEdge>> elementsConnectedEdges = {};
-
-  GraphData offsetChildren({
-    required Offset offset,
-    required List<GraphIdentifier> ids,
-  }) {
-    if (offset == Offset.zero) return this;
-    if (ids.isEmpty) return this;
-
-    final dx = (offset.dx / cellSize).round();
-    final dy = (offset.dy / cellSize).round();
-
-    final newElements = elements.map((element) {
-      if (!ids.contains(element.id)) {
-        return element;
-      }
-      return element.copyWith(x: element.x + dx, y: element.y + dy);
-    }).toList();
-    return copyWith(elements: newElements);
-  }
-
-  GraphData resizeChild({(GraphIdentifier, int, int)? resize}) {
-    if (resize == null) return this;
-    final (id, width, height) = resize;
-    final newElements = elements.map((element) {
-      if (element.id != id) {
-        return element;
-      }
-      return element.copyWith(width: width, height: height);
-    }).toList();
-    return copyWith(elements: newElements);
-  }
-
-  GraphData copyWith({
-    double? cellSize,
-    List<GraphElement>? elements,
-    List<GraphEdge>? edges,
-  }) => GraphData(
-    cellSize: cellSize ?? this.cellSize,
-    elements: elements ?? this.elements,
-    edges: edges ?? this.edges,
-  );
+  final Map<GraphIdentifier, List<GraphEdge>> elementsConnectedEdges;
 
   @override
   String toString() => "GraphData(elements: $elements, edges: $edges)";

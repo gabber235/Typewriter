@@ -7,7 +7,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// NormalMode is the default state when the application starts and provides
 /// a consistent baseline experience with standard navigation shortcuts.
-class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
+class NormalMode extends InteractionMode
+    with ModeDisplay, ModeShortcut, DirectionalInteractionMode {
   const NormalMode();
 
   @override
@@ -39,7 +40,7 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
             activators: [SingleActivator(key)],
             priority: 0,
             show: false,
-            onInvoke: (ref) => _moveFocus(direction),
+            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
 
       // Display
@@ -94,13 +95,9 @@ class NormalMode extends InteractionMode with ModeDisplay, ModeShortcut {
     ];
   }
 
-  /// Moves focus in the specified direction using the Flutter focus system.
-  void _moveFocus(TraversalDirection direction) {
-    final currentFocus = FocusManager.instance.primaryFocus;
-    if (currentFocus?.context != null) {
-      Actions.invoke(currentFocus!.context!, DirectionalFocusIntent(direction));
-    }
-  }
+  @override
+  Intent intentForDirection(TraversalDirection direction) =>
+      DirectionalFocusIntent(direction);
 }
 
 /// Creates an ActionShortcut that transitions to normal mode when escape is pressed.

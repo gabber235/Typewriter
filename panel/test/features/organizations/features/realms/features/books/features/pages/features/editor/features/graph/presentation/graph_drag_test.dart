@@ -9,7 +9,7 @@ void main() {
     testWidgets("accepts drag and commits snapped grid delta", (tester) async {
       const cell = 50.0;
 
-      final updates = <List<(GraphIdentifier, int, int)>>[];
+      final updates = <List<GraphMoveCommitPayload>>[];
       final data = GraphData(
         cellSize: cell,
         elements: [
@@ -30,7 +30,7 @@ void main() {
           child: SizedBox(
             width: 800,
             height: 600,
-            child: Graph(data: data, onElementsDragged: updates.add),
+            child: Graph(data: data, onElementsMoved: updates.add),
           ),
         ),
         settle: true,
@@ -53,9 +53,9 @@ void main() {
       expect(updates, isNotEmpty);
       final last = updates.last;
       expect(last, hasLength(1));
-      expect(last.first.$1, const GraphIdentifier("a"));
-      expect(last.first.$2, 2 + 1);
-      expect(last.first.$3, 3 + 2);
+      expect(last.first.id, const GraphIdentifier("a"));
+      expect(last.first.x, 2 + 1);
+      expect(last.first.y, 3 + 2);
     });
 
     testWidgets("snaps using .round(): <0.5 cell -> 0, >=0.5 cell -> 1", (
@@ -65,8 +65,8 @@ void main() {
       final dragInside = ValueNotifier<bool>(false);
       var accepted = 0;
 
-      (GraphIdentifier, int, int)? lastCall;
-      void onDragged(List<(GraphIdentifier, int, int)> u) {
+      GraphMoveCommitPayload? lastCall;
+      void onDragged(List<GraphMoveCommitPayload> u) {
         lastCall = u.single;
       }
 
@@ -95,7 +95,7 @@ void main() {
                   elements: [elementBuilder("snap")],
                   edges: const [],
                 ),
-                onElementsDragged: (u) {
+                onElementsMoved: (u) {
                   accepted++;
                   onDragged(u);
                 },
@@ -121,9 +121,9 @@ void main() {
 
       expect(accepted, greaterThanOrEqualTo(1));
       expect(lastCall, isNotNull);
-      expect(lastCall!.$1, const GraphIdentifier("snap"));
-      expect(lastCall!.$2, 0);
-      expect(lastCall!.$3, 0);
+      expect(lastCall!.id, const GraphIdentifier("snap"));
+      expect(lastCall!.x, 0);
+      expect(lastCall!.y, 0);
 
       await pumpGraph();
 
@@ -137,9 +137,9 @@ void main() {
 
       expect(accepted, greaterThanOrEqualTo(2));
       expect(lastCall, isNotNull);
-      expect(lastCall!.$1, const GraphIdentifier("snap"));
-      expect(lastCall!.$2, 1);
-      expect(lastCall!.$3, 0);
+      expect(lastCall!.id, const GraphIdentifier("snap"));
+      expect(lastCall!.x, 1);
+      expect(lastCall!.y, 0);
     });
 
     testWidgets("dragging a container moves elements fully inside it", (
@@ -147,8 +147,8 @@ void main() {
     ) async {
       const cell = 50.0;
 
-      List<(GraphIdentifier, int, int)>? a;
-      List<(GraphIdentifier, int, int)>? b;
+      List<GraphMoveCommitPayload>? a;
+      List<GraphMoveCommitPayload>? b;
 
       final data = GraphData(
         cellSize: cell,
@@ -180,12 +180,12 @@ void main() {
             height: 700,
             child: Graph(
               data: data,
-              onElementsDragged: (u) {
+              onElementsMoved: (u) {
                 for (final entry in u) {
-                  if (entry.$1 == const GraphIdentifier("parent")) {
+                  if (entry.id == const GraphIdentifier("parent")) {
                     a = u;
                   }
-                  if (entry.$1 == const GraphIdentifier("child")) {
+                  if (entry.id == const GraphIdentifier("child")) {
                     b = u;
                   }
                 }
@@ -215,7 +215,7 @@ void main() {
       final moved = a!;
       expect(moved.length, 2);
 
-      final movedMap = {for (final e in moved) e.$1: (e.$2, e.$3)};
+      final movedMap = {for (final e in moved) e.id: (e.x, e.y)};
 
       expect(movedMap[const GraphIdentifier("parent")], (1 + 2, 1 + 1));
       expect(movedMap[const GraphIdentifier("child")], (2 + 2, 2 + 1));
@@ -250,7 +250,7 @@ void main() {
           child: SizedBox(
             width: 800,
             height: 600,
-            child: Graph(data: data, onElementsDragged: (_) => calls++),
+            child: Graph(data: data, onElementsMoved: (_) => calls++),
           ),
         ),
         settle: true,

@@ -95,6 +95,20 @@ class EntryGraph extends HookConsumerWidget {
             ),
         ],
       ),
+      noBlueprint: (id, name, placement, inwardLinks, outwardLinks, metadata) =>
+          (
+            GraphElement(
+              id: EntryIdentifier(id),
+              x: placement.x,
+              y: placement.y,
+              width: placement.width,
+              height: placement.height,
+              builder: (context) {
+                return SizedBox.expand(child: EntryNode(entry: entry));
+              },
+            ),
+            <GraphEdge>[],
+          ),
       orElse: () => (
         GraphElement(
           id: GraphIdentifier(entry.id),
@@ -140,15 +154,15 @@ class EntryGraph extends HookConsumerWidget {
         }
         return Graph(
           data: _graphFromElements(elements),
-          onElementsDragged: (changes) {
+          onElementsMoved: (changes) {
             final changed = changes
-                .map((entry) => (entry.$1.id, entry.$2, entry.$3))
+                .map((entry) => (entry.id.id, entry.x, entry.y))
                 .toList(growable: false);
             ref.read(pageElementsProvider(pageId).notifier).moveAll(changed);
           },
-          onElementsResize: (changes) {
+          onElementsResized: (changes) {
             final changed = changes
-                .map((entry) => (entry.$1.id, entry.$2, entry.$3))
+                .map((entry) => (entry.id.id, entry.width, entry.height))
                 .toList(growable: false);
             ref.read(pageElementsProvider(pageId).notifier).resizeAll(changed);
           },

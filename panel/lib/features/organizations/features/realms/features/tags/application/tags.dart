@@ -61,8 +61,18 @@ abstract class Tag with _$Tag {
   );
 }
 
+class TagMovePayload {
+  const TagMovePayload({required this.id, required this.x, required this.y});
+
+  final skir.RecordId id;
+  final int x;
+  final int y;
+}
+
 @riverpod
 class Tags extends _$Tags {
+  final Map<skir.RecordId, int> _moveVersions = {};
+
   @override
   Stream<List<Tag>> build() async* {
     final organizationId = ref.watch(organizationIdProvider);
@@ -248,55 +258,99 @@ class Tags extends _$Tags {
     }
   }
 
-  Future<void> moveTag(skir.RecordId tagId, int x, int y) async {
+  Future<void> moveTag(skir.RecordId tagId, int x, int y) =>
+      moveTags([TagMovePayload(id: tagId, x: x, y: y)]);
+
+  Future<void> moveTags(List<TagMovePayload> changes) async {
+    if (changes.isEmpty) return;
     state.ensureReady();
-    final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     if (organizationId == null) throw ApiException.noOrganization();
 
-    state = AsyncData(
-      state.requireValue
-          .map(
-            (tag) => tag.tagId == tagId
-                ? tag.copyWith(
-                    placement: tag.placement.copyWith(x: x, y: y),
-                  )
-                : tag,
-          )
-          .toList(),
+    final changesById = {for (final change in changes) change.id: change};
+    assert(
+      changesById.length == changes.length,
+      "Tag move identifiers must be unique",
     );
-    final request = skir.MoveTagRequest(tagId: tagId, x: x, y: y);
+    final previousTags = {
+      for (final tag in state.requireValue)
+        if (changesById.containsKey(tag.tagId)) tag.tagId: tag,
+    };
+    final versions = <skir.RecordId, int>{};
+    for (final change in changes) {
+      final version = (_moveVersions[change.id] ?? 0) + 1;
+      _moveVersions[change.id] = version;
+      versions[change.id] = version;
+    }
+    state = AsyncData(
+      state.requireValue.map((tag) {
+        final change = changesById[tag.tagId];
+        if (change == null) return tag;
+        return tag.copyWith(
+          placement: tag.placement.copyWith(x: change.x, y: change.y),
+        );
+      }).toList(),
+    );
 
-    try {
-      final response = await ref.requestSkir(
-        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.move",
-        skir.MoveTagRequest.serializer.toBytes(request),
-        skir.MoveTagResponse.serializer,
-      );
-
-      switch (response) {
-        case skir.MoveTagResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-        case skir.MoveTagResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.MoveTagResponse_tagNotFoundErrorWrapper():
-          throw ApiException.notFound("Tag");
-        case skir.MoveTagResponse_validationErrorWrapper(:final value):
-          throw _tagValidationException(value);
-        case skir.MoveTagResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
-        case skir.MoveTagResponse_successWrapper(:final value):
-          final movedTag = Tag.fromSkir(value);
+    await Future.wait(
+      changes.map((change) async {
+        final version = versions[change.id]!;
+        try {
+          final movedTag = await _requestMoveTag(
+            organizationId.id,
+            realmId.id,
+            change,
+          );
+          if (_moveVersions[change.id] != version) return;
           state = AsyncData(
             state.requireValue.upsertByKey((tag) => tag.tagId, movedTag),
           );
-      }
-    } catch (_) {
-      state = previousState;
-      rethrow;
-    }
+        } catch (error, stackTrace) {
+          if (_moveVersions[change.id] == version) {
+            final previousTag = previousTags[change.id];
+            if (previousTag != null) {
+              state = AsyncData(
+                state.requireValue.upsertByKey((tag) => tag.tagId, previousTag),
+              );
+            }
+          }
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+      }),
+    );
+  }
+
+  Future<Tag> _requestMoveTag(
+    String organizationId,
+    String realmId,
+    TagMovePayload change,
+  ) async {
+    final request = skir.MoveTagRequest(
+      tagId: change.id,
+      x: change.x,
+      y: change.y,
+    );
+    final response = await ref.requestSkir(
+      "service.to.$realmId.organization.$organizationId.realm.tag.move",
+      skir.MoveTagRequest.serializer.toBytes(request),
+      skir.MoveTagResponse.serializer,
+    );
+
+    return switch (response) {
+      skir.MoveTagResponse_unknown() =>
+        throw ApiException.unknownResponseMessage(),
+      skir.MoveTagResponse_internalErrorWrapper() =>
+        throw ApiException.internalServerError(),
+      skir.MoveTagResponse_tagNotFoundErrorWrapper() =>
+        throw ApiException.notFound("Tag"),
+      skir.MoveTagResponse_validationErrorWrapper(:final value) =>
+        throw _tagValidationException(value),
+      skir.MoveTagResponse_invalidRecordIdErrorWrapper(:final value) =>
+        throw ApiException.invalidRecordId(value),
+      skir.MoveTagResponse_successWrapper(:final value) => Tag.fromSkir(value),
+    };
   }
 
   Future<void> resizeTag(skir.RecordId tagId, int width, int height) async {

@@ -1,11 +1,22 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart" as tags_lib;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../support/test_utils.dart";
 
 final _testTagId = recordId("tag:test_tag");
+final _tagRefreshProvider = NotifierProvider<_TagRefresh, int>(_TagRefresh.new);
+
+class _TagRefresh extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+}
 
 Tag _testTag({int x = 0, int y = 0}) => Tag(
   tagId: _testTagId,
@@ -17,6 +28,60 @@ Tag _testTag({int x = 0, int y = 0}) => Tag(
 
 void main() {
   group("TagNode - drag and drop", () {
+    testWidgets("retains selector and focus while tag refreshes", (
+      tester,
+    ) async {
+      final tag = _testTag();
+      final refresh = Completer<Tag?>();
+      var buildCount = 0;
+
+      await tester.pumpTestApp(
+        settle: false,
+        overrides: [
+          tags_lib.tagProvider(_testTagId).overrideWith((ref) {
+            ref.watch(_tagRefreshProvider);
+            buildCount++;
+            if (buildCount == 1) return tag;
+            return refresh.future;
+          }),
+        ],
+        child: Center(
+          child: SizedBox(
+            width: 200,
+            height: 100,
+            child: GraphDrag(
+              draggingInsideGraph: ValueNotifier(false),
+              child: TagNode(tagId: _testTagId),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final focusNode = tester.widget<Selector>(find.byType(Selector)).focusNode
+        ..requestFocus();
+      await tester.pump();
+      expect(FocusManager.instance.primaryFocus, same(focusNode));
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(TagNode)),
+      );
+      container.read(_tagRefreshProvider.notifier).increment();
+      await tester.pump();
+
+      expect(buildCount, 2);
+      expect(
+        container.read(tags_lib.tagProvider(_testTagId)).isLoading,
+        isTrue,
+      );
+
+      expect(find.byType(Selector), findsOneWidget);
+      expect(FocusManager.instance.primaryFocus, same(focusNode));
+
+      refresh.complete(tag);
+      await tester.pumpAndSettle();
+    });
+
     testWidgets("TagIdentifier implements GraphDragData", (tester) async {
       final tagId = TagIdentifier(_testTagId);
 
@@ -55,7 +120,7 @@ void main() {
 
       final tag = _testTag(x: 2, y: 3);
 
-      final updates = <List<(GraphIdentifier, int, int)>>[];
+      final updates = <List<GraphMoveCommitPayload>>[];
       final data = GraphData(
         cellSize: cell,
         elements: [
@@ -79,7 +144,7 @@ void main() {
           child: SizedBox(
             width: 800,
             height: 600,
-            child: Graph(data: data, onElementsDragged: updates.add),
+            child: Graph(data: data, onElementsMoved: updates.add),
           ),
         ),
         settle: true,
@@ -100,9 +165,9 @@ void main() {
       expect(updates, isNotEmpty);
       final last = updates.last;
       expect(last, hasLength(1));
-      expect(last.first.$1, const GraphIdentifier("test_tag"));
-      expect(last.first.$2, 2 + 1);
-      expect(last.first.$3, 3 + 2);
+      expect(last.first.id, const GraphIdentifier("test_tag"));
+      expect(last.first.x, 2 + 1);
+      expect(last.first.y, 3 + 2);
     });
 
     testWidgets("dragging TagNode inside graph hides feedback widget", (

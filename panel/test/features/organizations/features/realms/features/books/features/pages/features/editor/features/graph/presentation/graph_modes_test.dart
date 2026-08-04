@@ -21,7 +21,7 @@ void main() {
     testWidgets("GraphMoveIntent moves selected single element", (
       tester,
     ) async {
-      final movedCalls = <List<(GraphIdentifier, int, int)>>[];
+      final movedCalls = <List<GraphMoveCommitPayload>>[];
 
       final data = GraphData(
         cellSize: 50,
@@ -59,8 +59,8 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: movedCalls.add,
-            onElementsResize: (_) {},
+            onElementsMoved: movedCalls.add,
+            onElementsResized: (_) {},
           ),
         ),
       );
@@ -75,15 +75,15 @@ void main() {
       expect(movedCalls.length, 1);
       final moved = movedCalls.single;
       expect(moved.length, 1);
-      final (id, x, y) = moved.single;
-      expect(id.id, "a");
-      expect((x, y), (1, 0));
+      final change = moved.single;
+      expect(change.id.id, "a");
+      expect((change.x, change.y), (1, 0));
     });
 
     testWidgets("GraphMoveIntent moves multiple selected elements", (
       tester,
     ) async {
-      final movedCalls = <List<(GraphIdentifier, int, int)>>[];
+      final movedCalls = <List<GraphMoveCommitPayload>>[];
 
       final data = GraphData(
         cellSize: 50,
@@ -122,8 +122,8 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: movedCalls.add,
-            onElementsResize: (_) {},
+            onElementsMoved: movedCalls.add,
+            onElementsResized: (_) {},
           ),
         ),
       );
@@ -139,18 +139,17 @@ void main() {
       final moved = movedCalls.single;
       expect(moved.length, 2);
 
-      final sorted = [...moved]..sort((a, b) => a.$1.id.compareTo(b.$1.id));
-      // a: (0,-1), b: (3,3)
-      expect(sorted[0].$1.id, "a");
-      expect((sorted[0].$2, sorted[0].$3), (0, -1));
-      expect(sorted[1].$1.id, "b");
-      expect((sorted[1].$2, sorted[1].$3), (3, 3));
+      final sorted = [...moved]..sort((a, b) => a.id.id.compareTo(b.id.id));
+      expect(sorted[0].id.id, "a");
+      expect((sorted[0].x, sorted[0].y), (0, -1));
+      expect(sorted[1].id.id, "b");
+      expect((sorted[1].x, sorted[1].y), (3, 3));
     });
 
     testWidgets("GraphResizeIntent resizes selected single element", (
       tester,
     ) async {
-      final resizeCalls = <List<(GraphIdentifier, int, int)>>[];
+      final resizeCalls = <List<GraphResizeCommitPayload>>[];
 
       final data = GraphData(
         cellSize: 50,
@@ -180,8 +179,8 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: (_) {},
-            onElementsResize: resizeCalls.add,
+            onElementsMoved: (_) {},
+            onElementsResized: resizeCalls.add,
           ),
         ),
       );
@@ -196,15 +195,15 @@ void main() {
       expect(resizeCalls.length, 1);
       final changes = resizeCalls.single;
       expect(changes.length, 1);
-      final (id, w, h) = changes.single;
-      expect(id.id, "a");
-      expect((w, h), (3, 2));
+      final change = changes.single;
+      expect(change.id.id, "a");
+      expect((change.width, change.height), (3, 2));
     });
 
     testWidgets("GraphResizeIntent batches multiple and enforces min size", (
       tester,
     ) async {
-      final resizeCalls = <List<(GraphIdentifier, int, int)>>[];
+      final resizeCalls = <List<GraphResizeCommitPayload>>[];
 
       final data = GraphData(
         cellSize: 50,
@@ -243,8 +242,8 @@ void main() {
           height: 600,
           child: Graph(
             data: data,
-            onElementsDragged: (_) {},
-            onElementsResize: resizeCalls.add,
+            onElementsMoved: (_) {},
+            onElementsResized: resizeCalls.add,
           ),
         ),
       );
@@ -260,12 +259,11 @@ void main() {
       final changes = resizeCalls.single;
       expect(changes.length, 2);
 
-      final sorted = [...changes]..sort((a, b) => a.$1.id.compareTo(b.$1.id));
-      // a: width 2, height 1; b: width 1, height 1 (min size enforced)
-      expect(sorted[0].$1.id, "a");
-      expect((sorted[0].$2, sorted[0].$3), (2, 1));
-      expect(sorted[1].$1.id, "b");
-      expect((sorted[1].$2, sorted[1].$3), (1, 1));
+      final sorted = [...changes]..sort((a, b) => a.id.id.compareTo(b.id.id));
+      expect(sorted[0].id.id, "a");
+      expect((sorted[0].width, sorted[0].height), (2, 1));
+      expect(sorted[1].id.id, "b");
+      expect((sorted[1].width, sorted[1].height), (1, 1));
     });
   });
 }

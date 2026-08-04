@@ -143,8 +143,8 @@ Widget simpleGraphUseCase(BuildContext context) {
     child: SizedBox(
       height: 400,
       child: Graph(
-        onElementsDragged: (changes) {},
-        onElementsResize: (changes) {},
+        onElementsMoved: (changes) {},
+        onElementsResized: (changes) {},
         data: data,
       ),
     ),
@@ -289,8 +289,8 @@ Widget complexFlowGraphUseCase(BuildContext context) {
     child: SizedBox(
       height: 600,
       child: Graph(
-        onElementsDragged: (changes) {},
-        onElementsResize: (changes) {},
+        onElementsMoved: (changes) {},
+        onElementsResized: (changes) {},
         data: data,
       ),
     ),
@@ -448,8 +448,8 @@ Widget nestedGroupsGraphUseCase(BuildContext context) {
 
   return FakeApp(
     child: Graph(
-      onElementsDragged: (changes) {},
-      onElementsResize: (changes) {},
+      onElementsMoved: (changes) {},
+      onElementsResized: (changes) {},
       data: data,
     ),
   );
@@ -634,8 +634,8 @@ Widget edgeOrientationTestUseCase(BuildContext context) {
     child: SizedBox(
       height: 500,
       child: Graph(
-        onElementsDragged: (changes) {},
-        onElementsResize: (changes) {},
+        onElementsMoved: (changes) {},
+        onElementsResized: (changes) {},
         data: data,
       ),
     ),
@@ -821,8 +821,8 @@ Widget richContentGraphUseCase(BuildContext context) {
     child: SizedBox(
       height: 700,
       child: Graph(
-        onElementsDragged: (changes) {},
-        onElementsResize: (changes) {},
+        onElementsMoved: (changes) {},
+        onElementsResized: (changes) {},
         data: data,
       ),
     ),

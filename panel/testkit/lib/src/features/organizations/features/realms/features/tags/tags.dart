@@ -264,17 +264,21 @@ class TagsMock extends Tags {
 
   @override
   Future<void> moveTag(skir.RecordId tagId, int x, int y) async {
+    await moveTags([TagMovePayload(id: tagId, x: x, y: y)]);
+  }
+
+  @override
+  Future<void> moveTags(List<TagMovePayload> changes) async {
     final tags = await future;
+    final changesById = {for (final change in changes) change.id: change};
     state = AsyncData(
-      tags
-          .map(
-            (tag) => tag.tagId == tagId
-                ? tag.copyWith(
-                    placement: tag.placement.copyWith(x: x, y: y),
-                  )
-                : tag,
-          )
-          .toList(),
+      tags.map((tag) {
+        final change = changesById[tag.tagId];
+        if (change == null) return tag;
+        return tag.copyWith(
+          placement: tag.placement.copyWith(x: change.x, y: change.y),
+        );
+      }).toList(),
     );
   }
 

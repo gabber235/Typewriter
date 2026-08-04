@@ -4,26 +4,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
-/// Tests for the private slotted shell that composes the Graph render object
-/// and a full-viewport DragTarget layer.
-///
-/// What we validate indirectly through the public Graph API:
-/// - The DragTarget covers the current InteractiveViewer viewport, not the
-///   graph's logical 1×1 render box, so drags are discoverable anywhere on
-///   screen.
-/// - Regular pointer interactions (e.g., taps) still reach graph children even
-///   when the drag layer is mounted. This implies the hit test order favors the
-///   graph child for non-drag gestures.
-/// - When drag support is disabled (no onElementsDragged callback), the drag
-///   layer is not mounted and the inherited drag state doesn't toggle.
-///
-/// Notes:
-/// - We observe the drag-layer coverage and hit-testing by:
-///   1) Starting a Draggable with GraphDragData and checking the GraphDrag
-///      inherited notifier toggles when entering the viewport and resets after
-///      accept.
-///   2) Verifying that taps can focus a child below the drag layer.
-///   3) Ensuring no drag state changes when the drag layer is disabled.
 void main() {
   group("Graph - drag target shell (layout & hit testing)", () {
     testWidgets("drag target covers the viewport and accepts drags anywhere", (
@@ -56,7 +36,7 @@ void main() {
           child: SizedBox(
             width: 800,
             height: 600,
-            child: Graph(data: data, onElementsDragged: (_) => acceptedCalls++),
+            child: Graph(data: data, onElementsMoved: (_) => acceptedCalls++),
           ),
         ),
         settle: true,
@@ -112,7 +92,7 @@ void main() {
             width: 800,
             height: 600,
 
-            child: Graph(data: data, onElementsDragged: (_) {}),
+            child: Graph(data: data, onElementsMoved: (_) {}),
           ),
         ),
         settle: true,

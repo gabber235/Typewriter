@@ -1,6 +1,7 @@
 library;
 
 export "current_interaction_mode.dart";
+export "directional_interaction_mode.dart";
 export "interaction_mode.dart";
 export "mode_display.dart";
 export "mode_shortcut.dart";

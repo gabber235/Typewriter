@@ -204,6 +204,62 @@ void main() {
       expect(resizeEndCalls.first, equals((testElementId, 1, 1)));
     });
 
+    testWidgets("cancelling a resize clears the interaction without commit", (
+      tester,
+    ) async {
+      var startCalls = 0;
+      var updateCalls = 0;
+      var endCalls = 0;
+      var cancelCalls = 0;
+
+      await tester.pumpTestApp(
+        child: ResizableElement(
+          element: testElement,
+          onResizeStart: (_, _, _) => startCalls++,
+          onResizeUpdate: (_, _, _) => updateCalls++,
+          onResizeEnd: (_, _, _) => endCalls++,
+          onResizeCancel: () => cancelCalls++,
+          cellSize: cellSize,
+          handleSize: handleSize,
+          child: SizedBox.fromSize(size: childSize),
+        ),
+      );
+
+      final handle = find.byType(GestureDetector);
+      tester.widget<GestureDetector>(handle).onPanStart!(
+        DragStartDetails(
+          globalPosition: Offset.zero,
+          localPosition: Offset.zero,
+        ),
+      );
+      await tester.pump();
+      tester.widget<GestureDetector>(handle).onPanUpdate!(
+        DragUpdateDetails(
+          globalPosition: const Offset(cellSize, cellSize),
+          localPosition: Offset(cellSize, cellSize),
+        ),
+      );
+      await tester.pump();
+      tester.widget<GestureDetector>(handle).onPanCancel!();
+      await tester.pumpAndSettle();
+
+      expect(startCalls, 1);
+      expect(updateCalls, greaterThan(0));
+      expect(endCalls, 0);
+      expect(cancelCalls, 1);
+      expect(
+        tester
+            .widget<MouseRegion>(
+              find.descendant(
+                of: find.byType(ResizableElement),
+                matching: find.byType(MouseRegion),
+              ),
+            )
+            .cursor,
+        isNot(SystemMouseCursors.grabbing),
+      );
+    });
+
     testWidgets("uses custom handle size when provided", (tester) async {
       const customHandleSize = 50.0;
 

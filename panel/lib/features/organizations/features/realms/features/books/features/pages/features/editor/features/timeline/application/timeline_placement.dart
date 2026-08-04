@@ -255,10 +255,9 @@ class TimelineTrackGeometry {
   double get bottom => top + height;
 
   bool isVisible(TimelineViewport viewport) {
-    final trackTop = top;
-    final trackBottom = bottom;
-    if (trackTop > viewport.verticalOffset + viewport.planeHeight) return false;
-    if (trackBottom < viewport.verticalOffset) return false;
+    final visibleBounds = viewport.visibleBounds;
+    if (top > visibleBounds.bottom) return false;
+    if (bottom < visibleBounds.top) return false;
     return true;
   }
 }

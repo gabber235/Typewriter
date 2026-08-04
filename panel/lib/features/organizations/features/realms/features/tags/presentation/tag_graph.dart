@@ -74,18 +74,24 @@ class TagGraph extends HookConsumerWidget {
 
         return Graph(
           data: _graphFromTags(context, tagList),
-          onElementsDragged: (changes) {
-            for (final (element, x, y) in changes) {
-              final tagId = tagIds[element.id];
-              if (tagId == null) continue;
-              ref.read(tagsProvider.notifier).moveTag(tagId, x, y);
-            }
+          onElementsMoved: (changes) {
+            final moves = changes
+                .map((change) {
+                  final tagId = tagIds[change.id.id];
+                  if (tagId == null) return null;
+                  return TagMovePayload(id: tagId, x: change.x, y: change.y);
+                })
+                .nonNulls
+                .toList(growable: false);
+            ref.read(tagsProvider.notifier).moveTags(moves);
           },
-          onElementsResize: (changes) {
-            for (final (element, width, height) in changes) {
-              final tagId = tagIds[element.id];
+          onElementsResized: (changes) {
+            for (final change in changes) {
+              final tagId = tagIds[change.id.id];
               if (tagId == null) continue;
-              ref.read(tagsProvider.notifier).resizeTag(tagId, width, height);
+              ref
+                  .read(tagsProvider.notifier)
+                  .resizeTag(tagId, change.width, change.height);
             }
           },
         );

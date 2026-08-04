@@ -6,7 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// This mode provides keyboard shortcuts for moving selected timeline cues
 /// using hjkl and arrow keys.
-class TimelineMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
+class TimelineMoveMode extends InteractionMode
+    with ModeDisplay, ModeShortcut, DirectionalInteractionMode {
   const TimelineMoveMode();
 
   @override
@@ -33,7 +34,7 @@ class TimelineMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
             ],
             priority: 20,
             show: false,
-            onInvoke: (ref) => _invokeTimelineMoveIntent(direction),
+            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
       ActionShortcut(
         id: "timeline_move",
@@ -59,24 +60,9 @@ class TimelineMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
     ];
   }
 
-  /// Invokes a TimelineMoveIntent to move the currently selected timeline cue.
-  ///
-  /// This method uses the Flutter Actions system to dispatch a TimelineMoveIntent
-  /// that can be handled by the timeline widget or its parent components.
-  ///
-  /// Parameters:
-  /// - [deltaX]: The horizontal movement amount in pixels
-  /// - [deltaY]: The vertical movement amount in pixels
-  void _invokeTimelineMoveIntent(TraversalDirection direction) {
-    final currentFocus = FocusManager.instance.primaryFocus;
-    if (currentFocus?.context == null) {
-      return;
-    }
-    Actions.invoke(
-      currentFocus!.context!,
-      TimelineMoveIntent(direction: direction),
-    );
-  }
+  @override
+  Intent intentForDirection(TraversalDirection direction) =>
+      TimelineMoveIntent(direction: direction);
 }
 
 /// Timeline manipulation mode for resizing segments.
@@ -84,7 +70,7 @@ class TimelineMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
 /// This mode provides keyboard shortcuts for resizing selected timeline segments
 /// using hjkl and arrow keys.
 class TimelineResizeMode extends InteractionMode
-    with ModeDisplay, ModeShortcut {
+    with ModeDisplay, ModeShortcut, DirectionalInteractionMode {
   const TimelineResizeMode({required this.mode});
   final TimelineInteractionMode mode;
 
@@ -116,7 +102,7 @@ class TimelineResizeMode extends InteractionMode
             ],
             priority: 0,
             show: false,
-            onInvoke: (ref) => _invokeTimelineResizeIntent(direction),
+            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
       ActionShortcut(
         id: "timeline_resize",
@@ -142,24 +128,9 @@ class TimelineResizeMode extends InteractionMode
     ];
   }
 
-  /// Invokes a TimelineResizeIntent to resize the currently selected timeline segment.
-  ///
-  /// This method uses the Flutter Actions system to dispatch a TimelineResizeIntent
-  /// that can be handled by the timeline widget or its parent components.
-  ///
-  /// Parameters:
-  /// - [deltaX]: The horizontal movement amount in pixels
-  /// - [deltaY]: The vertical movement amount in pixels
-  void _invokeTimelineResizeIntent(TraversalDirection direction) {
-    final currentFocus = FocusManager.instance.primaryFocus;
-    if (currentFocus?.context == null) {
-      return;
-    }
-    Actions.invoke(
-      currentFocus!.context!,
-      TimelineResizeIntent(direction: direction),
-    );
-  }
+  @override
+  Intent intentForDirection(TraversalDirection direction) =>
+      TimelineResizeIntent(direction: direction);
 }
 
 /// Invokes a TimelineCommitIntent to commit the current timeline changes.

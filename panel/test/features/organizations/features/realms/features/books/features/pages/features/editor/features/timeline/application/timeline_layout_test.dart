@@ -1,3 +1,4 @@
+import "package:flutter/widgets.dart" as flutter;
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -628,6 +629,48 @@ void main() {
         expect(visibleIds.contains("intersecting"), isTrue);
       },
     );
+
+    testWidgets("keeps elements inside horizontal viewport overscan", (
+      tester,
+    ) async {
+      final data = timeline()
+          .track(elements: [.segment("overscan", 15, 17)])
+          .build();
+      final layout = data.layout().placement(
+        viewport: const TimelineViewport(
+          headerWidth: 200,
+          planeWidth: 100,
+          planeHeight: 400,
+          horizontalOffset: 200,
+          verticalOffset: 0,
+          pixelsPerFrame: 10,
+          overscanFrames: 10,
+        ),
+      );
+
+      expect(
+        layout.visibleElements.map((element) => element.element.id.id),
+        contains("overscan"),
+      );
+    });
+
+    test("expands culling bounds beyond the physical viewport", () {
+      const viewport = TimelineViewport(
+        headerWidth: 200,
+        planeWidth: 100,
+        planeHeight: 100,
+        horizontalOffset: 200,
+        verticalOffset: 200,
+        pixelsPerFrame: 10,
+        overscanFrames: 10,
+        overscanExtent: 50,
+      );
+
+      expect(
+        viewport.visibleBounds,
+        const flutter.Rect.fromLTRB(100, 150, 400, 350),
+      );
+    });
 
     testWidgets("expands content width for far preview geometry", (
       tester,

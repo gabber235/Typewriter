@@ -138,6 +138,22 @@ class Selector extends HookConsumerWidget {
                         .select(selectableId);
                   },
                 ),
+                ActivateAllIntent: CallbackAction(
+                  onInvoke: (_) {
+                    Actions.maybeInvoke(
+                      context,
+                      SelectedSelectorIntent(
+                        selectableId: selectableId,
+                        focusNode: focusNode,
+                        throughTap: false,
+                        throughActivateIntent: true,
+                      ),
+                    );
+                    return ref
+                        .read(selectionProvider.notifier)
+                        .select(selectableId, isMultiSelect: true);
+                  },
+                ),
               },
               child: PixelScaleTransition(
                 pixelScale: TweenSequence<double>([

@@ -12,6 +12,7 @@ class TimelineViewport {
     required this.verticalOffset,
     required this.pixelsPerFrame,
     this.overscanFrames = 40,
+    this.overscanExtent = 200,
   });
 
   final double headerWidth;
@@ -21,6 +22,7 @@ class TimelineViewport {
   final double verticalOffset;
   final double pixelsPerFrame;
   final int overscanFrames;
+  final double overscanExtent;
 
   int get visibleStartFrame {
     final frame = (horizontalOffset / pixelsPerFrame).floor() - overscanFrames;
@@ -49,11 +51,11 @@ class TimelineViewport {
   }
 
   Rect get visibleBounds {
-    return Rect.fromLTWH(
-      horizontalOffset,
-      verticalOffset,
-      planeWidth,
-      planeHeight,
+    return Rect.fromLTRB(
+      frameToPixel(visibleStartFrame),
+      verticalOffset - overscanExtent,
+      frameToPixel(visibleEndFrame),
+      verticalOffset + planeHeight + overscanExtent,
     );
   }
 
@@ -65,6 +67,7 @@ class TimelineViewport {
     double? verticalOffset,
     double? pixelsPerFrame,
     int? overscanFrames,
+    double? overscanExtent,
   }) {
     return TimelineViewport(
       headerWidth: headerWidth ?? this.headerWidth,
@@ -74,6 +77,7 @@ class TimelineViewport {
       verticalOffset: verticalOffset ?? this.verticalOffset,
       pixelsPerFrame: pixelsPerFrame ?? this.pixelsPerFrame,
       overscanFrames: overscanFrames ?? this.overscanFrames,
+      overscanExtent: overscanExtent ?? this.overscanExtent,
     );
   }
 }

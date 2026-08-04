@@ -6,7 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// This mode provides keyboard shortcuts for moving selected graph nodes
 /// using hjkl and arrow keys.
-class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
+class GraphMoveMode extends InteractionMode
+    with ModeDisplay, ModeShortcut, DirectionalInteractionMode {
   const GraphMoveMode();
 
   @override
@@ -30,7 +31,7 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
             activators: [SingleActivator(key)],
             priority: 20,
             show: false,
-            onInvoke: (ref) => _invokeGraphMoveIntent(direction),
+            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
       ActionShortcut(
         id: "graph_move",
@@ -56,30 +57,17 @@ class GraphMoveMode extends InteractionMode with ModeDisplay, ModeShortcut {
     ];
   }
 
-  /// Invokes a GraphMoveIntent to move the currently selected graph node.
-  ///
-  /// This method uses the Flutter Actions system to dispatch a GraphMoveIntent
-  /// that can be handled by the graph widget or its parent components.
-  ///
-  /// Parameters:
-  /// - [deltaX]: The horizontal movement amount in pixels
-  /// - [deltaY]: The vertical movement amount in pixels
-  void _invokeGraphMoveIntent(TraversalDirection direction) {
-    final currentFocus = FocusManager.instance.primaryFocus;
-    if (currentFocus?.context != null) {
-      Actions.invoke(
-        currentFocus!.context!,
-        GraphMoveIntent(direction: direction),
-      );
-    }
-  }
+  @override
+  Intent intentForDirection(TraversalDirection direction) =>
+      GraphMoveIntent(direction: direction);
 }
 
 /// Graph manipulation mode for resizing nodes.
 ///
 /// This mode provides keyboard shortcuts for resizing selected graph nodes
 /// using hjkl and arrow keys.
-class GraphResizeMode extends InteractionMode with ModeDisplay, ModeShortcut {
+class GraphResizeMode extends InteractionMode
+    with ModeDisplay, ModeShortcut, DirectionalInteractionMode {
   @override
   String get name => "Graph Resize";
 
@@ -104,7 +92,7 @@ class GraphResizeMode extends InteractionMode with ModeDisplay, ModeShortcut {
             activators: [SingleActivator(key)],
             priority: 0,
             show: false,
-            onInvoke: (ref) => _invokeGraphResizeIntent(direction),
+            onInvoke: (ref) => invokeCurrentModeDirection(ref, direction),
           ),
       ActionShortcut(
         id: "graph_resize",
@@ -130,21 +118,7 @@ class GraphResizeMode extends InteractionMode with ModeDisplay, ModeShortcut {
     ];
   }
 
-  /// Invokes a GraphResizeIntent to resize the currently selected graph node.
-  ///
-  /// This method uses the Flutter Actions system to dispatch a GraphResizeIntent
-  /// that can be handled by the graph widget or its parent components.
-  ///
-  /// Parameters:
-  /// - [deltaX]: The horizontal movement amount in pixels
-  /// - [deltaY]: The vertical movement amount in pixels
-  void _invokeGraphResizeIntent(TraversalDirection direction) {
-    final currentFocus = FocusManager.instance.primaryFocus;
-    if (currentFocus?.context != null) {
-      Actions.invoke(
-        currentFocus!.context!,
-        GraphResizeIntent(direction: direction),
-      );
-    }
-  }
+  @override
+  Intent intentForDirection(TraversalDirection direction) =>
+      GraphResizeIntent(direction: direction);
 }
