@@ -24,6 +24,7 @@ repository = "https://github.com/gabber235/Typewriter"
 [workspace.dependencies]
 base64 = "0.22"
 chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
 nkeys = "0.4"

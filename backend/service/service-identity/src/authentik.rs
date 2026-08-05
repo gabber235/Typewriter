@@ -13,6 +13,11 @@ const MAX_ERROR_FIELDS: usize = 16;
 
 pub struct AuthentikClient;
 
+struct CompletedResponse {
+    status: u16,
+    body: Result<Vec<u8>, ProviderError>,
+}
+
 struct Config {
     base_url: Url,
     token: String,
@@ -65,10 +70,10 @@ impl AccountProvider for AuthentikClient {
             Some(body),
         )
         .await?;
-        let status = response.get_status_code();
+        let status = response.status;
         otel_wasi::attribute!("provider.response.status_code" = status as i64);
         otel_wasi::main_attribute!("identity.provider.create.status_code" = status as i64);
-        let body = complete_response(response, classify_create_status(status)).await?;
+        let body = complete_response(response.body, classify_create_status(status))?;
         let result = parse_create_response(&body)?;
         Ok(ProvisionedAccount {
             username: result.username,
@@ -90,11 +95,11 @@ impl AccountProvider for AuthentikClient {
         )
         .await?;
 
-        let status = response.get_status_code();
+        let status = response.status;
         otel_wasi::attribute!("provider.response.status_code" = status as i64);
         otel_wasi::main_attribute!("identity.provider.delete.status_code" = status as i64);
 
-        complete_response(response, classify_delete_status(status)).await?;
+        complete_response(response.body, classify_delete_status(status))?;
         Ok(())
     }
 }
@@ -134,7 +139,7 @@ async fn send(
     method: Method,
     path: &str,
     body: Option<Vec<u8>>,
-) -> Result<Response, ProviderError> {
+) -> Result<CompletedResponse, ProviderError> {
     otel_wasi::attribute!(
         "provider.operation" = "send",
         "http.request.method" = method_name(&method),
@@ -216,10 +221,13 @@ async fn send(
     let response = bindings::wasi::http::client::send(request)
         .await
         .map_err(|_| ProviderError::Unavailable)?;
+    let status = response.get_status_code();
+    let (transmission, body) =
+        futures::join!(async { transmission.await }, response_body(response),);
 
-    transmission.await.map_err(|_| ProviderError::Unavailable)?;
+    transmission.map_err(|_| ProviderError::Unavailable)?;
 
-    Ok(response)
+    Ok(CompletedResponse { status, body })
 }
 
 fn method_name(method: &Method) -> String {
@@ -285,11 +293,10 @@ async fn response_body(response: Response) -> Result<Vec<u8>, ProviderError> {
     Ok(body)
 }
 
-async fn complete_response(
-    response: Response,
+fn complete_response(
+    body: Result<Vec<u8>, ProviderError>,
     classification: Result<(), ProviderError>,
 ) -> Result<Vec<u8>, ProviderError> {
-    let body = response_body(response).await;
     if classification.is_err() {
         if let Ok(response_body) = body.as_deref() {
             record_rejection(response_body);

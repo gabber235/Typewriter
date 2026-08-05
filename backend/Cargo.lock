@@ -622,6 +622,7 @@ checksum = "a88cf1f829d945f548cf8fec32c61b1f202b6d93b45848602fc02af4b12ad218"
 dependencies = [
  "futures-channel",
  "futures-core",
+ "futures-executor",
  "futures-io",
  "futures-sink",
  "futures-task",
@@ -2135,6 +2136,7 @@ dependencies = [
 name = "service-identity"
 version = "0.2.0"
 dependencies = [
+ "futures",
  "otel-wasi",
  "serde",
  "serde_json",
