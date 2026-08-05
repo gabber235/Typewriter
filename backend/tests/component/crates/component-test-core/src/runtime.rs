@@ -11,7 +11,7 @@ use wash_runtime::{
     engine::Engine,
     host::{
         Host, HostApi, HostBuilder,
-        http::{DynamicRouter, HttpServer},
+        http::{DynamicRouter, Ingress},
     },
     plugin::{
         HostPlugin,
@@ -145,7 +145,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             merge_interface(&mut interfaces, interface)?;
         }
         let value = Arc::new(
-            HttpServer::builder(
+            Ingress::builder(
                 DynamicRouter::default(),
                 SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0),
             )

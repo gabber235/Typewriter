@@ -35,16 +35,16 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 
 skir-client = "0.1"
-surrealdb-component-sdk = { git = "https://github.com/Seamlezz/surrealdb-wasi-component", rev = "039b2495b8fe62ca77e25203ef07f99ebab6c5fa" }
+surrealdb-component-sdk = { git = "https://github.com/Seamlezz/surrealdb-wasi-component", rev = "8b09a32e5505704df3c890822fdcffffd18c8588" }
 wasmcloud-component = "0.2.0"
 wasmcloud-utils = { path = "wasmcloud-utils" }
 wasmcloud-utils-macros = { path = "wasmcloud-utils-macros" }
 wstd = "0.6"
 
-opentelemetry = "0.31"
-otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "7c7537a33d216feb84835e111405a90460ec6297" }
+opentelemetry = "0.32"
+otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "1035d89de8ffca498df516903f4e22b8f9886dab" }
 tracing = "0.1"
-tracing-opentelemetry = "0.32"
+tracing-opentelemetry = "0.33"
 
 wit-bindgen = { version = "0.58", features = ["async-spawn", "inter-task-wakeup"] }
 
