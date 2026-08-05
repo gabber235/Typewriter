@@ -73,14 +73,7 @@ class JdkHttpTransport(
             HttpResult.Success(
                 HttpResponse(
                     response.statusCode(),
-                    HttpHeaders.of(
-                        response.headers().map().flatMap { (name, values) ->
-                            values.map {
-                                name to
-                                    it
-                            }
-                        },
-                    ),
+                    response.headers().toCoreHeaders(),
                     response.body(),
                 ),
             )
@@ -100,6 +93,13 @@ class JdkHttpTransport(
         if (closed.compareAndSet(false, true)) executor.shutdownNow()
     }
 }
+
+internal fun java.net.http.HttpHeaders.toCoreHeaders(): HttpHeaders =
+    HttpHeaders.of(
+        map().flatMap { (name, values) ->
+            if (name.startsWith(":")) emptyList() else values.map { value -> name to value }
+        },
+    )
 
 private tailrec fun unwrap(failure: Throwable): Throwable =
     if (failure.cause != null &&

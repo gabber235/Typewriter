@@ -23,6 +23,23 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 val JdkHttpTransportTest by testSuite {
+    test("omits HTTP control data from response headers") {
+        val headers =
+            java.net.http.HttpHeaders.of(
+                mapOf(
+                    ":status" to listOf("200"),
+                    "content-type" to listOf("application/skir"),
+                    "x-multi" to listOf("one", "two"),
+                ),
+            ) { _, _ -> true }
+
+        val converted = headers.toCoreHeaders()
+
+        converted.values(":status") shouldBe emptyList()
+        converted.first("content-type") shouldBe "application/skir"
+        converted.values("x-multi") shouldBe listOf("one", "two")
+    }
+
     test("sends bodies preserves response status and bounds response collection") {
         val server = HttpServer.create(InetSocketAddress(0), 0)
         server.createContext("/echo") { exchange ->
