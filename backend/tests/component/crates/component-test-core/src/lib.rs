@@ -9,6 +9,7 @@ mod manifest;
 mod messaging_mock;
 mod outgoing;
 mod runtime;
+mod telemetry;
 
 pub use http_mock::{ExpectationBuilder, HttpMock, MockRequest, MockResponse};
 pub use messaging_mock::{
@@ -35,10 +36,13 @@ use std::{
 use anyhow::Result;
 use component_test_model::{FixtureDescriptor, TestDescriptor};
 use futures_util::FutureExt;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::trace::{Sampler, SdkTracerProvider};
 use tokio::{
     runtime::{Builder, Runtime},
     sync::{OwnedSemaphorePermit, Semaphore},
 };
+use tracing_subscriber::prelude::*;
 use wash_runtime::{engine::Engine, plugin::wasmcloud_messaging::InMemoryMessagingDriver};
 
 pub type TestResult = anyhow::Result<()>;
@@ -210,12 +214,22 @@ struct Globals {
     runtime: Runtime,
     engine: Engine,
     admission: Arc<Semaphore>,
+    _host_tracer_provider: SdkTracerProvider,
 }
 static GLOBALS: OnceLock<Result<Globals, String>> = OnceLock::new();
 fn globals() -> Result<&'static Globals> {
     GLOBALS
         .get_or_init(|| {
             wash_runtime::init_crypto();
+            let host_tracer_provider = SdkTracerProvider::builder()
+                .with_sampler(Sampler::AlwaysOn)
+                .build();
+            let subscriber = tracing_subscriber::registry().with(
+                tracing_opentelemetry::layer()
+                    .with_tracer(host_tracer_provider.tracer("component-test-host")),
+            );
+            tracing::subscriber::set_global_default(subscriber)
+                .map_err(|error| format!("initialization phase: host tracing: {error}"))?;
             let runtime = Builder::new_multi_thread()
                 .enable_all()
                 .build()
@@ -226,6 +240,7 @@ fn globals() -> Result<&'static Globals> {
             Ok(Globals {
                 runtime,
                 engine,
+                _host_tracer_provider: host_tracer_provider,
                 admission: Arc::new(Semaphore::new(admission_limit(
                     std::thread::available_parallelism()
                         .map(usize::from)
@@ -295,20 +310,31 @@ where
         descriptor.case,
         Vec::new(),
     );
+    let telemetry = telemetry::TelemetryCapture::default();
     let _permit: OwnedSemaphorePermit = match admission.acquire_owned().await {
         Ok(value) => value,
-        Err(error) => return Outcome::Error(format!("admitted: {error}")),
+        Err(error) => {
+            return failed_before_runtime(diagnostic, &telemetry, format!("admitted: {error}"));
+        }
     };
     diagnostic.phase("validated");
     let artifacts = match manifest::artifacts(&F::DESCRIPTOR) {
         Ok(artifacts) => artifacts,
         Err(error) => {
-            return Outcome::Error(format!("validated ({:?}): {error:#}", started.elapsed()));
+            return failed_before_runtime(
+                diagnostic,
+                &telemetry,
+                format!("validated ({:?}): {error:#}", started.elapsed()),
+            );
         }
     };
     let mut builder = F::configure(FixtureBuilder::new());
     if let Err(error) = builder.validate() {
-        return Outcome::Error(format!("validated ({:?}): {error:#}", started.elapsed()));
+        return failed_before_runtime(
+            diagnostic,
+            &telemetry,
+            format!("validated ({:?}): {error:#}", started.elapsed()),
+        );
     }
     for artifact in artifacts.values() {
         diagnostic.artifact(&artifact.path, &artifact.digest);
@@ -363,6 +389,7 @@ where
             &artifacts,
             provision,
             workload_id.clone(),
+            telemetry.clone(),
         )
         .await
         {
@@ -516,6 +543,12 @@ where
     for line in context.transcript {
         diagnostic.event(line);
     }
+    if !failures.is_empty() || panic.is_some() {
+        match telemetry.render() {
+            Ok(lines) => diagnostic.otel(lines),
+            Err(error) => diagnostic.otel_unavailable(error),
+        }
+    }
     let report = diagnostic.finish();
     if let Some(payload) = panic {
         Outcome::Panic(payload, report)
@@ -524,6 +557,19 @@ where
     } else {
         Outcome::Error(report)
     }
+}
+
+fn failed_before_runtime(
+    mut diagnostic: diagnostic::DiagnosticReport,
+    telemetry: &telemetry::TelemetryCapture,
+    failure: String,
+) -> Outcome {
+    diagnostic.fail(&failure);
+    match telemetry.render() {
+        Ok(lines) => diagnostic.otel(lines),
+        Err(error) => diagnostic.otel_unavailable(error),
+    }
+    Outcome::Error(diagnostic.finish())
 }
 
 #[cfg(test)]

@@ -143,7 +143,7 @@ Raw byte APIs remain available for malformed payload and protocol tests.
 
 ## Failure behavior
 
-The runner catches panics while polling the async body, drains messaging, verifies strict mocks, stops workload before host, cleans extensions in reverse order, prints one redacted report, then resumes the original panic. The report includes fixture/test/case identity, phase timings, artifacts and hashes, workload state, guest logs, mock transcripts, and cleanup failures.
+The runner catches panics while polling the async body, drains messaging, verifies strict mocks, stops workload before host, cleans extensions in reverse order, prints one redacted report, then resumes the original panic. The report includes fixture/test/case identity, phase timings, artifacts and hashes, workload state, guest logs, mock transcripts, cleanup failures, and completed OpenTelemetry spans with their component resources, attributes, events, and links. Passing tests remain quiet.
 
 Sensitive environment values and authorization/cookie headers are redacted before buffering.
 

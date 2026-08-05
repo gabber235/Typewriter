@@ -31,6 +31,7 @@ pub(crate) struct DiagnosticReport {
     live: bool,
     sink: LiveSink,
     artifacts: Vec<String>,
+    otel: Vec<String>,
 }
 
 impl DiagnosticReport {
@@ -72,6 +73,7 @@ impl DiagnosticReport {
             live: std::env::var("COMPONENT_TEST_LIVE").as_deref() == Ok("1"),
             sink,
             artifacts: Vec::new(),
+            otel: Vec::new(),
         }
     }
 
@@ -110,6 +112,25 @@ impl DiagnosticReport {
         }
     }
 
+    pub(crate) fn otel(&mut self, lines: Vec<String>) {
+        if lines.is_empty() {
+            self.otel.push("no completed spans captured".into());
+            return;
+        }
+        let lines = lines
+            .into_iter()
+            .map(|line| self.redact(&line).chars().take(LINE_LIMIT).collect())
+            .collect::<Vec<_>>();
+        self.otel.extend(lines);
+    }
+
+    pub(crate) fn otel_unavailable(&mut self, error: impl AsRef<str>) {
+        self.otel.push(format!(
+            "capture unavailable: {}",
+            self.redact(error.as_ref())
+        ));
+    }
+
     pub(crate) fn finish(mut self) -> String {
         self.phase("complete");
         let mut out = format!(
@@ -134,6 +155,12 @@ impl DiagnosticReport {
         if !self.failures.is_empty() {
             out.push_str("failures (primary first):\n");
             for value in &self.failures {
+                let _ = writeln!(out, "  {value}");
+            }
+        }
+        if !self.otel.is_empty() {
+            out.push_str("OpenTelemetry spans:\n");
+            for value in &self.otel {
                 let _ = writeln!(out, "  {value}");
             }
         }
@@ -194,6 +221,48 @@ mod tests {
                 .unwrap()
                 .iter()
                 .all(|line| line.starts_with("[fixture / test] ") && !line.contains("secret"))
+        );
+    }
+
+    #[test]
+    fn otel_section_is_redacted_limited_and_ordered_before_logs() {
+        let mut report = DiagnosticReport::with_sink(
+            "fixture",
+            "test",
+            None,
+            vec!["secret".into()],
+            Arc::new(|_| {}),
+        );
+        report.fail("failed");
+        report.otel(vec![format!("span secret {}", "x".repeat(LINE_LIMIT + 10))]);
+        report.event("guest log");
+
+        let rendered = report.finish();
+        let otel_start = rendered.find("OpenTelemetry spans:").unwrap();
+        let log_start = rendered.find("recent diagnostics:").unwrap();
+        let otel_line = rendered
+            .lines()
+            .find(|line| line.contains("span [REDACTED]"))
+            .unwrap();
+        assert!(otel_start < log_start);
+        assert!(!rendered.contains("secret"));
+        assert_eq!(otel_line.trim_start().chars().count(), LINE_LIMIT);
+    }
+
+    #[test]
+    fn empty_and_unavailable_capture_have_explicit_diagnostics() {
+        let mut empty = DiagnosticReport::new("fixture", "empty", None, Vec::new());
+        empty.fail("failed");
+        empty.otel(Vec::new());
+        assert!(empty.finish().contains("no completed spans captured"));
+
+        let mut unavailable = DiagnosticReport::new("fixture", "poisoned", None, Vec::new());
+        unavailable.fail("failed");
+        unavailable.otel_unavailable("span capture lock poisoned");
+        assert!(
+            unavailable
+                .finish()
+                .contains("capture unavailable: span capture lock poisoned")
         );
     }
 }

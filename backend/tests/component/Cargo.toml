@@ -31,6 +31,11 @@ inventory = "0.3"
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
 nkeys = "0.4"
+opentelemetry = "0.32"
+opentelemetry_sdk = "0.32"
+tracing = "0.1"
+tracing-opentelemetry = "0.33"
+tracing-subscriber = "0.3"
 proc-macro2 = "1"
 quote = "1"
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
@@ -68,13 +73,13 @@ wasmtime-wasi-http = { version = "47.0.3", default-features = false, features = 
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 
-wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "f61bb5c8281d1b3b2118aeb96697402abe5d4e04", default-features = false, features = [
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "9f43d83c0", default-features = false, features = [
     "wasi-config",
     "wasi-logging",
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "4b7ef88f0377b30d25e1210445a7d9fdabb7e80c" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "bb4cda2" }
 
 [profile.dev]
 debug = 0

@@ -17,7 +17,7 @@ use wash_runtime::{
         HostPlugin,
         wasi_config::DynamicConfig,
         wasi_logging::TracingLogger,
-        wasi_otel::WasiOtel,
+        wasi_otel::{WasiOtel, WasiOtelConfig},
         wasmcloud_messaging::{InMemoryMessaging, InMemoryMessagingDriver},
     },
     types::{Component, LocalResources, Workload, WorkloadStartRequest, WorkloadState},
@@ -29,6 +29,7 @@ use crate::{
     builder::{FixtureBuilder, ProvisionContext},
     manifest::Artifact,
     outgoing::DispatchOutgoingHandler,
+    telemetry::TelemetryCapture,
 };
 
 pub(crate) struct Diagnostics {
@@ -111,6 +112,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
     artifacts: &HashMap<String, Artifact>,
     provision: ProvisionContext,
     workload_id: String,
+    telemetry: TelemetryCapture,
 ) -> Result<RunningFixture<F>> {
     for (name, config) in provision.components {
         builder.components.insert(name, config);
@@ -129,10 +131,15 @@ pub(crate) async fn start<F: FixtureDeclaration>(
         );
     }
     let diagnostics = Diagnostics::new(redactions);
+    let otel = WasiOtel::new(
+        WasiOtelConfig::builder()
+            .span_processor_factory(Arc::new(telemetry))
+            .build(),
+    );
     let mut plugins: Vec<Arc<dyn HostPlugin>> = vec![
         Arc::new(DynamicConfig::default()),
         Arc::new(TracingLogger::with_sink(diagnostics.sink())),
-        Arc::new(WasiOtel::default()),
+        Arc::new(otel),
     ];
     plugins.append(&mut builder.plugins);
     let mut interfaces = builder.interfaces.clone();

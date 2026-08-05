@@ -971,12 +971,17 @@ dependencies = [
  "http-body-util",
  "hyper",
  "inventory",
+ "opentelemetry",
+ "opentelemetry_sdk",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
  "sha2",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
  "uuid",
  "wash-runtime",
  "wasmtime-wasi",
@@ -6417,7 +6422,7 @@ dependencies = [
 [[package]]
 name = "wash-runtime"
 version = "2.6.1"
-source = "git+https://github.com/gabber235/wasmCloud?rev=f61bb5c8281d1b3b2118aeb96697402abe5d4e04#f61bb5c8281d1b3b2118aeb96697402abe5d4e04"
+source = "git+https://github.com/gabber235/wasmCloud?rev=9f43d83c0#9f43d83c0f435a593a469af9734a60ee58517a09"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6619,7 +6624,7 @@ dependencies = [
 [[package]]
 name = "wasmcloud-plugin-surrealdb"
 version = "2.1.6"
-source = "git+https://github.com/Seamlezz/wasmCloud-host?rev=4b7ef88f0377b30d25e1210445a7d9fdabb7e80c#4b7ef88f0377b30d25e1210445a7d9fdabb7e80c"
+source = "git+https://github.com/Seamlezz/wasmCloud-host?rev=bb4cda2#bb4cda29483207467ba35da37fb164407a09fe71"
 dependencies = [
  "anyhow",
  "async-trait",
