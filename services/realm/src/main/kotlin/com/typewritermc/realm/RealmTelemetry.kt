@@ -3,6 +3,10 @@ package com.typewritermc.realm
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecordExporter
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -44,11 +48,19 @@ fun realmOpenTelemetry(console: ConsoleLogOutput): OpenTelemetrySdk {
         val logExporter = OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build()
         loggerProvider.addLogRecordProcessor(BatchLogRecordProcessor.builder(logExporter).build())
     }
+    val propagators =
+        ContextPropagators.create(
+            TextMapPropagator.composite(
+                W3CTraceContextPropagator.getInstance(),
+                W3CBaggagePropagator.getInstance(),
+            ),
+        )
 
     return OpenTelemetrySdk
         .builder()
         .setTracerProvider(tracerProvider.build())
         .setLoggerProvider(loggerProvider.build())
+        .setPropagators(propagators)
         .buildAndRegisterGlobal()
 }
 
