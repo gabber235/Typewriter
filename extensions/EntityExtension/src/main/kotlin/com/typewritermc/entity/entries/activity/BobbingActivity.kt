@@ -60,9 +60,10 @@ class BobbingActivity(
     private var startTime: Long = System.currentTimeMillis()
     private var lastOffset: Float = 0.0f
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
         startTime = System.currentTimeMillis()
-        childActivity.initialize(context, position)
+        childActivity.activate(context, position.withY { it - lastOffset })
+        lastOffset = 0.0f
     }
 
     override fun tick(context: ActivityContext): TickResult {
@@ -80,8 +81,12 @@ class BobbingActivity(
         return childActivity.tick(context)
     }
 
-    override fun dispose(context: ActivityContext) {
-        childActivity.dispose(context)
+    override fun deactivate(context: ActivityContext) {
+        childActivity.deactivate(context)
+    }
+
+    override fun dispose() {
+        childActivity.dispose()
     }
 
     override val currentPosition: PositionProperty

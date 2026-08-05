@@ -56,7 +56,8 @@ class PatrolActivity(
         val targetNode = network.nodes.find { it.id == targetNodeId }
             ?: return
 
-        activity.dispose(context)
+        activity.deactivate(context)
+        activity.dispose()
         activity = NavigationActivity(
             PointToPointGPS(
                 roadNetwork,
@@ -68,11 +69,12 @@ class PatrolActivity(
             },
             currentPosition
         ).also {
-            it.initialize(context, currentPosition)
+            it.activate(context, currentPosition)
         }
     }
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        activity.dispose()
         activity = IdleActivity(position)
         setup(context)
     }
@@ -101,10 +103,12 @@ class PatrolActivity(
         return TickResult.CONSUMED
     }
 
-    override fun dispose(context: ActivityContext) {
-        val oldPosition = currentPosition
-        activity.dispose(context)
-        activity = IdleActivity(oldPosition)
+    override fun deactivate(context: ActivityContext) {
+        activity.deactivate(context)
+    }
+
+    override fun dispose() {
+        activity.dispose()
     }
 
     override val currentPosition: PositionProperty

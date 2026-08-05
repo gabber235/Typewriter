@@ -112,7 +112,10 @@ class RandomPatrolActivity(
         return TickResult.CONSUMED
     }
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        searchJob?.cancel()
+        searchJob = null
+        activity.dispose()
         activity = IdleActivity(position)
         setup(context)
     }
@@ -155,12 +158,14 @@ class RandomPatrolActivity(
         return distance > MIN_MOVED_DISTANCE_SQUARED
     }
 
-    override fun dispose(context: ActivityContext) {
+    override fun deactivate(context: ActivityContext) {
         searchJob?.cancel()
         searchJob = null
-        val oldPosition = currentPosition
-        activity.dispose(context)
-        activity = IdleActivity(oldPosition)
+        activity.deactivate(context)
+    }
+
+    override fun dispose() {
+        activity.dispose()
     }
 
     override val currentPosition: PositionProperty
@@ -215,8 +220,9 @@ class RandomPatrolActivity(
     }
 
     private fun setNavigationActivity(context: ActivityContext, gps: PointToPointGPS) {
-        activity.dispose(context)
-        activity = NavigationActivity(gps, currentPosition).also { it.initialize(context, currentPosition) }
+        activity.deactivate(context)
+        activity.dispose()
+        activity = NavigationActivity(gps, currentPosition).also { it.activate(context, currentPosition) }
     }
 
     private fun setIdleFallbackActivity(
@@ -229,10 +235,11 @@ class RandomPatrolActivity(
             .randomOrNull()
             .logErrorIfNull("No reachable nodes found")
 
-        activity.dispose(context)
+        activity.deactivate(context)
+        activity.dispose()
         val newPosition = teleportNode?.position?.toProperty() ?: currentPosition
         activity = IdleActivity(newPosition).also {
-            it.initialize(context, newPosition)
+            it.activate(context, newPosition)
         }
     }
 }

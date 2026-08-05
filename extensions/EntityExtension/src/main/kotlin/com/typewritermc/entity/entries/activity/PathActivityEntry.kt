@@ -49,9 +49,10 @@ private class PathActivity(
 
     fun refreshActivity(context: ActivityContext, network: RoadNetwork) {
         if (nodes.size <= currentLocationIndex) {
-            activity.dispose(context)
+            activity.deactivate(context)
+            activity.dispose()
             activity = idleActivity.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-            activity.initialize(context, currentPosition)
+            activity.activate(context, currentPosition)
             return
         }
 
@@ -60,7 +61,8 @@ private class PathActivity(
         val targetNode = network.nodes.find { it.id == targetNodeId }
             ?: return
 
-        activity.dispose(context)
+        activity.deactivate(context)
+        activity.dispose()
         activity = NavigationActivity(
             PointToPointGPS(
                 roadNetwork,
@@ -72,11 +74,12 @@ private class PathActivity(
             },
             currentPosition
         ).also {
-            it.initialize(context, currentPosition)
+            it.activate(context, currentPosition)
         }
     }
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        activity.dispose()
         activity = IdleActivity(position)
         setup(context)
     }
@@ -109,10 +112,12 @@ private class PathActivity(
         return TickResult.CONSUMED
     }
 
-    override fun dispose(context: ActivityContext) {
-        val oldPosition = currentPosition
-        activity.dispose(context)
-        activity = IdleActivity(oldPosition)
+    override fun deactivate(context: ActivityContext) {
+        activity.deactivate(context)
+    }
+
+    override fun dispose() {
+        activity.dispose()
     }
 
     override val currentPosition: PositionProperty

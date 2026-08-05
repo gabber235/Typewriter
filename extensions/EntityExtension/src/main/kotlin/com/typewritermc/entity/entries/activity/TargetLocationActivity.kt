@@ -49,100 +49,65 @@ class TargetLocationActivity(
     private val network: Ref<RoadNetworkEntry>,
     private val targetPosition: Position,
     private val idleActivity: Ref<out EntityActivityEntry>,
-    val once: Boolean,
+    private val once: Boolean,
     startPosition: PositionProperty,
 ) : GenericEntityActivity {
-    private val states = listOf(NavigatingState(), IdleState())
-    private var state: State = states.first()
-    private var currentActivity: EntityActivity<ActivityContext> = IdleActivity(startPosition)
+    private enum class Mode { NAVIGATING, IDLE }
 
+    private var searchStart: PositionProperty = startPosition
+    private var reachedTarget = false
 
-    private interface State {
-        val isValid: Boolean
-        fun nextState(): State
-        fun createActivity(
-            context: ActivityContext,
-            currentPosition: PositionProperty
-        ): EntityActivity<ActivityContext>
-    }
-
-    private inner class IdleState : State {
-        override val isValid: Boolean
-            get() {
-                if (once) return true
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance <= locationActivityRange * locationActivityRange
-            }
-
-        private var cachedActivity: EntityActivity<ActivityContext>? = null
-
-        override fun nextState(): State = states[0]
-
-        override fun createActivity(
-            context: ActivityContext,
-            currentPosition: PositionProperty
-        ): EntityActivity<ActivityContext> {
-            if (cachedActivity != null) return cachedActivity!!
-            cachedActivity = (idleActivity.get() ?: IdleActivity).create(context, currentPosition)
-            return cachedActivity!!
-        }
-    }
-
-    private inner class NavigatingState : State {
-        override val isValid: Boolean
-            get() {
-                val distance = currentPosition.distanceSquared(targetPosition) ?: return true
-                return distance > locationActivityRange * locationActivityRange
-            }
-
-        override fun nextState(): State = states[1]
-
-        override fun createActivity(
-            context: ActivityContext,
-            currentPosition: PositionProperty
-        ): EntityActivity<ActivityContext> {
-            return NavigationActivity(
+    private val children = ChildActivityHolder<Mode, ActivityContext>(startPosition) { mode, context, position ->
+        when (mode) {
+            Mode.NAVIGATING -> NavigationActivity(
                 PointToPointGPS(
                     network,
                     {
-                        val position = currentPosition.toPosition()
-                        position.firstWalkableLocationBelow() ?: position
+                        val start = searchStart.toPosition()
+                        start.firstWalkableLocationBelow() ?: start
                     },
-                    { targetPosition }
-                ), currentPosition)
+                    { targetPosition },
+                ),
+                position,
+            )
+
+            Mode.IDLE -> idleActivity.get()?.create(context, position)
         }
     }
 
-    override fun initialize(context: ActivityContext, position: PositionProperty) {
-        if (!state.isValid) {
-            state = state.nextState()
-        }
-
-        currentActivity = state.createActivity(context, position).also {
-            it.initialize(context, position)
-        }
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        enter(modeFor(position), context, position)
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        if (!state.isValid) {
-            currentActivity.dispose(context)
-            state = state.nextState()
-            currentActivity = state.createActivity(context, currentPosition)
-            currentActivity.initialize(context, currentPosition)
-        }
+        val position = currentPosition
+        val mode = modeFor(position)
+        if (mode != children.currentKey) enter(mode, context, position)
 
-        return currentActivity.tick(context)
+        return children.tick(context)
     }
 
-    override fun dispose(context: ActivityContext) {
-        val oldPosition = currentPosition
-        currentActivity.dispose(context)
-        currentActivity = IdleActivity(oldPosition)
-    }
+    override fun deactivate(context: ActivityContext) = children.deactivate(context)
+
+    override fun dispose() = children.dispose()
 
     override val currentPosition: PositionProperty
-        get() = currentActivity.currentPosition
+        get() = children.currentPosition
 
     override val currentProperties: List<EntityProperty>
-        get() = currentActivity.currentProperties
+        get() = children.currentProperties
+
+    private fun modeFor(position: PositionProperty): Mode {
+        if (once && reachedTarget) return Mode.IDLE
+        // Another world gives no distance, so keep doing whatever we were already doing.
+        val distance = position.distanceSquared(targetPosition) ?: return children.currentKey ?: Mode.NAVIGATING
+        if (distance <= locationActivityRange * locationActivityRange) return Mode.IDLE
+        return Mode.NAVIGATING
+    }
+
+    private fun enter(mode: Mode, context: ActivityContext, position: PositionProperty) {
+        if (mode == Mode.IDLE) reachedTarget = true
+        searchStart = position
+        children.activate(mode, context, position)
+    }
 }

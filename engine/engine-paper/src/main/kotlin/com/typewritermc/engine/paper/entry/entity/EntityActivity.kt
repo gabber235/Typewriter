@@ -12,9 +12,32 @@ interface ActivityCreator {
 }
 
 interface EntityActivity<Context : ActivityContext> {
-    fun initialize(context: Context, position: PositionProperty)
+    /**
+     * Start running at [position].
+     *
+     * Called for the first activation, for every resume after a [deactivate], and again while the
+     * activity is already running when whatever owns it is itself activated. The activity must
+     * adopt [position] every time and restart its work from there; it may differ from wherever the
+     * activity left off.
+     */
+    fun activate(context: Context, position: PositionProperty)
+
     fun tick(context: Context): TickResult
-    fun dispose(context: Context)
+
+    /**
+     * Stop running but keep progress. Cancel jobs, release listeners, drop temporary resources.
+     *
+     * The activity may be activated again afterwards.
+     */
+    fun deactivate(context: Context) {}
+
+    /**
+     * Final teardown. Never activated again.
+     *
+     * Takes no context because [deactivate] always runs first, so anything that touches viewers
+     * belongs there.
+     */
+    fun dispose() {}
 
     val currentPosition: PositionProperty
     val currentProperties: List<EntityProperty> get() = listOf(currentPosition)
@@ -42,11 +65,11 @@ interface IndividualEntityActivity : EntityActivity<IndividualActivityContext>
 interface GenericEntityActivity : EntityActivity<ActivityContext>
 
 class IdleActivity(override var currentPosition: PositionProperty) : GenericEntityActivity {
-    override fun initialize(context: ActivityContext, position: PositionProperty) {}
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        currentPosition = position
+    }
 
     override fun tick(context: ActivityContext): TickResult = TickResult.IGNORED
-
-    override fun dispose(context: ActivityContext) {}
 
     companion object : ActivityCreator {
         override fun create(
@@ -57,47 +80,31 @@ class IdleActivity(override var currentPosition: PositionProperty) : GenericEnti
 }
 
 abstract class SingleChildActivity<Context : ActivityContext>(
-    startLocation: PositionProperty,
+    startPosition: PositionProperty,
 ) : EntityActivity<Context> {
-    protected var child: Ref<out EntityActivityEntry> = emptyRef()
-        private set
-    private var currentActivity: EntityActivity<in Context> = IdleActivity(startLocation)
+    private val children = entryActivityHolder<Context>(startPosition)
 
-    private val activityCache = mutableMapOf<Ref<out EntityActivityEntry>, EntityActivity<in Context>>()
+    protected val child: Ref<out EntityActivityEntry>?
+        get() = children.currentKey
 
-    override fun initialize(context: Context, position: PositionProperty) {
-        child = currentChild(context)
-        refreshActivity(context, position)
+    override fun activate(context: Context, position: PositionProperty) {
+        children.activate(currentChild(context), context, position)
     }
-
-    fun refreshActivity(context: Context, position: PositionProperty) {
-        currentActivity.dispose(context)
-        currentActivity = activityCache.getOrPut(child) {
-            child.get()?.create(context, position) ?: IdleActivity(position)
-        }
-        currentActivity.initialize(context, position)
-    }
-
 
     override fun tick(context: Context): TickResult {
-        val correctChild = currentChild(context)
-        if (child != correctChild) {
-            child = correctChild
-            refreshActivity(context, currentPosition)
-        }
-        return currentActivity.tick(context)
+        children.switchTo(currentChild(context), context, children.currentPosition)
+        return children.tick(context)
     }
 
-    override fun dispose(context: Context) {
-        currentActivity.dispose(context)
-        child = emptyRef()
-    }
+    override fun deactivate(context: Context) = children.deactivate(context)
+
+    override fun dispose() = children.dispose()
 
     override val currentPosition: PositionProperty
-        get() = currentActivity.currentPosition
+        get() = children.currentPosition
 
     override val currentProperties: List<EntityProperty>
-        get() = currentActivity.currentProperties
+        get() = children.currentProperties
 
     abstract fun currentChild(context: Context): Ref<out EntityActivityEntry>
 }

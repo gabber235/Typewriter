@@ -171,8 +171,8 @@ class InDialogueActivity(
     override val currentProperties: List<EntityProperty>
         get() = super.currentProperties.filter { it !is PositionProperty } + currentPosition
 
-    override fun dispose(context: ActivityContext) {
-        super.dispose(context)
+    override fun deactivate(context: ActivityContext) {
+        super.deactivate(context)
         yawAdditiveVelocity.value = 0f
         pitchAdditiveVelocity.value = 0f
     }

@@ -210,8 +210,8 @@ The listener now receives a context with `player`, `ref`, `oldValue`, and `newVa
 ## Entity Activity Lifecycle Changes
 
 Entity activities are no longer recreated every time they become active.
-Each activity instance is created once per NPC and reused for the lifetime of that entity display.
-This allows activities to hold runtime state and resume where they left off when interrupted.
+Each activity instance is created once per NPC and reused for the lifetime of that entity display,
+so an activity can hold runtime state and resume where it left off after an interruption.
 
 A common example is pathing: an NPC walking a predefined path can be interrupted by an
 `InDialogueActivity`. When the dialogue ends, the path activity resumes from the next node
@@ -223,73 +223,123 @@ instead of restarting from the beginning.
 class, not on the entry.
 :::
 
-### `initialize` Signature
+### The lifecycle
 
-The `initialize` method now receives the entity's current position as a second parameter.
+`EntityActivity` has four methods instead of three.
 
 ```kotlin showLineNumbers
-// highlight-red
-override fun initialize(context: ActivityContext) {
-// highlight-green
-override fun initialize(context: ActivityContext, position: PositionProperty) {
+interface EntityActivity<Context : ActivityContext> {
+    fun activate(context: Context, position: PositionProperty)
+    fun tick(context: Context): TickResult
+    fun deactivate(context: Context) {}
+    fun dispose() {}
+
+    val currentPosition: PositionProperty
+    val currentProperties: List<EntityProperty> get() = listOf(currentPosition)
+}
 ```
 
-This applies to all `EntityActivity` implementations, including `GenericEntityActivity`,
-`SharedEntityActivity`, and `IndividualEntityActivity`.
+- `activate` starts the activity, at `position`. It runs for the first activation, for every
+  resume, and again while the activity is already running when whatever owns it is itself
+  activated. The activity must adopt `position` every time and restart its work from there, since
+  it may differ from wherever the activity left off.
+- `deactivate` pauses the activity. Cancel jobs, release listeners, drop temporary resources, keep
+  progress. The activity may be activated again afterwards.
+- `dispose` is final teardown. It takes no context, because `deactivate` always runs first, so
+  anything that touches viewers belongs there.
 
-### Designing Stateful Activities
+Typewriter guarantees:
 
-Because activity instances are reused, `initialize` may be called multiple times during an
-NPC's lifetime, for example when switching between child activities in a
-`SingleChildActivity`. Follow these guidelines when implementing custom activities:
+1. `activate` always runs before any `tick`.
+2. `deactivate` only ever follows an `activate`, and never twice in a row.
+3. `dispose` runs at most once, after `deactivate`, and nothing follows it.
+4. `activate` may run many times, each with a possibly different position, including twice with no
+   `deactivate` between them. Make it safe to call on an activity that is already running.
 
-1. **Do not reset progress in `initialize`.** Use `initialize` to sync the current position
-   or start child activities. Preserve fields like path indices, timers, or navigation state
-   across calls.
-2. **Do not reset persistent state in `dispose`.** `dispose` is called whenever an activity is
-   deactivated, including when `SingleChildActivity` switches between children (e.g. when
-   dialogue interrupts pathing). Activity instances are cached and reused, so fields like path
-   indices or navigation progress must survive `dispose`. Use `dispose` only to cancel jobs,
-   release listeners, or clean up other temporary resources.
-3. **Lazy-create child activities.** Create child activity instances once and reuse them.
-   Check whether a child already exists before calling `create()`:
+### Migrating
 
 ```kotlin showLineNumbers
 // highlight-red-start
-override fun initialize(context: ActivityContext) {
-    childActivity = child.get()?.create(context, currentPosition) ?: IdleActivity(currentPosition)
-    childActivity.initialize(context)
+override fun initialize(context: ActivityContext, position: PositionProperty) {
+    currentPosition = position
+    searchJob = startSearching()
+}
+
+override fun dispose(context: ActivityContext) {
+    searchJob?.cancel()
 }
 // highlight-red-end
 
 // highlight-green-start
-override fun initialize(context: ActivityContext, position: PositionProperty) {
-    if (childActivity is IdleActivity) {
-        childActivity = child.get()?.create(context, position) ?: IdleActivity(position)
-    }
-    childActivity.initialize(context, position)
+override fun activate(context: ActivityContext, position: PositionProperty) {
+    currentPosition = position
+    searchJob?.cancel()
+    searchJob = startSearching()
+}
+
+override fun deactivate(context: ActivityContext) {
+    searchJob?.cancel()
 }
 // highlight-green-end
 ```
 
-### `SingleChildActivity` Caching
+In almost every case `initialize` becomes `activate` and the body of the old `dispose` becomes
+`deactivate`. Leave `dispose` empty unless the activity holds child activities of its own.
 
-`SingleChildActivity` now caches child activity instances per child entry reference.
-When switching between children (e.g. between a talking and idle activity in
-`InDialogueActivity`), the current child is disposed and the cached instance is reactivated
-with `initialize` instead of calling `create()` again.
+Note the extra `cancel` in `activate`. Because `activate` can run on an activity that is already
+running, anything it starts has to replace what the previous activation started rather than run
+alongside it.
 
-The `refreshActivity` method signature has also changed:
+### Holding child activities
+
+An activity that switches between children should not cache them itself. Use
+`ChildActivityHolder`, which creates each child once, activates the incoming one at the position it
+is handed, deactivates the outgoing one, and on `dispose` tears down every child it created rather
+than only the one showing.
 
 ```kotlin showLineNumbers
-// highlight-red
-fun refreshActivity(context: Context)
-// highlight-green
-fun refreshActivity(context: Context, position: PositionProperty)
+class MyActivity(
+    private val child: Ref<out EntityActivityEntry>,
+    startPosition: PositionProperty,
+) : GenericEntityActivity {
+    private val children = entryActivityHolder<ActivityContext>(startPosition)
+
+    override fun activate(context: ActivityContext, position: PositionProperty) {
+        children.activate(child, context, position)
+    }
+
+    override fun tick(context: ActivityContext): TickResult = children.tick(context)
+
+    override fun deactivate(context: ActivityContext) = children.deactivate(context)
+
+    override fun dispose() = children.dispose()
+
+    override val currentPosition: PositionProperty
+        get() = children.currentPosition
+}
 ```
 
-If you extend `SingleChildActivity`, override `currentChild` to select the active child.
-The base class handles caching and reuse automatically.
+`SingleChildActivity` is built on the same holder, so subclasses keep overriding `currentChild` and
+nothing else. Its `refreshActivity` method has been removed; switching now happens automatically
+whenever `currentChild` returns a different reference.
+
+`entryActivityHolder` is the entry reference flavour of `ChildActivityHolder`, which is keyed by
+anything you like. When an activity already knows its children rather than reading them from a
+configured reference, key the holder on your own type and build them yourself:
+
+```kotlin showLineNumbers
+private enum class Mode { NAVIGATING, IDLE }
+
+private val children = ChildActivityHolder<Mode, ActivityContext>(startPosition) { mode, context, position ->
+    when (mode) {
+        Mode.NAVIGATING -> NavigationActivity(gps, position)
+        Mode.IDLE -> idleActivity.get()?.create(context, position) ?: IdleActivity(position)
+    }
+}
+```
+
+Each key gets its child built once and kept, so switching back to a mode resumes it rather than
+starting it over.
 
 ## Nested Classes Are Written The Way The JVM Names Them
 
