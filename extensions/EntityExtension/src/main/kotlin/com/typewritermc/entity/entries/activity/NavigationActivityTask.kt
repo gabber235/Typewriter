@@ -25,6 +25,8 @@ import org.bukkit.util.BoundingBox
 import kotlin.math.*
 
 
+private const val MAX_RESUME_DISTANCE_SQUARED = 1.0
+
 class NavigationActivity(
     private val gps: GPS,
     startPosition: PositionProperty,
@@ -36,14 +38,31 @@ class NavigationActivity(
         get() = state.position()
 
     override fun activate(context: ActivityContext, position: PositionProperty) {
+        val moved = (currentPosition.distanceSquared(position) ?: Double.MAX_VALUE) > MAX_RESUME_DISTANCE_SQUARED
+
+        // Nothing about the route changed while it was paused, so the state that was travelling it
+        // is kept whole, block path included. Building it again would path from the exact spot the
+        // entity stopped on, and that spot can be one the pathfinder refuses to start from, while
+        // the path it already holds was calculated from a node and is still walkable.
+        if (state.edge != null && path != null && !moved) return
+
         state.dispose()
         path = null
+        gps.clearPreviousPath()
         state = NavigationActivityTaskState.Searching(gps, position)
     }
 
     override fun tick(context: ActivityContext): TickResult {
-        val speed = context.entityState.speed
         state.tick(context)
+
+        // Every edge is walked from where the entity stands, so an edge that cannot be walked from
+        // there says the entity is stuck, not that the edge is bad. Moving on to the next one only
+        // burns the rest of the route against the same spot.
+        if (state.hasFailed) {
+            path = null
+            return TickResult.IGNORED
+        }
+
         if (state.isComplete()) {
             val remaining = path?.drop(1)
                 ?: (state as? NavigationActivityTaskState.Searching)?.path
@@ -52,32 +71,33 @@ class NavigationActivity(
 
             val currentEdge = remaining.firstOrNull() ?: return TickResult.IGNORED
 
-            state = when {
-                currentEdge.isFastTravel -> NavigationActivityTaskState.FastTravel(currentEdge)
-                context.isViewed -> NavigationActivityTaskState.Walking(
-                    gps.roadNetwork,
-                    currentEdge,
-                    currentPosition,
-                    speed = speed
-                )
-
-                else -> NavigationActivityTaskState.FakeNavigation(currentEdge, speed = speed)
-            }
+            state = travelState(context, currentEdge, currentPosition)
         }
 
-        val state = state
         // The fake navigation is used to improve the performance; it however, goes through buildings
-        // So, we switch to walking when the entity is viewed
-        if (state is NavigationActivityTaskState.FakeNavigation && context.isViewed) {
-            this.state = NavigationActivityTaskState.Walking(gps.roadNetwork, state.edge, currentPosition, speed)
-        }
-
-        // And we switch back to fake navigation when the entity is not viewed
-        if (state is NavigationActivityTaskState.Walking && !context.isViewed) {
-            this.state = NavigationActivityTaskState.FakeNavigation(state.edge, currentPosition, speed = speed)
+        // So, we switch to walking when the entity is viewed, and back when it is not
+        val state = state
+        val edge = state.edge
+        val viewChanged = (state is NavigationActivityTaskState.FakeNavigation && context.isViewed)
+                || (state is NavigationActivityTaskState.Walking && !context.isViewed)
+        if (edge != null && viewChanged) {
+            this.state = travelState(context, edge, currentPosition)
         }
 
         return TickResult.CONSUMED
+    }
+
+    private fun travelState(
+        context: ActivityContext,
+        edge: GPSEdge,
+        from: PositionProperty,
+    ): NavigationActivityTaskState {
+        val speed = context.entityState.speed
+        return when {
+            edge.isFastTravel -> NavigationActivityTaskState.FastTravel(edge)
+            context.isViewed -> NavigationActivityTaskState.Walking(gps.roadNetwork, edge, from, speed = speed)
+            else -> NavigationActivityTaskState.FakeNavigation(edge, from, speed = speed)
+        }
     }
 
     override fun deactivate(context: ActivityContext) {
@@ -95,6 +115,14 @@ sealed interface NavigationActivityTaskState {
     fun isComplete(): Boolean
     fun tick(context: ActivityContext) {}
     fun dispose() {}
+
+    /** The edge being travelled, or null when there is nothing to travel yet. */
+    val edge: GPSEdge?
+        get() = null
+
+    /** True when the edge could not be travelled and the route it belongs to has to be given up. */
+    val hasFailed: Boolean
+        get() = false
 
     class Idle(
         private val position: PositionProperty,
@@ -129,7 +157,7 @@ sealed interface NavigationActivityTaskState {
     }
 
     class FakeNavigation(
-        val edge: GPSEdge,
+        override val edge: GPSEdge,
         val startPosition: PositionProperty = edge.start.toProperty(),
         val speed: Float,
     ) : NavigationActivityTaskState {
@@ -157,7 +185,7 @@ sealed interface NavigationActivityTaskState {
     }
 
     class FastTravel(
-        val edge: GPSEdge,
+        override val edge: GPSEdge,
     ) : NavigationActivityTaskState {
         override fun position(): PositionProperty = edge.end.toProperty()
         override fun isComplete(): Boolean = true
@@ -165,7 +193,7 @@ sealed interface NavigationActivityTaskState {
 
     class Walking(
         private val roadNetwork: Ref<RoadNetworkEntry>,
-        val edge: GPSEdge,
+        override val edge: GPSEdge,
         startPosition: PositionProperty,
         val speed: Float,
         private val rotationLookAhead: Int = 3,
@@ -199,6 +227,9 @@ sealed interface NavigationActivityTaskState {
 
         @Volatile
         private var pathCalculationFailed: Boolean = false
+
+        override val hasFailed: Boolean
+            get() = pathCalculationFailed
 
         @Volatile
         private var pathIsFallback: Boolean = false
@@ -249,7 +280,9 @@ sealed interface NavigationActivityTaskState {
         override fun position(): PositionProperty = location
 
         override fun tick(context: ActivityContext) {
-            if (pathCalculationJob == null) {
+            // A pause cancels the calculation but leaves the path it produced, which is still the
+            // path to this edge, so only an edge without one has to calculate.
+            if (pathCalculationJob == null && patheticPath == null) {
                 startPathCalculation()
             }
 
