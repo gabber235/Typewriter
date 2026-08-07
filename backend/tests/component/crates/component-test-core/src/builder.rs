@@ -373,6 +373,19 @@ mod tests {
     }
     struct Endpoint;
 
+    struct MessagingFixture;
+    impl FixtureDeclaration for MessagingFixture {
+        const DESCRIPTOR: FixtureDescriptor = FixtureDescriptor {
+            id: "messaging-fixture",
+            primary: ComponentBuild::primary("http-component", "http_component"),
+            dependencies: &[ComponentBuild::dependency(
+                "messaging-component",
+                "messaging_component",
+            )],
+            affected_paths: &[],
+        };
+    }
+
     #[test]
     fn outgoing_http_preserves_https_policy() {
         let builder =
@@ -380,5 +393,46 @@ mod tests {
         assert!(builder.configuration_errors.is_empty());
         let hosts = &builder.components["component"].allowed_hosts;
         assert_eq!(hosts, &["https://authentik.test".parse().unwrap()]);
+    }
+
+    #[test]
+    fn messaging_allows_http_component_without_subscription() {
+        let builder = FixtureBuilder::<MessagingFixture>::new()
+            .messaging()
+            .dependency("messaging-component", |component| {
+                component.subscription("typewriter.from.service.*.status")
+            });
+
+        assert!(builder.validate().is_ok());
+    }
+
+    #[test]
+    fn messaging_requires_subscription_in_workload() {
+        let builder = FixtureBuilder::<MessagingFixture>::new()
+            .messaging()
+            .dependency("messaging-component", |component| component);
+
+        let error = builder.validate().unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "messaging fixtures require at least one subscription"
+        );
+    }
+
+    #[test]
+    fn messaging_rejects_duplicate_component_subscription() {
+        let builder = FixtureBuilder::<MessagingFixture>::new()
+            .messaging()
+            .dependency("messaging-component", |component| {
+                component
+                    .subscription("typewriter.from.service.*.status")
+                    .subscription("typewriter.from.service.*.status")
+            });
+
+        let error = builder.validate().unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "duplicate messaging subscription on `messaging-component`"
+        );
     }
 }
