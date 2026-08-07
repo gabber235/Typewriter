@@ -18,7 +18,13 @@ impl IdentityRepository for SurrealIdentityRepository {
             .execute()
             .await
             .map_err(|error| RepositoryError(error.to_string()))?
-            .parse_result(0)
+            .transaction(0)
+            .map(|outcome| match outcome {
+                surrealdb_component_sdk::TransactionOutcome::Committed(value) => Ok(value),
+                surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {
+                    Err(error.message().to_owned())
+                }
+            })
             .map_err(|error| RepositoryError(error.to_string()))
     }
 
@@ -44,7 +50,13 @@ impl IdentityRepository for SurrealIdentityRepository {
         .execute()
         .await
         .map_err(|error| RepositoryError(error.to_string()))?
-        .parse_result(0)
+        .transaction(0)
+        .map(|outcome| match outcome {
+            surrealdb_component_sdk::TransactionOutcome::Committed(value) => Ok(value),
+            surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {
+                Err(error.message().to_owned())
+            }
+        })
         .map_err(|error| RepositoryError(error.to_string()))
     }
 }

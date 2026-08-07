@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, num::NonZeroU32, time::Duration};
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use surrealdb_component_sdk::query;
+use surrealdb_component_sdk::{ConflictRetryPolicy, query};
 use wasmcloud_utils::{
     decode_skir, extract_params,
     skir::base::service::v1::{
@@ -36,7 +36,7 @@ pub async fn handle_bind(
     );
     let request = decode_skir!(BindServiceRequest, &msg.body)?;
 
-    let result = query(
+    let response = query(
         r#"
         BEGIN TRANSACTION;
 
@@ -69,12 +69,21 @@ pub async fn handle_bind(
     )
     .bind("registration_token", request.registration_token)
     .bind("org_id", org_id)
+    .retry_conflicts(ConflictRetryPolicy::new(
+        NonZeroU32::new(3).expect("bind query attempt count is nonzero"),
+        Duration::from_millis(10),
+        Duration::from_millis(40),
+    ))
     .execute()
     .await
-    .error_with_slug("service-bind-query-failed")?
-    .parse_result::<BindResult>(7)
-    .error_with_slug("service-bind-result-parse-failed")?;
-
+    .error_with_slug("service-bind-query-failed")?;
+    otel_wasi::main_attribute!(
+        "db.query.attempts" = response.attempts().get() as i64,
+        "db.query.retries" = response.attempts().get().saturating_sub(1) as i64,
+    );
+    let result = response
+        .transaction::<BindResult>(7)
+        .error_with_slug("service-bind-result-parse-failed")?;
     let result = skir_domain_result!(BindServiceResponse, result);
 
     let service_id = result.service.id.key.to_string();

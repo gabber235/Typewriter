@@ -93,19 +93,52 @@ impl<T> SkirDomainResultExt<T> for Result<T, String> {
     {
         match self {
             Ok(value) => Ok(SkirDomainResult::Value(value)),
-            Err(slug) => {
-                let slug = slug.strip_prefix("An error occurred: ").unwrap_or(&slug);
-                if let Some(response) =
-                    override_constructor(&slug).or_else(|| R::domain_error_from_slug(&slug))
-                {
-                    return Ok(SkirDomainResult::Response(response));
-                }
+            Err(slug) => domain_response(slug.as_str(), override_constructor),
+        }
+    }
+}
 
-                Err(otel_wasi::Error::new(
-                    "skir-domain-error-unknown",
-                    format!("unknown SKIR domain error slug `{slug}`"),
-                ))
+impl<T> SkirDomainResultExt<T> for surrealdb_component_sdk::TransactionOutcome<T> {
+    fn into_skir_domain_result<R>(self) -> Result<SkirDomainResult<T, R>, otel_wasi::Error>
+    where
+        R: SkirResponse,
+    {
+        self.into_skir_domain_result_with(|_| None)
+    }
+
+    fn into_skir_domain_result_with<R, F>(
+        self,
+        override_constructor: F,
+    ) -> Result<SkirDomainResult<T, R>, otel_wasi::Error>
+    where
+        R: SkirResponse,
+        F: FnOnce(&str) -> Option<R>,
+    {
+        match self {
+            surrealdb_component_sdk::TransactionOutcome::Committed(value) => {
+                Ok(SkirDomainResult::Value(value))
+            }
+            surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {
+                domain_response(error.message(), override_constructor)
             }
         }
     }
+}
+
+fn domain_response<T, R, F>(
+    slug: &str,
+    override_constructor: F,
+) -> Result<SkirDomainResult<T, R>, otel_wasi::Error>
+where
+    R: SkirResponse,
+    F: FnOnce(&str) -> Option<R>,
+{
+    if let Some(response) = override_constructor(slug).or_else(|| R::domain_error_from_slug(slug)) {
+        return Ok(SkirDomainResult::Response(response));
+    }
+
+    Err(otel_wasi::Error::new(
+        "skir-domain-error-unknown",
+        format!("unknown SKIR domain error slug `{slug}`"),
+    ))
 }

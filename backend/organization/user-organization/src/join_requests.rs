@@ -193,7 +193,7 @@ async fn handle_auto_accept(
     .execute()
     .await
     .error_with_slug("join-request-auto-accept-query-failed")?
-    .parse_result::<OrganizationMemberProjection>(9)
+    .transaction::<OrganizationMemberProjection>(9)
     .error_with_slug("join-request-auto-accept-result-parse-failed")?;
 
     let member = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -290,7 +290,7 @@ async fn handle_manual_accept(
     .execute()
     .await
     .error_with_slug("join-request-create-query-failed")?
-    .parse_result::<JoinRequestProjection>(9)
+    .transaction::<JoinRequestProjection>(9)
     .error_with_slug("join-request-create-result-parse-failed")?;
 
     let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);

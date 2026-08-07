@@ -1,9 +1,22 @@
-package seamlezz:surrealdb@0.3.0;
+package seamlezz:surrealdb@0.4.0;
 
 interface call {
   use wasmcloud:observability/propagation@0.1.0.{trace-context};
 
-  query: async func(parent-context: option<trace-context>, query: string, params: list<tuple<string, list<u8>>>) -> list<result<list<u8>, string>>;
+  record query-failure {
+    message: string,
+  }
+
+  variant statement-error {
+    domain(string),
+    retryable-conflict(string),
+    not-executed(string),
+    failure(string),
+  }
+
+  type statement-result = result<list<u8>, statement-error>;
+
+  query: async func(parent-context: option<trace-context>, query: string, params: list<tuple<string, list<u8>>>) -> result<list<statement-result>, query-failure>;
 
   variant live-action {
     create,

@@ -32,7 +32,7 @@ spec:
             host: PLACEHOLDER_API_HOST
         - namespace: seamlezz
           package: surrealdb
-          version: "0.3.0"
+          version: "0.4.0"
           interfaces: [call]
           secretFrom:
             - name: surrealdb-credentials-service-identity

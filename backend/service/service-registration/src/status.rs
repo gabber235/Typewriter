@@ -74,7 +74,7 @@ pub async fn handle_status(
     .execute()
     .await
     .error_with_slug("service-status-query-failed")?
-    .parse_result::<StatusQueryResult>(1)
+    .transaction::<StatusQueryResult>(1)
     .error_with_slug("service-status-result-parse-failed")?;
 
     let status = skir_domain_result!(GetServiceStatusResponse, result);

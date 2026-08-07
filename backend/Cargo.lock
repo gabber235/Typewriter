@@ -2960,8 +2960,8 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "surrealdb-component-sdk"
-version = "0.8.1"
-source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=8b09a32e5505704df3c890822fdcffffd18c8588#8b09a32e5505704df3c890822fdcffffd18c8588"
+version = "0.9.0"
+source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=cb3083cba338bc485f3491ef9acb233be92b22fb#cb3083cba338bc485f3491ef9acb233be92b22fb"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2969,8 +2969,10 @@ dependencies = [
  "serde",
  "serde_cbor",
  "serde_json",
+ "thiserror",
  "wasip3",
  "wit-bindgen 0.58.0",
+ "wstd",
 ]
 
 [[package]]

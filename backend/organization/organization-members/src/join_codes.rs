@@ -166,11 +166,11 @@ pub async fn handle_generate(
     .execute()
     .await
     .error_with_slug("join-code-generate-query-failed")?
-    .parse_result::<JoinCodeRecord>(5)
+    .transaction::<JoinCodeRecord>(5)
     .error_with_slug("join-code-generate-result-parse-failed")?;
 
-    if let Err(slug) = &result {
-        main_attribute!("join_code.outcome" = slug.clone());
+    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &result {
+        main_attribute!("join_code.outcome" = error.message().to_owned());
     }
 
     let row = wasmcloud_utils::skir_domain_result!(GenerateOrganizationJoinCodeResponse, result,

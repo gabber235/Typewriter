@@ -1837,6 +1837,15 @@ dependencies = [
 
 [[package]]
 name = "fastrand"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e51093e27b0797c359783294ca4f0a911c270184cb10f85783b118614a1501be"
+dependencies = [
+ "instant",
+]
+
+[[package]]
+name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
@@ -1993,6 +2002,21 @@ name = "futures-io"
 version = "0.3.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4577ecaa3c4f96589d473f679a71b596316f6641bc350038b962a5daf0085d7a"
+
+[[package]]
+name = "futures-lite"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49a9d51ce47660b1e808d3c990b4709f2f415d928835a17dfd16991515c46bce"
+dependencies = [
+ "fastrand 1.9.0",
+ "futures-core",
+ "futures-io",
+ "memchr",
+ "parking",
+ "pin-project-lite",
+ "waker-fn",
+]
 
 [[package]]
 name = "futures-macro"
@@ -2765,6 +2789,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879f10e63c20629ecabbb64a8010319738c66a5cd0c29b02d63d272b03751d01"
 dependencies = [
  "generic-array 0.14.7",
+]
+
+[[package]]
+name = "instant"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -3802,7 +3835,7 @@ version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "135ace3a761e564ec88c03a77317a7c6b80bb7f7135ef2544dbe054243b89737"
 dependencies = [
- "fastrand",
+ "fastrand 2.5.0",
  "phf_shared 0.13.1",
 ]
 
@@ -5384,8 +5417,8 @@ dependencies = [
 
 [[package]]
 name = "surrealdb-component-sdk"
-version = "0.8.1"
-source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=8b09a32e5505704df3c890822fdcffffd18c8588#8b09a32e5505704df3c890822fdcffffd18c8588"
+version = "0.9.0"
+source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=cb3083cba338bc485f3491ef9acb233be92b22fb#cb3083cba338bc485f3491ef9acb233be92b22fb"
 dependencies = [
  "anyhow",
  "chrono",
@@ -5393,8 +5426,10 @@ dependencies = [
  "serde",
  "serde_cbor",
  "serde_json",
+ "thiserror",
  "wasip3",
  "wit-bindgen 0.58.0",
+ "wstd",
 ]
 
 [[package]]
@@ -5495,9 +5530,8 @@ dependencies = [
 
 [[package]]
 name = "surrealdb-host-adapter"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0550294cc6d870352600b0818d3468a18d5745da8b14b306c01590bedbb41a23"
+version = "0.8.0"
+source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=cb3083c#cb3083cba338bc485f3491ef9acb233be92b22fb"
 dependencies = [
  "anyhow",
  "rust_decimal",
@@ -5720,7 +5754,7 @@ version = "3.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
- "fastrand",
+ "fastrand 2.5.0",
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
@@ -6436,6 +6470,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "051eb1abcf10076295e815102942cc58f9d5e3b4560e46e53c21e8ff6f3af7b1"
 
 [[package]]
+name = "waker-fn"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "317211a0dc0ceedd78fb2ca9a44aed3d7b9b26f81870d485c07122b4350673b7"
+
+[[package]]
 name = "walkdir"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6469,7 +6509,7 @@ dependencies = [
  "cap-std 3.4.5",
  "chrono",
  "etcetera",
- "fastrand",
+ "fastrand 2.5.0",
  "futures",
  "hostname",
  "http",
@@ -6659,7 +6699,7 @@ dependencies = [
 [[package]]
 name = "wasmcloud-plugin-surrealdb"
 version = "2.1.6"
-source = "git+https://github.com/Seamlezz/wasmCloud-host?rev=bb4cda2#bb4cda29483207467ba35da37fb164407a09fe71"
+source = "git+https://github.com/Seamlezz/wasmCloud-host?rev=801a0b0001fef87bbd4305a4e8d37996ab5979b9#801a0b0001fef87bbd4305a4e8d37996ab5979b9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7722,6 +7762,38 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
+
+[[package]]
+name = "wstd"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29b52936db10a79bb724dadd1c2c3aac958e8229dcb1f1c7f2b7044ca9fc6a3a"
+dependencies = [
+ "anyhow",
+ "async-task",
+ "bytes",
+ "futures-lite",
+ "http",
+ "http-body",
+ "http-body-util",
+ "itoa",
+ "pin-project-lite",
+ "serde",
+ "serde_json",
+ "slab",
+ "wasip2",
+ "wstd-macro",
+]
+
+[[package]]
+name = "wstd-macro"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "153db9b65508bf6c2efe26617169840c03671ba5719a35868db7682a5261f7d4"
+dependencies = [
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "wyz"

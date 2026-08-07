@@ -80,7 +80,7 @@ wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "9f43d83c
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "bb4cda2" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "801a0b0001fef87bbd4305a4e8d37996ab5979b9" }
 
 [profile.dev]
 debug = 0

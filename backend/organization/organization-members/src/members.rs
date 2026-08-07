@@ -270,11 +270,11 @@ pub async fn handle_remove(
     .execute()
     .await
     .error_with_slug("member-remove-query-failed")?
-    .parse_result::<RemovedMemberRecord>(9)
+    .transaction::<RemovedMemberRecord>(9)
     .error_with_slug("member-remove-result-parse-failed")?;
 
-    if let Err(slug) = &result {
-        otel_wasi::main_attribute!("member.outcome" = slug.clone());
+    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &result {
+        otel_wasi::main_attribute!("member.outcome" = error.message().to_owned());
     }
     let deleted = wasmcloud_utils::skir_domain_result!(RemoveOrganizationMemberResponse, result,
         "user-not-member-error" => { user_id: user_id.clone() },

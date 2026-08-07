@@ -222,7 +222,7 @@ impl FixtureExtension for TypewriterDatabase {
             })?;
         }
         context.plugin(plugin);
-        let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.3.0");
+        let mut interface = WitInterface::from("seamlezz:surrealdb/call@0.4.0");
         interface.config.insert("url".into(), key.url.clone());
         interface
             .config

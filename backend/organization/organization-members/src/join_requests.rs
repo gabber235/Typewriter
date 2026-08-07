@@ -230,11 +230,11 @@ pub async fn handle_approve(
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
-    .parse_result::<ApprovalRecord>(11)
+    .transaction::<ApprovalRecord>(11)
     .error_with_slug("join-request-approve-result-parse-failed")?;
 
-    if let Err(slug) = &result {
-        otel_wasi::main_attribute!("join_request.outcome" = slug.clone());
+    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &result {
+        otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
     }
     let approved = wasmcloud_utils::skir_domain_result!(ApproveOrganizationJoinRequestResponse, result,
         "request-not-found-error" => { request_id: request_id.clone() },
@@ -326,11 +326,11 @@ pub async fn handle_decline(
     .execute()
     .await
     .error_with_slug("join-request-decline-query-failed")?
-    .parse_result::<Option<JoinRequestProjection>>(3)
+    .transaction::<Option<JoinRequestProjection>>(3)
     .error_with_slug("join-request-decline-result-parse-failed")?;
 
-    if let Err(slug) = &row {
-        otel_wasi::main_attribute!("join_request.outcome" = slug.clone());
+    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &row {
+        otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
     }
 
     let row = wasmcloud_utils::skir_domain_result!(DeclineOrganizationJoinRequestResponse, row,
