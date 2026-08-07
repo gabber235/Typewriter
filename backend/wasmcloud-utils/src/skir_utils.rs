@@ -107,6 +107,18 @@ impl From<&RecordId> for surrealdb_component_sdk::RecordId {
     }
 }
 
+impl From<RecordId> for surrealdb_types::RecordId {
+    fn from(value: RecordId) -> Self {
+        surrealdb_types::RecordId::new(value.table, value.key)
+    }
+}
+
+impl From<&RecordId> for surrealdb_types::RecordId {
+    fn from(value: &RecordId) -> Self {
+        value.clone().into()
+    }
+}
+
 /// Converts Skir record ID collections into SurrealDB record IDs.
 pub trait IntoSurrealRecordIds {
     fn into_surreal_record_ids(self) -> Vec<surrealdb_component_sdk::RecordId>;
@@ -168,6 +180,60 @@ impl From<RecordIdValue> for surrealdb_component_sdk::RecordIdValue {
     }
 }
 
+impl From<RecordIdKey> for surrealdb_types::RecordIdKey {
+    fn from(value: RecordIdKey) -> Self {
+        match value {
+            RecordIdKey::Unknown(_) => surrealdb_types::RecordIdKey::String(String::new()),
+            RecordIdKey::Number(number) => surrealdb_types::RecordIdKey::Number(number),
+            RecordIdKey::String(string) => surrealdb_types::RecordIdKey::String(string),
+            RecordIdKey::Uuid(uuid) => surrealdb_types::RecordIdKey::Uuid(
+                uuid.parse()
+                    .expect("Skir RecordIdKey::Uuid must contain a valid UUID"),
+            ),
+            RecordIdKey::Array(array) => surrealdb_types::RecordIdKey::Array(
+                array
+                    .into_iter()
+                    .map(surrealdb_types::Value::from)
+                    .collect(),
+            ),
+            RecordIdKey::Object(object) => surrealdb_types::RecordIdKey::Object(
+                object
+                    .into_iter()
+                    .map(|item| (item.key, surrealdb_types::Value::from(item.value)))
+                    .collect(),
+            ),
+        }
+    }
+}
+
+impl From<RecordIdValue> for surrealdb_types::Value {
+    fn from(value: RecordIdValue) -> Self {
+        match value {
+            RecordIdValue::Unknown(_) | RecordIdValue::Null => surrealdb_types::Value::Null,
+            RecordIdValue::Boolean(boolean) => surrealdb_types::Value::Bool(boolean),
+            RecordIdValue::Number(number) => {
+                surrealdb_types::Value::Number(surrealdb_types::Number::Int(number))
+            }
+            RecordIdValue::Float(float) => {
+                surrealdb_types::Value::Number(surrealdb_types::Number::Float(float))
+            }
+            RecordIdValue::String(string) => surrealdb_types::Value::String(string),
+            RecordIdValue::Array(array) => surrealdb_types::Value::Array(
+                array
+                    .into_iter()
+                    .map(surrealdb_types::Value::from)
+                    .collect(),
+            ),
+            RecordIdValue::Object(object) => surrealdb_types::Value::Object(
+                object
+                    .into_iter()
+                    .map(|item| (item.key, surrealdb_types::Value::from(item.value)))
+                    .collect(),
+            ),
+        }
+    }
+}
+
 // =============================================================================
 // Surreal → Skir
 // =============================================================================
@@ -184,6 +250,22 @@ impl From<surrealdb_component_sdk::RecordId> for RecordId {
 
 impl From<&surrealdb_component_sdk::RecordId> for RecordId {
     fn from(value: &surrealdb_component_sdk::RecordId) -> Self {
+        value.clone().into()
+    }
+}
+
+impl From<surrealdb_types::RecordId> for RecordId {
+    fn from(value: surrealdb_types::RecordId) -> Self {
+        RecordId {
+            table: value.table.into_string(),
+            key: value.key.into(),
+            _unrecognized: None,
+        }
+    }
+}
+
+impl From<&surrealdb_types::RecordId> for RecordId {
+    fn from(value: &surrealdb_types::RecordId) -> Self {
         value.clone().into()
     }
 }
@@ -251,6 +333,62 @@ impl From<surrealdb_component_sdk::RecordIdValue> for RecordIdValue {
                     .collect();
                 RecordIdValue::Object(KeyedVec::new(items))
             }
+        }
+    }
+}
+
+impl From<surrealdb_types::RecordIdKey> for RecordIdKey {
+    fn from(value: surrealdb_types::RecordIdKey) -> Self {
+        match value {
+            surrealdb_types::RecordIdKey::Number(number) => RecordIdKey::Number(number),
+            surrealdb_types::RecordIdKey::String(string) => RecordIdKey::String(string),
+            surrealdb_types::RecordIdKey::Uuid(uuid) => RecordIdKey::Uuid(uuid.to_string()),
+            surrealdb_types::RecordIdKey::Array(array) => {
+                RecordIdKey::Array(array.into_iter().map(Into::into).collect())
+            }
+            surrealdb_types::RecordIdKey::Object(object) => {
+                let items = object
+                    .into_iter()
+                    .map(|(key, value)| ObjectRecordIdKey {
+                        key,
+                        value: value.into(),
+                        _unrecognized: None,
+                    })
+                    .collect();
+                RecordIdKey::Object(KeyedVec::new(items))
+            }
+            surrealdb_types::RecordIdKey::Range(_) => RecordIdKey::Unknown(None),
+        }
+    }
+}
+
+impl From<surrealdb_types::Value> for RecordIdValue {
+    fn from(value: surrealdb_types::Value) -> Self {
+        match value {
+            surrealdb_types::Value::Null => RecordIdValue::Null,
+            surrealdb_types::Value::Bool(boolean) => RecordIdValue::Boolean(boolean),
+            surrealdb_types::Value::Number(surrealdb_types::Number::Int(number)) => {
+                RecordIdValue::Number(number)
+            }
+            surrealdb_types::Value::Number(surrealdb_types::Number::Float(float)) => {
+                RecordIdValue::Float(float)
+            }
+            surrealdb_types::Value::String(string) => RecordIdValue::String(string),
+            surrealdb_types::Value::Array(array) => {
+                RecordIdValue::Array(array.into_iter().map(Into::into).collect())
+            }
+            surrealdb_types::Value::Object(object) => {
+                let items = object
+                    .into_iter()
+                    .map(|(key, value)| ObjectRecordIdValue {
+                        key,
+                        value: value.into(),
+                        _unrecognized: None,
+                    })
+                    .collect();
+                RecordIdValue::Object(KeyedVec::new(items))
+            }
+            _ => RecordIdValue::Unknown(None),
         }
     }
 }
@@ -392,5 +530,39 @@ mod tests {
         assert_eq!(ids.invalid_tables("user"), ["service", "zebra"]);
         assert_eq!(ids.as_slice().invalid_tables("user"), ["service", "zebra"]);
         assert!(Vec::<RecordId>::new().invalid_tables("user").is_empty());
+    }
+
+    #[test]
+    fn surrealdb_types_record_id_round_trips_supported_values() {
+        let original = RecordId {
+            table: "user".to_owned(),
+            key: RecordIdKey::Object(KeyedVec::new(vec![ObjectRecordIdKey {
+                key: "parts".to_owned(),
+                value: RecordIdValue::Array(vec![
+                    RecordIdValue::Number(42),
+                    RecordIdValue::Boolean(true),
+                    RecordIdValue::String("value".to_owned()),
+                ]),
+                _unrecognized: None,
+            }])),
+            _unrecognized: None,
+        };
+
+        let surreal = surrealdb_types::RecordId::from(original.clone());
+
+        assert_eq!(RecordId::from(surreal), original);
+    }
+
+    #[test]
+    fn surrealdb_types_record_id_round_trips_uuid_keys() {
+        let original = RecordId {
+            table: "user".to_owned(),
+            key: RecordIdKey::Uuid("019fd869-a293-7020-8745-24ba2ca92541".to_owned()),
+            _unrecognized: None,
+        };
+
+        let surreal = surrealdb_types::RecordId::from(original.clone());
+
+        assert_eq!(RecordId::from(surreal), original);
     }
 }

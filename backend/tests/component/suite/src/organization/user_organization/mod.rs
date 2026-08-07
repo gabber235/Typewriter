@@ -81,18 +81,34 @@ async fn create_organization_sets_up_roles_membership_and_notification(
         )
         .await?;
 
-    assert!(
-        matches!(response, CreateOrganizationResponse::Success(organization) if organization.name == "alpha")
-    );
+    let organization = match response {
+        CreateOrganizationResponse::Success(organization) => organization,
+        response => anyhow::bail!("unexpected create organization response: {response:?}"),
+    };
+    assert_eq!(organization.name, "alpha");
     let state = database
-        .query_json(
+        .seed(
             r#"
             RETURN {
-                role_names: array::sort(SELECT VALUE name FROM organization_role WHERE organization = organization:alpha),
-                founder_roles: array::sort(SELECT VALUE roles.name FROM member_of WHERE in = user:alice AND out = organization:alpha)[0]
+                role_names: array::sort(
+                    SELECT VALUE name
+                    FROM organization_role
+                    WHERE organization = $organization
+                ),
+                founder_roles: array::sort(
+                    SELECT VALUE roles.name
+                    FROM member_of
+                    WHERE in = user:alice
+                        AND out = $organization
+                )[0]
             }
             "#,
         )
+        .bind(
+            "organization",
+            surrealdb_types::RecordId::from(organization.organization_id),
+        )?
+        .query_json()
         .await?;
     assert_jm!(state, {
         "role_names": ["founder", "writer"],
