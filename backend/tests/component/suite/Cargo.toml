@@ -21,3 +21,4 @@ json-matcher.workspace = true
 tokio.workspace = true
 typewriter-component-test.workspace = true
 wasmcloud-utils.workspace = true
+surrealdb-types.workspace = true

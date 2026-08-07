@@ -1,25 +1,27 @@
 [package]
 name = "wasmcloud-utils"
 version = "0.0.1"
-edition = { workspace = true }
-rust-version = { workspace = true }
+edition.workspace = true
+rust-version.workspace = true
 description = "Utilities for wasmcloud components"
-repository = { workspace = true }
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-serde = { workspace = true }
-skir-client = { workspace = true }
-surrealdb-component-sdk = { workspace = true }
-wasmcloud-utils-macros = { workspace = true }
+serde.workspace = true
+skir-client.workspace = true
+surrealdb-types.workspace = true
+surrealdb-component-sdk.workspace = true
+wasmcloud-utils-macros.workspace = true
 
-opentelemetry = { workspace = true }
-otel-wasi = { workspace = true }
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
-wit-bindgen = { workspace = true }
+opentelemetry.workspace = true
+otel-wasi.workspace = true
+tracing.workspace = true
+tracing-opentelemetry.workspace = true
+wit-bindgen.workspace = true
+
 
 [dev-dependencies]
-serde_json = { workspace = true }
+serde_json.workspace = true

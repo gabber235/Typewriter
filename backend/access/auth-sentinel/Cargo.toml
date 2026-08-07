@@ -1,16 +1,16 @@
 [package]
 name = "auth-sentinel"
 version = "0.2.0"
-edition = { workspace = true }
-rust-version = { workspace = true }
-repository = { workspace = true }
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-otel-wasi = { workspace = true }
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
-wasmcloud-utils = { workspace = true }
-wit-bindgen = { workspace = true }
+otel-wasi.workspace = true
+tracing.workspace = true
+tracing-opentelemetry.workspace = true
+wasmcloud-utils.workspace = true
+wit-bindgen.workspace = true

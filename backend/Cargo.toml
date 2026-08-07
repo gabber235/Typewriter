@@ -1,19 +1,19 @@
 [workspace]
 resolver = "3"
 members = [
-  "access/auth-callout",
-  "access/auth-sentinel",
-  "access/auth-typewriter-permissions",
-  "organization/organization-members",
-  "organization/organization-roles",
-  "organization/user-organization",
-  "service/service-identity",
-  "service/service-registration",
-  "testing/component-test-echo",
-  "testing/component-test-messaging",
-  "testing/component-test-responder",
-  "wasmcloud-utils",
-  "wasmcloud-utils-macros"
+    "access/auth-callout",
+    "access/auth-sentinel",
+    "access/auth-typewriter-permissions",
+    "organization/organization-members",
+    "organization/organization-roles",
+    "organization/user-organization",
+    "service/service-identity",
+    "service/service-registration",
+    "testing/component-test-echo",
+    "testing/component-test-messaging",
+    "testing/component-test-responder",
+    "wasmcloud-utils",
+    "wasmcloud-utils-macros",
 ]
 
 [workspace.package]
@@ -47,7 +47,10 @@ otel-wasi = { git = "https://github.com/Seamlezz/otel-wasi", rev = "1035d89de8ff
 tracing = "0.1"
 tracing-opentelemetry = "0.33"
 
-wit-bindgen = { version = "0.58", features = ["async-spawn", "inter-task-wakeup"] }
+wit-bindgen = { version = "0.58", features = [
+    "async-spawn",
+    "inter-task-wakeup",
+] }
 
 convert_case = "0.6"
 proc-macro2 = "1"
@@ -55,5 +58,9 @@ quote = "1"
 rstest = "0.26.1"
 syn = { version = "2", features = ["full"] }
 
+surrealdb-types = "3.2.4"
+
 [workspace.metadata.dylint]
-libraries = [{ git = "https://github.com/Seamlezz/otel-wasi", pattern = "otel-wasi-dylint" }]
+libraries = [
+    { git = "https://github.com/Seamlezz/otel-wasi", pattern = "otel-wasi-dylint" },
+]

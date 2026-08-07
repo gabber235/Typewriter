@@ -44,7 +44,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 json-matcher = "0.1"
 skir-client = "0.1"
-surrealdb = { version = "3.2.3", features = ["kv-mem"] }
+surrealdb = { version = "3.2.4", features = ["kv-mem"] }
+surrealdb-types = "3.2.4"
 sha2 = "0.10"
 syn = { version = "2", features = ["full", "extra-traits"] }
 thiserror = "2"

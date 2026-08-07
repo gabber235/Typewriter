@@ -1,18 +1,18 @@
 [package]
 name = "organization-roles"
 version = "0.2.0"
-edition = { workspace = true }
-rust-version = { workspace = true }
-repository = { workspace = true }
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-surrealdb-component-sdk = { workspace = true }
-wasmcloud-utils = { workspace = true }
-wit-bindgen = { workspace = true }
-opentelemetry = { workspace = true }
-otel-wasi = { workspace = true }
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
+surrealdb-component-sdk.workspace = true
+wasmcloud-utils.workspace = true
+wit-bindgen.workspace = true
+opentelemetry.workspace = true
+otel-wasi.workspace = true
+tracing.workspace = true
+tracing-opentelemetry.workspace = true
