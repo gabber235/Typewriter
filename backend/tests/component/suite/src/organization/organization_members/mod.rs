@@ -222,7 +222,7 @@ async fn member_update_keeps_protected_founder_role(
         .await?;
 
     let UpdateOrganizationMemberRolesResponse::Success(member) = response else {
-        anyhow::bail!("expected member update success")
+        anyhow::bail!("expected member update success, received {response:?}")
     };
     let mut names = member
         .roles
@@ -231,6 +231,92 @@ async fn member_update_keeps_protected_founder_role(
         .collect::<Vec<_>>();
     names.sort_unstable();
     assert_eq!(names, ["founder", "writer"]);
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn member_update_returns_precise_validation_errors_without_state_changes(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    seed_organization(&database).await?;
+    let writer = role_key(&database, "writer").await?;
+    let founder = role_key(&database, "founder").await?;
+
+    let response = context
+        .messaging()?
+        .request_skir(
+            "typewriter.from.user.founder.organization.alpha.members.update",
+            &UpdateOrganizationMemberRolesRequest {
+                user_id: skir_record_id("user", "member"),
+                role_ids: vec![
+                    skir_record_id("organization_role", &writer),
+                    skir_record_id("organization_role", "missing"),
+                ],
+                _unrecognized: None,
+            },
+            UpdateOrganizationMemberRolesRequest::serializer(),
+            UpdateOrganizationMemberRolesResponse::serializer(),
+            Duration::from_secs(2),
+            UnrecognizedValues::Drop,
+        )
+        .await?;
+    let UpdateOrganizationMemberRolesResponse::RolesNotFoundError(error) = response else {
+        anyhow::bail!("expected missing role error, received {response:?}")
+    };
+    assert_eq!(error.role_ids.len(), 1);
+    assert_eq!(error.role_ids[0].key.to_string(), "missing");
+
+    let response = context
+        .messaging()?
+        .request_skir(
+            "typewriter.from.user.founder.organization.alpha.members.update",
+            &UpdateOrganizationMemberRolesRequest {
+                user_id: skir_record_id("user", "member"),
+                role_ids: vec![skir_record_id("organization_role", &founder)],
+                _unrecognized: None,
+            },
+            UpdateOrganizationMemberRolesRequest::serializer(),
+            UpdateOrganizationMemberRolesResponse::serializer(),
+            Duration::from_secs(2),
+            UnrecognizedValues::Drop,
+        )
+        .await?;
+    let UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(error) = response else {
+        anyhow::bail!("expected protected role error, received {response:?}")
+    };
+    assert_eq!(error.role_ids.len(), 1);
+    assert_eq!(error.role_ids[0].key.to_string(), founder);
+
+    let response = context
+        .messaging()?
+        .request_skir(
+            "typewriter.from.user.founder.organization.alpha.members.update",
+            &UpdateOrganizationMemberRolesRequest {
+                user_id: skir_record_id("user", "missing"),
+                role_ids: vec![skir_record_id("organization_role", &writer)],
+                _unrecognized: None,
+            },
+            UpdateOrganizationMemberRolesRequest::serializer(),
+            UpdateOrganizationMemberRolesResponse::serializer(),
+            Duration::from_secs(2),
+            UnrecognizedValues::Drop,
+        )
+        .await?;
+    assert!(matches!(
+        response,
+        UpdateOrganizationMemberRolesResponse::UserNotFoundError(_)
+    ));
+    assert_jm!(
+        database
+            .query_json(
+                "SELECT VALUE roles.name FROM ONLY member_of WHERE in = user:member AND out = organization:alpha FETCH roles"
+            )
+            .await?,
+        ["writer"]
+    );
     Ok(())
 }
 

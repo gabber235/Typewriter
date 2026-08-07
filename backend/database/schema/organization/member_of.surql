@@ -24,10 +24,10 @@ DEFINE EVENT OVERWRITE guard_founder_role_holder ON member_of WHEN $event IN ["D
     LET $org = IF $event = "DELETE" { $before.out } ELSE { $after.out };
     IF (SELECT VALUE id FROM ONLY $org) == NONE { RETURN NONE };
 
-    LET $founder_members = (
-        SELECT VALUE id FROM member_of
-        WHERE out = $org AND fn::organization::roles::has_named_role(roles, "founder")
-    );
+    LET $founder_role = SELECT VALUE id FROM ONLY organization_role
+        WHERE organization = $org AND name = "founder";
+    LET $founder_members = SELECT VALUE id FROM member_of
+        WHERE out = $org AND $founder_role IN roles;
     IF array::len($founder_members) = 0 { THROW "Organization needs at least one founder role holder" };
 };
 
