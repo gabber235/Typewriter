@@ -117,13 +117,17 @@ async fn generate_join_code_persists_and_publishes(
         )
         .await?;
 
-    assert!(
-        matches!(response, GenerateOrganizationJoinCodeResponse::Success(code) if !code.single_use && code.expires_at.is_none())
-    );
+    let GenerateOrganizationJoinCodeResponse::Success(code) = response else {
+        anyhow::bail!("expected join code success, received {response:?}")
+    };
+    assert!(!code.single_use);
+    assert!(code.expires_at.is_none());
     let codes = database
-        .query_json("RETURN count(SELECT id FROM organization_join_code)")
+        .query_json(
+            "RETURN { count: count(SELECT id FROM organization_join_code), never: (SELECT VALUE expires_at IS NULL FROM ONLY organization_join_code) }",
+        )
         .await?;
-    assert_jm!(codes, 1);
+    assert_jm!(codes, { "count": 1, "never": true });
     Ok(())
 }
 
@@ -380,7 +384,7 @@ async fn revoke_join_code_deletes_and_notifies(
         .extension::<DatabaseHandle>()
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
     seed_organization(&database).await?;
-    database.execute("CREATE organization_join_code:invite SET organization = organization:alpha, single_use = false, auto_accept_roles = [], expires_at = NONE").await?;
+    database.execute("CREATE organization_join_code:invite SET organization = organization:alpha, single_use = false, auto_accept_roles = [], expires_at = NULL").await?;
     context.messaging_mock()?.expect_publish("typewriter.to.organization.alpha.members.join_codes.watch").body_matches(|body| {
         matches!(WatchOrganizationJoinCodesResponse::serializer().from_bytes(body, UnrecognizedValues::Drop), Ok(WatchOrganizationJoinCodesResponse::Remove(code)) if code.key.to_string() == "invite")
     });
@@ -399,10 +403,10 @@ async fn revoke_join_code_deletes_and_notifies(
             UnrecognizedValues::Drop,
         )
         .await?;
-    assert!(matches!(
-        response,
-        RevokeOrganizationJoinCodeResponse::Success(_)
-    ));
+    assert!(
+        matches!(response, RevokeOrganizationJoinCodeResponse::Success(_)),
+        "expected revoke success, received {response:?}"
+    );
     assert_jm!(
         database
             .query_json("SELECT id FROM organization_join_code:invite")

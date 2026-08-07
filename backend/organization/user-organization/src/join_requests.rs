@@ -121,7 +121,7 @@ async fn fetch_join_code(
             single_use,
             auto_accept_roles
         FROM $code
-        WHERE expires_at IS NONE OR expires_at > time::now()
+        WHERE expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now()
         "#,
     )
     .bind("code", surrealdb_component_sdk::RecordId::from(code))

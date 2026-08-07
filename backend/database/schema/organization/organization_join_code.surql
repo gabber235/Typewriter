@@ -14,7 +14,7 @@ DEFINE FIELD OVERWRITE created_by ON organization_join_code TYPE option<record<u
     DEFAULT $auth
     READONLY;
 
-DEFINE FIELD OVERWRITE expires_at ON organization_join_code TYPE option<datetime>
+DEFINE FIELD OVERWRITE expires_at ON organization_join_code TYPE none | null | datetime
     DEFAULT time::now() + 7d;
 
 DEFINE FIELD OVERWRITE single_use ON organization_join_code TYPE bool

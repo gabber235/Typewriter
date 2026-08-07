@@ -33,7 +33,7 @@ pub async fn handle_watch(
                 auto_accept_roles
             FROM organization_join_code
             WHERE organization = type::record('organization', $org_id)
-                AND (expires_at IS NONE OR expires_at > time::now())
+                AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now())
                 ORDER BY created_at DESC
         "#,
     )
@@ -146,7 +146,7 @@ pub async fn handle_generate(
             created_by = $actor,
             single_use = $single_use,
             auto_accept_roles = $roles,
-            expires_at = IF $duration = NONE { NONE } ELSE { time::now() + $duration };
+            expires_at = IF $duration = NONE OR $duration = NULL { NULL } ELSE { time::now() + $duration };
 
         RETURN SELECT id, created_at, expires_at, single_use, auto_accept_roles FROM ONLY $code;
         COMMIT TRANSACTION;
@@ -215,7 +215,7 @@ pub async fn handle_revoke(
     );
 
     let deleted = query(
-        "DELETE $code WHERE organization = $org AND (expires_at IS NONE OR expires_at>time::now()) RETURN BEFORE"
+        "DELETE $code WHERE organization = $org AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now()) RETURN BEFORE"
     )
     .bind("code", surrealdb_component_sdk::RecordId::from(&code))
     .bind("org", surrealdb_component_sdk::RecordId::new("organization", org_id))
