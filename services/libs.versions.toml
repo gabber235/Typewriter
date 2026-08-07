@@ -15,6 +15,7 @@ skir = "1.0.16"
 okio = "3.6.0"
 
 nats = "0.9.1"
+cryptography = "0.6.0"
 surrealdb-server = "3.2.3"
 surrealdb-java-sdk = "2.1.2"
 
@@ -60,6 +61,7 @@ skir-client = { module = "build.skir:skir-client", version.ref = "skir"}
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }
+cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-provider-jdk", version.ref = "cryptography" }
 surrealdb-java-sdk = { module = "com.surrealdb:surrealdb", version.ref = "surrealdb-java-sdk" }
 
 kotlin-serialize-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlin-serialize" }

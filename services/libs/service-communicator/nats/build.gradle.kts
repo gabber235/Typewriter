@@ -4,5 +4,6 @@ dependencies {
     api(project(":service-communicator-core"))
     api(libs.kotlin.coroutines.core)
     implementation(libs.nats.core)
+    implementation(libs.cryptography.provider.jdk)
     testImplementation(libs.kotlin.coroutines.test)
 }
