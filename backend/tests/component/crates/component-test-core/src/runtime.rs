@@ -344,12 +344,13 @@ async fn start_messaging_monitors(
     let observation = tokio::spawn(async move {
         loop {
             tokio::select! {
-                changed = observation_stop.changed() => if changed.is_err() || *observation_stop.borrow() { return Ok(()); },
+                biased;
                 event = observations.recv() => match event {
                     Some(event) if event.operation == wash_runtime::plugin::wasmcloud_messaging::ObservedOperation::Publish => observation_mock.record_publish(&event.message),
                     Some(_) => {},
                     None => return Ok(()),
-                }
+                },
+                changed = observation_stop.changed() => if changed.is_err() || *observation_stop.borrow() { return Ok(()); },
             }
         }
     });
@@ -361,11 +362,12 @@ async fn start_messaging_monitors(
         tokio::spawn(async move {
             loop {
                 tokio::select! {
-                    changed = request_stop.changed() => if changed.is_err() || *request_stop.borrow() { return Ok(()); },
+                    biased;
                     request = receiver.recv() => match request {
                         Some(request) => if let Some(response) = request_mock.record_request(&request) { response.send(request).await?; },
                         None => return Ok(()),
-                    }
+                    },
+                    changed = request_stop.changed() => if changed.is_err() || *request_stop.borrow() { return Ok(()); },
                 }
             }
         })
