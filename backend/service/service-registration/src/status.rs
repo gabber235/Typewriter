@@ -52,18 +52,18 @@ pub async fn handle_status(
                 RETURN { organization: $service.organization, token: NONE }
             };
 
-            LET $token = IF $service.existing_token != NONE AND $service.existing_expires_at > time::now() {
+            LET $registration_token = IF $service.existing_token != NONE AND $service.existing_expires_at > time::now() {
                 $service.existing_token
             } ELSE {
                 $new_token
             };
 
             UPDATE type::record('service', $service_id) SET registration = {
-                token: $token,
+                token: $registration_token,
                 expires_at: time::now() + 2m30s
             };
 
-            RETURN { organization: NONE, token: $token };
+            RETURN { organization: NONE, token: $registration_token };
         };
 
         COMMIT TRANSACTION;
@@ -74,7 +74,7 @@ pub async fn handle_status(
     .execute()
     .await
     .error_with_slug("service-status-query-failed")?
-    .parse_result::<StatusQueryResult>(0)
+    .parse_result::<StatusQueryResult>(1)
     .error_with_slug("service-status-result-parse-failed")?;
 
     let status = skir_domain_result!(GetServiceStatusResponse, result);

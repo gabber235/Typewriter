@@ -64,9 +64,11 @@ async fn invalid_registration_token_does_not_bind_service(
     ));
     assert_jm!(
         database
-            .query_json("SELECT organization, registration.token AS token FROM ONLY service:bindable")
+            .query_json(
+                "RETURN { organization_is_none: (SELECT VALUE organization FROM ONLY service:bindable) = NONE, token: (SELECT VALUE registration.token FROM ONLY service:bindable) }",
+            )
             .await?,
-        { "token": "ABCDEFGHIJ" }
+        { "organization_is_none": true, "token": "ABCDEFGHIJ" }
     );
     Ok(())
 }
@@ -147,9 +149,11 @@ async fn valid_registration_binds_service_and_publishes_both_views(
     assert_eq!(success.service_roles.len(), 1);
     assert_jm!(
         database
-            .query_json("SELECT organization, registration FROM ONLY service:bindable")
+            .query_json(
+                "RETURN { organization: (SELECT VALUE organization FROM ONLY service:bindable), registration_is_none: (SELECT VALUE registration FROM ONLY service:bindable) = NONE }",
+            )
             .await?,
-        { "organization": "organization:test_org" }
+        { "organization": "organization:test_org", "registration_is_none": true }
     );
     Ok(())
 }
@@ -196,9 +200,11 @@ async fn unbind_removes_organization_and_publishes_removal(
     assert!(matches!(response, UnbindServiceResponse::Success(_)));
     assert_jm!(
         database
-            .query_json("SELECT organization, registration FROM ONLY service:bound")
+            .query_json(
+                "RETURN { organization_is_none: (SELECT VALUE organization FROM ONLY service:bound) = NONE, registration_is_none: (SELECT VALUE registration FROM ONLY service:bound) = NONE }",
+            )
             .await?,
-        {}
+        { "organization_is_none": true, "registration_is_none": true }
     );
     Ok(())
 }
