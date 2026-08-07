@@ -1,7 +1,11 @@
 package com.typewritermc.realm.schema
 
 import com.surrealdb.Surreal
+import com.surrealdb.signin.BearerCredential
+import com.surrealdb.signin.DatabaseCredential
+import com.surrealdb.signin.NamespaceCredential
 import com.surrealdb.signin.RootCredential
+import com.typewritermc.realm.SURREALDB_EMBEDDED_VERSION
 import com.typewritermc.realm.SURREALDB_SERVER_VERSION
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
@@ -16,42 +20,28 @@ interface RealmDatabaseProvider {
 }
 
 class DatabaseProvider(
-    private val url: String,
-    private val username: String,
-    private val password: String,
-    private val namespace: String,
-    private val database: String,
+    private val configuration: RealmDatabaseConfiguration,
 ) : RealmDatabaseProvider {
-    init {
-        require(url.isNotBlank()) { "Database URL must not be blank" }
-        require(username.isBlank() == password.isBlank()) {
-            "Database username and password must either both be set or both be blank"
-        }
-        require(namespace.isNotBlank()) { "Database namespace must not be blank" }
-        require(database.isNotBlank()) { "Database name must not be blank" }
-    }
-
     context(_: MainSpanScope)
     override fun connect(): Surreal =
         childSpanBlocking("realm.database.connect") { child ->
             withErrorSlug(DATABASE_CONNECT_FAILURE) {
                 child.annotate {
-                    attribute("db.url", url)
-                    attribute("db.namespace", namespace)
-                    attribute("db.database", database)
+                    attribute("db.connection.type", configuration.endpoint.connectionType)
+                    attribute("db.namespace", configuration.namespace)
+                    attribute("db.database", configuration.database)
                 }
                 val db = Surreal()
 
                 try {
-                    db.connect(url)
+                    requireSupportedEmbeddedEngine(configuration.endpoint)
+                    db.connect(configuration.endpoint.connectionString)
                     val serverVersion = db.version()
-                    requireSupportedDatabaseVersion(serverVersion)
+                    requireSupportedDatabaseVersion(serverVersion, configuration.endpoint.expectedVersion)
                     child.annotate { attribute("db.version", serverVersion) }
-                    if (username.isNotBlank()) {
-                        db.signin(RootCredential(username, password))
-                    }
+                    db.authenticate(configuration)
 
-                    db.useNs(namespace).useDb(database)
+                    db.useNs(configuration.namespace).useDb(configuration.database)
                     SchemaMigrator(db).migrate()
                     db
                 } catch (failure: Throwable) {
@@ -62,17 +52,82 @@ class DatabaseProvider(
         }
 }
 
-internal fun requireSupportedDatabaseVersion(version: String) {
+private fun Surreal.authenticate(configuration: RealmDatabaseConfiguration) {
+    val authentication = configuration.authentication
+    when (authentication) {
+        DatabaseAuthentication.None -> {
+        }
+
+        is DatabaseAuthentication.Root -> {
+            signin(RootCredential(authentication.username, authentication.password))
+        }
+
+        is DatabaseAuthentication.Namespace -> {
+            signin(
+                NamespaceCredential(
+                    authentication.username,
+                    authentication.password,
+                    configuration.namespace,
+                ),
+            )
+        }
+
+        is DatabaseAuthentication.Database -> {
+            signin(
+                DatabaseCredential(
+                    authentication.username,
+                    authentication.password,
+                    configuration.namespace,
+                    configuration.database,
+                ),
+            )
+        }
+
+        is DatabaseAuthentication.Bearer -> {
+            signin(BearerCredential(authentication.token))
+        }
+    }
+}
+
+internal fun requireSupportedEmbeddedEngine(endpoint: DatabaseEndpoint) {
+    if (endpoint !is DatabaseEndpoint.Embedded.RocksDb) return
+    throw UnsupportedDatabaseEngineException("RocksDB is not available in the configured SurrealDB Java SDK")
+}
+
+internal fun requireSupportedDatabaseVersion(
+    version: String,
+    expected: String,
+) {
     val normalizedVersion = version.removePrefix("surrealdb-").substringBefore('+')
-    if (normalizedVersion != SURREALDB_SERVER_VERSION) {
+    if (normalizedVersion != expected) {
         throw UnsupportedDatabaseVersionException(
-            expected = SURREALDB_SERVER_VERSION,
+            expected = expected,
             actual = normalizedVersion,
         )
     }
 }
 
+private val DatabaseEndpoint.expectedVersion: String
+    get() =
+        when (this) {
+            is DatabaseEndpoint.Remote -> SURREALDB_SERVER_VERSION
+            is DatabaseEndpoint.Embedded -> SURREALDB_EMBEDDED_VERSION
+        }
+
+private val DatabaseEndpoint.connectionType: String
+    get() =
+        when (this) {
+            is DatabaseEndpoint.Remote -> "remote"
+            is DatabaseEndpoint.Embedded.Memory -> "embedded.memory"
+            is DatabaseEndpoint.Embedded.SurrealKv -> "embedded.surrealkv"
+            is DatabaseEndpoint.Embedded.RocksDb -> "embedded.rocksdb"
+        }
+
 internal class UnsupportedDatabaseVersionException(
     expected: String,
     actual: String,
 ) : IllegalStateException("Realm requires SurrealDB $expected but connected to $actual")
+
+internal class UnsupportedDatabaseEngineException(
+    message: String,
+) : IllegalStateException(message)

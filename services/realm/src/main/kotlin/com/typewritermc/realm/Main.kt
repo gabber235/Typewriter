@@ -6,15 +6,11 @@ package com.typewritermc.realm
 import ch.qos.logback.classic.Level
 import com.surrealdb.Surreal
 import com.typewritermc.realm.RealmQualifier.DATABASE
-import com.typewritermc.realm.RealmQualifier.DB_DATABASE
-import com.typewritermc.realm.RealmQualifier.DB_NAMESPACE
-import com.typewritermc.realm.RealmQualifier.DB_PASSWORD
-import com.typewritermc.realm.RealmQualifier.DB_URL
-import com.typewritermc.realm.RealmQualifier.DB_USERNAME
 import com.typewritermc.realm.registrar.RealmCredentialStorage
 import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseProvider
+import com.typewritermc.realm.schema.databaseConfiguration
 import com.typewritermc.realm.shell.RealmConsoleLogOutput
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
@@ -73,26 +69,15 @@ fun main() {
     val openTelemetry = realmOpenTelemetry(consoleOutput)
     val logback = installOpenTelemetryLogback(openTelemetry, realmDiagnosticLevel())
     val registrarConfiguration = realmRegistrarConfiguration()
+    val databaseConfiguration = RealmSettings.system().databaseConfiguration()
     val module =
         module {
             single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
             single { applicationScope } onClose { it?.cancel() }
             single { consoleOutput }
 
-            single(named(DB_URL)) { getProperty("REALM_DB_URL", "ws://localhost:8235") }
-            single(named(DB_USERNAME)) { getProperty("REALM_DB_USERNAME", "root") }
-            single(named(DB_PASSWORD)) { getProperty("REALM_DB_PASSWORD", "root") }
-            single(named(DB_NAMESPACE)) { getProperty("REALM_DB_NAMESPACE", "typewriter") }
-            single(named(DB_DATABASE)) { getProperty("REALM_DB_DATABASE", "realm") }
-            single<RealmDatabaseProvider> {
-                DatabaseProvider(
-                    url = get(named(DB_URL)),
-                    username = get(named(DB_USERNAME)),
-                    password = get(named(DB_PASSWORD)),
-                    namespace = get(named(DB_NAMESPACE)),
-                    database = get(named(DB_DATABASE)),
-                )
-            }
+            single { databaseConfiguration }
+            single<RealmDatabaseProvider> { DatabaseProvider(get()) }
             single { Realm(get(named(DATABASE)), get(), get(), get(), get()) }
             single {
                 Cbor {

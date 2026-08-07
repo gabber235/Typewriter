@@ -16,6 +16,12 @@ val RealmSettingsTest by testSuite {
         settings.get("OTEL_EXPORTER_OTLP_ENDPOINT") shouldBe "https://otlp.local.seamlezz.net"
         settings.get("OTEL_TRACES_SAMPLER") shouldBe "always_on"
         settings.get("OTEL_TRACES_SAMPLER_ARG") shouldBe "1.0"
+        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
+        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
+        settings.get("REALM_DB_PATH") shouldBe "database/realm"
+        settings.get("REALM_DB_NAMESPACE") shouldBe "typewriter"
+        settings.get("REALM_DB_DATABASE") shouldBe "realm"
+        settings.get("REALM_DB_AUTHENTICATION") shouldBe "none"
     }
 
     test("production profile supplies production service settings") {

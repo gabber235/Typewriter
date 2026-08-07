@@ -65,6 +65,7 @@ buildConfig {
     }
     buildConfigField<String>("REALM_VERSION", provider { "${project.version}" })
     buildConfigField<String>("SURREALDB_SERVER_VERSION", libs.versions.surrealdb.server)
+    buildConfigField<String>("SURREALDB_EMBEDDED_VERSION", libs.versions.surrealdb.embedded)
 }
 
 val verifyPatchIndex =
