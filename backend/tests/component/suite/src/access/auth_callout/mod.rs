@@ -108,12 +108,12 @@ fn auth_request(password: Option<String>) -> anyhow::Result<Vec<u8>> {
         exp: None,
         iat: 0,
         id: None,
-        iss: String::new(),
+        iss: server.public_key(),
         jti: String::new(),
         name: None,
         nats: payload,
         nbf: None,
-        sub: String::new(),
+        sub: user.public_key(),
     };
     Ok(claims.encode(&server)?.into_bytes())
 }
@@ -122,11 +122,29 @@ async fn authorize(
     context: &TestContext<AuthCallout>,
     body: Vec<u8>,
 ) -> anyhow::Result<Claims<AuthResponse>> {
+    let response = authorize_raw(context, body).await?;
+    Claims::decode(std::str::from_utf8(&response)?)
+}
+
+async fn authorize_raw(
+    context: &TestContext<AuthCallout>,
+    body: Vec<u8>,
+) -> anyhow::Result<Vec<u8>> {
     let response = context
         .messaging()?
         .request("$SYS.REQ.USER.AUTH", body, Duration::from_secs(2))
         .await?;
-    Claims::decode(std::str::from_utf8(&response)?)
+    Ok(response)
+}
+
+fn authorization_payload(response: &[u8]) -> anyhow::Result<serde_json::Value> {
+    let encoded = std::str::from_utf8(response)?;
+    let payload = encoded
+        .split('.')
+        .nth(1)
+        .ok_or_else(|| anyhow::anyhow!("authorization response has no payload"))?;
+    let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(payload)?;
+    Ok(serde_json::from_slice(&decoded)?)
 }
 
 fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
@@ -193,10 +211,14 @@ async fn valid_user_token_receives_signed_permissions(
             GetEntityPermissionResponse::serializer(),
         );
 
-    let response = authorize(context, auth_request(Some(external_jwt()?))?).await?;
+    let response = authorize_raw(context, auth_request(Some(external_jwt()?))?).await?;
+    let payload = authorization_payload(&response)?;
 
-    assert!(response.payload().error.is_empty());
-    let user_claims = Claims::<User>::decode(&response.payload().jwt)?;
+    assert!(payload["nats"].get("error").is_none_or(|error| error == ""));
+    let user_jwt = payload["nats"]["jwt"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("authorization response jwt missing"))?;
+    let user_claims = Claims::<User>::decode(user_jwt)?;
     assert_eq!(
         user_claims.payload().permissions.permissions.publish.allow,
         ["cloud.to.user.panel_user.organization.watch"]
