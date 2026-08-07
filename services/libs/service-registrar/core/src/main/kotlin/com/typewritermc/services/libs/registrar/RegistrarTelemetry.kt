@@ -10,7 +10,7 @@ internal fun MainSpanScope.recordRegistrarStateChanged(
     snapshot: RegistrarSnapshot,
 ) {
     val state = snapshot.state
-    if (state is RegistrarState.Ready && previous is RegistrarState.Ready && state.connectionGeneration == previous.connectionGeneration) {
+    if (state.isDuplicateTelemetryTransition(previous)) {
         return
     }
     event(
@@ -22,6 +22,13 @@ internal fun MainSpanScope.recordRegistrarStateChanged(
         state.attributes(this)
     }
 }
+
+private fun RegistrarState.isDuplicateTelemetryTransition(previous: RegistrarState): Boolean =
+    when {
+        this is RegistrarState.AwaitingBinding && previous is RegistrarState.AwaitingBinding -> true
+        this is RegistrarState.Ready && previous is RegistrarState.Ready -> connectionGeneration == previous.connectionGeneration
+        else -> false
+    }
 
 private fun RegistrarState.projection(): EventProjection =
     when (this) {

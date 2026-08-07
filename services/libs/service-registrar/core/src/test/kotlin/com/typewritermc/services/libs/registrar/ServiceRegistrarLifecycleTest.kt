@@ -261,6 +261,31 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
+    test("repeated unbound observations log waiting once") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("first")))),
+                )
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("second")))),
+                )
+                f.runtime.enqueueWatch()
+                f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
+                f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
+
+                f.registrar.start()
+                runCurrent()
+
+                f.harness
+                    .finishedLogs()
+                    .mapNotNull { it.bodyValue?.asString() }
+                    .count { it == "Waiting for service binding in the Typewriter Panel" } shouldBe 1
+                (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe
+                    RegistrationToken("second")
+            }
+        }
+    }
     test("heartbeat is periodic and no binding calls occur after ready") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
