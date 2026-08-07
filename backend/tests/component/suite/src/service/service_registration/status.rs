@@ -78,7 +78,7 @@ async fn unbound_service_receives_persisted_registration_token(
 }
 
 #[component_test(ServiceRegistration)]
-async fn unexpired_registration_token_is_reused(
+async fn expiring_registration_token_is_reused_and_lease_is_renewed(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let database = database(context)?;
@@ -98,6 +98,45 @@ async fn unexpired_registration_token_is_reused(
         anyhow::bail!("expected unbound service response");
     };
     assert_eq!(binding.registration_token.as_deref(), Some("ABCDEFGHIJ"));
+    assert_jm!(
+        database
+            .query_json(
+                "SELECT VALUE registration.expires_at > time::now() + 2m FROM ONLY service:unbound",
+            )
+            .await?,
+        true
+    );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn healthy_registration_lease_is_not_rewritten(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    let database = database(context)?;
+    database
+        .seed(
+            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 3m }",
+        )
+        .execute()
+        .await?;
+    let before = database
+        .query_json("SELECT VALUE registration.expires_at FROM ONLY service:unbound")
+        .await?;
+
+    let response = get_status(context, "unbound").await?;
+
+    let GetServiceStatusResponse::Status(status) = response else {
+        anyhow::bail!("expected service status response");
+    };
+    let ServiceBinding::Unbound(binding) = status.binding else {
+        anyhow::bail!("expected unbound service response");
+    };
+    assert_eq!(binding.registration_token.as_deref(), Some("ABCDEFGHIJ"));
+    let after = database
+        .query_json("SELECT VALUE registration.expires_at FROM ONLY service:unbound")
+        .await?;
+    assert_eq!(after, before);
     Ok(())
 }
 

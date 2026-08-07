@@ -36,6 +36,8 @@ pub async fn handle_status(
         BEGIN TRANSACTION;
 
         RETURN {
+            LET $registration_lease = 2m30s;
+            LET $registration_renewal_window = 2m;
             LET $services = SELECT
                 IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
                 registration.token AS existing_token,
@@ -58,9 +60,11 @@ pub async fn handle_status(
                 $new_token
             };
 
-            UPDATE type::record('service', $service_id) SET registration = {
-                token: $registration_token,
-                expires_at: time::now() + 2m30s
+            IF $service.existing_token = NONE OR $service.existing_expires_at <= time::now() + $registration_renewal_window {
+                UPDATE type::record('service', $service_id) SET registration = {
+                    token: $registration_token,
+                    expires_at: time::now() + $registration_lease
+                }
             };
 
             RETURN { organization: NONE, token: $registration_token };
