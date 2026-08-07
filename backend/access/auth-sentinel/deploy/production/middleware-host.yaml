@@ -1,0 +1,9 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: auth-sentinel-host
+  namespace: typewriter
+spec:
+  headers:
+    customRequestHeaders:
+      Host: auth-sentinel.typewriter.svc

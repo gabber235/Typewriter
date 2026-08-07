@@ -6,4 +6,4 @@
   value: Always
 - op: replace
   path: /spec/template/spec/hostInterfaces/1/config/host
-  value: api.tw.seamlezz.net
+  value: auth-sentinel.typewriter.svc

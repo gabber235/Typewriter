@@ -4,6 +4,7 @@ resources:
   - ../base
   - ingress.yaml
   - middleware-cors.yaml
+  - middleware-host.yaml
 patches:
   - path: workloaddeployment-patch.yaml
     target:

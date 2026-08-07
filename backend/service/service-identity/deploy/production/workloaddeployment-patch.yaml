@@ -3,7 +3,7 @@
   value: oci.seamlezz.com/typewriter/service-identity:0.2.0
 - op: replace
   path: /spec/template/spec/hostInterfaces/1/config/host
-  value: api.typewritermc.com
+  value: service-identity.typewriter.svc
 - op: add
   path: /spec/template/spec/components/0/localResources/allowedHosts
   value:

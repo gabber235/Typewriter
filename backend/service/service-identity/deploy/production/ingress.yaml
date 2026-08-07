@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: service-identity
   namespace: typewriter
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: typewriter-service-identity-host@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

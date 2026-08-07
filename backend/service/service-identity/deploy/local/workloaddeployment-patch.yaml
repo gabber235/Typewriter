@@ -6,7 +6,7 @@
   value: Always
 - op: replace
   path: /spec/template/spec/hostInterfaces/1/config/host
-  value: api.tw.seamlezz.net
+  value: service-identity.typewriter.svc
 - op: add
   path: /spec/template/spec/components/0/localResources/allowedHosts
   value:
