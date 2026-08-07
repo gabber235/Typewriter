@@ -4,8 +4,11 @@ use anyhow::{Context, Result};
 use component_test::{
     ComponentConfiguration, FixtureBuilder, FixtureDeclaration, FixtureExtension, ProvisionContext,
 };
-use serde::{Serialize, de::DeserializeOwned};
-use surrealdb::IndexedResults;
+use serde::de::DeserializeOwned;
+use surrealdb::{
+    IndexedResults,
+    types::{SurrealValue, Value},
+};
 use uuid::Uuid;
 use wash_runtime::wit::WitInterface;
 use wasmcloud_plugin_surrealdb::{ConnectionKey, WasmcloudSurrealdb};
@@ -122,11 +125,7 @@ pub struct DatabaseHandle {
 }
 
 impl DatabaseHandle {
-    async fn response(
-        &self,
-        sql: &str,
-        bindings: Vec<(String, serde_json::Value)>,
-    ) -> Result<IndexedResults> {
+    async fn response(&self, sql: &str, bindings: Vec<(String, Value)>) -> Result<IndexedResults> {
         let connection = self.plugin.get_or_create_connection(&self.key).await?;
         let database = connection.read().await;
         let mut query = database.query(sql);
@@ -167,13 +166,12 @@ impl DatabaseHandle {
 pub struct SeedQuery {
     database: DatabaseHandle,
     sql: String,
-    bindings: Vec<(String, serde_json::Value)>,
+    bindings: Vec<(String, Value)>,
 }
 
 impl SeedQuery {
-    pub fn bind(mut self, name: impl Into<String>, value: impl Serialize) -> Result<Self> {
-        self.bindings
-            .push((name.into(), serde_json::to_value(value)?));
+    pub fn bind(mut self, name: impl Into<String>, value: impl SurrealValue) -> Result<Self> {
+        self.bindings.push((name.into(), value.into_value()));
         Ok(self)
     }
     pub async fn execute(self) -> Result<IndexedResults> {
@@ -323,7 +321,7 @@ mod tests {
         }
         let database = database(SchemaPreset::Service).await?;
         database
-            .seed("CREATE seed_test CONTENT { amount: $value }")
+            .seed("CREATE seed_test CONTENT { amount: $value, organization: organization:alpha }")
             .bind("value", 42_i64)?
             .execute()
             .await?;
@@ -332,6 +330,17 @@ mod tests {
                 .query::<Row>("SELECT amount FROM seed_test")
                 .await?,
             vec![Row { amount: 42 }]
+        );
+        assert_eq!(
+            database
+                .seed("RETURN count(SELECT id FROM seed_test WHERE organization = $organization)")
+                .bind(
+                    "organization",
+                    surrealdb::types::RecordId::new("organization", "alpha"),
+                )?
+                .query_json()
+                .await?,
+            serde_json::json!(1)
         );
         Ok(())
     }
