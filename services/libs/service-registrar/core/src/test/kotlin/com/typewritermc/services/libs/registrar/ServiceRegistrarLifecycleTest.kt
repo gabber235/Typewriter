@@ -228,17 +228,23 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 f.registrar.start()
                 runCurrent()
                 (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe null
+                f.runtime.activeWatchCount shouldBe 1
+                f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
             }
         }
     }
     test("binding notification reauthorizes and confirms binding") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
-                f.runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Bound(binding())))
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("token")))),
+                )
                 f.runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
                 f.registrar.start()
+                runCurrent()
+                f.runtime.emitBinding(RuntimeResult.Success(BindingObservation.Bound(binding())))
                 runCurrent()
                 f.ledger.actions.any { it == RegistrarAction.Reconnect } shouldBe true
                 f.registrar.states.value.state
@@ -249,15 +255,25 @@ val ServiceRegistrarLifecycleTest by testSuite {
     test("binding refresh queries while awaiting notification") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
-                f.runtime.enqueueWatch()
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("initial")))),
+                )
                 f.runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Unbound(RegistrationToken("next"))))
+                f.runtime.enqueueWatch()
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
                 f.registrar.start()
                 runCurrent()
-                advanceTimeBy(101)
+
+                advanceTimeBy(99)
                 runCurrent()
-                f.ledger.actions.any { it == RegistrarAction.QueryBinding } shouldBe true
+                f.ledger.actions.none { it == RegistrarAction.QueryBinding } shouldBe true
+                f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
+
+                advanceTimeBy(2)
+                runCurrent()
+                f.ledger.actions.count { it == RegistrarAction.QueryBinding } shouldBe 1
+                f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 2
             }
         }
     }
@@ -266,11 +282,8 @@ val ServiceRegistrarLifecycleTest by testSuite {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
                 f.runtime.enqueueWatch(
                     RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("first")))),
-                )
-                f.runtime.enqueueWatch(
                     RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("second")))),
                 )
-                f.runtime.enqueueWatch()
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
 
@@ -283,6 +296,7 @@ val ServiceRegistrarLifecycleTest by testSuite {
                     .count { it == "Waiting for service binding in the Typewriter Panel" } shouldBe 1
                 (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe
                     RegistrationToken("second")
+                f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
             }
         }
     }

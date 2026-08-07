@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -382,11 +383,9 @@ class ServiceRegistrar(
         while (true) {
             awaitConnected(active, events = events)
             val event =
-                withTimeoutOrNull(configuration.bindingRefreshInterval) {
-                    merge(
-                        active.watchBinding().map { BindingEvent.Observation(it) },
-                        active.connectivity.map { BindingEvent.Connectivity(it) },
-                    ).first { it !is BindingEvent.Connectivity || it.value != RuntimeConnectivity.CONNECTED }
+                awaitBindingEvent(active) { status ->
+                    bindingBackoffIndex = 0L
+                    transition(RegistrarState.AwaitingBinding(identity, status.token), events)
                 }
             when (event) {
                 null -> {
@@ -467,6 +466,52 @@ class ServiceRegistrar(
             }
         }
     }
+
+    private suspend fun awaitBindingEvent(
+        active: RegistrarRuntime,
+        onInitialUnbound: suspend (BindingStatus.Unbound) -> Unit,
+    ): BindingEvent? =
+        withTimeoutOrNull(configuration.bindingRefreshInterval) {
+            merge(
+                active.watchBinding().map { BindingEvent.Observation(it) },
+                active.connectivity.map { BindingEvent.Connectivity(it) },
+            ).mapNotNull { event ->
+                when (event) {
+                    is BindingEvent.Connectivity -> {
+                        event.takeIf { it.value != RuntimeConnectivity.CONNECTED }
+                    }
+
+                    is BindingEvent.Observation -> {
+                        when (val result = event.value) {
+                            is RuntimeResult.Failure -> {
+                                event
+                            }
+
+                            is RuntimeResult.Success -> {
+                                when (val observation = result.value) {
+                                    is BindingObservation.Bound -> {
+                                        event
+                                    }
+
+                                    is BindingObservation.Initial -> {
+                                        when (val status = observation.status) {
+                                            is BindingStatus.Bound -> {
+                                                event
+                                            }
+
+                                            is BindingStatus.Unbound -> {
+                                                onInitialUnbound(status)
+                                                null
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }.first()
+        }
 
     private suspend fun superviseReady(supervision: ReadySupervision) {
         val active = supervision.runtime
