@@ -18,6 +18,9 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         IF !fn::is_id($role.name) {
             THROW "custom-role-name-invalid-error"
         };
+        IF $role.name IN ["engine", "realm"] {
+            THROW "builtin-role-name-forbidden-error"
+        };
         RETURN true;
     };
 
