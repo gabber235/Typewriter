@@ -5,6 +5,7 @@ mod dispatch_actions;
 mod paths;
 mod skir_domain_result;
 mod skir_response;
+mod skir_transaction_outcome;
 mod skir_variant;
 
 #[proc_macro]
@@ -28,6 +29,16 @@ pub fn skir_domain_result(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as skir_domain_result::SkirDomainResultInput);
 
     match skir_domain_result::expand(input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+#[proc_macro]
+pub fn skir_transaction_outcome(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as skir_transaction_outcome::SkirTransactionOutcomeInput);
+
+    match skir_transaction_outcome::expand(input) {
         Ok(tokens) => tokens.into(),
         Err(error) => error.to_compile_error().into(),
     }
