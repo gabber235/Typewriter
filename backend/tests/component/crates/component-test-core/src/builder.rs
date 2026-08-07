@@ -252,9 +252,6 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
             if subscriptions.len() != component.subscriptions.len() {
                 bail!("duplicate messaging subscription on `{package}`");
             }
-            if self.messaging && component.subscriptions.is_empty() {
-                bail!("messaging component `{package}` requires at least one subscription");
-            }
             for mount in &component.volume_mounts {
                 if !volumes.contains(mount.name.as_str()) {
                     bail!(
@@ -263,6 +260,14 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
                     );
                 }
             }
+        }
+        if self.messaging
+            && !self
+                .components
+                .values()
+                .any(|component| !component.subscriptions.is_empty())
+        {
+            bail!("messaging fixtures require at least one subscription");
         }
         Ok(())
     }
