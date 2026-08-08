@@ -19,7 +19,6 @@ class TagNode extends HookConsumerWidget {
     return asyncTag(
       name: "Tag",
       shrink: true,
-      skipLoadingOnReload: true,
       builder: (tag) {
         if (tag == null) return const SizedBox.shrink();
         return _TagNode(tag: tag);

@@ -16,7 +16,7 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
     required String name,
     required Widget Function(T value) builder,
     bool shrink = false,
-    bool skipLoadingOnReload = false,
+    bool skipLoadingOnReload = true,
     Widget Function(String name)? loading,
     Widget Function(String title, String message)? error,
   }) {
