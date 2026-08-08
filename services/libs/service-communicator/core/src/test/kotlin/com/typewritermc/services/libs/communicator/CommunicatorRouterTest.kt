@@ -421,6 +421,21 @@ val CommunicatorRouterTest by testSuite {
         }
     }
 
+    test("graceful stop accepts clean subscription completion") {
+        runTest {
+            val fixture = routerFixture(communicatorRoutes { event(routerEvent) { } }, this)
+            fixture.use { fixture ->
+                fixture.fake.closeSubscriptionWith(1) {
+                    fixture.fake.deliver(TransportDelivery.Completed)
+                }
+                fixture.router.start()
+
+                fixture.router.stop() shouldBe RouterResult.Success
+                fixture.router.state shouldBe RouterState.STOPPED
+            }
+        }
+    }
+
     test("cancelled stop owner finalizes shared shutdown") {
         runTest {
             val fixture = routerFixture(communicatorRoutes { event(routerEvent) { } }, this)

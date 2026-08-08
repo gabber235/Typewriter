@@ -433,7 +433,9 @@ class CommunicatorRouter internal constructor(
                             }
 
                             TransportDelivery.Completed -> {
-                                terminalRouteShutdown(route, RouteCompleted(route.pattern.value))
+                                if (state == RouterState.RUNNING) {
+                                    terminalRouteShutdown(route, RouteCompleted(route.pattern.value))
+                                }
                                 return@collect
                             }
                         }

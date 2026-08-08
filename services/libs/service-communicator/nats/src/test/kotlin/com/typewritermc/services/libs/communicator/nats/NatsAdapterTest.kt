@@ -14,12 +14,18 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.yield
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
@@ -268,6 +274,31 @@ val NatsAdapterTest by testSuite {
         subscription.unsubscribeCalls shouldBe 1
     }
 
+    test("closing active subscription completes deliveries") {
+        coroutineScope {
+            val closed = CompletableDeferred<Unit>()
+            val subscription =
+                FakeSubscription(
+                    messages = flow { closed.await() },
+                    onUnsubscribe = { closed.complete(Unit) },
+                )
+            val client = FakeClient(subscription = subscription)
+            val connection = connection(client)
+            connection.connect()
+            val result =
+                NatsMessageTransport(connection).subscribe(
+                    AddressPattern.of("jobs.*"),
+                ) as TransportResult.Success
+            val deliveries = async { result.value.deliveries.toList() }
+            yield()
+
+            result.value.close()
+
+            deliveries.await() shouldContainExactly listOf(TransportDelivery.Completed)
+            subscription.unsubscribeCalls shouldBe 1
+        }
+    }
+
     test("flush failure rolls subscription back") {
         val subscription = FakeSubscription(flowOf())
         val client = FakeClient(subscription = subscription, flushFailure = IllegalStateException("flush"))
@@ -361,12 +392,14 @@ private class FakeClient(
 
 private class FakeSubscription(
     override val messages: Flow<NatsClientMessage>,
+    private val onUnsubscribe: suspend () -> Unit = {},
 ) : NatsClientSubscription {
     override val isActive: StateFlow<Boolean> = MutableStateFlow(true)
     var unsubscribeCalls = 0
 
     override suspend fun unsubscribe() {
         unsubscribeCalls++
+        onUnsubscribe()
     }
 }
 
