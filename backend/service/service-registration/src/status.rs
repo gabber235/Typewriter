@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_param,
     skir::base::service::v1::status::{
         GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
@@ -31,7 +31,7 @@ pub async fn handle_status(
     otel_wasi::main_attribute!("service.id" = service_id.to_string());
     let _ = decode_skir!(GetServiceStatusRequest, &msg.body)?;
 
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 

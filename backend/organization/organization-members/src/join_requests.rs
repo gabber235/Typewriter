@@ -7,6 +7,7 @@ use wasmcloud_utils::database::organization::projections::{
     JoinRequestProjection, OrganizationMemberProjection,
 };
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_params,
     skir::base::organization::v1::{
         join_request::*,
@@ -167,7 +168,7 @@ pub async fn handle_approve(
     }
 
     let roles = db_role_ids;
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -294,7 +295,7 @@ pub async fn handle_decline(
         "request.id" = request_id.key.to_string()
     );
 
-    let row = query(
+    let row = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 

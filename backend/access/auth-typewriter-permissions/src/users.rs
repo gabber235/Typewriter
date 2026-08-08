@@ -1,4 +1,5 @@
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
+use wasmcloud_utils::database::retrying_transaction;
 use wasmcloud_utils::skir::base::{
     access::v1::permission::{EntityPermissionQualifier, Permissions},
     kernel::v1::record_id::RecordId,
@@ -131,13 +132,17 @@ async fn upsert_user(
     email: &Option<String>,
     avatar_url: &Option<String>,
 ) -> Result<(), otel_wasi::Error> {
-    surrealdb_component_sdk::query(
+    retrying_transaction(
         "
+            BEGIN TRANSACTION;
+
             UPSERT type::record('user',$uid) SET
                 name = $name,
                 email = $email,
                 avatar_url = $avatar_url,
                 last_login = time::now();
+
+            COMMIT TRANSACTION;
             ",
     )
     .bind("uid", user_id)
@@ -147,7 +152,7 @@ async fn upsert_user(
     .execute()
     .await
     .error_with_slug("user-db-upsert-failed")?
-    .take::<Option<User>>(0)
+    .take::<Option<User>>(1)
     .error_with_slug("user-db-upsert-failed")?;
     Ok(())
 }

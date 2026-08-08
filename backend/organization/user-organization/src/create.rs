@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_param,
     skir::base::organization::v1::{organization::*, user::*},
     wasmcloud::messaging::types::BrokerMessage,
@@ -22,7 +22,7 @@ pub async fn handle_create(
     let name = request.name;
     let logo_url = request.logo_url;
 
-    let organization: Organization = query(
+    let organization: Organization = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 

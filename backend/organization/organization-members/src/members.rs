@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use surrealdb_component_sdk::{RecordId, query};
 use wasmcloud_utils::database::organization::projections::OrganizationMemberProjection;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_params,
     skir::base::organization::v1::{member::*, user::WatchUserOrganizationsResponse},
     skir_transaction_outcome,
@@ -115,7 +116,7 @@ pub async fn handle_update(
         "role.result_count" = role_ids.len() as i64
     );
 
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -236,7 +237,7 @@ pub async fn handle_remove(
         "user.id" = user_id.key.to_string()
     );
 
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 

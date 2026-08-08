@@ -1,6 +1,7 @@
 use surrealdb_component_sdk::{RecordId, query};
 
 use crate::identity::{IdentityRepository, NewIdentity, RepositoryError};
+use wasmcloud_utils::database::retrying_transaction;
 use wasmcloud_utils::database::service::ServiceRoleRecord;
 
 pub struct SurrealIdentityRepository;
@@ -35,13 +36,17 @@ impl IdentityRepository for SurrealIdentityRepository {
     ) -> Result<Result<RecordId, String>, RepositoryError> {
         otel_wasi::attribute!("persistence.operation" = "create_identity");
 
-        query(
+        retrying_transaction(
             r#"
+            BEGIN TRANSACTION;
+
             CREATE ONLY type::record('service', $service_id)
             SET
                 name = $display_name,
                 roles = $roles
             RETURN VALUE id;
+
+            COMMIT TRANSACTION;
             "#,
         )
         .bind("service_id", &identity.service_id)
@@ -50,7 +55,7 @@ impl IdentityRepository for SurrealIdentityRepository {
         .execute()
         .await
         .map_err(|error| RepositoryError(error.to_string()))?
-        .transaction(0)
+        .transaction(1)
         .map(|outcome| match outcome {
             surrealdb_component_sdk::TransactionOutcome::Committed(value) => Ok(value),
             surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {

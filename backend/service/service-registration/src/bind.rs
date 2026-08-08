@@ -1,9 +1,9 @@
-use std::{collections::HashMap, num::NonZeroU32, time::Duration};
+use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use surrealdb_component_sdk::{ConflictRetryPolicy, query};
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::WatchOrganizationServicesResponse,
@@ -36,7 +36,7 @@ pub async fn handle_bind(
     );
     let request = decode_skir!(BindServiceRequest, &msg.body)?;
 
-    let response = query(
+    let response = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -69,11 +69,6 @@ pub async fn handle_bind(
     )
     .bind("registration_token", request.registration_token)
     .bind("org_id", org_id)
-    .retry_conflicts(ConflictRetryPolicy::new(
-        NonZeroU32::new(3).expect("bind query attempt count is nonzero"),
-        Duration::from_millis(10),
-        Duration::from_millis(40),
-    ))
     .execute()
     .await
     .error_with_slug("service-bind-query-failed")?;

@@ -3,7 +3,7 @@ use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use std::collections::HashMap;
 use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    database::organization::JoinCodeRecord,
+    database::{organization::JoinCodeRecord, retrying_transaction},
     decode_skir, extract_params,
     skir::base::organization::v1::join_codes::*,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
@@ -127,7 +127,7 @@ pub async fn handle_generate(
 
     let roles = role_ids.clone();
 
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -214,15 +214,27 @@ pub async fn handle_revoke(
         "join_code.id" = code.key.to_string()
     );
 
-    let deleted = query(
-        "DELETE $code WHERE organization = $org AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now()) RETURN BEFORE"
+    let deleted = retrying_transaction(
+        r#"
+        BEGIN TRANSACTION;
+
+        DELETE $code
+        WHERE organization = $org
+            AND (expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now())
+        RETURN BEFORE;
+
+        COMMIT TRANSACTION;
+        "#,
     )
     .bind("code", surrealdb_component_sdk::RecordId::from(&code))
-    .bind("org", surrealdb_component_sdk::RecordId::new("organization", org_id))
+    .bind(
+        "org",
+        surrealdb_component_sdk::RecordId::new("organization", org_id),
+    )
     .execute()
     .await
     .error_with_slug("join-code-revoke-query-failed")?
-    .take::<Option<JoinCodeRecord>>(0)
+    .take::<Option<JoinCodeRecord>>(1)
     .error_with_slug("join-code-revoke-result-parse-failed")?;
 
     if deleted.is_none() {

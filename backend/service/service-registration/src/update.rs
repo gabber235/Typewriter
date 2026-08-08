@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_params,
     skir::base::service::v1::organization::{
         UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
@@ -34,12 +34,16 @@ pub async fn handle_update(
     );
 
     let service_id = surrealdb_component_sdk::RecordId::from(&request.service_id);
-    let records = query(
+    let records = retrying_transaction(
         r#"
+        BEGIN TRANSACTION;
+
         UPDATE $service_id SET
             name = IF $name != NONE THEN $name ELSE name END
         WHERE organization = type::record('organization', $org_id)
-        RETURN AFTER
+        RETURN AFTER;
+
+        COMMIT TRANSACTION;
         "#,
     )
     .bind("service_id", service_id)
@@ -48,7 +52,7 @@ pub async fn handle_update(
     .execute()
     .await
     .error_with_slug("service-update-query-failed")?
-    .take::<Option<ServiceRecord>>(0)
+    .take::<Option<ServiceRecord>>(1)
     .error_with_slug("service-update-result-parse-failed")?;
 
     let Some(record) = records else {

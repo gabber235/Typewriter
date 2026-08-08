@@ -11,3 +11,4 @@
 - Prefer one cohesive database query over multiple small queries with coordinating Rust logic. Extra database round trips and application side coordination are slower and can weaken transactional guarantees.
 - Use `skir_domain_result!` when a transaction uses `THROW` to return a domain slug without database computed payload data.
 - Use a Serde internally tagged outcome enum with `skir_transaction_outcome!` when a transaction returns precise database computed success or error payloads.
+- Execute every mutation through `wasmcloud_utils::database::retrying_transaction` with explicit `BEGIN TRANSACTION` and `COMMIT TRANSACTION` boundaries.

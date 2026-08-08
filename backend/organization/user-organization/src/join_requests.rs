@@ -4,6 +4,7 @@ use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
 use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_param,
     skir::base::{
         kernel::v1::record_id::RecordId,
@@ -140,7 +141,7 @@ async fn handle_auto_accept(
     single_use: bool,
     auto_accept_roles: &[surrealdb_component_sdk::RecordId],
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -243,7 +244,7 @@ async fn handle_manual_accept(
     code: &RecordId,
     single_use: bool,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
-    let result = query(
+    let result = retrying_transaction(
         r#"
         BEGIN TRANSACTION;
 
@@ -337,7 +338,7 @@ pub async fn handle_cancel(
 
     let request_id = request.request_id;
 
-    let join_request = query(
+    let join_request = retrying_transaction(
         r#"
             BEGIN TRANSACTION;
 

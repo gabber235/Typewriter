@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use wasmcloud_utils::database::service::ServiceStatusRecord;
 
 use otel_wasi::ResultWithSlug;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::retrying_transaction,
     decode_skir, extract_param,
     skir::base::service::v1::{
         lifecycle::ServiceHeartbeatNotification, organization::WatchOrganizationServicesResponse,
@@ -30,13 +30,17 @@ pub(crate) async fn update_state(
     service_id: &str,
     status: &ServiceStatusRecord,
 ) -> Result<(), otel_wasi::Error> {
-    let records = query(
+    let records = retrying_transaction(
         r#"
+        BEGIN TRANSACTION;
+
         UPDATE type::record('service', $service_id) SET state = {
             status: $status,
             last_seen: time::now()
         }
-        RETURN AFTER
+        RETURN AFTER;
+
+        COMMIT TRANSACTION;
         "#,
     )
     .bind("service_id", service_id)
@@ -44,7 +48,7 @@ pub(crate) async fn update_state(
     .execute()
     .await
     .error_with_slug("service-state-update-query-failed")?
-    .take::<Option<ServiceRecord>>(0)
+    .take::<Option<ServiceRecord>>(1)
     .error_with_slug("service-state-update-result-parse-failed")?;
 
     let Some(record) = records.into_iter().next() else {
