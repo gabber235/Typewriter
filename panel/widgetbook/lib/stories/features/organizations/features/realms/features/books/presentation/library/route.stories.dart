@@ -8,9 +8,13 @@ import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 @widgetbook.UseCase(name: "LibraryPage", type: LibraryPage)
 Widget libraryPageUseCase(BuildContext context) {
   final displayState = context.knobs.displayState();
+  final connectionState = context.knobs.realmConnectionState();
 
   return FakeApp(
     overrides: [
+      realmInteractionProvider.overrideWith(
+        (ref) => RealmInteractionState(connectionState: connectionState),
+      ),
       ...booksProviderOverrides(state: displayState),
       ...tagsProviderOverrides(state: DisplayState.manyItems),
       ...servicesProviderOverrides(state: DisplayState.manyItems),

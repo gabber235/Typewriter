@@ -185,6 +185,10 @@ class GlobalOperationShortcuts extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(realmInteractionProvider).suspended) {
+      return ManagedActionSet(shortcuts: [], child: child);
+    }
+
     final currentMode = ref.watch(currentInteractionModeProvider);
 
     if (currentMode is! NormalMode) {

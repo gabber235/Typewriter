@@ -12,15 +12,21 @@ Widget bookPageUseCase(BuildContext context) {
     label: "Pages State",
     initialOption: DisplayState.manyItems,
   );
+  final connectionState = context.knobs.realmConnectionState();
 
   return FakeApp(
     overrides: [
+      realmInteractionProvider.overrideWith(
+        (ref) => RealmInteractionState(connectionState: connectionState),
+      ),
       ...entryProviderOverrides(),
       ...bookPagesProviderOverrides(state: pagesState),
       ...pagesProviderOverrides(),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
       ...booksProviderOverrides(state: pagesState),
+      ...servicesProviderOverrides(state: DisplayState.manyItems),
+      ...realmProviderOverrides(),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),

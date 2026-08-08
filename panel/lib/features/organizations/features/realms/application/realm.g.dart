@@ -122,3 +122,91 @@ final class RealmsProvider
 }
 
 String _$realmsHash() => r'ed7e28e4f95f33cf44d5e3ea8d82d914c9796313';
+
+@ProviderFor(realmConnection)
+final realmConnectionProvider = RealmConnectionProvider._();
+
+final class RealmConnectionProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<RealmConnectionState>,
+          RealmConnectionState,
+          Stream<RealmConnectionState>
+        >
+    with
+        $FutureModifier<RealmConnectionState>,
+        $StreamProvider<RealmConnectionState> {
+  RealmConnectionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'realmConnectionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmConnectionHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<RealmConnectionState> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<RealmConnectionState> create(Ref ref) {
+    return realmConnection(ref);
+  }
+}
+
+String _$realmConnectionHash() => r'03fd58db72aa6a5bcb5647e9c97821de9590dd36';
+
+@ProviderFor(realmInteraction)
+final realmInteractionProvider = RealmInteractionProvider._();
+
+final class RealmInteractionProvider
+    extends
+        $FunctionalProvider<
+          RealmInteractionState,
+          RealmInteractionState,
+          RealmInteractionState
+        >
+    with $Provider<RealmInteractionState> {
+  RealmInteractionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'realmInteractionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmInteractionHash();
+
+  @$internal
+  @override
+  $ProviderElement<RealmInteractionState> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  RealmInteractionState create(Ref ref) {
+    return realmInteraction(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RealmInteractionState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RealmInteractionState>(value),
+    );
+  }
+}
+
+String _$realmInteractionHash() => r'c5ab3f670a6f9d86721d1555509b4ca8239b6b85';

@@ -27,6 +27,10 @@ class GlobalModeShortcut extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(realmInteractionProvider).suspended) {
+      return ManagedActionSet(shortcuts: [], child: child);
+    }
+
     final currentMode = ref.watch(currentInteractionModeProvider);
 
     final shortcuts = currentMode is ModeShortcut

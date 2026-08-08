@@ -81,6 +81,11 @@ class BookScaffold extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
+    final interaction = ref.watch(realmInteractionProvider);
+    final selectedRealm = ref.watch(selectedRealmProvider).value;
+
+    void retryConnection() => ref.invalidate(servicesProvider);
+
     return SimpleScaffold(
       appBar: CustomAppBar(
         row: [
@@ -96,22 +101,36 @@ class BookScaffold extends HookConsumerWidget {
             ],
           ],
           const Spacer(),
-          if (!context.isMobile) const ModeDisplayWidget(),
-        ],
-        sidebar: const BookSidebarContent(),
-      ),
-      child: Row(
-        children: [
-          if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(child: child),
-                ActionRow(),
-              ],
+          if (!context.isMobile)
+            RealmSuspensionInline(
+              suspended: interaction.suspended,
+              child: const ModeDisplayWidget(),
             ),
-          ),
         ],
+        sidebar: RealmSuspensionBarrier(
+          interaction: interaction,
+          realm: selectedRealm,
+          onRetry: retryConnection,
+          child: const BookSidebarContent(),
+        ),
+      ),
+      child: RealmSuspensionBarrier(
+        interaction: interaction,
+        realm: selectedRealm,
+        onRetry: retryConnection,
+        child: Row(
+          children: [
+            if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(child: child),
+                  ActionRow(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

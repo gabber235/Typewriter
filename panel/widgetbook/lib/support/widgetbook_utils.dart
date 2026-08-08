@@ -3,6 +3,15 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 
 extension KnobsBuilderX on KnobsBuilder {
+  RealmConnectionState realmConnectionState({
+    RealmConnectionState initialOption = RealmConnectionState.online,
+  }) => object.dropdown(
+    label: "Realm connection",
+    options: RealmConnectionState.values,
+    labelBuilder: (value) => value.name.formatted,
+    initialOption: initialOption,
+  );
+
   DisplayState displayState({
     String label = "Display State",
     DisplayState initialOption = DisplayState.fewItems,

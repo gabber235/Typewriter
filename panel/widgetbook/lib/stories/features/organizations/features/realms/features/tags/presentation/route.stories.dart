@@ -11,9 +11,13 @@ Widget tagsPageUseCase(BuildContext context) {
     label: "Tags State",
     initialOption: DisplayState.fewItems,
   );
+  final connectionState = context.knobs.realmConnectionState();
 
   return FakeApp(
     overrides: [
+      realmInteractionProvider.overrideWith(
+        (ref) => RealmInteractionState(connectionState: connectionState),
+      ),
       ...tagsProviderOverrides(state: tagsState),
       ...servicesProviderOverrides(state: DisplayState.manyItems),
       ...realmProviderOverrides(),

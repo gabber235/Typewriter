@@ -17,12 +17,16 @@ class ElasticSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimation = MediaQuery.disableAnimationsOf(context);
+    final sizeDuraiton = disableAnimation ? Duration.zero : 1000.ms;
+    final scaleDuration = disableAnimation ? Duration.zero : 800.ms;
+
     return AnimatedSize(
-      duration: 1000.ms,
+      duration: sizeDuraiton,
       curve: const ElasticOutCurve(0.9),
       clipBehavior: Clip.none,
       child: AnimatedSwitcher(
-        duration: 800.ms,
+        duration: scaleDuration,
         transitionBuilder: (child, animation) {
           return ScaleTransition(
             scale: CurvedAnimation(

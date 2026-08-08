@@ -31,6 +31,11 @@ class OrganizationScaffold extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
+    final interaction = ref.watch(realmInteractionProvider);
+    final selectedRealm = ref.watch(selectedRealmProvider).value;
+
+    void retryConnection() => ref.invalidate(servicesProvider);
+
     return SimpleScaffold(
       appBar: CustomAppBar(
         row: [
@@ -46,20 +51,33 @@ class OrganizationScaffold extends HookConsumerWidget {
             ],
           ],
           const Spacer(),
-          if (!context.isMobile) const ModeDisplayWidget(),
+          if (!context.isMobile)
+            RealmSuspensionInline(
+              suspended: interaction.suspended,
+              child: const ModeDisplayWidget(),
+            ),
         ],
-        sidebar: const OrganizationSidebarContent(),
+        sidebar: OrganizationSidebarContent(suspended: interaction.suspended),
       ),
       child: Row(
         children: [
           if (!context.isMobile)
-            const Sidebar(child: OrganizationSidebarContent()),
+            Sidebar(
+              child: OrganizationSidebarContent(
+                suspended: interaction.suspended,
+              ),
+            ),
           Expanded(
-            child: Column(
-              children: [
-                Expanded(child: child),
-                ActionRow(),
-              ],
+            child: RealmSuspensionBarrier(
+              interaction: interaction,
+              realm: selectedRealm,
+              onRetry: retryConnection,
+              child: Column(
+                children: [
+                  Expanded(child: child),
+                  ActionRow(),
+                ],
+              ),
             ),
           ),
         ],
@@ -69,7 +87,9 @@ class OrganizationScaffold extends HookConsumerWidget {
 }
 
 class OrganizationSidebarContent extends HookConsumerWidget {
-  const OrganizationSidebarContent({super.key});
+  const OrganizationSidebarContent({required this.suspended, super.key});
+
+  final bool suspended;
 
   static List<Widget> organizationLinks(
     skir.RecordId organizationId,
@@ -163,7 +183,13 @@ class OrganizationSidebarContent extends HookConsumerWidget {
       children: [
         if (organizationId != null) ...[
           if (realmId != null) ...[
-            ...realmLinks(organizationId, realmId),
+            RealmSuspensionInline(
+              suspended: suspended,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: realmLinks(organizationId, realmId),
+              ),
+            ),
             SizedBox(height: context.spacing.space4),
           ],
           ...organizationLinks(organizationId, pendingRequests),
