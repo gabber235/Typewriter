@@ -233,7 +233,6 @@ class TagsMock extends Tags {
     int width = 4,
     int height = 1,
   }) async {
-    await Future.delayed(500.ms);
     final tags = await future;
 
     final newTag = Tag(
@@ -250,21 +249,14 @@ class TagsMock extends Tags {
 
   @override
   Future<void> updateTag(Tag tag) async {
-    await Future.delayed(500.ms);
     final tags = await future;
     state = AsyncData(tags.map((t) => t.tagId == tag.tagId ? tag : t).toList());
   }
 
   @override
   Future<void> deleteTag(skir.RecordId tagId) async {
-    await Future.delayed(500.ms);
     final tags = await future;
     state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
-  }
-
-  @override
-  Future<void> moveTag(skir.RecordId tagId, int x, int y) async {
-    await moveTags([TagMovePayload(id: tagId, x: x, y: y)]);
   }
 
   @override
