@@ -54,6 +54,8 @@ class GraphGroup extends StatelessWidget {
 
         return Draggable(
           data: data,
+          onDragStarted: () => graphDrag?.beginDrag(data),
+          onDragEnd: (_) => graphDrag?.endDrag(),
           feedback: HookBuilder(
             builder: (context) {
               useListenable(graphDrag?.draggingInsideGraph);

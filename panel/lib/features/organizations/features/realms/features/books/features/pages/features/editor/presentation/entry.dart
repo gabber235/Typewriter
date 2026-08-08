@@ -60,12 +60,8 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       builder: (isSelected, isFocused, isHovered) {
         return Draggable<EntryIdentifier>(
           data: entryIdentifier,
-          onDragStarted: () {
-            // Because we initially start dragging over itself, we know that we are dragging inside the graph.
-            // And want to prevent the feedback from being shown.
-            // However the graph doesn't know that we are dragging on it yet.
-            graphDrag?.draggingInsideGraph.value = true;
-          },
+          onDragStarted: () => graphDrag?.beginDrag(entryIdentifier),
+          onDragEnd: (_) => graphDrag?.endDrag(),
           feedback: HookBuilder(
             builder: (context) {
               useListenable(graphDrag?.draggingInsideGraph);
@@ -92,27 +88,30 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                   blueprint: definition.blueprint,
                   isDeprecated: isDeprecated,
                 ),
-          child: DragTarget<EntryIdentifier>(
-            onWillAcceptWithDetails: (_) {
-              // TODO: Evaluate accepting paths for linking on drop.
-              return false;
-            },
-            onAcceptWithDetails: (_) async {
-              // TODO: Implement linking flow on drop.
-            },
-            builder: (context, candidateData, rejectedData) {
-              final isAccepting = candidateData.isNotEmpty;
-              final isRejecting = rejectedData.isNotEmpty;
+          child: GraphDragTargetRegion(
+            targetId: entryIdentifier.graphId,
+            child: DragTarget<EntryIdentifier>(
+              onWillAcceptWithDetails: (_) {
+                // TODO: Evaluate accepting paths for linking on drop.
+                return false;
+              },
+              onAcceptWithDetails: (_) async {
+                // TODO: Implement linking flow on drop.
+              },
+              builder: (context, candidateData, rejectedData) {
+                final isAccepting = candidateData.isNotEmpty;
+                final isRejecting = rejectedData.isNotEmpty;
 
-              return child(
-                context: context,
-                isDeprecated: isDeprecated,
-                isFocused: isFocused,
-                isSelected: isSelected,
-                isAccepting: isAccepting,
-                isRejecting: isRejecting,
-              );
-            },
+                return child(
+                  context: context,
+                  isDeprecated: isDeprecated,
+                  isFocused: isFocused,
+                  isSelected: isSelected,
+                  isAccepting: isAccepting,
+                  isRejecting: isRejecting,
+                );
+              },
+            ),
           ),
         );
       },

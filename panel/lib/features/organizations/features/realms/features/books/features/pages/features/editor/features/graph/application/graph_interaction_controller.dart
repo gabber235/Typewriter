@@ -10,6 +10,7 @@ class GraphInteractionController extends ChangeNotifier {
   GraphResizePreview? _resize;
   final Map<GraphIdentifier, (int, int)> _keyboardPositions = {};
   final ValueNotifier<bool> draggingInsideGraph = ValueNotifier(false);
+  final ValueNotifier<GraphIdentifier?> activeDragId = ValueNotifier(null);
 
   Set<GraphIdentifier> get movingIds => _movingIds;
   Offset get moveOffset => _moveOffset;
@@ -166,6 +167,7 @@ class GraphInteractionController extends ChangeNotifier {
   @override
   void dispose() {
     draggingInsideGraph.dispose();
+    activeDragId.dispose();
     super.dispose();
   }
 }

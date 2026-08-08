@@ -1,5 +1,7 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 enum GraphDragTargetSlot { graph, dragTarget }
 
@@ -9,6 +11,7 @@ class GraphDragTargetSurface
   const GraphDragTargetSurface({
     required this.viewport,
     required this.enabled,
+    required this.activeDragId,
     required this.graph,
     required this.dragTarget,
     super.key,
@@ -16,6 +19,7 @@ class GraphDragTargetSurface
 
   final Rect viewport;
   final bool enabled;
+  final ValueListenable<GraphIdentifier?> activeDragId;
   final Widget graph;
   final Widget dragTarget;
 
@@ -32,7 +36,11 @@ class GraphDragTargetSurface
 
   @override
   RenderGraphDragTargetSurface createRenderObject(BuildContext context) {
-    return RenderGraphDragTargetSurface(viewport: viewport, enabled: enabled);
+    return RenderGraphDragTargetSurface(
+      viewport: viewport,
+      enabled: enabled,
+      activeDragId: activeDragId,
+    );
   }
 
   @override
@@ -42,15 +50,45 @@ class GraphDragTargetSurface
   ) {
     renderObject
       ..viewport = viewport
-      ..enabled = enabled;
+      ..enabled = enabled
+      ..activeDragId = activeDragId;
   }
+}
+
+class GraphDragTargetRegion extends StatelessWidget {
+  const GraphDragTargetRegion({
+    required this.targetId,
+    required this.child,
+    super.key,
+  });
+
+  final GraphIdentifier targetId;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MetaData(
+      metaData: _GraphDragTargetRegionMarker(targetId),
+      child: child,
+    );
+  }
+}
+
+class _GraphDragTargetRegionMarker {
+  const _GraphDragTargetRegionMarker(this.targetId);
+
+  final GraphIdentifier targetId;
 }
 
 class RenderGraphDragTargetSurface extends RenderBox
     with SlottedContainerRenderObjectMixin<GraphDragTargetSlot, RenderBox> {
-  RenderGraphDragTargetSurface({required Rect viewport, required bool enabled})
-    : _viewport = viewport,
-      _enabled = enabled;
+  RenderGraphDragTargetSurface({
+    required Rect viewport,
+    required bool enabled,
+    required ValueListenable<GraphIdentifier?> activeDragId,
+  }) : _viewport = viewport,
+       _enabled = enabled,
+       _activeDragId = activeDragId;
 
   Rect _viewport;
   Rect get viewport => _viewport;
@@ -66,6 +104,13 @@ class RenderGraphDragTargetSurface extends RenderBox
     if (_enabled == value) return;
     _enabled = value;
     markNeedsLayout();
+  }
+
+  ValueListenable<GraphIdentifier?> _activeDragId;
+  ValueListenable<GraphIdentifier?> get activeDragId => _activeDragId;
+  set activeDragId(ValueListenable<GraphIdentifier?> value) {
+    if (_activeDragId == value) return;
+    _activeDragId = value;
   }
 
   @override
@@ -112,10 +157,18 @@ class RenderGraphDragTargetSurface extends RenderBox
     final graph = childForSlot(GraphDragTargetSlot.graph);
     final dragTarget = childForSlot(GraphDragTargetSlot.dragTarget);
     var anyHit = false;
+    final initialPathLength = result.path.length;
     if (graph != null) {
       anyHit = _hitChild(result, position, graph);
     }
-    if (enabled && dragTarget != null) {
+    final blocksGraphDrag = result.path
+        .skip(initialPathLength)
+        .map((entry) => entry.target)
+        .whereType<RenderMetaData>()
+        .map((target) => target.metaData)
+        .whereType<_GraphDragTargetRegionMarker>()
+        .any((marker) => marker.targetId != activeDragId.value);
+    if (enabled && dragTarget != null && !blocksGraphDrag) {
       anyHit = _hitChild(result, position, dragTarget) || anyHit;
     }
     return anyHit;

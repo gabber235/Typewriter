@@ -69,6 +69,58 @@ class TagMovePayload {
   final int y;
 }
 
+enum TagParentDropAction { link, unlink }
+
+TagParentDropAction? tagParentDropAction(
+  Iterable<Tag> tags, {
+  required skir.RecordId childId,
+  required skir.RecordId parentId,
+}) {
+  final tagsById = {for (final tag in tags) tag.tagId: tag};
+  final child = tagsById[childId];
+  if (child == null || !tagsById.containsKey(parentId)) return null;
+  if (childId == parentId) return null;
+  if (child.parentIds.contains(parentId)) return TagParentDropAction.unlink;
+
+  final parentIsAncestor = _isAncestor(
+    tagsById,
+    tagId: childId,
+    ancestorId: parentId,
+  );
+  if (parentIsAncestor ?? true) return null;
+
+  final childIsAncestor = _isAncestor(
+    tagsById,
+    tagId: parentId,
+    ancestorId: childId,
+  );
+  if (childIsAncestor ?? true) return null;
+
+  return TagParentDropAction.link;
+}
+
+bool? _isAncestor(
+  Map<skir.RecordId, Tag> tagsById, {
+  required skir.RecordId tagId,
+  required skir.RecordId ancestorId,
+}) {
+  final pendingIds = [tagId];
+  final visitedIds = <skir.RecordId>{};
+  while (pendingIds.isNotEmpty) {
+    final currentId = pendingIds.removeLast();
+    if (!visitedIds.add(currentId)) continue;
+
+    final current = tagsById[currentId];
+    if (current == null) return null;
+    for (final parentId in current.parentIds) {
+      if (parentId == ancestorId) return true;
+      pendingIds.add(parentId);
+    }
+  }
+
+  return false;
+}
+
 @riverpod
 class Tags extends _$Tags {
   final Map<skir.RecordId, int> _moveVersions = {};
@@ -219,6 +271,28 @@ class Tags extends _$Tags {
       state = previousState;
       rethrow;
     }
+  }
+
+  Future<void> toggleTagParent(
+    skir.RecordId childId,
+    skir.RecordId parentId,
+  ) async {
+    state.ensureReady();
+    final tags = state.requireValue;
+    final action = tagParentDropAction(
+      tags,
+      childId: childId,
+      parentId: parentId,
+    );
+    if (action == null) return;
+
+    final child = tags.firstWhere((tag) => tag.tagId == childId);
+    final parentIds = switch (action) {
+      TagParentDropAction.link => [...child.parentIds, parentId],
+      TagParentDropAction.unlink =>
+        child.parentIds.where((id) => id != parentId).toList(),
+    };
+    await updateTag(child.copyWith(parentIds: parentIds));
   }
 
   Future<void> deleteTag(skir.RecordId tagId) async {

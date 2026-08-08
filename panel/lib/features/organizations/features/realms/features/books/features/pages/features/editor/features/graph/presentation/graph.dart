@@ -202,9 +202,11 @@ class Graph extends HookConsumerWidget {
                   return GraphDragTargetSurface(
                     viewport: viewportRect,
                     enabled: onElementsMoved != null,
+                    activeDragId: interactionController.activeDragId,
                     graph: GraphDrag(
                       draggingInsideGraph:
                           interactionController.draggingInsideGraph,
+                      activeDragId: interactionController.activeDragId,
                       child: Actions(
                         actions: {
                           SelectedSelectorIntent:

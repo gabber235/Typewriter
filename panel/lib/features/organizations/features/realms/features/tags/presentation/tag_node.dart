@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/features/organizations/features/realms/features/tags/presentation/rejected_tag_drop_target.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -29,13 +30,13 @@ class TagNode extends HookConsumerWidget {
   }
 }
 
-class _TagNode extends HookWidget {
+class _TagNode extends HookConsumerWidget {
   const _TagNode({required this.tag});
 
   final Tag tag;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
 
     final tagColor = tag.color.toARGB32() != 0
@@ -58,15 +59,12 @@ class _TagNode extends HookWidget {
               isFocused: isFocused,
               isHovered: isHovered,
             );
+            final identifier = TagIdentifier(tag.tagId);
 
             return Draggable<TagIdentifier>(
-              data: TagIdentifier(tag.tagId),
-              onDragStarted: () {
-                // Because we initially start dragging over itself, we know that we are dragging inside the graph.
-                // And want to prevent the feedback from being shown.
-                // However the graph doesn't know that we are dragging on it yet.
-                graphDrag?.draggingInsideGraph.value = true;
-              },
+              data: identifier,
+              onDragStarted: () => graphDrag?.beginDrag(identifier),
+              onDragEnd: (_) => graphDrag?.endDrag(),
               feedback: HookBuilder(
                 builder: (context) {
                   useListenable(graphDrag?.draggingInsideGraph);
@@ -82,27 +80,37 @@ class _TagNode extends HookWidget {
               childWhenDragging: graphDrag?.draggingInsideGraph.value ?? false
                   ? content
                   : PlaceholderTagNode(name: tag.name, color: tagColor),
-              child: DragTarget<TagIdentifier>(
-                onWillAcceptWithDetails: (details) {
-                  // TODO: Must check that this will not create a cycle
-                  return details.data.tagId != tag.tagId;
-                },
-                onAcceptWithDetails: (details) {
-                  // TODO: Implement tag linking/grouping when dropped on another tag
-                },
-                builder: (context, candidateData, rejectedData) {
-                  final isDropTarget = candidateData.isNotEmpty;
-                  if (isDropTarget) {
-                    return _TagNodeContent(
-                      tag: tag,
-                      tagColor: tagColor,
-                      isSelected: true,
-                      isFocused: true,
-                      isHovered: true,
-                    );
-                  }
-                  return content;
-                },
+              child: GraphDragTargetRegion(
+                targetId: identifier.graphId,
+                child: DragTarget<TagIdentifier>(
+                  onWillAcceptWithDetails: (details) =>
+                      tagParentDropAction(
+                        ref.read(tagsProvider).value ?? const [],
+                        childId: tag.tagId,
+                        parentId: details.data.tagId,
+                      ) !=
+                      null,
+                  onAcceptWithDetails: (details) => ref
+                      .read(tagsProvider.notifier)
+                      .toggleTagParent(tag.tagId, details.data.tagId),
+                  builder: (context, candidateData, rejectedData) {
+                    final isDropTarget = candidateData.isNotEmpty;
+                    final isRejected = rejectedData.isNotEmpty;
+                    if (isRejected) {
+                      return RejectedTagDropTarget(tag: tag);
+                    }
+                    if (isDropTarget) {
+                      return _TagNodeContent(
+                        tag: tag,
+                        tagColor: tagColor,
+                        isSelected: true,
+                        isFocused: true,
+                        isHovered: true,
+                      );
+                    }
+                    return content;
+                  },
+                ),
               ),
             );
           },
