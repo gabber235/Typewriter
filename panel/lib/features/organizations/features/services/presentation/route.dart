@@ -196,6 +196,8 @@ class _ServiceCard extends HookConsumerWidget {
     final selectableId = ServiceIdentifier(service.serviceId);
     final scope = StackRouterScope.of(context);
 
+    useRefreshAt(service.nextTimeout);
+
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,

@@ -62,6 +62,8 @@ abstract class Service with _$Service {
 
   String get label => roles.map((role) => role.label).toList().join(" & ");
 
+  DateTime get nextTimeout => state?.nextTimeout ?? lastSeen ?? DateTime.now();
+
   bool get isEngine => roles.any((role) => role is EngineServiceRole);
   bool get isRealm => roles.any((role) => role is RealmServiceRole);
   bool get isCustom => roles.any((role) => role is CustomServiceRole);
@@ -156,6 +158,8 @@ abstract class ServiceRegistration with _$ServiceRegistration {
   }
 }
 
+const _serviceStateTimeout = Duration(minutes: 2);
+
 @freezed
 abstract class ServiceState with _$ServiceState {
   const factory ServiceState({
@@ -178,7 +182,12 @@ abstract class ServiceState with _$ServiceState {
 
   bool get isOnline {
     if (status == ServiceStateStatus.offline) return false;
-    return DateTime.now().difference(lastSeen) < const Duration(minutes: 2);
+    return DateTime.now().difference(lastSeen) < _serviceStateTimeout;
+  }
+
+  DateTime get nextTimeout {
+    if (status == ServiceStateStatus.offline) return lastSeen;
+    return lastSeen.add(_serviceStateTimeout);
   }
 
   String get lastSeenLabel {

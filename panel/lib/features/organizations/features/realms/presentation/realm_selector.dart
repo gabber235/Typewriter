@@ -77,66 +77,88 @@ class _RealmMenuContent extends HookConsumerWidget {
             itemCount: filteredRealms.length,
             itemBuilder: (context, index) {
               final realm = filteredRealms[index];
-              final isSelected = realm.serviceId == selectedRealm?.serviceId;
 
-              final onColor = realm.color.on(context);
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: Material(
-                  borderRadius: context.shapes.mediumBorderRadius,
-                  color: isSelected ? realm.color : null,
-                  child: Surface(
-                    color: isSelected ? realm.color : Surface.colorOf(context),
-                    child: ListTile(
-                      dense: true,
-                      leading: Icon(
-                        realm.icon,
-                        size: 20,
-                        color: isSelected ? onColor : realm.color,
-                      ),
-                      title: Text(
-                        realm.displayName,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: isSelected ? onColor : null,
-                        ),
-                      ),
-                      subtitle: StatusIndicator(
-                        isOnline: realm.isOnline,
-                        lastSeen: realm.lastSeen,
-                        dotColor: isSelected
-                            ? onColor
-                            : _statusDotColor(context, realm.isOnline),
-                        textColor: isSelected
-                            ? onColor.withValues(alpha: 0.7)
-                            : _statusTextColor(context, realm.isOnline),
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: isSelected ? onColor : null,
-                      ),
-                      onTap: () {
-                        final orgId = ref.read(organizationIdProvider);
-                        if (orgId == null) return;
-                        context.router.navigate(
-                          OrganizationRoute(
-                            organizationId: orgId.id,
-                            children: [RealmRoute(realmId: realm.serviceId.id)],
-                          ),
-                        );
-                        onDismiss(realm);
-                      },
-                    ),
-                  ),
-                ),
+              return _RealmMenuItem(
+                realm: realm,
+                isSelected: realm.serviceId == selectedRealm?.serviceId,
+                onDismiss: onDismiss,
               );
             },
           ),
         ),
         SizedBox(height: context.spacing.space2),
       ],
+    );
+  }
+}
+
+class _RealmMenuItem extends HookConsumerWidget {
+  const _RealmMenuItem({
+    required this.realm,
+    required this.isSelected,
+    required this.onDismiss,
+  });
+
+  final Service realm;
+  final bool isSelected;
+  final void Function(Service) onDismiss;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final onColor = realm.color.on(context);
+
+    useRefreshAt(realm.nextTimeout);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Material(
+        borderRadius: context.shapes.mediumBorderRadius,
+        color: isSelected ? realm.color : null,
+        child: Surface(
+          color: isSelected ? realm.color : Surface.colorOf(context),
+          child: ListTile(
+            dense: true,
+            leading: Icon(
+              realm.icon,
+              size: 20,
+              color: isSelected ? onColor : realm.color,
+            ),
+            title: Text(
+              realm.displayName,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                color: isSelected ? onColor : null,
+              ),
+            ),
+            subtitle: StatusIndicator(
+              isOnline: realm.isOnline,
+              lastSeen: realm.lastSeen,
+              dotColor: isSelected
+                  ? onColor
+                  : _statusDotColor(context, realm.isOnline),
+              textColor: isSelected
+                  ? onColor.withValues(alpha: 0.7)
+                  : _statusTextColor(context, realm.isOnline),
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: isSelected ? onColor : null,
+            ),
+            onTap: () {
+              final orgId = ref.read(organizationIdProvider);
+              if (orgId == null) return;
+              context.router.navigate(
+                OrganizationRoute(
+                  organizationId: orgId.id,
+                  children: [RealmRoute(realmId: realm.serviceId.id)],
+                ),
+              );
+              onDismiss(realm);
+            },
+          ),
+        ),
+      ),
     );
   }
 }
