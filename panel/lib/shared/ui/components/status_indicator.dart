@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-class StatusIndicator extends StatelessWidget {
+class StatusIndicator extends HookWidget {
   const StatusIndicator({
     required this.isOnline,
     this.lastSeen,
@@ -44,11 +45,27 @@ class StatusIndicator extends StatelessWidget {
     }
   }
 
+  DateTime get nextRefreshAt {
+    final now = DateTime.now();
+    if (isOnline) return now.add(Duration(seconds: 10));
+    if (lastSeen == null) return now;
+
+    final difference = now.difference(lastSeen!);
+    if (difference.inMinutes < 60) return now.add(Duration(seconds: 60 - difference.inSeconds % 60));
+    if (difference.inHours < 24) return now.add(Duration(seconds: 60 * 60 - difference.inSeconds % 60 * 60));
+    if (difference.inDays < 7) return now.add(Duration(seconds: 60 * 60 * 24 - difference.inSeconds % 60 * 60 * 24));
+    if (difference.inDays < 30) return now.add(Duration(seconds: 60 * 60 * 24 * 7 - difference.inSeconds % 60 * 60 * 24 * 7));
+    if (difference.inDays < 365) return now.add(Duration(seconds: 60 * 60 * 24 * 30 - difference.inSeconds % 60 * 60 * 24 * 30));
+    return now.add(Duration(seconds: 60 * 60 * 24 * 365 - difference.inSeconds % 60 * 60 * 24 * 365));
+  }
+
   @override
   Widget build(BuildContext context) {
     final effectiveDotColor =
         dotColor ?? (isOnline ? context.colors.online : context.colors.offline);
     final effectiveTextColor = textColor ?? context.colors.contentSecondary;
+
+    useRefreshAt(nextRefreshAt);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
