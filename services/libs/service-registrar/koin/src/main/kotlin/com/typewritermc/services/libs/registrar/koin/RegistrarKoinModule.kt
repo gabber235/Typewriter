@@ -15,7 +15,9 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.module.Module
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 
 /** Wires registrar adapters while leaving storage, telemetry, scope, and lifecycle application-owned. */
 fun registrarModule(
@@ -25,7 +27,7 @@ fun registrarModule(
 ): Module =
     module {
         single { configuration }
-        single<HttpTransport> { JdkHttpTransport(httpConfiguration) }
+        single { JdkHttpTransport(httpConfiguration) } onClose { it?.close() } bind HttpTransport::class
         single { ServiceHttpClient(get(), get(), get<OpenTelemetry>().propagators) }
         single<IdentityIssuer> { TypewriterIdentityIssuer(get(), configuration.identityIssueUri) }
         single<RegistrarRuntimeFactory> {
