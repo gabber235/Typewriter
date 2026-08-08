@@ -28,115 +28,109 @@ class LibraryPage extends HookConsumerWidget {
           .select(BookIdentifier(newBook.bookId));
     }
 
-    return Inspector(
+    return Pane(
+      id: "library",
+      primary: true,
+      borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,
-        right: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
       ),
-      child: Pane(
-        id: "library",
-        primary: true,
-        borderRadius: context.shapes.largeBorderRadius,
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          left: context.spacing.space2,
-          right: context.isMobile ? context.spacing.space2 : 0,
-        ),
-        child: Section(
-          margin: EdgeInsets.zero,
-          child: ManagedActionSet(
-            shortcuts: [
-              ActionShortcut(
-                id: "library.create",
-                label: "Create Book",
-                description: "Create a new book",
-                activators: const [
-                  SingleActivator(LogicalKeyboardKey.keyN),
-                  SingleActivator(LogicalKeyboardKey.keyA),
-                  SingleActivator(LogicalKeyboardKey.numpadAdd),
-                ],
-                priority: 100,
-                icon: const Icon(Icons.add),
-                onInvoke: (_) => handleCreateBook(),
-              ),
-            ],
-            child: FloatingButton(
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: ManagedActionSet(
+          shortcuts: [
+            ActionShortcut(
+              id: "library.create",
+              label: "Create Book",
+              description: "Create a new book",
+              activators: const [
+                SingleActivator(LogicalKeyboardKey.keyN),
+                SingleActivator(LogicalKeyboardKey.keyA),
+                SingleActivator(LogicalKeyboardKey.numpadAdd),
+              ],
+              priority: 100,
               icon: const Icon(Icons.add),
-              onPressed: handleCreateBook,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const PageHeading(
-                    title: "Library",
-                    subtext:
-                        "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(context.spacing.space4),
-                    child: DecoratedTextField(
-                      focusNode: useFocusNode(),
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: "Search books...",
-                        prefixIcon: const Icon(Icons.search),
-                      ),
-                      onChanged: (value) => searchQuery.value = value,
+              onInvoke: (_) => handleCreateBook(),
+            ),
+          ],
+          child: FloatingButton(
+            icon: const Icon(Icons.add),
+            onPressed: handleCreateBook,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const PageHeading(
+                  title: "Library",
+                  subtext:
+                      "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
+                ),
+                Padding(
+                  padding: EdgeInsets.all(context.spacing.space4),
+                  child: DecoratedTextField(
+                    focusNode: useFocusNode(),
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      hintText: "Search books...",
+                      prefixIcon: const Icon(Icons.search),
                     ),
+                    onChanged: (value) => searchQuery.value = value,
                   ),
-                  Expanded(
-                    child: filteredBooks(
-                      name: "filtered books",
-                      builder: (books) {
-                        if (books.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No books match your search",
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                          );
-                        }
-
-                        return ClipPath(
-                          clipper: VerticalClipper(additionalWidth: 100),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: context.spacing.space2,
-                              vertical: context.spacing.space4,
-                            ),
-                            child: ResponsiveGridView.builder(
-                              gridDelegate: ResponsiveGridDelegate(
-                                crossAxisExtent: bookWidth,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                childAspectRatio: bookAspectRatio,
-                              ),
-                              clipBehavior: Clip.none,
-                              alignment: Alignment.center,
-                              itemCount: books.length,
-                              itemBuilder: (context, index) {
-                                final book = books[index];
-                                return BookWidget(
-                                  id: book.bookId,
-                                  title: book.title,
-                                  icon: Icones(book.icon),
-                                  color: book.color,
-                                  tags: book.tagIds
-                                      .map(
-                                        (tagId) =>
-                                            ref.watch(tagProvider(tagId)).value,
-                                      )
-                                      .nonNulls
-                                      .toList(),
-                                );
-                              },
-                            ),
+                ),
+                Expanded(
+                  child: filteredBooks(
+                    name: "filtered books",
+                    builder: (books) {
+                      if (books.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "No books match your search",
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         );
-                      },
-                    ),
+                      }
+
+                      return ClipPath(
+                        clipper: VerticalClipper(additionalWidth: 100),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.spacing.space2,
+                            vertical: context.spacing.space4,
+                          ),
+                          child: ResponsiveGridView.builder(
+                            gridDelegate: ResponsiveGridDelegate(
+                              crossAxisExtent: bookWidth,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: bookAspectRatio,
+                            ),
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
+                            itemCount: books.length,
+                            itemBuilder: (context, index) {
+                              final book = books[index];
+                              return BookWidget(
+                                id: book.bookId,
+                                title: book.title,
+                                icon: Icones(book.icon),
+                                color: book.color,
+                                tags: book.tagIds
+                                    .map(
+                                      (tagId) =>
+                                          ref.watch(tagProvider(tagId)).value,
+                                    )
+                                    .nonNulls
+                                    .toList(),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

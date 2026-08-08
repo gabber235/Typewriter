@@ -25,66 +25,60 @@ class TagsPage extends HookConsumerWidget {
       ref.read(selectionProvider.notifier).select(TagIdentifier(newTag.tagId));
     }
 
-    return Inspector(
+    return Pane(
+      id: "tags",
+      primary: true,
+      borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,
-        right: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
       ),
-      child: Pane(
-        id: "tags",
-        primary: true,
-        borderRadius: context.shapes.largeBorderRadius,
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          left: context.spacing.space2,
-          right: context.isMobile ? context.spacing.space2 : 0,
-        ),
-        child: Section(
-          margin: EdgeInsets.zero,
-          child: ManagedActionSet(
-            shortcuts: [
-              ActionShortcut(
-                id: "tags.create",
-                label: "Create Tag",
-                description: "Create a new tag",
-                activators: const [
-                  SingleActivator(LogicalKeyboardKey.keyN),
-                  SingleActivator(LogicalKeyboardKey.keyA),
-                  SingleActivator(LogicalKeyboardKey.numpadAdd),
-                ],
-                priority: 100,
-                icon: const Icon(Icons.add),
-                onInvoke: (_) => handleCreateTag(),
-              ),
-            ],
-            child: FloatingButton(
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: ManagedActionSet(
+          shortcuts: [
+            ActionShortcut(
+              id: "tags.create",
+              label: "Create Tag",
+              description: "Create a new tag",
+              activators: const [
+                SingleActivator(LogicalKeyboardKey.keyN),
+                SingleActivator(LogicalKeyboardKey.keyA),
+                SingleActivator(LogicalKeyboardKey.numpadAdd),
+              ],
+              priority: 100,
               icon: const Icon(Icons.add),
-              onPressed: handleCreateTag,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const PageHeading(
-                    title: "Tags",
-                    subtext:
-                        "Organize books with colored labels that match your project structure. Build nested tag groups for locations or story progress, then use them to filter large libraries.",
+              onInvoke: (_) => handleCreateTag(),
+            ),
+          ],
+          child: FloatingButton(
+            icon: const Icon(Icons.add),
+            onPressed: handleCreateTag,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const PageHeading(
+                  title: "Tags",
+                  subtext:
+                      "Organize books with colored labels that match your project structure. Build nested tag groups for locations or story progress, then use them to filter large libraries.",
+                ),
+                Expanded(
+                  child: tagsAsync(
+                    name: "tags",
+                    builder: (tags) {
+                      if (tags.isEmpty) {
+                        return EmptyScreen(
+                          title: "No tags yet",
+                          buttonText: "Create Tag",
+                          onPressed: handleCreateTag,
+                        );
+                      }
+                      return const TagGraph();
+                    },
                   ),
-                  Expanded(
-                    child: tagsAsync(
-                      name: "tags",
-                      builder: (tags) {
-                        if (tags.isEmpty) {
-                          return EmptyScreen(
-                            title: "No tags yet",
-                            buttonText: "Create Tag",
-                            onPressed: handleCreateTag,
-                          );
-                        }
-                        return const TagGraph();
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

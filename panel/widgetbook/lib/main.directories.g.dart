@@ -37,8 +37,6 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/presentation/mode_display_chip.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_interaction_mode_presentation_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/search_result_item.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_search_result_item_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/decorated_text_field.stories.dart'
@@ -75,6 +73,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
+    as _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_frame.stories.dart'
     as _widgetbook_workspace_stories_shared_search_presentation_search_frame_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_modal.stories.dart'
@@ -363,152 +363,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                                 ],
                                               ),
                                               _widgetbook.WidgetbookFolder(
-                                                name: 'inspector',
-                                                children: [
-                                                  _widgetbook.WidgetbookFolder(
-                                                    name: 'presentation',
-                                                    children: [
-                                                      _widgetbook.WidgetbookFolder(
-                                                        name: 'editors',
-                                                        children: [
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
-                                                                'BooleanEditor',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories
-                                                                        .booleanEditorUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
-                                                                'FieldValueEditor',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name:
-                                                                    'Conflict',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                                                        .conflictValueEditorUseCase,
-                                                              ),
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Loading',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                                                        .loadingEditorUseCase,
-                                                              ),
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'None',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                                                        .noneValueEditorUseCase,
-                                                              ),
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Value',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                                                        .valueEditorUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name: 'ListEditor',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories
-                                                                        .listEditorUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
-                                                                'NumberEditor',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories
-                                                                        .numberEditorUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
-                                                                'StringEditor',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name: 'Default',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories
-                                                                        .stringEditorUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      _widgetbook.WidgetbookFolder(
-                                                        name: 'operations',
-                                                        children: [
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
-                                                                'DeleteOperationButton',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name:
-                                                                    'Multiple Success',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
-                                                                        .deleteMultipleSuccessUseCase,
-                                                              ),
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name:
-                                                                    'Partial Failures',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
-                                                                        .deletePartialFailureUseCase,
-                                                              ),
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name:
-                                                                    'Single Success',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
-                                                                        .deleteSingleSuccessUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                              _widgetbook.WidgetbookFolder(
-                                                name: 'interaction_mode',
-                                                children: [
-                                                  _widgetbook.WidgetbookFolder(
-                                                    name: 'presentation',
-                                                    children: [
-                                                      _widgetbook.WidgetbookComponent(
-                                                        name: 'ModeDisplayChip',
-                                                        useCases: [
-                                                          _widgetbook.WidgetbookUseCase(
-                                                            name: 'Default',
-                                                            builder:
-                                                                _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_interaction_mode_presentation_mode_display_chip_stories
-                                                                    .modeDisplayChipNormal,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                              _widgetbook.WidgetbookFolder(
                                                 name: 'search',
                                                 children: [
                                                   _widgetbook.WidgetbookFolder(
@@ -601,41 +455,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                           _widgetbook.WidgetbookFolder(
                                             name: 'presentation',
                                             children: [
-                                              _widgetbook.WidgetbookComponent(
-                                                name: 'DecoratedTextField',
-                                                useCases: [
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'Default',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
-                                                            .inputFieldUseCase,
-                                                  ),
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'Error',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
-                                                            .inputFieldErrorUseCase,
-                                                  ),
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'Multiline',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
-                                                            .inputFieldMultilineUseCase,
-                                                  ),
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'With Callbacks',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
-                                                            .inputFieldWithCallbacksUseCase,
-                                                  ),
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'With Prefix Icon',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
-                                                            .inputFieldWithPrefixIconUseCase,
-                                                  ),
-                                                ],
-                                              ),
                                               _widgetbook.WidgetbookComponent(
                                                 name: 'Dropdown<Object>',
                                                 useCases: [
@@ -969,6 +788,155 @@ final directories = <_widgetbook.WidgetbookNode>[
     name: 'shared',
     children: [
       _widgetbook.WidgetbookFolder(
+        name: 'editors',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'presentation',
+            children: [
+              _widgetbook.WidgetbookFolder(
+                name: 'components',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'DecoratedTextField',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
+                                .inputFieldUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Error',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
+                                .inputFieldErrorUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Multiline',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
+                                .inputFieldMultilineUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'With Callbacks',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
+                                .inputFieldWithCallbacksUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'With Prefix Icon',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
+                                .inputFieldWithPrefixIconUseCase,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'editors',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'BooleanEditor',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories
+                                .booleanEditorUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'FieldValueEditor',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Conflict',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                                .conflictValueEditorUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Loading',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                                .loadingEditorUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'None',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                                .noneValueEditorUseCase,
+                      ),
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Value',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                                .valueEditorUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'ListEditor',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories
+                                .listEditorUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'NumberEditor',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories
+                                .numberEditorUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'StringEditor',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Default',
+                        builder:
+                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories
+                                .stringEditorUseCase,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'interaction_mode',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'presentation',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'ModeDisplayChip',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories
+                            .modeDisplayChipNormal,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
         name: 'search',
         children: [
           _widgetbook.WidgetbookFolder(
@@ -999,6 +967,39 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_search_presentation_search_modal_stories
                             .searchModalRouteUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'selectables',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'operations',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'DeleteOperationButton',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Multiple Success',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
+                            .deleteMultipleSuccessUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Partial Failures',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
+                            .deletePartialFailureUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Single Success',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories
+                            .deleteSingleSuccessUseCase,
                   ),
                 ],
               ),

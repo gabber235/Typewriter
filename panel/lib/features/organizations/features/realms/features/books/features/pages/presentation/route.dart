@@ -12,36 +12,30 @@ class PagePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final page = ref.watch(pagesProvider(recordId("page:$pageId")));
-    return Inspector(
+    return Pane(
+      id: "pagepage",
+      primary: true,
+      borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,
-        right: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
       ),
-      child: Pane(
-        id: "pagepage",
-        primary: true,
-        borderRadius: context.shapes.largeBorderRadius,
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          left: context.spacing.space2,
-          right: context.isMobile ? context.spacing.space2 : 0,
-        ),
-        child: Section(
-          margin: EdgeInsets.zero,
-          child: page(
-            name: "page",
-            builder: (page) {
-              return switch (page.type) {
-                PageType.static ||
-                PageType.sequence ||
-                PageType.manifest => EntryGraph(
-                  pageId: pageId,
-                  graphDirection: page.type.direction!,
-                ),
-                PageType.scene => EntryScene(pageId: pageId),
-              };
-            },
-          ),
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: page(
+          name: "page",
+          builder: (page) {
+            return switch (page.type) {
+              PageType.static ||
+              PageType.sequence ||
+              PageType.manifest => EntryGraph(
+                pageId: pageId,
+                graphDirection: page.type.direction!,
+              ),
+              PageType.scene => EntryScene(pageId: pageId),
+            };
+          },
         ),
       ),
     );

@@ -82,7 +82,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
   }
 }
 
-class TestSelectable extends Selectable<TestSelectableIdentifier> {
+class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   TestSelectable({
     required this.ref,
     required this.id,
@@ -107,8 +107,8 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
   final VoidCallback? onDelete;
 
   @override
-  List<SelectableOperation> get operations => [
-    if (onDelete != null) DeleteSelectableOperation(onDelete: onDelete!),
+  List<SelectionCapability> get capabilities => [
+    if (onDelete != null) DeleteSelectionCapability(onDelete: onDelete!),
   ];
 
   @override
@@ -137,7 +137,7 @@ class TestSelectable extends Selectable<TestSelectableIdentifier> {
   }
 
   @override
-  Widget? header() => TestSelectableHeader(selectable: this);
+  Widget? buildInspectorHeader() => TestSelectableHeader(selectable: this);
 
   @override
   void setFieldValue(String path, dynamic value) {

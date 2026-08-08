@@ -17,78 +17,72 @@ class ServicesPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(servicesProvider);
 
-    return Inspector(
+    return Pane(
+      id: "services",
+      primary: true,
+      borderRadius: context.shapes.largeBorderRadius,
       margin: EdgeInsets.only(
         top: context.spacing.space2,
-        right: context.spacing.space2,
+        left: context.spacing.space2,
+        right: context.isMobile ? context.spacing.space2 : 0,
       ),
-      child: Pane(
-        id: "services",
-        primary: true,
-        borderRadius: context.shapes.largeBorderRadius,
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          left: context.spacing.space2,
-          right: context.isMobile ? context.spacing.space2 : 0,
-        ),
-        child: Section(
-          margin: EdgeInsets.zero,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PageHeading(
-                title: "Services",
-                subtext:
-                    "Connect Minecraft servers and content realms to this organization. Enter the registration token shown in your server console to register a service and begin syncing Typewriter content.",
-              ),
-              Padding(
-                padding: EdgeInsets.all(context.spacing.space4),
-                child: const _TokenInput(),
-              ),
-              Expanded(
-                child: servicesAsync(
-                  name: "Services",
-                  builder: (services) {
-                    if (services.isEmpty) {
-                      return Center(
-                        child: EmptyState(
-                          title: "No services connected",
-                          description:
-                              "Start a server with Typewriter installed and enter the registration token above.",
-                          icon: MaterialSymbols.dns,
-                        ),
-                      );
-                    }
-
-                    return ClipPath(
-                      clipper: VerticalClipper(additionalWidth: 100),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.spacing.space2,
-                          vertical: context.spacing.space4,
-                        ),
-                        child: ResponsiveGridView.builder(
-                          gridDelegate: ResponsiveGridDelegate(
-                            crossAxisExtent: _serviceCardWidth,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: _serviceCardAspectRatio,
-                          ),
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.center,
-                          itemCount: services.length,
-                          itemBuilder: (context, index) {
-                            final service = services[index];
-                            return _ServiceCard(service: service);
-                          },
-                        ),
+      child: Section(
+        margin: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const PageHeading(
+              title: "Services",
+              subtext:
+                  "Connect Minecraft servers and content realms to this organization. Enter the registration token shown in your server console to register a service and begin syncing Typewriter content.",
+            ),
+            Padding(
+              padding: EdgeInsets.all(context.spacing.space4),
+              child: const _TokenInput(),
+            ),
+            Expanded(
+              child: servicesAsync(
+                name: "Services",
+                builder: (services) {
+                  if (services.isEmpty) {
+                    return Center(
+                      child: EmptyState(
+                        title: "No services connected",
+                        description:
+                            "Start a server with Typewriter installed and enter the registration token above.",
+                        icon: MaterialSymbols.dns,
                       ),
                     );
-                  },
-                ),
+                  }
+
+                  return ClipPath(
+                    clipper: VerticalClipper(additionalWidth: 100),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.space2,
+                        vertical: context.spacing.space4,
+                      ),
+                      child: ResponsiveGridView.builder(
+                        gridDelegate: ResponsiveGridDelegate(
+                          crossAxisExtent: _serviceCardWidth,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: _serviceCardAspectRatio,
+                        ),
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        itemCount: services.length,
+                        itemBuilder: (context, index) {
+                          final service = services[index];
+                          return _ServiceCard(service: service);
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

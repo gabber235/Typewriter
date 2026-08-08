@@ -346,7 +346,7 @@ class BookIdentifier extends SelectableIdentifier {
   String toString() => "BookIdentifier(bookId: $bookId)";
 }
 
-class BookSelection extends Selectable<BookIdentifier> {
+class BookSelection extends InspectableSelectable<BookIdentifier> {
   BookSelection({required this.ref, required this.id, required this.book})
     : _data = DynamicData({"title": book.title});
 
@@ -367,10 +367,10 @@ class BookSelection extends Selectable<BookIdentifier> {
   );
 
   @override
-  List<SelectableOperation> get operations => [];
+  List<SelectionCapability> get capabilities => [];
 
   @override
-  Widget? header() => BookHeader(
+  Widget? buildInspectorHeader() => BookHeader(
     id: book.bookId.id,
     name: book.title.formatted,
     color: book.color,

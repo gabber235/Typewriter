@@ -105,6 +105,9 @@ class Dropdown<T extends Object> extends HookWidget {
         initialSelection: selected,
         onSelected: (value) {
           onSelected?.call(value);
+          if (value != null) {
+            inputFieldController.endInteraction();
+          }
           if (focusNode.hasFocus) {
             inputFieldController.requestSurroundingFocus();
           }

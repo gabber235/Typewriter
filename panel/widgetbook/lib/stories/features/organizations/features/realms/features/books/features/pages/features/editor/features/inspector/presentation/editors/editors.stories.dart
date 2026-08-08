@@ -21,11 +21,13 @@ class EditorStories extends StatelessWidget {
   const EditorStories({
     required this.child,
     this.overrides = const [],
+    this.source,
     super.key,
   });
 
   final Widget child;
   final List<Override> overrides;
+  final EditorSource Function(Ref ref)? source;
   @override
   Widget build(BuildContext context) {
     return FakeApp(
@@ -33,24 +35,28 @@ class EditorStories extends StatelessWidget {
       child: Consumer(
         child: child,
         builder: (context, ref, child) {
-          ref.watch(selectedProvider);
-          return Column(
-            children: [
-              Expanded(
-                child: Center(
-                  child: Section(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: child,
+          return EditorRoot(
+            create: (ref) => EditorController(
+              source: source?.call(ref) ?? SelectionEditorSource(ref),
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Section(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: child,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              ActionRow(),
-            ],
+                ActionRow(),
+              ],
+            ),
           );
         },
       ),
@@ -88,9 +94,7 @@ class EditorStory extends StatelessWidget {
 Widget loadingEditorUseCase(BuildContext context) {
   final editorMode = context.knobs.editorMode();
   return EditorStories(
-    overrides: [
-      fieldValueProvider.overrideWith((_, _) => SelectedValue.loading()),
-    ],
+    source: (_) => _StoryEditorSource((_) => const EditorValue.loading()),
     child: FieldValueEditor(
       path: "",
       dataBlueprint: DataBlueprint.string(),
@@ -104,9 +108,7 @@ Widget loadingEditorUseCase(BuildContext context) {
 Widget conflictValueEditorUseCase(BuildContext context) {
   final editorMode = context.knobs.editorMode();
   return EditorStories(
-    overrides: [
-      fieldValueProvider.overrideWith((_, _) => SelectedValue.conflict()),
-    ],
+    source: (_) => _StoryEditorSource((_) => const EditorValue.conflict()),
     child: FieldValueEditor(
       path: "",
       dataBlueprint: DataBlueprint.string(),
@@ -120,9 +122,7 @@ Widget conflictValueEditorUseCase(BuildContext context) {
 Widget noneValueEditorUseCase(BuildContext context) {
   final editorType = context.knobs.editorMode();
   return EditorStories(
-    overrides: [
-      fieldValueProvider.overrideWith((_, path) => SelectedValue.none()),
-    ],
+    source: (_) => _StoryEditorSource((_) => const EditorValue.none()),
     child: FieldValueEditor(
       path: "",
       dataBlueprint: DataBlueprint.string(),
@@ -136,11 +136,8 @@ Widget noneValueEditorUseCase(BuildContext context) {
 Widget valueEditorUseCase(BuildContext context) {
   final editorType = context.knobs.editorMode();
   return EditorStories(
-    overrides: [
-      fieldValueProvider.overrideWith(
-        (_, path) => SelectedValue.value(path.formatted),
-      ),
-    ],
+    source: (_) =>
+        _StoryEditorSource((path) => EditorValue.value(path.formatted)),
     child: FieldValueEditor(
       path: "hey",
       dataBlueprint: DataBlueprint.string(),
@@ -148,4 +145,19 @@ Widget valueEditorUseCase(BuildContext context) {
       builder: (value) => Text(value.toString()),
     ),
   );
+}
+
+class _StoryEditorSource extends ChangeNotifier implements EditorSource {
+  _StoryEditorSource(this.read);
+
+  final EditorValue Function(String path) read;
+
+  @override
+  ObjectBlueprint? get blueprint => null;
+
+  @override
+  EditorValue value(String path) => read(path);
+
+  @override
+  void update(String path, dynamic value) {}
 }

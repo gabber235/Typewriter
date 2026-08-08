@@ -12,11 +12,17 @@ class AppRequiredWidgets extends HookWidget {
   @override
   Widget build(BuildContext context) {
     useDisableContextMenu();
-    return GlobalCursorController(
-      child: GlobalPaneNavigator(
-        child: GlobalActionsManager(
-          child: GlobalModeShortcut(
-            child: GlobalOperationShortcuts(child: Shimmer(child: child)),
+    return SelectionOperationsRoot(
+      operations: const [
+        ...coreSelectionOperations,
+        ...entrySelectionOperations,
+      ],
+      child: GlobalCursorController(
+        child: GlobalPaneNavigator(
+          child: GlobalActionsManager(
+            child: GlobalModeShortcut(
+              child: GlobalOperationShortcuts(child: Shimmer(child: child)),
+            ),
           ),
         ),
       ),

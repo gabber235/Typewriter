@@ -29,22 +29,22 @@ final exemptions = <Exemption>[
     "service-role identity colors",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/interaction_mode/application/modes/insert_mode.dart",
+    "lib/shared/interaction_mode/application/modes/insert_mode.dart",
     RegExp(r"Colors\.green"),
     "editor mode identity color",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/entry_operations.dart",
+    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/operations/entry_operations.dart",
     RegExp(r"Colors\.(?:red|orange|blue|green)"),
     "editor operation identity colors",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/unbind_operation.dart",
+    "lib/shared/selectables/operations/unbind_operation.dart",
     RegExp(r"Colors\."),
     "editor operation identity color",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/headers/list_header.dart",
+    "lib/shared/editors/presentation/headers/list_header.dart",
     RegExp(r"Colors\.green"),
     "list validity indicator",
   ),
@@ -86,7 +86,7 @@ final exemptions = <Exemption>[
   for (final path in [
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/sidebar.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/header.dart",
+    "lib/shared/editors/presentation/header.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",

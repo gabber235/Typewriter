@@ -12,7 +12,7 @@ Widget operationUseCase(
         (ref, _) => builders.map((b) => b(context)).toList(),
       ),
     ],
-    child: Center(child: Operations()),
+    child: const Center(child: InspectorOperations()),
   );
 }
 

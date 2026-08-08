@@ -124,7 +124,7 @@ class SelectableDemo extends HookConsumerWidget {
           ),
         ),
         Expanded(
-          child: Inspector(
+          child: InspectorScaffold(
             margin: EdgeInsets.only(top: 8, right: 8),
             child: Pane(
               id: "boxes",

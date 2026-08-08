@@ -382,6 +382,7 @@ class ServiceIdentifier extends SelectableIdentifier {
         if (value == null) throw SelectableNotFoundException(this);
         return ServiceSelectable(ref: ref, id: this, service: value);
       });
+
   @override
   int get hashCode => serviceId.hashCode;
   @override
@@ -392,7 +393,7 @@ class ServiceIdentifier extends SelectableIdentifier {
   String toString() => "ServiceIdentifier(id: $serviceId)";
 }
 
-class ServiceSelectable extends Selectable<ServiceIdentifier> {
+class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   ServiceSelectable({
     required this.ref,
     required this.id,
@@ -411,9 +412,9 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
     },
   );
   @override
-  List<SelectableOperation> get operations => [
+  List<SelectionCapability> get capabilities => [
     if (service.isOnline && service.organization != null)
-      OpenSelectableOperation(
+      OpenSelectionCapability(
         onOpen: () => ref
             .read(appRouterProvider)
             .navigate(
@@ -424,13 +425,13 @@ class ServiceSelectable extends Selectable<ServiceIdentifier> {
             ),
         allowMultiSelect: false,
       ),
-    UnbindSelectableOperation(
+    UnbindSelectionCapability(
       onUnbind: () =>
           ref.read(servicesProvider.notifier).deleteService(service.serviceId),
     ),
   ];
   @override
-  Widget? header() => ServiceHeader(
+  Widget? buildInspectorHeader() => ServiceHeader(
     id: service.serviceId.id,
     name: service.displayName,
     color: service.color,

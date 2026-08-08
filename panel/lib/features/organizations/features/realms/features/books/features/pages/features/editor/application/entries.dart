@@ -184,7 +184,7 @@ class EntryIdentifier extends SelectableIdentifier
   String toString() => "EntryIdentifier($id)";
 }
 
-class EntrySelection extends Selectable<EntryIdentifier> {
+class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   const EntrySelection({
     required this.ref,
     required this.id,
@@ -203,10 +203,10 @@ class EntrySelection extends Selectable<EntryIdentifier> {
   ObjectBlueprint get objectBlueprint => definition.blueprint.dataBlueprint;
 
   @override
-  List<SelectableOperation> get operations => [];
+  List<SelectionCapability> get capabilities => [];
 
   @override
-  Widget? header() {
+  Widget? buildInspectorHeader() {
     return EntryHeader(
       id: id.id,
       name: name,

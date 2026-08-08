@@ -77,7 +77,7 @@ class CueIdentifier extends SelectableIdentifier {
   String toString() => "CueIdentifier($pageId, $id)";
 }
 
-class CueSelection extends Selectable<CueIdentifier> {
+class CueSelection extends InspectableSelectable<CueIdentifier> {
   const CueSelection({required this.ref, required this.id, required this.cue});
 
   final Ref ref;
@@ -94,10 +94,10 @@ class CueSelection extends Selectable<CueIdentifier> {
   ObjectBlueprint get objectBlueprint => cue.blueprint.dataBlueprint;
 
   @override
-  List<SelectableOperation> get operations => const [];
+  List<SelectionCapability> get capabilities => const [];
 
   @override
-  Widget? header() {
+  Widget? buildInspectorHeader() {
     return CueHeader(id: id.id, name: name, color: cue.blueprint.color);
   }
 

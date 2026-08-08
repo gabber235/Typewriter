@@ -78,7 +78,8 @@ class _DeleteSelectableIdentifier extends SelectableIdentifier {
   String toString() => "_TestSelectableIdentifier($id)";
 }
 
-class _DeleteSelectable extends Selectable<_DeleteSelectableIdentifier> {
+class _DeleteSelectable
+    extends InspectableSelectable<_DeleteSelectableIdentifier> {
   _DeleteSelectable({required this.id, required this.onDelete});
 
   @override
@@ -93,12 +94,12 @@ class _DeleteSelectable extends Selectable<_DeleteSelectableIdentifier> {
   final FutureOr<void> Function() onDelete;
 
   @override
-  List<SelectableOperation> get operations => [
-    DeleteSelectableOperation(onDelete: onDelete),
+  List<SelectionCapability> get capabilities => [
+    DeleteSelectionCapability(onDelete: onDelete),
   ];
 
   @override
-  Widget? header() => null;
+  Widget? buildInspectorHeader() => null;
 
   @override
   dynamic fieldValue(String path) => null;

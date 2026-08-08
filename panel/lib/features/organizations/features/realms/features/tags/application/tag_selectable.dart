@@ -39,7 +39,7 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   String toString() => "TagIdentifier(tagId: $tagId)";
 }
 
-class TagSelectable extends Selectable<TagIdentifier> {
+class TagSelectable extends InspectableSelectable<TagIdentifier> {
   TagSelectable({required this.ref, required this.id, required this.tag})
     : _data = DynamicData({"name": tag.name});
 
@@ -65,14 +65,14 @@ class TagSelectable extends Selectable<TagIdentifier> {
   }
 
   @override
-  List<SelectableOperation> get operations => [
-    DeleteSelectableOperation(
+  List<SelectionCapability> get capabilities => [
+    DeleteSelectionCapability(
       onDelete: () => ref.read(tagsProvider.notifier).deleteTag(tag.tagId),
     ),
   ];
 
   @override
-  Widget? header() => TagHeader(tag: tag);
+  Widget? buildInspectorHeader() => TagHeader(tag: tag);
 
   @override
   dynamic fieldValue(String path) {

@@ -1,0 +1,215 @@
+import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
+
+part "list_editor.g.dart";
+
+class ListEditor extends Editor {
+  @override
+  bool canEdit(DataBlueprint dataBlueprint) => dataBlueprint is ListBlueprint;
+
+  @override
+  Widget build(String path, DataBlueprint dataBlueprint, EditorMode mode) =>
+      ListEditorWidget(
+        path: path,
+        listBlueprint: dataBlueprint as ListBlueprint,
+        editorMode: mode,
+      );
+
+  @override
+  (HeaderActions, Iterable<(String, HeaderContext, DataBlueprint)>)
+  headerActions(
+    Ref ref,
+    String path,
+    DataBlueprint dataBlueprint,
+    HeaderContext context,
+    EditorMode mode,
+  ) {
+    final listBlueprint = dataBlueprint as ListBlueprint;
+    final length = ref.watch(_listValueLengthProvider(path));
+
+    final actions = super.headerActions(
+      ref,
+      path,
+      dataBlueprint,
+      context,
+      mode,
+    );
+    final childContext = context.copyWith(parentBlueprint: dataBlueprint);
+    final children = List.generate(
+      length,
+      (index) => (path.join("$index"), childContext, listBlueprint.type),
+    );
+
+    return (actions.$1, actions.$2.followedBy(children));
+  }
+}
+
+@riverpod
+int _listValueLength(Ref ref, String path) {
+  return (ref.watch(editorProvider)!.value(path).valueOr([])
+              as List<dynamic>? ??
+          [])
+      .length;
+}
+
+class ListEditorWidget extends HookConsumerWidget {
+  const ListEditorWidget({
+    required this.path,
+    required this.listBlueprint,
+    required this.editorMode,
+    super.key,
+  });
+
+  final String path;
+  final ListBlueprint listBlueprint;
+  final EditorMode editorMode;
+
+  void _addNew(WidgetRef ref) {
+    final currentValue = _get(ref);
+    final newValue = [...currentValue, listBlueprint.type.defaultValue()];
+    ref.read(editorProvider)!.update(path, newValue);
+  }
+
+  List<dynamic> _get(WidgetRef ref) {
+    return ref.read(editorProvider)!.value(path).valueOr([]);
+  }
+
+  void _reorderList(List<dynamic> value, int oldIndex, int newIndex) {
+    final item = value.removeAt(oldIndex);
+    value.insert(newIndex, item);
+  }
+
+  void _reorder(WidgetRef ref, int oldIndex, int newIndex) {
+    final newValue = [..._get(ref)];
+    _reorderList(newValue, oldIndex, newIndex);
+    ref.read(editorProvider)!.update(path, newValue);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final length = ref.watch(_listValueLengthProvider(path));
+    final globalKeys = useMemoized(
+      () => List.generate(
+        length,
+        (index) => GlobalKey(debugLabel: "item-$index"),
+      ),
+      [length],
+    );
+
+    return FieldHeader(
+      path: path,
+      dataBlueprint: listBlueprint,
+      canExpand: true,
+      editorMode: editorMode,
+      child: length > 0
+          ? ReorderableListView(
+              onReorderItem: (oldIndex, newIndex) {
+                _reorder(ref, oldIndex, newIndex);
+                _reorderList(globalKeys, oldIndex, newIndex);
+              },
+              shrinkWrap: true,
+              // The Inspector is already scrollable, so we don't want this to be nested.
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              children: List.generate(
+                length,
+                (index) => _ListItem(
+                  key: globalKeys[index],
+                  index: index,
+                  path: path,
+                  listBlueprint: listBlueprint,
+                  editorMode: editorMode,
+                ),
+              ),
+            )
+          : NoElements(
+              path: path,
+              onAdd: (editorMode, listBlueprint).canEdit
+                  ? () => _addNew(ref)
+                  : null,
+            ),
+    );
+  }
+}
+
+class NoElements extends HookConsumerWidget {
+  const NoElements({required this.path, required this.onAdd, super.key});
+
+  final String path;
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name =
+        ref.watch(pathDisplayNameProvider(path)).nullIfEmpty ?? "Fields";
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          spacing: context.spacing.space2,
+          children: [
+            Text(
+              "No $name found",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            if (onAdd != null)
+              ElevatedButton.icon(
+                onPressed: onAdd,
+                icon: const Icones(Fa6Solid.plus),
+                label: Text("Add ${name.singular}"),
+              )
+            else
+              const SizedBox.shrink(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ListItem extends HookConsumerWidget {
+  const _ListItem({
+    required this.index,
+    required this.path,
+    required this.listBlueprint,
+    required this.editorMode,
+    super.key,
+  });
+
+  final int index;
+  final String path;
+  final ListBlueprint listBlueprint;
+  final EditorMode editorMode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dataBlueprint = listBlueprint.type;
+    final childPath = path.join("$index");
+
+    Widget widget = FieldEditor(
+      path: childPath,
+      dataBlueprint: dataBlueprint,
+      editorMode: editorMode,
+    );
+
+    if (!dataBlueprint.hasCustomLayout) {
+      widget = FieldHeader(
+        path: childPath,
+        dataBlueprint: dataBlueprint,
+        canExpand: true,
+        editorMode: editorMode,
+        child: widget,
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: context.spacing.space1),
+      child: widget,
+    );
+  }
+}

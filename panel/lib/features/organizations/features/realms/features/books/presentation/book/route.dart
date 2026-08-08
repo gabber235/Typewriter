@@ -35,7 +35,13 @@ class BookPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BookScaffold(
-      child: AutoRouter(placeholder: (context) => EmptyBookPage()),
+      child: InspectorScaffold(
+        margin: EdgeInsets.only(
+          top: context.spacing.space2,
+          right: context.spacing.space2,
+        ),
+        child: AutoRouter(placeholder: (context) => EmptyBookPage()),
+      ),
     );
   }
 }

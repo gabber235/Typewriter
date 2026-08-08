@@ -18,7 +18,15 @@ class OrganizationPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return OrganizationScaffold(child: AutoRouter());
+    return OrganizationScaffold(
+      child: InspectorScaffold(
+        margin: EdgeInsets.only(
+          top: context.spacing.space2,
+          right: context.spacing.space2,
+        ),
+        child: AutoRouter(),
+      ),
+    );
   }
 }
 
