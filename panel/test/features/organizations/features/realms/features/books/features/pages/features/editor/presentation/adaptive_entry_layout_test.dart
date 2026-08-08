@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  group("AdaptiveEntryLayout via _InnerEntryNode", () {
+  group("AdaptiveLeadingLayout via EntryNode", () {
     late ElementBlueprint testBlueprint;
 
     setUp(() {

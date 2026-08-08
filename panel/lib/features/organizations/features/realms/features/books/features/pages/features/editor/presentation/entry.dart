@@ -284,7 +284,7 @@ class _NonexistentEntryNode extends StatelessWidget {
     return Material(
       color: context.colors.danger,
       borderRadius: context.shapes.smallBorderRadius,
-      child: AdaptiveElementLayout(
+      child: AdaptiveLeadingLayout(
         padding: EdgeInsets.symmetric(
           horizontal: context.spacing.space3,
           vertical: context.spacing.space2,
@@ -364,7 +364,7 @@ class _NoBlueprintEntryNode extends HookConsumerWidget {
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCirc,
               alignment: Alignment.topCenter,
-              child: AdaptiveElementLayout(
+              child: AdaptiveLeadingLayout(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.spacing.space2,
                   vertical: context.spacing.space1,
