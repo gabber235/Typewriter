@@ -32,7 +32,23 @@ import kotlin.math.pow
 
 interface GPS {
     val roadNetwork: Ref<RoadNetworkEntry>
+
+    /**
+     * Searches a route between the start and the end.
+     *
+     * The result is stored for the next search to reuse. Nothing is stored when the search is
+     * cancelled.
+     */
     suspend fun findPath(): Result<List<GPSEdge>>
+
+    /**
+     * Removes the route of the last search, so the next search does not reuse it.
+     *
+     * Reuse is only valid when the next search continues along the route of the last one. A caller
+     * whose next search starts elsewhere has to call this first. A search that is already running
+     * does not store its route.
+     */
+    fun clearPreviousPath() {}
 }
 
 data class GPSEdge(

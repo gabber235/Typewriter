@@ -14,9 +14,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
+
+// Compared by reference, so a search can see whether the route it read at the start was replaced
+// while it was running.
+private class PreviousPath(val edges: List<RoadEdge>)
 
 class PointToPointGPS(
     override val roadNetwork: Ref<RoadNetworkEntry>,
@@ -26,9 +32,14 @@ class PointToPointGPS(
     private val roadNetworkManager: RoadNetworkManager by inject()
     private var previousStart: Pair<RoadNode, List<RoadEdge>?>? = null
     private var previousEnd: Pair<RoadNode, List<RoadEdge>?>? = null
-    private var previousPath: List<RoadEdge> = emptyList()
+    private val previousPath = AtomicReference(PreviousPath(emptyList()))
+
+    override fun clearPreviousPath() {
+        previousPath.set(PreviousPath(emptyList()))
+    }
 
     override suspend fun findPath(): Result<List<GPSEdge>> = Dispatchers.UntickedAsync.switchContext {
+        val previous = previousPath.get()
         var network = roadNetworkManager.getNetwork(roadNetwork)
 
         val start = startFetcher(network)
@@ -61,13 +72,16 @@ class PointToPointGPS(
             network.nodes.firstOrNull { it.id == id }
                 ?: throw IllegalStateException("Could not find node $id in the network, possible nodes: ${network.nodes.map { it.id }}, edges: ${network.edges}, start: $startPair, end: $endPair")
         }
-        val path = findPath(nodes, network.edges, previousPath, startPair.first, endPair.first)
+        val path = findPath(nodes, network.edges, previous.edges, startPair.first, endPair.first)
         if (path.isFailure) {
             return@switchContext path.exceptionOrNull()?.let { failure(it) }
                 ?: failure("Could not find a path between $start and $end.")
         }
-        previousPath = path.getOrThrow()
-        ok(previousPath.map { edge ->
+        // A cancelled search must not store its route.
+        ensureActive()
+        val edges = path.getOrThrow()
+        previousPath.compareAndSet(previous, PreviousPath(edges))
+        ok(edges.map { edge ->
             GPSEdge(
                 nodes[edge.start]!!.position,
                 nodes[edge.end]!!.position,
