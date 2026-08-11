@@ -5,11 +5,17 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
-GraphElement _element(String id, {int priority = 0, WidgetBuilder? builder}) {
+GraphElement _element(
+  String id, {
+  int x = 0,
+  int y = 0,
+  int priority = 0,
+  WidgetBuilder? builder,
+}) {
   return GraphElement(
     id: GraphIdentifier(id),
-    x: 0,
-    y: 0,
+    x: x,
+    y: y,
     width: 2,
     height: 2,
     priority: priority,
@@ -69,6 +75,70 @@ void main() {
 
       final removed = await pump(const []);
       expect(removed.visibleEdges, isEmpty);
+    });
+
+    testWidgets("paints directed edges with rounded arrowheads", (
+      tester,
+    ) async {
+      await tester.pumpTestApp(
+        child: SizedBox(
+          width: 800,
+          height: 600,
+          child: Graph(
+            data: _data(
+              elements: [
+                _element(
+                  "source",
+                  builder: (_) => const ColoredBox(color: Colors.black),
+                ),
+                _element(
+                  "target",
+                  x: 4,
+                  builder: (_) => const ColoredBox(color: Colors.black),
+                ),
+              ],
+              edges: const [
+                GraphEdge(
+                  id: "edge",
+                  source: GraphIdentifier("source"),
+                  target: GraphIdentifier("target"),
+                  color: Color(0x33F44336),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final surface = tester.renderObject<RenderGraphSurface>(
+        find.byType(GraphSurface),
+      );
+      final canvas = _LineRecordingCanvas();
+      surface.paint(TestRecordingPaintingContext(canvas), Offset.zero);
+
+      expect(canvas.lines, hasLength(3));
+      expect(canvas.lines[0].start, const Offset(100, 50));
+      expect(canvas.lines[0].end, const Offset(192, 50));
+      expect(canvas.lines[1].start, const Offset(192, 50));
+      expect(canvas.lines[1].end, const Offset(180, 59));
+      expect(canvas.lines[2].start, const Offset(192, 50));
+      expect(canvas.lines[2].end, const Offset(180, 41));
+      expect(
+        canvas.lines.map((line) => line.paint.strokeCap),
+        everyElement(StrokeCap.round),
+      );
+      expect(
+        canvas.lines.map((line) => line.paint.strokeWidth),
+        everyElement(3),
+      );
+      expect(canvas.lines.map((line) => line.paint.color.a), everyElement(1));
+      expect(
+        surface,
+        paints
+          ..line(p1: const Offset(100, 50), p2: const Offset(192, 50))
+          ..rect(color: Colors.black)
+          ..rect(color: Colors.black),
+      );
     });
 
     testWidgets("reconciles visible children by graph identifier", (
@@ -176,6 +246,27 @@ void main() {
       expect(surface().dotPattern, (stride: 4, fadingOpacity: 1, radius: 8));
     });
   });
+}
+
+class _RecordedLine {
+  const _RecordedLine({
+    required this.start,
+    required this.end,
+    required this.paint,
+  });
+
+  final Offset start;
+  final Offset end;
+  final Paint paint;
+}
+
+class _LineRecordingCanvas extends TestRecordingCanvas {
+  final lines = <_RecordedLine>[];
+
+  @override
+  void drawLine(Offset p1, Offset p2, Paint paint) {
+    lines.add(_RecordedLine(start: p1, end: p2, paint: Paint.from(paint)));
+  }
 }
 
 class _IdentityProbe extends StatefulWidget {
