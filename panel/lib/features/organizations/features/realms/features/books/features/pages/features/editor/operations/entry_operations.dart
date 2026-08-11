@@ -96,7 +96,8 @@ class EntryLinkWithOperation extends ActivatorShortcutOperation {
 
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => LoadingButton.filledIcon(
+    builder: (context, ref, _) => OperationButton.filledIcon(
+      operation: this,
       icon: const Icones(Fa6Solid.link),
       label: Text(name),
       onPressed: () => executeOn(ref),
@@ -197,7 +198,8 @@ class EntryLinkWithDuplicateOperation extends ActivatorShortcutOperation {
 
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => LoadingButton.filledIcon(
+    builder: (context, ref, _) => OperationButton.filledIcon(
+      operation: this,
       icon: const Icones(Fa6Solid.copy),
       label: Text(name),
       onPressed: () => executeOn(ref),
@@ -258,7 +260,8 @@ class EntryDuplicateOperation extends ActivatorShortcutOperation {
 
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => LoadingButton.filledIcon(
+    builder: (context, ref, _) => OperationButton.filledIcon(
+      operation: this,
       icon: const Icones(Fa6Solid.clone),
       label: Text(name),
       onPressed: () => executeOn(ref),
@@ -319,7 +322,8 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
 
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => LoadingButton.filledIcon(
+    builder: (context, ref, _) => OperationButton.filledIcon(
+      operation: this,
       icon: const Icones(HeroiconsSolid.arrow_right),
       label: Text(name),
       onPressed: () => executeOn(ref),
@@ -380,7 +384,8 @@ class EntryReplaceWithOperation extends ActivatorShortcutOperation {
 
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
-    builder: (context, ref, _) => LoadingButton.filledIcon(
+    builder: (context, ref, _) => OperationButton.filledIcon(
+      operation: this,
       icon: const Icones(MaterialSymbols.find_replace),
       label: Text(name),
       onPressed: () => executeOn(ref),

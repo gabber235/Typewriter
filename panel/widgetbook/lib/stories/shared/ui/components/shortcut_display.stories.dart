@@ -7,12 +7,51 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 @widgetbook.UseCase(name: "Single", type: ShortcutDisplay)
 Widget singleShortcutDisplayUseCase(BuildContext context) {
-  final style = context.knobs.object.segmented(
+  final variant = context.knobs.object.segmented(
     label: "Style",
-    options: KeyStyle.values,
-    initialOption: KeyStyle.solid,
-    labelBuilder: (style) => style.name.formatted,
+    options: const [KeyStyle.solid(), KeyStyle.outline()],
+    initialOption: const KeyStyle.solid(),
+    labelBuilder: (style) => switch (style) {
+      SolidKeyStyle() => "Solid",
+      OutlineKeyStyle() => "Outline",
+    },
   );
+  final useCustomColors = context.knobs.boolean(
+    label: "Custom Colors",
+    initialValue: false,
+  );
+  final foregroundColor = useCustomColors
+      ? context.knobs.color(
+          label: "Foreground Color",
+          initialValue: Colors.white,
+        )
+      : null;
+  final style = switch (variant) {
+    SolidKeyStyle() => KeyStyle.solid(
+      backgroundColor: useCustomColors
+          ? context.knobs.color(
+              label: "Background Color",
+              initialValue: Colors.blue,
+            )
+          : null,
+      foregroundColor: foregroundColor,
+      shadowColor: useCustomColors
+          ? context.knobs.color(
+              label: "Shadow Color",
+              initialValue: Colors.blueGrey,
+            )
+          : null,
+    ),
+    OutlineKeyStyle() => KeyStyle.outline(
+      foregroundColor: foregroundColor,
+      borderColor: useCustomColors
+          ? context.knobs.color(
+              label: "Border Color",
+              initialValue: Colors.blue,
+            )
+          : null,
+    ),
+  };
   return FakeApp(
     child: Center(
       child: ShortcutDisplay(
@@ -37,9 +76,12 @@ Widget rotatingShortcutsUseCase(BuildContext context) {
   );
   final style = context.knobs.object.segmented(
     label: "Style",
-    options: KeyStyle.values,
-    initialOption: KeyStyle.solid,
-    labelBuilder: (style) => style.name.formatted,
+    options: const [KeyStyle.solid(), KeyStyle.outline()],
+    initialOption: const KeyStyle.solid(),
+    labelBuilder: (style) => switch (style) {
+      SolidKeyStyle() => "Solid",
+      OutlineKeyStyle() => "Outline",
+    },
   );
 
   return FakeApp(

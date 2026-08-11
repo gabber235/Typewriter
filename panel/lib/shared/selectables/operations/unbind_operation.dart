@@ -95,7 +95,8 @@ class UnbindOperationButton extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = Colors.orange;
     final onColor = color.on(context);
-    return LoadingButton.filledIcon(
+    return OperationButton.filledIcon(
+      operation: operation,
       onPressed: () {
         showConfirmationDialogue(
           context: context,

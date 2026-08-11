@@ -83,7 +83,8 @@ class OpenOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FilledButton.icon(
+    return OperationButton.filledIcon(
+      operation: operation,
       onPressed: () => operation.executeOn(ref),
       icon: const Icon(Icons.open_in_new, size: 16),
       label: Text(selection.length > 1 ? "Open (${selection.length})" : "Open"),

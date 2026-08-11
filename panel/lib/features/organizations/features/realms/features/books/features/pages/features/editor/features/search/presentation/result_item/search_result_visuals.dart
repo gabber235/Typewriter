@@ -273,7 +273,7 @@ class SearchResultSuffix extends StatelessWidget {
         if (shortcutActivator != null)
           ShortcutDisplay(
             shortcut: shortcutActivator!,
-            style: selected ? KeyStyle.outline : KeyStyle.solid,
+            style: selected ? const KeyStyle.outline() : const KeyStyle.solid(),
           ),
       ],
     );
