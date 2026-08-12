@@ -4,6 +4,19 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+const _tagInspectorType = TypeDefinition(
+  id: ResolvedTypeRef(
+    id: QualifiedTypeId(namespace: "panel", name: "Tag"),
+    revision: 1,
+  ),
+  kind: NominalTypeKind.concrete,
+  representation: RecordType(
+    fields: {"name": TypeField(name: "name", type: StringType())},
+  ),
+);
+
+const _tagInspectorCatalog = TypeCatalog([_tagInspectorType]);
+
 class TagIdentifier extends SelectableIdentifier implements GraphDragData {
   const TagIdentifier(this.tagId);
 
@@ -41,7 +54,7 @@ class TagIdentifier extends SelectableIdentifier implements GraphDragData {
 
 class TagSelectable extends InspectableSelectable<TagIdentifier> {
   TagSelectable({required this.ref, required this.id, required this.tag})
-    : _data = DynamicData({"name": tag.name});
+    : _data = RecordValue({"name": StringValue(tag.name)});
 
   @override
   final TagIdentifier id;
@@ -53,16 +66,13 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
 
   final Ref ref;
 
-  final DynamicData _data;
+  final RecordValue _data;
 
   @override
-  ObjectBlueprint get objectBlueprint {
-    return ObjectBlueprint(
-      fields: {
-        "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
-      },
-    );
-  }
+  ResolvedTypeRef get rootType => _tagInspectorType.id;
+
+  @override
+  TypeCatalog get typeCatalog => _tagInspectorCatalog;
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -75,15 +85,16 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
   Widget? buildInspectorHeader() => TagHeader(tag: tag);
 
   @override
-  dynamic fieldValue(String path) {
-    return _data.get(path);
-  }
+  EditorValue value(DataPath path) => _data.readEditorValue(path);
 
   @override
-  void setFieldValue(String path, dynamic value) {
-    final newData = _data.copyWith(path, value);
-    final newTag = tag.copyWith(name: newData.get("name") as String);
-    ref.read(tagsProvider.notifier).updateTag(newTag);
+  EditorMutationResult update(DataPath path, DataValue value) {
+    final result = validateUpdate(path, value);
+    if (result is! AppliedEditorMutation || value is! StringValue) {
+      return result;
+    }
+    ref.read(tagsProvider.notifier).updateTag(tag.copyWith(name: value.value));
+    return result;
   }
 
   @override

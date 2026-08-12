@@ -52,9 +52,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     TraversalDirection direction,
   ) {
     final scope = currentNode.nearestScope!;
-    final nodes = _collectGeometry(
-      scope.traversalDescendants,
-    );
+    final nodes = _collectGeometry(scope.traversalDescendants);
     if (nodes.isEmpty) {
       return null;
     }
@@ -91,10 +89,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
     final scope = currentNode.nearestScope!;
     final focusedChild = scope.focusedChild;
     if (focusedChild == null) {
-      final first = findFirstFocusInDirection(
-        currentNode,
-        direction,
-      );
+      final first = findFirstFocusInDirection(currentNode, direction);
       if (first == null) {
         return false;
       }
@@ -284,10 +279,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         focusedChild.unfocus();
         return false;
       case TraversalEdgeBehavior.closedLoop:
-        final wrapTarget = findFirstFocusInDirection(
-          currentNode,
-          direction,
-        );
+        final wrapTarget = findFirstFocusInDirection(currentNode, direction);
         if (wrapTarget == null) {
           return false;
         }
@@ -296,10 +288,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
         final parentScope = scope.enclosingScope;
         if (parentScope == null ||
             parentScope == FocusManager.instance.rootScope) {
-          final fallback = findFirstFocusInDirection(
-            currentNode,
-            direction,
-          );
+          final fallback = findFirstFocusInDirection(currentNode, direction);
           if (fallback == null) {
             return false;
           }
@@ -392,9 +381,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
       return byForward;
     }
 
-    final byCross = a.metrics.crossDistance.compareTo(
-      b.metrics.crossDistance,
-    );
+    final byCross = a.metrics.crossDistance.compareTo(b.metrics.crossDistance);
     if (byCross != 0) {
       return byCross;
     }

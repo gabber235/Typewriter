@@ -8,6 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "services.freezed.dart";
 part "services.g.dart";
+part "service_selection.dart";
 
 @freezed
 abstract class Service with _$Service {
@@ -370,88 +371,3 @@ class Services extends _$Services {
 Future<Service?> service(Ref ref, skir.RecordId id) async => (await ref.watch(
   servicesProvider.future,
 )).firstWhereOrNull((service) => service.serviceId == id);
-
-class ServiceIdentifier extends SelectableIdentifier {
-  ServiceIdentifier(this.serviceId);
-  final skir.RecordId serviceId;
-  @override
-  String get id => serviceId.id;
-  @override
-  AsyncValue<Selectable> create(Ref ref) =>
-      ref.watch(serviceProvider(serviceId)).whenData((value) {
-        if (value == null) throw SelectableNotFoundException(this);
-        return ServiceSelectable(ref: ref, id: this, service: value);
-      });
-
-  @override
-  int get hashCode => serviceId.hashCode;
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServiceIdentifier && other.serviceId == serviceId;
-  @override
-  String toString() => "ServiceIdentifier(id: $serviceId)";
-}
-
-class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
-  ServiceSelectable({
-    required this.ref,
-    required this.id,
-    required this.service,
-  });
-  @override
-  final ServiceIdentifier id;
-  final Service service;
-  final Ref ref;
-  @override
-  String get name => service.displayName;
-  @override
-  ObjectBlueprint get objectBlueprint => ObjectBlueprint(
-    fields: {
-      "name": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
-    },
-  );
-  @override
-  List<SelectionCapability> get capabilities => [
-    if (service.isOnline && service.organization != null)
-      OpenSelectionCapability(
-        onOpen: () => ref
-            .read(appRouterProvider)
-            .navigate(
-              OrganizationRoute(
-                organizationId: service.organization!.id,
-                children: [RealmRoute(realmId: service.serviceId.id)],
-              ),
-            ),
-        allowMultiSelect: false,
-      ),
-    UnbindSelectionCapability(
-      onUnbind: () =>
-          ref.read(servicesProvider.notifier).deleteService(service.serviceId),
-    ),
-  ];
-  @override
-  Widget? buildInspectorHeader() => ServiceHeader(
-    id: service.serviceId.id,
-    name: service.displayName,
-    color: service.color,
-  );
-  @override
-  dynamic fieldValue(String path) => path == "name" ? service.name : null;
-  @override
-  void setFieldValue(String path, dynamic value) {
-    if (path != "name" || value is! String) {
-      throw ArgumentError.value(value, path);
-    }
-    ref
-        .read(servicesProvider.notifier)
-        .updateService(service.copyWith(name: value));
-  }
-
-  @override
-  int get hashCode => Object.hash(id, service);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServiceSelectable && other.id == id && other.service == service;
-}

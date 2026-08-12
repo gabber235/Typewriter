@@ -3,24 +3,33 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/editors.stories.dart";
 
-@widgetbook.UseCase(name: "Default", type: NumberEditor)
+@widgetbook.UseCase(name: "Number", type: TypedEditor)
 Widget numberEditorUseCase(BuildContext context) {
   return EditorStory(
-    dataBlueprint: ObjectBlueprint(
+    rootType: RecordType(
       fields: {
-        "count": DataBlueprint.integer(),
-        "level": DataBlueprint.integer(
-          defaultValue: 1,
-          modifiers: [const Modifier.min(1), const Modifier.max(100)],
+        "count": const TypeField(
+          name: "count",
+          type: IntegerType(width: IntegerWidth.signed32),
         ),
-        "price": DataBlueprint.decimal(
-          modifiers: [
-            const Modifier.negative(),
-            const Modifier.min(-1000.0),
-            const Modifier.max(1000.0),
-          ],
+        "level": TypeField(
+          name: "level",
+          type: IntegerType(
+            width: IntegerWidth.unsigned8,
+            minimum: BigInt.one,
+            maximum: BigInt.from(100),
+          ),
+        ),
+        "price": const TypeField(
+          name: "price",
+          type: DecimalType(minimum: "-1000.0", maximum: "1000.0"),
         ),
       },
     ),
+    initialValue: RecordValue({
+      "count": IntegerValue(BigInt.from(42)),
+      "level": IntegerValue(BigInt.one),
+      "price": DecimalValue("12.50"),
+    }),
   );
 }

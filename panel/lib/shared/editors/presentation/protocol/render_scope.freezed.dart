@@ -1,0 +1,663 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'render_scope.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$ResolvedPresentationDefinition {
+
+ PresentationId get id; PresentationNode get root;
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ResolvedPresentationDefinitionCopyWith<ResolvedPresentationDefinition> get copyWith => _$ResolvedPresentationDefinitionCopyWithImpl<ResolvedPresentationDefinition>(this as ResolvedPresentationDefinition, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResolvedPresentationDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.root, root) || other.root == root));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,root);
+
+@override
+String toString() {
+  return 'ResolvedPresentationDefinition(id: $id, root: $root)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ResolvedPresentationDefinitionCopyWith<$Res>  {
+  factory $ResolvedPresentationDefinitionCopyWith(ResolvedPresentationDefinition value, $Res Function(ResolvedPresentationDefinition) _then) = _$ResolvedPresentationDefinitionCopyWithImpl;
+@useResult
+$Res call({
+ PresentationId id, PresentationNode root
+});
+
+
+$PresentationIdCopyWith<$Res> get id;$PresentationNodeCopyWith<$Res> get root;
+
+}
+/// @nodoc
+class _$ResolvedPresentationDefinitionCopyWithImpl<$Res>
+    implements $ResolvedPresentationDefinitionCopyWith<$Res> {
+  _$ResolvedPresentationDefinitionCopyWithImpl(this._self, this._then);
+
+  final ResolvedPresentationDefinition _self;
+  final $Res Function(ResolvedPresentationDefinition) _then;
+
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? root = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PresentationId,root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
+as PresentationNode,
+  ));
+}
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationIdCopyWith<$Res> get id {
+  
+  return $PresentationIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res> get root {
+  
+  return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
+    return _then(_self.copyWith(root: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [ResolvedPresentationDefinition].
+extension ResolvedPresentationDefinitionPatterns on ResolvedPresentationDefinition {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ResolvedPresentationDefinition value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ResolvedPresentationDefinition value)  $default,){
+final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ResolvedPresentationDefinition value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PresentationId id,  PresentationNode root)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition() when $default != null:
+return $default(_that.id,_that.root);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PresentationId id,  PresentationNode root)  $default,) {final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition():
+return $default(_that.id,_that.root);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PresentationId id,  PresentationNode root)?  $default,) {final _that = this;
+switch (_that) {
+case _ResolvedPresentationDefinition() when $default != null:
+return $default(_that.id,_that.root);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ResolvedPresentationDefinition implements ResolvedPresentationDefinition {
+  const _ResolvedPresentationDefinition({required this.id, required this.root});
+  
+
+@override final  PresentationId id;
+@override final  PresentationNode root;
+
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ResolvedPresentationDefinitionCopyWith<_ResolvedPresentationDefinition> get copyWith => __$ResolvedPresentationDefinitionCopyWithImpl<_ResolvedPresentationDefinition>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResolvedPresentationDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.root, root) || other.root == root));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,root);
+
+@override
+String toString() {
+  return 'ResolvedPresentationDefinition(id: $id, root: $root)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ResolvedPresentationDefinitionCopyWith<$Res> implements $ResolvedPresentationDefinitionCopyWith<$Res> {
+  factory _$ResolvedPresentationDefinitionCopyWith(_ResolvedPresentationDefinition value, $Res Function(_ResolvedPresentationDefinition) _then) = __$ResolvedPresentationDefinitionCopyWithImpl;
+@override @useResult
+$Res call({
+ PresentationId id, PresentationNode root
+});
+
+
+@override $PresentationIdCopyWith<$Res> get id;@override $PresentationNodeCopyWith<$Res> get root;
+
+}
+/// @nodoc
+class __$ResolvedPresentationDefinitionCopyWithImpl<$Res>
+    implements _$ResolvedPresentationDefinitionCopyWith<$Res> {
+  __$ResolvedPresentationDefinitionCopyWithImpl(this._self, this._then);
+
+  final _ResolvedPresentationDefinition _self;
+  final $Res Function(_ResolvedPresentationDefinition) _then;
+
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? root = null,}) {
+  return _then(_ResolvedPresentationDefinition(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as PresentationId,root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
+as PresentationNode,
+  ));
+}
+
+/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationIdCopyWith<$Res> get id {
+  
+  return $PresentationIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of ResolvedPresentationDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res> get root {
+  
+  return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
+    return _then(_self.copyWith(root: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$PresentationRenderScope {
+
+ ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; Map<BindingId, BindingReference> get aliases; Map<HeaderActionId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?)> get suppressedHeaders; bool get enabled; bool get readOnly; Set<PresentationId> get activePresentations;
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PresentationRenderScopeCopyWith<PresentationRenderScope> get copyWith => _$PresentationRenderScopeCopyWithImpl<PresentationRenderScope>(this as PresentationRenderScope, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationRenderScope&&(identical(other.expressions, expressions) || other.expressions == expressions)&&(identical(other.registry, registry) || other.registry == registry)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding)&&(identical(other.executeAction, executeAction) || other.executeAction == executeAction)&&(identical(other.resolvePresentation, resolvePresentation) || other.resolvePresentation == resolvePresentation)&&(identical(other.expansionStore, expansionStore) || other.expansionStore == expansionStore)&&const DeepCollectionEquality().equals(other.aliases, aliases)&&const DeepCollectionEquality().equals(other.headerShortcuts, headerShortcuts)&&const DeepCollectionEquality().equals(other.suppressedHeaders, suppressedHeaders)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&const DeepCollectionEquality().equals(other.activePresentations, activePresentations));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,expressions,registry,budget,setBinding,executeAction,resolvePresentation,expansionStore,const DeepCollectionEquality().hash(aliases),const DeepCollectionEquality().hash(headerShortcuts),const DeepCollectionEquality().hash(suppressedHeaders),enabled,readOnly,const DeepCollectionEquality().hash(activePresentations));
+
+@override
+String toString() {
+  return 'PresentationRenderScope(expressions: $expressions, registry: $registry, budget: $budget, setBinding: $setBinding, executeAction: $executeAction, resolvePresentation: $resolvePresentation, expansionStore: $expansionStore, aliases: $aliases, headerShortcuts: $headerShortcuts, suppressedHeaders: $suppressedHeaders, enabled: $enabled, readOnly: $readOnly, activePresentations: $activePresentations)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PresentationRenderScopeCopyWith<$Res>  {
+  factory $PresentationRenderScopeCopyWith(PresentationRenderScope value, $Res Function(PresentationRenderScope) _then) = _$PresentationRenderScopeCopyWithImpl;
+@useResult
+$Res call({
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
+});
+
+
+$ExpressionContextCopyWith<$Res> get expressions;$ExpressionBudgetCopyWith<$Res> get budget;
+
+}
+/// @nodoc
+class _$PresentationRenderScopeCopyWithImpl<$Res>
+    implements $PresentationRenderScopeCopyWith<$Res> {
+  _$PresentationRenderScopeCopyWithImpl(this._self, this._then);
+
+  final PresentationRenderScope _self;
+  final $Res Function(PresentationRenderScope) _then;
+
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? aliases = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? enabled = null,Object? readOnly = null,Object? activePresentations = null,}) {
+  return _then(_self.copyWith(
+expressions: null == expressions ? _self.expressions : expressions // ignore: cast_nullable_to_non_nullable
+as ExpressionContext,registry: null == registry ? _self.registry : registry // ignore: cast_nullable_to_non_nullable
+as TypeRegistry,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
+as ExpressionBudget,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
+as BindingSetter,executeAction: null == executeAction ? _self.executeAction : executeAction // ignore: cast_nullable_to_non_nullable
+as ActionExecutor,resolvePresentation: null == resolvePresentation ? _self.resolvePresentation : resolvePresentation // ignore: cast_nullable_to_non_nullable
+as PresentationResolver,expansionStore: null == expansionStore ? _self.expansionStore : expansionStore // ignore: cast_nullable_to_non_nullable
+as HeaderExpansionStore,aliases: null == aliases ? _self.aliases : aliases // ignore: cast_nullable_to_non_nullable
+as Map<BindingId, BindingReference>,headerShortcuts: null == headerShortcuts ? _self.headerShortcuts : headerShortcuts // ignore: cast_nullable_to_non_nullable
+as Map<HeaderActionId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self.suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
+as Set<(String, BindingReference?)>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
+as bool,activePresentations: null == activePresentations ? _self.activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable
+as Set<PresentationId>,
+  ));
+}
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExpressionContextCopyWith<$Res> get expressions {
+  
+  return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
+    return _then(_self.copyWith(expressions: value));
+  });
+}/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExpressionBudgetCopyWith<$Res> get budget {
+  
+  return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
+    return _then(_self.copyWith(budget: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [PresentationRenderScope].
+extension PresentationRenderScopePatterns on PresentationRenderScope {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PresentationRenderScope value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PresentationRenderScope() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PresentationRenderScope value)  $default,){
+final _that = this;
+switch (_that) {
+case _PresentationRenderScope():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PresentationRenderScope value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PresentationRenderScope() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PresentationRenderScope() when $default != null:
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)  $default,) {final _that = this;
+switch (_that) {
+case _PresentationRenderScope():
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,) {final _that = this;
+switch (_that) {
+case _PresentationRenderScope() when $default != null:
+return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PresentationRenderScope extends PresentationRenderScope {
+  const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, final  Map<BindingId, BindingReference> aliases = const {}, final  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts = const {}, final  Set<(String, BindingReference?)> suppressedHeaders = const {}, this.enabled = true, this.readOnly = false, final  Set<PresentationId> activePresentations = const {}}): _aliases = aliases,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_activePresentations = activePresentations,super._();
+  
+
+@override final  ExpressionContext expressions;
+@override final  TypeRegistry registry;
+@override final  ExpressionBudget budget;
+@override final  BindingSetter setBinding;
+@override final  ActionExecutor executeAction;
+@override final  PresentationResolver resolvePresentation;
+@override final  HeaderExpansionStore expansionStore;
+ final  Map<BindingId, BindingReference> _aliases;
+@override@JsonKey() Map<BindingId, BindingReference> get aliases {
+  if (_aliases is EqualUnmodifiableMapView) return _aliases;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_aliases);
+}
+
+ final  Map<HeaderActionId, List<ShortcutActivator>> _headerShortcuts;
+@override@JsonKey() Map<HeaderActionId, List<ShortcutActivator>> get headerShortcuts {
+  if (_headerShortcuts is EqualUnmodifiableMapView) return _headerShortcuts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_headerShortcuts);
+}
+
+ final  Set<(String, BindingReference?)> _suppressedHeaders;
+@override@JsonKey() Set<(String, BindingReference?)> get suppressedHeaders {
+  if (_suppressedHeaders is EqualUnmodifiableSetView) return _suppressedHeaders;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_suppressedHeaders);
+}
+
+@override@JsonKey() final  bool enabled;
+@override@JsonKey() final  bool readOnly;
+ final  Set<PresentationId> _activePresentations;
+@override@JsonKey() Set<PresentationId> get activePresentations {
+  if (_activePresentations is EqualUnmodifiableSetView) return _activePresentations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_activePresentations);
+}
+
+
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PresentationRenderScopeCopyWith<_PresentationRenderScope> get copyWith => __$PresentationRenderScopeCopyWithImpl<_PresentationRenderScope>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationRenderScope&&(identical(other.expressions, expressions) || other.expressions == expressions)&&(identical(other.registry, registry) || other.registry == registry)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.setBinding, setBinding) || other.setBinding == setBinding)&&(identical(other.executeAction, executeAction) || other.executeAction == executeAction)&&(identical(other.resolvePresentation, resolvePresentation) || other.resolvePresentation == resolvePresentation)&&(identical(other.expansionStore, expansionStore) || other.expansionStore == expansionStore)&&const DeepCollectionEquality().equals(other._aliases, _aliases)&&const DeepCollectionEquality().equals(other._headerShortcuts, _headerShortcuts)&&const DeepCollectionEquality().equals(other._suppressedHeaders, _suppressedHeaders)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&const DeepCollectionEquality().equals(other._activePresentations, _activePresentations));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,expressions,registry,budget,setBinding,executeAction,resolvePresentation,expansionStore,const DeepCollectionEquality().hash(_aliases),const DeepCollectionEquality().hash(_headerShortcuts),const DeepCollectionEquality().hash(_suppressedHeaders),enabled,readOnly,const DeepCollectionEquality().hash(_activePresentations));
+
+@override
+String toString() {
+  return 'PresentationRenderScope(expressions: $expressions, registry: $registry, budget: $budget, setBinding: $setBinding, executeAction: $executeAction, resolvePresentation: $resolvePresentation, expansionStore: $expansionStore, aliases: $aliases, headerShortcuts: $headerShortcuts, suppressedHeaders: $suppressedHeaders, enabled: $enabled, readOnly: $readOnly, activePresentations: $activePresentations)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PresentationRenderScopeCopyWith<$Res> implements $PresentationRenderScopeCopyWith<$Res> {
+  factory _$PresentationRenderScopeCopyWith(_PresentationRenderScope value, $Res Function(_PresentationRenderScope) _then) = __$PresentationRenderScopeCopyWithImpl;
+@override @useResult
+$Res call({
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
+});
+
+
+@override $ExpressionContextCopyWith<$Res> get expressions;@override $ExpressionBudgetCopyWith<$Res> get budget;
+
+}
+/// @nodoc
+class __$PresentationRenderScopeCopyWithImpl<$Res>
+    implements _$PresentationRenderScopeCopyWith<$Res> {
+  __$PresentationRenderScopeCopyWithImpl(this._self, this._then);
+
+  final _PresentationRenderScope _self;
+  final $Res Function(_PresentationRenderScope) _then;
+
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? expressions = null,Object? registry = null,Object? budget = null,Object? setBinding = null,Object? executeAction = null,Object? resolvePresentation = null,Object? expansionStore = null,Object? aliases = null,Object? headerShortcuts = null,Object? suppressedHeaders = null,Object? enabled = null,Object? readOnly = null,Object? activePresentations = null,}) {
+  return _then(_PresentationRenderScope(
+expressions: null == expressions ? _self.expressions : expressions // ignore: cast_nullable_to_non_nullable
+as ExpressionContext,registry: null == registry ? _self.registry : registry // ignore: cast_nullable_to_non_nullable
+as TypeRegistry,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
+as ExpressionBudget,setBinding: null == setBinding ? _self.setBinding : setBinding // ignore: cast_nullable_to_non_nullable
+as BindingSetter,executeAction: null == executeAction ? _self.executeAction : executeAction // ignore: cast_nullable_to_non_nullable
+as ActionExecutor,resolvePresentation: null == resolvePresentation ? _self.resolvePresentation : resolvePresentation // ignore: cast_nullable_to_non_nullable
+as PresentationResolver,expansionStore: null == expansionStore ? _self.expansionStore : expansionStore // ignore: cast_nullable_to_non_nullable
+as HeaderExpansionStore,aliases: null == aliases ? _self._aliases : aliases // ignore: cast_nullable_to_non_nullable
+as Map<BindingId, BindingReference>,headerShortcuts: null == headerShortcuts ? _self._headerShortcuts : headerShortcuts // ignore: cast_nullable_to_non_nullable
+as Map<HeaderActionId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self._suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
+as Set<(String, BindingReference?)>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
+as bool,activePresentations: null == activePresentations ? _self._activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable
+as Set<PresentationId>,
+  ));
+}
+
+/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExpressionContextCopyWith<$Res> get expressions {
+  
+  return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
+    return _then(_self.copyWith(expressions: value));
+  });
+}/// Create a copy of PresentationRenderScope
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExpressionBudgetCopyWith<$Res> get budget {
+  
+  return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
+    return _then(_self.copyWith(budget: value));
+  });
+}
+}
+
+// dart format on

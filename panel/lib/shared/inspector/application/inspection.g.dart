@@ -110,52 +110,47 @@ final class HasInspectableSelectionProvider
 String _$hasInspectableSelectionHash() =>
     r'fc35f93d31e8a73986f4932f8650aac64a93cc09';
 
-@ProviderFor(inspectedDataBlueprint)
-final inspectedDataBlueprintProvider = InspectedDataBlueprintProvider._();
+@ProviderFor(inspectedRootType)
+final inspectedRootTypeProvider = InspectedRootTypeProvider._();
 
-final class InspectedDataBlueprintProvider
+final class InspectedRootTypeProvider
     extends
-        $FunctionalProvider<
-          ObjectBlueprint?,
-          ObjectBlueprint?,
-          ObjectBlueprint?
-        >
-    with $Provider<ObjectBlueprint?> {
-  InspectedDataBlueprintProvider._()
+        $FunctionalProvider<TypeExpression?, TypeExpression?, TypeExpression?>
+    with $Provider<TypeExpression?> {
+  InspectedRootTypeProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'inspectedDataBlueprintProvider',
+        name: r'inspectedRootTypeProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$inspectedDataBlueprintHash();
+  String debugGetCreateSourceHash() => _$inspectedRootTypeHash();
 
   @$internal
   @override
-  $ProviderElement<ObjectBlueprint?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<TypeExpression?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  ObjectBlueprint? create(Ref ref) {
-    return inspectedDataBlueprint(ref);
+  TypeExpression? create(Ref ref) {
+    return inspectedRootType(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ObjectBlueprint? value) {
+  Override overrideWithValue(TypeExpression? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<ObjectBlueprint?>(value),
+      providerOverride: $SyncValueProvider<TypeExpression?>(value),
     );
   }
 }
 
-String _$inspectedDataBlueprintHash() =>
-    r'e8f2e5081c9fb98e06d1466fe6fa0b5a5578ee71';
+String _$inspectedRootTypeHash() => r'dde8d50025d4f9ff0d0bed58b42ec4cfdccc1ba3';
 
 @ProviderFor(inspectedHeader)
 final inspectedHeaderProvider = InspectedHeaderProvider._();

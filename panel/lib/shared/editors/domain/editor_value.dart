@@ -1,38 +1,64 @@
-sealed class EditorValue {
-  const EditorValue();
+import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-  const factory EditorValue.loading() = LoadingValue;
-  const factory EditorValue.value(dynamic value) = Value;
-  const factory EditorValue.conflict() = ConflictValue;
-  const factory EditorValue.none() = NoneValue;
+part "editor_value.freezed.dart";
 
-  factory EditorValue.from(dynamic value) {
-    if (value == null) return const EditorValue.none();
-    return EditorValue.value(value);
-  }
+@freezed
+sealed class EditorValue with _$EditorValue {
+  const EditorValue._();
 
-  dynamic valueOr(dynamic defaultValue) {
-    return switch (this) {
-      Value(:final value) => value,
-      ConflictValue() || NoneValue() || LoadingValue() => defaultValue,
+  const factory EditorValue.loading() = LoadingEditorValue;
+  const factory EditorValue.conflict() = ConflictEditorValue;
+  const factory EditorValue.invalid(List<TypeDiagnostic> diagnostics) =
+      InvalidEditorValue;
+  const factory EditorValue.ready(DataValue value) = ReadyEditorValue;
+
+  DataValue? get valueOrNull => switch (this) {
+    ReadyEditorValue(:final value) => value,
+    LoadingEditorValue() ||
+    ConflictEditorValue() ||
+    InvalidEditorValue() => null,
+  };
+}
+
+@freezed
+sealed class EditorMutationResult with _$EditorMutationResult {
+  const EditorMutationResult._();
+
+  const factory EditorMutationResult.applied(DataValue value) =
+      AppliedEditorMutation;
+  const factory EditorMutationResult.conflict() = ConflictingEditorMutation;
+  const factory EditorMutationResult.invalid(List<TypeDiagnostic> diagnostics) =
+      InvalidEditorMutation;
+}
+
+extension DataValueEditorReading on DataValue {
+  EditorValue readEditorValue(DataPath path) {
+    final result = path.read(this);
+    return switch (result) {
+      TypeSuccess(:final value) => EditorValue.ready(value),
+      TypeFailure(:final diagnostics) => EditorValue.invalid(diagnostics),
     };
   }
 }
 
-final class LoadingValue extends EditorValue {
-  const LoadingValue();
-}
-
-final class Value extends EditorValue {
-  const Value(this.value);
-
-  final dynamic value;
-}
-
-final class ConflictValue extends EditorValue {
-  const ConflictValue();
-}
-
-final class NoneValue extends EditorValue {
-  const NoneValue();
+extension TypeExpressionEditorMutationValidation on TypeExpression {
+  EditorMutationResult validateEditorMutation(
+    DataPath path,
+    DataValue value, {
+    TypeRegistry? registry,
+  }) {
+    final resolved = resolvePath(path, registry: registry);
+    if (resolved case TypeFailure(:final diagnostics)) {
+      return EditorMutationResult.invalid(diagnostics);
+    }
+    final diagnostics = value.validateAgainst(
+      (resolved as TypeSuccess<TypeExpression>).value,
+      path: path,
+      registry: registry,
+    );
+    return diagnostics.isEmpty
+        ? EditorMutationResult.applied(value)
+        : EditorMutationResult.invalid(diagnostics);
+  }
 }

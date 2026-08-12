@@ -89,14 +89,14 @@ class EntryGraph extends HookConsumerWidget {
               id: edge.linkId,
               source: EntryIdentifier(definition.id),
               target: EntryIdentifier(edge.otherId),
-              color: definition.blueprint.color,
+              color: definition.elementDefinition.color,
               sourceSide: graphDirection.sourceSide,
               targetSide: graphDirection.targetSide,
             ),
         ],
       ),
-      noBlueprint: (id, name, placement, inwardLinks, outwardLinks, metadata) =>
-          (
+      missingElementDefinition:
+          (id, name, placement, inwardLinks, outwardLinks, metadata) => (
             GraphElement(
               id: EntryIdentifier(id),
               x: placement.x,

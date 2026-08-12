@@ -4,7 +4,6 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "scene.freezed.dart";
-part "scene.g.dart";
 
 @freezed
 abstract class Cue with _$Cue {
@@ -15,8 +14,8 @@ abstract class Cue with _$Cue {
     required String id,
     required int startFrame,
     required int endFrame,
-    required ElementBlueprint blueprint,
-    required DynamicData data,
+    required ElementDefinition elementDefinition,
+    required RecordValue data,
     required List<ElementLink> inwardLinks,
     required List<ElementLink> outwardLinks,
   }) = Segment;
@@ -26,12 +25,10 @@ abstract class Cue with _$Cue {
   const factory Cue.keyframe({
     required String id,
     required int frame,
-    required ElementBlueprint blueprint,
-    required DynamicData data,
+    required ElementDefinition elementDefinition,
+    required RecordValue data,
     required List<ElementLink> inwardLinks,
   }) = Keyframe;
-
-  factory Cue.fromJson(Map<String, dynamic> json) => _$CueFromJson(json);
 }
 
 class CueIdentifier extends SelectableIdentifier {
@@ -45,23 +42,34 @@ class CueIdentifier extends SelectableIdentifier {
   @override
   AsyncValue<Selectable<CueIdentifier>> create(Ref ref) {
     final asyncElements = ref.watch(pageElementsProvider(pageId));
-    return asyncElements.whenData((elements) {
-      Cue? cue;
-      for (final element in elements) {
-        if (element case PageElementCue(
-          cue: final candidate,
-        ) when candidate.id == id) {
-          cue = candidate;
-          break;
+    return asyncElements.when(
+      data: (elements) {
+        Cue? cue;
+        for (final element in elements) {
+          if (element case PageElementCue(
+            cue: final candidate,
+          ) when candidate.id == id) {
+            cue = candidate;
+            break;
+          }
         }
-      }
 
-      if (cue == null) {
-        throw SelectableNotFoundException(this);
-      }
+        if (cue == null) {
+          throw SelectableNotFoundException(this);
+        }
 
-      return CueSelection(ref: ref, id: this, cue: cue);
-    });
+        final catalogState = ref.watch(
+          realmEditorCatalogForTypeProvider(cue.elementDefinition.rootType),
+        );
+        return catalogState.resolveElement(
+          cue.elementDefinition,
+          (catalog) =>
+              CueSelection(ref: ref, id: this, cue: cue!, typeCatalog: catalog),
+        );
+      },
+      error: AsyncValue.error,
+      loading: AsyncValue.loading,
+    );
   }
 
   @override
@@ -78,7 +86,12 @@ class CueIdentifier extends SelectableIdentifier {
 }
 
 class CueSelection extends InspectableSelectable<CueIdentifier> {
-  const CueSelection({required this.ref, required this.id, required this.cue});
+  const CueSelection({
+    required this.ref,
+    required this.id,
+    required this.cue,
+    required this.typeCatalog,
+  });
 
   final Ref ref;
 
@@ -88,27 +101,34 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
   final Cue cue;
 
   @override
-  String get name => cue.blueprint.name;
+  final TypeCatalog typeCatalog;
 
   @override
-  ObjectBlueprint get objectBlueprint => cue.blueprint.dataBlueprint;
+  String get name => cue.elementDefinition.name;
+
+  @override
+  ResolvedTypeRef get rootType => cue.elementDefinition.rootType;
 
   @override
   List<SelectionCapability> get capabilities => const [];
 
   @override
   Widget? buildInspectorHeader() {
-    return CueHeader(id: id.id, name: name, color: cue.blueprint.color);
+    return CueHeader(id: id.id, name: name, color: cue.elementDefinition.color);
   }
 
   @override
-  dynamic fieldValue(String path) => cue.data.get(path);
+  EditorValue value(DataPath path) => cue.data.readEditorValue(path);
 
   @override
-  void setFieldValue(String path, dynamic value) {
-    ref
-        .read(pageElementsProvider(id.pageId).notifier)
-        .updateCueFieldValue(id.id, path, value);
+  EditorMutationResult update(DataPath path, DataValue value) {
+    final result = validateUpdate(path, value);
+    if (result is AppliedEditorMutation) {
+      ref
+          .read(pageElementsProvider(id.pageId).notifier)
+          .updateCueFieldValue(id.id, path, value);
+    }
+    return result;
   }
 
   @override

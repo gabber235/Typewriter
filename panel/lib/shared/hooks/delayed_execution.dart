@@ -16,8 +16,10 @@ class _DelayedExecutionHook extends Hook<void> {
 class _DelayedExecutionHookState
     extends HookState<void, _DelayedExecutionHook> {
   void scheduleRun() {
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => hook.function(), debugLabel: debugLabel);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => hook.function(),
+      debugLabel: debugLabel,
+    );
   }
 
   @override

@@ -11,45 +11,11 @@ part of 'entries.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-PageEntry _$PageEntryFromJson(
-  Map<String, dynamic> json
-) {
-        switch (json['_kind']) {
-                  case 'definition':
-          return DefinitionPageEntry.fromJson(
-            json
-          );
-                case 'reference':
-          return ReferencePageEntry.fromJson(
-            json
-          );
-                case 'nonexistent':
-          return NonexistentPageEntry.fromJson(
-            json
-          );
-                case 'noBlueprint':
-          return NoBlueprintPageEntry.fromJson(
-            json
-          );
-        
-          default:
-            throw CheckedFromJsonException(
-  json,
-  '_kind',
-  'PageEntry',
-  'Invalid union type "${json['_kind']}"!'
-);
-        }
-      
-}
-
 /// @nodoc
 mixin _$PageEntry implements DiagnosticableTreeMixin {
 
 
 
-  /// Serializes this PageEntry to a JSON map.
-  Map<String, dynamic> toJson();
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -63,7 +29,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PageEntry);
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => runtimeType.hashCode;
 
@@ -95,14 +61,14 @@ extension PageEntryPatterns on PageEntry {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DefinitionPageEntry value)?  definition,TResult Function( ReferencePageEntry value)?  reference,TResult Function( NonexistentPageEntry value)?  nonexistent,TResult Function( NoBlueprintPageEntry value)?  noBlueprint,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DefinitionPageEntry value)?  definition,TResult Function( ReferencePageEntry value)?  reference,TResult Function( NonexistentPageEntry value)?  nonexistent,TResult Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that);case ReferencePageEntry() when reference != null:
 return reference(_that);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that);case NoBlueprintPageEntry() when noBlueprint != null:
-return noBlueprint(_that);case _:
+return nonexistent(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return missingElementDefinition(_that);case _:
   return orElse();
 
 }
@@ -120,14 +86,14 @@ return noBlueprint(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DefinitionPageEntry value)  definition,required TResult Function( ReferencePageEntry value)  reference,required TResult Function( NonexistentPageEntry value)  nonexistent,required TResult Function( NoBlueprintPageEntry value)  noBlueprint,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DefinitionPageEntry value)  definition,required TResult Function( ReferencePageEntry value)  reference,required TResult Function( NonexistentPageEntry value)  nonexistent,required TResult Function( MissingElementDefinitionPageEntry value)  missingElementDefinition,}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry():
 return definition(_that);case ReferencePageEntry():
 return reference(_that);case NonexistentPageEntry():
-return nonexistent(_that);case NoBlueprintPageEntry():
-return noBlueprint(_that);case _:
+return nonexistent(_that);case MissingElementDefinitionPageEntry():
+return missingElementDefinition(_that);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -144,14 +110,14 @@ return noBlueprint(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DefinitionPageEntry value)?  definition,TResult? Function( ReferencePageEntry value)?  reference,TResult? Function( NonexistentPageEntry value)?  nonexistent,TResult? Function( NoBlueprintPageEntry value)?  noBlueprint,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DefinitionPageEntry value)?  definition,TResult? Function( ReferencePageEntry value)?  reference,TResult? Function( NonexistentPageEntry value)?  nonexistent,TResult? Function( MissingElementDefinitionPageEntry value)?  missingElementDefinition,}){
 final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that);case ReferencePageEntry() when reference != null:
 return reference(_that);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that);case NoBlueprintPageEntry() when noBlueprint != null:
-return noBlueprint(_that);case _:
+return nonexistent(_that);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return missingElementDefinition(_that);case _:
   return null;
 
 }
@@ -168,13 +134,13 @@ return noBlueprint(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( EntryDefinition definition)?  definition,TResult Function( String id,  String name,  ElementBlueprint blueprint,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult Function( String id)?  nonexistent,TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  noBlueprint,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( EntryDefinition definition)?  definition,TResult Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult Function( String id)?  nonexistent,TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that.definition);case ReferencePageEntry() when reference != null:
-return reference(_that.id,_that.name,_that.blueprint,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that.id);case NoBlueprintPageEntry() when noBlueprint != null:
-return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
+return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
+return nonexistent(_that.id);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   return orElse();
 
 }
@@ -192,13 +158,13 @@ return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.o
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( EntryDefinition definition)  definition,required TResult Function( String id,  String name,  ElementBlueprint blueprint,  String pageId,  List<EntryMetadata> metadata)  reference,required TResult Function( String id)  nonexistent,required TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  noBlueprint,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( EntryDefinition definition)  definition,required TResult Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)  reference,required TResult Function( String id)  nonexistent,required TResult Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)  missingElementDefinition,}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry():
 return definition(_that.definition);case ReferencePageEntry():
-return reference(_that.id,_that.name,_that.blueprint,_that.pageId,_that.metadata);case NonexistentPageEntry():
-return nonexistent(_that.id);case NoBlueprintPageEntry():
-return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
+return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry():
+return nonexistent(_that.id);case MissingElementDefinitionPageEntry():
+return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -215,13 +181,13 @@ return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.o
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( EntryDefinition definition)?  definition,TResult? Function( String id,  String name,  ElementBlueprint blueprint,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult? Function( String id)?  nonexistent,TResult? Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  noBlueprint,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( EntryDefinition definition)?  definition,TResult? Function( String id,  String name,  ElementDefinition elementDefinition,  String pageId,  List<EntryMetadata> metadata)?  reference,TResult? Function( String id)?  nonexistent,TResult? Function( String id,  String name,  EntryPlacement placement,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  List<EntryMetadata> metadata)?  missingElementDefinition,}) {final _that = this;
 switch (_that) {
 case DefinitionPageEntry() when definition != null:
 return definition(_that.definition);case ReferencePageEntry() when reference != null:
-return reference(_that.id,_that.name,_that.blueprint,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
-return nonexistent(_that.id);case NoBlueprintPageEntry() when noBlueprint != null:
-return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
+return reference(_that.id,_that.name,_that.elementDefinition,_that.pageId,_that.metadata);case NonexistentPageEntry() when nonexistent != null:
+return nonexistent(_that.id);case MissingElementDefinitionPageEntry() when missingElementDefinition != null:
+return missingElementDefinition(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.outwardLinks,_that.metadata);case _:
   return null;
 
 }
@@ -230,17 +196,13 @@ return noBlueprint(_that.id,_that.name,_that.placement,_that.inwardLinks,_that.o
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class DefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const DefinitionPageEntry({required this.definition, final  String? $type}): $type = $type ?? 'definition';
-  factory DefinitionPageEntry.fromJson(Map<String, dynamic> json) => _$DefinitionPageEntryFromJson(json);
+  const DefinitionPageEntry({required this.definition});
+
 
  final  EntryDefinition definition;
-
-@JsonKey(name: '_kind')
-final String $type;
-
 
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -248,10 +210,7 @@ final String $type;
 @pragma('vm:prefer-inline')
 $DefinitionPageEntryCopyWith<DefinitionPageEntry> get copyWith => _$DefinitionPageEntryCopyWithImpl<DefinitionPageEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$DefinitionPageEntryToJson(this, );
-}
+
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
@@ -264,7 +223,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is DefinitionPageEntry&&(identical(other.definition, definition) || other.definition == definition));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,definition);
 
@@ -310,7 +269,7 @@ as EntryDefinition,
 @override
 @pragma('vm:prefer-inline')
 $EntryDefinitionCopyWith<$Res> get definition {
-  
+
   return $EntryDefinitionCopyWith<$Res>(_self.definition, (value) {
     return _then(_self.copyWith(definition: value));
   });
@@ -318,15 +277,15 @@ $EntryDefinitionCopyWith<$Res> get definition {
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class ReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const ReferencePageEntry({required this.id, required this.name, required this.blueprint, required this.pageId, final  List<EntryMetadata> metadata = const [], final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_metadata = metadata,$type = $type ?? 'reference';
-  factory ReferencePageEntry.fromJson(Map<String, dynamic> json) => _$ReferencePageEntryFromJson(json);
+  const ReferencePageEntry({required this.id, required this.name, required this.elementDefinition, required this.pageId, final  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),assert(pageId != "", 'Page ID must not be empty.'),_metadata = metadata;
+
 
  final  String id;
  final  String name;
- final  ElementBlueprint blueprint;
+ final  ElementDefinition elementDefinition;
  final  String pageId;
  final  List<EntryMetadata> _metadata;
 @JsonKey() List<EntryMetadata> get metadata {
@@ -336,39 +295,32 @@ class ReferencePageEntry with DiagnosticableTreeMixin implements PageEntry {
 }
 
 
-@JsonKey(name: '_kind')
-final String $type;
-
-
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReferencePageEntryCopyWith<ReferencePageEntry> get copyWith => _$ReferencePageEntryCopyWithImpl<ReferencePageEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$ReferencePageEntryToJson(this, );
-}
+
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'PageEntry.reference'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('blueprint', blueprint))..add(DiagnosticsProperty('pageId', pageId))..add(DiagnosticsProperty('metadata', metadata));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('elementDefinition', elementDefinition))..add(DiagnosticsProperty('pageId', pageId))..add(DiagnosticsProperty('metadata', metadata));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferencePageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.pageId, pageId) || other.pageId == pageId)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReferencePageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.pageId, pageId) || other.pageId == pageId)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,name,blueprint,pageId,const DeepCollectionEquality().hash(_metadata));
+int get hashCode => Object.hash(runtimeType,id,name,elementDefinition,pageId,const DeepCollectionEquality().hash(_metadata));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'PageEntry.reference(id: $id, name: $name, blueprint: $blueprint, pageId: $pageId, metadata: $metadata)';
+  return 'PageEntry.reference(id: $id, name: $name, elementDefinition: $elementDefinition, pageId: $pageId, metadata: $metadata)';
 }
 
 
@@ -379,11 +331,11 @@ abstract mixin class $ReferencePageEntryCopyWith<$Res> implements $PageEntryCopy
   factory $ReferencePageEntryCopyWith(ReferencePageEntry value, $Res Function(ReferencePageEntry) _then) = _$ReferencePageEntryCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, ElementBlueprint blueprint, String pageId, List<EntryMetadata> metadata
+ String id, String name, ElementDefinition elementDefinition, String pageId, List<EntryMetadata> metadata
 });
 
 
-$ElementBlueprintCopyWith<$Res> get blueprint;
+$ElementDefinitionCopyWith<$Res> get elementDefinition;
 
 }
 /// @nodoc
@@ -396,12 +348,12 @@ class _$ReferencePageEntryCopyWithImpl<$Res>
 
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? blueprint = null,Object? pageId = null,Object? metadata = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? elementDefinition = null,Object? pageId = null,Object? metadata = null,}) {
   return _then(ReferencePageEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
+as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
 as String,metadata: null == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
 as List<EntryMetadata>,
   ));
@@ -411,26 +363,22 @@ as List<EntryMetadata>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class NonexistentPageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const NonexistentPageEntry({required this.id, final  String? $type}): assert(id != "", 'ID must not be empty.'),$type = $type ?? 'nonexistent';
-  factory NonexistentPageEntry.fromJson(Map<String, dynamic> json) => _$NonexistentPageEntryFromJson(json);
+  const NonexistentPageEntry({required this.id}): assert(id != "", 'ID must not be empty.');
+
 
  final  String id;
-
-@JsonKey(name: '_kind')
-final String $type;
-
 
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -438,10 +386,7 @@ final String $type;
 @pragma('vm:prefer-inline')
 $NonexistentPageEntryCopyWith<NonexistentPageEntry> get copyWith => _$NonexistentPageEntryCopyWithImpl<NonexistentPageEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$NonexistentPageEntryToJson(this, );
-}
+
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
@@ -454,7 +399,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is NonexistentPageEntry&&(identical(other.id, id) || other.id == id));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id);
 
@@ -499,11 +444,11 @@ as String,
 }
 
 /// @nodoc
-@JsonSerializable()
 
-class NoBlueprintPageEntry with DiagnosticableTreeMixin implements PageEntry {
-  const NoBlueprintPageEntry({required this.id, required this.name, required this.placement, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  List<EntryMetadata> metadata = const [], final  String? $type}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata,$type = $type ?? 'noBlueprint';
-  factory NoBlueprintPageEntry.fromJson(Map<String, dynamic> json) => _$NoBlueprintPageEntryFromJson(json);
+
+class MissingElementDefinitionPageEntry with DiagnosticableTreeMixin implements PageEntry {
+  const MissingElementDefinitionPageEntry({required this.id, required this.name, required this.placement, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,_metadata = metadata;
+
 
  final  String id;
  final  String name;
@@ -530,47 +475,40 @@ class NoBlueprintPageEntry with DiagnosticableTreeMixin implements PageEntry {
 }
 
 
-@JsonKey(name: '_kind')
-final String $type;
-
-
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$NoBlueprintPageEntryCopyWith<NoBlueprintPageEntry> get copyWith => _$NoBlueprintPageEntryCopyWithImpl<NoBlueprintPageEntry>(this, _$identity);
+$MissingElementDefinitionPageEntryCopyWith<MissingElementDefinitionPageEntry> get copyWith => _$MissingElementDefinitionPageEntryCopyWithImpl<MissingElementDefinitionPageEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$NoBlueprintPageEntryToJson(this, );
-}
+
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
-    ..add(DiagnosticsProperty('type', 'PageEntry.noBlueprint'))
+    ..add(DiagnosticsProperty('type', 'PageEntry.missingElementDefinition'))
     ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('placement', placement))..add(DiagnosticsProperty('inwardLinks', inwardLinks))..add(DiagnosticsProperty('outwardLinks', outwardLinks))..add(DiagnosticsProperty('metadata', metadata));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NoBlueprintPageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.placement, placement) || other.placement == placement)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissingElementDefinitionPageEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.placement, placement) || other.placement == placement)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,name,placement,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks),const DeepCollectionEquality().hash(_metadata));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'PageEntry.noBlueprint(id: $id, name: $name, placement: $placement, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, metadata: $metadata)';
+  return 'PageEntry.missingElementDefinition(id: $id, name: $name, placement: $placement, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, metadata: $metadata)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $NoBlueprintPageEntryCopyWith<$Res> implements $PageEntryCopyWith<$Res> {
-  factory $NoBlueprintPageEntryCopyWith(NoBlueprintPageEntry value, $Res Function(NoBlueprintPageEntry) _then) = _$NoBlueprintPageEntryCopyWithImpl;
+abstract mixin class $MissingElementDefinitionPageEntryCopyWith<$Res> implements $PageEntryCopyWith<$Res> {
+  factory $MissingElementDefinitionPageEntryCopyWith(MissingElementDefinitionPageEntry value, $Res Function(MissingElementDefinitionPageEntry) _then) = _$MissingElementDefinitionPageEntryCopyWithImpl;
 @useResult
 $Res call({
  String id, String name, EntryPlacement placement, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks, List<EntryMetadata> metadata
@@ -581,17 +519,17 @@ $EntryPlacementCopyWith<$Res> get placement;
 
 }
 /// @nodoc
-class _$NoBlueprintPageEntryCopyWithImpl<$Res>
-    implements $NoBlueprintPageEntryCopyWith<$Res> {
-  _$NoBlueprintPageEntryCopyWithImpl(this._self, this._then);
+class _$MissingElementDefinitionPageEntryCopyWithImpl<$Res>
+    implements $MissingElementDefinitionPageEntryCopyWith<$Res> {
+  _$MissingElementDefinitionPageEntryCopyWithImpl(this._self, this._then);
 
-  final NoBlueprintPageEntry _self;
-  final $Res Function(NoBlueprintPageEntry) _then;
+  final MissingElementDefinitionPageEntry _self;
+  final $Res Function(MissingElementDefinitionPageEntry) _then;
 
 /// Create a copy of PageEntry
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? placement = null,Object? inwardLinks = null,Object? outwardLinks = null,Object? metadata = null,}) {
-  return _then(NoBlueprintPageEntry(
+  return _then(MissingElementDefinitionPageEntry(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
@@ -607,46 +545,43 @@ as List<EntryMetadata>,
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
 }
 }
 
-
 /// @nodoc
 mixin _$EntryDefinition implements DiagnosticableTreeMixin {
 
- String get id; String get name; ElementBlueprint get blueprint; EntryPlacement get placement; DynamicData get data; List<ElementLink> get inwardEdges; List<ElementLink> get outwardEdges; List<EntryMetadata> get metadata;
+ String get id; String get name; ElementDefinition get elementDefinition; EntryPlacement get placement; RecordValue get data; List<ElementLink> get inwardEdges; List<ElementLink> get outwardEdges; List<EntryMetadata> get metadata;
 /// Create a copy of EntryDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EntryDefinitionCopyWith<EntryDefinition> get copyWith => _$EntryDefinitionCopyWithImpl<EntryDefinition>(this as EntryDefinition, _$identity);
 
-  /// Serializes this EntryDefinition to a JSON map.
-  Map<String, dynamic> toJson();
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'EntryDefinition'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('blueprint', blueprint))..add(DiagnosticsProperty('placement', placement))..add(DiagnosticsProperty('data', data))..add(DiagnosticsProperty('inwardEdges', inwardEdges))..add(DiagnosticsProperty('outwardEdges', outwardEdges))..add(DiagnosticsProperty('metadata', metadata));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('elementDefinition', elementDefinition))..add(DiagnosticsProperty('placement', placement))..add(DiagnosticsProperty('data', data))..add(DiagnosticsProperty('inwardEdges', inwardEdges))..add(DiagnosticsProperty('outwardEdges', outwardEdges))..add(DiagnosticsProperty('metadata', metadata));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EntryDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardEdges, inwardEdges)&&const DeepCollectionEquality().equals(other.outwardEdges, outwardEdges)&&const DeepCollectionEquality().equals(other.metadata, metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EntryDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardEdges, inwardEdges)&&const DeepCollectionEquality().equals(other.outwardEdges, outwardEdges)&&const DeepCollectionEquality().equals(other.metadata, metadata));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,name,blueprint,placement,data,const DeepCollectionEquality().hash(inwardEdges),const DeepCollectionEquality().hash(outwardEdges),const DeepCollectionEquality().hash(metadata));
+int get hashCode => Object.hash(runtimeType,id,name,elementDefinition,placement,data,const DeepCollectionEquality().hash(inwardEdges),const DeepCollectionEquality().hash(outwardEdges),const DeepCollectionEquality().hash(metadata));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'EntryDefinition(id: $id, name: $name, blueprint: $blueprint, placement: $placement, data: $data, inwardEdges: $inwardEdges, outwardEdges: $outwardEdges, metadata: $metadata)';
+  return 'EntryDefinition(id: $id, name: $name, elementDefinition: $elementDefinition, placement: $placement, data: $data, inwardEdges: $inwardEdges, outwardEdges: $outwardEdges, metadata: $metadata)';
 }
 
 
@@ -657,11 +592,11 @@ abstract mixin class $EntryDefinitionCopyWith<$Res>  {
   factory $EntryDefinitionCopyWith(EntryDefinition value, $Res Function(EntryDefinition) _then) = _$EntryDefinitionCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, ElementBlueprint blueprint, EntryPlacement placement, DynamicData data, List<ElementLink> inwardEdges, List<ElementLink> outwardEdges, List<EntryMetadata> metadata
+ String id, String name, ElementDefinition elementDefinition, EntryPlacement placement, RecordValue data, List<ElementLink> inwardEdges, List<ElementLink> outwardEdges, List<EntryMetadata> metadata
 });
 
 
-$ElementBlueprintCopyWith<$Res> get blueprint;$EntryPlacementCopyWith<$Res> get placement;
+$ElementDefinitionCopyWith<$Res> get elementDefinition;$EntryPlacementCopyWith<$Res> get placement;
 
 }
 /// @nodoc
@@ -674,14 +609,14 @@ class _$EntryDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of EntryDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? blueprint = null,Object? placement = null,Object? data = null,Object? inwardEdges = null,Object? outwardEdges = null,Object? metadata = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? elementDefinition = null,Object? placement = null,Object? data = null,Object? inwardEdges = null,Object? outwardEdges = null,Object? metadata = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
+as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
 as EntryPlacement,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as DynamicData,inwardEdges: null == inwardEdges ? _self.inwardEdges : inwardEdges // ignore: cast_nullable_to_non_nullable
+as RecordValue,inwardEdges: null == inwardEdges ? _self.inwardEdges : inwardEdges // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,outwardEdges: null == outwardEdges ? _self.outwardEdges : outwardEdges // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
 as List<EntryMetadata>,
@@ -691,17 +626,17 @@ as List<EntryMetadata>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }/// Create a copy of EntryDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -787,10 +722,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  ElementBlueprint blueprint,  EntryPlacement placement,  DynamicData data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  ElementDefinition elementDefinition,  EntryPlacement placement,  RecordValue data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EntryDefinition() when $default != null:
-return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
+return $default(_that.id,_that.name,_that.elementDefinition,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
   return orElse();
 
 }
@@ -808,10 +743,10 @@ return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  ElementBlueprint blueprint,  EntryPlacement placement,  DynamicData data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  ElementDefinition elementDefinition,  EntryPlacement placement,  RecordValue data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)  $default,) {final _that = this;
 switch (_that) {
 case _EntryDefinition():
-return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
+return $default(_that.id,_that.name,_that.elementDefinition,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -828,10 +763,10 @@ return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  ElementBlueprint blueprint,  EntryPlacement placement,  DynamicData data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  ElementDefinition elementDefinition,  EntryPlacement placement,  RecordValue data,  List<ElementLink> inwardEdges,  List<ElementLink> outwardEdges,  List<EntryMetadata> metadata)?  $default,) {final _that = this;
 switch (_that) {
 case _EntryDefinition() when $default != null:
-return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
+return $default(_that.id,_that.name,_that.elementDefinition,_that.placement,_that.data,_that.inwardEdges,_that.outwardEdges,_that.metadata);case _:
   return null;
 
 }
@@ -840,17 +775,17 @@ return $default(_that.id,_that.name,_that.blueprint,_that.placement,_that.data,_
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _EntryDefinition with DiagnosticableTreeMixin implements EntryDefinition {
-  const _EntryDefinition({required this.id, required this.name, required this.blueprint, required this.placement, required this.data, required final  List<ElementLink> inwardEdges, required final  List<ElementLink> outwardEdges, final  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata;
-  factory _EntryDefinition.fromJson(Map<String, dynamic> json) => _$EntryDefinitionFromJson(json);
+  const _EntryDefinition({required this.id, required this.name, required this.elementDefinition, required this.placement, required this.data, required final  List<ElementLink> inwardEdges, required final  List<ElementLink> outwardEdges, final  List<EntryMetadata> metadata = const []}): assert(id != "", 'ID must not be empty.'),_inwardEdges = inwardEdges,_outwardEdges = outwardEdges,_metadata = metadata;
+
 
 @override final  String id;
 @override final  String name;
-@override final  ElementBlueprint blueprint;
+@override final  ElementDefinition elementDefinition;
 @override final  EntryPlacement placement;
-@override final  DynamicData data;
+@override final  RecordValue data;
  final  List<ElementLink> _inwardEdges;
 @override List<ElementLink> get inwardEdges {
   if (_inwardEdges is EqualUnmodifiableListView) return _inwardEdges;
@@ -879,29 +814,26 @@ class _EntryDefinition with DiagnosticableTreeMixin implements EntryDefinition {
 @pragma('vm:prefer-inline')
 _$EntryDefinitionCopyWith<_EntryDefinition> get copyWith => __$EntryDefinitionCopyWithImpl<_EntryDefinition>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$EntryDefinitionToJson(this, );
-}
+
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'EntryDefinition'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('blueprint', blueprint))..add(DiagnosticsProperty('placement', placement))..add(DiagnosticsProperty('data', data))..add(DiagnosticsProperty('inwardEdges', inwardEdges))..add(DiagnosticsProperty('outwardEdges', outwardEdges))..add(DiagnosticsProperty('metadata', metadata));
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('elementDefinition', elementDefinition))..add(DiagnosticsProperty('placement', placement))..add(DiagnosticsProperty('data', data))..add(DiagnosticsProperty('inwardEdges', inwardEdges))..add(DiagnosticsProperty('outwardEdges', outwardEdges))..add(DiagnosticsProperty('metadata', metadata));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EntryDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardEdges, _inwardEdges)&&const DeepCollectionEquality().equals(other._outwardEdges, _outwardEdges)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EntryDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardEdges, _inwardEdges)&&const DeepCollectionEquality().equals(other._outwardEdges, _outwardEdges)&&const DeepCollectionEquality().equals(other._metadata, _metadata));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,name,blueprint,placement,data,const DeepCollectionEquality().hash(_inwardEdges),const DeepCollectionEquality().hash(_outwardEdges),const DeepCollectionEquality().hash(_metadata));
+int get hashCode => Object.hash(runtimeType,id,name,elementDefinition,placement,data,const DeepCollectionEquality().hash(_inwardEdges),const DeepCollectionEquality().hash(_outwardEdges),const DeepCollectionEquality().hash(_metadata));
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'EntryDefinition(id: $id, name: $name, blueprint: $blueprint, placement: $placement, data: $data, inwardEdges: $inwardEdges, outwardEdges: $outwardEdges, metadata: $metadata)';
+  return 'EntryDefinition(id: $id, name: $name, elementDefinition: $elementDefinition, placement: $placement, data: $data, inwardEdges: $inwardEdges, outwardEdges: $outwardEdges, metadata: $metadata)';
 }
 
 
@@ -912,11 +844,11 @@ abstract mixin class _$EntryDefinitionCopyWith<$Res> implements $EntryDefinition
   factory _$EntryDefinitionCopyWith(_EntryDefinition value, $Res Function(_EntryDefinition) _then) = __$EntryDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, ElementBlueprint blueprint, EntryPlacement placement, DynamicData data, List<ElementLink> inwardEdges, List<ElementLink> outwardEdges, List<EntryMetadata> metadata
+ String id, String name, ElementDefinition elementDefinition, EntryPlacement placement, RecordValue data, List<ElementLink> inwardEdges, List<ElementLink> outwardEdges, List<EntryMetadata> metadata
 });
 
 
-@override $ElementBlueprintCopyWith<$Res> get blueprint;@override $EntryPlacementCopyWith<$Res> get placement;
+@override $ElementDefinitionCopyWith<$Res> get elementDefinition;@override $EntryPlacementCopyWith<$Res> get placement;
 
 }
 /// @nodoc
@@ -929,14 +861,14 @@ class __$EntryDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of EntryDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? blueprint = null,Object? placement = null,Object? data = null,Object? inwardEdges = null,Object? outwardEdges = null,Object? metadata = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? elementDefinition = null,Object? placement = null,Object? data = null,Object? inwardEdges = null,Object? outwardEdges = null,Object? metadata = null,}) {
   return _then(_EntryDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
+as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
 as EntryPlacement,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as DynamicData,inwardEdges: null == inwardEdges ? _self._inwardEdges : inwardEdges // ignore: cast_nullable_to_non_nullable
+as RecordValue,inwardEdges: null == inwardEdges ? _self._inwardEdges : inwardEdges // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,outwardEdges: null == outwardEdges ? _self._outwardEdges : outwardEdges // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,metadata: null == metadata ? _self._metadata : metadata // ignore: cast_nullable_to_non_nullable
 as List<EntryMetadata>,
@@ -947,17 +879,17 @@ as List<EntryMetadata>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }/// Create a copy of EntryDefinition
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });

@@ -6,8 +6,5 @@ import "package:flutter_hooks/flutter_hooks.dart";
 /// See also:
 /// - [GlobalKey]
 GlobalKey useGlobalKey({String? debugLabel}) {
-  return useMemoized(
-    () => GlobalKey(debugLabel: debugLabel),
-    [],
-  );
+  return useMemoized(() => GlobalKey(debugLabel: debugLabel), []);
 }

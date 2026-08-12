@@ -1,0 +1,277 @@
+part of "scene.dart";
+
+class _SceneMockBuilder {
+  final math.Random _random = math.Random();
+
+  List<PageElement> generateWithDsl(int count) {
+    if (count <= 0) return const [];
+
+    final dsl = sceneElements();
+    var consumed = 0;
+
+    for (var entryIndex = 0; consumed < count; entryIndex++) {
+      final remaining = count - consumed;
+      final blockBudget = remaining <= 10
+          ? remaining
+          : _nextInt(10, math.min(16, remaining));
+      final entry = _generateEntry(entryIndex, blockBudget);
+      dsl.entry(
+        id: entry.id,
+        name: entry.name,
+        icon: entry.icon,
+        placement: entry.placement,
+        data: entry.data,
+        children: entry.children,
+      );
+      consumed += blockBudget;
+    }
+
+    return dsl.build();
+  }
+
+  _GeneratedEntry _generateEntry(int entryIndex, int budget) {
+    assert(budget > 0);
+
+    final entryId = "scene_entry_$entryIndex";
+    final rootChildren = <SceneCueDsl>[];
+    final remainingCueBudget = budget - 1;
+
+    if (remainingCueBudget > 0) {
+      final rootCount = _nextInt(
+        remainingCueBudget >= 4 ? 2 : 1,
+        math.min(3, remainingCueBudget),
+      );
+      final rootBudgets = _splitBudget(
+        remainingCueBudget,
+        rootCount,
+        minEach: 1,
+      );
+
+      for (var rootIndex = 0; rootIndex < rootBudgets.length; rootIndex++) {
+        final range = _generateRootSegmentRange();
+        final tree = _generateSegmentTree(
+          entryIndex: entryIndex,
+          nodePath: "$rootIndex",
+          depth: 0,
+          budget: rootBudgets[rootIndex],
+          startFrame: range.$1,
+          endFrame: range.$2,
+        );
+        rootChildren.add(tree);
+      }
+    }
+
+    return _GeneratedEntry(
+      id: entryId,
+      name: "Scene Entry ${entryIndex + 1}",
+      icon: "solar:video-frame-bold",
+      placement: EntryPlacement(
+        x: 40 + ((entryIndex % 4) * 220),
+        y: 32 + ((entryIndex ~/ 4) * 120),
+        width: 180,
+        height: 72,
+      ),
+      data: RecordValue({
+        "entryType": StringValue(
+          rootChildren.length.isEven ? "entity" : "title",
+        ),
+        "label": StringValue("Scene Entry ${entryIndex + 1}"),
+      }),
+      children: rootChildren,
+    );
+  }
+
+  SceneCueDsl _generateSegmentTree({
+    required int entryIndex,
+    required String nodePath,
+    required int depth,
+    required int budget,
+    required int startFrame,
+    required int endFrame,
+  }) {
+    assert(budget > 0);
+
+    final cueId = "scene_entry_${entryIndex}_segment_$nodePath";
+    final kind = _pickSegmentKind(depth);
+    final remainingBudget = budget - 1;
+    final children = <SceneCueDsl>[];
+
+    if (remainingBudget > 0) {
+      final childSegmentCount = _pickChildSegmentCount(depth, remainingBudget);
+      final keyframeCount = _pickKeyframeCount(
+        remainingBudget: remainingBudget,
+        childSegmentCount: childSegmentCount,
+      );
+      final childSegmentBudget = remainingBudget - keyframeCount;
+
+      if (childSegmentCount > 0) {
+        final childBudgets = _splitBudget(
+          childSegmentBudget,
+          childSegmentCount,
+          minEach: 1,
+        );
+
+        for (
+          var childIndex = 0;
+          childIndex < childBudgets.length;
+          childIndex++
+        ) {
+          final range = _generateRelativeSegmentRange(endFrame - startFrame);
+          children.add(
+            _generateSegmentTree(
+              entryIndex: entryIndex,
+              nodePath: "${nodePath}_$childIndex",
+              depth: depth + 1,
+              budget: childBudgets[childIndex],
+              startFrame: range.$1,
+              endFrame: range.$2,
+            ),
+          );
+        }
+      }
+
+      for (
+        var keyframeIndex = 0;
+        keyframeIndex < keyframeCount;
+        keyframeIndex++
+      ) {
+        final keyframeId =
+            "scene_entry_${entryIndex}_keyframe_${nodePath}_$keyframeIndex";
+        children.add(
+          SceneCueDsl.keyframe(
+            keyframeId,
+            name: "${kind.name} Keyframe",
+            icon: _pickKeyframeIcon(),
+            frame: _generateRelativeKeyframe(endFrame - startFrame),
+            data: RecordValue({
+              "channel": StringValue(kind.channel),
+              "event": StringValue(_pickKeyframeEvent(depth)),
+              "label": StringValue(
+                "${kind.name} Keyframe ${keyframeIndex + 1}",
+              ),
+            }),
+          ),
+        );
+      }
+    }
+
+    return SceneCueDsl.segment(
+      cueId,
+      name: kind.name,
+      icon: kind.icon,
+      start: startFrame,
+      end: endFrame,
+      data: RecordValue({
+        "channel": StringValue(kind.channel),
+        "label": StringValue("${kind.name} ${entryIndex + 1}.$nodePath"),
+        "mode": StringValue(_pickSegmentMode(depth)),
+      }),
+      children: children,
+    );
+  }
+
+  (int, int) _generateRootSegmentRange() {
+    final startFrame = _nextInt(0, 72);
+    final duration = _nextInt(24, 120);
+    return (startFrame, startFrame + duration);
+  }
+
+  (int, int) _generateRelativeSegmentRange(int parentDuration) {
+    if (parentDuration <= 0) return (0, 0);
+
+    final startFrame = _nextInt(0, parentDuration);
+    final availableDuration = parentDuration - startFrame;
+    if (availableDuration <= 0) return (startFrame, startFrame);
+
+    final minimumSpan = math.min(12, availableDuration);
+    final endFrame = startFrame + _nextInt(minimumSpan, availableDuration);
+    return (startFrame, endFrame);
+  }
+
+  int _generateRelativeKeyframe(int parentDuration) {
+    if (parentDuration <= 0) return 0;
+    return _nextInt(0, parentDuration);
+  }
+
+  int _pickChildSegmentCount(int depth, int remainingBudget) {
+    if (depth >= 2 || remainingBudget <= 0) return 0;
+
+    final maxChildSegments = math.min(3, remainingBudget);
+    if (maxChildSegments == 0) return 0;
+
+    final minChildSegments = switch (depth) {
+      0 when remainingBudget >= 4 => 1,
+      1 when remainingBudget >= 3 && _random.nextBool() => 1,
+      _ => 0,
+    };
+
+    return _nextInt(minChildSegments, maxChildSegments);
+  }
+
+  int _pickKeyframeCount({
+    required int remainingBudget,
+    required int childSegmentCount,
+  }) {
+    final maxKeyframes = math.min(3, remainingBudget - childSegmentCount);
+    if (maxKeyframes <= 0) return 0;
+    return _nextInt(1, maxKeyframes);
+  }
+
+  List<int> _splitBudget(int total, int parts, {required int minEach}) {
+    assert(parts > 0);
+    assert(total >= parts * minEach);
+
+    final budgets = List.filled(parts, minEach);
+    var remaining = total - (parts * minEach);
+
+    while (remaining > 0) {
+      final index = _random.nextInt(parts);
+      budgets[index]++;
+      remaining--;
+    }
+
+    budgets.shuffle(_random);
+    return budgets;
+  }
+
+  _SceneCueKind _pickSegmentKind(int depth) {
+    final kinds = switch (depth) {
+      0 => _rootCueKinds,
+      1 => _childCueKinds,
+      _ => _grandchildCueKinds,
+    };
+    return kinds[_random.nextInt(kinds.length)];
+  }
+
+  String _pickSegmentMode(int depth) {
+    final modes = switch (depth) {
+      0 => ["cinematic", "staged", "hero"],
+      1 => ["follow", "accent", "reaction"],
+      _ => ["detail", "flare", "micro"],
+    };
+    return modes[_random.nextInt(modes.length)];
+  }
+
+  String _pickKeyframeEvent(int depth) {
+    final events = switch (depth) {
+      0 => ["intro", "focus", "resolve"],
+      1 => ["step", "emote", "swing"],
+      _ => ["blink", "spark", "pulse"],
+    };
+    return events[_random.nextInt(events.length)];
+  }
+
+  String _pickKeyframeIcon() {
+    const icons = [
+      "fa7-solid:person-rays",
+      "fa7-solid:wand-magic-sparkles",
+      "fa7-solid:star",
+    ];
+    return icons[_random.nextInt(icons.length)];
+  }
+
+  int _nextInt(int min, int max) {
+    assert(min <= max);
+    return min + _random.nextInt((max - min) + 1);
+  }
+}

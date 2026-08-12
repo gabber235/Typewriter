@@ -1,380 +1,173 @@
+import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  group("ElementBlueprint.getField", () {
-    test("returns field for simple path", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {"name": DataBlueprint.string()},
-        ),
-      );
-      final field = blueprint.getField("name");
-      expect(field, isNotNull);
-      expect(field is PrimitiveBlueprint, isTrue);
+  group("ElementDefinition", () {
+    test("uses resolved root identity and supports Freezed copyWith", () {
+      final definition = _elementDefinition();
+      final renamed = definition.copyWith(name: "Renamed");
+
+      expect(definition.typeId, _rootType.id);
+      expect(definition.namespace, "example");
+      expect(definition.qualifiedName, "example::Entry");
+      expect(renamed.name, "Renamed");
+      expect(renamed.rootType, definition.rootType);
+      expect(_elementDefinition(), definition);
     });
 
-    test("returns field for nested object path", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "user": DataBlueprint.object(
-              fields: {"email": DataBlueprint.string()},
-            ),
-          },
-        ),
+    test("stores deprecation directly", () {
+      final definition = _elementDefinition(
+        deprecation: const ElementDeprecation(reason: "Use another type"),
       );
-      final field = blueprint.getField("user.email");
-      expect(field, isNotNull);
-      expect(field is PrimitiveBlueprint, isTrue);
+
+      expect(definition.isDeprecated, isTrue);
+      expect(definition.deprecation?.reason, "Use another type");
     });
 
-    test("returns list element type for list path", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {"items": DataBlueprint.list(type: DataBlueprint.string())},
-        ),
-      );
-      final field = blueprint.getField("items.0");
-      expect(field, isNotNull);
-      expect(field is PrimitiveBlueprint, isTrue);
+    test("supports iconify and sanitized SVG icons", () {
+      const iconify = IconValue.iconify("fa-solid:star");
+      const svg = IconValue.svg('<svg viewBox="0 0 1 1"></svg>');
+
+      expect(iconify.validate(), isEmpty);
+      expect(svg.validate(), isEmpty);
+      expect(iconify.typedValue.concreteType, standardTypeRefs.iconifyIcon);
+      expect(svg.typedValue.concreteType, standardTypeRefs.svgIcon);
     });
 
-    test("returns map value type for map path", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "settings": DataBlueprint.map(
-              key: DataBlueprint.string(),
-              value: DataBlueprint.integer(),
-            ),
-          },
-        ),
-      );
-      final field = blueprint.getField("settings.someKey");
-      expect(field, isNotNull);
-      expect(field is PrimitiveBlueprint, isTrue);
+    test("rejects unsafe SVG icons", () {
+      const icon = IconValue.svg('<svg><script>alert("x")</script></svg>');
+
+      expect(icon.validate().single.code, TypeDiagnosticCode.invalidValue);
     });
 
-    test("returns null for non-existent path", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-      );
-      final field = blueprint.getField("nonexistent.path");
-      expect(field, isNull);
-    });
-
-    test("handles deeply nested paths", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "level1": DataBlueprint.object(
-              fields: {
-                "level2": DataBlueprint.object(
-                  fields: {
-                    "level3": DataBlueprint.string(defaultValue: "deep"),
-                  },
-                ),
-              },
-            ),
-          },
+    test("resolves a concrete record root", () {
+      final result = _elementDefinition().resolve(
+        _registry(
+          kind: NominalTypeKind.concrete,
+          type: RecordType(fields: {}),
         ),
       );
-      final field = blueprint.getField("level1.level2.level3");
-      expect(field, isNotNull);
+
+      expect(result.valueOrNull?.reference, _rootType);
+    });
+
+    test("reports unknown, abstract, and nonrecord roots", () {
+      final unknown = _elementDefinition().resolve(
+        TypeRegistry(TypeCatalog([])),
+      );
+      final abstract = _elementDefinition().resolve(
+        _registry(
+          kind: NominalTypeKind.openAbstract,
+          type: RecordType(fields: {}),
+        ),
+      );
+      final nonrecord = _elementDefinition().resolve(
+        _registry(kind: NominalTypeKind.concrete, type: const StringType()),
+      );
+
+      expect(unknown.diagnostics.single.code, TypeDiagnosticCode.unknownType);
+      expect(
+        abstract.diagnostics.single.code,
+        TypeDiagnosticCode.invalidConcreteType,
+      );
+      expect(
+        nonrecord.diagnostics.single.code,
+        TypeDiagnosticCode.incompatibleRepresentation,
+      );
+    });
+
+    test("catalogue readiness gates entry and cue selection creation", () {
+      final definition = _elementDefinition();
+      final catalog = TypeCatalog([
+        TypeDefinition(
+          id: _rootType,
+          kind: NominalTypeKind.concrete,
+          representation: RecordType(fields: {}),
+        ),
+      ]);
+      final snapshot = RealmEditorCatalogSnapshot(
+        catalog: catalog,
+        generation: const CatalogGeneration("1"),
+      );
+      final ready = AsyncValue<RealmEditorCatalogState>.data(
+        RealmEditorCatalogState.ready(snapshot),
+      ).resolveElement(definition, (resolvedCatalog) => resolvedCatalog);
+      final loading = const AsyncValue<RealmEditorCatalogState>.data(
+        RealmEditorCatalogState.loading(),
+      ).resolveElement(definition, (resolvedCatalog) => resolvedCatalog);
+
+      expect(ready.requireValue.definitions, isNotEmpty);
+      expect(loading, isA<AsyncLoading<TypeCatalog>>());
     });
   });
 
-  group("ElementBlueprint.fieldsWithModifier", () {
-    test("finds fields with read-only modifier", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "id": DataBlueprint.string(modifiers: [const Modifier.readOnly()]),
-            "name": DataBlueprint.string(),
-          },
-        ),
+  group("Entry geometry and identity", () {
+    test("calculates centers and squared distance", () {
+      const first = EntryPlacement(x: 0, y: 0, width: 100, height: 100);
+      const second = EntryPlacement(x: 100, y: 0, width: 100, height: 100);
+
+      expect(first.center, const Offset(50, 50));
+      expect(first.distanceSquaredTo(second), 10000);
+    });
+
+    test("exposes the identifier for every page entry state", () {
+      final definition = EntryDefinition(
+        id: "defined",
+        name: "Defined",
+        elementDefinition: _elementDefinition(),
+        placement: const EntryPlacement(x: 0, y: 0, width: 10, height: 10),
+        data: RecordValue(const {}),
+        inwardEdges: const [],
+        outwardEdges: const [],
       );
-      final fields = blueprint.fieldsWithModifier<ReadOnlyModifier>();
-      expect(fields.containsKey("id"), isTrue);
-      expect(fields.containsKey("name"), isFalse);
-    });
 
-    test("finds nested fields with modifiers", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "outer": DataBlueprint.object(
-              fields: {
-                "inner": DataBlueprint.string(
-                  modifiers: [const Modifier.readOnly()],
-                ),
-              },
-            ),
-          },
-        ),
+      expect(PageEntry.definition(definition: definition).id, "defined");
+      expect(
+        PageEntry.reference(
+          id: "reference",
+          name: "Reference",
+          elementDefinition: _elementDefinition(),
+          pageId: "page",
+        ).id,
+        "reference",
       );
-      final fields = blueprint.fieldsWithModifier<ReadOnlyModifier>();
-      expect(fields.containsKey("outer.inner"), isTrue);
-    });
-
-    test("finds fields in lists with modifiers", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {
-            "items": DataBlueprint.list(
-              type: DataBlueprint.string(
-                modifiers: [const Modifier.multiline()],
-              ),
-            ),
-          },
-        ),
+      expect(const PageEntry.nonexistent(id: "missing").id, "missing");
+      expect(
+        PageEntry.missingElementDefinition(
+          id: "unknown",
+          name: "Unknown",
+          placement: const EntryPlacement(x: 0, y: 0, width: 10, height: 10),
+          inwardLinks: const [],
+          outwardLinks: const [],
+        ).id,
+        "unknown",
       );
-      final fields = blueprint.fieldsWithModifier<MultilineModifier>();
-      expect(fields.containsKey("items.*"), isTrue);
-    });
-
-    test("returns empty map when no modifiers found", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(
-          fields: {"name": DataBlueprint.string()},
-        ),
-      );
-      final fields = blueprint.fieldsWithModifier<ReadOnlyModifier>();
-      expect(fields, isEmpty);
-    });
-  });
-
-  group("ElementBlueprint.isGeneric", () {
-    test("returns false when genericConstraints is null", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: null,
-      );
-      expect(blueprint.isGeneric, isFalse);
-    });
-
-    test("returns true when genericConstraints is not null", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [],
-      );
-      expect(blueprint.isGeneric, isTrue);
-    });
-
-    test("returns true when genericConstraints has items", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [DataBlueprint.string()],
-      );
-      expect(blueprint.isGeneric, isTrue);
-    });
-  });
-
-  group("ElementBlueprint.allowsGeneric", () {
-    test("allows any when genericConstraints is null", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: null,
-      );
-      expect(blueprint.allowsGeneric(DataBlueprint.string()), isTrue);
-      expect(blueprint.allowsGeneric(DataBlueprint.integer()), isTrue);
-    });
-
-    test("allows any when genericConstraints is empty", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [],
-      );
-      expect(blueprint.allowsGeneric(DataBlueprint.string()), isTrue);
-    });
-
-    test("allows matching blueprint", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [DataBlueprint.string()],
-      );
-      expect(blueprint.allowsGeneric(DataBlueprint.string()), isTrue);
-    });
-
-    test("rejects non-matching blueprint", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [DataBlueprint.string()],
-      );
-      expect(blueprint.allowsGeneric(DataBlueprint.integer()), isFalse);
-    });
-
-    test("rejects null blueprint when constraints exist", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [DataBlueprint.string()],
-      );
-      expect(blueprint.allowsGeneric(null), isFalse);
-    });
-
-    test("allows when any constraint matches", () {
-      final blueprint = ElementBlueprint(
-        id: "test",
-        name: "Test",
-        description: "Test entry",
-        extension: "TestExtension",
-        dataBlueprint: ObjectBlueprint(fields: {}),
-        genericConstraints: [DataBlueprint.string(), DataBlueprint.integer()],
-      );
-      expect(blueprint.allowsGeneric(DataBlueprint.integer()), isTrue);
-    });
-  });
-
-  group("EntryPlacement", () {
-    test("center is calculated correctly", () {
-      const placement = EntryPlacement(x: 100, y: 200, width: 50, height: 100);
-      expect(placement.center, const Offset(125, 250));
-    });
-
-    test("center at origin", () {
-      const placement = EntryPlacement(x: 0, y: 0, width: 100, height: 100);
-      expect(placement.center, const Offset(50, 50));
-    });
-
-    test("distanceSquaredTo calculates correctly", () {
-      const placement1 = EntryPlacement(x: 0, y: 0, width: 100, height: 100);
-      const placement2 = EntryPlacement(x: 100, y: 0, width: 100, height: 100);
-
-      final distance = placement1.distanceSquaredTo(placement2);
-      expect(distance, 10000.0);
-    });
-
-    test("distanceSquaredTo same placement is zero", () {
-      const placement = EntryPlacement(x: 100, y: 200, width: 50, height: 50);
-      expect(placement.distanceSquaredTo(placement), 0.0);
-    });
-  });
-
-  group("PageEntry extension", () {
-    test("DefinitionPageEntry id returns definition id", () {
-      final pageEntry = PageEntry.definition(
-        definition: EntryDefinition(
-          id: "entry-123",
-          name: "Test Entry",
-          blueprint: ElementBlueprint(
-            id: "blueprint-id",
-            name: "Test",
-            description: "",
-            extension: "TestExt",
-            dataBlueprint: ObjectBlueprint(fields: {}),
-          ),
-          placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 100),
-          data: const DynamicData({}),
-          inwardEdges: const [],
-          outwardEdges: const [],
-        ),
-      );
-      expect(pageEntry.id, "entry-123");
-    });
-
-    test("ReferencePageEntry id returns reference id", () {
-      const pageEntry = PageEntry.reference(
-        id: "ref-456",
-        name: "Referenced Entry",
-        blueprint: ElementBlueprint(
-          id: "blueprint-id",
-          name: "Test",
-          description: "",
-          extension: "TestExt",
-          dataBlueprint: ObjectBlueprint(fields: {}),
-        ),
-        pageId: "page-1",
-      );
-      expect(pageEntry.id, "ref-456");
-    });
-
-    test("NonexistentPageEntry id returns entry id", () {
-      const pageEntry = PageEntry.nonexistent(id: "missing-789");
-      expect(pageEntry.id, "missing-789");
-    });
-
-    test("NoBlueprintPageEntry id returns entry id", () {
-      final pageEntry = PageEntry.noBlueprint(
-        id: "no-bp-101",
-        name: "No Blueprint Entry",
-        placement: EntryPlacement(x: 0, y: 0, width: 100, height: 100),
-        inwardLinks: [],
-        outwardLinks: [],
-      );
-      expect(pageEntry.id, "no-bp-101");
     });
   });
 }
+
+ElementDefinition _elementDefinition({ElementDeprecation? deprecation}) =>
+    ElementDefinition(
+      rootType: _rootType,
+      name: "Example",
+      description: "Typed entry",
+      color: Colors.blue,
+      icon: const IconValue.iconify("fa-solid:star"),
+      deprecation: deprecation,
+    );
+
+TypeRegistry _registry({
+  required NominalTypeKind kind,
+  required TypeExpression type,
+}) => TypeRegistry(
+  TypeCatalog([
+    TypeDefinition(id: _rootType, kind: kind, representation: type),
+  ]),
+);
+
+final _rootType = ResolvedTypeRef(
+  id: const QualifiedTypeId(namespace: "example", name: "Entry"),
+  revision: 1,
+);

@@ -3,29 +3,51 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/editors.stories.dart";
 
-@widgetbook.UseCase(name: "Default", type: ListEditor)
+@widgetbook.UseCase(name: "List", type: TypedEditor)
 Widget listEditorUseCase(BuildContext context) {
   return EditorStory(
-    dataBlueprint: ObjectBlueprint(
+    rootType: RecordType(
       fields: {
-        "items": DataBlueprint.list(
-          type: DataBlueprint.string(),
-          internalDefaultValue: ["Hey there", "How is it going?"],
+        "items": TypeField(
+          name: "items",
+          type: ListType(element: StringType()),
         ),
-        "numbers": DataBlueprint.list(type: DataBlueprint.integer()),
-        "nested": DataBlueprint.list(
-          type: ObjectBlueprint(
-            fields: {
-              "name": DataBlueprint.string(),
-              "value": DataBlueprint.integer(),
-            },
+        "numbers": TypeField(
+          name: "numbers",
+          type: ListType(element: IntegerType(width: IntegerWidth.signed32)),
+        ),
+        "nested": TypeField(
+          name: "nested",
+          type: ListType(
+            element: RecordType(
+              fields: {
+                "name": TypeField(name: "name", type: StringType()),
+                "value": TypeField(
+                  name: "value",
+                  type: IntegerType(width: IntegerWidth.signed32),
+                ),
+              },
+            ),
           ),
-          internalDefaultValue: [
-            {"name": "Item 1", "value": 1},
-            {"name": "Item 2", "value": 2},
-          ],
         ),
       },
     ),
+    initialValue: RecordValue({
+      "items": ListValue([
+        const StringValue("Hey there"),
+        const StringValue("How is it going?"),
+      ]),
+      "numbers": ListValue([IntegerValue(BigInt.one)]),
+      "nested": ListValue([
+        RecordValue({
+          "name": const StringValue("Item 1"),
+          "value": IntegerValue(BigInt.one),
+        }),
+        RecordValue({
+          "name": const StringValue("Item 2"),
+          "value": IntegerValue(BigInt.two),
+        }),
+      ]),
+    }),
   );
 }

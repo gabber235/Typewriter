@@ -33,6 +33,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/number_editor.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_headers.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/string_editor.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/delete_operation.stories.dart'
@@ -373,19 +375,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                                         children: [
                                                           _widgetbook.WidgetbookComponent(
                                                             name:
-                                                                'BlueprintSearchResultItem',
-                                                            useCases: [
-                                                              _widgetbook.WidgetbookUseCase(
-                                                                name:
-                                                                    'Blueprint',
-                                                                builder:
-                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_search_result_item_stories
-                                                                        .blueprintSearchResultItemUseCase,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          _widgetbook.WidgetbookComponent(
-                                                            name:
                                                                 'BookSearchResultItem',
                                                             useCases: [
                                                               _widgetbook.WidgetbookUseCase(
@@ -393,6 +382,19 @@ final directories = <_widgetbook.WidgetbookNode>[
                                                                 builder:
                                                                     _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_search_result_item_stories
                                                                         .bookSearchResultItemUseCase,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          _widgetbook.WidgetbookComponent(
+                                                            name:
+                                                                'ElementDefinitionSearchResultItem',
+                                                            useCases: [
+                                                              _widgetbook.WidgetbookUseCase(
+                                                                name:
+                                                                    'Element definition',
+                                                                builder:
+                                                                    _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_search_presentation_search_result_item_stories
+                                                                        .elementDefinitionSearchResultItemUseCase,
                                                               ),
                                                             ],
                                                           ),
@@ -496,16 +498,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                                                   ),
                                                   _widgetbook.WidgetbookUseCase(
                                                     name:
+                                                        'Missing Element Definition',
+                                                    builder:
+                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_entry_stories
+                                                            .entryNodeMissingElementDefinitionUseCase,
+                                                  ),
+                                                  _widgetbook.WidgetbookUseCase(
+                                                    name:
                                                         'Multiple Entries Grid',
                                                     builder:
                                                         _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_entry_stories
                                                             .entryNodeMultipleEntriesUseCase,
-                                                  ),
-                                                  _widgetbook.WidgetbookUseCase(
-                                                    name: 'No Blueprint Entry',
-                                                    builder:
-                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_entry_stories
-                                                            .entryNodeNoBlueprintUseCase,
                                                   ),
                                                   _widgetbook.WidgetbookUseCase(
                                                     name: 'Nonexistent Entry',
@@ -793,6 +796,59 @@ final directories = <_widgetbook.WidgetbookNode>[
           _widgetbook.WidgetbookFolder(
             name: 'presentation',
             children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'TypedEditor',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Boolean',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories
+                            .booleanEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Conflict',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                            .conflictValueEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Invalid',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                            .invalidValueEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'List',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories
+                            .listEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Loading',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                            .loadingEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Number',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories
+                            .numberEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Ready',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                            .readyValueEditorUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'String',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories
+                            .stringEditorUseCase,
+                  ),
+                ],
+              ),
               _widgetbook.WidgetbookFolder(
                 name: 'components',
                 children: [
@@ -828,84 +884,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                         builder:
                             _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_presentation_decorated_text_field_stories
                                 .inputFieldWithPrefixIconUseCase,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookFolder(
-                name: 'editors',
-                children: [
-                  _widgetbook.WidgetbookComponent(
-                    name: 'BooleanEditor',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Default',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories
-                                .booleanEditorUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'FieldValueEditor',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Conflict',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                .conflictValueEditorUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Loading',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                .loadingEditorUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'None',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                .noneValueEditorUseCase,
-                      ),
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Value',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
-                                .valueEditorUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'ListEditor',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Default',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories
-                                .listEditorUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'NumberEditor',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Default',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories
-                                .numberEditorUseCase,
-                      ),
-                    ],
-                  ),
-                  _widgetbook.WidgetbookComponent(
-                    name: 'StringEditor',
-                    useCases: [
-                      _widgetbook.WidgetbookUseCase(
-                        name: 'Default',
-                        builder:
-                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories
-                                .stringEditorUseCase,
                       ),
                     ],
                   ),
@@ -1490,6 +1468,74 @@ final directories = <_widgetbook.WidgetbookNode>[
                                           _widgetbook.WidgetbookFolder(
                                             name: 'editor',
                                             children: [
+                                              _widgetbook.WidgetbookFolder(
+                                                name: 'features',
+                                                children: [
+                                                  _widgetbook.WidgetbookFolder(
+                                                    name: 'inspector',
+                                                    children: [
+                                                      _widgetbook.WidgetbookFolder(
+                                                        name: 'presentation',
+                                                        children: [
+                                                          _widgetbook.WidgetbookFolder(
+                                                            name: 'editors',
+                                                            children: [
+                                                              _widgetbook.WidgetbookComponent(
+                                                                name:
+                                                                    'SemanticHeaderGallery',
+                                                                useCases: [
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'Action overflow',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .headerActionOverflowUseCase,
+                                                                  ),
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'Action states',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .headerActionStatesUseCase,
+                                                                  ),
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'Generated composites',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .generatedCompositeHeadersUseCase,
+                                                                  ),
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'List actions',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .listHeaderActionsUseCase,
+                                                                  ),
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'Map actions',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .mapHeaderActionsUseCase,
+                                                                  ),
+                                                                  _widgetbook.WidgetbookUseCase(
+                                                                    name:
+                                                                        'Merged binding',
+                                                                    builder:
+                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
+                                                                            .mergedBindingHeadersUseCase,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                               _widgetbook.WidgetbookFolder(
                                                 name: 'presentation',
                                                 children: [

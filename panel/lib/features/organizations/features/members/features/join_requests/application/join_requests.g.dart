@@ -38,7 +38,7 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'a54be2bbd6f4ce22d30ed33d6d4ecbf75ecb87ef';
+    r'fef6905f08b048161ddb3731bea8369df9be45d7';
 
 abstract class _$OrganizationJoinRequests
     extends $StreamNotifier<List<OrganizationJoinRequest>> {

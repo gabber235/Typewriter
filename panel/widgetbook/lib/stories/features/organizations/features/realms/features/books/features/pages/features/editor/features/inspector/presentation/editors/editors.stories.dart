@@ -3,19 +3,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hooks_riverpod/misc.dart" show Override;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
-import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-
-extension KnobsBuilderX on KnobsBuilder {
-  EditorMode editorMode() {
-    return object.dropdown(
-      label: "Editor Type",
-      options: EditorMode.values,
-      labelBuilder: (option) => option.name.formatted,
-      initialOption: EditorMode.interactiveInspector,
-    );
-  }
-}
 
 class EditorStories extends StatelessWidget {
   const EditorStories({
@@ -28,136 +16,117 @@ class EditorStories extends StatelessWidget {
   final Widget child;
   final List<Override> overrides;
   final EditorSource Function(Ref ref)? source;
+
   @override
-  Widget build(BuildContext context) {
-    return FakeApp(
-      overrides: overrides,
-      child: Consumer(
-        child: child,
-        builder: (context, ref, child) {
-          return EditorRoot(
-            create: (ref) => EditorController(
-              source: source?.call(ref) ?? SelectionEditorSource(ref),
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Section(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 500),
-                          child: child,
-                        ),
-                      ),
+  Widget build(BuildContext context) => FakeApp(
+    overrides: overrides,
+    child: Consumer(
+      child: child,
+      builder: (context, ref, child) => EditorRoot(
+        create: (ref) => EditorController(
+          source: source?.call(ref) ?? SelectionEditorSource(ref),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: Section(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: child,
                     ),
                   ),
                 ),
-                ActionRow(),
-              ],
+              ),
             ),
-          );
-        },
+            ActionRow(),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class EditorStory extends StatelessWidget {
-  const EditorStory({required this.dataBlueprint, super.key});
+  const EditorStory({required this.rootType, this.initialValue, super.key});
 
-  final ObjectBlueprint dataBlueprint;
+  final RecordType rootType;
+  final RecordValue? initialValue;
 
   @override
   Widget build(BuildContext context) {
-    final editorMode = context.knobs.editorMode();
+    final initial = initialValue ?? rootType.createInitialValue().valueOrNull;
     return EditorStories(
-      overrides: [
-        selectionProvider.overrideWithValue([
-          TestSelectableIdentifier(id: "editor", dataBlueprint: dataBlueprint),
-        ]),
-      ],
-      child: SingleChildScrollView(
-        child: ObjectEditorWidget(
-          path: "",
-          objectBlueprint: dataBlueprint,
-          editorMode: editorMode,
-          defaultExpanded: true,
-        ),
+      source: (_) => _StoryEditorSource(
+        rootType: rootType,
+        state: initial is RecordValue ? EditorValue.ready(initial) : null,
       ),
+      child: const SingleChildScrollView(child: TypedEditor()),
     );
   }
 }
 
-@widgetbook.UseCase(name: "Loading", type: FieldValueEditor)
-Widget loadingEditorUseCase(BuildContext context) {
-  final editorMode = context.knobs.editorMode();
-  return EditorStories(
-    source: (_) => _StoryEditorSource((_) => const EditorValue.loading()),
-    child: FieldValueEditor(
-      path: "",
-      dataBlueprint: DataBlueprint.string(),
-      editorMode: editorMode,
-      builder: (value) => Text(value.toString()),
-    ),
-  );
-}
+@widgetbook.UseCase(name: "Loading", type: TypedEditor)
+Widget loadingEditorUseCase(BuildContext context) => EditorStories(
+  source: (_) =>
+      _StoryEditorSource(rootType: StringType(), state: EditorValue.loading()),
+  child: const TypedEditor(),
+);
 
-@widgetbook.UseCase(name: "Conflict", type: FieldValueEditor)
-Widget conflictValueEditorUseCase(BuildContext context) {
-  final editorMode = context.knobs.editorMode();
-  return EditorStories(
-    source: (_) => _StoryEditorSource((_) => const EditorValue.conflict()),
-    child: FieldValueEditor(
-      path: "",
-      dataBlueprint: DataBlueprint.string(),
-      editorMode: editorMode,
-      builder: (value) => Text(value.toString()),
-    ),
-  );
-}
+@widgetbook.UseCase(name: "Conflict", type: TypedEditor)
+Widget conflictValueEditorUseCase(BuildContext context) => EditorStories(
+  source: (_) =>
+      _StoryEditorSource(rootType: StringType(), state: EditorValue.conflict()),
+  child: const TypedEditor(),
+);
 
-@widgetbook.UseCase(name: "None", type: FieldValueEditor)
-Widget noneValueEditorUseCase(BuildContext context) {
-  final editorType = context.knobs.editorMode();
-  return EditorStories(
-    source: (_) => _StoryEditorSource((_) => const EditorValue.none()),
-    child: FieldValueEditor(
-      path: "",
-      dataBlueprint: DataBlueprint.string(),
-      editorMode: editorType,
-      builder: (value) => Text(value.toString()),
-    ),
-  );
-}
+@widgetbook.UseCase(name: "Invalid", type: TypedEditor)
+Widget invalidValueEditorUseCase(BuildContext context) => EditorStories(
+  source: (_) => _StoryEditorSource(
+    rootType: StringType(),
+    state: EditorValue.invalid([
+      const TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "The editor value is missing",
+      ),
+    ]),
+  ),
+  child: const TypedEditor(),
+);
 
-@widgetbook.UseCase(name: "Value", type: FieldValueEditor)
-Widget valueEditorUseCase(BuildContext context) {
-  final editorType = context.knobs.editorMode();
-  return EditorStories(
-    source: (_) =>
-        _StoryEditorSource((path) => EditorValue.value(path.formatted)),
-    child: FieldValueEditor(
-      path: "hey",
-      dataBlueprint: DataBlueprint.string(),
-      editorMode: editorType,
-      builder: (value) => Text(value.toString()),
-    ),
-  );
-}
+@widgetbook.UseCase(name: "Ready", type: TypedEditor)
+Widget readyValueEditorUseCase(BuildContext context) => EditorStories(
+  source: (_) => _StoryEditorSource(
+    rootType: StringType(),
+    state: EditorValue.ready(StringValue("Typed value")),
+  ),
+  child: const TypedEditor(),
+);
 
 class _StoryEditorSource extends ChangeNotifier implements EditorSource {
-  _StoryEditorSource(this.read);
-
-  final EditorValue Function(String path) read;
+  _StoryEditorSource({required this.rootType, EditorValue? state})
+    : _state =
+          state ??
+          EditorValue.invalid([
+            const TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidValue,
+              message: "The story could not create an initial value",
+            ),
+          ]);
 
   @override
-  ObjectBlueprint? get blueprint => null;
+  final TypeExpression rootType;
 
   @override
-  EditorValue value(String path) => read(path);
+  TypeRegistry? get registry => null;
+  final EditorValue _state;
 
   @override
-  void update(String path, dynamic value) {}
+  EditorValue value(DataPath path) => _state;
+
+  @override
+  EditorMutationResult update(DataPath path, DataValue value) =>
+      EditorMutationResult.applied(value);
 }

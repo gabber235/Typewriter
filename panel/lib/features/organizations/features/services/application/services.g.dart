@@ -33,7 +33,7 @@ final class ServicesProvider
   Services create() => Services();
 }
 
-String _$servicesHash() => r'a12701dd25ab76fb97dc8a8ebdc18fb3c45dadf0';
+String _$servicesHash() => r'7768b5ed5ba4bbd5b18ef2e7e02bc49c33a0bdc6';
 
 abstract class _$Services extends $StreamNotifier<List<Service>> {
   Stream<List<Service>> build();
