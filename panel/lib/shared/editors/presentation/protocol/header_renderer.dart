@@ -106,7 +106,6 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
       scope: widget.scope,
       collapsible: widget.header.initiallyExpanded != null,
       expanded: _expansibleController.isExpanded,
-      onToggle: _toggle,
     );
     final collapsible = widget.header.initiallyExpanded != null;
     final headerContent = Material(
@@ -185,7 +184,6 @@ class _HeaderRow extends StatelessWidget {
     required this.scope,
     required this.collapsible,
     required this.expanded,
-    required this.onToggle,
   });
 
   final String title;
@@ -193,7 +191,6 @@ class _HeaderRow extends StatelessWidget {
   final PresentationRenderScope scope;
   final bool collapsible;
   final bool expanded;
-  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -214,10 +211,12 @@ class _HeaderRow extends StatelessWidget {
       return Row(
         children: [
           if (collapsible)
-            IconButton(
-              onPressed: onToggle,
-              icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
-              visualDensity: VisualDensity.compact,
+            SizedBox.square(
+              dimension: 40,
+              child: Icon(
+                expanded ? Icons.expand_less : Icons.expand_more,
+                size: 18,
+              ),
             ),
           for (final item in reorderHandles) item.inlineWidget(context, scope),
           for (final item in beforeTitle) item.inlineWidget(context, scope),

@@ -27,11 +27,29 @@ void main() {
     expect(find.byType(PresentationHeaderChrome), findsOneWidget);
     expect(find.byType(Expansible), findsOneWidget);
     expect(find.text("Body"), findsNothing);
+    expect(find.byIcon(Icons.expand_more), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.expand_more),
+        matching: find.byType(IconButton),
+      ),
+      findsNothing,
+    );
+    expect(tester.widget<Icon>(find.byIcon(Icons.expand_more)).size, 18);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    expect(find.text("Body"), findsOneWidget);
+    expect(find.byIcon(Icons.expand_less), findsOneWidget);
 
     await tester.tap(find.text("Details"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Body"), findsOneWidget);
+    expect(find.text("Body"), findsNothing);
+    expect(find.byIcon(Icons.expand_more), findsOneWidget);
   });
 
   testWidgets("combines headers through a typed field binding", (tester) async {
@@ -88,6 +106,22 @@ void main() {
       findsNWidgets(3),
     );
     expect(find.text("Add item"), findsNothing);
+    expect(find.byIcon(Icons.expand_less), findsOneWidget);
+    expect(find.byIcon(Icons.expand_more), findsNWidgets(3));
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.expand_more),
+        matching: find.byType(IconButton),
+      ),
+      findsNothing,
+    );
+
+    final reorderIcons = tester.widgetList<Icones>(
+      find.byWidgetPredicate(
+        (widget) => widget is Icones && widget.icon == Fa6Solid.bars_staggered,
+      ),
+    );
+    expect(reorderIcons.every((icon) => icon.size == 18), isTrue);
 
     for (var index = 1; index <= 3; index++) {
       await tester.tap(find.text("Item $index"));
@@ -95,6 +129,7 @@ void main() {
     }
 
     final handles = find.byType(ReorderableDragStartListener);
+    expect(tester.getSize(handles.first), const Size.square(40));
     final gesture = await tester.startGesture(tester.getCenter(handles.first));
     await tester.pump();
     final lastHandle = tester.getRect(handles.last);
@@ -282,6 +317,14 @@ void main() {
     expect(find.text("Value details"), findsOneWidget);
     expect(find.byType(PresentationHeaderChrome), findsOneWidget);
     expect(find.byTooltip("Remove entry"), findsNothing);
+    expect(find.byIcon(Icons.expand_more), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.expand_more),
+        matching: find.byType(IconButton),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets("localizes one invalid header item", (tester) async {

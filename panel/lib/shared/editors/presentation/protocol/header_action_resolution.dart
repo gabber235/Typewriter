@@ -123,9 +123,9 @@ sealed class _ResolvedHeaderItem with _$ResolvedHeaderItem {
           child: ReorderableDragStartListener(
             index: index,
             enabled: enabled,
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icones(Fa6Solid.bars_staggered),
+            child: const SizedBox.square(
+              dimension: 40,
+              child: Center(child: Icones(Fa6Solid.bars_staggered, size: 18)),
             ),
           ),
         ),
