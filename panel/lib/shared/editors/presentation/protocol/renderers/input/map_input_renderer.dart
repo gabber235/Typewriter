@@ -84,7 +84,7 @@ class _MapInput extends StatelessWidget {
                 id: mapEntryRemoveHeaderItemId,
                 icon: HeroiconsSolid.trash.asIconLiteral,
                 label: "Remove entry".asStringLiteral,
-                priority: _integer(90),
+                priority: (-0x8000000000000000).asSigned64Literal,
                 tone: HeaderActionTone.destructive,
                 action: LocalEditorAction(
                   RemoveMapEntryAction(
