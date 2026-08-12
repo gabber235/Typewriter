@@ -145,6 +145,73 @@ void main() {
     expect(values, ["second", "first", "third"]);
   });
 
+  testWidgets("moves expansion with a reordered list item", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("first"), StringValue("second")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1"));
+    await tester.pumpAndSettle();
+    expect(_expandedItemHeader("Item 1"), findsOneWidget);
+    expect(_expandedItemHeader("Item 2"), findsNothing);
+
+    await _dragFirstItemAfterSecond(tester);
+
+    expect(_expandedItemHeader("Item 1"), findsNothing);
+    expect(_expandedItemHeader("Item 2"), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+      "first",
+    );
+  });
+
+  testWidgets("moves expansion between equal list values", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("same"), StringValue("same")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1"));
+    await tester.pumpAndSettle();
+
+    await _dragFirstItemAfterSecond(tester);
+
+    expect(_expandedItemHeader("Item 1"), findsNothing);
+    expect(_expandedItemHeader("Item 2"), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("keeps edited item expansion through reorder", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("first"), StringValue("second")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1"));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "updated");
+    await tester.pumpAndSettle();
+    tester.testTextInput.hide();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    await _dragFirstItemAfterSecond(tester);
+
+    expect(_expandedItemHeader("Item 1"), findsNothing);
+    expect(_expandedItemHeader("Item 2"), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+      "updated",
+    );
+  });
+
   testWidgets("supports every reorder command and disables boundaries", (
     tester,
   ) async {
@@ -473,6 +540,27 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+Finder _expandedItemHeader(String title) {
+  final header = find.ancestor(
+    of: find.text(title),
+    matching: find.byType(InkWell),
+  );
+  return find.descendant(of: header, matching: find.byIcon(Icons.expand_less));
+}
+
+Future<void> _dragFirstItemAfterSecond(WidgetTester tester) async {
+  final handles = find.byType(ReorderableDragStartListener);
+  final gesture = await tester.startGesture(tester.getCenter(handles.first));
+  await tester.pump();
+  final secondHandle = tester.getRect(handles.last);
+  await gesture.moveTo(
+    Offset(secondHandle.center.dx, secondHandle.bottom + 48),
+  );
+  await tester.pump();
+  await gesture.up();
+  await tester.pumpAndSettle();
 }
 
 const _root = BindingReference(bindingId: BindingId(0));
