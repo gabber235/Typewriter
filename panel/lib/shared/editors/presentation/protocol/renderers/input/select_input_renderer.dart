@@ -18,18 +18,15 @@ extension SelectInputElementRendering on SelectInputElement {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Dropdown<DataValue>(
+          AdaptiveChoiceControl<DataValue>(
             selected:
                 resolvedOptions.any((option) => option.$2 == binding.value)
                 ? binding.value
                 : null,
-            dropdownMenuEntries: [
+            choices: {
               for (final option in resolvedOptions)
-                DropdownMenuEntry(
-                  value: option.$2,
-                  label: scope.expressionText(option.$1.label),
-                ),
-            ],
+                option.$2: scope.expressionText(option.$1.label),
+            },
             enabled: !scope.readOnly && scope.enabled && binding.writable,
             onSelected: (value) {
               if (value != null) scope.update(control.binding, value);

@@ -29,15 +29,12 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Dropdown<ResolvedTypeRef>(
+          AdaptiveChoiceControl<ResolvedTypeRef>(
             selected: value.concreteType,
-            dropdownMenuEntries: [
+            choices: {
               for (final candidate in element.concreteTypes)
-                DropdownMenuEntry(
-                  value: candidate.type,
-                  label: scope.expressionText(candidate.label),
-                ),
-            ],
+                candidate.type: scope.expressionText(candidate.label),
+            },
             enabled: !scope.readOnly && scope.enabled && binding.writable,
             onSelected: (type) => type._replace(element, scope),
           ),

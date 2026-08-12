@@ -1,5 +1,6 @@
 library;
 
+export "components/adaptive_choice_control.dart";
 export "components/adaptive_leading_layout.dart";
 export "components/admonition.dart";
 export "components/anchored_overlay/anchored_overlay.dart";
