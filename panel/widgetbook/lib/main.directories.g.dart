@@ -208,15 +208,25 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookFolder(
                     name: 'Data',
                     children: [
+                      _widgetbook.WidgetbookFolder(
+                        name: 'Conditional',
+                        children: [
+                          _widgetbook.WidgetbookComponent(
+                            name: 'PresentationRendererStory',
+                            useCases: [
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Interactive',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                        .conditionalRendererUseCase,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                       _widgetbook.WidgetbookComponent(
                         name: 'PresentationRendererStory',
                         useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Conditional',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
-                                    .conditionalRendererUseCase,
-                          ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Default presentation',
                             builder:
@@ -228,12 +238,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
                                     .diagnosticRendererUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Repeated',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
-                                    .repeatedRendererUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Scoped binding',
@@ -249,6 +253,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                           ),
                         ],
                       ),
+                      _widgetbook.WidgetbookFolder(
+                        name: 'Repeated',
+                        children: [
+                          _widgetbook.WidgetbookComponent(
+                            name: 'PresentationRendererStory',
+                            useCases: [
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Custom empty state',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                        .customRepeatedEmptyUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Interactive list',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                        .repeatedRendererUseCase,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   _widgetbook.WidgetbookFolder(
@@ -257,18 +283,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                       _widgetbook.WidgetbookComponent(
                         name: 'PresentationRendererStory',
                         useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Conditional false',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories
-                                    .conditionalFalseUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Custom repeated empty',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories
-                                    .customRepeatedEmptyUseCase,
-                          ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Mismatched typed field',
                             builder:

@@ -16,10 +16,34 @@ PresentationNode storyNode(
   properties: properties,
 );
 
-BoundControl storyControl(String label) => BoundControl(
-  binding: rootBinding,
+BoundControl storyControl(
+  String label, {
+  BindingReference binding = rootBinding,
+  String? description,
+}) => BoundControl(
+  binding: binding,
   label: label.asStringLiteral,
-  description: "Adjust this value to inspect its renderer.".asStringLiteral,
+  description: (description ?? "Adjust this value to inspect its renderer.")
+      .asStringLiteral,
+);
+
+PresentationNode storyInput(
+  String id, {
+  required String label,
+  required BindingReference binding,
+  required PresentationElement Function(BoundControl control) build,
+  String? description,
+  bool showHeader = false,
+}) => storyNode(
+  id,
+  build(storyControl(label, binding: binding, description: description)),
+  header: showHeader
+      ? PresentationHeader(
+          binding: binding,
+          title: label.asStringLiteral,
+          description: description?.asStringLiteral,
+        )
+      : null,
 );
 
 TypedExpression literal(TypeExpression type, DataValue value) =>
