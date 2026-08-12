@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:flutter_animate/flutter_animate.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -28,9 +30,13 @@ class TypedEditor extends ConsumerWidget {
     }
     final type = typeResult.valueOrNull!;
     return switch (controller.value(path)) {
-      LoadingEditorValue() => const LinearProgressIndicator(),
-      ConflictEditorValue() => const Admonition.danger(
-        child: Text("The selected values are different"),
+      LoadingEditorValue() => const _LoadingValueEditor(),
+      ConflictEditorValue() => _ConflictValueEditor(
+        controller: controller,
+        path: path,
+        type: type,
+        registry: effectiveRegistry,
+        readOnly: readOnly,
       ),
       InvalidEditorValue(:final diagnostics) => Admonition.danger(
         child: Text(diagnostics.map((item) => item.message).join("\n")),
@@ -44,6 +50,78 @@ class TypedEditor extends ConsumerWidget {
         readOnly: readOnly,
       ),
     };
+  }
+}
+
+class _ConflictValueEditor extends StatelessWidget {
+  const _ConflictValueEditor({
+    required this.controller,
+    required this.path,
+    required this.type,
+    required this.registry,
+    required this.readOnly,
+  });
+
+  final EditorController controller;
+  final DataPath path;
+  final TypeExpression type;
+  final TypeRegistry? registry;
+  final bool readOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final errorColor = Theme.of(context).colorScheme.error;
+    return Material(
+      color: Theme.of(context).inputDecorationTheme.fillColor,
+      borderRadius: context.shapes.mediumBorderRadius,
+      child: InkWell(
+        onTap: readOnly ? null : _reset,
+        borderRadius: context.shapes.mediumBorderRadius,
+        splashColor: errorColor.withValues(alpha: 0.2),
+        highlightColor: errorColor.withValues(alpha: 0.1),
+        child: Tooltip(
+          message: "Click to reset field to its initial value",
+          child: Padding(
+            padding: EdgeInsets.all(context.spacing.space3),
+            child: Row(
+              children: [
+                Icones("mdi:close", size: 18, color: errorColor),
+                SizedBox(width: context.spacing.space3),
+                Expanded(
+                  child: Text(
+                    "The selected values are different",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: errorColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _reset() {
+    final initial = type.createInitialValue(registry: registry).valueOrNull;
+    if (initial != null) controller.update(path, initial);
+  }
+}
+
+class _LoadingValueEditor extends HookWidget {
+  const _LoadingValueEditor();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = useAnimationController()..repeat(period: 2200.ms);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: context.shapes.mediumBorderRadius,
+        color: Theme.of(context).inputDecorationTheme.fillColor,
+      ),
+      height: 48,
+    ).animate(controller: controller).shimmer(delay: 500.ms, duration: 1200.ms);
   }
 }
 
@@ -98,6 +176,7 @@ class _LocalPresentationSurfaceState extends State<_LocalPresentationSurface> {
       expressions: expressions,
       registry: registry,
       budget: const ExpressionBudget(),
+      readOnly: widget.readOnly,
       expansionStore: _expansionStore,
       setBinding: (reference, value, context, aliases) {
         final canonical = reference.canonicalizedWith(aliases);

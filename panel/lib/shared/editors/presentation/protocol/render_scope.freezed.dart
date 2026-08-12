@@ -310,7 +310,7 @@ $PresentationNodeCopyWith<$Res> get root {
 /// @nodoc
 mixin _$PresentationRenderScope {
 
- ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; Map<BindingId, BindingReference> get aliases; Map<HeaderActionId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?)> get suppressedHeaders; bool get enabled; bool get readOnly; Set<PresentationId> get activePresentations;
+ ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; Map<BindingId, BindingReference> get aliases; Map<HeaderItemCommandId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?)> get suppressedHeaders; bool get enabled; bool get readOnly; Set<PresentationId> get activePresentations;
 /// Create a copy of PresentationRenderScope
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -341,7 +341,7 @@ abstract mixin class $PresentationRenderScopeCopyWith<$Res>  {
   factory $PresentationRenderScopeCopyWith(PresentationRenderScope value, $Res Function(PresentationRenderScope) _then) = _$PresentationRenderScopeCopyWithImpl;
 @useResult
 $Res call({
- ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
 });
 
 
@@ -369,7 +369,7 @@ as ActionExecutor,resolvePresentation: null == resolvePresentation ? _self.resol
 as PresentationResolver,expansionStore: null == expansionStore ? _self.expansionStore : expansionStore // ignore: cast_nullable_to_non_nullable
 as HeaderExpansionStore,aliases: null == aliases ? _self.aliases : aliases // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, BindingReference>,headerShortcuts: null == headerShortcuts ? _self.headerShortcuts : headerShortcuts // ignore: cast_nullable_to_non_nullable
-as Map<HeaderActionId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self.suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
+as Map<HeaderItemCommandId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self.suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
 as Set<(String, BindingReference?)>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
 as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
 as bool,activePresentations: null == activePresentations ? _self.activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable
@@ -476,7 +476,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope() when $default != null:
 return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
@@ -497,7 +497,7 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope():
 return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
@@ -517,7 +517,7 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ExpressionContext expressions,  TypeRegistry registry,  ExpressionBudget budget,  BindingSetter setBinding,  ActionExecutor executeAction,  PresentationResolver resolvePresentation,  HeaderExpansionStore expansionStore,  Map<BindingId, BindingReference> aliases,  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,  Set<(String, BindingReference?)> suppressedHeaders,  bool enabled,  bool readOnly,  Set<PresentationId> activePresentations)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationRenderScope() when $default != null:
 return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_that.executeAction,_that.resolvePresentation,_that.expansionStore,_that.aliases,_that.headerShortcuts,_that.suppressedHeaders,_that.enabled,_that.readOnly,_that.activePresentations);case _:
@@ -532,7 +532,7 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 
 
 class _PresentationRenderScope extends PresentationRenderScope {
-  const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, final  Map<BindingId, BindingReference> aliases = const {}, final  Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts = const {}, final  Set<(String, BindingReference?)> suppressedHeaders = const {}, this.enabled = true, this.readOnly = false, final  Set<PresentationId> activePresentations = const {}}): _aliases = aliases,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_activePresentations = activePresentations,super._();
+  const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, final  Map<BindingId, BindingReference> aliases = const {}, final  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts = const {}, final  Set<(String, BindingReference?)> suppressedHeaders = const {}, this.enabled = true, this.readOnly = false, final  Set<PresentationId> activePresentations = const {}}): _aliases = aliases,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_activePresentations = activePresentations,super._();
   
 
 @override final  ExpressionContext expressions;
@@ -549,8 +549,8 @@ class _PresentationRenderScope extends PresentationRenderScope {
   return EqualUnmodifiableMapView(_aliases);
 }
 
- final  Map<HeaderActionId, List<ShortcutActivator>> _headerShortcuts;
-@override@JsonKey() Map<HeaderActionId, List<ShortcutActivator>> get headerShortcuts {
+ final  Map<HeaderItemCommandId, List<ShortcutActivator>> _headerShortcuts;
+@override@JsonKey() Map<HeaderItemCommandId, List<ShortcutActivator>> get headerShortcuts {
   if (_headerShortcuts is EqualUnmodifiableMapView) return _headerShortcuts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_headerShortcuts);
@@ -603,7 +603,7 @@ abstract mixin class _$PresentationRenderScopeCopyWith<$Res> implements $Present
   factory _$PresentationRenderScopeCopyWith(_PresentationRenderScope value, $Res Function(_PresentationRenderScope) _then) = __$PresentationRenderScopeCopyWithImpl;
 @override @useResult
 $Res call({
- ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
+ ExpressionContext expressions, TypeRegistry registry, ExpressionBudget budget, BindingSetter setBinding, ActionExecutor executeAction, PresentationResolver resolvePresentation, HeaderExpansionStore expansionStore, Map<BindingId, BindingReference> aliases, Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts, Set<(String, BindingReference?)> suppressedHeaders, bool enabled, bool readOnly, Set<PresentationId> activePresentations
 });
 
 
@@ -631,7 +631,7 @@ as ActionExecutor,resolvePresentation: null == resolvePresentation ? _self.resol
 as PresentationResolver,expansionStore: null == expansionStore ? _self.expansionStore : expansionStore // ignore: cast_nullable_to_non_nullable
 as HeaderExpansionStore,aliases: null == aliases ? _self._aliases : aliases // ignore: cast_nullable_to_non_nullable
 as Map<BindingId, BindingReference>,headerShortcuts: null == headerShortcuts ? _self._headerShortcuts : headerShortcuts // ignore: cast_nullable_to_non_nullable
-as Map<HeaderActionId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self._suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
+as Map<HeaderItemCommandId, List<ShortcutActivator>>,suppressedHeaders: null == suppressedHeaders ? _self._suppressedHeaders : suppressedHeaders // ignore: cast_nullable_to_non_nullable
 as Set<(String, BindingReference?)>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
 as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
 as bool,activePresentations: null == activePresentations ? _self._activePresentations : activePresentations // ignore: cast_nullable_to_non_nullable

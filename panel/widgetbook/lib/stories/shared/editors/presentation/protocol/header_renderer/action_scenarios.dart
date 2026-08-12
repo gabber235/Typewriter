@@ -1,5 +1,6 @@
+import "package:iconify_flutter_plus/icons/mdi.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_gallery.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_gallery.dart";
 
 const _root = BindingReference(bindingId: BindingId(0));
 const _title = BindingReference(
@@ -19,20 +20,20 @@ SemanticHeaderScenario actionOverflowScenario() => (
           "Resize the canvas to see lower priority actions move into the menu."
               .asStringLiteral,
       initiallyExpanded: true,
-      actions: [
+      items: [
         _title.setAction(
           "publish",
           "Publish",
-          "mdi:publish",
+          Mdi.publish,
           "Published",
           120,
           placement: HeaderActionPlacement.beforeTitle,
         ),
-        _title.setAction("preview", "Preview", "mdi:play", "Previewing", 90),
+        _title.setAction("preview", "Preview", Mdi.play, "Previewing", 90),
         _title.setAction(
           "reset",
           "Reset",
-          "mdi:restore",
+          Mdi.restore,
           "Untitled quest",
           50,
           placement: HeaderActionPlacement.afterTitle,
@@ -40,14 +41,14 @@ SemanticHeaderScenario actionOverflowScenario() => (
         _title.setAction(
           "copy",
           "Make copy",
-          "mdi:content-copy",
+          Mdi.content_copy,
           "Quest copy",
           30,
         ),
         _title.setAction(
           "archive",
           "Archive",
-          "mdi:archive-outline",
+          Mdi.archive_outline,
           "Archived quest",
           10,
           tone: HeaderActionTone.destructive,
@@ -90,12 +91,12 @@ SemanticHeaderScenario actionStatesScenario() => (
           "Visible, disabled, hidden, destructive, and invalid actions are resolved independently."
               .asStringLiteral,
       initiallyExpanded: true,
-      actions: [
-        _title.setAction("ready", "Ready", "mdi:check", "Ready", 100),
+      items: [
+        _title.setAction("ready", "Ready", Mdi.check, "Ready", 100),
         _title.setAction(
           "disabled",
           "Unavailable",
-          "mdi:lock-outline",
+          Mdi.lock_outline,
           "Unavailable",
           90,
           enabledIf: false.literal,
@@ -103,22 +104,20 @@ SemanticHeaderScenario actionStatesScenario() => (
         _title.setAction(
           "hidden",
           "Hidden",
-          "mdi:eye-off-outline",
+          Mdi.eye_off_outline,
           "Hidden",
           80,
           visibleIf: false.literal,
         ),
-        EditorHeaderAction(
-          id: const HeaderActionId(namespace: "widgetbook", name: "invalid"),
+        HeaderButtonItem(
+          id: const HeaderItemId(namespace: "widgetbook", name: "invalid"),
           icon: "This is not an icon".asStringLiteral,
           label: "Invalid icon".asStringLiteral,
           tooltip:
               "Invalid expressions become diagnostic actions".asStringLiteral,
           priority: 70.literal,
-          activation: HeaderActionActivation.invoke(
-            EditorAction.local(
-              SetValueAction(target: _title, value: "Invalid".asStringLiteral),
-            ),
+          action: EditorAction.local(
+            SetValueAction(target: _title, value: "Invalid".asStringLiteral),
           ),
         ),
       ],
@@ -142,7 +141,7 @@ final _actionValue = RecordValue({
 });
 
 extension on BindingReference {
-  EditorHeaderAction setAction(
+  HeaderButtonItem setAction(
     String name,
     String label,
     String icon,
@@ -153,8 +152,8 @@ extension on BindingReference {
     HeaderActionConfirmation? confirmation,
     TypedExpression? visibleIf,
     TypedExpression? enabledIf,
-  }) => EditorHeaderAction(
-    id: HeaderActionId(namespace: "widgetbook", name: name),
+  }) => HeaderButtonItem(
+    id: HeaderItemId(namespace: "widgetbook", name: name),
     icon: icon.iconLiteral,
     label: label.asStringLiteral,
     tooltip: "$label quest".asStringLiteral,
@@ -164,10 +163,8 @@ extension on BindingReference {
     placement: placement,
     tone: tone,
     confirmation: confirmation,
-    activation: HeaderActionActivation.invoke(
-      EditorAction.local(
-        SetValueAction(target: this, value: value.asStringLiteral),
-      ),
+    action: EditorAction.local(
+      SetValueAction(target: this, value: value.asStringLiteral),
     ),
   );
 }
@@ -175,7 +172,7 @@ extension on BindingReference {
 extension on String {
   TypedExpression get iconLiteral => TypedExpression(
     resultType: NamedType(standardTypeRefs.icon),
-    expression: LiteralExpression(IconValue.iconify(this).typedValue),
+    expression: LiteralExpression(IconValue.svg(this).typedValue),
   );
 }
 

@@ -572,27 +572,27 @@ class PresentationProperties private constructor(
     }
 }
 
-sealed interface HeaderActionId_OrMutable {
+sealed interface HeaderItemId_OrMutable {
     val namespace: kotlin.String;
     val name: kotlin.String;
 
-    fun toFrozen(): skirout.editor.v1.presentation.HeaderActionId;
+    fun toFrozen(): skirout.editor.v1.presentation.HeaderItemId;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class HeaderActionId private constructor(
+class HeaderItemId private constructor(
     override val namespace: kotlin.String,
     override val name: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderActionId>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderItemId>? =
         null,
-): skirout.editor.v1.presentation.HeaderActionId_OrMutable {
+): skirout.editor.v1.presentation.HeaderItemId_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         namespace: kotlin.String,
         name: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderActionId>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderItemId>? =
             null,
     ): this(
         namespace,
@@ -617,7 +617,7 @@ class HeaderActionId private constructor(
             this.namespace,
         name: kotlin.String =
             this.name,
-    ) = skirout.editor.v1.presentation.HeaderActionId(
+    ) = skirout.editor.v1.presentation.HeaderItemId(
         namespace,
         name,
         this._unrecognizedFields,
@@ -627,7 +627,7 @@ class HeaderActionId private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.HeaderActionId && this.namespace == other.namespace && this.name == other.name);
+        return this === other || (other is skirout.editor.v1.presentation.HeaderItemId && this.namespace == other.namespace && this.name == other.name);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -637,11 +637,11 @@ class HeaderActionId private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.presentation.HeaderActionId.serializerImpl,
+            skirout.editor.v1.presentation.HeaderItemId.serializerImpl,
         )
     }
 
-    /** Mutable version of [HeaderActionId]. */
+    /** Mutable version of [HeaderItemId]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
@@ -649,11 +649,11 @@ class HeaderActionId private constructor(
             "",
         override var name: kotlin.String =
             "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderActionId>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderItemId>? =
             null,
-    ): skirout.editor.v1.presentation.HeaderActionId_OrMutable {
+    ): skirout.editor.v1.presentation.HeaderItemId_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.HeaderActionId(
+        override fun toFrozen() = skirout.editor.v1.presentation.HeaderItemId(
             namespace = this.namespace,
             name = this.name,
             _unrecognizedFields = this._unrecognizedFields,
@@ -662,7 +662,7 @@ class HeaderActionId private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.HeaderActionId(
+            skirout.editor.v1.presentation.HeaderItemId(
                 "",
                 "",
             );
@@ -671,7 +671,7 @@ class HeaderActionId private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [HeaderActionId].
+         * Creates a new instance of [HeaderItemId].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -682,14 +682,14 @@ class HeaderActionId private constructor(
                 "",
             name: kotlin.String =
                 "",
-        ) = skirout.editor.v1.presentation.HeaderActionId(
+        ) = skirout.editor.v1.presentation.HeaderItemId(
             namespace = namespace,
             name = name,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:HeaderActionId",
+            recordId = "editor/v1/presentation.skir:HeaderItemId",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -698,10 +698,10 @@ class HeaderActionId private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [HeaderActionId] instances. */
+        /** Serializer for [HeaderItemId] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [HeaderActionId] type. Provides runtime introspection capabilities. */
+        /** Describes the [HeaderItemId] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
@@ -997,438 +997,6 @@ sealed class HeaderActionPlacement private constructor() {
     }
 }
 
-sealed interface InvokeHeaderAction_OrMutable {
-    val action: skirout.editor.v1.action.EditorAction;
-
-    fun toFrozen(): skirout.editor.v1.presentation.InvokeHeaderAction;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class InvokeHeaderAction private constructor(
-    override val action: skirout.editor.v1.action.EditorAction,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.InvokeHeaderAction>? =
-        null,
-): skirout.editor.v1.presentation.InvokeHeaderAction_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        action: skirout.editor.v1.action.EditorAction,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.InvokeHeaderAction>? =
-            null,
-    ): this(
-        action,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        action = this.action,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        action: skirout.editor.v1.action.EditorAction =
-            this.action,
-    ) = skirout.editor.v1.presentation.InvokeHeaderAction(
-        action,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.InvokeHeaderAction && this.action == other.action);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.action).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.presentation.InvokeHeaderAction.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [InvokeHeaderAction]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var action: skirout.editor.v1.action.EditorAction =
-            skirout.editor.v1.action.EditorAction.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.InvokeHeaderAction>? =
-            null,
-    ): skirout.editor.v1.presentation.InvokeHeaderAction_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.InvokeHeaderAction(
-            action = this.action,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.presentation.InvokeHeaderAction(
-                skirout.editor.v1.action.EditorAction.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [InvokeHeaderAction].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            action: skirout.editor.v1.action.EditorAction =
-                skirout.editor.v1.action.EditorAction.UNKNOWN,
-        ) = skirout.editor.v1.presentation.InvokeHeaderAction(
-            action = action,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:InvokeHeaderAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [InvokeHeaderAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [InvokeHeaderAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "action",
-                "action",
-                0,
-                skirout.editor.v1.action.EditorAction.serializer,
-                "",
-                { it.action },
-                { mut, v -> mut.action = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface ReorderListItemHeaderAction_OrMutable {
-    val source: skirout.editor.v1.binding.BindingRef_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.presentation.ReorderListItemHeaderAction;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ReorderListItemHeaderAction private constructor(
-    override val source: skirout.editor.v1.binding.BindingRef,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReorderListItemHeaderAction>? =
-        null,
-): skirout.editor.v1.presentation.ReorderListItemHeaderAction_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReorderListItemHeaderAction>? =
-            null,
-    ): this(
-        source.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        source = this.source,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable =
-            this.source,
-    ) = skirout.editor.v1.presentation.ReorderListItemHeaderAction(
-        source.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.ReorderListItemHeaderAction && this.source == other.source);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.presentation.ReorderListItemHeaderAction.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [ReorderListItemHeaderAction]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var source: skirout.editor.v1.binding.BindingRef_OrMutable =
-            skirout.editor.v1.binding.BindingRef.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ReorderListItemHeaderAction>? =
-            null,
-    ): skirout.editor.v1.presentation.ReorderListItemHeaderAction_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.ReorderListItemHeaderAction(
-            source = this.source,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [source] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-         */
-        val mutableSource: skirout.editor.v1.binding.BindingRef.Mutable get() {
-            var value = this.source;
-            return when (value) {
-                is skirout.editor.v1.binding.BindingRef -> {
-                    value = value.toMutable();
-                    this.source = value;
-                    return value;
-                }
-                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.presentation.ReorderListItemHeaderAction(
-                skirout.editor.v1.binding.BindingRef.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ReorderListItemHeaderAction].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable =
-                skirout.editor.v1.binding.BindingRef.partial(),
-        ) = skirout.editor.v1.presentation.ReorderListItemHeaderAction(
-            source = source,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:ReorderListItemHeaderAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [ReorderListItemHeaderAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [ReorderListItemHeaderAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "source",
-                "source",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class HeaderActionActivation private constructor() {
-    /** The kind of variant held by a `HeaderActionActivation`. */
-    enum class Kind {
-        UNKNOWN,
-        INVOKE_WRAPPER,
-        REORDER_LIST_ITEM_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.HeaderActionActivation.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HeaderActionActivation>?,
-    ) : skirout.editor.v1.presentation.HeaderActionActivation() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.HeaderActionActivation && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class InvokeWrapper private constructor (
-        val value: skirout.editor.v1.presentation.InvokeHeaderAction,
-    ) : skirout.editor.v1.presentation.HeaderActionActivation() {
-        constructor(
-            value: skirout.editor.v1.presentation.InvokeHeaderAction_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVOKE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.HeaderActionActivation.InvokeWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1183693704;
-        }
-    }
-
-    class ReorderListItemWrapper private constructor (
-        val value: skirout.editor.v1.presentation.ReorderListItemHeaderAction,
-    ) : skirout.editor.v1.presentation.HeaderActionActivation() {
-        constructor(
-            value: skirout.editor.v1.presentation.ReorderListItemHeaderAction_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REORDER_LIST_ITEM_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.HeaderActionActivation.ReorderListItemWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1434112976;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HeaderActionActivation>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.presentation.HeaderActionActivation._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [HeaderActionActivation].
-         * Default value for fields of type [HeaderActionActivation].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InvokeWrapper(skirout.editor.v1.presentation.InvokeHeaderAction(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvoke(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            action: skirout.editor.v1.action.EditorAction,
-        ) = InvokeWrapper(
-            skirout.editor.v1.presentation.InvokeHeaderAction(
-                action = action,
-            )
-        );
-
-        /** Shortcut for `ReorderListItemWrapper(skirout.editor.v1.presentation.ReorderListItemHeaderAction(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReorderListItem(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable,
-        ) = ReorderListItemWrapper(
-            skirout.editor.v1.presentation.ReorderListItemHeaderAction(
-                source = source,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.HeaderActionActivation, Unknown>(
-                recordId = "editor/v1/presentation.skir:HeaderActionActivation",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [HeaderActionActivation] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [HeaderActionActivation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "invoke",
-                    Kind.INVOKE_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.InvokeHeaderAction.serializer,
-                    "",
-                    { InvokeWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "reorder_list_item",
-                    Kind.REORDER_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.ReorderListItemHeaderAction.serializer,
-                    "",
-                    { ReorderListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-}
-
 sealed interface HeaderActionConfirmation_OrMutable {
     val title: skirout.editor.v1.expression.TypedExpression_OrMutable;
     val message: skirout.editor.v1.expression.TypedExpression_OrMutable;
@@ -1657,12 +1225,12 @@ class HeaderActionConfirmation private constructor(
     }
 }
 
-sealed interface EditorHeaderAction_OrMutable {
-    val actionId: skirout.editor.v1.presentation.HeaderActionId_OrMutable;
+sealed interface HeaderButtonItem_OrMutable {
+    val itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable;
     val icon: skirout.editor.v1.expression.TypedExpression_OrMutable;
     val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
     val tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?;
-    val activation: skirout.editor.v1.presentation.HeaderActionActivation;
+    val action: skirout.editor.v1.action.EditorAction;
     val priority: skirout.editor.v1.expression.TypedExpression_OrMutable?;
     val visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
     val enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
@@ -1670,48 +1238,48 @@ sealed interface EditorHeaderAction_OrMutable {
     val confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?;
     val placement: skirout.editor.v1.presentation.HeaderActionPlacement;
 
-    fun toFrozen(): skirout.editor.v1.presentation.EditorHeaderAction;
+    fun toFrozen(): skirout.editor.v1.presentation.HeaderButtonItem;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class EditorHeaderAction private constructor(
-    override val actionId: skirout.editor.v1.presentation.HeaderActionId,
+class HeaderButtonItem private constructor(
+    override val itemId: skirout.editor.v1.presentation.HeaderItemId,
     override val icon: skirout.editor.v1.expression.TypedExpression,
     override val label: skirout.editor.v1.expression.TypedExpression,
     override val tooltip: skirout.editor.v1.expression.TypedExpression?,
-    override val activation: skirout.editor.v1.presentation.HeaderActionActivation,
+    override val action: skirout.editor.v1.action.EditorAction,
     override val priority: skirout.editor.v1.expression.TypedExpression?,
     override val visibleIf: skirout.editor.v1.expression.TypedExpression?,
     override val enabledIf: skirout.editor.v1.expression.TypedExpression?,
     override val tone: skirout.editor.v1.presentation.HeaderActionTone,
     override val confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation?,
     override val placement: skirout.editor.v1.presentation.HeaderActionPlacement,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.EditorHeaderAction>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderButtonItem>? =
         null,
-): skirout.editor.v1.presentation.EditorHeaderAction_OrMutable {
+): skirout.editor.v1.presentation.HeaderButtonItem_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        actionId: skirout.editor.v1.presentation.HeaderActionId_OrMutable,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
         icon: skirout.editor.v1.expression.TypedExpression_OrMutable,
         label: skirout.editor.v1.expression.TypedExpression_OrMutable,
         tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-        activation: skirout.editor.v1.presentation.HeaderActionActivation,
+        action: skirout.editor.v1.action.EditorAction,
         priority: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         tone: skirout.editor.v1.presentation.HeaderActionTone,
         confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?,
         placement: skirout.editor.v1.presentation.HeaderActionPlacement,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.EditorHeaderAction>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderButtonItem>? =
             null,
     ): this(
-        actionId.toFrozen(),
+        itemId.toFrozen(),
         icon.toFrozen(),
         label.toFrozen(),
         if (tooltip != null) tooltip.toFrozen() else null,
-        activation,
+        action,
         if (priority != null) priority.toFrozen() else null,
         if (visibleIf != null) visibleIf.toFrozen() else null,
         if (enabledIf != null) enabledIf.toFrozen() else null,
@@ -1726,11 +1294,11 @@ class EditorHeaderAction private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        actionId = this.actionId,
+        itemId = this.itemId,
         icon = this.icon,
         label = this.label,
         tooltip = this.tooltip,
-        activation = this.activation,
+        action = this.action,
         priority = this.priority,
         visibleIf = this.visibleIf,
         enabledIf = this.enabledIf,
@@ -1743,16 +1311,16 @@ class EditorHeaderAction private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        actionId: skirout.editor.v1.presentation.HeaderActionId_OrMutable =
-            this.actionId,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            this.itemId,
         icon: skirout.editor.v1.expression.TypedExpression_OrMutable =
             this.icon,
         label: skirout.editor.v1.expression.TypedExpression_OrMutable =
             this.label,
         tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             this.tooltip,
-        activation: skirout.editor.v1.presentation.HeaderActionActivation =
-            this.activation,
+        action: skirout.editor.v1.action.EditorAction =
+            this.action,
         priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             this.priority,
         visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
@@ -1765,12 +1333,12 @@ class EditorHeaderAction private constructor(
             this.confirmation,
         placement: skirout.editor.v1.presentation.HeaderActionPlacement =
             this.placement,
-    ) = skirout.editor.v1.presentation.EditorHeaderAction(
-        actionId.toFrozen(),
+    ) = skirout.editor.v1.presentation.HeaderButtonItem(
+        itemId.toFrozen(),
         icon.toFrozen(),
         label.toFrozen(),
         if (tooltip != null) tooltip.toFrozen() else null,
-        activation,
+        action,
         if (priority != null) priority.toFrozen() else null,
         if (visibleIf != null) visibleIf.toFrozen() else null,
         if (enabledIf != null) enabledIf.toFrozen() else null,
@@ -1784,34 +1352,34 @@ class EditorHeaderAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.EditorHeaderAction && this.actionId == other.actionId && this.icon == other.icon && this.label == other.label && this.tooltip == other.tooltip && this.activation == other.activation && this.priority == other.priority && this.visibleIf == other.visibleIf && this.enabledIf == other.enabledIf && this.tone == other.tone && this.confirmation == other.confirmation && this.placement == other.placement);
+        return this === other || (other is skirout.editor.v1.presentation.HeaderButtonItem && this.itemId == other.itemId && this.icon == other.icon && this.label == other.label && this.tooltip == other.tooltip && this.action == other.action && this.priority == other.priority && this.visibleIf == other.visibleIf && this.enabledIf == other.enabledIf && this.tone == other.tone && this.confirmation == other.confirmation && this.placement == other.placement);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.actionId, this.icon, this.label, this.tooltip, this.activation, this.priority, this.visibleIf, this.enabledIf, this.tone, this.confirmation, this.placement).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.itemId, this.icon, this.label, this.tooltip, this.action, this.priority, this.visibleIf, this.enabledIf, this.tone, this.confirmation, this.placement).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.presentation.EditorHeaderAction.serializerImpl,
+            skirout.editor.v1.presentation.HeaderButtonItem.serializerImpl,
         )
     }
 
-    /** Mutable version of [EditorHeaderAction]. */
+    /** Mutable version of [HeaderButtonItem]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var actionId: skirout.editor.v1.presentation.HeaderActionId_OrMutable =
-            skirout.editor.v1.presentation.HeaderActionId.partial(),
+        override var itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            skirout.editor.v1.presentation.HeaderItemId.partial(),
         override var icon: skirout.editor.v1.expression.TypedExpression_OrMutable =
             skirout.editor.v1.expression.TypedExpression.partial(),
         override var label: skirout.editor.v1.expression.TypedExpression_OrMutable =
             skirout.editor.v1.expression.TypedExpression.partial(),
         override var tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             null,
-        override var activation: skirout.editor.v1.presentation.HeaderActionActivation =
-            skirout.editor.v1.presentation.HeaderActionActivation.UNKNOWN,
+        override var action: skirout.editor.v1.action.EditorAction =
+            skirout.editor.v1.action.EditorAction.UNKNOWN,
         override var priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             null,
         override var visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
@@ -1824,16 +1392,16 @@ class EditorHeaderAction private constructor(
             null,
         override var placement: skirout.editor.v1.presentation.HeaderActionPlacement =
             skirout.editor.v1.presentation.HeaderActionPlacement.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.EditorHeaderAction>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderButtonItem>? =
             null,
-    ): skirout.editor.v1.presentation.EditorHeaderAction_OrMutable {
+    ): skirout.editor.v1.presentation.HeaderButtonItem_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.EditorHeaderAction(
-            actionId = this.actionId,
+        override fun toFrozen() = skirout.editor.v1.presentation.HeaderButtonItem(
+            itemId = this.itemId,
             icon = this.icon,
             label = this.label,
             tooltip = this.tooltip,
-            activation = this.activation,
+            action = this.action,
             priority = this.priority,
             visibleIf = this.visibleIf,
             enabledIf = this.enabledIf,
@@ -1844,18 +1412,18 @@ class EditorHeaderAction private constructor(
         );
 
         /**
-         * If the value of [actionId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [actionId] and returns it.
+         * If the value of [itemId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
          */
-        val mutableActionId: skirout.editor.v1.presentation.HeaderActionId.Mutable get() {
-            var value = this.actionId;
+        val mutableItemId: skirout.editor.v1.presentation.HeaderItemId.Mutable get() {
+            var value = this.itemId;
             return when (value) {
-                is skirout.editor.v1.presentation.HeaderActionId -> {
+                is skirout.editor.v1.presentation.HeaderItemId -> {
                     value = value.toMutable();
-                    this.actionId = value;
+                    this.itemId = value;
                     return value;
                 }
-                is skirout.editor.v1.presentation.HeaderActionId.Mutable -> value;
+                is skirout.editor.v1.presentation.HeaderItemId.Mutable -> value;
             }
         }
 
@@ -1894,12 +1462,12 @@ class EditorHeaderAction private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.EditorHeaderAction(
-                skirout.editor.v1.presentation.HeaderActionId.partial(),
+            skirout.editor.v1.presentation.HeaderButtonItem(
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
                 skirout.editor.v1.expression.TypedExpression.partial(),
                 skirout.editor.v1.expression.TypedExpression.partial(),
                 null,
-                skirout.editor.v1.presentation.HeaderActionActivation.UNKNOWN,
+                skirout.editor.v1.action.EditorAction.UNKNOWN,
                 null,
                 null,
                 null,
@@ -1912,23 +1480,23 @@ class EditorHeaderAction private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [EditorHeaderAction].
+         * Creates a new instance of [HeaderButtonItem].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            actionId: skirout.editor.v1.presentation.HeaderActionId_OrMutable =
-                skirout.editor.v1.presentation.HeaderActionId.partial(),
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
             icon: skirout.editor.v1.expression.TypedExpression_OrMutable =
                 skirout.editor.v1.expression.TypedExpression.partial(),
             label: skirout.editor.v1.expression.TypedExpression_OrMutable =
                 skirout.editor.v1.expression.TypedExpression.partial(),
             tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
                 null,
-            activation: skirout.editor.v1.presentation.HeaderActionActivation =
-                skirout.editor.v1.presentation.HeaderActionActivation.UNKNOWN,
+            action: skirout.editor.v1.action.EditorAction =
+                skirout.editor.v1.action.EditorAction.UNKNOWN,
             priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
                 null,
             visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
@@ -1941,12 +1509,12 @@ class EditorHeaderAction private constructor(
                 null,
             placement: skirout.editor.v1.presentation.HeaderActionPlacement =
                 skirout.editor.v1.presentation.HeaderActionPlacement.UNKNOWN,
-        ) = skirout.editor.v1.presentation.EditorHeaderAction(
-            actionId = actionId,
+        ) = skirout.editor.v1.presentation.HeaderButtonItem(
+            itemId = itemId,
             icon = icon,
             label = label,
             tooltip = tooltip,
-            activation = activation,
+            action = action,
             priority = priority,
             visibleIf = visibleIf,
             enabledIf = enabledIf,
@@ -1957,7 +1525,7 @@ class EditorHeaderAction private constructor(
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:EditorHeaderAction",
+            recordId = "editor/v1/presentation.skir:HeaderButtonItem",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1966,21 +1534,21 @@ class EditorHeaderAction private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [EditorHeaderAction] instances. */
+        /** Serializer for [HeaderButtonItem] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [EditorHeaderAction] type. Provides runtime introspection capabilities. */
+        /** Describes the [HeaderButtonItem] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "action_id",
-                "actionId",
+                "item_id",
+                "itemId",
                 0,
-                skirout.editor.v1.presentation.HeaderActionId.serializer,
+                skirout.editor.v1.presentation.HeaderItemId.serializer,
                 "",
-                { it.actionId },
-                { mut, v -> mut.actionId = v },
+                { it.itemId },
+                { mut, v -> mut.itemId = v },
             );
             serializerImpl.addField(
                 "icon",
@@ -2012,13 +1580,13 @@ class EditorHeaderAction private constructor(
                 { mut, v -> mut.tooltip = v },
             );
             serializerImpl.addField(
-                "activation",
-                "activation",
+                "action",
+                "action",
                 4,
-                skirout.editor.v1.presentation.HeaderActionActivation.serializer,
+                skirout.editor.v1.action.EditorAction.serializer,
                 "",
-                { it.activation },
-                { mut, v -> mut.activation = v },
+                { it.action },
+                { mut, v -> mut.action = v },
             );
             serializerImpl.addField(
                 "priority",
@@ -2087,12 +1655,964 @@ class EditorHeaderAction private constructor(
     }
 }
 
+sealed interface HeaderBooleanToggleItem_OrMutable {
+    val itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable;
+    val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val checked: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val action: skirout.editor.v1.action.EditorAction;
+    val tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val priority: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?;
+    val placement: skirout.editor.v1.presentation.HeaderActionPlacement;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HeaderBooleanToggleItem;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HeaderBooleanToggleItem private constructor(
+    override val itemId: skirout.editor.v1.presentation.HeaderItemId,
+    override val label: skirout.editor.v1.expression.TypedExpression,
+    override val checked: skirout.editor.v1.expression.TypedExpression,
+    override val action: skirout.editor.v1.action.EditorAction,
+    override val tooltip: skirout.editor.v1.expression.TypedExpression?,
+    override val priority: skirout.editor.v1.expression.TypedExpression?,
+    override val visibleIf: skirout.editor.v1.expression.TypedExpression?,
+    override val enabledIf: skirout.editor.v1.expression.TypedExpression?,
+    override val confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation?,
+    override val placement: skirout.editor.v1.presentation.HeaderActionPlacement,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderBooleanToggleItem>? =
+        null,
+): skirout.editor.v1.presentation.HeaderBooleanToggleItem_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        checked: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        action: skirout.editor.v1.action.EditorAction,
+        tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        priority: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?,
+        placement: skirout.editor.v1.presentation.HeaderActionPlacement,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderBooleanToggleItem>? =
+            null,
+    ): this(
+        itemId.toFrozen(),
+        label.toFrozen(),
+        checked.toFrozen(),
+        action,
+        if (tooltip != null) tooltip.toFrozen() else null,
+        if (priority != null) priority.toFrozen() else null,
+        if (visibleIf != null) visibleIf.toFrozen() else null,
+        if (enabledIf != null) enabledIf.toFrozen() else null,
+        if (confirmation != null) confirmation.toFrozen() else null,
+        placement,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        itemId = this.itemId,
+        label = this.label,
+        checked = this.checked,
+        action = this.action,
+        tooltip = this.tooltip,
+        priority = this.priority,
+        visibleIf = this.visibleIf,
+        enabledIf = this.enabledIf,
+        confirmation = this.confirmation,
+        placement = this.placement,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            this.itemId,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.label,
+        checked: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.checked,
+        action: skirout.editor.v1.action.EditorAction =
+            this.action,
+        tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.tooltip,
+        priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.priority,
+        visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.visibleIf,
+        enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.enabledIf,
+        confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable? =
+            this.confirmation,
+        placement: skirout.editor.v1.presentation.HeaderActionPlacement =
+            this.placement,
+    ) = skirout.editor.v1.presentation.HeaderBooleanToggleItem(
+        itemId.toFrozen(),
+        label.toFrozen(),
+        checked.toFrozen(),
+        action,
+        if (tooltip != null) tooltip.toFrozen() else null,
+        if (priority != null) priority.toFrozen() else null,
+        if (visibleIf != null) visibleIf.toFrozen() else null,
+        if (enabledIf != null) enabledIf.toFrozen() else null,
+        if (confirmation != null) confirmation.toFrozen() else null,
+        placement,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HeaderBooleanToggleItem && this.itemId == other.itemId && this.label == other.label && this.checked == other.checked && this.action == other.action && this.tooltip == other.tooltip && this.priority == other.priority && this.visibleIf == other.visibleIf && this.enabledIf == other.enabledIf && this.confirmation == other.confirmation && this.placement == other.placement);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.itemId, this.label, this.checked, this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.confirmation, this.placement).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HeaderBooleanToggleItem.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HeaderBooleanToggleItem]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            skirout.editor.v1.presentation.HeaderItemId.partial(),
+        override var label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var checked: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var action: skirout.editor.v1.action.EditorAction =
+            skirout.editor.v1.action.EditorAction.UNKNOWN,
+        override var tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable? =
+            null,
+        override var placement: skirout.editor.v1.presentation.HeaderActionPlacement =
+            skirout.editor.v1.presentation.HeaderActionPlacement.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderBooleanToggleItem>? =
+            null,
+    ): skirout.editor.v1.presentation.HeaderBooleanToggleItem_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HeaderBooleanToggleItem(
+            itemId = this.itemId,
+            label = this.label,
+            checked = this.checked,
+            action = this.action,
+            tooltip = this.tooltip,
+            priority = this.priority,
+            visibleIf = this.visibleIf,
+            enabledIf = this.enabledIf,
+            confirmation = this.confirmation,
+            placement = this.placement,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [itemId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
+         */
+        val mutableItemId: skirout.editor.v1.presentation.HeaderItemId.Mutable get() {
+            var value = this.itemId;
+            return when (value) {
+                is skirout.editor.v1.presentation.HeaderItemId -> {
+                    value = value.toMutable();
+                    this.itemId = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.HeaderItemId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [label] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+         */
+        val mutableLabel: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.label;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.label = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [checked] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [checked] and returns it.
+         */
+        val mutableChecked: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.checked;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.checked = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HeaderBooleanToggleItem(
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.action.EditorAction.UNKNOWN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                skirout.editor.v1.presentation.HeaderActionPlacement.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HeaderBooleanToggleItem].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            checked: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            action: skirout.editor.v1.action.EditorAction =
+                skirout.editor.v1.action.EditorAction.UNKNOWN,
+            tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            priority: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable? =
+                null,
+            placement: skirout.editor.v1.presentation.HeaderActionPlacement =
+                skirout.editor.v1.presentation.HeaderActionPlacement.UNKNOWN,
+        ) = skirout.editor.v1.presentation.HeaderBooleanToggleItem(
+            itemId = itemId,
+            label = label,
+            checked = checked,
+            action = action,
+            tooltip = tooltip,
+            priority = priority,
+            visibleIf = visibleIf,
+            enabledIf = enabledIf,
+            confirmation = confirmation,
+            placement = placement,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HeaderBooleanToggleItem",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HeaderBooleanToggleItem] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HeaderBooleanToggleItem] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "item_id",
+                "itemId",
+                0,
+                skirout.editor.v1.presentation.HeaderItemId.serializer,
+                "",
+                { it.itemId },
+                { mut, v -> mut.itemId = v },
+            );
+            serializerImpl.addField(
+                "label",
+                "label",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.label },
+                { mut, v -> mut.label = v },
+            );
+            serializerImpl.addField(
+                "checked",
+                "checked",
+                2,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.checked },
+                { mut, v -> mut.checked = v },
+            );
+            serializerImpl.addField(
+                "action",
+                "action",
+                3,
+                skirout.editor.v1.action.EditorAction.serializer,
+                "",
+                { it.action },
+                { mut, v -> mut.action = v },
+            );
+            serializerImpl.addField(
+                "tooltip",
+                "tooltip",
+                4,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.tooltip },
+                { mut, v -> mut.tooltip = v },
+            );
+            serializerImpl.addField(
+                "priority",
+                "priority",
+                5,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.priority },
+                { mut, v -> mut.priority = v },
+            );
+            serializerImpl.addField(
+                "visible_if",
+                "visibleIf",
+                6,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.visibleIf },
+                { mut, v -> mut.visibleIf = v },
+            );
+            serializerImpl.addField(
+                "enabled_if",
+                "enabledIf",
+                7,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.enabledIf },
+                { mut, v -> mut.enabledIf = v },
+            );
+            serializerImpl.addField(
+                "confirmation",
+                "confirmation",
+                8,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.HeaderActionConfirmation.serializer,
+                ),
+                "",
+                { it.confirmation },
+                { mut, v -> mut.confirmation = v },
+            );
+            serializerImpl.addField(
+                "placement",
+                "placement",
+                9,
+                skirout.editor.v1.presentation.HeaderActionPlacement.serializer,
+                "",
+                { it.placement },
+                { mut, v -> mut.placement = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface HeaderReorderHandleItem_OrMutable {
+    val itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable;
+    val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val source: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HeaderReorderHandleItem;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HeaderReorderHandleItem private constructor(
+    override val itemId: skirout.editor.v1.presentation.HeaderItemId,
+    override val label: skirout.editor.v1.expression.TypedExpression,
+    override val source: skirout.editor.v1.binding.BindingRef,
+    override val tooltip: skirout.editor.v1.expression.TypedExpression?,
+    override val visibleIf: skirout.editor.v1.expression.TypedExpression?,
+    override val enabledIf: skirout.editor.v1.expression.TypedExpression?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderReorderHandleItem>? =
+        null,
+): skirout.editor.v1.presentation.HeaderReorderHandleItem_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        source: skirout.editor.v1.binding.BindingRef_OrMutable,
+        tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderReorderHandleItem>? =
+            null,
+    ): this(
+        itemId.toFrozen(),
+        label.toFrozen(),
+        source.toFrozen(),
+        if (tooltip != null) tooltip.toFrozen() else null,
+        if (visibleIf != null) visibleIf.toFrozen() else null,
+        if (enabledIf != null) enabledIf.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        itemId = this.itemId,
+        label = this.label,
+        source = this.source,
+        tooltip = this.tooltip,
+        visibleIf = this.visibleIf,
+        enabledIf = this.enabledIf,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            this.itemId,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.label,
+        source: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.source,
+        tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.tooltip,
+        visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.visibleIf,
+        enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.enabledIf,
+    ) = skirout.editor.v1.presentation.HeaderReorderHandleItem(
+        itemId.toFrozen(),
+        label.toFrozen(),
+        source.toFrozen(),
+        if (tooltip != null) tooltip.toFrozen() else null,
+        if (visibleIf != null) visibleIf.toFrozen() else null,
+        if (enabledIf != null) enabledIf.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HeaderReorderHandleItem && this.itemId == other.itemId && this.label == other.label && this.source == other.source && this.tooltip == other.tooltip && this.visibleIf == other.visibleIf && this.enabledIf == other.enabledIf);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.itemId, this.label, this.source, this.tooltip, this.visibleIf, this.enabledIf).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HeaderReorderHandleItem.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HeaderReorderHandleItem]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+            skirout.editor.v1.presentation.HeaderItemId.partial(),
+        override var label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var source: skirout.editor.v1.binding.BindingRef_OrMutable =
+            skirout.editor.v1.binding.BindingRef.partial(),
+        override var tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HeaderReorderHandleItem>? =
+            null,
+    ): skirout.editor.v1.presentation.HeaderReorderHandleItem_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HeaderReorderHandleItem(
+            itemId = this.itemId,
+            label = this.label,
+            source = this.source,
+            tooltip = this.tooltip,
+            visibleIf = this.visibleIf,
+            enabledIf = this.enabledIf,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [itemId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
+         */
+        val mutableItemId: skirout.editor.v1.presentation.HeaderItemId.Mutable get() {
+            var value = this.itemId;
+            return when (value) {
+                is skirout.editor.v1.presentation.HeaderItemId -> {
+                    value = value.toMutable();
+                    this.itemId = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.HeaderItemId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [label] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+         */
+        val mutableLabel: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.label;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.label = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [source] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+         */
+        val mutableSource: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.source;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingRef -> {
+                    value = value.toMutable();
+                    this.source = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HeaderReorderHandleItem(
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.binding.BindingRef.partial(),
+                null,
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HeaderReorderHandleItem].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable =
+                skirout.editor.v1.presentation.HeaderItemId.partial(),
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            source: skirout.editor.v1.binding.BindingRef_OrMutable =
+                skirout.editor.v1.binding.BindingRef.partial(),
+            tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.HeaderReorderHandleItem(
+            itemId = itemId,
+            label = label,
+            source = source,
+            tooltip = tooltip,
+            visibleIf = visibleIf,
+            enabledIf = enabledIf,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HeaderReorderHandleItem",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HeaderReorderHandleItem] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HeaderReorderHandleItem] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "item_id",
+                "itemId",
+                0,
+                skirout.editor.v1.presentation.HeaderItemId.serializer,
+                "",
+                { it.itemId },
+                { mut, v -> mut.itemId = v },
+            );
+            serializerImpl.addField(
+                "label",
+                "label",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.label },
+                { mut, v -> mut.label = v },
+            );
+            serializerImpl.addField(
+                "source",
+                "source",
+                2,
+                skirout.editor.v1.binding.BindingRef.serializer,
+                "",
+                { it.source },
+                { mut, v -> mut.source = v },
+            );
+            serializerImpl.addField(
+                "tooltip",
+                "tooltip",
+                3,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.tooltip },
+                { mut, v -> mut.tooltip = v },
+            );
+            serializerImpl.addField(
+                "visible_if",
+                "visibleIf",
+                4,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.visibleIf },
+                { mut, v -> mut.visibleIf = v },
+            );
+            serializerImpl.addField(
+                "enabled_if",
+                "enabledIf",
+                5,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.enabledIf },
+                { mut, v -> mut.enabledIf = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class HeaderItem private constructor() {
+    /** The kind of variant held by a `HeaderItem`. */
+    enum class Kind {
+        UNKNOWN,
+        BUTTON_WRAPPER,
+        BOOLEAN_TOGGLE_WRAPPER,
+        REORDER_HANDLE_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.HeaderItem.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HeaderItem>?,
+    ) : skirout.editor.v1.presentation.HeaderItem() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HeaderItem && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ButtonWrapper private constructor (
+        val value: skirout.editor.v1.presentation.HeaderButtonItem,
+    ) : skirout.editor.v1.presentation.HeaderItem() {
+        constructor(
+            value: skirout.editor.v1.presentation.HeaderButtonItem_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.BUTTON_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HeaderItem.ButtonWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1377687758;
+        }
+    }
+
+    class BooleanToggleWrapper private constructor (
+        val value: skirout.editor.v1.presentation.HeaderBooleanToggleItem,
+    ) : skirout.editor.v1.presentation.HeaderItem() {
+        constructor(
+            value: skirout.editor.v1.presentation.HeaderBooleanToggleItem_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.BOOLEAN_TOGGLE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HeaderItem.BooleanToggleWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1483681973;
+        }
+    }
+
+    class ReorderHandleWrapper private constructor (
+        val value: skirout.editor.v1.presentation.HeaderReorderHandleItem,
+    ) : skirout.editor.v1.presentation.HeaderItem() {
+        constructor(
+            value: skirout.editor.v1.presentation.HeaderReorderHandleItem_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REORDER_HANDLE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.HeaderItem.ReorderHandleWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -658765332;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.HeaderItem>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HeaderItem._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [HeaderItem].
+         * Default value for fields of type [HeaderItem].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ButtonWrapper(skirout.editor.v1.presentation.HeaderButtonItem(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createButton(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
+            icon: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            action: skirout.editor.v1.action.EditorAction,
+            priority: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            tone: skirout.editor.v1.presentation.HeaderActionTone,
+            confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?,
+            placement: skirout.editor.v1.presentation.HeaderActionPlacement,
+        ) = ButtonWrapper(
+            skirout.editor.v1.presentation.HeaderButtonItem(
+                itemId = itemId,
+                icon = icon,
+                label = label,
+                tooltip = tooltip,
+                action = action,
+                priority = priority,
+                visibleIf = visibleIf,
+                enabledIf = enabledIf,
+                tone = tone,
+                confirmation = confirmation,
+                placement = placement,
+            )
+        );
+
+        /** Shortcut for `BooleanToggleWrapper(skirout.editor.v1.presentation.HeaderBooleanToggleItem(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createBooleanToggle(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            checked: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            action: skirout.editor.v1.action.EditorAction,
+            tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            priority: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            confirmation: skirout.editor.v1.presentation.HeaderActionConfirmation_OrMutable?,
+            placement: skirout.editor.v1.presentation.HeaderActionPlacement,
+        ) = BooleanToggleWrapper(
+            skirout.editor.v1.presentation.HeaderBooleanToggleItem(
+                itemId = itemId,
+                label = label,
+                checked = checked,
+                action = action,
+                tooltip = tooltip,
+                priority = priority,
+                visibleIf = visibleIf,
+                enabledIf = enabledIf,
+                confirmation = confirmation,
+                placement = placement,
+            )
+        );
+
+        /** Shortcut for `ReorderHandleWrapper(skirout.editor.v1.presentation.HeaderReorderHandleItem(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReorderHandle(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            itemId: skirout.editor.v1.presentation.HeaderItemId_OrMutable,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            source: skirout.editor.v1.binding.BindingRef_OrMutable,
+            tooltip: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            visibleIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            enabledIf: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        ) = ReorderHandleWrapper(
+            skirout.editor.v1.presentation.HeaderReorderHandleItem(
+                itemId = itemId,
+                label = label,
+                source = source,
+                tooltip = tooltip,
+                visibleIf = visibleIf,
+                enabledIf = enabledIf,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.HeaderItem, Unknown>(
+                recordId = "editor/v1/presentation.skir:HeaderItem",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [HeaderItem] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [HeaderItem] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "button",
+                    Kind.BUTTON_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.HeaderButtonItem.serializer,
+                    "",
+                    { ButtonWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "boolean_toggle",
+                    Kind.BOOLEAN_TOGGLE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.HeaderBooleanToggleItem.serializer,
+                    "",
+                    { BooleanToggleWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "reorder_handle",
+                    Kind.REORDER_HANDLE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.HeaderReorderHandleItem.serializer,
+                    "",
+                    { ReorderHandleWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 sealed interface PresentationHeader_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable?;
     val title: skirout.editor.v1.expression.TypedExpression_OrMutable?;
     val description: skirout.editor.v1.expression.TypedExpression_OrMutable?;
     val initiallyExpanded: kotlin.Boolean?;
-    val actions: kotlin.collections.List<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable>;
+    val items: kotlin.collections.List<skirout.editor.v1.presentation.HeaderItem>;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationHeader;
 }
@@ -2104,7 +2624,7 @@ class PresentationHeader private constructor(
     override val title: skirout.editor.v1.expression.TypedExpression?,
     override val description: skirout.editor.v1.expression.TypedExpression?,
     override val initiallyExpanded: kotlin.Boolean?,
-    override val actions: kotlin.collections.List<skirout.editor.v1.presentation.EditorHeaderAction>,
+    override val items: kotlin.collections.List<skirout.editor.v1.presentation.HeaderItem>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationHeader>? =
         null,
 ): skirout.editor.v1.presentation.PresentationHeader_OrMutable {
@@ -2115,7 +2635,7 @@ class PresentationHeader private constructor(
         title: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         initiallyExpanded: kotlin.Boolean?,
-        actions: kotlin.collections.Iterable<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable>,
+        items: kotlin.collections.Iterable<skirout.editor.v1.presentation.HeaderItem>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationHeader>? =
             null,
     ): this(
@@ -2123,7 +2643,7 @@ class PresentationHeader private constructor(
         if (title != null) title.toFrozen() else null,
         if (description != null) description.toFrozen() else null,
         initiallyExpanded,
-        build.skir.internal.toFrozenList(actions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(items),
         _unrecognizedFields,
     ) {}
 
@@ -2136,7 +2656,7 @@ class PresentationHeader private constructor(
         title = this.title,
         description = this.description,
         initiallyExpanded = this.initiallyExpanded,
-        actions = this.actions,
+        items = this.items,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2151,14 +2671,14 @@ class PresentationHeader private constructor(
             this.description,
         initiallyExpanded: kotlin.Boolean? =
             this.initiallyExpanded,
-        actions: kotlin.collections.Iterable<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable> =
-            this.actions,
+        items: kotlin.collections.Iterable<skirout.editor.v1.presentation.HeaderItem> =
+            this.items,
     ) = skirout.editor.v1.presentation.PresentationHeader(
         if (binding != null) binding.toFrozen() else null,
         if (title != null) title.toFrozen() else null,
         if (description != null) description.toFrozen() else null,
         initiallyExpanded,
-        build.skir.internal.toFrozenList(actions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(items),
         this._unrecognizedFields,
     );
 
@@ -2166,11 +2686,11 @@ class PresentationHeader private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationHeader && this.binding == other.binding && this.title == other.title && this.description == other.description && this.initiallyExpanded == other.initiallyExpanded && this.actions == other.actions);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationHeader && this.binding == other.binding && this.title == other.title && this.description == other.description && this.initiallyExpanded == other.initiallyExpanded && this.items == other.items);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.title, this.description, this.initiallyExpanded, this.actions).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.binding, this.title, this.description, this.initiallyExpanded, this.items).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2192,8 +2712,8 @@ class PresentationHeader private constructor(
             null,
         override var initiallyExpanded: kotlin.Boolean? =
             null,
-        override var actions: kotlin.collections.List<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.EditorHeaderAction>(),
+        override var items: kotlin.collections.List<skirout.editor.v1.presentation.HeaderItem> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HeaderItem>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationHeader>? =
             null,
     ): skirout.editor.v1.presentation.PresentationHeader_OrMutable {
@@ -2203,21 +2723,21 @@ class PresentationHeader private constructor(
             title = this.title,
             description = this.description,
             initiallyExpanded = this.initiallyExpanded,
-            actions = this.actions,
+            items = this.items,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [actions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [actions] and returns it.
+         * If the value of [items] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [items] and returns it.
          */
-        val mutableActions: kotlin.collections.MutableList<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable> get() {
-            var value = this.actions;
+        val mutableItems: kotlin.collections.MutableList<skirout.editor.v1.presentation.HeaderItem> get() {
+            var value = this.items;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
                 else -> {
                     value = build.skir.internal.MutableList(value);
-                    this.actions = value;
+                    this.items = value;
                     value;
                 }
             }
@@ -2231,7 +2751,7 @@ class PresentationHeader private constructor(
                 null,
                 null,
                 null,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.EditorHeaderAction>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HeaderItem>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2253,14 +2773,14 @@ class PresentationHeader private constructor(
                 null,
             initiallyExpanded: kotlin.Boolean? =
                 null,
-            actions: kotlin.collections.Iterable<skirout.editor.v1.presentation.EditorHeaderAction_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.EditorHeaderAction>(),
+            items: kotlin.collections.Iterable<skirout.editor.v1.presentation.HeaderItem> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HeaderItem>(),
         ) = skirout.editor.v1.presentation.PresentationHeader(
             binding = binding,
             title = title,
             description = description,
             initiallyExpanded = initiallyExpanded,
-            actions = actions,
+            items = items,
             _unrecognizedFields = null,
         );
 
@@ -2326,15 +2846,15 @@ class PresentationHeader private constructor(
                 { mut, v -> mut.initiallyExpanded = v },
             );
             serializerImpl.addField(
-                "actions",
-                "actions",
+                "items",
+                "items",
                 4,
                 build.skir.Serializers.list(
-                    skirout.editor.v1.presentation.EditorHeaderAction.serializer,
+                    skirout.editor.v1.presentation.HeaderItem.serializer,
                 ),
                 "",
-                { it.actions },
-                { mut, v -> mut.actions = v },
+                { it.items },
+                { mut, v -> mut.items = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -9352,7 +9872,6 @@ sealed class PresentationElement private constructor() {
         TABS_WRAPPER,
         SPACER_WRAPPER,
         TEXT_WRAPPER,
-        RICH_TEXT_WRAPPER,
         MARKDOWN_WRAPPER,
         ICON_WRAPPER,
         IMAGE_WRAPPER,
@@ -9612,24 +10131,6 @@ sealed class PresentationElement private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 3556653;
-        }
-    }
-
-    class RichTextWrapper private constructor (
-        val value: skirout.editor.v1.presentation.TextContent,
-    ) : skirout.editor.v1.presentation.PresentationElement() {
-        constructor(
-            value: skirout.editor.v1.presentation.TextContent_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RICH_TEXT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.RichTextWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -842613072;
         }
     }
 
@@ -10383,18 +10884,6 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `RichTextWrapper(skirout.editor.v1.presentation.TextContent(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRichText(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = RichTextWrapper(
-            skirout.editor.v1.presentation.TextContent(
-                value = value,
-            )
-        );
-
         /** Shortcut for `MarkdownWrapper(skirout.editor.v1.presentation.TextContent(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createMarkdown(
@@ -11024,15 +11513,6 @@ sealed class PresentationElement private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     13,
-                    "rich_text",
-                    Kind.RICH_TEXT_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.TextContent.serializer,
-                    "",
-                    { RichTextWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    14,
                     "markdown",
                     Kind.MARKDOWN_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextContent.serializer,
@@ -11041,7 +11521,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    15,
+                    14,
                     "icon",
                     Kind.ICON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.IconContent.serializer,
@@ -11050,7 +11530,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    16,
+                    15,
                     "image",
                     Kind.IMAGE_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ImageContent.serializer,
@@ -11059,7 +11539,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    17,
+                    16,
                     "badge",
                     Kind.BADGE_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BadgeContent.serializer,
@@ -11068,7 +11548,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    18,
+                    17,
                     "progress",
                     Kind.PROGRESS_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ProgressContent.serializer,
@@ -11077,7 +11557,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    19,
+                    18,
                     "typed_field",
                     Kind.TYPED_FIELD_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TypedFieldElement.serializer,
@@ -11086,7 +11566,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    20,
+                    19,
                     "conditional",
                     Kind.CONDITIONAL_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ConditionalElement.serializer,
@@ -11095,7 +11575,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    21,
+                    20,
                     "repeated",
                     Kind.REPEATED_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RepeatedElement.serializer,
@@ -11104,7 +11584,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    22,
+                    21,
                     "scoped_binding",
                     Kind.SCOPED_BINDING_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ScopedBindingElement.serializer,
@@ -11113,7 +11593,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    23,
+                    22,
                     "text_input",
                     Kind.TEXT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextControl.serializer,
@@ -11122,7 +11602,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    24,
+                    23,
                     "numeric_input",
                     Kind.NUMERIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11131,7 +11611,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    25,
+                    24,
                     "toggle_input",
                     Kind.TOGGLE_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11140,7 +11620,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    26,
+                    25,
                     "select_input",
                     Kind.SELECT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SelectControl.serializer,
@@ -11149,7 +11629,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    27,
+                    26,
                     "slider_input",
                     Kind.SLIDER_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SliderControl.serializer,
@@ -11158,7 +11638,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    28,
+                    27,
                     "date_time_input",
                     Kind.DATE_TIME_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11167,7 +11647,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    29,
+                    28,
                     "duration_input",
                     Kind.DURATION_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11176,7 +11656,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    30,
+                    29,
                     "color_input",
                     Kind.COLOR_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11185,7 +11665,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    31,
+                    30,
                     "bytes_input",
                     Kind.BYTES_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11194,7 +11674,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    32,
+                    31,
                     "named_input",
                     Kind.NAMED_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11203,7 +11683,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    33,
+                    32,
                     "button",
                     Kind.BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ButtonElement.serializer,
@@ -11212,7 +11692,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    34,
+                    33,
                     "icon_button",
                     Kind.ICON_BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.IconButtonElement.serializer,
@@ -11221,7 +11701,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    35,
+                    34,
                     "menu",
                     Kind.MENU_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MenuElement.serializer,
@@ -11230,7 +11710,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    36,
+                    35,
                     "tooltip",
                     Kind.TOOLTIP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TooltipElement.serializer,
@@ -11239,7 +11719,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    37,
+                    36,
                     "list_input",
                     Kind.LIST_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ListControl.serializer,
@@ -11248,7 +11728,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    38,
+                    37,
                     "map_input",
                     Kind.MAP_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MapControl.serializer,
@@ -11257,7 +11737,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    39,
+                    38,
                     "record_input",
                     Kind.RECORD_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RecordControl.serializer,
@@ -11266,7 +11746,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    40,
+                    39,
                     "enum_input",
                     Kind.ENUM_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -11275,7 +11755,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    41,
+                    40,
                     "polymorphic_input",
                     Kind.POLYMORPHIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PolymorphicControl.serializer,
@@ -11284,7 +11764,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    42,
+                    41,
                     "default_presentation",
                     Kind.DEFAULT_PRESENTATION_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.DefaultPresentationElement.serializer,
@@ -11293,7 +11773,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    43,
+                    42,
                     "collapsible",
                     Kind.COLLAPSIBLE_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.CollapsibleLayout.serializer,
@@ -11302,7 +11782,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    44,
+                    43,
                     "icon_input",
                     Kind.ICON_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,

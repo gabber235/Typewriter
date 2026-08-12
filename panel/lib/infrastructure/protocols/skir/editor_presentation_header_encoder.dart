@@ -7,16 +7,16 @@ extension on SkirPresentationEncoder {
         : expressions.binding(value.binding!).mapValue((value) => value);
     final title = _optional(value.title);
     final description = _optional(value.description);
-    final encodedActions = <wire.EditorHeaderAction>[];
+    final encodedItems = <wire.HeaderItem>[];
     final diagnostics = [
       ...binding.diagnostics,
       ...title.diagnostics,
       ...description.diagnostics,
     ];
-    for (final action in value.actions) {
-      final encoded = _headerAction(action);
+    for (final item in value.items) {
+      final encoded = _headerItem(item);
       diagnostics.addAll(encoded.diagnostics);
-      if (encoded.valueOrNull case final item?) encodedActions.add(item);
+      if (encoded.valueOrNull case final item?) encodedItems.add(item);
     }
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -25,54 +25,132 @@ extension on SkirPresentationEncoder {
               title: title.valueOrNull,
               description: description.valueOrNull,
               initiallyExpanded: value.initiallyExpanded,
-              actions: encodedActions,
+              items: encodedItems,
             ),
           )
         : TypeResult.failure(diagnostics);
   }
 
-  TypeResult<wire.EditorHeaderAction> _headerAction(EditorHeaderAction value) {
-    final icon = expressions.encode(value.icon);
-    final label = expressions.encode(value.label);
-    final tooltip = _optional(value.tooltip);
-    final priority = _optional(value.priority);
-    final visible = _optional(value.visibleIf);
-    final enabled = _optional(value.enabledIf);
-    final activation = value.activation._encode(this);
-    final confirmation = value.confirmation?._encode(this);
+  TypeResult<wire.HeaderItem> _headerItem(HeaderItem value) => switch (value) {
+    final HeaderButtonItem item => item._encode(this),
+    final HeaderBooleanToggleItem item => item._encode(this),
+    final HeaderReorderHandleItem item => item._encode(this),
+  };
+}
+
+extension on HeaderButtonItem {
+  TypeResult<wire.HeaderItem> _encode(SkirPresentationEncoder encoder) {
+    final icon = encoder.expressions.encode(this.icon);
+    final label = encoder.expressions.encode(this.label);
+    final tooltip = encoder._optional(this.tooltip);
+    final action = encoder.actions.encode(this.action);
+    final priority = encoder._optional(this.priority);
+    final visible = encoder._optional(visibleIf);
+    final enabled = encoder._optional(enabledIf);
+    final confirmation = this.confirmation?._encode(encoder);
     final diagnostics = [
       ...icon.diagnostics,
       ...label.diagnostics,
       ...tooltip.diagnostics,
+      ...action.diagnostics,
       ...priority.diagnostics,
       ...visible.diagnostics,
       ...enabled.diagnostics,
-      ...activation.diagnostics,
       ...?confirmation?.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
-            wire.EditorHeaderAction(
-              actionId: wire.HeaderActionId(
-                namespace: value.id.namespace,
-                name: value.id.name,
-              ),
+            wire.HeaderItem.createButton(
+              itemId: id._encode,
               icon: icon.valueOrNull!,
               label: label.valueOrNull!,
               tooltip: tooltip.valueOrNull,
-              activation: activation.valueOrNull!,
+              action: action.valueOrNull!,
               priority: priority.valueOrNull,
               visibleIf: visible.valueOrNull,
               enabledIf: enabled.valueOrNull,
-              placement: value.placement._encode,
-              tone: value.tone == HeaderActionTone.destructive
+              tone: tone == HeaderActionTone.destructive
                   ? wire.HeaderActionTone.destructive
                   : wire.HeaderActionTone.neutral,
               confirmation: confirmation?.valueOrNull,
+              placement: placement._encode,
             ),
           )
         : TypeResult.failure(diagnostics);
   }
+}
+
+extension on HeaderBooleanToggleItem {
+  TypeResult<wire.HeaderItem> _encode(SkirPresentationEncoder encoder) {
+    final label = encoder.expressions.encode(this.label);
+    final checked = encoder.expressions.encode(this.checked);
+    final action = encoder.actions.encode(this.action);
+    final tooltip = encoder._optional(this.tooltip);
+    final priority = encoder._optional(this.priority);
+    final visible = encoder._optional(visibleIf);
+    final enabled = encoder._optional(enabledIf);
+    final confirmation = this.confirmation?._encode(encoder);
+    final diagnostics = [
+      ...label.diagnostics,
+      ...checked.diagnostics,
+      ...action.diagnostics,
+      ...tooltip.diagnostics,
+      ...priority.diagnostics,
+      ...visible.diagnostics,
+      ...enabled.diagnostics,
+      ...?confirmation?.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.HeaderItem.createBooleanToggle(
+              itemId: id._encode,
+              label: label.valueOrNull!,
+              checked: checked.valueOrNull!,
+              action: action.valueOrNull!,
+              tooltip: tooltip.valueOrNull,
+              priority: priority.valueOrNull,
+              visibleIf: visible.valueOrNull,
+              enabledIf: enabled.valueOrNull,
+              confirmation: confirmation?.valueOrNull,
+              placement: placement._encode,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on HeaderReorderHandleItem {
+  TypeResult<wire.HeaderItem> _encode(SkirPresentationEncoder encoder) {
+    final label = encoder.expressions.encode(this.label);
+    final source = encoder.expressions.binding(this.source);
+    final tooltip = encoder._optional(this.tooltip);
+    final visible = encoder._optional(visibleIf);
+    final enabled = encoder._optional(enabledIf);
+    final diagnostics = [
+      ...label.diagnostics,
+      ...source.diagnostics,
+      ...tooltip.diagnostics,
+      ...visible.diagnostics,
+      ...enabled.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.HeaderItem.createReorderHandle(
+              itemId: id._encode,
+              label: label.valueOrNull!,
+              source: source.valueOrNull!,
+              tooltip: tooltip.valueOrNull,
+              visibleIf: visible.valueOrNull,
+              enabledIf: enabled.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+}
+
+extension on HeaderItemId {
+  wire.HeaderItemId get _encode =>
+      wire.HeaderItemId(namespace: namespace, name: name);
 }
 
 extension on HeaderActionPlacement {
@@ -80,28 +158,6 @@ extension on HeaderActionPlacement {
     HeaderActionPlacement.beforeTitle => wire.HeaderActionPlacement.beforeTitle,
     HeaderActionPlacement.afterTitle => wire.HeaderActionPlacement.afterTitle,
     HeaderActionPlacement.end => wire.HeaderActionPlacement.end,
-  };
-}
-
-extension on HeaderActionActivation {
-  TypeResult<wire.HeaderActionActivation> _encode(
-    SkirPresentationEncoder encoder,
-  ) => switch (this) {
-    InvokeHeaderAction(:final action) =>
-      encoder.actions
-          .encode(action)
-          .mapValue(
-            (action) =>
-                wire.HeaderActionActivation.createInvoke(action: action),
-          ),
-    ReorderListItemHeaderAction(:final source) =>
-      encoder.expressions
-          .binding(source)
-          .mapValue(
-            (source) => wire.HeaderActionActivation.createReorderListItem(
-              source: source,
-            ),
-          ),
   };
 }
 

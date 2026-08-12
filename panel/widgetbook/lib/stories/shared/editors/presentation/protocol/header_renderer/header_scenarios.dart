@@ -1,5 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_gallery.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_gallery.dart";
 
 SemanticHeaderScenario generatedCompositeScenario() => (
   type: RecordType(

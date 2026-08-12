@@ -63,24 +63,29 @@ void main() {
     }
   });
 
-  test("round trips semantic header records and activations", () {
+  test("round trips every semantic header item", () {
     final header = PresentationHeader(
       binding: binding,
       title: text,
       description: text,
       initiallyExpanded: false,
-      actions: [
-        EditorHeaderAction(
-          id: listItemReorderHeaderActionId,
-          icon: TypedExpression(
-            resultType: NamedType(standardTypeRefs.icon),
-            expression: LiteralExpression(
-              const IconValue.iconify("mdi:drag").typedValue,
-            ),
-          ),
+      items: [
+        HeaderReorderHandleItem(
+          id: listItemReorderHeaderItemId,
           label: text,
           tooltip: text,
-          activation: const ReorderListItemHeaderAction(source: binding),
+          source: binding,
+          visibleIf: truth,
+          enabledIf: truth,
+        ),
+        HeaderBooleanToggleItem(
+          id: booleanToggleHeaderItemId,
+          label: text,
+          checked: truth,
+          action: LocalEditorAction(
+            SetValueAction(target: binding, value: truth),
+          ),
+          tooltip: text,
           priority: number,
           visibleIf: truth,
           enabledIf: truth,
@@ -91,8 +96,8 @@ void main() {
             confirmationLabel: text,
           ),
         ),
-        EditorHeaderAction(
-          id: mapEntryRemoveHeaderActionId,
+        HeaderButtonItem(
+          id: mapEntryRemoveHeaderItemId,
           icon: TypedExpression(
             resultType: NamedType(standardTypeRefs.icon),
             expression: LiteralExpression(
@@ -100,8 +105,8 @@ void main() {
             ),
           ),
           label: text,
-          activation: InvokeHeaderAction(
-            LocalEditorAction(SetValueAction(target: binding, value: text)),
+          action: LocalEditorAction(
+            SetValueAction(target: binding, value: text),
           ),
           placement: HeaderActionPlacement.afterTitle,
           tone: HeaderActionTone.destructive,
@@ -123,10 +128,36 @@ void main() {
     expect(decoded, node);
   });
 
+  test("localizes an unknown header item", () {
+    final node = PresentationNode(
+      id: "unknown.header.item",
+      element: const DividerElement(),
+      header: PresentationHeader(
+        items: [
+          HeaderButtonItem(
+            id: mapAddHeaderItemId,
+            icon: text,
+            label: text,
+            action: const RealmEditorAction(ReloadRealmAction()),
+          ),
+        ],
+      ),
+    );
+    final encoded = codecs.encoder.encodeNode(node).valueOrNull!;
+    final mutable = encoded.toMutable()
+      ..header = (encoded.header!.toMutable()
+        ..items = const [wire.HeaderItem.unknown]);
+
+    final decoded = codecs.decoder.decodeNode(mutable.toFrozen());
+    final item = decoded.header!.items.single as HeaderButtonItem;
+
+    expect(item.label, "Invalid item".asStringLiteral);
+    expect(item.icon.resultType, const StringType());
+  });
+
   test("round trips every content presentation variant", () {
     final elements = <PresentationElement>[
       const TextElement(text),
-      const RichTextElement(text),
       const MarkdownElement(text),
       const IconElement(name: text, semanticLabel: text),
       const ImageElement(source: text, semanticLabel: text),

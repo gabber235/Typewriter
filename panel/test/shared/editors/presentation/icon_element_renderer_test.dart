@@ -25,7 +25,7 @@ void main() {
     );
 
     final rendered = tester.widget<Icones>(find.byType(Icones));
-    expect(rendered.icon, icon);
+    expect(rendered.iconValue, icon);
     expect(find.bySemanticsLabel("Quest icon"), findsOneWidget);
   });
 

@@ -13,8 +13,8 @@ class PresentationNodeRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (node.element case DiagnosticElement(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
+    if (node.element is DiagnosticElement) {
+      return DataElementRendering(node.element).render(context, scope);
     }
     final enabled = _condition(node.properties.enabledIf, true);
     if (enabled case TypeFailure(:final diagnostics)) {
@@ -115,10 +115,7 @@ extension on PresentationElement {
     TooltipElement() => InteractionElementRendering(
       this,
     ).render(context, scope),
-    DiagnosticElement(:final diagnostics) => presentationDiagnostic(
-      context,
-      diagnostics,
-    ),
+    DiagnosticElement() => DataElementRendering(this).render(context, scope),
     DefaultPresentationElement() => (this as DefaultPresentationElement).render(
       context,
       scope,

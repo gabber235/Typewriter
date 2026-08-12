@@ -12,42 +12,50 @@ extension on SkirPresentationDecoder {
       title: title.valueOrNull,
       description: description.valueOrNull,
       initiallyExpanded: value.initiallyExpanded,
-      actions: [for (final action in value.actions) _headerAction(action)],
+      items: [for (final item in value.items) _headerItem(item)],
     );
   }
 
-  EditorHeaderAction _headerAction(wire.EditorHeaderAction value) {
+  HeaderItem _headerItem(wire.HeaderItem value) => switch (value) {
+    wire.HeaderItem_buttonWrapper(:final value) => _buttonItem(value),
+    wire.HeaderItem_booleanToggleWrapper(:final value) => _booleanToggleItem(
+      value,
+    ),
+    wire.HeaderItem_reorderHandleWrapper(:final value) => _reorderHandleItem(
+      value,
+    ),
+    wire.HeaderItem_unknown() => [
+      wireDiagnostic("Unknown header item"),
+    ]._invalidHeaderItem,
+  };
+
+  HeaderItem _buttonItem(wire.HeaderButtonItem value) {
     final icon = expressions.decode(value.icon);
     final label = expressions.decode(value.label);
     final tooltip = _optionalExpression(value.tooltip);
+    final action = actions.decode(value.action);
     final priority = _optionalExpression(value.priority);
     final visible = _optionalExpression(value.visibleIf);
     final enabled = _optionalExpression(value.enabledIf);
-    final activation = value.activation._decode(this);
     final confirmation = value.confirmation?._decode(this);
     final diagnostics = [
       ...icon.diagnostics,
       ...label.diagnostics,
       ...tooltip.diagnostics,
+      ...action.diagnostics,
       ...priority.diagnostics,
       ...visible.diagnostics,
       ...enabled.diagnostics,
-      ...activation.diagnostics,
       ...?confirmation?.diagnostics,
+      ...value.itemId._validate,
     ];
-    if (value.actionId.namespace.isEmpty || value.actionId.name.isEmpty) {
-      diagnostics.add(wireDiagnostic("Header action id is not qualified"));
-    }
-    if (diagnostics.isNotEmpty) return diagnostics._invalidHeaderAction;
-    return EditorHeaderAction(
-      id: HeaderActionId(
-        namespace: value.actionId.namespace,
-        name: value.actionId.name,
-      ),
+    if (diagnostics.isNotEmpty) return diagnostics._invalidHeaderItem;
+    return HeaderButtonItem(
+      id: value.itemId._decode,
       icon: icon.valueOrNull!,
       label: label.valueOrNull!,
       tooltip: tooltip.valueOrNull,
-      activation: activation.valueOrNull!,
+      action: action.valueOrNull!,
       priority: priority.valueOrNull,
       visibleIf: visible.valueOrNull,
       enabledIf: enabled.valueOrNull,
@@ -58,6 +66,74 @@ extension on SkirPresentationDecoder {
       confirmation: confirmation?.valueOrNull,
     );
   }
+
+  HeaderItem _booleanToggleItem(wire.HeaderBooleanToggleItem value) {
+    final label = expressions.decode(value.label);
+    final checked = expressions.decode(value.checked);
+    final action = actions.decode(value.action);
+    final tooltip = _optionalExpression(value.tooltip);
+    final priority = _optionalExpression(value.priority);
+    final visible = _optionalExpression(value.visibleIf);
+    final enabled = _optionalExpression(value.enabledIf);
+    final confirmation = value.confirmation?._decode(this);
+    final diagnostics = [
+      ...label.diagnostics,
+      ...checked.diagnostics,
+      ...action.diagnostics,
+      ...tooltip.diagnostics,
+      ...priority.diagnostics,
+      ...visible.diagnostics,
+      ...enabled.diagnostics,
+      ...?confirmation?.diagnostics,
+      ...value.itemId._validate,
+    ];
+    if (diagnostics.isNotEmpty) return diagnostics._invalidHeaderItem;
+    return HeaderBooleanToggleItem(
+      id: value.itemId._decode,
+      label: label.valueOrNull!,
+      checked: checked.valueOrNull!,
+      action: action.valueOrNull!,
+      tooltip: tooltip.valueOrNull,
+      priority: priority.valueOrNull,
+      visibleIf: visible.valueOrNull,
+      enabledIf: enabled.valueOrNull,
+      confirmation: confirmation?.valueOrNull,
+      placement: value.placement._decode,
+    );
+  }
+
+  HeaderItem _reorderHandleItem(wire.HeaderReorderHandleItem value) {
+    final label = expressions.decode(value.label);
+    final source = expressions.binding(value.source);
+    final tooltip = _optionalExpression(value.tooltip);
+    final visible = _optionalExpression(value.visibleIf);
+    final enabled = _optionalExpression(value.enabledIf);
+    final diagnostics = [
+      ...label.diagnostics,
+      ...source.diagnostics,
+      ...tooltip.diagnostics,
+      ...visible.diagnostics,
+      ...enabled.diagnostics,
+      ...value.itemId._validate,
+    ];
+    if (diagnostics.isNotEmpty) return diagnostics._invalidHeaderItem;
+    return HeaderReorderHandleItem(
+      id: value.itemId._decode,
+      label: label.valueOrNull!,
+      source: source.valueOrNull!,
+      tooltip: tooltip.valueOrNull,
+      visibleIf: visible.valueOrNull,
+      enabledIf: enabled.valueOrNull,
+    );
+  }
+}
+
+extension on wire.HeaderItemId {
+  HeaderItemId get _decode => HeaderItemId(namespace: namespace, name: name);
+
+  List<TypeDiagnostic> get _validate => namespace.isEmpty || name.isEmpty
+      ? [wireDiagnostic("Header item id is not qualified")]
+      : const [];
 }
 
 extension on wire.HeaderActionPlacement {
@@ -67,23 +143,6 @@ extension on wire.HeaderActionPlacement {
     wire.HeaderActionPlacement.end ||
     wire.HeaderActionPlacement_unknown() => HeaderActionPlacement.end,
   };
-}
-
-extension on wire.HeaderActionActivation {
-  TypeResult<HeaderActionActivation> _decode(SkirPresentationDecoder decoder) =>
-      switch (this) {
-        wire.HeaderActionActivation_invokeWrapper(:final value) =>
-          decoder.actions.decode(value.action).mapValue(InvokeHeaderAction.new),
-        wire.HeaderActionActivation_reorderListItemWrapper(:final value) =>
-          decoder.expressions
-              .binding(value.source)
-              .mapValue(
-                (source) => ReorderListItemHeaderAction(source: source),
-              ),
-        wire.HeaderActionActivation_unknown() => invalidWire(
-          "Unknown header action activation",
-        ),
-      };
 }
 
 extension on wire.HeaderActionConfirmation {
@@ -111,15 +170,13 @@ extension on wire.HeaderActionConfirmation {
 }
 
 extension on List<TypeDiagnostic> {
-  EditorHeaderAction get _invalidHeaderAction {
+  HeaderItem get _invalidHeaderItem {
     final message = map((item) => item.message).join("\n");
-    return EditorHeaderAction(
-      id: const HeaderActionId(namespace: "wire", name: "invalid"),
+    return HeaderButtonItem(
+      id: const HeaderItemId(namespace: "wire", name: "invalid"),
       icon: message.asStringLiteral,
-      label: "Invalid action".asStringLiteral,
-      activation: const InvokeHeaderAction(
-        RealmEditorAction(ReloadRealmAction()),
-      ),
+      label: "Invalid item".asStringLiteral,
+      action: const RealmEditorAction(ReloadRealmAction()),
     );
   }
 }

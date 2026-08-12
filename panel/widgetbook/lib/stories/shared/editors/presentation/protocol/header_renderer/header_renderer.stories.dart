@@ -1,9 +1,9 @@
 import "package:flutter/material.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_action_scenarios.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_gallery.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_scenarios.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/action_scenarios.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_gallery.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_scenarios.dart";
 
 @widgetbook.UseCase(name: "Generated composites", type: SemanticHeaderGallery)
 Widget generatedCompositeHeadersUseCase(BuildContext context) =>

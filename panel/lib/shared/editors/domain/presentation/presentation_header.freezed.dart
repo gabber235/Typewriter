@@ -12,20 +12,20 @@ part of 'presentation_header.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$HeaderActionId {
+mixin _$HeaderItemId {
 
  String get namespace; String get name;
-/// Create a copy of HeaderActionId
+/// Create a copy of HeaderItemId
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$HeaderActionIdCopyWith<HeaderActionId> get copyWith => _$HeaderActionIdCopyWithImpl<HeaderActionId>(this as HeaderActionId, _$identity);
+$HeaderItemIdCopyWith<HeaderItemId> get copyWith => _$HeaderItemIdCopyWithImpl<HeaderItemId>(this as HeaderItemId, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderActionId&&(identical(other.namespace, namespace) || other.namespace == namespace)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderItemId&&(identical(other.namespace, namespace) || other.namespace == namespace)&&(identical(other.name, name) || other.name == name));
 }
 
 
@@ -34,15 +34,15 @@ int get hashCode => Object.hash(runtimeType,namespace,name);
 
 @override
 String toString() {
-  return 'HeaderActionId(namespace: $namespace, name: $name)';
+  return 'HeaderItemId(namespace: $namespace, name: $name)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $HeaderActionIdCopyWith<$Res>  {
-  factory $HeaderActionIdCopyWith(HeaderActionId value, $Res Function(HeaderActionId) _then) = _$HeaderActionIdCopyWithImpl;
+abstract mixin class $HeaderItemIdCopyWith<$Res>  {
+  factory $HeaderItemIdCopyWith(HeaderItemId value, $Res Function(HeaderItemId) _then) = _$HeaderItemIdCopyWithImpl;
 @useResult
 $Res call({
  String namespace, String name
@@ -53,14 +53,14 @@ $Res call({
 
 }
 /// @nodoc
-class _$HeaderActionIdCopyWithImpl<$Res>
-    implements $HeaderActionIdCopyWith<$Res> {
-  _$HeaderActionIdCopyWithImpl(this._self, this._then);
+class _$HeaderItemIdCopyWithImpl<$Res>
+    implements $HeaderItemIdCopyWith<$Res> {
+  _$HeaderItemIdCopyWithImpl(this._self, this._then);
 
-  final HeaderActionId _self;
-  final $Res Function(HeaderActionId) _then;
+  final HeaderItemId _self;
+  final $Res Function(HeaderItemId) _then;
 
-/// Create a copy of HeaderActionId
+/// Create a copy of HeaderItemId
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? namespace = null,Object? name = null,}) {
   return _then(_self.copyWith(
@@ -73,8 +73,8 @@ as String,
 }
 
 
-/// Adds pattern-matching-related methods to [HeaderActionId].
-extension HeaderActionIdPatterns on HeaderActionId {
+/// Adds pattern-matching-related methods to [HeaderItemId].
+extension HeaderItemIdPatterns on HeaderItemId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -87,10 +87,10 @@ extension HeaderActionIdPatterns on HeaderActionId {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _HeaderActionId value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _HeaderItemId value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _HeaderActionId() when $default != null:
+case _HeaderItemId() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -109,10 +109,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _HeaderActionId value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _HeaderItemId value)  $default,){
 final _that = this;
 switch (_that) {
-case _HeaderActionId():
+case _HeaderItemId():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -130,10 +130,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _HeaderActionId value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _HeaderItemId value)?  $default,){
 final _that = this;
 switch (_that) {
-case _HeaderActionId() when $default != null:
+case _HeaderItemId() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String namespace,  String name)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _HeaderActionId() when $default != null:
+case _HeaderItemId() when $default != null:
 return $default(_that.namespace,_that.name);case _:
   return orElse();
 
@@ -174,7 +174,7 @@ return $default(_that.namespace,_that.name);case _:
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String namespace,  String name)  $default,) {final _that = this;
 switch (_that) {
-case _HeaderActionId():
+case _HeaderItemId():
 return $default(_that.namespace,_that.name);case _:
   throw StateError('Unexpected subclass');
 
@@ -194,7 +194,7 @@ return $default(_that.namespace,_that.name);case _:
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String namespace,  String name)?  $default,) {final _that = this;
 switch (_that) {
-case _HeaderActionId() when $default != null:
+case _HeaderItemId() when $default != null:
 return $default(_that.namespace,_that.name);case _:
   return null;
 
@@ -206,24 +206,24 @@ return $default(_that.namespace,_that.name);case _:
 /// @nodoc
 
 
-class _HeaderActionId extends HeaderActionId {
-  const _HeaderActionId({required this.namespace, required this.name}): assert(namespace != "", 'Header action namespace must not be empty.'),assert(name != "", 'Header action name must not be empty.'),super._();
+class _HeaderItemId extends HeaderItemId {
+  const _HeaderItemId({required this.namespace, required this.name}): assert(namespace != "", 'Header item namespace must not be empty.'),assert(name != "", 'Header item name must not be empty.'),super._();
   
 
 @override final  String namespace;
 @override final  String name;
 
-/// Create a copy of HeaderActionId
+/// Create a copy of HeaderItemId
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$HeaderActionIdCopyWith<_HeaderActionId> get copyWith => __$HeaderActionIdCopyWithImpl<_HeaderActionId>(this, _$identity);
+_$HeaderItemIdCopyWith<_HeaderItemId> get copyWith => __$HeaderItemIdCopyWithImpl<_HeaderItemId>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeaderActionId&&(identical(other.namespace, namespace) || other.namespace == namespace)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeaderItemId&&(identical(other.namespace, namespace) || other.namespace == namespace)&&(identical(other.name, name) || other.name == name));
 }
 
 
@@ -232,15 +232,15 @@ int get hashCode => Object.hash(runtimeType,namespace,name);
 
 @override
 String toString() {
-  return 'HeaderActionId(namespace: $namespace, name: $name)';
+  return 'HeaderItemId(namespace: $namespace, name: $name)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$HeaderActionIdCopyWith<$Res> implements $HeaderActionIdCopyWith<$Res> {
-  factory _$HeaderActionIdCopyWith(_HeaderActionId value, $Res Function(_HeaderActionId) _then) = __$HeaderActionIdCopyWithImpl;
+abstract mixin class _$HeaderItemIdCopyWith<$Res> implements $HeaderItemIdCopyWith<$Res> {
+  factory _$HeaderItemIdCopyWith(_HeaderItemId value, $Res Function(_HeaderItemId) _then) = __$HeaderItemIdCopyWithImpl;
 @override @useResult
 $Res call({
  String namespace, String name
@@ -251,17 +251,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$HeaderActionIdCopyWithImpl<$Res>
-    implements _$HeaderActionIdCopyWith<$Res> {
-  __$HeaderActionIdCopyWithImpl(this._self, this._then);
+class __$HeaderItemIdCopyWithImpl<$Res>
+    implements _$HeaderItemIdCopyWith<$Res> {
+  __$HeaderItemIdCopyWithImpl(this._self, this._then);
 
-  final _HeaderActionId _self;
-  final $Res Function(_HeaderActionId) _then;
+  final _HeaderItemId _self;
+  final $Res Function(_HeaderItemId) _then;
 
-/// Create a copy of HeaderActionId
+/// Create a copy of HeaderItemId
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? namespace = null,Object? name = null,}) {
-  return _then(_HeaderActionId(
+  return _then(_HeaderItemId(
 namespace: null == namespace ? _self.namespace : namespace // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,
@@ -272,37 +272,78 @@ as String,
 }
 
 /// @nodoc
-mixin _$HeaderActionActivation {
+mixin _$HeaderItemCommandId {
 
-
+ HeaderItemId get itemId; HeaderItemCommand get command;
+/// Create a copy of HeaderItemCommandId
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HeaderItemCommandIdCopyWith<HeaderItemCommandId> get copyWith => _$HeaderItemCommandIdCopyWithImpl<HeaderItemCommandId>(this as HeaderItemCommandId, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderActionActivation);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderItemCommandId&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.command, command) || other.command == command));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,itemId,command);
 
 @override
 String toString() {
-  return 'HeaderActionActivation()';
+  return 'HeaderItemCommandId(itemId: $itemId, command: $command)';
 }
 
 
 }
 
 /// @nodoc
-class $HeaderActionActivationCopyWith<$Res>  {
-$HeaderActionActivationCopyWith(HeaderActionActivation _, $Res Function(HeaderActionActivation) __);
+abstract mixin class $HeaderItemCommandIdCopyWith<$Res>  {
+  factory $HeaderItemCommandIdCopyWith(HeaderItemCommandId value, $Res Function(HeaderItemCommandId) _then) = _$HeaderItemCommandIdCopyWithImpl;
+@useResult
+$Res call({
+ HeaderItemId itemId, HeaderItemCommand command
+});
+
+
+$HeaderItemIdCopyWith<$Res> get itemId;
+
+}
+/// @nodoc
+class _$HeaderItemCommandIdCopyWithImpl<$Res>
+    implements $HeaderItemCommandIdCopyWith<$Res> {
+  _$HeaderItemCommandIdCopyWithImpl(this._self, this._then);
+
+  final HeaderItemCommandId _self;
+  final $Res Function(HeaderItemCommandId) _then;
+
+/// Create a copy of HeaderItemCommandId
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? itemId = null,Object? command = null,}) {
+  return _then(_self.copyWith(
+itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,command: null == command ? _self.command : command // ignore: cast_nullable_to_non_nullable
+as HeaderItemCommand,
+  ));
+}
+/// Create a copy of HeaderItemCommandId
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HeaderItemIdCopyWith<$Res> get itemId {
+  
+  return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
+    return _then(_self.copyWith(itemId: value));
+  });
+}
 }
 
 
-/// Adds pattern-matching-related methods to [HeaderActionActivation].
-extension HeaderActionActivationPatterns on HeaderActionActivation {
+/// Adds pattern-matching-related methods to [HeaderItemCommandId].
+extension HeaderItemCommandIdPatterns on HeaderItemCommandId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -315,12 +356,11 @@ extension HeaderActionActivationPatterns on HeaderActionActivation {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( InvokeHeaderAction value)?  invoke,TResult Function( ReorderListItemHeaderAction value)?  reorderListItem,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _HeaderItemCommandId value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case InvokeHeaderAction() when invoke != null:
-return invoke(_that);case ReorderListItemHeaderAction() when reorderListItem != null:
-return reorderListItem(_that);case _:
+case _HeaderItemCommandId() when $default != null:
+return $default(_that);case _:
   return orElse();
 
 }
@@ -338,12 +378,14 @@ return reorderListItem(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( InvokeHeaderAction value)  invoke,required TResult Function( ReorderListItemHeaderAction value)  reorderListItem,}){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _HeaderItemCommandId value)  $default,){
 final _that = this;
 switch (_that) {
-case InvokeHeaderAction():
-return invoke(_that);case ReorderListItemHeaderAction():
-return reorderListItem(_that);}
+case _HeaderItemCommandId():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -357,12 +399,11 @@ return reorderListItem(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( InvokeHeaderAction value)?  invoke,TResult? Function( ReorderListItemHeaderAction value)?  reorderListItem,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _HeaderItemCommandId value)?  $default,){
 final _that = this;
 switch (_that) {
-case InvokeHeaderAction() when invoke != null:
-return invoke(_that);case ReorderListItemHeaderAction() when reorderListItem != null:
-return reorderListItem(_that);case _:
+case _HeaderItemCommandId() when $default != null:
+return $default(_that);case _:
   return null;
 
 }
@@ -379,11 +420,10 @@ return reorderListItem(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( EditorAction action)?  invoke,TResult Function( BindingReference source)?  reorderListItem,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( HeaderItemId itemId,  HeaderItemCommand command)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case InvokeHeaderAction() when invoke != null:
-return invoke(_that.action);case ReorderListItemHeaderAction() when reorderListItem != null:
-return reorderListItem(_that.source);case _:
+case _HeaderItemCommandId() when $default != null:
+return $default(_that.itemId,_that.command);case _:
   return orElse();
 
 }
@@ -401,11 +441,13 @@ return reorderListItem(_that.source);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( EditorAction action)  invoke,required TResult Function( BindingReference source)  reorderListItem,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( HeaderItemId itemId,  HeaderItemCommand command)  $default,) {final _that = this;
 switch (_that) {
-case InvokeHeaderAction():
-return invoke(_that.action);case ReorderListItemHeaderAction():
-return reorderListItem(_that.source);}
+case _HeaderItemCommandId():
+return $default(_that.itemId,_that.command);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -419,11 +461,10 @@ return reorderListItem(_that.source);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( EditorAction action)?  invoke,TResult? Function( BindingReference source)?  reorderListItem,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( HeaderItemId itemId,  HeaderItemCommand command)?  $default,) {final _that = this;
 switch (_that) {
-case InvokeHeaderAction() when invoke != null:
-return invoke(_that.action);case ReorderListItemHeaderAction() when reorderListItem != null:
-return reorderListItem(_that.source);case _:
+case _HeaderItemCommandId() when $default != null:
+return $default(_that.itemId,_that.command);case _:
   return null;
 
 }
@@ -434,149 +475,76 @@ return reorderListItem(_that.source);case _:
 /// @nodoc
 
 
-class InvokeHeaderAction implements HeaderActionActivation {
-  const InvokeHeaderAction(this.action);
+class _HeaderItemCommandId implements HeaderItemCommandId {
+  const _HeaderItemCommandId({required this.itemId, required this.command});
   
 
- final  EditorAction action;
+@override final  HeaderItemId itemId;
+@override final  HeaderItemCommand command;
 
-/// Create a copy of HeaderActionActivation
+/// Create a copy of HeaderItemCommandId
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$InvokeHeaderActionCopyWith<InvokeHeaderAction> get copyWith => _$InvokeHeaderActionCopyWithImpl<InvokeHeaderAction>(this, _$identity);
+_$HeaderItemCommandIdCopyWith<_HeaderItemCommandId> get copyWith => __$HeaderItemCommandIdCopyWithImpl<_HeaderItemCommandId>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InvokeHeaderAction&&(identical(other.action, action) || other.action == action));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HeaderItemCommandId&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.command, command) || other.command == command));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,action);
-
-@override
-String toString() {
-  return 'HeaderActionActivation.invoke(action: $action)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $InvokeHeaderActionCopyWith<$Res> implements $HeaderActionActivationCopyWith<$Res> {
-  factory $InvokeHeaderActionCopyWith(InvokeHeaderAction value, $Res Function(InvokeHeaderAction) _then) = _$InvokeHeaderActionCopyWithImpl;
-@useResult
-$Res call({
- EditorAction action
-});
-
-
-$EditorActionCopyWith<$Res> get action;
-
-}
-/// @nodoc
-class _$InvokeHeaderActionCopyWithImpl<$Res>
-    implements $InvokeHeaderActionCopyWith<$Res> {
-  _$InvokeHeaderActionCopyWithImpl(this._self, this._then);
-
-  final InvokeHeaderAction _self;
-  final $Res Function(InvokeHeaderAction) _then;
-
-/// Create a copy of HeaderActionActivation
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? action = null,}) {
-  return _then(InvokeHeaderAction(
-null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as EditorAction,
-  ));
-}
-
-/// Create a copy of HeaderActionActivation
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$EditorActionCopyWith<$Res> get action {
-  
-  return $EditorActionCopyWith<$Res>(_self.action, (value) {
-    return _then(_self.copyWith(action: value));
-  });
-}
-}
-
-/// @nodoc
-
-
-class ReorderListItemHeaderAction implements HeaderActionActivation {
-  const ReorderListItemHeaderAction({required this.source});
-  
-
- final  BindingReference source;
-
-/// Create a copy of HeaderActionActivation
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ReorderListItemHeaderActionCopyWith<ReorderListItemHeaderAction> get copyWith => _$ReorderListItemHeaderActionCopyWithImpl<ReorderListItemHeaderAction>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReorderListItemHeaderAction&&(identical(other.source, source) || other.source == source));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,source);
+int get hashCode => Object.hash(runtimeType,itemId,command);
 
 @override
 String toString() {
-  return 'HeaderActionActivation.reorderListItem(source: $source)';
+  return 'HeaderItemCommandId(itemId: $itemId, command: $command)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $ReorderListItemHeaderActionCopyWith<$Res> implements $HeaderActionActivationCopyWith<$Res> {
-  factory $ReorderListItemHeaderActionCopyWith(ReorderListItemHeaderAction value, $Res Function(ReorderListItemHeaderAction) _then) = _$ReorderListItemHeaderActionCopyWithImpl;
-@useResult
+abstract mixin class _$HeaderItemCommandIdCopyWith<$Res> implements $HeaderItemCommandIdCopyWith<$Res> {
+  factory _$HeaderItemCommandIdCopyWith(_HeaderItemCommandId value, $Res Function(_HeaderItemCommandId) _then) = __$HeaderItemCommandIdCopyWithImpl;
+@override @useResult
 $Res call({
- BindingReference source
+ HeaderItemId itemId, HeaderItemCommand command
 });
 
 
-$BindingReferenceCopyWith<$Res> get source;
+@override $HeaderItemIdCopyWith<$Res> get itemId;
 
 }
 /// @nodoc
-class _$ReorderListItemHeaderActionCopyWithImpl<$Res>
-    implements $ReorderListItemHeaderActionCopyWith<$Res> {
-  _$ReorderListItemHeaderActionCopyWithImpl(this._self, this._then);
+class __$HeaderItemCommandIdCopyWithImpl<$Res>
+    implements _$HeaderItemCommandIdCopyWith<$Res> {
+  __$HeaderItemCommandIdCopyWithImpl(this._self, this._then);
 
-  final ReorderListItemHeaderAction _self;
-  final $Res Function(ReorderListItemHeaderAction) _then;
+  final _HeaderItemCommandId _self;
+  final $Res Function(_HeaderItemCommandId) _then;
 
-/// Create a copy of HeaderActionActivation
+/// Create a copy of HeaderItemCommandId
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? source = null,}) {
-  return _then(ReorderListItemHeaderAction(
-source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
-as BindingReference,
+@override @pragma('vm:prefer-inline') $Res call({Object? itemId = null,Object? command = null,}) {
+  return _then(_HeaderItemCommandId(
+itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,command: null == command ? _self.command : command // ignore: cast_nullable_to_non_nullable
+as HeaderItemCommand,
   ));
 }
 
-/// Create a copy of HeaderActionActivation
+/// Create a copy of HeaderItemCommandId
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$BindingReferenceCopyWith<$Res> get source {
+$HeaderItemIdCopyWith<$Res> get itemId {
   
-  return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
-    return _then(_self.copyWith(source: value));
+  return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
+    return _then(_self.copyWith(itemId: value));
   });
 }
 }
@@ -899,91 +867,76 @@ $TypedExpressionCopyWith<$Res> get confirmationLabel {
 }
 
 /// @nodoc
-mixin _$EditorHeaderAction {
+mixin _$HeaderItem {
 
- HeaderActionId get id; TypedExpression get icon; TypedExpression get label; HeaderActionActivation get activation; TypedExpression? get tooltip; TypedExpression? get priority; TypedExpression? get visibleIf; TypedExpression? get enabledIf; HeaderActionPlacement get placement; HeaderActionTone get tone; HeaderActionConfirmation? get confirmation;
-/// Create a copy of EditorHeaderAction
+ HeaderItemId get id; TypedExpression get label; TypedExpression? get tooltip; TypedExpression? get visibleIf; TypedExpression? get enabledIf;
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$EditorHeaderActionCopyWith<EditorHeaderAction> get copyWith => _$EditorHeaderActionCopyWithImpl<EditorHeaderAction>(this as EditorHeaderAction, _$identity);
+$HeaderItemCopyWith<HeaderItem> get copyWith => _$HeaderItemCopyWithImpl<HeaderItem>(this as HeaderItem, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorHeaderAction&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.activation, activation) || other.activation == activation)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.tone, tone) || other.tone == tone)&&(identical(other.confirmation, confirmation) || other.confirmation == confirmation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderItem&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,icon,label,activation,tooltip,priority,visibleIf,enabledIf,placement,tone,confirmation);
+int get hashCode => Object.hash(runtimeType,id,label,tooltip,visibleIf,enabledIf);
 
 @override
 String toString() {
-  return 'EditorHeaderAction(id: $id, icon: $icon, label: $label, activation: $activation, tooltip: $tooltip, priority: $priority, visibleIf: $visibleIf, enabledIf: $enabledIf, placement: $placement, tone: $tone, confirmation: $confirmation)';
+  return 'HeaderItem(id: $id, label: $label, tooltip: $tooltip, visibleIf: $visibleIf, enabledIf: $enabledIf)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $EditorHeaderActionCopyWith<$Res>  {
-  factory $EditorHeaderActionCopyWith(EditorHeaderAction value, $Res Function(EditorHeaderAction) _then) = _$EditorHeaderActionCopyWithImpl;
+abstract mixin class $HeaderItemCopyWith<$Res>  {
+  factory $HeaderItemCopyWith(HeaderItem value, $Res Function(HeaderItem) _then) = _$HeaderItemCopyWithImpl;
 @useResult
 $Res call({
- HeaderActionId id, TypedExpression icon, TypedExpression label, HeaderActionActivation activation, TypedExpression? tooltip, TypedExpression? priority, TypedExpression? visibleIf, TypedExpression? enabledIf, HeaderActionPlacement placement, HeaderActionTone tone, HeaderActionConfirmation? confirmation
+ HeaderItemId id, TypedExpression label, TypedExpression? tooltip, TypedExpression? visibleIf, TypedExpression? enabledIf
 });
 
 
-$HeaderActionIdCopyWith<$Res> get id;$TypedExpressionCopyWith<$Res> get icon;$TypedExpressionCopyWith<$Res> get label;$HeaderActionActivationCopyWith<$Res> get activation;$TypedExpressionCopyWith<$Res>? get tooltip;$TypedExpressionCopyWith<$Res>? get priority;$TypedExpressionCopyWith<$Res>? get visibleIf;$TypedExpressionCopyWith<$Res>? get enabledIf;$HeaderActionConfirmationCopyWith<$Res>? get confirmation;
+$HeaderItemIdCopyWith<$Res> get id;$TypedExpressionCopyWith<$Res> get label;$TypedExpressionCopyWith<$Res>? get tooltip;$TypedExpressionCopyWith<$Res>? get visibleIf;$TypedExpressionCopyWith<$Res>? get enabledIf;
 
 }
 /// @nodoc
-class _$EditorHeaderActionCopyWithImpl<$Res>
-    implements $EditorHeaderActionCopyWith<$Res> {
-  _$EditorHeaderActionCopyWithImpl(this._self, this._then);
+class _$HeaderItemCopyWithImpl<$Res>
+    implements $HeaderItemCopyWith<$Res> {
+  _$HeaderItemCopyWithImpl(this._self, this._then);
 
-  final EditorHeaderAction _self;
-  final $Res Function(EditorHeaderAction) _then;
+  final HeaderItem _self;
+  final $Res Function(HeaderItem) _then;
 
-/// Create a copy of EditorHeaderAction
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? icon = null,Object? label = null,Object? activation = null,Object? tooltip = freezed,Object? priority = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,Object? placement = null,Object? tone = null,Object? confirmation = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? tooltip = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as HeaderActionId,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
-as TypedExpression,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as TypedExpression,activation: null == activation ? _self.activation : activation // ignore: cast_nullable_to_non_nullable
-as HeaderActionActivation,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
-as TypedExpression?,priority: freezed == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,visibleIf: freezed == visibleIf ? _self.visibleIf : visibleIf // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,enabledIf: freezed == enabledIf ? _self.enabledIf : enabledIf // ignore: cast_nullable_to_non_nullable
-as TypedExpression?,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
-as HeaderActionPlacement,tone: null == tone ? _self.tone : tone // ignore: cast_nullable_to_non_nullable
-as HeaderActionTone,confirmation: freezed == confirmation ? _self.confirmation : confirmation // ignore: cast_nullable_to_non_nullable
-as HeaderActionConfirmation?,
+as TypedExpression?,
   ));
 }
-/// Create a copy of EditorHeaderAction
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$HeaderActionIdCopyWith<$Res> get id {
+$HeaderItemIdCopyWith<$Res> get id {
   
-  return $HeaderActionIdCopyWith<$Res>(_self.id, (value) {
+  return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
-}/// Create a copy of EditorHeaderAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res> get icon {
-  
-  return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
-    return _then(_self.copyWith(icon: value));
-  });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -992,16 +945,7 @@ $TypedExpressionCopyWith<$Res> get label {
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
-}/// Create a copy of EditorHeaderAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$HeaderActionActivationCopyWith<$Res> get activation {
-  
-  return $HeaderActionActivationCopyWith<$Res>(_self.activation, (value) {
-    return _then(_self.copyWith(activation: value));
-  });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1013,19 +957,7 @@ $TypedExpressionCopyWith<$Res>? get tooltip {
   return $TypedExpressionCopyWith<$Res>(_self.tooltip!, (value) {
     return _then(_self.copyWith(tooltip: value));
   });
-}/// Create a copy of EditorHeaderAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res>? get priority {
-    if (_self.priority == null) {
-    return null;
-  }
-
-  return $TypedExpressionCopyWith<$Res>(_self.priority!, (value) {
-    return _then(_self.copyWith(priority: value));
-  });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1037,7 +969,7 @@ $TypedExpressionCopyWith<$Res>? get visibleIf {
   return $TypedExpressionCopyWith<$Res>(_self.visibleIf!, (value) {
     return _then(_self.copyWith(visibleIf: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1049,24 +981,12 @@ $TypedExpressionCopyWith<$Res>? get enabledIf {
   return $TypedExpressionCopyWith<$Res>(_self.enabledIf!, (value) {
     return _then(_self.copyWith(enabledIf: value));
   });
-}/// Create a copy of EditorHeaderAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$HeaderActionConfirmationCopyWith<$Res>? get confirmation {
-    if (_self.confirmation == null) {
-    return null;
-  }
-
-  return $HeaderActionConfirmationCopyWith<$Res>(_self.confirmation!, (value) {
-    return _then(_self.copyWith(confirmation: value));
-  });
 }
 }
 
 
-/// Adds pattern-matching-related methods to [EditorHeaderAction].
-extension EditorHeaderActionPatterns on EditorHeaderAction {
+/// Adds pattern-matching-related methods to [HeaderItem].
+extension HeaderItemPatterns on HeaderItem {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -1079,11 +999,13 @@ extension EditorHeaderActionPatterns on EditorHeaderAction {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _EditorHeaderAction value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( HeaderButtonItem value)?  button,TResult Function( HeaderBooleanToggleItem value)?  booleanToggle,TResult Function( HeaderReorderHandleItem value)?  reorderHandle,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _EditorHeaderAction() when $default != null:
-return $default(_that);case _:
+case HeaderButtonItem() when button != null:
+return button(_that);case HeaderBooleanToggleItem() when booleanToggle != null:
+return booleanToggle(_that);case HeaderReorderHandleItem() when reorderHandle != null:
+return reorderHandle(_that);case _:
   return orElse();
 
 }
@@ -1101,14 +1023,13 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _EditorHeaderAction value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( HeaderButtonItem value)  button,required TResult Function( HeaderBooleanToggleItem value)  booleanToggle,required TResult Function( HeaderReorderHandleItem value)  reorderHandle,}){
 final _that = this;
 switch (_that) {
-case _EditorHeaderAction():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case HeaderButtonItem():
+return button(_that);case HeaderBooleanToggleItem():
+return booleanToggle(_that);case HeaderReorderHandleItem():
+return reorderHandle(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1122,11 +1043,13 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _EditorHeaderAction value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( HeaderButtonItem value)?  button,TResult? Function( HeaderBooleanToggleItem value)?  booleanToggle,TResult? Function( HeaderReorderHandleItem value)?  reorderHandle,}){
 final _that = this;
 switch (_that) {
-case _EditorHeaderAction() when $default != null:
-return $default(_that);case _:
+case HeaderButtonItem() when button != null:
+return button(_that);case HeaderBooleanToggleItem() when booleanToggle != null:
+return booleanToggle(_that);case HeaderReorderHandleItem() when reorderHandle != null:
+return reorderHandle(_that);case _:
   return null;
 
 }
@@ -1143,10 +1066,12 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( HeaderActionId id,  TypedExpression icon,  TypedExpression label,  HeaderActionActivation activation,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( HeaderItemId id,  TypedExpression icon,  TypedExpression label,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)?  button,TResult Function( HeaderItemId id,  TypedExpression label,  TypedExpression checked,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionConfirmation? confirmation)?  booleanToggle,TResult Function( HeaderItemId id,  TypedExpression label,  BindingReference source,  TypedExpression? tooltip,  TypedExpression? visibleIf,  TypedExpression? enabledIf)?  reorderHandle,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _EditorHeaderAction() when $default != null:
-return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case _:
+case HeaderButtonItem() when button != null:
+return button(_that.id,_that.icon,_that.label,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case HeaderBooleanToggleItem() when booleanToggle != null:
+return booleanToggle(_that.id,_that.label,_that.checked,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.confirmation);case HeaderReorderHandleItem() when reorderHandle != null:
+return reorderHandle(_that.id,_that.label,_that.source,_that.tooltip,_that.visibleIf,_that.enabledIf);case _:
   return orElse();
 
 }
@@ -1164,13 +1089,12 @@ return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( HeaderActionId id,  TypedExpression icon,  TypedExpression label,  HeaderActionActivation activation,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( HeaderItemId id,  TypedExpression icon,  TypedExpression label,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)  button,required TResult Function( HeaderItemId id,  TypedExpression label,  TypedExpression checked,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionConfirmation? confirmation)  booleanToggle,required TResult Function( HeaderItemId id,  TypedExpression label,  BindingReference source,  TypedExpression? tooltip,  TypedExpression? visibleIf,  TypedExpression? enabledIf)  reorderHandle,}) {final _that = this;
 switch (_that) {
-case _EditorHeaderAction():
-return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case _:
-  throw StateError('Unexpected subclass');
-
-}
+case HeaderButtonItem():
+return button(_that.id,_that.icon,_that.label,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case HeaderBooleanToggleItem():
+return booleanToggle(_that.id,_that.label,_that.checked,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.confirmation);case HeaderReorderHandleItem():
+return reorderHandle(_that.id,_that.label,_that.source,_that.tooltip,_that.visibleIf,_that.enabledIf);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1184,10 +1108,12 @@ return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( HeaderActionId id,  TypedExpression icon,  TypedExpression label,  HeaderActionActivation activation,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( HeaderItemId id,  TypedExpression icon,  TypedExpression label,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionTone tone,  HeaderActionConfirmation? confirmation)?  button,TResult? Function( HeaderItemId id,  TypedExpression label,  TypedExpression checked,  EditorAction action,  TypedExpression? tooltip,  TypedExpression? priority,  TypedExpression? visibleIf,  TypedExpression? enabledIf,  HeaderActionPlacement placement,  HeaderActionConfirmation? confirmation)?  booleanToggle,TResult? Function( HeaderItemId id,  TypedExpression label,  BindingReference source,  TypedExpression? tooltip,  TypedExpression? visibleIf,  TypedExpression? enabledIf)?  reorderHandle,}) {final _that = this;
 switch (_that) {
-case _EditorHeaderAction() when $default != null:
-return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case _:
+case HeaderButtonItem() when button != null:
+return button(_that.id,_that.icon,_that.label,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.tone,_that.confirmation);case HeaderBooleanToggleItem() when booleanToggle != null:
+return booleanToggle(_that.id,_that.label,_that.checked,_that.action,_that.tooltip,_that.priority,_that.visibleIf,_that.enabledIf,_that.placement,_that.confirmation);case HeaderReorderHandleItem() when reorderHandle != null:
+return reorderHandle(_that.id,_that.label,_that.source,_that.tooltip,_that.visibleIf,_that.enabledIf);case _:
   return null;
 
 }
@@ -1198,76 +1124,76 @@ return $default(_that.id,_that.icon,_that.label,_that.activation,_that.tooltip,_
 /// @nodoc
 
 
-class _EditorHeaderAction implements EditorHeaderAction {
-  const _EditorHeaderAction({required this.id, required this.icon, required this.label, required this.activation, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.tone = HeaderActionTone.neutral, this.confirmation});
+class HeaderButtonItem implements HeaderItem {
+  const HeaderButtonItem({required this.id, required this.icon, required this.label, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.tone = HeaderActionTone.neutral, this.confirmation});
   
 
-@override final  HeaderActionId id;
-@override final  TypedExpression icon;
+@override final  HeaderItemId id;
+ final  TypedExpression icon;
 @override final  TypedExpression label;
-@override final  HeaderActionActivation activation;
+ final  EditorAction action;
 @override final  TypedExpression? tooltip;
-@override final  TypedExpression? priority;
+ final  TypedExpression? priority;
 @override final  TypedExpression? visibleIf;
 @override final  TypedExpression? enabledIf;
-@override@JsonKey() final  HeaderActionPlacement placement;
-@override@JsonKey() final  HeaderActionTone tone;
-@override final  HeaderActionConfirmation? confirmation;
+@JsonKey() final  HeaderActionPlacement placement;
+@JsonKey() final  HeaderActionTone tone;
+ final  HeaderActionConfirmation? confirmation;
 
-/// Create a copy of EditorHeaderAction
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$EditorHeaderActionCopyWith<_EditorHeaderAction> get copyWith => __$EditorHeaderActionCopyWithImpl<_EditorHeaderAction>(this, _$identity);
+$HeaderButtonItemCopyWith<HeaderButtonItem> get copyWith => _$HeaderButtonItemCopyWithImpl<HeaderButtonItem>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditorHeaderAction&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.activation, activation) || other.activation == activation)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.tone, tone) || other.tone == tone)&&(identical(other.confirmation, confirmation) || other.confirmation == confirmation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderButtonItem&&(identical(other.id, id) || other.id == id)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.label, label) || other.label == label)&&(identical(other.action, action) || other.action == action)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.tone, tone) || other.tone == tone)&&(identical(other.confirmation, confirmation) || other.confirmation == confirmation));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,icon,label,activation,tooltip,priority,visibleIf,enabledIf,placement,tone,confirmation);
+int get hashCode => Object.hash(runtimeType,id,icon,label,action,tooltip,priority,visibleIf,enabledIf,placement,tone,confirmation);
 
 @override
 String toString() {
-  return 'EditorHeaderAction(id: $id, icon: $icon, label: $label, activation: $activation, tooltip: $tooltip, priority: $priority, visibleIf: $visibleIf, enabledIf: $enabledIf, placement: $placement, tone: $tone, confirmation: $confirmation)';
+  return 'HeaderItem.button(id: $id, icon: $icon, label: $label, action: $action, tooltip: $tooltip, priority: $priority, visibleIf: $visibleIf, enabledIf: $enabledIf, placement: $placement, tone: $tone, confirmation: $confirmation)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$EditorHeaderActionCopyWith<$Res> implements $EditorHeaderActionCopyWith<$Res> {
-  factory _$EditorHeaderActionCopyWith(_EditorHeaderAction value, $Res Function(_EditorHeaderAction) _then) = __$EditorHeaderActionCopyWithImpl;
+abstract mixin class $HeaderButtonItemCopyWith<$Res> implements $HeaderItemCopyWith<$Res> {
+  factory $HeaderButtonItemCopyWith(HeaderButtonItem value, $Res Function(HeaderButtonItem) _then) = _$HeaderButtonItemCopyWithImpl;
 @override @useResult
 $Res call({
- HeaderActionId id, TypedExpression icon, TypedExpression label, HeaderActionActivation activation, TypedExpression? tooltip, TypedExpression? priority, TypedExpression? visibleIf, TypedExpression? enabledIf, HeaderActionPlacement placement, HeaderActionTone tone, HeaderActionConfirmation? confirmation
+ HeaderItemId id, TypedExpression icon, TypedExpression label, EditorAction action, TypedExpression? tooltip, TypedExpression? priority, TypedExpression? visibleIf, TypedExpression? enabledIf, HeaderActionPlacement placement, HeaderActionTone tone, HeaderActionConfirmation? confirmation
 });
 
 
-@override $HeaderActionIdCopyWith<$Res> get id;@override $TypedExpressionCopyWith<$Res> get icon;@override $TypedExpressionCopyWith<$Res> get label;@override $HeaderActionActivationCopyWith<$Res> get activation;@override $TypedExpressionCopyWith<$Res>? get tooltip;@override $TypedExpressionCopyWith<$Res>? get priority;@override $TypedExpressionCopyWith<$Res>? get visibleIf;@override $TypedExpressionCopyWith<$Res>? get enabledIf;@override $HeaderActionConfirmationCopyWith<$Res>? get confirmation;
+@override $HeaderItemIdCopyWith<$Res> get id;$TypedExpressionCopyWith<$Res> get icon;@override $TypedExpressionCopyWith<$Res> get label;$EditorActionCopyWith<$Res> get action;@override $TypedExpressionCopyWith<$Res>? get tooltip;$TypedExpressionCopyWith<$Res>? get priority;@override $TypedExpressionCopyWith<$Res>? get visibleIf;@override $TypedExpressionCopyWith<$Res>? get enabledIf;$HeaderActionConfirmationCopyWith<$Res>? get confirmation;
 
 }
 /// @nodoc
-class __$EditorHeaderActionCopyWithImpl<$Res>
-    implements _$EditorHeaderActionCopyWith<$Res> {
-  __$EditorHeaderActionCopyWithImpl(this._self, this._then);
+class _$HeaderButtonItemCopyWithImpl<$Res>
+    implements $HeaderButtonItemCopyWith<$Res> {
+  _$HeaderButtonItemCopyWithImpl(this._self, this._then);
 
-  final _EditorHeaderAction _self;
-  final $Res Function(_EditorHeaderAction) _then;
+  final HeaderButtonItem _self;
+  final $Res Function(HeaderButtonItem) _then;
 
-/// Create a copy of EditorHeaderAction
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? icon = null,Object? label = null,Object? activation = null,Object? tooltip = freezed,Object? priority = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,Object? placement = null,Object? tone = null,Object? confirmation = freezed,}) {
-  return _then(_EditorHeaderAction(
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? icon = null,Object? label = null,Object? action = null,Object? tooltip = freezed,Object? priority = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,Object? placement = null,Object? tone = null,Object? confirmation = freezed,}) {
+  return _then(HeaderButtonItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as HeaderActionId,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as TypedExpression,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as TypedExpression,activation: null == activation ? _self.activation : activation // ignore: cast_nullable_to_non_nullable
-as HeaderActionActivation,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
+as TypedExpression,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
+as EditorAction,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,priority: freezed == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,visibleIf: freezed == visibleIf ? _self.visibleIf : visibleIf // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,enabledIf: freezed == enabledIf ? _self.enabledIf : enabledIf // ignore: cast_nullable_to_non_nullable
@@ -1278,16 +1204,16 @@ as HeaderActionConfirmation?,
   ));
 }
 
-/// Create a copy of EditorHeaderAction
+/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$HeaderActionIdCopyWith<$Res> get id {
+$HeaderItemIdCopyWith<$Res> get id {
   
-  return $HeaderActionIdCopyWith<$Res>(_self.id, (value) {
+  return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1296,7 +1222,7 @@ $TypedExpressionCopyWith<$Res> get icon {
   return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1305,16 +1231,16 @@ $TypedExpressionCopyWith<$Res> get label {
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$HeaderActionActivationCopyWith<$Res> get activation {
+$EditorActionCopyWith<$Res> get action {
   
-  return $HeaderActionActivationCopyWith<$Res>(_self.activation, (value) {
-    return _then(_self.copyWith(activation: value));
+  return $EditorActionCopyWith<$Res>(_self.action, (value) {
+    return _then(_self.copyWith(action: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1326,7 +1252,7 @@ $TypedExpressionCopyWith<$Res>? get tooltip {
   return $TypedExpressionCopyWith<$Res>(_self.tooltip!, (value) {
     return _then(_self.copyWith(tooltip: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1338,7 +1264,7 @@ $TypedExpressionCopyWith<$Res>? get priority {
   return $TypedExpressionCopyWith<$Res>(_self.priority!, (value) {
     return _then(_self.copyWith(priority: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1350,7 +1276,7 @@ $TypedExpressionCopyWith<$Res>? get visibleIf {
   return $TypedExpressionCopyWith<$Res>(_self.visibleIf!, (value) {
     return _then(_self.copyWith(visibleIf: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1362,7 +1288,7 @@ $TypedExpressionCopyWith<$Res>? get enabledIf {
   return $TypedExpressionCopyWith<$Res>(_self.enabledIf!, (value) {
     return _then(_self.copyWith(enabledIf: value));
   });
-}/// Create a copy of EditorHeaderAction
+}/// Create a copy of HeaderItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -1378,9 +1304,328 @@ $HeaderActionConfirmationCopyWith<$Res>? get confirmation {
 }
 
 /// @nodoc
+
+
+class HeaderBooleanToggleItem implements HeaderItem {
+  const HeaderBooleanToggleItem({required this.id, required this.label, required this.checked, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.confirmation});
+  
+
+@override final  HeaderItemId id;
+@override final  TypedExpression label;
+ final  TypedExpression checked;
+ final  EditorAction action;
+@override final  TypedExpression? tooltip;
+ final  TypedExpression? priority;
+@override final  TypedExpression? visibleIf;
+@override final  TypedExpression? enabledIf;
+@JsonKey() final  HeaderActionPlacement placement;
+ final  HeaderActionConfirmation? confirmation;
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HeaderBooleanToggleItemCopyWith<HeaderBooleanToggleItem> get copyWith => _$HeaderBooleanToggleItemCopyWithImpl<HeaderBooleanToggleItem>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderBooleanToggleItem&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.action, action) || other.action == action)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf)&&(identical(other.placement, placement) || other.placement == placement)&&(identical(other.confirmation, confirmation) || other.confirmation == confirmation));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,label,checked,action,tooltip,priority,visibleIf,enabledIf,placement,confirmation);
+
+@override
+String toString() {
+  return 'HeaderItem.booleanToggle(id: $id, label: $label, checked: $checked, action: $action, tooltip: $tooltip, priority: $priority, visibleIf: $visibleIf, enabledIf: $enabledIf, placement: $placement, confirmation: $confirmation)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HeaderBooleanToggleItemCopyWith<$Res> implements $HeaderItemCopyWith<$Res> {
+  factory $HeaderBooleanToggleItemCopyWith(HeaderBooleanToggleItem value, $Res Function(HeaderBooleanToggleItem) _then) = _$HeaderBooleanToggleItemCopyWithImpl;
+@override @useResult
+$Res call({
+ HeaderItemId id, TypedExpression label, TypedExpression checked, EditorAction action, TypedExpression? tooltip, TypedExpression? priority, TypedExpression? visibleIf, TypedExpression? enabledIf, HeaderActionPlacement placement, HeaderActionConfirmation? confirmation
+});
+
+
+@override $HeaderItemIdCopyWith<$Res> get id;@override $TypedExpressionCopyWith<$Res> get label;$TypedExpressionCopyWith<$Res> get checked;$EditorActionCopyWith<$Res> get action;@override $TypedExpressionCopyWith<$Res>? get tooltip;$TypedExpressionCopyWith<$Res>? get priority;@override $TypedExpressionCopyWith<$Res>? get visibleIf;@override $TypedExpressionCopyWith<$Res>? get enabledIf;$HeaderActionConfirmationCopyWith<$Res>? get confirmation;
+
+}
+/// @nodoc
+class _$HeaderBooleanToggleItemCopyWithImpl<$Res>
+    implements $HeaderBooleanToggleItemCopyWith<$Res> {
+  _$HeaderBooleanToggleItemCopyWithImpl(this._self, this._then);
+
+  final HeaderBooleanToggleItem _self;
+  final $Res Function(HeaderBooleanToggleItem) _then;
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? checked = null,Object? action = null,Object? tooltip = freezed,Object? priority = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,Object? placement = null,Object? confirmation = freezed,}) {
+  return _then(HeaderBooleanToggleItem(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression,checked: null == checked ? _self.checked : checked // ignore: cast_nullable_to_non_nullable
+as TypedExpression,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
+as EditorAction,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,priority: freezed == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,visibleIf: freezed == visibleIf ? _self.visibleIf : visibleIf // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,enabledIf: freezed == enabledIf ? _self.enabledIf : enabledIf // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
+as HeaderActionPlacement,confirmation: freezed == confirmation ? _self.confirmation : confirmation // ignore: cast_nullable_to_non_nullable
+as HeaderActionConfirmation?,
+  ));
+}
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HeaderItemIdCopyWith<$Res> get id {
+  
+  return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get label {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get checked {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.checked, (value) {
+    return _then(_self.copyWith(checked: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$EditorActionCopyWith<$Res> get action {
+  
+  return $EditorActionCopyWith<$Res>(_self.action, (value) {
+    return _then(_self.copyWith(action: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get tooltip {
+    if (_self.tooltip == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.tooltip!, (value) {
+    return _then(_self.copyWith(tooltip: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get priority {
+    if (_self.priority == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.priority!, (value) {
+    return _then(_self.copyWith(priority: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get visibleIf {
+    if (_self.visibleIf == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.visibleIf!, (value) {
+    return _then(_self.copyWith(visibleIf: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get enabledIf {
+    if (_self.enabledIf == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.enabledIf!, (value) {
+    return _then(_self.copyWith(enabledIf: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HeaderActionConfirmationCopyWith<$Res>? get confirmation {
+    if (_self.confirmation == null) {
+    return null;
+  }
+
+  return $HeaderActionConfirmationCopyWith<$Res>(_self.confirmation!, (value) {
+    return _then(_self.copyWith(confirmation: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class HeaderReorderHandleItem implements HeaderItem {
+  const HeaderReorderHandleItem({required this.id, required this.label, required this.source, this.tooltip, this.visibleIf, this.enabledIf});
+  
+
+@override final  HeaderItemId id;
+@override final  TypedExpression label;
+ final  BindingReference source;
+@override final  TypedExpression? tooltip;
+@override final  TypedExpression? visibleIf;
+@override final  TypedExpression? enabledIf;
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HeaderReorderHandleItemCopyWith<HeaderReorderHandleItem> get copyWith => _$HeaderReorderHandleItemCopyWithImpl<HeaderReorderHandleItem>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderReorderHandleItem&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.source, source) || other.source == source)&&(identical(other.tooltip, tooltip) || other.tooltip == tooltip)&&(identical(other.visibleIf, visibleIf) || other.visibleIf == visibleIf)&&(identical(other.enabledIf, enabledIf) || other.enabledIf == enabledIf));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,label,source,tooltip,visibleIf,enabledIf);
+
+@override
+String toString() {
+  return 'HeaderItem.reorderHandle(id: $id, label: $label, source: $source, tooltip: $tooltip, visibleIf: $visibleIf, enabledIf: $enabledIf)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HeaderReorderHandleItemCopyWith<$Res> implements $HeaderItemCopyWith<$Res> {
+  factory $HeaderReorderHandleItemCopyWith(HeaderReorderHandleItem value, $Res Function(HeaderReorderHandleItem) _then) = _$HeaderReorderHandleItemCopyWithImpl;
+@override @useResult
+$Res call({
+ HeaderItemId id, TypedExpression label, BindingReference source, TypedExpression? tooltip, TypedExpression? visibleIf, TypedExpression? enabledIf
+});
+
+
+@override $HeaderItemIdCopyWith<$Res> get id;@override $TypedExpressionCopyWith<$Res> get label;$BindingReferenceCopyWith<$Res> get source;@override $TypedExpressionCopyWith<$Res>? get tooltip;@override $TypedExpressionCopyWith<$Res>? get visibleIf;@override $TypedExpressionCopyWith<$Res>? get enabledIf;
+
+}
+/// @nodoc
+class _$HeaderReorderHandleItemCopyWithImpl<$Res>
+    implements $HeaderReorderHandleItemCopyWith<$Res> {
+  _$HeaderReorderHandleItemCopyWithImpl(this._self, this._then);
+
+  final HeaderReorderHandleItem _self;
+  final $Res Function(HeaderReorderHandleItem) _then;
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? source = null,Object? tooltip = freezed,Object? visibleIf = freezed,Object? enabledIf = freezed,}) {
+  return _then(HeaderReorderHandleItem(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as HeaderItemId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as BindingReference,tooltip: freezed == tooltip ? _self.tooltip : tooltip // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,visibleIf: freezed == visibleIf ? _self.visibleIf : visibleIf // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,enabledIf: freezed == enabledIf ? _self.enabledIf : enabledIf // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+
+/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$HeaderItemIdCopyWith<$Res> get id {
+  
+  return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
+    return _then(_self.copyWith(id: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get label {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingReferenceCopyWith<$Res> get source {
+  
+  return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get tooltip {
+    if (_self.tooltip == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.tooltip!, (value) {
+    return _then(_self.copyWith(tooltip: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get visibleIf {
+    if (_self.visibleIf == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.visibleIf!, (value) {
+    return _then(_self.copyWith(visibleIf: value));
+  });
+}/// Create a copy of HeaderItem
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get enabledIf {
+    if (_self.enabledIf == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.enabledIf!, (value) {
+    return _then(_self.copyWith(enabledIf: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$PresentationHeader {
 
- BindingReference? get binding; TypedExpression? get title; TypedExpression? get description; bool? get initiallyExpanded; List<EditorHeaderAction> get actions;
+ BindingReference? get binding; TypedExpression? get title; TypedExpression? get description; bool? get initiallyExpanded; List<HeaderItem> get items;
 /// Create a copy of PresentationHeader
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1391,16 +1636,16 @@ $PresentationHeaderCopyWith<PresentationHeader> get copyWith => _$PresentationHe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationHeader&&(identical(other.binding, binding) || other.binding == binding)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.initiallyExpanded, initiallyExpanded) || other.initiallyExpanded == initiallyExpanded)&&const DeepCollectionEquality().equals(other.actions, actions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationHeader&&(identical(other.binding, binding) || other.binding == binding)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.initiallyExpanded, initiallyExpanded) || other.initiallyExpanded == initiallyExpanded)&&const DeepCollectionEquality().equals(other.items, items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,binding,title,description,initiallyExpanded,const DeepCollectionEquality().hash(actions));
+int get hashCode => Object.hash(runtimeType,binding,title,description,initiallyExpanded,const DeepCollectionEquality().hash(items));
 
 @override
 String toString() {
-  return 'PresentationHeader(binding: $binding, title: $title, description: $description, initiallyExpanded: $initiallyExpanded, actions: $actions)';
+  return 'PresentationHeader(binding: $binding, title: $title, description: $description, initiallyExpanded: $initiallyExpanded, items: $items)';
 }
 
 
@@ -1411,7 +1656,7 @@ abstract mixin class $PresentationHeaderCopyWith<$Res>  {
   factory $PresentationHeaderCopyWith(PresentationHeader value, $Res Function(PresentationHeader) _then) = _$PresentationHeaderCopyWithImpl;
 @useResult
 $Res call({
- BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<EditorHeaderAction> actions
+ BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
 });
 
 
@@ -1428,14 +1673,14 @@ class _$PresentationHeaderCopyWithImpl<$Res>
 
 /// Create a copy of PresentationHeader
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? binding = freezed,Object? title = freezed,Object? description = freezed,Object? initiallyExpanded = freezed,Object? actions = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? binding = freezed,Object? title = freezed,Object? description = freezed,Object? initiallyExpanded = freezed,Object? items = null,}) {
   return _then(_self.copyWith(
 binding: freezed == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
 as BindingReference?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,initiallyExpanded: freezed == initiallyExpanded ? _self.initiallyExpanded : initiallyExpanded // ignore: cast_nullable_to_non_nullable
-as bool?,actions: null == actions ? _self.actions : actions // ignore: cast_nullable_to_non_nullable
-as List<EditorHeaderAction>,
+as bool?,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as List<HeaderItem>,
   ));
 }
 /// Create a copy of PresentationHeader
@@ -1556,10 +1801,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<EditorHeaderAction> actions)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationHeader() when $default != null:
-return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.actions);case _:
+return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
   return orElse();
 
 }
@@ -1577,10 +1822,10 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<EditorHeaderAction> actions)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationHeader():
-return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.actions);case _:
+return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1597,10 +1842,10 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<EditorHeaderAction> actions)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationHeader() when $default != null:
-return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.actions);case _:
+return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
   return null;
 
 }
@@ -1612,18 +1857,18 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 
 
 class _PresentationHeader implements PresentationHeader {
-  const _PresentationHeader({this.binding, this.title, this.description, this.initiallyExpanded, final  List<EditorHeaderAction> actions = const []}): _actions = actions;
+  const _PresentationHeader({this.binding, this.title, this.description, this.initiallyExpanded, final  List<HeaderItem> items = const []}): _items = items;
   
 
 @override final  BindingReference? binding;
 @override final  TypedExpression? title;
 @override final  TypedExpression? description;
 @override final  bool? initiallyExpanded;
- final  List<EditorHeaderAction> _actions;
-@override@JsonKey() List<EditorHeaderAction> get actions {
-  if (_actions is EqualUnmodifiableListView) return _actions;
+ final  List<HeaderItem> _items;
+@override@JsonKey() List<HeaderItem> get items {
+  if (_items is EqualUnmodifiableListView) return _items;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_actions);
+  return EqualUnmodifiableListView(_items);
 }
 
 
@@ -1637,16 +1882,16 @@ _$PresentationHeaderCopyWith<_PresentationHeader> get copyWith => __$Presentatio
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationHeader&&(identical(other.binding, binding) || other.binding == binding)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.initiallyExpanded, initiallyExpanded) || other.initiallyExpanded == initiallyExpanded)&&const DeepCollectionEquality().equals(other._actions, _actions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationHeader&&(identical(other.binding, binding) || other.binding == binding)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.initiallyExpanded, initiallyExpanded) || other.initiallyExpanded == initiallyExpanded)&&const DeepCollectionEquality().equals(other._items, _items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,binding,title,description,initiallyExpanded,const DeepCollectionEquality().hash(_actions));
+int get hashCode => Object.hash(runtimeType,binding,title,description,initiallyExpanded,const DeepCollectionEquality().hash(_items));
 
 @override
 String toString() {
-  return 'PresentationHeader(binding: $binding, title: $title, description: $description, initiallyExpanded: $initiallyExpanded, actions: $actions)';
+  return 'PresentationHeader(binding: $binding, title: $title, description: $description, initiallyExpanded: $initiallyExpanded, items: $items)';
 }
 
 
@@ -1657,7 +1902,7 @@ abstract mixin class _$PresentationHeaderCopyWith<$Res> implements $Presentation
   factory _$PresentationHeaderCopyWith(_PresentationHeader value, $Res Function(_PresentationHeader) _then) = __$PresentationHeaderCopyWithImpl;
 @override @useResult
 $Res call({
- BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<EditorHeaderAction> actions
+ BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
 });
 
 
@@ -1674,14 +1919,14 @@ class __$PresentationHeaderCopyWithImpl<$Res>
 
 /// Create a copy of PresentationHeader
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? binding = freezed,Object? title = freezed,Object? description = freezed,Object? initiallyExpanded = freezed,Object? actions = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? binding = freezed,Object? title = freezed,Object? description = freezed,Object? initiallyExpanded = freezed,Object? items = null,}) {
   return _then(_PresentationHeader(
 binding: freezed == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
 as BindingReference?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,initiallyExpanded: freezed == initiallyExpanded ? _self.initiallyExpanded : initiallyExpanded // ignore: cast_nullable_to_non_nullable
-as bool?,actions: null == actions ? _self._actions : actions // ignore: cast_nullable_to_non_nullable
-as List<EditorHeaderAction>,
+as bool?,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as List<HeaderItem>,
   ));
 }
 

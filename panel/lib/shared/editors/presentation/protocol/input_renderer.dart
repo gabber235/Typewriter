@@ -6,9 +6,6 @@ extension InputElementRendering on PresentationElement {
       switch (this) {
         TextInputElement() || SelectInputElement() || SliderInputElement() =>
           ScalarInputRendering(this).render(context, scope),
-        IconInputElement(:final control) => ScalarInputRendering(
-          TextInputElement(control: control, multiline: false),
-        ).render(context, scope),
         NumericInputElement() || ToggleInputElement() || SimpleInputElement() =>
           SimpleInputRendering(this).render(context, scope),
         ListInputElement() || MapInputElement() || RecordInputElement() =>

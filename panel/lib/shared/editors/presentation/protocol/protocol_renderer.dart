@@ -29,7 +29,7 @@ class EditorProtocolRenderer extends StatefulWidget {
   final PresentationNode? presentation;
   final List<TypeDiagnostic> diagnostics;
   final RealmActionExecutor? onRealmAction;
-  final Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts;
+  final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final bool readOnly;
 
   @override

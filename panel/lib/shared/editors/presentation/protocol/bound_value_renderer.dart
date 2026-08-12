@@ -1,59 +1,7 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-extension DefaultPresentationElementRendering on DefaultPresentationElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) {
-    final element = this;
-    if (element.presentationId case final presentationId?
-        when scope.activePresentations.contains(presentationId)) {
-      return presentationDiagnostic(context, [
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "Presentation delegation is recursive",
-        ),
-      ]);
-    }
-    final resolved = scope.resolve(element.binding);
-    if (resolved case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final binding = resolved.valueOrNull!;
-    final selected = scope.resolvePresentation(
-      binding.type,
-      element.presentationId,
-    );
-    if (selected == null) {
-      final generated = binding.type.generateDefaultPresentation(
-        binding: element.binding,
-        nodeId: "default.${element.binding.bindingId.value}",
-      );
-      return PresentationNodeRenderer(node: generated, scope: scope);
-    }
-    if (scope.activePresentations.contains(selected.id)) {
-      return presentationDiagnostic(context, [
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "Presentation delegation is recursive",
-        ),
-      ]);
-    }
-    final childScope = scope
-        .withAlias(
-          const BindingId(0),
-          scope.canonical(element.binding),
-          BindingSnapshot(
-            type: binding.type,
-            value: binding.value,
-            revision: binding.revision,
-            writable: binding.writable,
-          ),
-        )
-        .copyWith(
-          activePresentations: {...scope.activePresentations, selected.id},
-        );
-    return PresentationNodeRenderer(node: selected.root, scope: childScope);
-  }
-}
+part "renderers/data/default_presentation_renderer.dart";
 
 class ProtocolBoundValueEditor extends StatelessWidget {
   const ProtocolBoundValueEditor({
@@ -87,11 +35,12 @@ extension ResolvedBindingDefaultPresentationRendering on ResolvedBinding {
   Widget renderDefaultPresentation(
     PresentationRenderScope scope, {
     required String nodeId,
+    bool root = false,
   }) => PresentationNodeRenderer(
     node: type.generateDefaultPresentation(
       binding: reference,
       nodeId: nodeId,
-      root: false,
+      root: root,
     ),
     scope: scope,
   );

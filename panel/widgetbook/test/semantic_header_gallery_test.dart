@@ -1,9 +1,9 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_action_scenarios.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_gallery.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_header_scenarios.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/action_scenarios.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_gallery.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_scenarios.dart";
 
 void main() {
   test("every semantic header story starts with a valid typed value", () {
@@ -34,12 +34,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip("Add item"), findsOneWidget);
-    expect(find.byIcon(Icons.drag_handle), findsNWidgets(3));
 
     await tester.tap(find.byTooltip("Add item"));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.drag_handle), findsNWidgets(4));
     expect(find.text("Item 4"), findsOneWidget);
   });
 

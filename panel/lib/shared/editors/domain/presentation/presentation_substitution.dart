@@ -89,9 +89,6 @@ extension on PresentationElement {
         height: value.height._substituteTypes(substitutions),
       ),
       TextElement() => TextElement(value.value._substituteTypes(substitutions)),
-      RichTextElement() => RichTextElement(
-        value.value._substituteTypes(substitutions),
-      ),
       MarkdownElement() => MarkdownElement(
         value.value._substituteTypes(substitutions),
       ),

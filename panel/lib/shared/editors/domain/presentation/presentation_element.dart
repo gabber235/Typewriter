@@ -23,9 +23,6 @@ sealed class PresentationElement with _$PresentationElement {
   @Implements<TextualContentElement>()
   const factory PresentationElement.text(TypedExpression value) = TextElement;
   @Implements<TextualContentElement>()
-  const factory PresentationElement.richText(TypedExpression value) =
-      RichTextElement;
-  @Implements<TextualContentElement>()
   const factory PresentationElement.markdown(TypedExpression value) =
       MarkdownElement;
   const factory PresentationElement.icon({

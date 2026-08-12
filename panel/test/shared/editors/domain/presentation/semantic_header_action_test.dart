@@ -3,18 +3,26 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("header composition", () {
-    test("outer metadata and actions override matching inner values", () {
+    test("outer metadata and items override matching inner variants", () {
       final inner = PresentationHeader(
         title: "Inner".asStringLiteral,
         description: "Description".asStringLiteral,
         initiallyExpanded: false,
-        actions: [_action("inner")],
+        items: [
+          HeaderBooleanToggleItem(
+            id: listAddHeaderItemId,
+            label: "inner".asStringLiteral,
+            checked: const TypedExpression(
+              resultType: BooleanType(),
+              expression: LiteralExpression(BooleanValue(true)),
+            ),
+            action: const RealmEditorAction(ReloadRealmAction()),
+          ),
+        ],
       );
       final outer = PresentationHeader(
         title: "Outer".asStringLiteral,
-        actions: [
-          _action("outer", placement: HeaderActionPlacement.afterTitle),
-        ],
+        items: [_action("outer", placement: HeaderActionPlacement.afterTitle)],
       );
 
       final merged = outer.mergeInner(inner);
@@ -22,8 +30,44 @@ void main() {
       expect(merged.title, "Outer".asStringLiteral);
       expect(merged.description, "Description".asStringLiteral);
       expect(merged.initiallyExpanded, isFalse);
-      expect(merged.actions.single.label, "outer".asStringLiteral);
-      expect(merged.actions.single.placement, HeaderActionPlacement.afterTitle);
+      final item = merged.items.single as HeaderButtonItem;
+      expect(item.label, "outer".asStringLiteral);
+      expect(item.placement, HeaderActionPlacement.afterTitle);
+    });
+
+    test("keeps stable ordering around an overridden item", () {
+      const first = HeaderItemId(namespace: "test", name: "first");
+      const shared = HeaderItemId(namespace: "test", name: "shared");
+      const third = HeaderItemId(namespace: "test", name: "third");
+      const fourth = HeaderItemId(namespace: "test", name: "fourth");
+      final inner = PresentationHeader(
+        items: [
+          _action("first", id: first),
+          _action("inner", id: shared),
+          _action("third", id: third),
+        ],
+      );
+      final outer = PresentationHeader(
+        items: [
+          HeaderBooleanToggleItem(
+            id: shared,
+            label: "outer".asStringLiteral,
+            checked: const TypedExpression(
+              resultType: BooleanType(),
+              expression: LiteralExpression(BooleanValue(true)),
+            ),
+            action: const RealmEditorAction(ReloadRealmAction()),
+          ),
+          _action("fourth", id: fourth),
+        ],
+      );
+
+      expect(outer.mergeInner(inner).items.map((item) => item.id), [
+        first,
+        third,
+        shared,
+        fourth,
+      ]);
     });
   });
 
@@ -92,11 +136,12 @@ void main() {
 const _root = BindingReference(bindingId: BindingId(0));
 const _listType = ListType(element: StringType());
 
-EditorHeaderAction _action(
+HeaderButtonItem _action(
   String label, {
+  HeaderItemId id = listAddHeaderItemId,
   HeaderActionPlacement placement = HeaderActionPlacement.end,
-}) => EditorHeaderAction(
-  id: listAddHeaderActionId,
+}) => HeaderButtonItem(
+  id: id,
   icon: TypedExpression(
     resultType: NamedType(standardTypeRefs.icon),
     expression: LiteralExpression(
@@ -105,10 +150,8 @@ EditorHeaderAction _action(
   ),
   label: label.asStringLiteral,
   placement: placement,
-  activation: InvokeHeaderAction(
-    LocalEditorAction(
-      SetValueAction(target: _root, value: label.asStringLiteral),
-    ),
+  action: LocalEditorAction(
+    SetValueAction(target: _root, value: label.asStringLiteral),
   ),
 );
 

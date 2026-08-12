@@ -25,18 +25,6 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_graph_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_graph_presentation_resizable_element_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/boolean_editor.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/editors.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/list_editor.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/number_editor.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/semantic_headers.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/editors/string_editor.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/search_result_item.stories.dart'
@@ -75,6 +63,34 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/data/data_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/data/data_renderer_variants.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/input/input_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/input/input_renderer_variants.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/interaction/interaction_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/interaction/interaction_renderer_variants.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_variants_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/layout/layout_renderer.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/boolean.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_boolean_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/list.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_list_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/number.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_number_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/string.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_string_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/typed_editor/typed_editor.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories;
 import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
     as _widgetbook_workspace_stories_shared_interaction_mode_presentation_mode_display_chip_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_frame.stories.dart'
@@ -131,6 +147,454 @@ import 'package:widgetbook_workspace/support/color_swatch.dart'
     as _widgetbook_workspace_support_color_swatch;
 
 final directories = <_widgetbook.WidgetbookNode>[
+  _widgetbook.WidgetbookCategory(
+    name: 'Shared',
+    children: [
+      _widgetbook.WidgetbookFolder(
+        name: 'Editors',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'Presentation protocol',
+            children: [
+              _widgetbook.WidgetbookFolder(
+                name: 'Renderers',
+                children: [
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Content',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Badge',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .badgeRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Icon',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .iconRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Image',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .imageRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Markdown',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .markdownRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Progress',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .progressRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Text',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                    .textRendererUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Data',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Conditional',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .conditionalRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Default presentation',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .defaultPresentationRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Diagnostic',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .diagnosticRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Repeated',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .repeatedRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Scoped binding',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .scopedBindingRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Typed field',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_stories
+                                    .typedFieldRendererUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Data states',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Conditional false',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories
+                                    .conditionalFalseUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Custom repeated empty',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories
+                                    .customRepeatedEmptyUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Mismatched typed field',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_data_data_renderer_variants_stories
+                                    .mismatchedTypedFieldUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Input',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Bytes',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .bytesInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Color',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .colorInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Date and time',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .dateTimeInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Duration',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .durationInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Enum',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .enumInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Icon',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .iconInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'List',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .listInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Map',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .mapInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Named',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .namedInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Numeric',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .numericInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Polymorphic',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .polymorphicInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Record',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .recordInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Select',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .selectInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Slider',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .sliderInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Text',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .textInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Toggle',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .toggleInputRendererUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Input states',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Decimal',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .decimalInputUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Disabled toggle',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .disabledToggleUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Empty list',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .emptyListUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Empty map',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .emptyMapUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Empty text',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .emptyTextInputUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Locked list actions',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .lockedListActionsUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Nested list',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .nestedListUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Single line text',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .singleLineTextInputUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Unchecked toggle',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                    .uncheckedToggleUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Interaction',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Button',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_stories
+                                    .buttonRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Icon button',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_stories
+                                    .iconButtonRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Menu',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_stories
+                                    .menuRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Tooltip',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_stories
+                                    .tooltipRendererUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Interaction states',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Disabled button',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_variants_stories
+                                    .disabledButtonUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Unavailable realm action',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_interaction_interaction_renderer_variants_stories
+                                    .unavailableRealmActionUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookFolder(
+                    name: 'Layout',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationRendererStory',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Card',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .cardRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Collapsible',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .collapsibleRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Column',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .columnRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Divider',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .dividerRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Grid',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .gridRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Row',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .rowRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Scroll',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .scrollRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Section',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .sectionRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Spacer',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .spacerRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Stack',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .stackRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Tabs',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .tabsRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Wrap',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                    .wrapRendererUseCase,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  ),
   _widgetbook.WidgetbookFolder(
     name: 'app',
     children: [
@@ -802,49 +1266,49 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookUseCase(
                     name: 'Boolean',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_boolean_editor_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_boolean_stories
                             .booleanEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Conflict',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories
                             .conflictValueEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Invalid',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories
                             .invalidValueEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'List',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_list_editor_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_list_stories
                             .listEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Loading',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories
                             .loadingEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Number',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_number_editor_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_number_stories
                             .numberEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Ready',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_editors_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_typed_editor_stories
                             .readyValueEditorUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'String',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_string_editor_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_typed_editor_string_stories
                             .stringEditorUseCase,
                   ),
                 ],
@@ -1469,74 +1933,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                             name: 'editor',
                                             children: [
                                               _widgetbook.WidgetbookFolder(
-                                                name: 'features',
-                                                children: [
-                                                  _widgetbook.WidgetbookFolder(
-                                                    name: 'inspector',
-                                                    children: [
-                                                      _widgetbook.WidgetbookFolder(
-                                                        name: 'presentation',
-                                                        children: [
-                                                          _widgetbook.WidgetbookFolder(
-                                                            name: 'editors',
-                                                            children: [
-                                                              _widgetbook.WidgetbookComponent(
-                                                                name:
-                                                                    'SemanticHeaderGallery',
-                                                                useCases: [
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'Action overflow',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .headerActionOverflowUseCase,
-                                                                  ),
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'Action states',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .headerActionStatesUseCase,
-                                                                  ),
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'Generated composites',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .generatedCompositeHeadersUseCase,
-                                                                  ),
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'List actions',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .listHeaderActionsUseCase,
-                                                                  ),
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'Map actions',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .mapHeaderActionsUseCase,
-                                                                  ),
-                                                                  _widgetbook.WidgetbookUseCase(
-                                                                    name:
-                                                                        'Merged binding',
-                                                                    builder:
-                                                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_features_editor_features_inspector_presentation_editors_semantic_headers_stories
-                                                                            .mergedBindingHeadersUseCase,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                              _widgetbook.WidgetbookFolder(
                                                 name: 'presentation',
                                                 children: [
                                                   _widgetbook.WidgetbookComponent(
@@ -1560,6 +1956,72 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     ],
                                   ),
                                 ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
+        name: 'shared',
+        children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'editors',
+            children: [
+              _widgetbook.WidgetbookFolder(
+                name: 'presentation',
+                children: [
+                  _widgetbook.WidgetbookFolder(
+                    name: 'protocol',
+                    children: [
+                      _widgetbook.WidgetbookFolder(
+                        name: 'header_renderer',
+                        children: [
+                          _widgetbook.WidgetbookComponent(
+                            name: 'SemanticHeaderGallery',
+                            useCases: [
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Action overflow',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .headerActionOverflowUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Action states',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .headerActionStatesUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Generated composites',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .generatedCompositeHeadersUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'List actions',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .listHeaderActionsUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Map actions',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .mapHeaderActionsUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Merged binding',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories
+                                        .mergedBindingHeadersUseCase,
                               ),
                             ],
                           ),

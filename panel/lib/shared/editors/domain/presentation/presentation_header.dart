@@ -4,56 +4,67 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "presentation_header.freezed.dart";
 
 @freezed
-abstract class HeaderActionId with _$HeaderActionId {
-  @Assert("namespace != \"\"", "Header action namespace must not be empty.")
-  @Assert("name != \"\"", "Header action name must not be empty.")
-  const factory HeaderActionId({
+abstract class HeaderItemId with _$HeaderItemId {
+  @Assert("namespace != \"\"", "Header item namespace must not be empty.")
+  @Assert("name != \"\"", "Header item name must not be empty.")
+  const factory HeaderItemId({
     required String namespace,
     required String name,
-  }) = _HeaderActionId;
+  }) = _HeaderItemId;
 
-  const HeaderActionId._();
+  const HeaderItemId._();
 
   String get qualified => "$namespace:$name";
 }
 
-const listAddHeaderActionId = HeaderActionId(
+const listAddHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "list.add",
 );
-const listItemRemoveHeaderActionId = HeaderActionId(
+const listItemRemoveHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "list.item.remove",
 );
-const listItemDuplicateHeaderActionId = HeaderActionId(
+const listItemDuplicateHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "list.item.duplicate",
 );
-const listItemReorderHeaderActionId = HeaderActionId(
+const listItemReorderHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "list.item.reorder",
 );
-const mapAddHeaderActionId = HeaderActionId(
+const mapAddHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "map.add",
 );
-const mapEntryRemoveHeaderActionId = HeaderActionId(
+const mapEntryRemoveHeaderItemId = HeaderItemId(
   namespace: "typewriter",
   name: "map.entry.remove",
 );
+const booleanToggleHeaderItemId = HeaderItemId(
+  namespace: "typewriter",
+  name: "boolean.toggle",
+);
+
+enum HeaderItemCommand {
+  activate,
+  moveBefore,
+  moveAfter,
+  moveToStart,
+  moveToEnd,
+}
+
+@freezed
+abstract class HeaderItemCommandId with _$HeaderItemCommandId {
+  const factory HeaderItemCommandId({
+    required HeaderItemId itemId,
+    required HeaderItemCommand command,
+  }) = _HeaderItemCommandId;
+}
 
 enum HeaderActionTone { neutral, destructive }
 
 enum HeaderActionPlacement { beforeTitle, afterTitle, end }
-
-@freezed
-sealed class HeaderActionActivation with _$HeaderActionActivation {
-  const factory HeaderActionActivation.invoke(EditorAction action) =
-      InvokeHeaderAction;
-  const factory HeaderActionActivation.reorderListItem({
-    required BindingReference source,
-  }) = ReorderListItemHeaderAction;
-}
 
 @freezed
 abstract class HeaderActionConfirmation with _$HeaderActionConfirmation {
@@ -65,12 +76,12 @@ abstract class HeaderActionConfirmation with _$HeaderActionConfirmation {
 }
 
 @freezed
-abstract class EditorHeaderAction with _$EditorHeaderAction {
-  const factory EditorHeaderAction({
-    required HeaderActionId id,
+sealed class HeaderItem with _$HeaderItem {
+  const factory HeaderItem.button({
+    required HeaderItemId id,
     required TypedExpression icon,
     required TypedExpression label,
-    required HeaderActionActivation activation,
+    required EditorAction action,
     TypedExpression? tooltip,
     TypedExpression? priority,
     TypedExpression? visibleIf,
@@ -78,7 +89,29 @@ abstract class EditorHeaderAction with _$EditorHeaderAction {
     @Default(HeaderActionPlacement.end) HeaderActionPlacement placement,
     @Default(HeaderActionTone.neutral) HeaderActionTone tone,
     HeaderActionConfirmation? confirmation,
-  }) = _EditorHeaderAction;
+  }) = HeaderButtonItem;
+
+  const factory HeaderItem.booleanToggle({
+    required HeaderItemId id,
+    required TypedExpression label,
+    required TypedExpression checked,
+    required EditorAction action,
+    TypedExpression? tooltip,
+    TypedExpression? priority,
+    TypedExpression? visibleIf,
+    TypedExpression? enabledIf,
+    @Default(HeaderActionPlacement.end) HeaderActionPlacement placement,
+    HeaderActionConfirmation? confirmation,
+  }) = HeaderBooleanToggleItem;
+
+  const factory HeaderItem.reorderHandle({
+    required HeaderItemId id,
+    required TypedExpression label,
+    required BindingReference source,
+    TypedExpression? tooltip,
+    TypedExpression? visibleIf,
+    TypedExpression? enabledIf,
+  }) = HeaderReorderHandleItem;
 }
 
 @freezed
@@ -88,6 +121,6 @@ abstract class PresentationHeader with _$PresentationHeader {
     TypedExpression? title,
     TypedExpression? description,
     bool? initiallyExpanded,
-    @Default([]) List<EditorHeaderAction> actions,
+    @Default([]) List<HeaderItem> items,
   }) = _PresentationHeader;
 }

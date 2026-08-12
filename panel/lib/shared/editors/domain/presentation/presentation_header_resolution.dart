@@ -1,19 +1,20 @@
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 extension PresentationHeaderComposition on PresentationHeader {
   PresentationHeader mergeInner(PresentationHeader inner) {
-    final outerIds = actions.map((action) => action.id).toSet();
+    final outerIds = items.map((item) => item.id).toSet();
     final merged = [
-      for (final action in inner.actions)
-        if (!outerIds.contains(action.id)) action,
-      ...actions,
+      for (final item in inner.items)
+        if (!outerIds.contains(item.id)) item,
+      ...items,
     ];
     return PresentationHeader(
       binding: binding ?? inner.binding,
       title: title ?? inner.title,
       description: description ?? inner.description,
       initiallyExpanded: initiallyExpanded ?? inner.initiallyExpanded,
-      actions: merged,
+      items: merged,
     );
   }
 }
@@ -25,10 +26,54 @@ extension PresentationElementHeaderContribution on PresentationElement {
   }) {
     final element = this;
     return switch (element) {
+      ToggleInputElement() => element._toggleHeader(context),
       ListInputElement() => element._listHeader(context, registry),
       MapInputElement() => element._mapHeader(context, registry),
       _ => null,
     };
+  }
+}
+
+extension on ToggleInputElement {
+  PresentationHeader? _toggleHeader(ExpressionContext context) {
+    final resolved = context.bindings.resolve(control.binding).valueOrNull;
+    if (resolved case ResolvedBinding(
+      type: BooleanType(),
+      value: BooleanValue(:final value),
+      :final writable,
+    )) {
+      return PresentationHeader(
+        binding: control.binding,
+        title: control.label,
+        description: control.description,
+        items: [
+          HeaderBooleanToggleItem(
+            id: booleanToggleHeaderItemId,
+            label: (value ? "Disable" : "Enable").asStringLiteral,
+            checked: TypedExpression(
+              resultType: const BooleanType(),
+              expression: BindingExpression(control.binding),
+            ),
+            priority: _integer(0x7fffffffffffffff),
+            enabledIf: TypedExpression(
+              resultType: const BooleanType(),
+              expression: LiteralExpression(BooleanValue(writable)),
+            ),
+            placement: HeaderActionPlacement.beforeTitle,
+            action: LocalEditorAction(
+              SetValueAction(
+                target: control.binding,
+                value: TypedExpression(
+                  resultType: const BooleanType(),
+                  expression: LiteralExpression(BooleanValue(!value)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return null;
   }
 }
 
@@ -49,20 +94,18 @@ extension on ListInputElement {
         title: control.label,
         description: control.description,
         initiallyExpanded: control.binding.path.segments.isEmpty,
-        actions: [
-          EditorHeaderAction(
-            id: listAddHeaderActionId,
-            icon: _icon("mdi:plus"),
+        items: [
+          HeaderButtonItem(
+            id: listAddHeaderItemId,
+            icon: _icon(Fa6Solid.plus),
             label: "Add item".asStringLiteral,
             priority: _integer(100),
-            activation: InvokeHeaderAction(
-              LocalEditorAction(
-                AppendListItemAction(
-                  target: control.binding,
-                  value: TypedExpression(
-                    resultType: element,
-                    expression: LiteralExpression(initial),
-                  ),
+            action: LocalEditorAction(
+              AppendListItemAction(
+                target: control.binding,
+                value: TypedExpression(
+                  resultType: element,
+                  expression: LiteralExpression(initial),
                 ),
               ),
             ),
@@ -92,24 +135,22 @@ extension on MapInputElement {
         title: control.label,
         description: control.description,
         initiallyExpanded: control.binding.path.segments.isEmpty,
-        actions: [
-          EditorHeaderAction(
-            id: mapAddHeaderActionId,
-            icon: _icon("mdi:plus"),
+        items: [
+          HeaderButtonItem(
+            id: mapAddHeaderItemId,
+            icon: _icon(Fa6Solid.plus),
             label: "Add entry".asStringLiteral,
             priority: _integer(100),
-            activation: InvokeHeaderAction(
-              LocalEditorAction(
-                PutMapEntryAction(
-                  target: control.binding,
-                  key: TypedExpression(
-                    resultType: key,
-                    expression: LiteralExpression(initialKey),
-                  ),
-                  value: TypedExpression(
-                    resultType: value,
-                    expression: LiteralExpression(initialValue),
-                  ),
+            action: LocalEditorAction(
+              PutMapEntryAction(
+                target: control.binding,
+                key: TypedExpression(
+                  resultType: key,
+                  expression: LiteralExpression(initialKey),
+                ),
+                value: TypedExpression(
+                  resultType: value,
+                  expression: LiteralExpression(initialValue),
                 ),
               ),
             ),
@@ -128,5 +169,5 @@ TypedExpression _integer(int value) => TypedExpression(
 
 TypedExpression _icon(String value) => TypedExpression(
   resultType: NamedType(standardTypeRefs.icon),
-  expression: LiteralExpression(IconValue.iconify(value).typedValue),
+  expression: LiteralExpression(IconValue.from(value).typedValue),
 );

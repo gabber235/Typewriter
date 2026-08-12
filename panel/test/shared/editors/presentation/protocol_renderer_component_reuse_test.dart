@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
@@ -25,7 +26,7 @@ void main() {
     final field = tester.widget<DecoratedTextField>(
       find.byType(DecoratedTextField),
     );
-    expect(field.minLines, 3);
+    expect(field.minLines, 1);
     expect(field.maxLines, 8);
   });
 
@@ -140,7 +141,7 @@ void main() {
                   icon: TypedExpression(
                     resultType: NamedType(standardTypeRefs.icon),
                     expression: LiteralExpression(
-                      IconValue.iconify("mdi:plus").typedValue,
+                      const IconValue.svg(Fa6Solid.plus).typedValue,
                     ),
                   ),
                   semanticLabel: "Add".asStringLiteral,
@@ -209,7 +210,8 @@ void main() {
     );
 
     expect(find.byType(Section), findsOneWidget);
-    expect(find.byType(LabeledMessage), findsOneWidget);
+    expect(find.byType(PresentationHeaderChrome), findsOneWidget);
+    expect(find.byType(SectionTitle), findsOneWidget);
   });
 }
 

@@ -81,10 +81,6 @@ final class SkirPresentationDecoder {
       value,
       TextElement.new,
     ),
-    wire.PresentationElement_richTextWrapper(:final value) => _text(
-      value,
-      RichTextElement.new,
-    ),
     wire.PresentationElement_markdownWrapper(:final value) => _text(
       value,
       MarkdownElement.new,
