@@ -5,6 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "renderers/input/collection_support.dart";
 part "renderers/input/list_input_renderer.dart";
+part "renderers/input/map_entry_support.dart";
 part "renderers/input/record_input_renderer.dart";
 part "renderers/input/map_input_renderer.dart";
 

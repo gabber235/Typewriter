@@ -36,11 +36,13 @@ extension ResolvedBindingDefaultPresentationRendering on ResolvedBinding {
     PresentationRenderScope scope, {
     required String nodeId,
     bool root = false,
+    String? label,
   }) => PresentationNodeRenderer(
     node: type.generateDefaultPresentation(
       binding: reference,
       nodeId: nodeId,
       root: root,
+      label: label,
     ),
     scope: scope,
   );
