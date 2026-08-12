@@ -1,0 +1,47 @@
+---
+title: Video Test Page
+description: A page to test video embedding and playback.
+editUrl: true
+head: []
+template: doc
+sidebar:
+  hidden: false
+  attrs: {}
+pagefind: true
+draft: false
+---
+
+import { VideoPlayer } from '@components/video';
+
+## Default — Muted, Autoplay on Scroll, Looping
+
+<VideoPlayer
+  src="@assets/videos/videotest/world-specific.webm"
+/>
+
+## With Audio — Unmuted, Manual Play, No Loop
+
+<VideoPlayer
+  src="@assets/videos/videotest/world-specific.webm"
+  audio={true}
+/>
+
+## Audio + Looping Override
+
+<VideoPlayer
+  src="@assets/videos/videotest/world-specific.webm"
+  audio={true}
+  loop={true}
+/>
+
+## With Chapters
+
+<VideoPlayer
+  src="@assets/videos/videotest/world-specific.webm"
+  chapters={[
+    { time: 0, label: "Intro" },
+    { time: 3, label: "Main" },
+    { time: 8, label: "Details" },
+    { time: 15, label: "Ending" },
+  ]}
+/>
