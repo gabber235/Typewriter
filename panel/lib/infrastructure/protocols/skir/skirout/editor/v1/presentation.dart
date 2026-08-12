@@ -417,46 +417,46 @@ final class PresentationProperties_mutable implements PresentationProperties_orM
 }
 
 // -----------------------------------------------------------------------------
-// struct HeaderActionId
+// struct HeaderItemId
 // -----------------------------------------------------------------------------
 
-sealed class HeaderActionId_orMutable {
+sealed class HeaderItemId_orMutable {
   _core.String get namespace;
   _core.String get name;
 
-  HeaderActionId toFrozen();
+  HeaderItemId toFrozen();
 }
 
 /// Deeply immutable.
-final class HeaderActionId implements HeaderActionId_orMutable {
+final class HeaderItemId implements HeaderItemId_orMutable {
   @_core.override
   final _core.String namespace;
   @_core.override
   final _core.String name;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory HeaderActionId({
+  factory HeaderItemId({
     required _core.String namespace,
     required _core.String name,
-  }) => HeaderActionId._(
+  }) => HeaderItemId._(
     namespace,
     name,
   );
 
-  HeaderActionId._(
+  HeaderItemId._(
     this.namespace,
     this.name,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = HeaderActionId._(
+  static final defaultInstance = HeaderItemId._(
     "",
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HeaderActionId_mutable mutable() => HeaderActionId_mutable._(
+  static HeaderItemId_mutable mutable() => HeaderItemId_mutable._(
     "",
     "",
   );
@@ -464,10 +464,10 @@ final class HeaderActionId implements HeaderActionId_orMutable {
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  HeaderActionId toFrozen() => this;
+  HeaderItemId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HeaderActionId_mutable toMutable() => HeaderActionId_mutable._(
+  HeaderItemId_mutable toMutable() => HeaderItemId_mutable._(
     this.namespace,
     this.name,
   );
@@ -475,7 +475,7 @@ final class HeaderActionId implements HeaderActionId_orMutable {
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! HeaderActionId) return false;
+    if (other is! HeaderItemId) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -490,8 +490,8 @@ final class HeaderActionId implements HeaderActionId_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `HeaderActionId` instances.
-  static _skir.StructSerializer<HeaderActionId, HeaderActionId_mutable> get serializer {
+  /// Serializer for `HeaderItemId` instances.
+  static _skir.StructSerializer<HeaderItemId, HeaderItemId_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "namespace",
@@ -517,30 +517,30 @@ final class HeaderActionId implements HeaderActionId_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:HeaderActionId",
+    recordId: "editor/v1/presentation.skir:HeaderItemId",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (HeaderActionId_mutable it) => it.toFrozen(),
+    toFrozen: (HeaderItemId_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [HeaderActionId].
-final class HeaderActionId_mutable implements HeaderActionId_orMutable {
+/// Mutable version of [HeaderItemId].
+final class HeaderItemId_mutable implements HeaderItemId_orMutable {
   _core.String namespace;
   _core.String name;
   _skir.internal__UnrecognizedFields? _u;
 
-  HeaderActionId_mutable._(
+  HeaderItemId_mutable._(
     this.namespace,
     this.name,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  HeaderActionId toFrozen() => HeaderActionId(
+  HeaderItemId toFrozen() => HeaderItemId(
     namespace: this.namespace,
     name: this.name,
   ).._u = this._u;
@@ -758,385 +758,6 @@ enum _HeaderActionPlacement_consts implements HeaderActionPlacement {
 }
 
 // -----------------------------------------------------------------------------
-// struct InvokeHeaderAction
-// -----------------------------------------------------------------------------
-
-sealed class InvokeHeaderAction_orMutable {
-  _lib_editor_v1_action.EditorAction get action;
-
-  InvokeHeaderAction toFrozen();
-}
-
-/// Deeply immutable.
-final class InvokeHeaderAction implements InvokeHeaderAction_orMutable {
-  @_core.override
-  final _lib_editor_v1_action.EditorAction action;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory InvokeHeaderAction({
-    required _lib_editor_v1_action.EditorAction action,
-  }) => InvokeHeaderAction._(
-    action,
-  );
-
-  InvokeHeaderAction._(
-    this.action,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = InvokeHeaderAction._(
-    _lib_editor_v1_action.EditorAction.unknown,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static InvokeHeaderAction_mutable mutable() => InvokeHeaderAction_mutable._(
-    _lib_editor_v1_action.EditorAction.unknown,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  InvokeHeaderAction toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  InvokeHeaderAction_mutable toMutable() => InvokeHeaderAction_mutable._(
-    this.action,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! InvokeHeaderAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.action,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `InvokeHeaderAction` instances.
-  static _skir.StructSerializer<InvokeHeaderAction, InvokeHeaderAction_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "action",
-        "action",
-        0,
-        _lib_editor_v1_action.EditorAction.serializer,
-        "",
-        (it) => it.action,
-        (it, v) => it.action = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:InvokeHeaderAction",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (InvokeHeaderAction_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [InvokeHeaderAction].
-final class InvokeHeaderAction_mutable implements InvokeHeaderAction_orMutable {
-  _lib_editor_v1_action.EditorAction action;
-  _skir.internal__UnrecognizedFields? _u;
-
-  InvokeHeaderAction_mutable._(
-    this.action,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  InvokeHeaderAction toFrozen() => InvokeHeaderAction(
-    action: this.action,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct ReorderListItemHeaderAction
-// -----------------------------------------------------------------------------
-
-sealed class ReorderListItemHeaderAction_orMutable {
-  _lib_editor_v1_binding.BindingRef_orMutable get source;
-
-  ReorderListItemHeaderAction toFrozen();
-}
-
-/// Deeply immutable.
-final class ReorderListItemHeaderAction implements ReorderListItemHeaderAction_orMutable {
-  @_core.override
-  final _lib_editor_v1_binding.BindingRef source;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ReorderListItemHeaderAction({
-    required _lib_editor_v1_binding.BindingRef_orMutable source,
-  }) => ReorderListItemHeaderAction._(
-    source.toFrozen(),
-  );
-
-  ReorderListItemHeaderAction._(
-    this.source,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReorderListItemHeaderAction._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ReorderListItemHeaderAction_mutable mutable() => ReorderListItemHeaderAction_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ReorderListItemHeaderAction toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ReorderListItemHeaderAction_mutable toMutable() => ReorderListItemHeaderAction_mutable._(
-    this.source,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ReorderListItemHeaderAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.source,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ReorderListItemHeaderAction` instances.
-  static _skir.StructSerializer<ReorderListItemHeaderAction, ReorderListItemHeaderAction_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "source",
-        "source",
-        0,
-        _lib_editor_v1_binding.BindingRef.serializer,
-        "",
-        (it) => it.source,
-        (it, v) => it.source = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:ReorderListItemHeaderAction",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReorderListItemHeaderAction_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ReorderListItemHeaderAction].
-final class ReorderListItemHeaderAction_mutable implements ReorderListItemHeaderAction_orMutable {
-  _lib_editor_v1_binding.BindingRef_orMutable source;
-  _skir.internal__UnrecognizedFields? _u;
-
-  ReorderListItemHeaderAction_mutable._(
-    this.source,
-  );
-
-  /// If the value of [source] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_binding.BindingRef_mutable get mutableSource {
-    final value = this.source;
-    if (value is _lib_editor_v1_binding.BindingRef_mutable) {
-      return value;
-    } else {
-      return this.source = (value as _lib_editor_v1_binding.BindingRef).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ReorderListItemHeaderAction toFrozen() => ReorderListItemHeaderAction(
-    source: this.source,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum HeaderActionActivation
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case HeaderActionActivation_unknown(): { ... }
-///     case HeaderActionActivation_invoke(:var value): { ... }
-///     case HeaderActionActivation_reorderListItem(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class HeaderActionActivation {
-  /// Constant indicating an unknown `HeaderActionActivation`.
-  /// Default value for fields of type `HeaderActionActivation`.
-  static const HeaderActionActivation unknown = HeaderActionActivation_unknown._instance;
-
-  /// Create a 'invoke' variant wrapping around the given value.
-  factory HeaderActionActivation.wrapInvoke(
-    InvokeHeaderAction value
-  ) => HeaderActionActivation_invokeWrapper._(value);
-
-  /// Same as `wrapInvoke(InvokeHeaderAction(...))`.
-  factory HeaderActionActivation.createInvoke({
-    required _lib_editor_v1_action.EditorAction action,
-  }) => HeaderActionActivation.wrapInvoke(
-    InvokeHeaderAction(
-      action: action,
-    )
-  );
-
-  /// Create a 'reorder_list_item' variant wrapping around the given value.
-  factory HeaderActionActivation.wrapReorderListItem(
-    ReorderListItemHeaderAction value
-  ) => HeaderActionActivation_reorderListItemWrapper._(value);
-
-  /// Same as `wrapReorderListItem(ReorderListItemHeaderAction(...))`.
-  factory HeaderActionActivation.createReorderListItem({
-    required _lib_editor_v1_binding.BindingRef_orMutable source,
-  }) => HeaderActionActivation.wrapReorderListItem(
-    ReorderListItemHeaderAction(
-      source: source,
-    )
-  );
-
-  /// Returns the kind of variant held by this HeaderActionActivation.
-  HeaderActionActivation_kind get kind;
-
-  /// Serializer for `HeaderActionActivation` instances.
-  static _skir.EnumSerializer<HeaderActionActivation> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "invoke",
-        "wrapInvoke",
-        InvokeHeaderAction.serializer,
-        "",
-        HeaderActionActivation_invokeWrapper._,
-        (it) => it.value,
-        ordinal: HeaderActionActivation_kind.invokeWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "reorder_list_item",
-        "wrapReorderListItem",
-        ReorderListItemHeaderAction.serializer,
-        "",
-        HeaderActionActivation_reorderListItemWrapper._,
-        (it) => it.value,
-        ordinal: HeaderActionActivation_kind.reorderListItemWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:HeaderActionActivation",
-    doc: "",
-    unknownInstance: HeaderActionActivation_unknown._instance,
-    enumInstance: HeaderActionActivation.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HeaderActionActivation_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `HeaderActionActivation`.
-enum HeaderActionActivation_kind {
-  unknown(0),
-  invokeWrapper(1),
-  reorderListItemWrapper(2);
-
-  final _core.int _ordinal;
-
-  const HeaderActionActivation_kind(this._ordinal);
-}
-
-final class HeaderActionActivation_unknown implements HeaderActionActivation {
-  static const _instance = HeaderActionActivation_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const HeaderActionActivation_unknown._() : _u = null;
-  HeaderActionActivation_unknown._unrecognized(this._u);
-
-  @_core.override
-  HeaderActionActivation_kind get kind => HeaderActionActivation_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is HeaderActionActivation_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionActivation.serializer);
-}
-
-sealed class _HeaderActionActivation_wrapper implements HeaderActionActivation {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _HeaderActionActivation_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HeaderActionActivation.serializer);
-}
-
-final class HeaderActionActivation_invokeWrapper extends _HeaderActionActivation_wrapper {
-  final InvokeHeaderAction value;
-
-  HeaderActionActivation_invokeWrapper._(this.value);
-
-  @_core.override
-  HeaderActionActivation_kind get kind => HeaderActionActivation_kind.invokeWrapper;
-}
-
-final class HeaderActionActivation_reorderListItemWrapper extends _HeaderActionActivation_wrapper {
-  final ReorderListItemHeaderAction value;
-
-  HeaderActionActivation_reorderListItemWrapper._(this.value);
-
-  @_core.override
-  HeaderActionActivation_kind get kind => HeaderActionActivation_kind.reorderListItemWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // struct HeaderActionConfirmation
 // -----------------------------------------------------------------------------
 
@@ -1322,15 +943,15 @@ final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation
 }
 
 // -----------------------------------------------------------------------------
-// struct EditorHeaderAction
+// struct HeaderButtonItem
 // -----------------------------------------------------------------------------
 
-sealed class EditorHeaderAction_orMutable {
-  HeaderActionId_orMutable get actionId;
+sealed class HeaderButtonItem_orMutable {
+  HeaderItemId_orMutable get itemId;
   _lib_editor_v1_expression.TypedExpression_orMutable get icon;
   _lib_editor_v1_expression.TypedExpression_orMutable get label;
   _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
-  HeaderActionActivation get activation;
+  _lib_editor_v1_action.EditorAction get action;
   _lib_editor_v1_expression.TypedExpression_orMutable? get priority;
   _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
   _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
@@ -1338,13 +959,13 @@ sealed class EditorHeaderAction_orMutable {
   HeaderActionConfirmation_orMutable? get confirmation;
   HeaderActionPlacement get placement;
 
-  EditorHeaderAction toFrozen();
+  HeaderButtonItem toFrozen();
 }
 
 /// Deeply immutable.
-final class EditorHeaderAction implements EditorHeaderAction_orMutable {
+final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   @_core.override
-  final HeaderActionId actionId;
+  final HeaderItemId itemId;
   @_core.override
   final _lib_editor_v1_expression.TypedExpression icon;
   @_core.override
@@ -1352,7 +973,7 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   @_core.override
   final _lib_editor_v1_expression.TypedExpression? tooltip;
   @_core.override
-  final HeaderActionActivation activation;
+  final _lib_editor_v1_action.EditorAction action;
   @_core.override
   final _lib_editor_v1_expression.TypedExpression? priority;
   @_core.override
@@ -1367,24 +988,24 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   final HeaderActionPlacement placement;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory EditorHeaderAction({
-    required HeaderActionId_orMutable actionId,
+  factory HeaderButtonItem({
+    required HeaderItemId_orMutable itemId,
     required _lib_editor_v1_expression.TypedExpression_orMutable icon,
     required _lib_editor_v1_expression.TypedExpression_orMutable label,
     required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
-    required HeaderActionActivation activation,
+    required _lib_editor_v1_action.EditorAction action,
     required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
     required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
     required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
     required HeaderActionTone tone,
     required HeaderActionConfirmation_orMutable? confirmation,
     required HeaderActionPlacement placement,
-  }) => EditorHeaderAction._(
-    actionId.toFrozen(),
+  }) => HeaderButtonItem._(
+    itemId.toFrozen(),
     icon.toFrozen(),
     label.toFrozen(),
     (tooltip != null) ? tooltip.toFrozen() : null,
-    activation,
+    action,
     (priority != null) ? priority.toFrozen() : null,
     (visibleIf != null) ? visibleIf.toFrozen() : null,
     (enabledIf != null) ? enabledIf.toFrozen() : null,
@@ -1393,12 +1014,12 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
     placement,
   );
 
-  EditorHeaderAction._(
-    this.actionId,
+  HeaderButtonItem._(
+    this.itemId,
     this.icon,
     this.label,
     this.tooltip,
-    this.activation,
+    this.action,
     this.priority,
     this.visibleIf,
     this.enabledIf,
@@ -1408,12 +1029,12 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = EditorHeaderAction._(
-    HeaderActionId.defaultInstance,
+  static final defaultInstance = HeaderButtonItem._(
+    HeaderItemId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     null,
-    HeaderActionActivation.unknown,
+    _lib_editor_v1_action.EditorAction.unknown,
     null,
     null,
     null,
@@ -1424,12 +1045,12 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditorHeaderAction_mutable mutable() => EditorHeaderAction_mutable._(
-    HeaderActionId.defaultInstance,
+  static HeaderButtonItem_mutable mutable() => HeaderButtonItem_mutable._(
+    HeaderItemId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     null,
-    HeaderActionActivation.unknown,
+    _lib_editor_v1_action.EditorAction.unknown,
     null,
     null,
     null,
@@ -1441,15 +1062,15 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  EditorHeaderAction toFrozen() => this;
+  HeaderButtonItem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditorHeaderAction_mutable toMutable() => EditorHeaderAction_mutable._(
-    this.actionId,
+  HeaderButtonItem_mutable toMutable() => HeaderButtonItem_mutable._(
+    this.itemId,
     this.icon,
     this.label,
     this.tooltip,
-    this.activation,
+    this.action,
     this.priority,
     this.visibleIf,
     this.enabledIf,
@@ -1461,7 +1082,7 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! EditorHeaderAction) return false;
+    if (other is! HeaderButtonItem) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -1469,11 +1090,11 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.actionId,
+    this.itemId,
     this.icon,
     this.label,
     this.tooltip,
-    this.activation,
+    this.action,
     this.priority,
     this.visibleIf,
     this.enabledIf,
@@ -1485,17 +1106,17 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `EditorHeaderAction` instances.
-  static _skir.StructSerializer<EditorHeaderAction, EditorHeaderAction_mutable> get serializer {
+  /// Serializer for `HeaderButtonItem` instances.
+  static _skir.StructSerializer<HeaderButtonItem, HeaderButtonItem_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "action_id",
-        "actionId",
+        "item_id",
+        "itemId",
         0,
-        HeaderActionId.serializer,
+        HeaderItemId.serializer,
         "",
-        (it) => it.actionId,
-        (it, v) => it.actionId = v,
+        (it) => it.itemId,
+        (it, v) => it.itemId = v,
       );
       _serializerBuilder.addField(
         "icon",
@@ -1527,13 +1148,13 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
         (it, v) => it.tooltip = v,
       );
       _serializerBuilder.addField(
-        "activation",
-        "activation",
+        "action",
+        "action",
         4,
-        HeaderActionActivation.serializer,
+        _lib_editor_v1_action.EditorAction.serializer,
         "",
-        (it) => it.activation,
-        (it, v) => it.activation = v,
+        (it) => it.action,
+        (it, v) => it.action = v,
       );
       _serializerBuilder.addField(
         "priority",
@@ -1603,23 +1224,23 @@ final class EditorHeaderAction implements EditorHeaderAction_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:EditorHeaderAction",
+    recordId: "editor/v1/presentation.skir:HeaderButtonItem",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (EditorHeaderAction_mutable it) => it.toFrozen(),
+    toFrozen: (HeaderButtonItem_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [EditorHeaderAction].
-final class EditorHeaderAction_mutable implements EditorHeaderAction_orMutable {
-  HeaderActionId_orMutable actionId;
+/// Mutable version of [HeaderButtonItem].
+final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
+  HeaderItemId_orMutable itemId;
   _lib_editor_v1_expression.TypedExpression_orMutable icon;
   _lib_editor_v1_expression.TypedExpression_orMutable label;
   _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
-  HeaderActionActivation activation;
+  _lib_editor_v1_action.EditorAction action;
   _lib_editor_v1_expression.TypedExpression_orMutable? priority;
   _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
   _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
@@ -1628,12 +1249,12 @@ final class EditorHeaderAction_mutable implements EditorHeaderAction_orMutable {
   HeaderActionPlacement placement;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditorHeaderAction_mutable._(
-    this.actionId,
+  HeaderButtonItem_mutable._(
+    this.itemId,
     this.icon,
     this.label,
     this.tooltip,
-    this.activation,
+    this.action,
     this.priority,
     this.visibleIf,
     this.enabledIf,
@@ -1642,14 +1263,14 @@ final class EditorHeaderAction_mutable implements EditorHeaderAction_orMutable {
     this.placement,
   );
 
-  /// If the value of [actionId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [actionId] and returns it.
-  HeaderActionId_mutable get mutableActionId {
-    final value = this.actionId;
-    if (value is HeaderActionId_mutable) {
+  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
+  HeaderItemId_mutable get mutableItemId {
+    final value = this.itemId;
+    if (value is HeaderItemId_mutable) {
       return value;
     } else {
-      return this.actionId = (value as HeaderActionId).toMutable();
+      return this.itemId = (value as HeaderItemId).toMutable();
     }
   }
 
@@ -1677,12 +1298,12 @@ final class EditorHeaderAction_mutable implements EditorHeaderAction_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditorHeaderAction toFrozen() => EditorHeaderAction(
-    actionId: this.actionId,
+  HeaderButtonItem toFrozen() => HeaderButtonItem(
+    itemId: this.itemId,
     icon: this.icon,
     label: this.label,
     tooltip: this.tooltip,
-    activation: this.activation,
+    action: this.action,
     priority: this.priority,
     visibleIf: this.visibleIf,
     enabledIf: this.enabledIf,
@@ -1690,6 +1311,847 @@ final class EditorHeaderAction_mutable implements EditorHeaderAction_orMutable {
     confirmation: this.confirmation,
     placement: this.placement,
   ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HeaderBooleanToggleItem
+// -----------------------------------------------------------------------------
+
+sealed class HeaderBooleanToggleItem_orMutable {
+  HeaderItemId_orMutable get itemId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.TypedExpression_orMutable get checked;
+  _lib_editor_v1_action.EditorAction get action;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get priority;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+  HeaderActionConfirmation_orMutable? get confirmation;
+  HeaderActionPlacement get placement;
+
+  HeaderBooleanToggleItem toFrozen();
+}
+
+/// Deeply immutable.
+final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable {
+  @_core.override
+  final HeaderItemId itemId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression label;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression checked;
+  @_core.override
+  final _lib_editor_v1_action.EditorAction action;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? tooltip;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? priority;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  @_core.override
+  final HeaderActionConfirmation? confirmation;
+  @_core.override
+  final HeaderActionPlacement placement;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HeaderBooleanToggleItem({
+    required HeaderItemId_orMutable itemId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.TypedExpression_orMutable checked,
+    required _lib_editor_v1_action.EditorAction action,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required HeaderActionConfirmation_orMutable? confirmation,
+    required HeaderActionPlacement placement,
+  }) => HeaderBooleanToggleItem._(
+    itemId.toFrozen(),
+    label.toFrozen(),
+    checked.toFrozen(),
+    action,
+    (tooltip != null) ? tooltip.toFrozen() : null,
+    (priority != null) ? priority.toFrozen() : null,
+    (visibleIf != null) ? visibleIf.toFrozen() : null,
+    (enabledIf != null) ? enabledIf.toFrozen() : null,
+    (confirmation != null) ? confirmation.toFrozen() : null,
+    placement,
+  );
+
+  HeaderBooleanToggleItem._(
+    this.itemId,
+    this.label,
+    this.checked,
+    this.action,
+    this.tooltip,
+    this.priority,
+    this.visibleIf,
+    this.enabledIf,
+    this.confirmation,
+    this.placement,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HeaderBooleanToggleItem._(
+    HeaderItemId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_action.EditorAction.unknown,
+    null,
+    null,
+    null,
+    null,
+    null,
+    HeaderActionPlacement.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HeaderBooleanToggleItem_mutable mutable() => HeaderBooleanToggleItem_mutable._(
+    HeaderItemId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_action.EditorAction.unknown,
+    null,
+    null,
+    null,
+    null,
+    null,
+    HeaderActionPlacement.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HeaderBooleanToggleItem toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HeaderBooleanToggleItem_mutable toMutable() => HeaderBooleanToggleItem_mutable._(
+    this.itemId,
+    this.label,
+    this.checked,
+    this.action,
+    this.tooltip,
+    this.priority,
+    this.visibleIf,
+    this.enabledIf,
+    this.confirmation,
+    this.placement,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HeaderBooleanToggleItem) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.itemId,
+    this.label,
+    this.checked,
+    this.action,
+    this.tooltip,
+    this.priority,
+    this.visibleIf,
+    this.enabledIf,
+    this.confirmation,
+    this.placement,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HeaderBooleanToggleItem` instances.
+  static _skir.StructSerializer<HeaderBooleanToggleItem, HeaderBooleanToggleItem_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "item_id",
+        "itemId",
+        0,
+        HeaderItemId.serializer,
+        "",
+        (it) => it.itemId,
+        (it, v) => it.itemId = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "checked",
+        "checked",
+        2,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.checked,
+        (it, v) => it.checked = v,
+      );
+      _serializerBuilder.addField(
+        "action",
+        "action",
+        3,
+        _lib_editor_v1_action.EditorAction.serializer,
+        "",
+        (it) => it.action,
+        (it, v) => it.action = v,
+      );
+      _serializerBuilder.addField(
+        "tooltip",
+        "tooltip",
+        4,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.tooltip,
+        (it, v) => it.tooltip = v,
+      );
+      _serializerBuilder.addField(
+        "priority",
+        "priority",
+        5,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.priority,
+        (it, v) => it.priority = v,
+      );
+      _serializerBuilder.addField(
+        "visible_if",
+        "visibleIf",
+        6,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.visibleIf,
+        (it, v) => it.visibleIf = v,
+      );
+      _serializerBuilder.addField(
+        "enabled_if",
+        "enabledIf",
+        7,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.enabledIf,
+        (it, v) => it.enabledIf = v,
+      );
+      _serializerBuilder.addField(
+        "confirmation",
+        "confirmation",
+        8,
+        _skir.Serializers.optional(
+          HeaderActionConfirmation.serializer,
+        ),
+        "",
+        (it) => it.confirmation,
+        (it, v) => it.confirmation = v,
+      );
+      _serializerBuilder.addField(
+        "placement",
+        "placement",
+        9,
+        HeaderActionPlacement.serializer,
+        "",
+        (it) => it.placement,
+        (it, v) => it.placement = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HeaderBooleanToggleItem",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HeaderBooleanToggleItem_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HeaderBooleanToggleItem].
+final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_orMutable {
+  HeaderItemId_orMutable itemId;
+  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.TypedExpression_orMutable checked;
+  _lib_editor_v1_action.EditorAction action;
+  _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
+  _lib_editor_v1_expression.TypedExpression_orMutable? priority;
+  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
+  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  HeaderActionConfirmation_orMutable? confirmation;
+  HeaderActionPlacement placement;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HeaderBooleanToggleItem_mutable._(
+    this.itemId,
+    this.label,
+    this.checked,
+    this.action,
+    this.tooltip,
+    this.priority,
+    this.visibleIf,
+    this.enabledIf,
+    this.confirmation,
+    this.placement,
+  );
+
+  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
+  HeaderItemId_mutable get mutableItemId {
+    final value = this.itemId;
+    if (value is HeaderItemId_mutable) {
+      return value;
+    } else {
+      return this.itemId = (value as HeaderItemId).toMutable();
+    }
+  }
+
+  /// If the value of [label] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
+    final value = this.label;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// If the value of [checked] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [checked] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableChecked {
+    final value = this.checked;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.checked = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HeaderBooleanToggleItem toFrozen() => HeaderBooleanToggleItem(
+    itemId: this.itemId,
+    label: this.label,
+    checked: this.checked,
+    action: this.action,
+    tooltip: this.tooltip,
+    priority: this.priority,
+    visibleIf: this.visibleIf,
+    enabledIf: this.enabledIf,
+    confirmation: this.confirmation,
+    placement: this.placement,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HeaderReorderHandleItem
+// -----------------------------------------------------------------------------
+
+sealed class HeaderReorderHandleItem_orMutable {
+  HeaderItemId_orMutable get itemId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_binding.BindingRef_orMutable get source;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+
+  HeaderReorderHandleItem toFrozen();
+}
+
+/// Deeply immutable.
+final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable {
+  @_core.override
+  final HeaderItemId itemId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression label;
+  @_core.override
+  final _lib_editor_v1_binding.BindingRef source;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? tooltip;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HeaderReorderHandleItem({
+    required HeaderItemId_orMutable itemId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_binding.BindingRef_orMutable source,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+  }) => HeaderReorderHandleItem._(
+    itemId.toFrozen(),
+    label.toFrozen(),
+    source.toFrozen(),
+    (tooltip != null) ? tooltip.toFrozen() : null,
+    (visibleIf != null) ? visibleIf.toFrozen() : null,
+    (enabledIf != null) ? enabledIf.toFrozen() : null,
+  );
+
+  HeaderReorderHandleItem._(
+    this.itemId,
+    this.label,
+    this.source,
+    this.tooltip,
+    this.visibleIf,
+    this.enabledIf,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HeaderReorderHandleItem._(
+    HeaderItemId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_binding.BindingRef.defaultInstance,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HeaderReorderHandleItem_mutable mutable() => HeaderReorderHandleItem_mutable._(
+    HeaderItemId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_binding.BindingRef.defaultInstance,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HeaderReorderHandleItem toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HeaderReorderHandleItem_mutable toMutable() => HeaderReorderHandleItem_mutable._(
+    this.itemId,
+    this.label,
+    this.source,
+    this.tooltip,
+    this.visibleIf,
+    this.enabledIf,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HeaderReorderHandleItem) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.itemId,
+    this.label,
+    this.source,
+    this.tooltip,
+    this.visibleIf,
+    this.enabledIf,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HeaderReorderHandleItem` instances.
+  static _skir.StructSerializer<HeaderReorderHandleItem, HeaderReorderHandleItem_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "item_id",
+        "itemId",
+        0,
+        HeaderItemId.serializer,
+        "",
+        (it) => it.itemId,
+        (it, v) => it.itemId = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        2,
+        _lib_editor_v1_binding.BindingRef.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "tooltip",
+        "tooltip",
+        3,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.tooltip,
+        (it, v) => it.tooltip = v,
+      );
+      _serializerBuilder.addField(
+        "visible_if",
+        "visibleIf",
+        4,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.visibleIf,
+        (it, v) => it.visibleIf = v,
+      );
+      _serializerBuilder.addField(
+        "enabled_if",
+        "enabledIf",
+        5,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.enabledIf,
+        (it, v) => it.enabledIf = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HeaderReorderHandleItem",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HeaderReorderHandleItem_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HeaderReorderHandleItem].
+final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_orMutable {
+  HeaderItemId_orMutable itemId;
+  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_binding.BindingRef_orMutable source;
+  _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
+  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
+  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HeaderReorderHandleItem_mutable._(
+    this.itemId,
+    this.label,
+    this.source,
+    this.tooltip,
+    this.visibleIf,
+    this.enabledIf,
+  );
+
+  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
+  HeaderItemId_mutable get mutableItemId {
+    final value = this.itemId;
+    if (value is HeaderItemId_mutable) {
+      return value;
+    } else {
+      return this.itemId = (value as HeaderItemId).toMutable();
+    }
+  }
+
+  /// If the value of [label] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
+    final value = this.label;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// If the value of [source] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+  _lib_editor_v1_binding.BindingRef_mutable get mutableSource {
+    final value = this.source;
+    if (value is _lib_editor_v1_binding.BindingRef_mutable) {
+      return value;
+    } else {
+      return this.source = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HeaderReorderHandleItem toFrozen() => HeaderReorderHandleItem(
+    itemId: this.itemId,
+    label: this.label,
+    source: this.source,
+    tooltip: this.tooltip,
+    visibleIf: this.visibleIf,
+    enabledIf: this.enabledIf,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum HeaderItem
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case HeaderItem_unknown(): { ... }
+///     case HeaderItem_button(:var value): { ... }
+///     case HeaderItem_booleanToggle(:var value): { ... }
+///     case HeaderItem_reorderHandle(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class HeaderItem {
+  /// Constant indicating an unknown `HeaderItem`.
+  /// Default value for fields of type `HeaderItem`.
+  static const HeaderItem unknown = HeaderItem_unknown._instance;
+
+  /// Create a 'button' variant wrapping around the given value.
+  factory HeaderItem.wrapButton(
+    HeaderButtonItem value
+  ) => HeaderItem_buttonWrapper._(value);
+
+  /// Same as `wrapButton(HeaderButtonItem(...))`.
+  factory HeaderItem.createButton({
+    required HeaderItemId_orMutable itemId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable icon,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_action.EditorAction action,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required HeaderActionTone tone,
+    required HeaderActionConfirmation_orMutable? confirmation,
+    required HeaderActionPlacement placement,
+  }) => HeaderItem.wrapButton(
+    HeaderButtonItem(
+      itemId: itemId,
+      icon: icon,
+      label: label,
+      tooltip: tooltip,
+      action: action,
+      priority: priority,
+      visibleIf: visibleIf,
+      enabledIf: enabledIf,
+      tone: tone,
+      confirmation: confirmation,
+      placement: placement,
+    )
+  );
+
+  /// Create a 'boolean_toggle' variant wrapping around the given value.
+  factory HeaderItem.wrapBooleanToggle(
+    HeaderBooleanToggleItem value
+  ) => HeaderItem_booleanToggleWrapper._(value);
+
+  /// Same as `wrapBooleanToggle(HeaderBooleanToggleItem(...))`.
+  factory HeaderItem.createBooleanToggle({
+    required HeaderItemId_orMutable itemId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.TypedExpression_orMutable checked,
+    required _lib_editor_v1_action.EditorAction action,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required HeaderActionConfirmation_orMutable? confirmation,
+    required HeaderActionPlacement placement,
+  }) => HeaderItem.wrapBooleanToggle(
+    HeaderBooleanToggleItem(
+      itemId: itemId,
+      label: label,
+      checked: checked,
+      action: action,
+      tooltip: tooltip,
+      priority: priority,
+      visibleIf: visibleIf,
+      enabledIf: enabledIf,
+      confirmation: confirmation,
+      placement: placement,
+    )
+  );
+
+  /// Create a 'reorder_handle' variant wrapping around the given value.
+  factory HeaderItem.wrapReorderHandle(
+    HeaderReorderHandleItem value
+  ) => HeaderItem_reorderHandleWrapper._(value);
+
+  /// Same as `wrapReorderHandle(HeaderReorderHandleItem(...))`.
+  factory HeaderItem.createReorderHandle({
+    required HeaderItemId_orMutable itemId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_binding.BindingRef_orMutable source,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+  }) => HeaderItem.wrapReorderHandle(
+    HeaderReorderHandleItem(
+      itemId: itemId,
+      label: label,
+      source: source,
+      tooltip: tooltip,
+      visibleIf: visibleIf,
+      enabledIf: enabledIf,
+    )
+  );
+
+  /// Returns the kind of variant held by this HeaderItem.
+  HeaderItem_kind get kind;
+
+  /// Serializer for `HeaderItem` instances.
+  static _skir.EnumSerializer<HeaderItem> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "button",
+        "wrapButton",
+        HeaderButtonItem.serializer,
+        "",
+        HeaderItem_buttonWrapper._,
+        (it) => it.value,
+        ordinal: HeaderItem_kind.buttonWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "boolean_toggle",
+        "wrapBooleanToggle",
+        HeaderBooleanToggleItem.serializer,
+        "",
+        HeaderItem_booleanToggleWrapper._,
+        (it) => it.value,
+        ordinal: HeaderItem_kind.booleanToggleWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "reorder_handle",
+        "wrapReorderHandle",
+        HeaderReorderHandleItem.serializer,
+        "",
+        HeaderItem_reorderHandleWrapper._,
+        (it) => it.value,
+        ordinal: HeaderItem_kind.reorderHandleWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:HeaderItem",
+    doc: "",
+    unknownInstance: HeaderItem_unknown._instance,
+    enumInstance: HeaderItem.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: HeaderItem_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `HeaderItem`.
+enum HeaderItem_kind {
+  unknown(0),
+  buttonWrapper(1),
+  booleanToggleWrapper(2),
+  reorderHandleWrapper(3);
+
+  final _core.int _ordinal;
+
+  const HeaderItem_kind(this._ordinal);
+}
+
+final class HeaderItem_unknown implements HeaderItem {
+  static const _instance = HeaderItem_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const HeaderItem_unknown._() : _u = null;
+  HeaderItem_unknown._unrecognized(this._u);
+
+  @_core.override
+  HeaderItem_kind get kind => HeaderItem_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is HeaderItem_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, HeaderItem.serializer);
+}
+
+sealed class _HeaderItem_wrapper implements HeaderItem {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _HeaderItem_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, HeaderItem.serializer);
+}
+
+final class HeaderItem_buttonWrapper extends _HeaderItem_wrapper {
+  final HeaderButtonItem value;
+
+  HeaderItem_buttonWrapper._(this.value);
+
+  @_core.override
+  HeaderItem_kind get kind => HeaderItem_kind.buttonWrapper;
+}
+
+final class HeaderItem_booleanToggleWrapper extends _HeaderItem_wrapper {
+  final HeaderBooleanToggleItem value;
+
+  HeaderItem_booleanToggleWrapper._(this.value);
+
+  @_core.override
+  HeaderItem_kind get kind => HeaderItem_kind.booleanToggleWrapper;
+}
+
+final class HeaderItem_reorderHandleWrapper extends _HeaderItem_wrapper {
+  final HeaderReorderHandleItem value;
+
+  HeaderItem_reorderHandleWrapper._(this.value);
+
+  @_core.override
+  HeaderItem_kind get kind => HeaderItem_kind.reorderHandleWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1701,7 +2163,7 @@ sealed class PresentationHeader_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? get title;
   _lib_editor_v1_expression.TypedExpression_orMutable? get description;
   _core.bool? get initiallyExpanded;
-  _core.Iterable<EditorHeaderAction_orMutable> get actions;
+  _core.Iterable<HeaderItem> get items;
 
   PresentationHeader toFrozen();
 }
@@ -1717,7 +2179,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   @_core.override
   final _core.bool? initiallyExpanded;
   @_core.override
-  final _core.Iterable<EditorHeaderAction> actions;
+  final _core.Iterable<HeaderItem> items;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationHeader({
@@ -1725,13 +2187,13 @@ final class PresentationHeader implements PresentationHeader_orMutable {
     required _lib_editor_v1_expression.TypedExpression_orMutable? title,
     required _lib_editor_v1_expression.TypedExpression_orMutable? description,
     required _core.bool? initiallyExpanded,
-    required _core.Iterable<EditorHeaderAction_orMutable> actions,
+    required _core.Iterable<HeaderItem> items,
   }) => PresentationHeader._(
     (binding != null) ? binding.toFrozen() : null,
     (title != null) ? title.toFrozen() : null,
     (description != null) ? description.toFrozen() : null,
     initiallyExpanded,
-    _skir.internal__frozenMappedCopy(actions, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(items),
   );
 
   PresentationHeader._(
@@ -1739,7 +2201,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
     this.title,
     this.description,
     this.initiallyExpanded,
-    this.actions,
+    this.items,
   );
 
   /// Default instance with all fields set to their default values.
@@ -1772,7 +2234,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
     this.title,
     this.description,
     this.initiallyExpanded,
-    this.actions,
+    this.items,
   );
 
   @_core.override
@@ -1790,7 +2252,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
     this.title,
     this.description,
     this.initiallyExpanded,
-    this.actions,
+    this.items,
   ];
 
   @_core.override
@@ -1844,15 +2306,15 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         (it, v) => it.initiallyExpanded = v,
       );
       _serializerBuilder.addField(
-        "actions",
-        "actions",
+        "items",
+        "items",
         4,
         _skir.Serializers.iterable(
-          EditorHeaderAction.serializer,
+          HeaderItem.serializer,
         ),
         "",
-        (it) => it.actions,
-        (it, v) => it.actions = v,
+        (it) => it.items,
+        (it, v) => it.items = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1876,7 +2338,7 @@ final class PresentationHeader_mutable implements PresentationHeader_orMutable {
   _lib_editor_v1_expression.TypedExpression_orMutable? title;
   _lib_editor_v1_expression.TypedExpression_orMutable? description;
   _core.bool? initiallyExpanded;
-  _core.Iterable<EditorHeaderAction_orMutable> actions;
+  _core.Iterable<HeaderItem> items;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationHeader_mutable._(
@@ -1884,17 +2346,17 @@ final class PresentationHeader_mutable implements PresentationHeader_orMutable {
     this.title,
     this.description,
     this.initiallyExpanded,
-    this.actions,
+    this.items,
   );
 
-  /// If the value of [actions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [actions] and returns it.
-  _core.List<EditorHeaderAction_orMutable> get mutableActions {
-    final value = this.actions;
-    if (value is _skir.internal__MutableList<EditorHeaderAction_orMutable>) {
+  /// If the value of [items] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [items] and returns it.
+  _core.List<HeaderItem> get mutableItems {
+    final value = this.items;
+    if (value is _skir.internal__MutableList<HeaderItem>) {
       return value;
     } else {
-      return this.actions = _skir.internal__MutableList([...value]);
+      return this.items = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -1905,7 +2367,7 @@ final class PresentationHeader_mutable implements PresentationHeader_orMutable {
     title: this.title,
     description: this.description,
     initiallyExpanded: this.initiallyExpanded,
-    actions: this.actions,
+    items: this.items,
   ).._u = this._u;
 }
 
@@ -7737,7 +8199,6 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_tabs(:var value): { ... }
 ///     case PresentationElement_spacer(:var value): { ... }
 ///     case PresentationElement_text(:var value): { ... }
-///     case PresentationElement_richText(:var value): { ... }
 ///     case PresentationElement_markdown(:var value): { ... }
 ///     case PresentationElement_icon(:var value): { ... }
 ///     case PresentationElement_image(:var value): { ... }
@@ -7971,20 +8432,6 @@ sealed class PresentationElement {
   factory PresentationElement.createText({
     required _lib_editor_v1_expression.TypedExpression_orMutable value,
   }) => PresentationElement.wrapText(
-    TextContent(
-      value: value,
-    )
-  );
-
-  /// Create a 'rich_text' variant wrapping around the given value.
-  factory PresentationElement.wrapRichText(
-    TextContent value
-  ) => PresentationElement_richTextWrapper._(value);
-
-  /// Same as `wrapRichText(TextContent(...))`.
-  factory PresentationElement.createRichText({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-  }) => PresentationElement.wrapRichText(
     TextContent(
       value: value,
     )
@@ -8671,16 +9118,6 @@ sealed class PresentationElement {
       );
       _serializerBuilder.addWrapperVariant(
         13,
-        "rich_text",
-        "wrapRichText",
-        TextContent.serializer,
-        "",
-        PresentationElement_richTextWrapper._,
-        (it) => it.value,
-        ordinal: PresentationElement_kind.richTextWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        14,
         "markdown",
         "wrapMarkdown",
         TextContent.serializer,
@@ -8690,7 +9127,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.markdownWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        15,
+        14,
         "icon",
         "wrapIcon",
         IconContent.serializer,
@@ -8700,7 +9137,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.iconWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        16,
+        15,
         "image",
         "wrapImage",
         ImageContent.serializer,
@@ -8710,7 +9147,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.imageWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        17,
+        16,
         "badge",
         "wrapBadge",
         BadgeContent.serializer,
@@ -8720,7 +9157,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.badgeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        18,
+        17,
         "progress",
         "wrapProgress",
         ProgressContent.serializer,
@@ -8730,7 +9167,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.progressWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        19,
+        18,
         "typed_field",
         "wrapTypedField",
         TypedFieldElement.serializer,
@@ -8740,7 +9177,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.typedFieldWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        20,
+        19,
         "conditional",
         "wrapConditional",
         ConditionalElement.serializer,
@@ -8750,7 +9187,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.conditionalWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        21,
+        20,
         "repeated",
         "wrapRepeated",
         RepeatedElement.serializer,
@@ -8760,7 +9197,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.repeatedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        22,
+        21,
         "scoped_binding",
         "wrapScopedBinding",
         ScopedBindingElement.serializer,
@@ -8770,7 +9207,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.scopedBindingWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        23,
+        22,
         "text_input",
         "wrapTextInput",
         TextControl.serializer,
@@ -8780,7 +9217,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.textInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        24,
+        23,
         "numeric_input",
         "wrapNumericInput",
         BoundControl.serializer,
@@ -8790,7 +9227,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.numericInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        25,
+        24,
         "toggle_input",
         "wrapToggleInput",
         BoundControl.serializer,
@@ -8800,7 +9237,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.toggleInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        26,
+        25,
         "select_input",
         "wrapSelectInput",
         SelectControl.serializer,
@@ -8810,7 +9247,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.selectInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        27,
+        26,
         "slider_input",
         "wrapSliderInput",
         SliderControl.serializer,
@@ -8820,7 +9257,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.sliderInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        28,
+        27,
         "date_time_input",
         "wrapDateTimeInput",
         BoundControl.serializer,
@@ -8830,7 +9267,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.dateTimeInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        29,
+        28,
         "duration_input",
         "wrapDurationInput",
         BoundControl.serializer,
@@ -8840,7 +9277,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.durationInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        30,
+        29,
         "color_input",
         "wrapColorInput",
         BoundControl.serializer,
@@ -8850,7 +9287,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.colorInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        31,
+        30,
         "bytes_input",
         "wrapBytesInput",
         BoundControl.serializer,
@@ -8860,7 +9297,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.bytesInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        32,
+        31,
         "named_input",
         "wrapNamedInput",
         BoundControl.serializer,
@@ -8870,7 +9307,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.namedInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        33,
+        32,
         "button",
         "wrapButton",
         ButtonElement.serializer,
@@ -8880,7 +9317,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.buttonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        34,
+        33,
         "icon_button",
         "wrapIconButton",
         IconButtonElement.serializer,
@@ -8890,7 +9327,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.iconButtonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        35,
+        34,
         "menu",
         "wrapMenu",
         MenuElement.serializer,
@@ -8900,7 +9337,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.menuWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        36,
+        35,
         "tooltip",
         "wrapTooltip",
         TooltipElement.serializer,
@@ -8910,7 +9347,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.tooltipWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        37,
+        36,
         "list_input",
         "wrapListInput",
         ListControl.serializer,
@@ -8920,7 +9357,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.listInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        38,
+        37,
         "map_input",
         "wrapMapInput",
         MapControl.serializer,
@@ -8930,7 +9367,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.mapInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        39,
+        38,
         "record_input",
         "wrapRecordInput",
         RecordControl.serializer,
@@ -8940,7 +9377,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.recordInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        40,
+        39,
         "enum_input",
         "wrapEnumInput",
         BoundControl.serializer,
@@ -8950,7 +9387,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.enumInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        41,
+        40,
         "polymorphic_input",
         "wrapPolymorphicInput",
         PolymorphicControl.serializer,
@@ -8960,7 +9397,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.polymorphicInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        42,
+        41,
         "default_presentation",
         "wrapDefaultPresentation",
         DefaultPresentationElement.serializer,
@@ -8970,7 +9407,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.defaultPresentationWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        43,
+        42,
         "collapsible",
         "wrapCollapsible",
         CollapsibleLayout.serializer,
@@ -8980,7 +9417,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collapsibleWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        44,
+        43,
         "icon_input",
         "wrapIconInput",
         BoundControl.serializer,
@@ -9020,38 +9457,37 @@ enum PresentationElement_kind {
   tabsWrapper(10),
   spacerWrapper(11),
   textWrapper(12),
-  richTextWrapper(13),
-  markdownWrapper(14),
-  iconWrapper(15),
-  imageWrapper(16),
-  badgeWrapper(17),
-  progressWrapper(18),
-  typedFieldWrapper(19),
-  conditionalWrapper(20),
-  repeatedWrapper(21),
-  scopedBindingWrapper(22),
-  textInputWrapper(23),
-  numericInputWrapper(24),
-  toggleInputWrapper(25),
-  selectInputWrapper(26),
-  sliderInputWrapper(27),
-  dateTimeInputWrapper(28),
-  durationInputWrapper(29),
-  colorInputWrapper(30),
-  bytesInputWrapper(31),
-  namedInputWrapper(32),
-  buttonWrapper(33),
-  iconButtonWrapper(34),
-  menuWrapper(35),
-  tooltipWrapper(36),
-  listInputWrapper(37),
-  mapInputWrapper(38),
-  recordInputWrapper(39),
-  enumInputWrapper(40),
-  polymorphicInputWrapper(41),
-  defaultPresentationWrapper(42),
-  collapsibleWrapper(43),
-  iconInputWrapper(44);
+  markdownWrapper(13),
+  iconWrapper(14),
+  imageWrapper(15),
+  badgeWrapper(16),
+  progressWrapper(17),
+  typedFieldWrapper(18),
+  conditionalWrapper(19),
+  repeatedWrapper(20),
+  scopedBindingWrapper(21),
+  textInputWrapper(22),
+  numericInputWrapper(23),
+  toggleInputWrapper(24),
+  selectInputWrapper(25),
+  sliderInputWrapper(26),
+  dateTimeInputWrapper(27),
+  durationInputWrapper(28),
+  colorInputWrapper(29),
+  bytesInputWrapper(30),
+  namedInputWrapper(31),
+  buttonWrapper(32),
+  iconButtonWrapper(33),
+  menuWrapper(34),
+  tooltipWrapper(35),
+  listInputWrapper(36),
+  mapInputWrapper(37),
+  recordInputWrapper(38),
+  enumInputWrapper(39),
+  polymorphicInputWrapper(40),
+  defaultPresentationWrapper(41),
+  collapsibleWrapper(42),
+  iconInputWrapper(43);
 
   final _core.int _ordinal;
 
@@ -9201,15 +9637,6 @@ final class PresentationElement_textWrapper extends _PresentationElement_wrapper
 
   @_core.override
   PresentationElement_kind get kind => PresentationElement_kind.textWrapper;
-}
-
-final class PresentationElement_richTextWrapper extends _PresentationElement_wrapper {
-  final TextContent value;
-
-  PresentationElement_richTextWrapper._(this.value);
-
-  @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.richTextWrapper;
 }
 
 final class PresentationElement_markdownWrapper extends _PresentationElement_wrapper {

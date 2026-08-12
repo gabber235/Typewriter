@@ -34,7 +34,7 @@ void main() {
       },
     );
 
-    await tester.pumpTypedEditor(
+    final source = await tester.pumpTypedEditor(
       type: type,
       value: RecordValue({
         "title": const StringValue("Example"),
@@ -45,7 +45,16 @@ void main() {
     expect(find.text("Title"), findsOneWidget);
     expect(find.text("Enabled"), findsOneWidget);
     expect(find.byType(TextFormField), findsOneWidget);
-    expect(find.byType(Switch), findsOneWidget);
+    expect(find.byType(Checkbox), findsOneWidget);
+    expect(find.byType(Switch), findsNothing);
+
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+
+    expect(
+      DataPath.root.field("enabled").read(source.rootValue).valueOrNull,
+      const BooleanValue(false),
+    );
   });
 
   testWidgets("renders list controls from a ListValue", (tester) async {
@@ -60,6 +69,15 @@ void main() {
     expect(find.text("Item 1"), findsOneWidget);
     expect(find.text("Item 2"), findsOneWidget);
     expect(find.byTooltip("Add item"), findsOneWidget);
+  });
+
+  testWidgets("renders generated collection empty states", (tester) async {
+    await tester.pumpTypedEditor(
+      type: const ListType(element: StringType()),
+      value: const ListValue([]),
+    );
+
+    expect(find.text("No items found"), findsOneWidget);
   });
 
   testWidgets("renders map entries with typed keys", (tester) async {
@@ -98,8 +116,20 @@ void main() {
     );
 
     expect(
-      tester.widget<TextFormField>(find.byType(TextFormField)).enabled,
-      isFalse,
+      tester.widget<EditableText>(find.byType(EditableText)).readOnly,
+      isTrue,
     );
+  });
+
+  testWidgets("disables boolean header actions in read only mode", (
+    tester,
+  ) async {
+    await tester.pumpTypedEditor(
+      type: const BooleanType(),
+      value: const BooleanValue(true),
+      readOnly: true,
+    );
+
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).onChanged, isNull);
   });
 }

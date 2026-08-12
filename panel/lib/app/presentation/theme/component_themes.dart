@@ -112,6 +112,8 @@ ThemeData applyComponentThemes(
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colors.brand,
+      linearTrackColor: colors.surfaceEmphasized,
+      circularTrackColor: colors.surfaceEmphasized,
       strokeCap: StrokeCap.round,
     ),
     listTileTheme: ListTileThemeData(

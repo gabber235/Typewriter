@@ -78,10 +78,6 @@ final class SkirPresentationEncoder {
         ),
         SpacerElement() => _spacer(value),
         TextElement() => _text(value.value, wire.PresentationElement.wrapText),
-        RichTextElement() => _text(
-          value.value,
-          wire.PresentationElement.wrapRichText,
-        ),
         MarkdownElement() => _text(
           value.value,
           wire.PresentationElement.wrapMarkdown,

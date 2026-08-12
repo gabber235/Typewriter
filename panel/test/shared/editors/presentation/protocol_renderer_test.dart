@@ -1,10 +1,33 @@
 import "package:flutter/material.dart";
+import "package:flutter_markdown_plus/flutter_markdown_plus.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("renders selectable Markdown through Flutter Markdown Plus", (
+    tester,
+  ) async {
+    const markdown = "# Quest notes\n\nUse **clear objectives**.";
+
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "markdown",
+          element: MarkdownElement(markdown.asStringLiteral),
+        ),
+      ),
+    );
+
+    final widget = tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+
+    expect(widget.data, markdown);
+    expect(widget.selectable, isTrue);
+  });
+
   testWidgets("executes local actions and refreshes bound content", (
     tester,
   ) async {
@@ -85,6 +108,37 @@ void main() {
       find.text("Control does not accept its binding type"),
       findsOneWidget,
     );
+  });
+
+  testWidgets("renders declared repeated empty content", (tester) async {
+    const source = TypedExpression(
+      resultType: ListType(element: StringType()),
+      expression: BindingExpression(_rootBinding),
+    );
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([]),
+        presentation: PresentationNode(
+          id: "repeated",
+          element: RepeatedElement(
+            source: source,
+            itemBindingId: const BindingId(1),
+            template: PresentationNode(
+              id: "item",
+              element: TextElement("Item".asStringLiteral),
+            ),
+            empty: PresentationNode(
+              id: "empty",
+              element: TextElement("Custom empty content".asStringLiteral),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("Custom empty content"), findsOneWidget);
+    expect(find.text("No items found"), findsNothing);
   });
 
   testWidgets("uses conditional content and read only local actions", (

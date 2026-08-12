@@ -17,6 +17,8 @@ class FormattedTextField extends HookWidget {
     this.hintText,
     this.icon,
     this.singleLine = true,
+    this.minLines,
+    this.maxLines,
     this.readOnly = false,
     super.key,
   }) : super();
@@ -32,6 +34,8 @@ class FormattedTextField extends HookWidget {
   final String? hintText;
   final String? icon;
   final bool singleLine;
+  final int? minLines;
+  final int? maxLines;
   final bool readOnly;
 
   @override
@@ -44,7 +48,8 @@ class FormattedTextField extends HookWidget {
       onChanged: onChanged,
       onDone: onDone,
       onSubmitted: onSubmitted,
-      maxLines: singleLine ? 1 : null,
+      minLines: minLines,
+      maxLines: maxLines ?? (singleLine ? 1 : null),
       keyboardType: keyboardType,
       readOnly: readOnly,
       inputFormatters: [
@@ -55,7 +60,7 @@ class FormattedTextField extends HookWidget {
         prefixIcon: icon != null
             ? Padding(
                 padding: EdgeInsets.all(context.spacing.space2),
-                child: Icones(icon!, size: 18),
+                child: Icones(icon, size: 18),
               )
             : null,
         hintText: hintText,

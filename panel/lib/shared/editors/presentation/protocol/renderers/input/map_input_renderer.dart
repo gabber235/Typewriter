@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+part of "../../composite_input_renderer.dart";
 
 extension MapInputElementRendering on MapInputElement {
   Widget render({
@@ -28,10 +27,7 @@ class _MapInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (value.entries.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text("No entries"),
-          ),
+          const _CollectionEmptyState(message: "No entries found"),
         for (final entry in value.entries)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -82,22 +78,20 @@ class _MapInput extends StatelessWidget {
       binding: reference,
       title: entry.key.expressionDisplayText.asStringLiteral,
       initiallyExpanded: false,
-      actions: element.allowRemove
+      items: element.allowRemove
           ? [
-              EditorHeaderAction(
-                id: mapEntryRemoveHeaderActionId,
-                icon: _icon("mdi:delete-outline"),
+              HeaderButtonItem(
+                id: mapEntryRemoveHeaderItemId,
+                icon: _icon(HeroiconsSolid.trash),
                 label: "Remove entry".asStringLiteral,
                 priority: _integer(90),
                 tone: HeaderActionTone.destructive,
-                activation: InvokeHeaderAction(
-                  LocalEditorAction(
-                    RemoveMapEntryAction(
-                      target: scope.canonical(element.control.binding),
-                      key: TypedExpression(
-                        resultType: type.key,
-                        expression: LiteralExpression(entry.key),
-                      ),
+                action: LocalEditorAction(
+                  RemoveMapEntryAction(
+                    target: scope.canonical(element.control.binding),
+                    key: TypedExpression(
+                      resultType: type.key,
+                      expression: LiteralExpression(entry.key),
                     ),
                   ),
                 ),
@@ -220,6 +214,7 @@ class _MapInput extends StatelessWidget {
     ).renderDefaultPresentation(
       scope,
       nodeId: "map.value.${entry.key.hashCode}",
+      root: true,
     );
   }
 }
@@ -231,5 +226,5 @@ TypedExpression _integer(int value) => TypedExpression(
 
 TypedExpression _icon(String value) => TypedExpression(
   resultType: NamedType(standardTypeRefs.icon),
-  expression: LiteralExpression(IconValue.iconify(value).typedValue),
+  expression: LiteralExpression(IconValue.from(value).typedValue),
 );

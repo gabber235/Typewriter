@@ -10,6 +10,11 @@ sealed class IconValue with _$IconValue {
 
   @Assert("source != \"\"", "SVG source must not be empty.")
   const factory IconValue.svg(String source) = SvgIconValue;
+
+  factory IconValue.from(String value) {
+    if (value.isValidIconifyValue) return IconifyIconValue(value);
+    return SvgIconValue(value);
+  }
 }
 
 extension IconValueValidation on IconValue {

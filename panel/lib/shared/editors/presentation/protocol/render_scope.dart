@@ -63,7 +63,8 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     required PresentationResolver resolvePresentation,
     required HeaderExpansionStore expansionStore,
     @Default({}) Map<BindingId, BindingReference> aliases,
-    @Default({}) Map<HeaderActionId, List<ShortcutActivator>> headerShortcuts,
+    @Default({})
+    Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,
     @Default({}) Set<(String, BindingReference?)> suppressedHeaders,
     @Default(true) bool enabled,
     @Default(false) bool readOnly,
@@ -88,6 +89,13 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     final value = evaluate(expression).valueOrNull;
     return value == null ? "" : value.expressionDisplayText;
   }
+
+  List<ShortcutActivator> shortcuts(
+    HeaderItemId itemId,
+    HeaderItemCommand command,
+  ) =>
+      headerShortcuts[HeaderItemCommandId(itemId: itemId, command: command)] ??
+      const [];
 
   void update(BindingReference reference, DataValue value) {
     if (!enabled || readOnly) return;

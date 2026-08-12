@@ -31,7 +31,7 @@ struct PresentationProperties(810900003) {
   read_only: bool = 1;
 }
 
-struct HeaderActionId(810900051) {
+struct HeaderItemId(810900060) {
   namespace: string = 0;
   name: string = 1;
 }
@@ -47,31 +47,18 @@ enum HeaderActionPlacement(810900059) {
   end = 3;
 }
 
-struct InvokeHeaderAction(810900053) {
-  action: EditorAction = 0;
-}
-
-struct ReorderListItemHeaderAction(810900054) {
-  source: BindingRef = 0;
-}
-
-enum HeaderActionActivation(810900055) {
-  invoke: InvokeHeaderAction = 1;
-  reorder_list_item: ReorderListItemHeaderAction = 2;
-}
-
 struct HeaderActionConfirmation(810900056) {
   title: TypedExpression = 0;
   message: TypedExpression = 1;
   confirmation_label: TypedExpression = 2;
 }
 
-struct EditorHeaderAction(810900057) {
-  action_id: HeaderActionId = 0;
+struct HeaderButtonItem(810900061) {
+  item_id: HeaderItemId = 0;
   icon: TypedExpression = 1;
   label: TypedExpression = 2;
   tooltip: TypedExpression? = 3;
-  activation: HeaderActionActivation = 4;
+  action: EditorAction = 4;
   priority: TypedExpression? = 5;
   visible_if: TypedExpression? = 6;
   enabled_if: TypedExpression? = 7;
@@ -80,12 +67,40 @@ struct EditorHeaderAction(810900057) {
   placement: HeaderActionPlacement = 10;
 }
 
-struct PresentationHeader(810900058) {
+struct HeaderBooleanToggleItem(810900062) {
+  item_id: HeaderItemId = 0;
+  label: TypedExpression = 1;
+  checked: TypedExpression = 2;
+  action: EditorAction = 3;
+  tooltip: TypedExpression? = 4;
+  priority: TypedExpression? = 5;
+  visible_if: TypedExpression? = 6;
+  enabled_if: TypedExpression? = 7;
+  confirmation: HeaderActionConfirmation? = 8;
+  placement: HeaderActionPlacement = 9;
+}
+
+struct HeaderReorderHandleItem(810900063) {
+  item_id: HeaderItemId = 0;
+  label: TypedExpression = 1;
+  source: BindingRef = 2;
+  tooltip: TypedExpression? = 3;
+  visible_if: TypedExpression? = 4;
+  enabled_if: TypedExpression? = 5;
+}
+
+enum HeaderItem(810900064) {
+  button: HeaderButtonItem = 1;
+  boolean_toggle: HeaderBooleanToggleItem = 2;
+  reorder_handle: HeaderReorderHandleItem = 3;
+}
+
+struct PresentationHeader(810900065) {
   binding: BindingRef? = 0;
   title: TypedExpression? = 1;
   description: TypedExpression? = 2;
   initially_expanded: bool? = 3;
-  actions: [EditorHeaderAction] = 4;
+  items: [HeaderItem] = 4;
 }
 
 struct PresentationNode(810900004) {
@@ -309,38 +324,37 @@ enum PresentationElement(810900034) {
   divider = 10;
   spacer: SpacerLayout = 11;
   text: TextContent = 12;
-  rich_text: TextContent = 13;
-  markdown: TextContent = 14;
-  icon: IconContent = 15;
-  image: ImageContent = 16;
-  badge: BadgeContent = 17;
-  progress: ProgressContent = 18;
-  typed_field: TypedFieldElement = 19;
-  conditional: ConditionalElement = 20;
-  repeated: RepeatedElement = 21;
-  scoped_binding: ScopedBindingElement = 22;
-  text_input: TextControl = 23;
-  numeric_input: BoundControl = 24;
-  toggle_input: BoundControl = 25;
-  select_input: SelectControl = 26;
-  slider_input: SliderControl = 27;
-  date_time_input: BoundControl = 28;
-  duration_input: BoundControl = 29;
-  color_input: BoundControl = 30;
-  bytes_input: BoundControl = 31;
-  named_input: BoundControl = 32;
-  button: ButtonElement = 33;
-  icon_button: IconButtonElement = 34;
-  menu: MenuElement = 35;
-  tooltip: TooltipElement = 36;
-  list_input: ListControl = 37;
-  map_input: MapControl = 38;
-  record_input: RecordControl = 39;
-  enum_input: BoundControl = 40;
-  polymorphic_input: PolymorphicControl = 41;
-  default_presentation: DefaultPresentationElement = 42;
-  collapsible: CollapsibleLayout = 43;
-  icon_input: BoundControl = 44;
+  markdown: TextContent = 13;
+  icon: IconContent = 14;
+  image: ImageContent = 15;
+  badge: BadgeContent = 16;
+  progress: ProgressContent = 17;
+  typed_field: TypedFieldElement = 18;
+  conditional: ConditionalElement = 19;
+  repeated: RepeatedElement = 20;
+  scoped_binding: ScopedBindingElement = 21;
+  text_input: TextControl = 22;
+  numeric_input: BoundControl = 23;
+  toggle_input: BoundControl = 24;
+  select_input: SelectControl = 25;
+  slider_input: SliderControl = 26;
+  date_time_input: BoundControl = 27;
+  duration_input: BoundControl = 28;
+  color_input: BoundControl = 29;
+  bytes_input: BoundControl = 30;
+  named_input: BoundControl = 31;
+  button: ButtonElement = 32;
+  icon_button: IconButtonElement = 33;
+  menu: MenuElement = 34;
+  tooltip: TooltipElement = 35;
+  list_input: ListControl = 36;
+  map_input: MapControl = 37;
+  record_input: RecordControl = 38;
+  enum_input: BoundControl = 39;
+  polymorphic_input: PolymorphicControl = 40;
+  default_presentation: DefaultPresentationElement = 41;
+  collapsible: CollapsibleLayout = 42;
+  icon_input: BoundControl = 43;
 }
 
 struct PresentationDefinition(810900050) {
