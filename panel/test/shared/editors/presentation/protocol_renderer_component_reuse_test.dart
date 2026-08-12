@@ -30,7 +30,7 @@ void main() {
     expect(field.maxLines, 8);
   });
 
-  testWidgets("renders select and enum controls through Dropdown", (
+  testWidgets("renders select adaptively and enum through Dropdown", (
     tester,
   ) async {
     await tester.pumpTestApp(
@@ -68,11 +68,12 @@ void main() {
       ),
     );
 
+    expect(find.byType(AdaptiveChoiceControl<DataValue>), findsOneWidget);
     expect(find.byType(Dropdown<DataValue>), findsNWidgets(2));
     expect(find.byType(DropdownButtonFormField<DataValue>), findsNothing);
   });
 
-  testWidgets("updates typed bindings through Dropdown selection", (
+  testWidgets("updates typed bindings through adaptive selection", (
     tester,
   ) async {
     await tester.pumpTestApp(
@@ -117,8 +118,10 @@ void main() {
     );
 
     tester
-        .widget<Dropdown<DataValue>>(find.byType(Dropdown<DataValue>))
-        .onSelected!(const StringValue("two"));
+        .widget<AdaptiveChoiceControl<DataValue>>(
+          find.byType(AdaptiveChoiceControl<DataValue>),
+        )
+        .onSelected(const StringValue("two"));
     await tester.pump();
 
     expect(find.text("two"), findsOneWidget);

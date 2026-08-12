@@ -49,44 +49,14 @@ class _TabsRendererState extends State<_TabsRenderer> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (widget.element.tabs.length <= 3)
-          CupertinoSlidingSegmentedControl<String>(
-            groupValue: _selected,
-            backgroundColor:
-                Theme.of(context).inputDecorationTheme.fillColor ??
-                context.colors.surfaceContainer,
-            thumbColor: context.colors.selectionContainer,
-            children: {
-              for (final tab in widget.element.tabs)
-                tab.id: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.spacing.space2,
-                    vertical: context.spacing.space1,
-                  ),
-                  child: Text(
-                    widget.scope.expressionText(tab.label),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: tab.id == _selected
-                          ? context.colors.onSelectionContainer
-                          : context.colors.contentSecondary,
-                    ),
-                  ),
-                ),
-            },
-            onValueChanged: _select,
-          )
-        else
-          Dropdown<String>(
-            selected: _selected,
-            dropdownMenuEntries: [
-              for (final tab in widget.element.tabs)
-                DropdownMenuEntry(
-                  value: tab.id,
-                  label: widget.scope.expressionText(tab.label),
-                ),
-            ],
-            onSelected: _select,
-          ),
+        AdaptiveChoiceControl<String>(
+          selected: _selected,
+          choices: {
+            for (final tab in widget.element.tabs)
+              tab.id: widget.scope.expressionText(tab.label),
+          },
+          onSelected: _select,
+        ),
         const SizedBox(height: 12),
         PresentationNodeRenderer(node: selectedTab.child, scope: widget.scope),
       ],
