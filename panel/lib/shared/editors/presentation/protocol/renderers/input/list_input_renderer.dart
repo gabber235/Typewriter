@@ -234,6 +234,7 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
       itemScope,
       nodeId: "list.${widget.element.control.binding.bindingId.value}.$index",
       root: true,
+      label: "",
     );
   }
 
