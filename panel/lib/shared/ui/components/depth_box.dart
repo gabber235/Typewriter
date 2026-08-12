@@ -41,14 +41,17 @@ class DepthBox extends HookWidget {
               : Theme.of(context).colorScheme.surface
         : Colors.transparent;
 
-    final widget = Material(
-      color: color,
-      shape:
-          shape ??
-          RoundedRectangleBorder(
-            borderRadius: context.shapes.mediumBorderRadius,
-          ),
-      child: Surface(color: color, child: child),
+    final widget = Semantics(
+      container: true,
+      child: Material(
+        color: color,
+        shape:
+            shape ??
+            RoundedRectangleBorder(
+              borderRadius: context.shapes.mediumBorderRadius,
+            ),
+        child: Surface(color: color, child: child),
+      ),
     );
 
     if (!enabled) {

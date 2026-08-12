@@ -74,52 +74,49 @@ final class _MapEntryIdentity {
 }
 
 class _MapEntryField extends StatelessWidget {
-  const _MapEntryField({
-    required this.child,
-    this.label,
-    this.emphasized = false,
-  });
+  const _MapEntryField({required this.child, this.label, this.value = false});
 
   final String? label;
   final Widget child;
-  final bool emphasized;
+  final bool value;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final background = emphasized
-        ? colors.primaryContainer.withValues(alpha: 0.45)
-        : colors.surfaceContainer;
-    final border = emphasized
-        ? colors.primary.withValues(alpha: 0.24)
-        : colors.outlineVariant;
+
+    final content = Padding(
+      padding: EdgeInsets.all(context.spacing.space2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: context.spacing.space1,
+        children: [
+          if (label case final label?)
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: value ? context.colors.contentSecondary : colors.primary,
+              ),
+            ),
+          child,
+        ],
+      ),
+    );
+
+    if (value) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: context.spacing.space1),
+        child: DepthBox(child: content),
+      );
+    }
+
     return Semantics(
       container: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: background,
-          border: Border.all(color: border),
-          borderRadius: context.shapes.smallBorderRadius,
+          color: colors.primaryContainer.withValues(alpha: 0.45),
+          borderRadius: context.shapes.mediumBorderRadius,
         ),
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.space2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: context.spacing.space1,
-            children: [
-              if (label case final label?)
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: emphasized
-                        ? colors.primary
-                        : context.colors.contentSecondary,
-                  ),
-                ),
-              child,
-            ],
-          ),
-        ),
+        child: content,
       ),
     );
   }

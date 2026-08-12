@@ -431,6 +431,31 @@ void main() {
     );
   });
 
+  testWidgets("keeps space below the final map value surface", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const MapType(key: StringType(), value: StringType()),
+        value: const MapValue([
+          DataMapEntry(key: StringValue("key"), value: StringValue("value")),
+        ]),
+      ),
+    );
+
+    await tester.tap(find.text("key"));
+    await tester.pumpAndSettle();
+
+    final valueField = find.byWidgetPredicate(
+      (widget) => widget is EditableText && widget.controller.text == "value",
+    );
+    final valueSurface = _smallestAncestorRect<DepthBox>(tester, valueField);
+    final entry = _smallestAncestorRect<PresentationHeaderChrome>(
+      tester,
+      valueField,
+    );
+
+    expect(entry.bottom - valueSurface.bottom, 8);
+  });
+
   testWidgets("places remove last in a map entry header", (tester) async {
     final presentation = PresentationNode(
       id: "map",
@@ -567,6 +592,19 @@ Finder _expandedItemHeader(String title) {
     matching: find.byType(InkWell),
   );
   return find.descendant(of: header, matching: find.byIcon(Icons.expand_less));
+}
+
+Rect _smallestAncestorRect<T extends Widget>(
+  WidgetTester tester,
+  Finder descendant,
+) {
+  final ancestors = find.ancestor(of: descendant, matching: find.byType(T));
+  return ancestors
+      .evaluate()
+      .map((element) => tester.getRect(find.byWidget(element.widget)))
+      .reduce(
+        (smallest, rect) => rect.height < smallest.height ? rect : smallest,
+      );
 }
 
 Future<void> _dragFirstItemAfterSecond(WidgetTester tester) async {
