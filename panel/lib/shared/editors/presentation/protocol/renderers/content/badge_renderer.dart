@@ -1,11 +1,17 @@
 part of "../../content_renderer.dart";
 
 extension BadgeElementRendering on BadgeElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) => Chip(
-    visualDensity: VisualDensity.compact,
-    label: Text(scope.expressionText(label)),
-    avatar: Icon(Icons.circle, size: 10, color: tone._badgeTone(context)),
-  );
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    final color = tone._badgeTone(context);
+
+    return Chip(
+      visualDensity: VisualDensity.compact,
+      label: Text(scope.expressionText(label), style: TextStyle(color: color)),
+      avatar: Icon(Icons.circle, size: 10, color: color),
+      backgroundColor: color.withValues(alpha: 0.2),
+      side: BorderSide(color: color),
+    );
+  }
 }
 
 extension on String {
