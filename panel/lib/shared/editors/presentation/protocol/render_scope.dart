@@ -29,19 +29,23 @@ abstract class ResolvedPresentationDefinition
 }
 
 final class HeaderExpansionStore {
-  final Map<(String, BindingReference?), bool> _values = {};
+  final Map<Object, bool> _values = {};
 
   bool value({
     required String nodeId,
     required BindingReference? binding,
     required bool initial,
-  }) => _values[(nodeId, binding)] ?? initial;
+    Object? identity,
+  }) => _values[identity ?? (nodeId, binding)] ?? initial;
 
   void set({
     required String nodeId,
     required BindingReference? binding,
     required bool expanded,
-  }) => _values[(nodeId, binding)] = expanded;
+    Object? identity,
+  }) => _values[identity ?? (nodeId, binding)] = expanded;
+
+  void remove(Object identity) => _values.remove(identity);
 
   void clear() => _values.clear();
 }
