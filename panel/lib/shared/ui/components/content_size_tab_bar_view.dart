@@ -51,6 +51,7 @@ class ContentSizeTabBarView extends StatefulWidget {
 class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
   TabController? _controller;
   late PageController _pageController;
+  bool _pageControllerInitialized = false;
   late List<Widget> _children;
   late List<Widget> _childrenWithKey;
   int? _currentIndex;
@@ -85,8 +86,11 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateTabController();
-    _currentIndex = _controller?.index;
-    _pageController = PageController(initialPage: _currentIndex ?? 0);
+    _currentIndex ??= _controller?.index;
+    if (!_pageControllerInitialized) {
+      _pageController = PageController(initialPage: _currentIndex ?? 0);
+      _pageControllerInitialized = true;
+    }
   }
 
   @override
@@ -104,6 +108,7 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
       _controller!.animation!.removeListener(_handleTabControllerAnimationTick);
     }
     _controller = null;
+    if (_pageControllerInitialized) _pageController.dispose();
     // We don't own the _controller Animation, so it's not disposed here.
     super.dispose();
   }
@@ -134,11 +139,7 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
     final previousIndex = _controller!.previousIndex;
     if ((_currentIndex! - previousIndex).abs() == 1) {
       _warpUnderwayCount += 1;
-      await _pageController.animateToPage(
-        _currentIndex!,
-        duration: kTabScrollDuration,
-        curve: Curves.ease,
-      );
+      await _moveToPage(_currentIndex!);
       _warpUnderwayCount -= 1;
       return Future<void>.value();
     }
@@ -158,11 +159,7 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
     });
     _pageController.jumpToPage(initialPage);
 
-    await _pageController.animateToPage(
-      _currentIndex!,
-      duration: kTabScrollDuration,
-      curve: Curves.ease,
-    );
+    await _moveToPage(_currentIndex!);
     if (!mounted) return Future<void>.value();
     setState(() {
       _warpUnderwayCount -= 1;
@@ -172,6 +169,18 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
         _childrenWithKey = originalChildren;
       }
     });
+  }
+
+  Future<void> _moveToPage(int index) async {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pageController.jumpToPage(index);
+      return;
+    }
+    await _pageController.animateToPage(
+      index,
+      duration: widget.animationDuration,
+      curve: Curves.easeOutCubic,
+    );
   }
 
   // Called when the PageView scrolls
@@ -218,7 +227,9 @@ class _ContentSizeTabBarViewState extends State<ContentSizeTabBarView> {
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
       child: ExpandablePageView(
-        animationDuration: widget.animationDuration,
+        animationDuration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : widget.animationDuration,
         dragStartBehavior: widget.dragStartBehavior,
         controller: _pageController,
         physics: widget.physics == null

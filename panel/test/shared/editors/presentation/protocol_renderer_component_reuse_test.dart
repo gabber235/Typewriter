@@ -127,6 +127,88 @@ void main() {
     expect(find.text("two"), findsOneWidget);
   });
 
+  testWidgets("moves tabs through the content sized page view", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "tabs",
+          element: TabsElement(
+            tabs: [
+              TabItem(
+                id: "one",
+                label: "One".asStringLiteral,
+                child: PresentationNode(
+                  id: "first",
+                  element: TextElement("First".asStringLiteral),
+                ),
+              ),
+              TabItem(
+                id: "two",
+                label: "Two".asStringLiteral,
+                child: PresentationNode(
+                  id: "second",
+                  element: TextElement("Second".asStringLiteral),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final choice = tester.widget<AdaptiveChoiceControl<String>>(
+      find.byType(AdaptiveChoiceControl<String>),
+    );
+    final pages = tester.widget<ContentSizeTabBarView>(
+      find.byType(ContentSizeTabBarView),
+    );
+
+    expect(choice.selected, "one");
+    expect(pages.controller!.index, 0);
+
+    choice.onSelected("two");
+    await tester.pumpAndSettle();
+
+    expect(pages.controller!.index, 1);
+    expect(
+      tester
+          .widget<AdaptiveChoiceControl<String>>(
+            find.byType(AdaptiveChoiceControl<String>),
+          )
+          .selected,
+      "two",
+    );
+  });
+
+  testWidgets("switches polymorphic content directionally", (tester) async {
+    await tester.pumpTestApp(child: _polymorphicRenderer());
+
+    expect(find.byType(DirectionalContentSwitcher), findsOneWidget);
+    expect(
+      tester
+          .widget<DirectionalContentSwitcher>(
+            find.byType(DirectionalContentSwitcher),
+          )
+          .index,
+      0,
+    );
+
+    tester
+        .widget<AdaptiveChoiceControl<ResolvedTypeRef>>(
+          find.byType(AdaptiveChoiceControl<ResolvedTypeRef>),
+        )
+        .onSelected(_catType);
+    await tester.pumpAndSettle();
+
+    final switcher = tester.widget<DirectionalContentSwitcher>(
+      find.byType(DirectionalContentSwitcher),
+    );
+    expect(switcher.index, 1);
+    expect(switcher.child.key, const ValueKey(_catType));
+  });
+
   testWidgets("uses panel icon and menu components for interactions", (
     tester,
   ) async {
@@ -244,3 +326,88 @@ Widget _renderer({
     ),
   );
 }
+
+Widget _polymorphicRenderer() => SizedBox(
+  width: 500,
+  child: EditorProtocolRenderer(
+    envelope: TypedValueEnvelope(
+      rootType: _polymorphicRootType,
+      rootValue: RecordValue({
+        "choice": PolymorphicValue(concreteType: _dogType, value: UnitValue()),
+      }),
+    ),
+    typeCatalog: TypeCatalog([
+      const TypeDefinition(
+        id: _polymorphicRootType,
+        kind: NominalTypeKind.concrete,
+        representation: RecordType(
+          fields: {
+            "choice": TypeField(name: "choice", type: NamedType(_animalType)),
+          },
+        ),
+      ),
+      const TypeDefinition(
+        id: _animalType,
+        kind: NominalTypeKind.openAbstract,
+        representation: UnitType(),
+      ),
+      const TypeDefinition(
+        id: _dogType,
+        kind: NominalTypeKind.concrete,
+        parents: [_animalType],
+        representation: UnitType(),
+      ),
+      const TypeDefinition(
+        id: _catType,
+        kind: NominalTypeKind.concrete,
+        parents: [_animalType],
+        representation: UnitType(),
+      ),
+    ]),
+    presentation: PresentationNode(
+      id: "polymorphic",
+      element: PolymorphicInputElement(
+        control: const BoundControl(binding: _polymorphicBinding),
+        concreteTypes: [
+          ConcreteTypePresentation(
+            type: _dogType,
+            label: "Dog".asStringLiteral,
+            presentation: PresentationNode(
+              id: "dog",
+              element: TextElement("Dog content".asStringLiteral),
+            ),
+          ),
+          ConcreteTypePresentation(
+            type: _catType,
+            label: "Cat".asStringLiteral,
+            presentation: PresentationNode(
+              id: "cat",
+              element: TextElement("Cat content".asStringLiteral),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+
+const _polymorphicBinding = BindingReference(
+  bindingId: BindingId(0),
+  path: DataPath([DataPathSegment.field("choice")]),
+);
+const _polymorphicRootType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "PolymorphicRoot"),
+  revision: 1,
+);
+const _animalType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Animal"),
+  revision: 1,
+);
+const _dogType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Dog"),
+  revision: 1,
+);
+const _catType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Cat"),
+  revision: 1,
+);

@@ -16,6 +16,7 @@ export "components/context_menu.dart";
 export "components/countdown_badge.dart";
 export "components/cursor_controller.dart";
 export "components/depth_box.dart";
+export "components/directional_content_switcher.dart";
 export "components/drag_handle.dart";
 export "components/draggable_sheet_handle.dart";
 export "components/elastic_message_switcher.dart";
