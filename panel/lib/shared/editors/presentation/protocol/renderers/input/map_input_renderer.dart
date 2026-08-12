@@ -120,11 +120,12 @@ class _MapInputState extends State<_MapInput> {
       children: [
         _MapEntryField(
           label: element.keyPresentation == null ? null : "Key",
-          emphasized: true,
+          value: false,
           child: _key(type, map, slot),
         ),
         _MapEntryField(
           label: element.valuePresentation == null ? null : "Value",
+          value: true,
           child: _item(type, slot, itemScope),
         ),
       ],
