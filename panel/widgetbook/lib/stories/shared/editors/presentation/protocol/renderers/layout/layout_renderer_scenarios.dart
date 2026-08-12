@@ -7,6 +7,53 @@ PresentationNode _label(String id, String label) => storyNode(
   PresentationElement.badge(label: label.asStringLiteral, tone: "neutral"),
 );
 
+final dropdownTabsRendererScenario = RendererStoryScenario(
+  kind: RendererStoryKind.tabs,
+  name: "Tabs with dropdown",
+  type: const UnitType(),
+  value: const UnitValue(),
+  presentation: storyNode(
+    "dropdownTabs",
+    PresentationElement.tabs(
+      initiallySelectedTabId: "general",
+      tabs: [
+        TabItem(
+          id: "general",
+          label: "General".asStringLiteral,
+          child: storyNode(
+            "dropdownGeneralTab",
+            PresentationElement.text("General settings".asStringLiteral),
+          ),
+        ),
+        TabItem(
+          id: "advanced",
+          label: "Advanced".asStringLiteral,
+          child: storyNode(
+            "dropdownAdvancedTab",
+            PresentationElement.text("Advanced settings".asStringLiteral),
+          ),
+        ),
+        TabItem(
+          id: "history",
+          label: "History".asStringLiteral,
+          child: storyNode(
+            "dropdownHistoryTab",
+            PresentationElement.text("Change history".asStringLiteral),
+          ),
+        ),
+        TabItem(
+          id: "permissions",
+          label: "Permissions".asStringLiteral,
+          child: storyNode(
+            "dropdownPermissionsTab",
+            PresentationElement.text("Tab permissions".asStringLiteral),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
 final layoutRendererScenarios = [
   RendererStoryScenario(
     kind: RendererStoryKind.column,
@@ -197,6 +244,14 @@ final layoutRendererScenarios = [
             child: storyNode(
               "advancedTab",
               PresentationElement.text("Advanced settings".asStringLiteral),
+            ),
+          ),
+          TabItem(
+            id: "history",
+            label: "History".asStringLiteral,
+            child: storyNode(
+              "historyTab",
+              PresentationElement.text("Change history".asStringLiteral),
             ),
           ),
         ],
