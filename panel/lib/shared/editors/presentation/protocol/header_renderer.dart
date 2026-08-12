@@ -15,6 +15,7 @@ class PresentationHeaderChrome extends StatefulWidget {
     required this.header,
     required this.scope,
     required this.child,
+    this.expansionIdentity,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class PresentationHeaderChrome extends StatefulWidget {
   final PresentationHeader header;
   final PresentationRenderScope scope;
   final Widget child;
+  final Object? expansionIdentity;
 
   @override
   State<PresentationHeaderChrome> createState() =>
@@ -48,8 +50,11 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
         ? widget.header.binding != null
         : widget.header.binding == null ||
               oldWidget.scope.canonical(oldWidget.header.binding!) != _binding;
-    if (oldWidget.nodeId != widget.nodeId ||
-        bindingChanged ||
+    final expansionIdentityChanged =
+        oldWidget.expansionIdentity != widget.expansionIdentity ||
+        (widget.expansionIdentity == null &&
+            (oldWidget.nodeId != widget.nodeId || bindingChanged));
+    if (expansionIdentityChanged ||
         oldWidget.header.initiallyExpanded != widget.header.initiallyExpanded) {
       _expansibleController.dispose();
       _expansibleController = _createExpansibleController();
@@ -66,6 +71,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
     nodeId: widget.nodeId,
     binding: _binding,
     initial: widget.header.initiallyExpanded ?? true,
+    identity: widget.expansionIdentity,
   );
 
   ExpansibleController _createExpansibleController() {
@@ -81,6 +87,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
       nodeId: widget.nodeId,
       binding: _binding,
       expanded: _expansibleController.isExpanded,
+      identity: widget.expansionIdentity,
     );
     setState(() {});
   }
