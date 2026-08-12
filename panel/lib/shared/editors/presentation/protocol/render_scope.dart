@@ -144,20 +144,28 @@ Widget presentationDiagnostic(
     borderRadius: context.shapes.mediumBorderRadius,
     child: Padding(
       padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline, color: colors.onErrorContainer),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              values.map((item) => item.message).join("\n"),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onErrorContainer),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 24),
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 34),
+              child: Text(
+                values.map((item) => item.message).join("\n"),
+                textAlign: TextAlign.left,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onErrorContainer,
+                ),
+              ),
             ),
-          ),
-        ],
+            Positioned(
+              left: 0,
+              top: 0,
+              child: Icon(Icons.error_outline, color: colors.onErrorContainer),
+            ),
+          ],
+        ),
       ),
     ),
   );
