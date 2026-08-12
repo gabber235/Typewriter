@@ -123,40 +123,33 @@ final class SkirActionEncoder {
     final target = expressions.binding(value.target);
     final key = expressions.encode(value.key);
     final item = expressions.encode(value.value);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...key.diagnostics,
-      ...item.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            wire.LocalEditorAction.createPutMapEntry(
-              target: target.valueOrNull!,
-              key: key.valueOrNull!,
-              value: item.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      key,
+      item,
+      (target, key, item) => wire.LocalEditorAction.createPutMapEntry(
+        target: target,
+        key: key,
+        value: item,
+      ),
+    );
   }
 
   TypeResult<wire.LocalEditorAction> _replace(ReplaceConcreteTypeAction value) {
     final target = expressions.binding(value.target);
     final type = values.typeCodec.encodeReference(value.concreteType);
     final initial = expressions.encode(value.initialValue);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...type.diagnostics,
-      ...initial.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            wire.LocalEditorAction.createReplaceConcreteNominalType(
-              target: target.valueOrNull!,
-              concreteType: type.valueOrNull!,
-              value: initial.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      type,
+      initial,
+      (target, type, initial) =>
+          wire.LocalEditorAction.createReplaceConcreteNominalType(
+            target: target,
+            concreteType: type,
+            value: initial,
+          ),
+    );
   }
 
   TypeResult<wire.RealmEditorAction> _realm(RealmAction value) =>
@@ -196,19 +189,15 @@ final class SkirActionEncoder {
     final target = expressions.binding(value.target);
     final index = expressions.encode(value.index);
     final item = expressions.encode(value.value);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...index.diagnostics,
-      ...item.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            wire.LocalEditorAction.createInsertListItem(
-              target: target.valueOrNull!,
-              index: index.valueOrNull!,
-              value: item.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      index,
+      item,
+      (target, index, item) => wire.LocalEditorAction.createInsertListItem(
+        target: target,
+        index: index,
+        value: item,
+      ),
+    );
   }
 }
