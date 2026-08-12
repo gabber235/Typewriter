@@ -115,6 +115,7 @@ class Dropdown<T extends Object> extends HookWidget {
         dropdownMenuEntries: dropdownMenuEntries,
         inputDecorationTheme: inputDecorationTheme,
         menuStyle: menuStyle,
+        expandedInsets: EdgeInsets.zero,
       ),
     );
   }

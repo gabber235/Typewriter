@@ -113,6 +113,10 @@ void main() {
     expect(find.byType(Dropdown<String>), findsOneWidget);
     expect(find.byType(CupertinoSlidingSegmentedControl<String>), findsNothing);
     expect(find.text("General settings"), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(InputFieldContainer)).width,
+      tester.getSize(find.byType(EditorProtocolRenderer)).width,
+    );
 
     tester.widget<Dropdown<String>>(find.byType(Dropdown<String>)).onSelected!(
       "history",
@@ -122,6 +126,23 @@ void main() {
     expect(find.text("General settings"), findsNothing);
     expect(find.text("Change history"), findsOneWidget);
     expect(storyBuilds, 1);
+  });
+
+  testWidgets("enum input dropdown fills the editor width", (tester) async {
+    final enumScenario = inputRendererScenarios.singleWhere(
+      (scenario) => scenario.kind == RendererStoryKind.enumInput,
+    );
+
+    await tester.pumpWidget(
+      PresentationRendererStory(scenario: enumScenario, width: 520),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Dropdown<DataValue>), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(InputFieldContainer)).width,
+      tester.getSize(find.byType(EditorProtocolRenderer)).width,
+    );
   });
 
   testWidgets("unavailable realm actions expose their diagnostic", (
