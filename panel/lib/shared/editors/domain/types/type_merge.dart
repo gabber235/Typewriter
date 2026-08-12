@@ -1,5 +1,3 @@
-import "dart:math" as math;
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 TypeResult<TypeExpression> intersectTypes(
@@ -59,8 +57,14 @@ TypeResult<TypeExpression> _intersectStrings(
   StringType left,
   StringType right,
 ) {
-  final minimum = _maximumInt(left.minimumLength, right.minimumLength);
-  final maximum = _minimumInt(left.maximumLength, right.maximumLength);
+  final minimum = maximumNullableComparable(
+    left.minimumLength,
+    right.minimumLength,
+  );
+  final maximum = minimumNullableComparable(
+    left.maximumLength,
+    right.maximumLength,
+  );
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -74,8 +78,14 @@ TypeResult<TypeExpression> _intersectStrings(
 }
 
 TypeResult<TypeExpression> _intersectBytes(BytesType left, BytesType right) {
-  final minimum = _maximumInt(left.minimumLength, right.minimumLength);
-  final maximum = _minimumInt(left.maximumLength, right.maximumLength);
+  final minimum = maximumNullableComparable(
+    left.minimumLength,
+    right.minimumLength,
+  );
+  final maximum = minimumNullableComparable(
+    left.maximumLength,
+    right.maximumLength,
+  );
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -89,8 +99,8 @@ TypeResult<TypeExpression> _intersectIntegers(
   IntegerType right,
 ) {
   if (left.width != right.width) return _conflict(left, right);
-  final minimum = _maximumBigInt(left.minimum, right.minimum);
-  final maximum = _minimumBigInt(left.maximum, right.maximum);
+  final minimum = maximumNullableComparable(left.minimum, right.minimum);
+  final maximum = minimumNullableComparable(left.maximum, right.maximum);
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -101,8 +111,8 @@ TypeResult<TypeExpression> _intersectIntegers(
 
 TypeResult<TypeExpression> _intersectFloats(FloatType left, FloatType right) {
   if (left.width != right.width) return _conflict(left, right);
-  final minimum = _maximumDouble(left.minimum, right.minimum);
-  final maximum = _minimumDouble(left.maximum, right.maximum);
+  final minimum = maximumNullableComparable(left.minimum, right.minimum);
+  final maximum = minimumNullableComparable(left.maximum, right.maximum);
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -116,8 +126,14 @@ TypeResult<TypeExpression> _intersectLists(ListType left, ListType right) {
   if (element case TypeFailure(:final diagnostics)) {
     return TypeResult.failure(diagnostics);
   }
-  final minimum = _maximumInt(left.minimumLength, right.minimumLength);
-  final maximum = _minimumInt(left.maximumLength, right.maximumLength);
+  final minimum = maximumNullableComparable(
+    left.minimumLength,
+    right.minimumLength,
+  );
+  final maximum = minimumNullableComparable(
+    left.maximumLength,
+    right.maximumLength,
+  );
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -136,8 +152,14 @@ TypeResult<TypeExpression> _intersectMaps(MapType left, MapType right) {
   final value = intersectTypes(left.value, right.value);
   final diagnostics = [...key.diagnostics, ...value.diagnostics];
   if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
-  final minimum = _maximumInt(left.minimumLength, right.minimumLength);
-  final maximum = _minimumInt(left.maximumLength, right.maximumLength);
+  final minimum = maximumNullableComparable(
+    left.minimumLength,
+    right.minimumLength,
+  );
+  final maximum = minimumNullableComparable(
+    left.maximumLength,
+    right.maximumLength,
+  );
   if (minimum != null && maximum != null && minimum > maximum) {
     return _conflict(left, right);
   }
@@ -189,39 +211,3 @@ TypeFailure<TypeExpression> _conflict(
     message: "${left.runtimeType} conflicts with ${right.runtimeType}",
   ),
 ]);
-
-int? _maximumInt(int? left, int? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => math.max(a, b),
-};
-
-int? _minimumInt(int? left, int? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => math.min(a, b),
-};
-
-BigInt? _maximumBigInt(BigInt? left, BigInt? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => a > b ? a : b,
-};
-
-BigInt? _minimumBigInt(BigInt? left, BigInt? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => a < b ? a : b,
-};
-
-double? _maximumDouble(double? left, double? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => math.max(a, b),
-};
-
-double? _minimumDouble(double? left, double? right) => switch ((left, right)) {
-  (null, _) => right,
-  (_, null) => left,
-  (final a?, final b?) => math.min(a, b),
-};
