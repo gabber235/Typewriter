@@ -22,6 +22,7 @@ void main() {
   ];
   final scenarios = [
     ...primaryScenarios,
+    customRepeatedEmptyScenario,
     ...dataRendererVariantScenarios,
     ...inputRendererVariantScenarios,
     ...interactionRendererVariantScenarios,
@@ -64,6 +65,49 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets("conditional story changes branches inside the canvas", (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      PresentationRendererStory(
+        scenario: conditionalRendererScenario,
+        width: 520,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text("Timed dialogue"), findsOneWidget);
+    expect(find.text("Text"), findsOneWidget);
+    expect(find.text("Typing duration"), findsOneWidget);
+    expect(find.text("Wait duration"), findsOneWidget);
+    expect(find.text("Allow skip"), findsOneWidget);
+    expect(find.text("Timed dialogue hidden"), findsNothing);
+
+    await tester.enterText(
+      find.byType(EditableText).first,
+      "Meet me beside the old watchtower at dusk.",
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text("Timed dialogue"), findsNothing);
+    expect(find.text("Timed dialogue hidden"), findsOneWidget);
+
+    await tester.tap(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Timed dialogue"), findsOneWidget);
+    expect(
+      tester
+          .widget<EditableText>(find.byType(EditableText).first)
+          .controller
+          .text,
+      "Meet me beside the old watchtower at dusk.",
+    );
+  });
 
   testWidgets("three tabs use the segmented selector and change locally", (
     tester,

@@ -5,7 +5,20 @@ import "package:widgetbook_workspace/stories/shared/editors/presentation/protoco
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
 const _path = "[Shared]/Editors/Presentation protocol/Renderers/Data";
+const _conditionalPath = "$_path/Conditional";
+const _repeatedPath = "$_path/Repeated";
 const _itemBinding = BindingReference(bindingId: BindingId(1));
+final _conditionBinding = rootBinding.at(
+  DataPath.root.field("showTimedDialogue"),
+);
+final _dialogueTextBinding = rootBinding.at(DataPath.root.field("text"));
+final _typingDurationBinding = rootBinding.at(
+  DataPath.root.field("typingDuration"),
+);
+final _waitDurationBinding = rootBinding.at(
+  DataPath.root.field("waitDuration"),
+);
+final _allowSkipBinding = rootBinding.at(DataPath.root.field("allowSkip"));
 
 final dataRendererScenarios = [
   RendererStoryScenario(
@@ -154,20 +167,243 @@ Widget typedFieldRendererUseCase(BuildContext context) =>
     rendererStory(context, dataRendererScenarios[2]);
 
 @widgetbook.UseCase(
-  name: "Conditional",
+  name: "Interactive",
   type: PresentationRendererStory,
-  path: _path,
+  path: _conditionalPath,
 )
 Widget conditionalRendererUseCase(BuildContext context) =>
-    rendererStory(context, dataRendererScenarios[3]);
+    rendererStory(context, conditionalRendererScenario);
+
+final conditionalRendererScenario = RendererStoryScenario(
+  kind: RendererStoryKind.conditional,
+  name: "Conditional",
+  type: RecordType(
+    fields: {
+      "showTimedDialogue": TypeField(
+        name: "showTimedDialogue",
+        type: BooleanType(),
+      ),
+      "text": TypeField(name: "text", type: StringType(maximumLength: 240)),
+      "typingDuration": TypeField(name: "typingDuration", type: DurationType()),
+      "waitDuration": TypeField(name: "waitDuration", type: DurationType()),
+      "allowSkip": TypeField(name: "allowSkip", type: BooleanType()),
+    },
+  ),
+  value: RecordValue({
+    "showTimedDialogue": BooleanValue(true),
+    "text": StringValue("The lanterns will guide you through the old forest."),
+    "typingDuration": DurationValue(Duration(seconds: 2)),
+    "waitDuration": DurationValue(Duration(seconds: 4)),
+    "allowSkip": BooleanValue(true),
+  }),
+  presentation: storyNode(
+    "conditional",
+    PresentationElement.tabs(
+      initiallySelectedTabId: "preview",
+      tabs: [
+        TabItem(
+          id: "preview",
+          label: "Preview".asStringLiteral,
+          child: storyNode(
+            "conditionalPreview",
+            PresentationElement.column(
+              spacing: 16,
+              children: [
+                storyInput(
+                  "conditionInput",
+                  label: "Timed dialogue fields",
+                  binding: _conditionBinding,
+                  description: "This local Boolean is the conditional input.",
+                  showHeader: true,
+                  build: PresentationElement.toggleInput,
+                ),
+                storyNode(
+                  "conditionResult",
+                  PresentationElement.conditional(
+                    condition: bindingExpression(
+                      _conditionBinding,
+                      const BooleanType(),
+                    ),
+                    whenTrue: storyNode(
+                      "timedDialogueEditor",
+                      PresentationElement.section(
+                        title: "Timed dialogue".asStringLiteral,
+                        description:
+                            "Representative fields from TimedDialogueEntry."
+                                .asStringLiteral,
+                        child: storyNode(
+                          "timedDialogueFields",
+                          PresentationElement.column(
+                            spacing: 12,
+                            children: [
+                              storyInput(
+                                "dialogueText",
+                                label: "Text",
+                                binding: _dialogueTextBinding,
+                                description: "The message shown to the player.",
+                                build: (control) =>
+                                    PresentationElement.textInput(
+                                      control: control,
+                                      multiline: true,
+                                      placeholder:
+                                          "What should the speaker say?"
+                                              .asStringLiteral,
+                                    ),
+                              ),
+                              storyInput(
+                                "dialogueTypingDuration",
+                                label: "Typing duration",
+                                binding: _typingDurationBinding,
+                                description:
+                                    "Time used to animate the full message.",
+                                build: PresentationElement.durationInput,
+                              ),
+                              storyInput(
+                                "dialogueWaitDuration",
+                                label: "Wait duration",
+                                binding: _waitDurationBinding,
+                                description:
+                                    "Pause before the dialogue continues.",
+                                build: PresentationElement.durationInput,
+                              ),
+                              storyInput(
+                                "dialogueAllowSkip",
+                                label: "Allow skip",
+                                binding: _allowSkipBinding,
+                                description:
+                                    "Let the confirmation key complete or skip the dialogue.",
+                                showHeader: true,
+                                build: PresentationElement.toggleInput,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    whenFalse: storyNode(
+                      "timedDialogueHidden",
+                      PresentationElement.section(
+                        title: "Timed dialogue hidden".asStringLiteral,
+                        description:
+                            "The false branch replaces the field editor while preserving its bound values."
+                                .asStringLiteral,
+                        child: storyNode(
+                          "timedDialogueHiddenText",
+                          PresentationElement.text(
+                            "Enable the condition to continue editing the same dialogue."
+                                .asStringLiteral,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        TabItem(
+          id: "resolution",
+          label: "Resolution".asStringLiteral,
+          child: storyNode(
+            "conditionalResolution",
+            PresentationElement.markdown(
+              "### How it resolves\n\n"
+                      "1. The condition reads `showTimedDialogue`.\n"
+                      "2. `true` renders the timed dialogue fields.\n"
+                      "3. `false` renders the explicit fallback instead.\n\n"
+                      "The field values come from the same binding in both "
+                      "branches. Hiding and restoring the editor preserves "
+                      "local edits without recreating the Widgetbook story."
+                  .asStringLiteral,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
 
 @widgetbook.UseCase(
-  name: "Repeated",
+  name: "Interactive list",
   type: PresentationRendererStory,
-  path: _path,
+  path: _repeatedPath,
 )
 Widget repeatedRendererUseCase(BuildContext context) =>
     rendererStory(context, dataRendererScenarios[4]);
+final customRepeatedEmptyScenario = RendererStoryScenario(
+  kind: RendererStoryKind.repeated,
+  name: "Custom repeated empty state",
+  type: const ListType(element: StringType()),
+  value: const ListValue([]),
+  presentation: storyNode(
+    "emptyRepeated",
+    PresentationElement.tabs(
+      initiallySelectedTabId: "preview",
+      tabs: [
+        TabItem(
+          id: "preview",
+          label: "Preview".asStringLiteral,
+          child: storyNode(
+            "emptyPreview",
+            PresentationElement.repeated(
+              source: bindingExpression(
+                rootBinding,
+                const ListType(element: StringType()),
+              ),
+              itemBindingId: const BindingId(1),
+              template: storyNode(
+                "repeatedTemplate",
+                PresentationElement.text(
+                  bindingExpression(_itemBinding, const StringType()),
+                ),
+              ),
+              empty: storyNode(
+                "customEmpty",
+                PresentationElement.section(
+                  title: "No objectives yet".asStringLiteral,
+                  description:
+                      "The empty presentation replaces the objective template."
+                          .asStringLiteral,
+                  child: storyNode(
+                    "customEmptyText",
+                    PresentationElement.text(
+                      "Add the first objective when the quest is ready."
+                          .asStringLiteral,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        TabItem(
+          id: "resolution",
+          label: "Resolution".asStringLiteral,
+          child: storyNode(
+            "emptyResolution",
+            PresentationElement.markdown(
+              "### Empty resolution\n\n"
+                      "The objective source resolves to `[]`, so the template "
+                      "renders zero times. The renderer then uses the explicit "
+                      "`empty` presentation. If `empty` were omitted, the "
+                      "output would occupy no space."
+                  .asStringLiteral,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
+@widgetbook.UseCase(
+  name: "Custom empty state",
+  type: PresentationRendererStory,
+  path: _repeatedPath,
+)
+Widget customRepeatedEmptyUseCase(BuildContext context) =>
+    rendererStory(context, customRepeatedEmptyScenario);
 
 @widgetbook.UseCase(
   name: "Scoped binding",
