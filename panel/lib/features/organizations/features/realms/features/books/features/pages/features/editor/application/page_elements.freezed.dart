@@ -188,7 +188,7 @@ return cue(_that.cue);case _:
 
 class PageElementEntry implements PageElement {
   const PageElementEntry({required this.entry});
-
+  
 
  final  PageEntry entry;
 
@@ -251,7 +251,7 @@ as PageEntry,
 @override
 @pragma('vm:prefer-inline')
 $PageEntryCopyWith<$Res> get entry {
-
+  
   return $PageEntryCopyWith<$Res>(_self.entry, (value) {
     return _then(_self.copyWith(entry: value));
   });
@@ -263,7 +263,7 @@ $PageEntryCopyWith<$Res> get entry {
 
 class PageElementGroup implements PageElement {
   const PageElementGroup({required this.id, required this.name, required this.placement}): assert(id != "", 'ID must not be empty.');
-
+  
 
  final  String id;
  final  String name;
@@ -330,7 +330,7 @@ as EntryPlacement,
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-
+  
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -342,7 +342,7 @@ $EntryPlacementCopyWith<$Res> get placement {
 
 class PageElementCue implements PageElement {
   const PageElementCue({required this.cue});
-
+  
 
  final  Cue cue;
 
@@ -405,7 +405,7 @@ as Cue,
 @override
 @pragma('vm:prefer-inline')
 $CueCopyWith<$Res> get cue {
-
+  
   return $CueCopyWith<$Res>(_self.cue, (value) {
     return _then(_self.copyWith(cue: value));
   });
