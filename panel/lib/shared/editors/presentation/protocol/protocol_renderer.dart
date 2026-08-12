@@ -1,10 +1,29 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef RealmActionExecutor =
     FutureOr<TypedMutationResult> Function(RealmAction action);
+
+final _defaultEditorHeaderShortcuts =
+    Map<HeaderItemCommandId, List<ShortcutActivator>>.unmodifiable({
+      HeaderItemCommandId(
+        itemId: listItemReorderHeaderItemId,
+        command: HeaderItemCommand.moveBefore,
+      ): const [
+        SingleActivator(LogicalKeyboardKey.arrowUp, alt: true),
+        SingleActivator(LogicalKeyboardKey.keyK, alt: true),
+      ],
+      HeaderItemCommandId(
+        itemId: listItemReorderHeaderItemId,
+        command: HeaderItemCommand.moveAfter,
+      ): const [
+        SingleActivator(LogicalKeyboardKey.arrowDown, alt: true),
+        SingleActivator(LogicalKeyboardKey.keyJ, alt: true),
+      ],
+    });
 
 class EditorProtocolRenderer extends StatefulWidget {
   const EditorProtocolRenderer({
@@ -113,7 +132,10 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
       executeAction: _executeAction,
       resolvePresentation: _resolvePresentation,
       expansionStore: _expansionStore,
-      headerShortcuts: widget.headerShortcuts,
+      headerShortcuts: {
+        ..._defaultEditorHeaderShortcuts,
+        ...widget.headerShortcuts,
+      },
       activePresentations: {
         if (widget.presentation == null && selectedRoot != null)
           selectedRoot.id,
