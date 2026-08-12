@@ -1,5 +1,8 @@
+import "dart:math" as math;
+
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:flutter/rendering.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/ic.dart";
@@ -184,7 +187,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
   }
 }
 
-class _HeaderRow extends StatelessWidget {
+class _HeaderRow extends StatefulWidget {
   const _HeaderRow({
     required this.title,
     required this.items,
@@ -200,43 +203,322 @@ class _HeaderRow extends StatelessWidget {
   final bool expanded;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final reorderHandles = items
-          .whereType<_ResolvedHeaderReorderHandleItem>();
-      final beforeTitle = items.at(HeaderActionPlacement.beforeTitle);
-      final afterTitle = items.at(HeaderActionPlacement.afterTitle);
-      final end = items.at(HeaderActionPlacement.end);
-      final fixedWidth =
-          180 +
-          (reorderHandles.length + beforeTitle.length + afterTitle.length) * 40;
-      final availableItems = ((constraints.maxWidth - fixedWidth) / 40)
-          .floor()
-          .clamp(0, end.length);
-      final visible = end.take(availableItems).toList();
-      final overflow = end.skip(availableItems).toList();
-      return Row(
-        children: [
-          if (collapsible)
-            SizedBox.square(
-              dimension: 40,
-              child: Icon(
-                expanded ? Icons.expand_less : Icons.expand_more,
-                size: 18,
-              ),
-            ),
-          for (final item in reorderHandles) item.inlineWidget(context, scope),
-          for (final item in beforeTitle) item.inlineWidget(context, scope),
-          Flexible(child: SectionTitle(title: title)),
-          for (final item in afterTitle) item.inlineWidget(context, scope),
-          const Spacer(),
-          for (final item in visible) item.inlineWidget(context, scope),
-          if (overflow.isNotEmpty)
-            _OverflowItems(items: overflow, scope: scope),
-        ],
-      );
-    },
+  State<_HeaderRow> createState() => _HeaderRowState();
+}
+
+class _HeaderRowState extends State<_HeaderRow> {
+  var _visibleEndCount = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final reorderHandles = widget.items
+        .whereType<_ResolvedHeaderReorderHandleItem>()
+        .toList();
+    final beforeTitle = widget.items.at(HeaderActionPlacement.beforeTitle);
+    final afterTitle = widget.items.at(HeaderActionPlacement.afterTitle);
+    final end = widget.items.at(HeaderActionPlacement.end);
+    final beforeTitleWidgets = <Widget>[
+      if (widget.collapsible) _collapseAffordance(widget.expanded),
+      for (final item in reorderHandles)
+        item.inlineWidget(context, widget.scope),
+      for (final item in beforeTitle) item.inlineWidget(context, widget.scope),
+    ];
+    final overflow = end.skip(_visibleEndCount.clamp(0, end.length)).toList();
+    return _HeaderLayout(
+      beforeTitleCount: beforeTitleWidgets.length,
+      afterTitleCount: afterTitle.length,
+      endCount: end.length,
+      textDirection: Directionality.of(context),
+      onVisibleEndCountChanged: _handleVisibleEndCountChanged,
+      children: [
+        ...beforeTitleWidgets,
+        SectionTitle(title: widget.title),
+        for (final item in afterTitle) item.inlineWidget(context, widget.scope),
+        for (final item in end) item.inlineWidget(context, widget.scope),
+        if (end.isNotEmpty)
+          _OverflowItems(
+            items: overflow.isEmpty ? end : overflow,
+            scope: widget.scope,
+          ),
+      ],
+    );
+  }
+
+  Widget _collapseAffordance(bool expanded) => SizedBox.square(
+    dimension: 40,
+    child: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
   );
+
+  void _handleVisibleEndCountChanged(int value) {
+    if (!mounted || _visibleEndCount == value) return;
+    setState(() => _visibleEndCount = value);
+  }
+}
+
+class _HeaderLayoutParentData extends ContainerBoxParentData<RenderBox> {
+  bool isVisible = true;
+}
+
+class _HeaderLayout extends MultiChildRenderObjectWidget {
+  const _HeaderLayout({
+    required this.beforeTitleCount,
+    required this.afterTitleCount,
+    required this.endCount,
+    required this.textDirection,
+    required this.onVisibleEndCountChanged,
+    required super.children,
+  });
+
+  final int beforeTitleCount;
+  final int afterTitleCount;
+  final int endCount;
+  final TextDirection textDirection;
+  final ValueChanged<int> onVisibleEndCountChanged;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderHeaderLayout(
+    beforeTitleCount: beforeTitleCount,
+    afterTitleCount: afterTitleCount,
+    endCount: endCount,
+    textDirection: textDirection,
+    onVisibleEndCountChanged: onVisibleEndCountChanged,
+  );
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderHeaderLayout renderObject,
+  ) {
+    renderObject
+      ..beforeTitleCount = beforeTitleCount
+      ..afterTitleCount = afterTitleCount
+      ..endCount = endCount
+      ..textDirection = textDirection
+      ..onVisibleEndCountChanged = onVisibleEndCountChanged;
+  }
+}
+
+class _RenderHeaderLayout extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _HeaderLayoutParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _HeaderLayoutParentData> {
+  _RenderHeaderLayout({
+    required int beforeTitleCount,
+    required int afterTitleCount,
+    required int endCount,
+    required TextDirection textDirection,
+    required this.onVisibleEndCountChanged,
+  }) : _beforeTitleCount = beforeTitleCount,
+       _afterTitleCount = afterTitleCount,
+       _endCount = endCount,
+       _textDirection = textDirection;
+
+  int _beforeTitleCount;
+  int get beforeTitleCount => _beforeTitleCount;
+  set beforeTitleCount(int value) {
+    if (_beforeTitleCount == value) return;
+    _beforeTitleCount = value;
+    markNeedsLayout();
+  }
+
+  int _afterTitleCount;
+  int get afterTitleCount => _afterTitleCount;
+  set afterTitleCount(int value) {
+    if (_afterTitleCount == value) return;
+    _afterTitleCount = value;
+    markNeedsLayout();
+  }
+
+  int _endCount;
+  int get endCount => _endCount;
+  set endCount(int value) {
+    if (_endCount == value) return;
+    _endCount = value;
+    markNeedsLayout();
+  }
+
+  TextDirection _textDirection;
+  TextDirection get textDirection => _textDirection;
+  set textDirection(TextDirection value) {
+    if (_textDirection == value) return;
+    _textDirection = value;
+    markNeedsLayout();
+  }
+
+  ValueChanged<int> onVisibleEndCountChanged;
+
+  int? _reportedVisibleEndCount;
+
+  @override
+  void setupParentData(RenderObject child) {
+    if (child.parentData is! _HeaderLayoutParentData) {
+      child.parentData = _HeaderLayoutParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    final children = getChildrenAsList();
+    assert(
+      children.length ==
+          beforeTitleCount +
+              1 +
+              afterTitleCount +
+              endCount +
+              (endCount > 0 ? 1 : 0),
+    );
+    final titleIndex = beforeTitleCount;
+    final afterTitleStart = titleIndex + 1;
+    final endStart = afterTitleStart + afterTitleCount;
+    final overflowIndex = endStart + endCount;
+    final childConstraints = constraints.loosen();
+    final title = children[titleIndex];
+
+    var fixedWidth = 0.0;
+    var maxHeight = 0.0;
+    for (var index = 0; index < children.length; index++) {
+      if (index == titleIndex) continue;
+      final child = children[index]
+        ..layout(childConstraints, parentUsesSize: true);
+      maxHeight = math.max(maxHeight, child.size.height);
+      if (index < endStart) fixedWidth += child.size.width;
+    }
+
+    final endWidth = children
+        .skip(endStart)
+        .take(endCount)
+        .map((child) => child.size.width)
+        .sum;
+    if (!constraints.hasBoundedWidth) {
+      title.layout(childConstraints, parentUsesSize: true);
+      maxHeight = math.max(maxHeight, title.size.height);
+    }
+    final availableWidth = constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : fixedWidth + endWidth + title.size.width;
+    final overflowWidth = endCount > 0 ? children[overflowIndex].size.width : 0;
+    final showOverflow = fixedWidth + endWidth > availableWidth;
+    final inlineBudget = math.max(
+      availableWidth - fixedWidth - (showOverflow ? overflowWidth : 0),
+      0.0,
+    );
+    var visibleEndCount = 0;
+    var visibleEndWidth = 0.0;
+    for (final child in children.skip(endStart).take(endCount)) {
+      if (visibleEndWidth + child.size.width > inlineBudget) break;
+      visibleEndWidth += child.size.width;
+      visibleEndCount++;
+    }
+    if (!showOverflow) visibleEndCount = endCount;
+
+    final titleWidth = math.max(
+      availableWidth -
+          fixedWidth -
+          visibleEndWidth -
+          (showOverflow ? overflowWidth : 0),
+      0.0,
+    );
+    title.layout(
+      childConstraints.copyWith(maxWidth: titleWidth),
+      parentUsesSize: true,
+    );
+    maxHeight = math.max(maxHeight, title.size.height);
+    size = constraints.constrain(Size(availableWidth, maxHeight));
+
+    var logicalOffset = 0.0;
+    var semanticsChanged = false;
+    for (var index = 0; index < children.length; index++) {
+      final child = children[index];
+      final parentData = child.parentData! as _HeaderLayoutParentData;
+      final isVisible = switch (index) {
+        _ when index < endStart => true,
+        _ when index < overflowIndex => index - endStart < visibleEndCount,
+        _ => showOverflow,
+      };
+      if (parentData.isVisible != isVisible) {
+        parentData.isVisible = isVisible;
+        semanticsChanged = true;
+      }
+      if (!parentData.isVisible) continue;
+
+      final allocatedWidth = index == titleIndex
+          ? titleWidth
+          : child.size.width;
+      final childX = switch (textDirection) {
+        TextDirection.ltr => logicalOffset,
+        TextDirection.rtl => size.width - logicalOffset - child.size.width,
+      };
+      parentData.offset = Offset(childX, (size.height - child.size.height) / 2);
+      logicalOffset += allocatedWidth;
+    }
+    if (semanticsChanged) markNeedsSemanticsUpdate();
+    _reportVisibleEndCount(visibleEndCount);
+  }
+
+  void _reportVisibleEndCount(int value) {
+    if (_reportedVisibleEndCount == value) return;
+    _reportedVisibleEndCount = value;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!attached || _reportedVisibleEndCount != value) return;
+      onVisibleEndCountChanged(value);
+    });
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    var child = firstChild;
+    while (child != null) {
+      final parentData = child.parentData! as _HeaderLayoutParentData;
+      if (parentData.isVisible) {
+        context.paintChild(child, parentData.offset + offset);
+      }
+      child = childAfter(child);
+    }
+  }
+
+  @override
+  bool paintsChild(RenderBox child) =>
+      (child.parentData! as _HeaderLayoutParentData).isVisible;
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    var child = lastChild;
+    while (child != null) {
+      final parentData = child.parentData! as _HeaderLayoutParentData;
+      if (parentData.isVisible &&
+          result.addWithPaintOffset(
+            offset: parentData.offset,
+            position: position,
+            hitTest: (result, transformed) =>
+                child!.hitTest(result, position: transformed),
+          )) {
+        return true;
+      }
+      child = childBefore(child);
+    }
+    return false;
+  }
+
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) {
+    var child = firstChild;
+    while (child != null) {
+      final parentData = child.parentData! as _HeaderLayoutParentData;
+      if (parentData.isVisible) visitor(child);
+      child = childAfter(child);
+    }
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final parentData = child.parentData! as _HeaderLayoutParentData;
+    transform.translateByDouble(
+      parentData.offset.dx,
+      parentData.offset.dy,
+      0,
+      1,
+    );
+  }
 }
 
 extension on List<_ResolvedHeaderItem> {

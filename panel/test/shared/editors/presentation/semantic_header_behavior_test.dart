@@ -83,6 +83,7 @@ void main() {
   testWidgets("applies visibility, enabled state, and stable priority", (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final presentation = PresentationNode(
       id: "actions",
       element: const DividerElement(),
@@ -98,20 +99,84 @@ void main() {
     );
 
     await tester.pumpTestApp(
-      child: SizedBox(width: 230, child: _renderer(presentation: presentation)),
+      child: SizedBox(width: 130, child: _renderer(presentation: presentation)),
     );
 
     expect(find.byTooltip("hidden"), findsNothing);
-    expect(find.byTooltip("first"), findsOneWidget);
-    expect(find.byTooltip("second"), findsNothing);
-    expect(find.byTooltip("More actions"), findsOneWidget);
-    await tester.tap(find.byTooltip("More actions"));
+    expect(find.byTooltip("first").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("second").hitTestable(), findsNothing);
+    expect(find.byTooltip("More actions").hitTestable(), findsOneWidget);
+    expect(
+      tester.getSemantics(find.byTooltip("first")).getSemanticsData().tooltip,
+      "first",
+    );
+    expect(
+      tester.getSemantics(find.byTooltip("second")).getSemanticsData().tooltip,
+      isNot("second"),
+    );
+    await tester.tap(find.byTooltip("More actions").hitTestable());
     await tester.pumpAndSettle();
     expect(find.text("second"), findsOneWidget);
     final disabled = tester.widget<MenuItemButton>(
       find.widgetWithText(MenuItemButton, "disabled"),
     );
     expect(disabled.onPressed, isNull);
+    semantics.dispose();
+  });
+
+  testWidgets("uses genuine available width and responds to resizing", (
+    tester,
+  ) async {
+    final width = ValueNotifier(230.0);
+    addTearDown(width.dispose);
+    final presentation = PresentationNode(
+      id: "responsive.actions",
+      element: const DividerElement(),
+      header: PresentationHeader(
+        title: "Responsive".asStringLiteral,
+        items: [
+          _action("first", 30),
+          _action("second", 20),
+          _action("third", 10),
+        ],
+      ),
+    );
+
+    await tester.pumpTestApp(
+      child: ValueListenableBuilder(
+        valueListenable: width,
+        builder: (context, value, child) => SizedBox(
+          width: value,
+          child: _renderer(presentation: presentation),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip("first").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("second").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("third").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("More actions").hitTestable(), findsNothing);
+    expect(
+      tester.getRect(find.byType(PresentationHeaderChrome)).right -
+          tester.getRect(find.byTooltip("third")).right,
+      lessThanOrEqualTo(4),
+    );
+
+    width.value = 130;
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip("first").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("second").hitTestable(), findsNothing);
+    expect(find.byTooltip("third").hitTestable(), findsNothing);
+    expect(find.byTooltip("More actions").hitTestable(), findsOneWidget);
+
+    width.value = 230;
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip("second").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("third").hitTestable(), findsOneWidget);
+    expect(find.byTooltip("More actions").hitTestable(), findsNothing);
   });
 
   testWidgets("places items before the title, after it, and at the end", (
@@ -280,6 +345,7 @@ void main() {
       header: PresentationHeader(
         title: "Toggle".asStringLiteral,
         items: [
+          _action("companion", 1),
           _toggle(
             checked: _trueExpression,
             action: const RealmEditorAction(ReloadRealmAction()),
@@ -319,15 +385,15 @@ void main() {
 
     await tester.pumpTestApp(
       child: SizedBox(
-        width: 150,
+        width: 70,
         child: _renderer(
           presentation: presentation,
           headerShortcuts: shortcuts,
         ),
       ),
     );
-    expect(find.byType(Checkbox), findsNothing);
-    await tester.tap(find.byTooltip("More actions"));
+    expect(find.byType(Checkbox).hitTestable(), findsNothing);
+    await tester.tap(find.byTooltip("More actions").hitTestable());
     await tester.pumpAndSettle();
 
     final menuItem = tester.widget<MenuItemButton>(

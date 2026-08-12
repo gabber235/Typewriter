@@ -59,7 +59,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      SemanticHeaderGallery(scenario: actionOverflowScenario(), width: 320),
+      SemanticHeaderGallery(scenario: actionOverflowScenario(), width: 240),
     );
     await tester.pumpAndSettle();
 
