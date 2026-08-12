@@ -82,7 +82,7 @@ class _MapInput extends StatelessWidget {
           ? [
               HeaderButtonItem(
                 id: mapEntryRemoveHeaderItemId,
-                icon: _icon(HeroiconsSolid.trash),
+                icon: HeroiconsSolid.trash.asIconLiteral,
                 label: "Remove entry".asStringLiteral,
                 priority: _integer(90),
                 tone: HeaderActionTone.destructive,
@@ -218,13 +218,3 @@ class _MapInput extends StatelessWidget {
     );
   }
 }
-
-TypedExpression _integer(int value) => TypedExpression(
-  resultType: const IntegerType(width: IntegerWidth.signed64),
-  expression: LiteralExpression(IntegerValue(BigInt.from(value))),
-);
-
-TypedExpression _icon(String value) => TypedExpression(
-  resultType: NamedType(standardTypeRefs.icon),
-  expression: LiteralExpression(IconValue.from(value).typedValue),
-);
