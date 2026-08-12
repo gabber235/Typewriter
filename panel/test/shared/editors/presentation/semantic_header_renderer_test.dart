@@ -231,23 +231,11 @@ void main() {
     );
   });
 
-  testWidgets("supports every reorder command and disables boundaries", (
+  testWidgets("supports default reorder shortcuts and disables boundaries", (
     tester,
   ) async {
     const type = ListType(element: StringType());
     final shortcuts = {
-      HeaderItemCommandId(
-        itemId: listItemReorderHeaderItemId,
-        command: HeaderItemCommand.moveBefore,
-      ): [
-        SingleActivator(LogicalKeyboardKey.f1),
-      ],
-      HeaderItemCommandId(
-        itemId: listItemReorderHeaderItemId,
-        command: HeaderItemCommand.moveAfter,
-      ): [
-        SingleActivator(LogicalKeyboardKey.f2),
-      ],
       HeaderItemCommandId(
         itemId: listItemReorderHeaderItemId,
         command: HeaderItemCommand.moveToStart,
@@ -278,50 +266,156 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<void> focusValue(String value) async {
-      final field = find.byWidgetPredicate(
-        (widget) => widget is EditableText && widget.controller.text == value,
-      );
-      await tester.tap(field);
-      await tester.pump();
-    }
-
     List<String> values() => tester
         .widgetList<EditableText>(find.byType(EditableText))
         .map((field) => field.controller.text)
         .toList();
 
-    await focusValue("second");
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    final secondHeaderFocus = await _focusHeaderContainingValue(
+      tester,
+      "second",
+    );
+    await _sendAltKey(tester, LogicalKeyboardKey.arrowUp);
     await tester.pumpAndSettle();
     expect(values(), ["second", "first", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
 
-    await focusValue("second");
-    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+    await _sendAltKey(tester, LogicalKeyboardKey.arrowDown);
     await tester.pumpAndSettle();
     expect(values(), ["first", "second", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
 
-    await focusValue("second");
+    await _sendAltKey(tester, LogicalKeyboardKey.keyK);
+    await tester.pumpAndSettle();
+    expect(values(), ["second", "first", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
+
+    await _sendAltKey(tester, LogicalKeyboardKey.keyJ);
+    await tester.pumpAndSettle();
+    expect(values(), ["first", "second", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
+
     await tester.sendKeyEvent(LogicalKeyboardKey.f4);
     await tester.pumpAndSettle();
     expect(values(), ["first", "third", "second"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
 
-    await focusValue("second");
     await tester.sendKeyEvent(LogicalKeyboardKey.f3);
     await tester.pumpAndSettle();
     expect(values(), ["second", "first", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
 
-    await focusValue("second");
-    await tester.sendKeyEvent(LogicalKeyboardKey.f1);
+    await _sendAltKey(tester, LogicalKeyboardKey.arrowUp);
     await tester.sendKeyEvent(LogicalKeyboardKey.f3);
     await tester.pumpAndSettle();
     expect(values(), ["second", "first", "third"]);
+    expect(secondHeaderFocus.hasPrimaryFocus, isTrue);
 
-    await focusValue("third");
-    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+    final thirdHeaderFocus = await _focusHeaderContainingValue(tester, "third");
+    await _sendAltKey(tester, LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.f4);
     await tester.pumpAndSettle();
     expect(values(), ["second", "first", "third"]);
+    expect(thirdHeaderFocus.hasPrimaryFocus, isTrue);
+  });
+
+  testWidgets("does not reorder a list item from input focus", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("first"), StringValue("second")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 2"));
+    await tester.pumpAndSettle();
+    final field = tester.widget<EditableText>(find.byType(EditableText));
+    field.focusNode.requestFocus();
+    await tester.pump();
+    await _sendAltKey(tester, LogicalKeyboardKey.keyK);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .map((field) => field.controller.text),
+      ["second"],
+    );
+    expect(_expandedItemHeader("Item 1"), findsNothing);
+    expect(_expandedItemHeader("Item 2"), findsOneWidget);
+    expect(field.focusNode.hasPrimaryFocus, isTrue);
+  });
+
+  testWidgets("centers the focused list header after moving", (tester) async {
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+    const viewportKey = ValueKey("list reorder viewport");
+    await tester.pumpTestApp(
+      child: SizedBox(
+        height: 140,
+        child: SingleChildScrollView(
+          key: viewportKey,
+          controller: scrollController,
+          child: _renderer(
+            type: const ListType(element: StringType()),
+            value: const ListValue([
+              StringValue("first"),
+              StringValue("second"),
+              StringValue("third"),
+              StringValue("fourth"),
+              StringValue("fifth"),
+              StringValue("sixth"),
+            ]),
+          ),
+        ),
+      ),
+    );
+
+    final focusNode = await _focusHeaderWithTitle(tester, "Item 2");
+    await _sendAltKey(tester, LogicalKeyboardKey.keyJ);
+    await tester.pumpAndSettle();
+    await _sendAltKey(tester, LogicalKeyboardKey.keyJ);
+    await tester.pumpAndSettle();
+
+    expect(scrollController.offset, greaterThan(0));
+    _expectHeaderCentered(tester, focusNode, viewportKey);
+
+    await _sendAltKey(tester, LogicalKeyboardKey.keyK);
+    await tester.pumpAndSettle();
+
+    _expectHeaderCentered(tester, focusNode, viewportKey);
+  });
+
+  testWidgets("reorders the innermost focused list item header", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: ListType(element: StringType())),
+        value: const ListValue([
+          ListValue([StringValue("first"), StringValue("second")]),
+          ListValue([StringValue("third")]),
+        ]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1").first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Item 1").last);
+    await tester.tap(find.text("Item 2").first);
+    await tester.pumpAndSettle();
+
+    final firstHeaderFocus = await _focusHeaderContainingValue(tester, "first");
+    await _sendAltKey(tester, LogicalKeyboardKey.keyJ);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .map((field) => field.controller.text),
+      ["second", "first"],
+    );
+    expect(firstHeaderFocus.hasPrimaryFocus, isTrue);
   });
 
   testWidgets("confirms before removing a list item", (tester) async {
@@ -605,6 +699,67 @@ Rect _smallestAncestorRect<T extends Widget>(
       .reduce(
         (smallest, rect) => rect.height < smallest.height ? rect : smallest,
       );
+}
+
+Future<FocusNode> _focusHeaderContainingValue(
+  WidgetTester tester,
+  String value,
+) async {
+  final field = find.byWidgetPredicate(
+    (widget) => widget is EditableText && widget.controller.text == value,
+  );
+  PresentationHeaderChrome? header;
+  tester.element(field).visitAncestorElements((element) {
+    if (element.widget case final PresentationHeaderChrome chrome) {
+      header = chrome;
+      return false;
+    }
+    return true;
+  });
+  expect(header, isNotNull);
+  final inkWell = tester.widget<InkWell>(
+    find
+        .descendant(of: find.byWidget(header!), matching: find.byType(InkWell))
+        .first,
+  );
+  final focusNode = inkWell.focusNode!..requestFocus();
+  await tester.pumpAndSettle();
+  return focusNode;
+}
+
+Future<FocusNode> _focusHeaderWithTitle(
+  WidgetTester tester,
+  String title,
+) async {
+  final header = find.ancestor(
+    of: find.text(title),
+    matching: find.byType(PresentationHeaderChrome),
+  );
+  final inkWell = tester.widget<InkWell>(
+    find.descendant(of: header, matching: find.byType(InkWell)).first,
+  );
+  final focusNode = inkWell.focusNode!..requestFocus();
+  await tester.pumpAndSettle();
+  return focusNode;
+}
+
+void _expectHeaderCentered(
+  WidgetTester tester,
+  FocusNode focusNode,
+  Key viewportKey,
+) {
+  final focusedHeader = find.byWidgetPredicate(
+    (widget) => widget is InkWell && widget.focusNode == focusNode,
+  );
+  final headerRect = tester.getRect(focusedHeader);
+  final viewportRect = tester.getRect(find.byKey(viewportKey));
+  expect(headerRect.center.dy, closeTo(viewportRect.center.dy, 0.5));
+}
+
+Future<void> _sendAltKey(WidgetTester tester, LogicalKeyboardKey key) async {
+  await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+  await tester.sendKeyEvent(key);
+  await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
 }
 
 Future<void> _dragFirstItemAfterSecond(WidgetTester tester) async {

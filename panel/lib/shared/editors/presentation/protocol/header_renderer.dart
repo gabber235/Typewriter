@@ -35,6 +35,7 @@ class PresentationHeaderChrome extends StatefulWidget {
 
 class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
   late ExpansibleController _expansibleController;
+  late final FocusNode _headerFocusNode;
 
   BindingReference? get _binding => widget.header.binding == null
       ? null
@@ -44,11 +45,16 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
   void initState() {
     super.initState();
     _expansibleController = _createExpansibleController();
+    _headerFocusNode = FocusNode(debugLabel: "Presentation header");
   }
 
   @override
   void didUpdateWidget(PresentationHeaderChrome oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final movedWithSameIdentity =
+        widget.expansionIdentity != null &&
+        oldWidget.expansionIdentity == widget.expansionIdentity &&
+        oldWidget.nodeId != widget.nodeId;
     final bindingChanged = oldWidget.header.binding == null
         ? widget.header.binding != null
         : widget.header.binding == null ||
@@ -62,11 +68,22 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
       _expansibleController.dispose();
       _expansibleController = _createExpansibleController();
     }
+    if (movedWithSameIdentity) _ensureFocusedHeaderVisible();
+  }
+
+  void _ensureFocusedHeaderVisible() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_headerFocusNode.hasPrimaryFocus) return;
+      final headerContext = _headerFocusNode.context;
+      if (headerContext == null) return;
+      Scrollable.ensureVisible(headerContext, alignment: 0.5);
+    });
   }
 
   @override
   void dispose() {
     _expansibleController.dispose();
+    _headerFocusNode.dispose();
     super.dispose();
   }
 
@@ -118,37 +135,41 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
       expanded: _expansibleController.isExpanded,
     );
     final collapsible = widget.header.initiallyExpanded != null;
-    final headerContent = Material(
-      color: Colors.transparent,
-      borderRadius: context.shapes.smallBorderRadius,
-      child: InkWell(
-        onTap: collapsible ? _toggle : null,
+    final headerContent = ManagedActionSet(
+      shortcuts: shortcuts,
+      child: Material(
+        color: Colors.transparent,
         borderRadius: context.shapes.smallBorderRadius,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: collapsible ? context.spacing.space1 : 0,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: context.spacing.space1,
-            children: [
-              headerRow,
-              if (description.isNotEmpty) ...[
-                SizedBox(
-                  key: ValueKey((
-                    "presentationHeaderDescription",
-                    widget.nodeId,
-                  )),
-                  width: double.infinity,
-                  child: Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.colors.contentSecondary,
+        child: InkWell(
+          focusNode: _headerFocusNode,
+          onTap: collapsible ? _toggle : null,
+          borderRadius: context.shapes.smallBorderRadius,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: collapsible ? context.spacing.space1 : 0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: context.spacing.space1,
+              children: [
+                headerRow,
+                if (description.isNotEmpty) ...[
+                  SizedBox(
+                    key: ValueKey((
+                      "presentationHeaderDescription",
+                      widget.nodeId,
+                    )),
+                    width: double.infinity,
+                    child: Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.colors.contentSecondary,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -180,10 +201,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [headerContent, widget.child],
           );
-    return ManagedActionSet(
-      shortcuts: shortcuts,
-      child: DepthBox(enabled: collapsible, child: content),
-    );
+    return DepthBox(enabled: collapsible, child: content);
   }
 }
 
