@@ -94,6 +94,13 @@ void main() {
       ]),
     );
 
+    expect(find.text("Map entry"), findsOneWidget);
+
+    await tester.tap(find.text("Map entry"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Key"), findsOneWidget);
+    expect(find.text("Value"), findsOneWidget);
     expect(find.text("1"), findsWidgets);
     expect(find.byTooltip("Add entry"), findsOneWidget);
   });

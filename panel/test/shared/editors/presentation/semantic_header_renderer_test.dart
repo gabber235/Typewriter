@@ -168,6 +168,25 @@ void main() {
     );
   });
 
+  testWidgets("does not label default list editors with their index", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("first"), StringValue("second")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1"));
+    await tester.tap(find.text("Item 2"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("0"), findsNothing);
+    expect(find.text("1"), findsNothing);
+    expect(find.byType(TextFormField), findsNWidgets(2));
+  });
+
   testWidgets("moves expansion between equal list values", (tester) async {
     await tester.pumpTestApp(
       child: _renderer(

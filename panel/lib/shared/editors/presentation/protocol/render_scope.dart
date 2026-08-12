@@ -125,16 +125,53 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     BindingId id,
     BindingSnapshot snapshot,
     ValueChanged<DataValue> onChanged,
-  ) => copyWith(
-    expressions: expressions.withBinding(id, snapshot),
-    setBinding: (reference, value, context, aliases) {
-      if (reference.bindingId == id && reference.path.segments.isEmpty) {
-        onChanged(value);
-        return;
-      }
-      setBinding(reference, value, context, aliases);
-    },
-  );
+  ) {
+    var currentValue = snapshot.value;
+    return copyWith(
+      expressions: expressions.withBinding(id, snapshot),
+      setBinding: (reference, value, context, aliases) {
+        if (reference.bindingId != id) {
+          setBinding(reference, value, context, aliases);
+          return;
+        }
+        final updated = reference.path.replace(currentValue, value).valueOrNull;
+        if (updated == null) return;
+        currentValue = updated;
+        onChanged(updated);
+      },
+      executeAction: (action, context, aliases) {
+        if (action case LocalEditorAction(
+          action: final local,
+        ) when local._bindingReference.bindingId == id) {
+          final result = action.execute(
+            context,
+            registry: registry,
+            budget: budget,
+          );
+          if (result case MutationSuccess(:final value)) {
+            currentValue = value;
+            onChanged(value);
+          }
+          return;
+        }
+        executeAction(action, context, aliases);
+      },
+    );
+  }
+}
+
+extension on LocalAction {
+  BindingReference get _bindingReference => switch (this) {
+    SetValueAction(:final target) ||
+    InsertListItemAction(:final target) ||
+    RemoveListItemAction(:final target) ||
+    AppendListItemAction(:final target) ||
+    PutMapEntryAction(:final target) ||
+    RemoveMapEntryAction(:final target) ||
+    ReplaceConcreteTypeAction(:final target) => target,
+    DuplicateListItemAction(:final source) ||
+    ReorderListItemAction(:final source) => source,
+  };
 }
 
 Widget presentationDiagnostic(

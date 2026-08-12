@@ -56,7 +56,14 @@ extension TypeExpressionDefaultPresentation on TypeExpression {
     BindingReference binding = const BindingReference(bindingId: BindingId(0)),
     String nodeId = "root",
     bool root = true,
-  }) => _DefaultPresentationGenerator().generate(this, binding, nodeId, root);
+    String? label,
+  }) => _DefaultPresentationGenerator().generate(
+    this,
+    binding,
+    nodeId,
+    root,
+    label,
+  );
 }
 
 final class _DefaultPresentationGenerator {

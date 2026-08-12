@@ -162,13 +162,15 @@ void main() {
 
     await tester.enterText(keyField, "new key");
     await tester.pumpAndSettle();
-    await tester.tap(find.text("new key"));
-    await tester.pumpAndSettle();
 
     final updatedKeyField = find.byType(TextField);
     expect(
       tester.widget<TextField>(updatedKeyField).controller?.text,
       "new key",
+    );
+    expect(
+      tester.widget<TextField>(updatedKeyField).focusNode?.hasFocus,
+      isTrue,
     );
     expect(find.text("rendered value"), findsOneWidget);
   });
