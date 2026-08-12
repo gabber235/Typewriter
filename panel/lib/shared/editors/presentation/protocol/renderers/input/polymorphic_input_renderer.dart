@@ -20,9 +20,23 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
       ]);
     }
     final value = binding.value as PolymorphicValue;
+    final selectedIndex = element.concreteTypes.indexWhere(
+      (candidate) => candidate.type == value.concreteType,
+    );
     final selected = element.concreteTypes
         .where((candidate) => candidate.type == value.concreteType)
         .firstOrNull;
+    final content = switch (selected?.presentation) {
+      final presentation? => PresentationNodeRenderer(
+        node: presentation.localizeFailures(
+          scope.expressions,
+          registry: scope.registry,
+          budget: scope.budget,
+        ),
+        scope: scope,
+      ),
+      null => value._defaultConcreteEditor(binding, element, scope),
+    };
     return LabeledControl(
       control: element.control,
       scope: scope,
@@ -39,17 +53,13 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
             onSelected: (type) => type._replace(element, scope),
           ),
           const SizedBox(height: 12),
-          if (selected?.presentation case final presentation?)
-            PresentationNodeRenderer(
-              node: presentation.localizeFailures(
-                scope.expressions,
-                registry: scope.registry,
-                budget: scope.budget,
-              ),
-              scope: scope,
-            )
-          else
-            value._defaultConcreteEditor(binding, element, scope),
+          DirectionalContentSwitcher(
+            index: selectedIndex,
+            child: KeyedSubtree(
+              key: ValueKey(value.concreteType),
+              child: content,
+            ),
+          ),
         ],
       ),
     );
