@@ -1,0 +1,47 @@
+import { DataPath } from "editor/v1/path.skir";
+
+enum DiagnosticSeverity(810300001) {
+  information = 1;
+  warning = 2;
+  error = 3;
+}
+
+enum DiagnosticCode(810300002) {
+  invalid_type_id = 1;
+  invalid_revision = 2;
+  duplicate_definition = 3;
+  invalid_arity = 4;
+  unsatisfied_bound = 5;
+  invalid_variance = 6;
+  inheritance_cycle = 7;
+  inheritance_conflict = 8;
+  weakened_constraint = 9;
+  incompatible_representation = 10;
+  invalid_value = 11;
+  missing_required_field = 12;
+  unknown_field = 13;
+  invalid_path = 14;
+  invalid_concrete_type = 15;
+  conversion_not_found = 16;
+  conversion_ambiguous = 17;
+  conversion_failed = 18;
+  invalid_expression = 19;
+  evaluation_budget_exceeded = 20;
+  invalid_presentation = 21;
+  mutation_conflict = 22;
+  permission_denied = 23;
+}
+
+struct TypeDiagnostic(810300003) {
+  code: DiagnosticCode = 0;
+  severity: DiagnosticSeverity = 1;
+  message: string = 2;
+  path: DataPath? = 3;
+  related_type: string? = 4;
+  details: [DiagnosticDetail] = 5;
+}
+
+struct DiagnosticDetail(810300004) {
+  key: string = 0;
+  value: string = 1;
+}

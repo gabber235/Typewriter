@@ -1,0 +1,81 @@
+import { ConversionDefinition } from "editor/v1/conversion.skir";
+import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { PresentationDefinition } from "editor/v1/presentation.skir";
+import {
+  ConversionId,
+  PresentationId,
+  RealmActionId,
+  ResolvedTypeRef,
+  TypeDefinition,
+} from "editor/v1/type_catalog.skir";
+
+struct CatalogGeneration(811100001) {
+  value: string = 0;
+}
+
+struct SubtypeQueryId(811100002) {
+  value: string = 0;
+}
+
+struct SubtypeQuery(811100003) {
+  query_id: SubtypeQueryId = 0;
+  target: ResolvedTypeRef = 1;
+}
+
+struct SubtypeResult(811100004) {
+  query_id: SubtypeQueryId = 0;
+  matching_types: [ResolvedTypeRef] = 1;
+}
+
+struct RealmActionDefinition(811100005) {
+  realm_action_id: RealmActionId = 0;
+  payload_type: ResolvedTypeRef = 1;
+  result_type: ResolvedTypeRef? = 2;
+}
+
+struct CatalogFetchRequest(811100006) {
+  expected_generation: CatalogGeneration? = 0;
+  requested_types: [ResolvedTypeRef] = 1;
+  presentation_ids: [PresentationId] = 2;
+  conversion_ids: [ConversionId] = 3;
+  realm_action_ids: [RealmActionId] = 4;
+  subtype_queries: [SubtypeQuery] = 5;
+}
+
+struct CatalogFetchSuccess(811100007) {
+  generation: CatalogGeneration = 0;
+  type_definitions: [TypeDefinition] = 1;
+  presentation_definitions: [PresentationDefinition] = 2;
+  conversions: [ConversionDefinition] = 3;
+  realm_action_definitions: [RealmActionDefinition] = 4;
+  subtype_results: [SubtypeResult] = 5;
+  diagnostics: [TypeDiagnostic] = 6;
+}
+
+struct CatalogGenerationMismatch(811100008) {
+  actual_generation: CatalogGeneration = 0;
+}
+
+enum CatalogFetchResult(811100009) {
+  success: CatalogFetchSuccess = 1;
+  generation_mismatch: CatalogGenerationMismatch = 2;
+  unavailable: [TypeDiagnostic] = 3;
+}
+
+struct CatalogInvalidated(811100010) {
+  generation: CatalogGeneration = 0;
+  reason: string = 1;
+}
+
+enum CatalogWatchUpdate(811100011) {
+  initial: CatalogGeneration = 1;
+  invalidated: CatalogInvalidated = 2;
+}
+
+method FetchEditorCatalog(
+  CatalogFetchRequest
+): CatalogFetchResult = 910001;
+
+method WatchEditorCatalog(
+  struct {}
+): CatalogWatchUpdate = 910002;

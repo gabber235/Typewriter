@@ -1,6 +1,7 @@
 library;
 
 export "converters.dart";
+export "editor_codec.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";
 export "skirout/kernel/v1/color.dart";

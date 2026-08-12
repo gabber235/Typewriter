@@ -1,0 +1,350 @@
+import { EditorAction } from "editor/v1/action.skir";
+import {
+  BindingId,
+  BindingRef,
+} from "editor/v1/binding.skir";
+import { TypedExpression } from "editor/v1/expression.skir";
+import {
+  PresentationId,
+  ResolvedTypeRef,
+  TypeExpression,
+} from "editor/v1/type_catalog.skir";
+
+enum MainAxisAlignment(810900001) {
+  start = 1;
+  center = 2;
+  end = 3;
+  space_between = 4;
+  space_around = 5;
+  space_evenly = 6;
+}
+
+enum CrossAxisAlignment(810900002) {
+  start = 1;
+  center = 2;
+  end = 3;
+  stretch = 4;
+}
+
+struct PresentationProperties(810900003) {
+  enabled_if: TypedExpression? = 0;
+  read_only: bool = 1;
+}
+
+struct HeaderActionId(810900051) {
+  namespace: string = 0;
+  name: string = 1;
+}
+
+enum HeaderActionTone(810900052) {
+  neutral = 1;
+  destructive = 2;
+}
+
+enum HeaderActionPlacement(810900059) {
+  before_title = 1;
+  after_title = 2;
+  end = 3;
+}
+
+struct InvokeHeaderAction(810900053) {
+  action: EditorAction = 0;
+}
+
+struct ReorderListItemHeaderAction(810900054) {
+  source: BindingRef = 0;
+}
+
+enum HeaderActionActivation(810900055) {
+  invoke: InvokeHeaderAction = 1;
+  reorder_list_item: ReorderListItemHeaderAction = 2;
+}
+
+struct HeaderActionConfirmation(810900056) {
+  title: TypedExpression = 0;
+  message: TypedExpression = 1;
+  confirmation_label: TypedExpression = 2;
+}
+
+struct EditorHeaderAction(810900057) {
+  action_id: HeaderActionId = 0;
+  icon: TypedExpression = 1;
+  label: TypedExpression = 2;
+  tooltip: TypedExpression? = 3;
+  activation: HeaderActionActivation = 4;
+  priority: TypedExpression? = 5;
+  visible_if: TypedExpression? = 6;
+  enabled_if: TypedExpression? = 7;
+  tone: HeaderActionTone = 8;
+  confirmation: HeaderActionConfirmation? = 9;
+  placement: HeaderActionPlacement = 10;
+}
+
+struct PresentationHeader(810900058) {
+  binding: BindingRef? = 0;
+  title: TypedExpression? = 1;
+  description: TypedExpression? = 2;
+  initially_expanded: bool? = 3;
+  actions: [EditorHeaderAction] = 4;
+}
+
+struct PresentationNode(810900004) {
+  node_id: string = 0;
+  properties: PresentationProperties = 1;
+  element: PresentationElement? = 2;
+  header: PresentationHeader? = 3;
+}
+
+struct ChildrenLayout(810900005) {
+  children: [PresentationNode] = 0;
+  spacing: float64 = 1;
+  main_axis_alignment: MainAxisAlignment = 2;
+  cross_axis_alignment: CrossAxisAlignment = 3;
+}
+
+struct SingleChildLayout(810900006) {
+  child: PresentationNode = 0;
+}
+
+struct GridLayout(810900007) {
+  children: [PresentationNode] = 0;
+  columns: int32 = 1;
+  horizontal_spacing: float64 = 2;
+  vertical_spacing: float64 = 3;
+}
+
+struct CardLayout(810900042) {
+  child: PresentationNode = 0;
+  initially_expanded: bool? = 1;
+}
+
+struct SectionLayout(810900008) {
+  title: TypedExpression = 0;
+  description: TypedExpression? = 1;
+  child: PresentationNode = 2;
+  initially_expanded: bool? = 3;
+}
+
+struct CollapsibleLayout(810900043) {
+  title: TypedExpression = 0;
+  child: PresentationNode = 1;
+  initially_expanded: bool = 2;
+}
+
+struct TabItem(810900009) {
+  tab_id: string = 0;
+  label: TypedExpression = 1;
+  child: PresentationNode = 2;
+}
+
+struct TabsLayout(810900010) {
+  tabs: [TabItem|tab_id] = 0;
+  initially_selected_tab_id: string? = 1;
+}
+
+struct SpacerLayout(810900011) {
+  width: TypedExpression? = 0;
+  height: TypedExpression? = 1;
+}
+
+struct TextContent(810900012) {
+  value: TypedExpression = 0;
+}
+
+struct IconContent(810900013) {
+  name: TypedExpression = 0;
+  semantic_label: TypedExpression? = 1;
+}
+
+struct ImageContent(810900014) {
+  source: TypedExpression = 0;
+  semantic_label: TypedExpression? = 1;
+}
+
+struct BadgeContent(810900015) {
+  label: TypedExpression = 0;
+  tone: string = 1;
+}
+
+struct ProgressContent(810900016) {
+  value: TypedExpression = 0;
+  maximum: TypedExpression = 1;
+  label: TypedExpression? = 2;
+}
+
+struct TypedFieldElement(810900017) {
+  binding: BindingRef = 0;
+  expected_type: TypeExpression = 1;
+  presentation: PresentationNode? = 2;
+}
+
+struct ConditionalElement(810900018) {
+  condition: TypedExpression = 0;
+  when_true: PresentationNode = 1;
+  when_false: PresentationNode? = 2;
+}
+
+struct RepeatedElement(810900019) {
+  source: TypedExpression = 0;
+  item_binding_id: BindingId = 1;
+  template: PresentationNode = 2;
+  empty: PresentationNode? = 3;
+}
+
+struct ScopedBindingElement(810900020) {
+  binding: BindingRef = 0;
+  scope_binding_id: BindingId = 1;
+  child: PresentationNode = 2;
+}
+
+struct BoundControl(810900021) {
+  binding: BindingRef = 0;
+  label: TypedExpression? = 1;
+  description: TypedExpression? = 2;
+}
+
+struct TextControl(810900022) {
+  control: BoundControl = 0;
+  multiline: bool? = 1;
+  placeholder: TypedExpression? = 2;
+}
+
+struct SelectOption(810900023) {
+  option_id: string = 0;
+  label: TypedExpression = 1;
+  value: TypedExpression = 2;
+}
+
+struct SelectControl(810900024) {
+  control: BoundControl = 0;
+  options: [SelectOption|option_id] = 1;
+  allow_custom_value: bool = 2;
+}
+
+struct SliderControl(810900025) {
+  control: BoundControl = 0;
+  minimum: TypedExpression = 1;
+  maximum: TypedExpression = 2;
+  divisions: TypedExpression? = 3;
+}
+
+struct ListControl(810900044) {
+  control: BoundControl = 0;
+  item_presentation: PresentationNode? = 1;
+  allow_add: bool = 2;
+  allow_remove: bool = 3;
+  allow_reorder: bool = 4;
+  item_binding_id: BindingId = 5;
+  index_binding_id: BindingId = 6;
+}
+
+struct MapControl(810900045) {
+  control: BoundControl = 0;
+  key_presentation: PresentationNode? = 1;
+  value_presentation: PresentationNode? = 2;
+  allow_add: bool = 3;
+  allow_remove: bool = 4;
+  key_binding_id: BindingId = 5;
+  value_binding_id: BindingId = 6;
+}
+
+struct RecordControl(810900046) {
+  control: BoundControl = 0;
+  field_presentation: PresentationNode? = 1;
+}
+
+struct ConcreteTypePresentation(810900047) {
+  concrete_type: ResolvedTypeRef = 0;
+  label: TypedExpression = 1;
+  presentation: PresentationNode? = 2;
+}
+
+struct PolymorphicControl(810900048) {
+  control: BoundControl = 0;
+  concrete_types: [ConcreteTypePresentation] = 1;
+}
+
+struct DefaultPresentationElement(810900049) {
+  binding: BindingRef = 0;
+  presentation_id: PresentationId? = 1;
+}
+
+struct ButtonElement(810900029) {
+  label: TypedExpression = 0;
+  action: EditorAction = 1;
+}
+
+struct IconButtonElement(810900030) {
+  icon: TypedExpression = 0;
+  semantic_label: TypedExpression = 1;
+  action: EditorAction = 2;
+}
+
+struct MenuItem(810900031) {
+  item_id: string = 0;
+  label: TypedExpression = 1;
+  action: EditorAction = 2;
+}
+
+struct MenuElement(810900032) {
+  label: TypedExpression? = 0;
+  items: [MenuItem|item_id] = 1;
+}
+
+struct TooltipElement(810900033) {
+  message: TypedExpression = 0;
+  child: PresentationNode = 1;
+}
+
+enum PresentationElement(810900034) {
+  column: ChildrenLayout = 1;
+  row: ChildrenLayout = 2;
+  wrap: ChildrenLayout = 3;
+  stack: ChildrenLayout = 4;
+  grid: GridLayout = 5;
+  scroll: SingleChildLayout = 6;
+  card: CardLayout = 7;
+  section: SectionLayout = 8;
+  tabs: TabsLayout = 9;
+  divider = 10;
+  spacer: SpacerLayout = 11;
+  text: TextContent = 12;
+  rich_text: TextContent = 13;
+  markdown: TextContent = 14;
+  icon: IconContent = 15;
+  image: ImageContent = 16;
+  badge: BadgeContent = 17;
+  progress: ProgressContent = 18;
+  typed_field: TypedFieldElement = 19;
+  conditional: ConditionalElement = 20;
+  repeated: RepeatedElement = 21;
+  scoped_binding: ScopedBindingElement = 22;
+  text_input: TextControl = 23;
+  numeric_input: BoundControl = 24;
+  toggle_input: BoundControl = 25;
+  select_input: SelectControl = 26;
+  slider_input: SliderControl = 27;
+  date_time_input: BoundControl = 28;
+  duration_input: BoundControl = 29;
+  color_input: BoundControl = 30;
+  bytes_input: BoundControl = 31;
+  named_input: BoundControl = 32;
+  button: ButtonElement = 33;
+  icon_button: IconButtonElement = 34;
+  menu: MenuElement = 35;
+  tooltip: TooltipElement = 36;
+  list_input: ListControl = 37;
+  map_input: MapControl = 38;
+  record_input: RecordControl = 39;
+  enum_input: BoundControl = 40;
+  polymorphic_input: PolymorphicControl = 41;
+  default_presentation: DefaultPresentationElement = 42;
+  collapsible: CollapsibleLayout = 43;
+  icon_input: BoundControl = 44;
+}
+
+struct PresentationDefinition(810900050) {
+  presentation_id: PresentationId = 0;
+  target: TypeExpression = 1;
+  root: PresentationNode = 2;
+}

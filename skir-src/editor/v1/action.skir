@@ -1,0 +1,107 @@
+import { BindingRef } from "editor/v1/binding.skir";
+import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { TypedExpression } from "editor/v1/expression.skir";
+import {
+  RealmActionId,
+  ResolvedTypeRef,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+
+struct SetValueAction(810800001) {
+  target: BindingRef = 0;
+  value: TypedExpression = 1;
+}
+
+struct InsertListItemAction(810800002) {
+  target: BindingRef = 0;
+  index: TypedExpression = 1;
+  value: TypedExpression = 2;
+}
+
+struct RemoveListItemAction(810800003) {
+  target: BindingRef = 0;
+  index: TypedExpression = 1;
+}
+
+struct AppendListItemAction(810800019) {
+  target: BindingRef = 0;
+  value: TypedExpression = 1;
+}
+
+struct DuplicateListItemAction(810800020) {
+  source: BindingRef = 0;
+}
+
+struct ReorderListItemAction(810800021) {
+  source: BindingRef = 0;
+  new_index: TypedExpression = 1;
+}
+
+struct PutMapEntryAction(810800004) {
+  target: BindingRef = 0;
+  key: TypedExpression = 1;
+  value: TypedExpression = 2;
+}
+
+struct RemoveMapEntryAction(810800005) {
+  target: BindingRef = 0;
+  key: TypedExpression = 1;
+}
+
+struct ReplaceConcreteNominalTypeAction(810800013) {
+  target: BindingRef = 0;
+  concrete_type: ResolvedTypeRef = 1;
+  value: TypedExpression = 2;
+}
+
+enum LocalEditorAction(810800014) {
+  set_value: SetValueAction = 1;
+  insert_list_item: InsertListItemAction = 2;
+  remove_list_item: RemoveListItemAction = 3;
+  append_list_item: AppendListItemAction = 4;
+  duplicate_list_item: DuplicateListItemAction = 5;
+  reorder_list_item: ReorderListItemAction = 6;
+  put_map_entry: PutMapEntryAction = 7;
+  remove_map_entry: RemoveMapEntryAction = 8;
+  replace_concrete_nominal_type: ReplaceConcreteNominalTypeAction = 9;
+}
+
+struct ReloadRealmAction(810800015) {}
+
+struct RealmCallbackAction(810800016) {
+  realm_action_id: RealmActionId = 0;
+  payload: TypedExpression = 1;
+}
+
+enum RealmEditorAction(810800017) {
+  reload: ReloadRealmAction = 1;
+  callback: RealmCallbackAction = 2;
+}
+
+enum EditorAction(810800009) {
+  local: LocalEditorAction = 1;
+  realm: RealmEditorAction = 2;
+}
+
+struct MutationSuccess(810800010) {
+  revision: int64 = 0;
+  value: TypedValue = 1;
+}
+
+struct MutationConflict(810800011) {
+  expected_revision: int64 = 0;
+  actual_revision: int64 = 1;
+  actual_value: TypedValue = 2;
+}
+
+struct PermissionDenied(810800018) {
+  message: string = 0;
+}
+
+enum TypedMutationResult(810800012) {
+  success: MutationSuccess = 1;
+  conflict: MutationConflict = 2;
+  invalid: [TypeDiagnostic] = 3;
+  unavailable: [TypeDiagnostic] = 4;
+  permission_denied: PermissionDenied = 5;
+}

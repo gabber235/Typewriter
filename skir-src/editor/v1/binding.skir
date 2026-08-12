@@ -1,0 +1,28 @@
+import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { DataPath } from "editor/v1/path.skir";
+import {
+  TypeExpression,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+
+struct BindingId(810400012) {
+  value: int64 = 0;
+}
+
+struct BindingRef(810400007) {
+  path: DataPath = 0;
+  binding_id: BindingId = 1;
+}
+
+struct ResolvedBinding(810400008) {
+  reference: BindingRef = 0;
+  value_type: TypeExpression = 1;
+  value: TypedValue = 2;
+  writable: bool = 3;
+  revision: int64 = 4;
+}
+
+enum BindingResolution(810400011) {
+  resolved: ResolvedBinding = 1;
+  diagnostics: [TypeDiagnostic] = 2;
+}

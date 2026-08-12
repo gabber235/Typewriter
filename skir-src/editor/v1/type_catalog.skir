@@ -1,0 +1,218 @@
+import { Duration } from "kernel/v1/duration.skir";
+
+enum BuiltinTypeId(810100027) {
+  option = 1;
+  some = 2;
+  none = 3;
+}
+
+struct QualifiedTypeId(810100028) {
+  namespace: string = 0;
+  name: string = 1;
+}
+
+enum TypeId(810100001) {
+  builtin: BuiltinTypeId = 1;
+  realm: QualifiedTypeId = 2;
+}
+
+enum TypeVariance(810100003) {
+  invariant = 1;
+  covariant = 2;
+  contravariant = 3;
+}
+
+enum IntegerWidth(810100004) {
+  eight_bits = 1;
+  sixteen_bits = 2;
+  thirty_two_bits = 3;
+  sixty_four_bits = 4;
+}
+
+enum FloatWidth(810100005) {
+  thirty_two_bits = 1;
+  sixty_four_bits = 2;
+}
+
+struct StringConstraints(810100007) {
+  minimum_length: int32? = 0;
+  maximum_length: int32? = 1;
+  pattern: string? = 2;
+  allowed_values: [string] = 3;
+}
+
+struct NumericConstraints(810100008) {
+  minimum: string? = 0;
+  minimum_inclusive: bool = 1;
+  maximum: string? = 2;
+  maximum_inclusive: bool = 3;
+  multiple_of: string? = 4;
+}
+
+struct CollectionConstraints(810100009) {
+  minimum_length: int32? = 0;
+  maximum_length: int32? = 1;
+  unique_items: bool = 2;
+}
+
+struct ResolvedTypeRef(810100013) {
+  type_id: TypeId = 0;
+  revision: int32 = 1;
+  arguments: [TypeExpression] = 2;
+}
+
+struct TypedRecordField(810200001) {
+  name: string = 0;
+  value: TypedValue = 1;
+}
+
+struct TypedRecordValue(810200002) {
+  fields: [TypedRecordField|name] = 0;
+}
+
+struct TypedMapEntry(810200003) {
+  key: TypedValue = 0;
+  value: TypedValue = 1;
+}
+
+struct TypedMapValue(810200004) {
+  entries: [TypedMapEntry] = 0;
+}
+
+struct TypedNamedValue(810200006) {
+  tag: ResolvedTypeRef = 0;
+  payload: TypedValue = 1;
+}
+
+struct TypedDurationValue(810200009) {
+  duration: Duration = 0;
+}
+
+enum TypedValue(810200007) {
+  unit = 1;
+  boolean: bool = 2;
+  string: string = 3;
+  bytes: bytes = 4;
+  signed_eight: int32 = 5;
+  signed_sixteen: int32 = 6;
+  signed_thirty_two: int32 = 7;
+  signed_sixty_four: int64 = 8;
+  unsigned_eight: int32 = 9;
+  unsigned_sixteen: int32 = 10;
+  unsigned_thirty_two: int64 = 11;
+  unsigned_sixty_four: string = 12;
+  float_thirty_two: float32 = 13;
+  float_sixty_four: float64 = 14;
+  decimal: string = 15;
+  timestamp: timestamp = 16;
+  list: [TypedValue] = 17;
+  map: TypedMapValue = 18;
+  record: TypedRecordValue = 19;
+  named: TypedNamedValue = 20;
+  duration: TypedDurationValue = 21;
+}
+
+struct ListType(810100014) {
+  element: TypeExpression = 0;
+  constraints: CollectionConstraints = 1;
+}
+
+struct MapType(810100015) {
+  key: TypeExpression = 0;
+  value: TypeExpression = 1;
+  constraints: CollectionConstraints = 2;
+}
+
+struct RecordField(810100016) {
+  name: string = 0;
+  value_type: TypeExpression = 1;
+  initializer: TypedValue? = 2;
+}
+
+struct RecordType(810100017) {
+  fields: [RecordField|name] = 0;
+  closed: bool = 1;
+}
+
+struct IntegerType(810100025) {
+  width: IntegerWidth = 0;
+  constraints: NumericConstraints = 1;
+}
+
+struct FloatType(810100026) {
+  width: FloatWidth = 0;
+  constraints: NumericConstraints = 1;
+}
+
+struct EnumType(810100029) {
+  value_type: TypeExpression = 0;
+  canonical_values: [TypedValue] = 1;
+}
+
+enum TypeExpression(810100021) {
+  unit = 1;
+  boolean = 2;
+  string: StringConstraints = 3;
+  bytes: CollectionConstraints = 4;
+  signed_integer: IntegerType = 5;
+  unsigned_integer: IntegerType = 6;
+  float: FloatType = 7;
+  decimal: NumericConstraints = 8;
+  timestamp = 9;
+  duration = 10;
+  list: ListType = 11;
+  map: MapType = 12;
+  record: RecordType = 13;
+  enum_type: EnumType = 14;
+  parameter: string = 15;
+  named: ResolvedTypeRef = 16;
+}
+
+struct TypeParameter(810100022) {
+  name: string = 0;
+  variance: TypeVariance = 1;
+  upper_bounds: [TypeExpression] = 2;
+}
+
+enum TypeDefinitionKind(810100030) {
+  concrete = 1;
+  open_abstract = 2;
+  sealed_abstract = 3;
+}
+
+struct PresentationId(810100031) {
+  namespace: string = 0;
+  name: string = 1;
+}
+
+struct ConversionId(810100032) {
+  namespace: string = 0;
+  name: string = 1;
+}
+
+struct RealmActionId(810100034) {
+  namespace: string = 0;
+  name: string = 1;
+}
+
+struct NamedPresentation(810100033) {
+  name: string = 0;
+  presentation_id: PresentationId = 1;
+}
+
+struct TypeDefinition(810100023) {
+  display_name: string = 0;
+  parameters: [TypeParameter|name] = 1;
+  direct_parents: [ResolvedTypeRef] = 2;
+  representation: TypeExpression = 3;
+  type_id: TypeId = 4;
+  revision: int32 = 5;
+  kind: TypeDefinitionKind = 6;
+  default_presentation_id: PresentationId? = 7;
+  named_presentations: [NamedPresentation|name] = 8;
+  outgoing_conversion_ids: [ConversionId] = 9;
+}
+
+struct TypeCatalog(810100024) {
+  definitions: [TypeDefinition] = 0;
+}

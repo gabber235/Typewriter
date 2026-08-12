@@ -1,0 +1,23 @@
+import { TypedValue } from "editor/v1/type_catalog.skir";
+
+struct FieldPathSegment(810400001) {
+  field_name: string = 0;
+}
+
+struct IndexPathSegment(810400002) {
+  index: int32 = 0;
+}
+
+struct MapKeyPathSegment(810400003) {
+  key: TypedValue = 0;
+}
+
+enum DataPathSegment(810400005) {
+  field: FieldPathSegment = 1;
+  index: IndexPathSegment = 2;
+  map_key: MapKeyPathSegment = 3;
+}
+
+struct DataPath(810400006) {
+  segments: [DataPathSegment] = 0;
+}
