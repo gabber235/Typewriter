@@ -18,13 +18,3 @@ class _CollectionEmptyState extends StatelessWidget {
     ),
   );
 }
-
-TypedExpression _collectionIntegerExpression(int value) => TypedExpression(
-  resultType: const IntegerType(width: IntegerWidth.signed64),
-  expression: LiteralExpression(IntegerValue(BigInt.from(value))),
-);
-
-TypedExpression _collectionIconExpression(String value) => TypedExpression(
-  resultType: NamedType(standardTypeRefs.icon),
-  expression: LiteralExpression(IconValue.from(value).typedValue),
-);

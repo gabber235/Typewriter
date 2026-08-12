@@ -93,8 +93,31 @@ abstract class ExpressionBudget with _$ExpressionBudget {
 }
 
 extension StringExpressionLiteral on String {
-  TypedExpression get asStringLiteral => TypedExpression(
-    resultType: const StringType(),
-    expression: LiteralExpression(StringValue(this)),
+  TypedExpression get asStringLiteral =>
+      StringValue(this).asLiteral(const StringType());
+
+  TypedExpression get asIconLiteral => IconValue.from(this).asIconLiteral;
+}
+
+extension IntegerExpressionLiteral on int {
+  TypedExpression get asSigned64Literal => IntegerValue(
+    BigInt.from(this),
+  ).asLiteral(const IntegerType(width: IntegerWidth.signed64));
+}
+
+extension BooleanExpressionLiteral on bool {
+  TypedExpression get asBooleanLiteral =>
+      BooleanValue(this).asLiteral(const BooleanType());
+}
+
+extension IconExpressionLiteral on IconValue {
+  TypedExpression get asIconLiteral =>
+      typedValue.asLiteral(NamedType(standardTypeRefs.icon));
+}
+
+extension DataValueExpressionLiteral on DataValue {
+  TypedExpression asLiteral(TypeExpression resultType) => TypedExpression(
+    resultType: resultType,
+    expression: LiteralExpression(this),
   );
 }

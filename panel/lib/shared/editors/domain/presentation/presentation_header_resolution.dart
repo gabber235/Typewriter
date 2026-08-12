@@ -54,19 +54,13 @@ extension on ToggleInputElement {
               resultType: const BooleanType(),
               expression: BindingExpression(control.binding),
             ),
-            priority: _integer(0x7fffffffffffffff),
-            enabledIf: TypedExpression(
-              resultType: const BooleanType(),
-              expression: LiteralExpression(BooleanValue(writable)),
-            ),
+            priority: 0x7fffffffffffffff.asSigned64Literal,
+            enabledIf: writable.asBooleanLiteral,
             placement: HeaderActionPlacement.beforeTitle,
             action: LocalEditorAction(
               SetValueAction(
                 target: control.binding,
-                value: TypedExpression(
-                  resultType: const BooleanType(),
-                  expression: LiteralExpression(BooleanValue(!value)),
-                ),
+                value: (!value).asBooleanLiteral,
               ),
             ),
           ),
@@ -97,9 +91,9 @@ extension on ListInputElement {
         items: [
           HeaderButtonItem(
             id: listAddHeaderItemId,
-            icon: _icon(Fa6Solid.plus),
+            icon: Fa6Solid.plus.asIconLiteral,
             label: "Add item".asStringLiteral,
-            priority: _integer(100),
+            priority: 100.asSigned64Literal,
             action: LocalEditorAction(
               AppendListItemAction(
                 target: control.binding,
@@ -138,9 +132,9 @@ extension on MapInputElement {
         items: [
           HeaderButtonItem(
             id: mapAddHeaderItemId,
-            icon: _icon(Fa6Solid.plus),
+            icon: Fa6Solid.plus.asIconLiteral,
             label: "Add entry".asStringLiteral,
-            priority: _integer(100),
+            priority: 100.asSigned64Literal,
             action: LocalEditorAction(
               PutMapEntryAction(
                 target: control.binding,
@@ -161,13 +155,3 @@ extension on MapInputElement {
     return null;
   }
 }
-
-TypedExpression _integer(int value) => TypedExpression(
-  resultType: const IntegerType(width: IntegerWidth.signed64),
-  expression: LiteralExpression(IntegerValue(BigInt.from(value))),
-);
-
-TypedExpression _icon(String value) => TypedExpression(
-  resultType: NamedType(standardTypeRefs.icon),
-  expression: LiteralExpression(IconValue.from(value).typedValue),
-);

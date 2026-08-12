@@ -54,7 +54,7 @@ class _ListInputRenderer extends StatelessWidget {
       if (element.allowRemove)
         HeaderButtonItem(
           id: listItemRemoveHeaderItemId,
-          icon: _collectionIconExpression(HeroiconsSolid.trash),
+          icon: HeroiconsSolid.trash.asIconLiteral,
           label: "Remove item".asStringLiteral,
           priority: _collectionIntegerExpression(90),
           tone: HeaderActionTone.destructive,
@@ -67,15 +67,15 @@ class _ListInputRenderer extends StatelessWidget {
           action: LocalEditorAction(
             RemoveListItemAction(
               target: scope.canonical(element.control.binding),
-              index: _collectionIntegerExpression(index),
+              index: index.asSigned64Literal,
             ),
           ),
         ),
       HeaderButtonItem(
         id: listItemDuplicateHeaderItemId,
-        icon: _collectionIconExpression(Ion.duplicate),
+        icon: Ion.duplicate.asIconLiteral,
         label: "Duplicate item".asStringLiteral,
-        priority: _collectionIntegerExpression(70),
+        priority: 70.asSigned64Literal,
         action: LocalEditorAction(DuplicateListItemAction(source: source)),
       ),
       if (element.allowReorder)
@@ -150,7 +150,7 @@ class _ListInputRenderer extends StatelessWidget {
         source: scope
             .canonical(element.control.binding)
             .at(DataPath.root.index(source)),
-        newIndex: _collectionIntegerExpression(destination),
+        newIndex: destination.asSigned64Literal,
       ),
     ),
   );

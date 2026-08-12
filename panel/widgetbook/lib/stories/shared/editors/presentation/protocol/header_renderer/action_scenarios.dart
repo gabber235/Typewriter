@@ -99,7 +99,7 @@ SemanticHeaderScenario actionStatesScenario() => (
           Mdi.lock_outline,
           "Unavailable",
           90,
-          enabledIf: false.literal,
+          enabledIf: false.asBooleanLiteral,
         ),
         _title.setAction(
           "hidden",
@@ -107,7 +107,7 @@ SemanticHeaderScenario actionStatesScenario() => (
           Mdi.eye_off_outline,
           "Hidden",
           80,
-          visibleIf: false.literal,
+          visibleIf: false.asBooleanLiteral,
         ),
         HeaderButtonItem(
           id: const HeaderItemId(namespace: "widgetbook", name: "invalid"),
@@ -115,7 +115,7 @@ SemanticHeaderScenario actionStatesScenario() => (
           label: "Invalid icon".asStringLiteral,
           tooltip:
               "Invalid expressions become diagnostic actions".asStringLiteral,
-          priority: 70.literal,
+          priority: 70.asSigned64Literal,
           action: EditorAction.local(
             SetValueAction(target: _title, value: "Invalid".asStringLiteral),
           ),
@@ -154,10 +154,10 @@ extension on BindingReference {
     TypedExpression? enabledIf,
   }) => HeaderButtonItem(
     id: HeaderItemId(namespace: "widgetbook", name: name),
-    icon: icon.iconLiteral,
+    icon: IconValue.svg(icon).asIconLiteral,
     label: label.asStringLiteral,
     tooltip: "$label quest".asStringLiteral,
-    priority: priority.literal,
+    priority: priority.asSigned64Literal,
     visibleIf: visibleIf,
     enabledIf: enabledIf,
     placement: placement,
@@ -166,26 +166,5 @@ extension on BindingReference {
     action: EditorAction.local(
       SetValueAction(target: this, value: value.asStringLiteral),
     ),
-  );
-}
-
-extension on String {
-  TypedExpression get iconLiteral => TypedExpression(
-    resultType: NamedType(standardTypeRefs.icon),
-    expression: LiteralExpression(IconValue.svg(this).typedValue),
-  );
-}
-
-extension on int {
-  TypedExpression get literal => TypedExpression(
-    resultType: const IntegerType(width: IntegerWidth.signed64),
-    expression: LiteralExpression(IntegerValue(BigInt.from(this))),
-  );
-}
-
-extension on bool {
-  TypedExpression get literal => TypedExpression(
-    resultType: const BooleanType(),
-    expression: LiteralExpression(BooleanValue(this)),
   );
 }

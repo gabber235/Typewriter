@@ -280,7 +280,7 @@ extension on _ResolvedHeaderReorderHandleItem {
       LocalEditorAction(
         ReorderListItemAction(
           source: canonical,
-          newIndex: _headerInteger(destination),
+          newIndex: destination.asSigned64Literal,
         ),
       ),
     );
@@ -579,11 +579,6 @@ extension on TypedExpression {
     return null;
   }
 }
-
-TypedExpression _headerInteger(int value) => TypedExpression(
-  resultType: const IntegerType(width: IntegerWidth.signed64),
-  expression: LiteralExpression(IntegerValue(BigInt.from(value))),
-);
 
 TypeDiagnostic _invalidHeaderValue(String message) =>
     TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message);

@@ -47,23 +47,20 @@ PresentationNode storyInput(
 );
 
 TypedExpression literal(TypeExpression type, DataValue value) =>
-    TypedExpression(resultType: type, expression: LiteralExpression(value));
+    value.asLiteral(type);
 
 TypedExpression bindingExpression(
   BindingReference binding,
   TypeExpression type,
 ) => TypedExpression(resultType: type, expression: BindingExpression(binding));
 
-TypedExpression integerLiteral(int value) => literal(
-  const IntegerType(width: IntegerWidth.signed64),
-  IntegerValue(BigInt.from(value)),
-);
+TypedExpression integerLiteral(int value) => value.asSigned64Literal;
 
 TypedExpression floatLiteral(double value) =>
     literal(const FloatType(width: FloatWidth.float64), FloatValue(value));
 
 TypedExpression svgIconLiteral(String value) =>
-    literal(NamedType(standardTypeRefs.icon), IconValue.svg(value).typedValue);
+    IconValue.svg(value).asIconLiteral;
 
 EditorAction setRootValue(TypeExpression type, DataValue value) =>
     LocalEditorAction(

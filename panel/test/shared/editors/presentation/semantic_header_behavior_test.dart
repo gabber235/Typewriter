@@ -455,29 +455,15 @@ HeaderButtonItem _action(
   HeaderActionConfirmation? confirmation,
 }) => HeaderButtonItem(
   id: HeaderItemId(namespace: "test", name: label),
-  icon: TypedExpression(
-    resultType: NamedType(standardTypeRefs.icon),
-    expression: LiteralExpression(
-      const IconValue.svg(Fa6Solid.plus).typedValue,
-    ),
-  ),
+  icon: const IconValue.svg(Fa6Solid.plus).asIconLiteral,
   label: label.asStringLiteral,
   tooltip: label.asStringLiteral,
   action: LocalEditorAction(
     SetValueAction(target: _root, value: label.asStringLiteral),
   ),
-  priority: TypedExpression(
-    resultType: const IntegerType(width: IntegerWidth.signed64),
-    expression: LiteralExpression(IntegerValue(BigInt.from(priority))),
-  ),
-  visibleIf: TypedExpression(
-    resultType: const BooleanType(),
-    expression: LiteralExpression(BooleanValue(visible)),
-  ),
-  enabledIf: TypedExpression(
-    resultType: const BooleanType(),
-    expression: LiteralExpression(BooleanValue(enabled)),
-  ),
+  priority: priority.asSigned64Literal,
+  visibleIf: visible.asBooleanLiteral,
+  enabledIf: enabled.asBooleanLiteral,
   placement: placement,
   confirmation: confirmation,
 );

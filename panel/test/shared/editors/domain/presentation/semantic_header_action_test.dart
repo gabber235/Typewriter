@@ -107,7 +107,7 @@ void main() {
 
     test("rejects a source that is not an item binding", () {
       final result = LocalEditorAction(
-        ReorderListItemAction(source: _root, newIndex: _integer(0)),
+        ReorderListItemAction(source: _root, newIndex: 0.asSigned64Literal),
       ).execute(_context(), registry: null);
 
       expect(result, isA<MutationInvalid>());
@@ -158,13 +158,8 @@ HeaderButtonItem _action(
 LocalEditorAction _reorder(int source, int destination) => LocalEditorAction(
   ReorderListItemAction(
     source: _root.at(DataPath.root.index(source)),
-    newIndex: _integer(destination),
+    newIndex: destination.asSigned64Literal,
   ),
-);
-
-TypedExpression _integer(int value) => TypedExpression(
-  resultType: const IntegerType(width: IntegerWidth.signed64),
-  expression: LiteralExpression(IntegerValue(BigInt.from(value))),
 );
 
 ExpressionContext _context() => ExpressionContext(
