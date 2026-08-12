@@ -129,20 +129,13 @@ final class SkirActionDecoder {
     final target = expressions.binding(value.target);
     final key = expressions.decode(value.key);
     final item = expressions.decode(value.value);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...key.diagnostics,
-      ...item.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            PutMapEntryAction(
-              target: target.valueOrNull!,
-              key: key.valueOrNull!,
-              value: item.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      key,
+      item,
+      (target, key, item) =>
+          PutMapEntryAction(target: target, key: key, value: item),
+    );
   }
 
   TypeResult<LocalAction> _replace(
@@ -151,20 +144,16 @@ final class SkirActionDecoder {
     final target = expressions.binding(value.target);
     final type = types.decodeReference(value.concreteType);
     final initial = expressions.decode(value.value);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...type.diagnostics,
-      ...initial.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            ReplaceConcreteTypeAction(
-              target: target.valueOrNull!,
-              concreteType: type.valueOrNull!,
-              initialValue: initial.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      type,
+      initial,
+      (target, type, initial) => ReplaceConcreteTypeAction(
+        target: target,
+        concreteType: type,
+        initialValue: initial,
+      ),
+    );
   }
 
   TypeResult<RealmAction> _realm(wire.RealmEditorAction value) =>
@@ -195,20 +184,13 @@ final class SkirActionDecoder {
     final target = expressions.binding(value.target);
     final index = expressions.decode(value.index);
     final item = expressions.decode(value.value);
-    final diagnostics = [
-      ...target.diagnostics,
-      ...index.diagnostics,
-      ...item.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            InsertListItemAction(
-              target: target.valueOrNull!,
-              index: index.valueOrNull!,
-              value: item.valueOrNull!,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
+    return combineThreeResults(
+      target,
+      index,
+      item,
+      (target, index, item) =>
+          InsertListItemAction(target: target, index: index, value: item),
+    );
   }
 }
 
