@@ -12,6 +12,45 @@ class TestIntent extends Intent {
 }
 
 void main() {
+  group("Dropdown layout", () {
+    testWidgets("fills available width like DecoratedTextField", (
+      tester,
+    ) async {
+      const parentKey = Key("parent");
+
+      await tester.pumpTestApp(
+        child: SizedBox(
+          key: parentKey,
+          width: 360,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Dropdown<String>(
+                dropdownMenuEntries: const [
+                  DropdownMenuEntry(value: "A", label: "Alpha"),
+                  DropdownMenuEntry(value: "B", label: "Beta"),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const DecoratedTextField(),
+            ],
+          ),
+        ),
+      );
+
+      final fields = find.byType(InputFieldContainer);
+      expect(fields, findsNWidgets(2));
+      expect(
+        tester.getSize(fields.first).width,
+        tester.getSize(find.byKey(parentKey)).width,
+      );
+      expect(
+        tester.getSize(fields.first).width,
+        tester.getSize(fields.last).width,
+      );
+    });
+  });
+
   group("Dropdown - focus & actions", () {
     testWidgets("DismissIntent moves focus away from the inner DropdownMenu", (
       tester,
