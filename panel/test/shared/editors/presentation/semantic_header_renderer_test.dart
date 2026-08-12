@@ -276,6 +276,24 @@ void main() {
     expect(find.text("Item 2"), findsOneWidget);
   });
 
+  testWidgets("places remove last in a list item header", (tester) async {
+    const type = ListType(element: StringType());
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: type,
+        value: const ListValue([StringValue("first")]),
+      ),
+    );
+
+    await tester.tap(find.text("Item 1"));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getCenter(find.byTooltip("Duplicate item")).dx,
+      lessThan(tester.getCenter(find.byTooltip("Remove item")).dx),
+    );
+  });
+
   testWidgets("uses a declared value header for a read only map entry", (
     tester,
   ) async {
@@ -324,6 +342,60 @@ void main() {
         matching: find.byType(IconButton),
       ),
       findsNothing,
+    );
+  });
+
+  testWidgets("places remove last in a map entry header", (tester) async {
+    final presentation = PresentationNode(
+      id: "map",
+      element: MapInputElement(
+        control: const BoundControl(binding: _root),
+        allowAdd: false,
+        valuePresentation: PresentationNode(
+          id: "value",
+          header: PresentationHeader(
+            binding: const BindingReference(bindingId: BindingId(2)),
+            title: "Value details".asStringLiteral,
+            initiallyExpanded: false,
+            items: [
+              HeaderButtonItem(
+                id: const HeaderItemId(namespace: "test", name: "edit"),
+                icon: const IconValue.svg(Fa6Solid.pen).asIconLiteral,
+                label: "Edit entry".asStringLiteral,
+                action: LocalEditorAction(
+                  SetValueAction(
+                    target: const BindingReference(bindingId: BindingId(2)),
+                    value: "updated".asStringLiteral,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          element: const TextInputElement(
+            control: BoundControl(
+              binding: BindingReference(bindingId: BindingId(2)),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const MapType(key: StringType(), value: StringType()),
+        value: MapValue(const [
+          DataMapEntry(key: StringValue("key"), value: StringValue("value")),
+        ]),
+        presentation: presentation,
+      ),
+    );
+
+    await tester.tap(find.text("Value details"));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getCenter(find.byTooltip("Edit entry")).dx,
+      lessThan(tester.getCenter(find.byTooltip("Remove entry")).dx),
     );
   });
 

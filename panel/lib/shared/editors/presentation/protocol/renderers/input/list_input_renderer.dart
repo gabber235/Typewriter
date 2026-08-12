@@ -56,7 +56,7 @@ class _ListInputRenderer extends StatelessWidget {
           id: listItemRemoveHeaderItemId,
           icon: HeroiconsSolid.trash.asIconLiteral,
           label: "Remove item".asStringLiteral,
-          priority: _collectionIntegerExpression(90),
+          priority: (-0x8000000000000000).asSigned64Literal,
           tone: HeaderActionTone.destructive,
           confirmation: HeaderActionConfirmation(
             title: "Remove item?".asStringLiteral,
