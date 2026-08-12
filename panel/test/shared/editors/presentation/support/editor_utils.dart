@@ -1,112 +1,71 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/misc.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../support/test_utils.dart";
 
-extension EditorTesterExtension on WidgetTester {
-  ProviderContainer get editorContainer =>
-      container(of: find.byType(EditorRoot));
+final class TestEditorSource extends ChangeNotifier implements EditorSource {
+  TestEditorSource({
+    required this.rootType,
+    required DataValue value,
+    this.registry,
+  }) : _value = value;
 
-  Future<void> pumpEditor({
-    List<Override> overrides = const [],
-    String selectedId = "editor",
-    String path = "test",
-    DataBlueprint? dataBlueprint,
-    Widget? child,
-    EditorMode editorMode = EditorMode.interactiveInspector,
-    bool defaultExpanded = true,
-    bool settle = true,
-    bool actionRow = false,
-    Map<String, dynamic> initialData = const {},
-    EditorController Function(Ref ref)? createEditor,
-  }) async {
-    assert(
-      child != null || dataBlueprint != null,
-      "Either child or dataBlueprint must be provided",
+  @override
+  final TypeExpression rootType;
+
+  @override
+  final TypeRegistry? registry;
+
+  DataValue _value;
+
+  DataValue get rootValue => _value;
+
+  @override
+  EditorValue value(DataPath path) => _value.readEditorValue(path);
+
+  @override
+  EditorMutationResult update(DataPath path, DataValue value) {
+    final validation = rootType.validateEditorMutation(
+      path,
+      value,
+      registry: registry,
     );
+    if (validation is! AppliedEditorMutation) return validation;
+    final replaced = path.replace(_value, value);
+    if (replaced case TypeFailure(:final diagnostics)) {
+      return EditorMutationResult.invalid(diagnostics);
+    }
+    _value = replaced.valueOrNull!;
+    notifyListeners();
+    return validation;
+  }
+}
 
-    final objectBlueprint = dataBlueprint is ObjectBlueprint && path.isEmpty
-        ? dataBlueprint
-        : dataBlueprint != null
-        ? ObjectBlueprint(fields: {path: dataBlueprint})
-        : null;
-
+extension TypedEditorTesterExtension on WidgetTester {
+  Future<TestEditorSource> pumpTypedEditor({
+    required TypeExpression type,
+    required DataValue value,
+    DataPath path = DataPath.root,
+    bool readOnly = false,
+    TypeRegistry? registry,
+  }) async {
+    final source = TestEditorSource(
+      rootType: type,
+      value: value,
+      registry: registry,
+    );
     await pumpTestApp(
-      overrides: [
-        ...overrides,
-        if (objectBlueprint != null)
-          selectionProvider.overrideWithValue([
-            TestSelectableIdentifier(
-              id: selectedId,
-              dataBlueprint: objectBlueprint,
-            ),
-          ]),
-      ],
-      settle: settle,
       child: EditorRoot(
-        create:
-            createEditor ??
-            (ref) => EditorController(source: SelectionEditorSource(ref)),
-        child: Consumer(
-          child:
-              child ??
-              SingleChildScrollView(
-                child: ObjectEditorWidget(
-                  path: "",
-                  objectBlueprint: objectBlueprint!,
-                  editorMode: editorMode,
-                  defaultExpanded: defaultExpanded,
-                ),
-              ),
-          builder: (context, ref, child) {
-            ref.watch(selectedProvider);
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: child,
-                  ),
-                ),
-                if (actionRow) ActionRow(),
-              ],
-            );
-          },
+        create: (_) => EditorController(source: source),
+        child: Material(
+          child: SizedBox(
+            width: 500,
+            child: TypedEditor(path: path, readOnly: readOnly),
+          ),
         ),
       ),
     );
-
-    final Map<dynamic, dynamic> baseData =
-        objectBlueprint?.defaultValue() ?? {};
-    final data = stringMap(baseData.mask(initialData));
-    editorContainer
-        .read(testSelectableDataProvider.notifier)
-        .set(selectedId, DynamicData(data));
-
-    if (settle) {
-      await pumpAndSettle();
-    }
-  }
-
-  void selectSelectables(List<SelectableIdentifier> identifiers) {
-    editorContainer.read(selectionProvider.notifier).selectAll(identifiers);
-  }
-
-  dynamic fieldValue({String selectedId = "editor", String path = "test"}) {
-    return editorContainer.read(testDataProvider(selectedId))?.get(path);
-  }
-
-  void setTestSelectableData({
-    required Map<String, dynamic> data,
-    String selectedId = "editor",
-  }) {
-    editorContainer
-        .read(testSelectableDataProvider.notifier)
-        .set(selectedId, DynamicData(data));
+    return source;
   }
 }

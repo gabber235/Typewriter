@@ -6,45 +6,6 @@ part of 'page_elements.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-PageElementEntry _$PageElementEntryFromJson(Map<String, dynamic> json) =>
-    PageElementEntry(
-      entry: PageEntry.fromJson(json['entry'] as Map<String, dynamic>),
-      $type: json['_kind'] as String?,
-    );
-
-Map<String, dynamic> _$PageElementEntryToJson(PageElementEntry instance) =>
-    <String, dynamic>{
-      'entry': instance.entry.toJson(),
-      '_kind': instance.$type,
-    };
-
-PageElementGroup _$PageElementGroupFromJson(Map<String, dynamic> json) =>
-    PageElementGroup(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      placement: EntryPlacement.fromJson(
-        json['placement'] as Map<String, dynamic>,
-      ),
-      $type: json['_kind'] as String?,
-    );
-
-Map<String, dynamic> _$PageElementGroupToJson(PageElementGroup instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'placement': instance.placement.toJson(),
-      '_kind': instance.$type,
-    };
-
-PageElementCue _$PageElementCueFromJson(Map<String, dynamic> json) =>
-    PageElementCue(
-      cue: Cue.fromJson(json['cue'] as Map<String, dynamic>),
-      $type: json['_kind'] as String?,
-    );
-
-Map<String, dynamic> _$PageElementCueToJson(PageElementCue instance) =>
-    <String, dynamic>{'cue': instance.cue.toJson(), '_kind': instance.$type};
-
 _ElementLink _$ElementLinkFromJson(Map<String, dynamic> json) => _ElementLink(
   linkId: json['linkId'] as String,
   otherId: json['otherId'] as String,
@@ -106,7 +67,7 @@ final class PageElementsProvider
   }
 }
 
-String _$pageElementsHash() => r'45868c16219ae7eafd6255e616a169a917c300ea';
+String _$pageElementsHash() => r'f89321b29fb44bc6f0206fd168c2aee121f84280';
 
 final class PageElementsFamily extends $Family
     with

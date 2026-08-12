@@ -82,11 +82,25 @@ class _DeleteSelectable
     extends InspectableSelectable<_DeleteSelectableIdentifier> {
   _DeleteSelectable({required this.id, required this.onDelete});
 
+  static final TypeDefinition _rootDefinition = TypeDefinition(
+    id: ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "widgetbook", name: "delete_story"),
+      revision: 1,
+    ),
+    kind: NominalTypeKind.concrete,
+    representation: RecordType(fields: const {}),
+  );
+
+  static final TypeCatalog _typeCatalog = TypeCatalog([_rootDefinition]);
+
   @override
   final _DeleteSelectableIdentifier id;
 
   @override
-  ObjectBlueprint get objectBlueprint => ObjectBlueprint(fields: {});
+  ResolvedTypeRef get rootType => _rootDefinition.id;
+
+  @override
+  TypeCatalog get typeCatalog => _typeCatalog;
 
   @override
   String get name => id.id.titleCase();
@@ -102,10 +116,23 @@ class _DeleteSelectable
   Widget? buildInspectorHeader() => null;
 
   @override
-  dynamic fieldValue(String path) => null;
+  EditorValue value(DataPath path) => EditorValue.invalid([
+    TypeDiagnostic(
+      code: TypeDiagnosticCode.invalidPath,
+      message: "The delete story has no editable fields",
+      path: path,
+    ),
+  ]);
 
   @override
-  void setFieldValue(String path, dynamic value) {}
+  EditorMutationResult update(DataPath path, DataValue value) =>
+      EditorMutationResult.invalid([
+        TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidPath,
+          message: "The delete story has no editable fields",
+          path: path,
+        ),
+      ]);
 
   @override
   int get hashCode => id.hashCode;

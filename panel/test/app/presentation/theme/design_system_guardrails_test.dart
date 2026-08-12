@@ -56,7 +56,7 @@ final exemptions = <Exemption>[
   Exemption(
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/entry.dart",
     RegExp(r"Colors\.white"),
-    "established entry-node focus treatment over arbitrary blueprint colors",
+    "established entry-node focus treatment over arbitrary elementDefinition colors",
   ),
   Exemption(
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",

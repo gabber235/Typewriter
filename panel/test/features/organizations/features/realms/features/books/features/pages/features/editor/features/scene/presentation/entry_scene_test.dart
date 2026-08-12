@@ -412,9 +412,9 @@ List<PageElement> _sceneElements() {
         definition: EntryDefinition(
           id: "entry",
           name: "Scene Entry",
-          blueprint: _blueprint("entry_blueprint", "Scene Entry"),
+          elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: const DynamicData({}),
+          data: RecordValue(const {}),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -431,8 +431,8 @@ List<PageElement> _sceneElements() {
         id: "root",
         startFrame: 10,
         endFrame: 30,
-        blueprint: _blueprint("root_blueprint", "Root Segment"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_blueprint", "Root Segment"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root",
@@ -454,8 +454,8 @@ List<PageElement> _sceneElements() {
         id: "child",
         startFrame: 5,
         endFrame: 15,
-        blueprint: _blueprint("child_blueprint", "Child Segment"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("child_blueprint", "Child Segment"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "root_child",
@@ -477,8 +477,8 @@ List<PageElement> _sceneElementsWithSibling() {
         id: "sibling",
         startFrame: 40,
         endFrame: 50,
-        blueprint: _blueprint("sibling_blueprint", "Sibling Segment"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("sibling_blueprint", "Sibling Segment"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_sibling",
@@ -499,9 +499,12 @@ List<PageElement> _nestedRootResizeSceneElements() {
         definition: EntryDefinition(
           id: "entry",
           name: "Nested Scene Entry",
-          blueprint: _blueprint("entry_blueprint", "Nested Scene Entry"),
+          elementDefinition: _blueprint(
+            "entry_blueprint",
+            "Nested Scene Entry",
+          ),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: const DynamicData({}),
+          data: RecordValue(const {}),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -518,8 +521,8 @@ List<PageElement> _nestedRootResizeSceneElements() {
         id: "root",
         startFrame: 10,
         endFrame: 30,
-        blueprint: _blueprint("root_blueprint", "Root Segment"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_blueprint", "Root Segment"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root",
@@ -541,8 +544,8 @@ List<PageElement> _nestedRootResizeSceneElements() {
         id: "child",
         startFrame: 5,
         endFrame: 15,
-        blueprint: _blueprint("child_blueprint", "Child Segment"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("child_blueprint", "Child Segment"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "root_child",
@@ -563,9 +566,9 @@ List<PageElement> _multiRootSceneElements() {
         definition: EntryDefinition(
           id: "entry",
           name: "Scene Entry",
-          blueprint: _blueprint("entry_blueprint", "Scene Entry"),
+          elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: const DynamicData({}),
+          data: RecordValue(const {}),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -587,8 +590,8 @@ List<PageElement> _multiRootSceneElements() {
         id: "root_a",
         startFrame: 10,
         endFrame: 30,
-        blueprint: _blueprint("root_a_blueprint", "Root A"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_a_blueprint", "Root A"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root_a",
@@ -604,8 +607,8 @@ List<PageElement> _multiRootSceneElements() {
         id: "root_b",
         startFrame: 40,
         endFrame: 50,
-        blueprint: _blueprint("root_b_blueprint", "Root B"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_b_blueprint", "Root B"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root_b",
@@ -626,9 +629,9 @@ List<PageElement> _adjacentRootSceneElements() {
         definition: EntryDefinition(
           id: "entry",
           name: "Scene Entry",
-          blueprint: _blueprint("entry_blueprint", "Scene Entry"),
+          elementDefinition: _blueprint("entry_blueprint", "Scene Entry"),
           placement: const EntryPlacement(x: 0, y: 0, width: 100, height: 60),
-          data: const DynamicData({}),
+          data: RecordValue(const {}),
           inwardEdges: const [],
           outwardEdges: [
             const ElementLink(
@@ -650,8 +653,8 @@ List<PageElement> _adjacentRootSceneElements() {
         id: "root_left",
         startFrame: 10,
         endFrame: 30,
-        blueprint: _blueprint("root_left_blueprint", "Root Left"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_left_blueprint", "Root Left"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root_left",
@@ -667,8 +670,8 @@ List<PageElement> _adjacentRootSceneElements() {
         id: "root_right",
         startFrame: 31,
         endFrame: 50,
-        blueprint: _blueprint("root_right_blueprint", "Root Right"),
-        data: const DynamicData({}),
+        elementDefinition: _blueprint("root_right_blueprint", "Root Right"),
+        data: RecordValue(const {}),
         inwardLinks: [
           const ElementLink(
             linkId: "entry_root_right",
@@ -682,14 +685,15 @@ List<PageElement> _adjacentRootSceneElements() {
   ];
 }
 
-ElementBlueprint _blueprint(String id, String name) {
-  return ElementBlueprint(
-    id: id,
+ElementDefinition _blueprint(String id, String name) {
+  return ElementDefinition(
+    rootType: ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "test", name: id),
+      revision: 1,
+    ),
     name: name,
     description: name,
-    extension: "test",
-    dataBlueprint: ObjectBlueprint(fields: {}),
     color: Colors.blue,
-    icon: Iconoir.add_frame,
+    icon: const IconValue.iconify(Iconoir.add_frame),
   );
 }

@@ -6,7 +6,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 // Entry nodes use white as their established focus treatment so focus remains
-// legible against every data-driven blueprint color.
+// legible against every data-driven elementDefinition color.
 const _entryFocusColor = Colors.white;
 
 class EntryNode extends HookConsumerWidget {
@@ -23,17 +23,17 @@ class EntryNode extends HookConsumerWidget {
       ReferencePageEntry(
         id: final id,
         name: final name,
-        blueprint: final blueprint,
+        elementDefinition: final elementDefinition,
         pageId: final pageId,
       ) =>
         _ReferenceEntryNode(
           id: id,
           name: name,
-          blueprint: blueprint,
+          elementDefinition: elementDefinition,
           pageId: pageId,
         ),
-      NoBlueprintPageEntry(id: final id, name: final name) =>
-        _NoBlueprintEntryNode(id: id, name: name),
+      MissingElementDefinitionPageEntry(id: final id, name: final name) =>
+        _MissingElementDefinitionEntryNode(id: id, name: name),
       _ => const _NonexistentEntryNode(),
     };
   }
@@ -69,7 +69,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                   ? SizedBox()
                   : _FeedbackEntryNode(
                       name: definition.name,
-                      blueprint: definition.blueprint,
+                      elementDefinition: definition.elementDefinition,
                       isDeprecated: isDeprecated,
                     );
             },
@@ -85,7 +85,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                 )
               : _PlaceholderEntryNode(
                   name: definition.name,
-                  blueprint: definition.blueprint,
+                  elementDefinition: definition.elementDefinition,
                   isDeprecated: isDeprecated,
                 ),
           child: GraphDragTargetRegion(
@@ -136,7 +136,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
             padding: const EdgeInsets.all(7.0),
             child: InnerElementNode(
               name: definition.name,
-              blueprint: definition.blueprint,
+              elementDefinition: definition.elementDefinition,
               color: context.colors.contentPrimary,
               isDeprecated: isDeprecated,
             ),
@@ -149,10 +149,10 @@ class _DefinitionEntryNode extends HookConsumerWidget {
       builder: (context) {
         final backgroundColor = isDeprecated
             ? Color.alphaBlend(
-                definition.blueprint.color.withValues(alpha: 0.7),
+                definition.elementDefinition.color.withValues(alpha: 0.7),
                 Surface.colorOf(context),
               )
-            : definition.blueprint.color;
+            : definition.elementDefinition.color;
 
         final adaptedBackgroundColor = useMemoized(
           () => backgroundColor.onBrightness(Brightness.dark),
@@ -187,7 +187,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
                 alignment: Alignment.topCenter,
                 child: InnerElementNode(
                   name: definition.name,
-                  blueprint: definition.blueprint,
+                  elementDefinition: definition.elementDefinition,
                   color: highlightColor,
                   isDeprecated: isDeprecated,
                 ),
@@ -200,7 +200,7 @@ class _DefinitionEntryNode extends HookConsumerWidget {
   }
 
   bool _isEntryDeprecated(EntryDefinition definition) {
-    return definition.blueprint.hasModifier<DeprecatedModifier>();
+    return definition.elementDefinition.isDeprecated;
   }
 }
 
@@ -208,13 +208,13 @@ class _ReferenceEntryNode extends HookConsumerWidget {
   const _ReferenceEntryNode({
     required this.id,
     required this.name,
-    required this.blueprint,
+    required this.elementDefinition,
     required this.pageId,
   });
 
   final String id;
   final String name;
-  final ElementBlueprint blueprint;
+  final ElementDefinition elementDefinition;
   final String pageId;
 
   @override
@@ -222,33 +222,33 @@ class _ReferenceEntryNode extends HookConsumerWidget {
     final focusNode = useFocusNode();
     // TODO: Change to different type of identifier
     final entryIdentifier = EntryIdentifier(id);
-    final isDeprecated = blueprint.modifiers.any(
-      (modifier) => modifier is DeprecatedModifier,
-    );
+    final isDeprecated = elementDefinition.isDeprecated;
 
     return Selector(
       focusNode: focusNode,
       selectableId: entryIdentifier,
       builder: (isSelected, isFocused, isHovered) {
         final backgroundColor = Color.alphaBlend(
-          blueprint.color.withValues(alpha: 0.05),
+          elementDefinition.color.withValues(alpha: 0.05),
           Surface.colorOf(context),
         );
 
-        final highlightColor = isFocused ? _entryFocusColor : blueprint.color;
+        final highlightColor = isFocused
+            ? _entryFocusColor
+            : elementDefinition.color;
 
         return LongPressDraggable<EntryIdentifier>(
           data: entryIdentifier,
           feedback: _FeedbackEntryNode(
             name: name,
-            blueprint: blueprint,
+            elementDefinition: elementDefinition,
             isDeprecated: isDeprecated,
             isReference: true,
             pageId: pageId,
           ),
           childWhenDragging: _PlaceholderEntryNode(
             name: name,
-            blueprint: blueprint,
+            elementDefinition: elementDefinition,
             isDeprecated: isDeprecated,
             isReference: true,
           ),
@@ -256,12 +256,12 @@ class _ReferenceEntryNode extends HookConsumerWidget {
             animationDuration: 300.ms,
             color: backgroundColor,
             shape: RoundedRectangleBorder(
-              side: BorderSide(color: blueprint.color, width: 3),
+              side: BorderSide(color: elementDefinition.color, width: 3),
               borderRadius: context.shapes.smallBorderRadius,
             ),
             child: InnerElementNode(
               name: name,
-              blueprint: blueprint,
+              elementDefinition: elementDefinition,
               color: highlightColor,
               isDeprecated: isDeprecated,
               isReference: true,
@@ -322,8 +322,11 @@ class _NonexistentEntryNode extends StatelessWidget {
   }
 }
 
-class _NoBlueprintEntryNode extends HookConsumerWidget {
-  const _NoBlueprintEntryNode({required this.id, required this.name});
+class _MissingElementDefinitionEntryNode extends HookConsumerWidget {
+  const _MissingElementDefinitionEntryNode({
+    required this.id,
+    required this.name,
+  });
 
   final String id;
   final String name;
@@ -386,7 +389,7 @@ class _NoBlueprintEntryNode extends HookConsumerWidget {
                     ),
                     Flexible(
                       child: Text(
-                        "Blueprint for this entry does not exist",
+                        "The element definition for this entry does not exist",
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: highlightColor,
                           fontStyle: FontStyle.italic,
@@ -409,25 +412,25 @@ class _NoBlueprintEntryNode extends HookConsumerWidget {
 class _FeedbackEntryNode extends StatelessWidget {
   const _FeedbackEntryNode({
     required this.name,
-    required this.blueprint,
+    required this.elementDefinition,
     required this.isDeprecated,
     this.isReference = false,
     this.pageId,
   });
 
   final String name;
-  final ElementBlueprint blueprint;
+  final ElementDefinition elementDefinition;
   final bool isDeprecated;
   final bool isReference;
   final String? pageId;
 
   @override
   Widget build(BuildContext context) {
-    final foreground = blueprint.color.on(context);
+    final foreground = elementDefinition.color.on(context);
     final secondaryForeground = foreground.withValues(alpha: 0.7);
     return Material(
       borderRadius: context.shapes.smallBorderRadius,
-      color: blueprint.color,
+      color: elementDefinition.color,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: context.spacing.space3,
@@ -436,7 +439,7 @@ class _FeedbackEntryNode extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icones(blueprint.icon, color: foreground, size: 18),
+            Icones.value(elementDefinition.icon, color: foreground, size: 18),
             SizedBox(width: context.spacing.space2),
             Flexible(
               child: Column(
@@ -459,7 +462,7 @@ class _FeedbackEntryNode extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    blueprint.name,
+                    elementDefinition.name,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: secondaryForeground,
                       fontSize: 11,
@@ -486,13 +489,13 @@ class _FeedbackEntryNode extends StatelessWidget {
 class _PlaceholderEntryNode extends StatelessWidget {
   const _PlaceholderEntryNode({
     required this.name,
-    required this.blueprint,
+    required this.elementDefinition,
     required this.isDeprecated,
     this.isReference = false,
   });
 
   final String name;
-  final ElementBlueprint blueprint;
+  final ElementDefinition elementDefinition;
   final bool isDeprecated;
   final bool isReference;
 
@@ -506,7 +509,7 @@ class _PlaceholderEntryNode extends StatelessWidget {
         color: color,
         child: DottedBorder(
           options: RoundedRectDottedBorderOptions(
-            color: blueprint.color,
+            color: elementDefinition.color,
             strokeWidth: 2,
             dashPattern: const [5, 5],
             radius: const Radius.circular(6),
@@ -515,8 +518,8 @@ class _PlaceholderEntryNode extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             child: InnerElementNode(
               name: name,
-              blueprint: blueprint,
-              color: blueprint.color,
+              elementDefinition: elementDefinition,
+              color: elementDefinition.color,
               isDeprecated: isDeprecated,
               isReference: isReference,
             ),

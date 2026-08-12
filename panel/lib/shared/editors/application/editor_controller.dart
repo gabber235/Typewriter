@@ -8,11 +8,14 @@ class EditorController extends ChangeNotifier {
 
   final EditorSource _source;
 
-  ObjectBlueprint? get blueprint => _source.blueprint;
+  TypeExpression? get rootType => _source.rootType;
 
-  EditorValue value(String path) => _source.value(path);
+  TypeRegistry? get registry => _source.registry;
 
-  void update(String path, dynamic value) => _source.update(path, value);
+  EditorValue value(DataPath path) => _source.value(path);
+
+  EditorMutationResult update(DataPath path, DataValue value) =>
+      _source.update(path, value);
 
   @override
   void dispose() {

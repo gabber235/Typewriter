@@ -62,8 +62,11 @@ Widget entrySearchResultItemUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Blueprint", type: BlueprintSearchResultItem)
-Widget blueprintSearchResultItemUseCase(BuildContext context) {
+@widgetbook.UseCase(
+  name: "Element definition",
+  type: ElementDefinitionSearchResultItem,
+)
+Widget elementDefinitionSearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
       child: ConstrainedBox(
@@ -114,31 +117,28 @@ List<Widget> _items() {
   return [
     EntrySearchResultItem(
       name: "winston_dialogue",
-      blueprintName: "spoken",
+      elementDefinitionName: "spoken",
       bookTitle: "main_quest",
       chapter: "main_quest.quests.welcome",
       pageTitle: "welcome_static",
       color: const Color(0xFF00A6FF),
-      icon: "fa6-solid:comments",
-      tags: const ["quest", "npc"],
+      icon: const IconValue.iconify("fa6-solid:comments"),
       shortcutActivator: SingleActivator(LogicalKeyboardKey.digit1, meta: true),
     ),
-    BlueprintSearchResultItem(
+    ElementDefinitionSearchResultItem(
       name: "permanent_fact",
-      extensionName: "basic",
+      namespace: "basic",
       shortDescription: "Creates branching player conversations",
       color: const Color(0xFF8B5CF6),
-      icon: "fa6-solid:diagram-project",
-      tags: const ["interaction", "npc"],
+      icon: const IconValue.iconify("fa6-solid:diagram-project"),
       shortcutActivator: SingleActivator(LogicalKeyboardKey.digit2, meta: true),
     ),
-    BlueprintSearchResultItem(
+    ElementDefinitionSearchResultItem(
       name: "message_blueprint",
-      extensionName: "basic",
+      namespace: "basic",
       shortDescription: "Sends messages to players",
       color: const Color(0xFF8B5CF6),
-      icon: "fa6-solid:message",
-      tags: const ["chat"],
+      icon: const IconValue.iconify("fa6-solid:message"),
       focused: true,
       shortcutActivator: SingleActivator(LogicalKeyboardKey.digit3, meta: true),
     ),
@@ -183,25 +183,23 @@ List<Widget> _items() {
     ),
     EntrySearchResultItem(
       name: "my_option",
-      blueprintName: "option",
+      elementDefinitionName: "option",
       bookTitle: "starter_book",
       chapter: "",
       pageTitle: "sequence",
       color: safeColors[5],
-      icon: "fa6-solid:list-ol",
-      tags: const ["sequence", "trigger", "triggerable", "dialogue"],
+      icon: const IconValue.iconify("fa6-solid:list-ol"),
       focused: true,
     ),
 
     EntrySearchResultItem(
       name: "Legacy Zombie Objective",
-      blueprintName: "Objective Entry",
+      elementDefinitionName: "Objective Entry",
       bookTitle: "Town Book",
       chapter: "main_quest.quests.graveyard",
       pageTitle: "Graveyard",
       color: const Color(0xFF64748B),
-      icon: "fa6-solid:skull",
-      tags: const ["combat"],
+      icon: const IconValue.iconify("fa6-solid:skull"),
       deprecated: true,
     ),
   ];
@@ -223,32 +221,31 @@ class _SelectableItem extends StatelessWidget {
     return switch (child) {
       final EntrySearchResultItem item => EntrySearchResultItem(
         name: item.name,
-        blueprintName: item.blueprintName,
+        elementDefinitionName: item.elementDefinitionName,
         bookTitle: item.bookTitle,
         chapter: item.chapter,
         pageTitle: item.pageTitle,
         color: item.color,
         icon: item.icon,
-        tags: item.tags,
         deprecated: item.deprecated,
         selected: selected,
         focused: item.focused,
         onTap: onTap ?? item.onTap,
         shortcutActivator: item.shortcutActivator,
       ),
-      final BlueprintSearchResultItem item => BlueprintSearchResultItem(
-        name: item.name,
-        extensionName: item.extensionName,
-        shortDescription: item.shortDescription,
-        color: item.color,
-        icon: item.icon,
-        tags: item.tags,
-        deprecated: item.deprecated,
-        selected: selected,
-        focused: item.focused,
-        onTap: onTap ?? item.onTap,
-        shortcutActivator: item.shortcutActivator,
-      ),
+      final ElementDefinitionSearchResultItem item =>
+        ElementDefinitionSearchResultItem(
+          name: item.name,
+          namespace: item.namespace,
+          shortDescription: item.shortDescription,
+          color: item.color,
+          icon: item.icon,
+          deprecated: item.deprecated,
+          selected: selected,
+          focused: item.focused,
+          onTap: onTap ?? item.onTap,
+          shortcutActivator: item.shortcutActivator,
+        ),
       final PageSearchResultItem item => PageSearchResultItem(
         name: item.name,
         bookName: item.bookName,

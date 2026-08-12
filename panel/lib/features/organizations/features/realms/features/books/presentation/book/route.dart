@@ -671,6 +671,7 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final elementTypes = ref.watch(pageElementTypesProvider(page.type)).value;
 
     final color = Theme.of(context).colorScheme.onSurface;
 
@@ -701,8 +702,12 @@ class _PageTile extends HookConsumerWidget {
         final definition = ref.read(entryProvider(entryId)).value;
         if (definition == null) return false;
 
-        final entryPageType = definition.blueprint.pageType;
-        return entryPageType == page.type;
+        return switch (elementTypes) {
+          PageElementTypesReady(:final types) => types.contains(
+            definition.elementDefinition.rootType,
+          ),
+          _ => false,
+        };
       },
       onAcceptWithDetails: (details) {
         final entryId = details.data.id;

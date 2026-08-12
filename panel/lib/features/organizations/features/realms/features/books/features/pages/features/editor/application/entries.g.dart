@@ -6,126 +6,6 @@ part of 'entries.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-DefinitionPageEntry _$DefinitionPageEntryFromJson(Map<String, dynamic> json) =>
-    DefinitionPageEntry(
-      definition: EntryDefinition.fromJson(
-        json['definition'] as Map<String, dynamic>,
-      ),
-      $type: json['_kind'] as String?,
-    );
-
-Map<String, dynamic> _$DefinitionPageEntryToJson(
-  DefinitionPageEntry instance,
-) => <String, dynamic>{
-  'definition': instance.definition.toJson(),
-  '_kind': instance.$type,
-};
-
-ReferencePageEntry _$ReferencePageEntryFromJson(Map<String, dynamic> json) =>
-    ReferencePageEntry(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      blueprint: ElementBlueprint.fromJson(
-        json['blueprint'] as Map<String, dynamic>,
-      ),
-      pageId: json['pageId'] as String,
-      metadata:
-          (json['metadata'] as List<dynamic>?)
-              ?.map((e) => EntryMetadata.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      $type: json['_kind'] as String?,
-    );
-
-Map<String, dynamic> _$ReferencePageEntryToJson(ReferencePageEntry instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'blueprint': instance.blueprint.toJson(),
-      'pageId': instance.pageId,
-      'metadata': instance.metadata.map((e) => e.toJson()).toList(),
-      '_kind': instance.$type,
-    };
-
-NonexistentPageEntry _$NonexistentPageEntryFromJson(
-  Map<String, dynamic> json,
-) => NonexistentPageEntry(
-  id: json['id'] as String,
-  $type: json['_kind'] as String?,
-);
-
-Map<String, dynamic> _$NonexistentPageEntryToJson(
-  NonexistentPageEntry instance,
-) => <String, dynamic>{'id': instance.id, '_kind': instance.$type};
-
-NoBlueprintPageEntry _$NoBlueprintPageEntryFromJson(
-  Map<String, dynamic> json,
-) => NoBlueprintPageEntry(
-  id: json['id'] as String,
-  name: json['name'] as String,
-  placement: EntryPlacement.fromJson(json['placement'] as Map<String, dynamic>),
-  inwardLinks: (json['inwardLinks'] as List<dynamic>)
-      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  outwardLinks: (json['outwardLinks'] as List<dynamic>)
-      .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  metadata:
-      (json['metadata'] as List<dynamic>?)
-          ?.map((e) => EntryMetadata.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-  $type: json['_kind'] as String?,
-);
-
-Map<String, dynamic> _$NoBlueprintPageEntryToJson(
-  NoBlueprintPageEntry instance,
-) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'placement': instance.placement.toJson(),
-  'inwardLinks': instance.inwardLinks.map((e) => e.toJson()).toList(),
-  'outwardLinks': instance.outwardLinks.map((e) => e.toJson()).toList(),
-  'metadata': instance.metadata.map((e) => e.toJson()).toList(),
-  '_kind': instance.$type,
-};
-
-_EntryDefinition _$EntryDefinitionFromJson(Map<String, dynamic> json) =>
-    _EntryDefinition(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      blueprint: ElementBlueprint.fromJson(
-        json['blueprint'] as Map<String, dynamic>,
-      ),
-      placement: EntryPlacement.fromJson(
-        json['placement'] as Map<String, dynamic>,
-      ),
-      data: DynamicData.fromJson(json['data'] as Map<String, dynamic>),
-      inwardEdges: (json['inwardEdges'] as List<dynamic>)
-          .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      outwardEdges: (json['outwardEdges'] as List<dynamic>)
-          .map((e) => ElementLink.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      metadata:
-          (json['metadata'] as List<dynamic>?)
-              ?.map((e) => EntryMetadata.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-    );
-
-Map<String, dynamic> _$EntryDefinitionToJson(_EntryDefinition instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'blueprint': instance.blueprint.toJson(),
-      'placement': instance.placement.toJson(),
-      'data': instance.data.toJson(),
-      'inwardEdges': instance.inwardEdges.map((e) => e.toJson()).toList(),
-      'outwardEdges': instance.outwardEdges.map((e) => e.toJson()).toList(),
-      'metadata': instance.metadata.map((e) => e.toJson()).toList(),
-    };
-
 _EntryPlacement _$EntryPlacementFromJson(Map<String, dynamic> json) =>
     _EntryPlacement(
       x: (json['x'] as num).toInt(),
@@ -197,7 +77,7 @@ final class EntryProvider
   }
 }
 
-String _$entryHash() => r'87002d25623d406347e71cb7e129993c0836b751';
+String _$entryHash() => r'ad350444d2088bc221f9ce43f91bee29395ddfbb';
 
 final class EntryFamily extends $Family
     with

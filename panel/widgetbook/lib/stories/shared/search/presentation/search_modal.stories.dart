@@ -112,17 +112,17 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
 final _mockRowRenderers = <String, SearchResultRowBuilder>{
   "mockPageRow": _mockPageResultRow,
   "mockEntryRow": _mockEntryResultRow,
-  "mockBlueprintRow": _mockBlueprintResultRow,
+  "mockElementDefinitionRow": _mockElementDefinitionResultRow,
   "mockBookRow": _mockBookResultRow,
   "mockTagRow": _mockTagResultRow,
 };
 
 final _mockPreviewRenderers = <String, SearchResultPreviewBuilder>{
-  "mockBlueprintPreview": _mockBlueprintPreview,
+  "mockElementDefinitionPreview": _mockElementDefinitionPreview,
 };
 
-Widget _mockBlueprintPreview(SearchResultPreviewContext context) {
-  return BlueprintSearchPreview(context: context);
+Widget _mockElementDefinitionPreview(SearchResultPreviewContext context) {
+  return ElementDefinitionSearchPreview(context: context);
 }
 
 Widget _mockPageResultRow(SearchResultRowContext context) {
@@ -163,14 +163,14 @@ Widget _mockEntryResultRow(SearchResultRowContext context) {
   );
 }
 
-Widget _mockBlueprintResultRow(SearchResultRowContext context) {
+Widget _mockElementDefinitionResultRow(SearchResultRowContext context) {
   final payload = context.result.payload;
-  if (payload is! ElementBlueprint) {
+  if (payload is! ElementDefinition) {
     return MissingSearchResultRendererRow(result: context.result);
   }
 
-  return BlueprintSearchResultItem.fromBlueprint(
-    blueprint: payload,
+  return ElementDefinitionSearchResultItem.fromDefinition(
+    elementDefinition: payload,
     selected: context.selected,
     focused: context.focused,
     loading: context.loading,

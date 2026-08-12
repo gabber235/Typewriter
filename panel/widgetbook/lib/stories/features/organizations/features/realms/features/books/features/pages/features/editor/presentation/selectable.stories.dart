@@ -89,15 +89,21 @@ class SelectableDemo extends HookConsumerWidget {
 
     TestSelectableIdentifier generate() {
       final id = faker.person.name().snakeCase();
-      final blueprint = ObjectBlueprint(
+      final rootType = RecordType(
         fields: {
-          "name": DataBlueprint.string(modifiers: [const Modifier.snakeCase()]),
-          "count": DataBlueprint.integer(),
+          "name": TypeField(
+            name: "name",
+            type: StringType(patterns: [r"^[a-z0-9_]+$"]),
+          ),
+          "count": TypeField(
+            name: "count",
+            type: IntegerType(width: IntegerWidth.signed32),
+          ),
         },
       );
       return TestSelectableIdentifier(
         id: id,
-        dataBlueprint: blueprint,
+        rootType: rootType,
         color: safeColors.randomOrNull()!,
         onDelete: () {
           selectables.value = selectables.value

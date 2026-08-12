@@ -162,7 +162,7 @@ TimelineElement? _buildTimelineElement({
         selectableId: selectableId,
         cue: cue,
       ),
-      color: cue.blueprint.color,
+      color: cue.elementDefinition.color,
     );
   }
 
@@ -182,7 +182,7 @@ TimelineElement? _buildTimelineElement({
       cue: cue,
       selectableId: selectableId,
     ),
-    color: cue.blueprint.color,
+    color: cue.elementDefinition.color,
     children: childrenId
         .map(
           (childId) => _buildTimelineElement(
@@ -198,9 +198,9 @@ TimelineElement? _buildTimelineElement({
 }
 
 Color _fillColor(BuildContext context, Cue cue, TimelineElementBuildData data) {
-  final isDeprecated = cue.blueprint.hasModifier<DeprecatedModifier>();
+  final isDeprecated = cue.elementDefinition.isDeprecated;
   if (!isDeprecated && !data.isPreview) {
-    return cue.blueprint.color;
+    return cue.elementDefinition.color;
   }
 
   final previewAlpha = data.isPrimaryPreview
@@ -210,7 +210,9 @@ Color _fillColor(BuildContext context, Cue cue, TimelineElementBuildData data) {
       : 0.0;
   final deprecationAlpha = isDeprecated ? 0.7 : 1.0;
   return Color.alphaBlend(
-    cue.blueprint.color.withValues(alpha: deprecationAlpha - previewAlpha),
+    cue.elementDefinition.color.withValues(
+      alpha: deprecationAlpha - previewAlpha,
+    ),
     Surface.colorOf(context),
   );
 }
@@ -226,7 +228,7 @@ class _SceneTimelineSegmentWidget extends HookWidget {
   final Cue cue;
   final CueIdentifier selectableId;
 
-  bool get isDeprecated => cue.blueprint.hasModifier<DeprecatedModifier>();
+  bool get isDeprecated => cue.elementDefinition.isDeprecated;
 
   @override
   Widget build(BuildContext context) {
@@ -253,8 +255,8 @@ class _SceneTimelineSegmentWidget extends HookWidget {
           outlineColor: outlineColor,
           outlineWidth: 2.8,
           child: InnerElementNode(
-            name: cue.blueprint.name,
-            blueprint: cue.blueprint,
+            name: cue.elementDefinition.name,
+            elementDefinition: cue.elementDefinition,
             color: foregroundColor,
             isDeprecated: isDeprecated,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),

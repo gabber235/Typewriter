@@ -1,19 +1,8 @@
-enum AnchoredOverlaySide {
-  top,
-  bottom,
-  left,
-  right,
-}
+enum AnchoredOverlaySide { top, bottom, left, right }
 
-enum BoundaryMode {
-  nearestScope,
-  overlay,
-}
+enum BoundaryMode { nearestScope, overlay }
 
-enum SharedAxisConstraintMode {
-  none,
-  matchAnchor,
-}
+enum SharedAxisConstraintMode { none, matchAnchor }
 
 class AnchoredOverlayConfig {
   const AnchoredOverlayConfig({

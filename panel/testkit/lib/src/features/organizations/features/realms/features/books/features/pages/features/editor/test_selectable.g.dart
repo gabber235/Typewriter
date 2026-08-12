@@ -13,7 +13,7 @@ part of 'test_selectable.dart';
 final testSelectableDataProvider = TestSelectableDataProvider._();
 
 final class TestSelectableDataProvider
-    extends $NotifierProvider<TestSelectableData, Map<String, DynamicData>> {
+    extends $NotifierProvider<TestSelectableData, Map<String, RecordValue>> {
   TestSelectableDataProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class TestSelectableDataProvider
   TestSelectableData create() => TestSelectableData();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Map<String, DynamicData> value) {
+  Override overrideWithValue(Map<String, RecordValue> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Map<String, DynamicData>>(value),
+      providerOverride: $SyncValueProvider<Map<String, RecordValue>>(value),
     );
   }
 }
@@ -45,18 +45,18 @@ String _$testSelectableDataHash() =>
     r'75bfb34c9442a7fc0082b7411e322fc94c17ade8';
 
 abstract class _$TestSelectableData
-    extends $Notifier<Map<String, DynamicData>> {
-  Map<String, DynamicData> build();
+    extends $Notifier<Map<String, RecordValue>> {
+  Map<String, RecordValue> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final ref =
-        this.ref as $Ref<Map<String, DynamicData>, Map<String, DynamicData>>;
+        this.ref as $Ref<Map<String, RecordValue>, Map<String, RecordValue>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Map<String, DynamicData>, Map<String, DynamicData>>,
-              Map<String, DynamicData>,
+              AnyNotifier<Map<String, RecordValue>, Map<String, RecordValue>>,
+              Map<String, RecordValue>,
               Object?,
               Object?
             >;
@@ -68,8 +68,8 @@ abstract class _$TestSelectableData
 final testDataProvider = TestDataFamily._();
 
 final class TestDataProvider
-    extends $FunctionalProvider<DynamicData?, DynamicData?, DynamicData?>
-    with $Provider<DynamicData?> {
+    extends $FunctionalProvider<RecordValue?, RecordValue?, RecordValue?>
+    with $Provider<RecordValue?> {
   TestDataProvider._({
     required TestDataFamily super.from,
     required String super.argument,
@@ -93,20 +93,20 @@ final class TestDataProvider
 
   @$internal
   @override
-  $ProviderElement<DynamicData?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<RecordValue?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  DynamicData? create(Ref ref) {
+  RecordValue? create(Ref ref) {
     final argument = this.argument as String;
     return testData(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DynamicData? value) {
+  Override overrideWithValue(RecordValue? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DynamicData?>(value),
+      providerOverride: $SyncValueProvider<RecordValue?>(value),
     );
   }
 
@@ -124,7 +124,7 @@ final class TestDataProvider
 String _$testDataHash() => r'da0cfaf005696101290c07062ae208fab95f1042';
 
 final class TestDataFamily extends $Family
-    with $FunctionalFamilyOverride<DynamicData?, String> {
+    with $FunctionalFamilyOverride<RecordValue?, String> {
   TestDataFamily._()
     : super(
         retry: null,

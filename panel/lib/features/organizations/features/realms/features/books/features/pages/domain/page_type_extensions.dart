@@ -5,22 +5,6 @@ import "package:iconify_flutter_plus/icons/ph.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 extension PageTypeExtensions on PageType {
-  /// The tag string used for matching blueprint tags
-  String get tag => switch (this) {
-    PageType.sequence => "trigger",
-    PageType.static => "static",
-    PageType.scene => "scene",
-    PageType.manifest => "manifest",
-  };
-
-  /// List of linking tags for this page type
-  List<String> get linkingTags => switch (this) {
-    PageType.sequence => ["triggerable"],
-    PageType.static => [],
-    PageType.scene => [],
-    PageType.manifest => ["manifest", "audience"],
-  };
-
   /// Icon identifier string for this page type
   String get icon => switch (this) {
     PageType.sequence => Fa6Solid.diagram_project,

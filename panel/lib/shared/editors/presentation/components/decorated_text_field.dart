@@ -24,6 +24,7 @@ class DecoratedTextField extends HookWidget {
     this.inputFormatters,
     this.keyboardType = TextInputType.text,
     this.decoration,
+    this.minLines,
     this.maxLines = 1,
     this.textAlign = TextAlign.start,
     this.readOnly = false,
@@ -73,6 +74,7 @@ class DecoratedTextField extends HookWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType keyboardType;
   final InputDecoration? decoration;
+  final int? minLines;
   final int? maxLines;
   final TextAlign textAlign;
   final bool enabled;
@@ -135,6 +137,7 @@ class DecoratedTextField extends HookWidget {
             ? TextInputAction.done
             : TextInputAction.newline,
         textAlign: textAlign,
+        minLines: minLines,
         maxLines: maxLines,
         keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
         enabled: enabled,

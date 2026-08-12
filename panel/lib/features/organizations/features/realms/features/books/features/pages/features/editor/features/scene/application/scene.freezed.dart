@@ -11,56 +11,30 @@ part of 'scene.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-Cue _$CueFromJson(
-  Map<String, dynamic> json
-) {
-        switch (json['runtimeType']) {
-                  case 'segment':
-          return Segment.fromJson(
-            json
-          );
-                case 'keyframe':
-          return Keyframe.fromJson(
-            json
-          );
-        
-          default:
-            throw CheckedFromJsonException(
-  json,
-  'runtimeType',
-  'Cue',
-  'Invalid union type "${json['runtimeType']}"!'
-);
-        }
-      
-}
-
 /// @nodoc
 mixin _$Cue {
 
- String get id; ElementBlueprint get blueprint; DynamicData get data; List<ElementLink> get inwardLinks;
+ String get id; ElementDefinition get elementDefinition; RecordValue get data; List<ElementLink> get inwardLinks;
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CueCopyWith<Cue> get copyWith => _$CueCopyWithImpl<Cue>(this as Cue, _$identity);
 
-  /// Serializes this Cue to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Cue&&(identical(other.id, id) || other.id == id)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardLinks, inwardLinks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Cue&&(identical(other.id, id) || other.id == id)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardLinks, inwardLinks));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,blueprint,data,const DeepCollectionEquality().hash(inwardLinks));
+int get hashCode => Object.hash(runtimeType,id,elementDefinition,data,const DeepCollectionEquality().hash(inwardLinks));
 
 @override
 String toString() {
-  return 'Cue(id: $id, blueprint: $blueprint, data: $data, inwardLinks: $inwardLinks)';
+  return 'Cue(id: $id, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks)';
 }
 
 
@@ -71,11 +45,11 @@ abstract mixin class $CueCopyWith<$Res>  {
   factory $CueCopyWith(Cue value, $Res Function(Cue) _then) = _$CueCopyWithImpl;
 @useResult
 $Res call({
- String id, ElementBlueprint blueprint, DynamicData data, List<ElementLink> inwardLinks
+ String id, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks
 });
 
 
-$ElementBlueprintCopyWith<$Res> get blueprint;
+$ElementDefinitionCopyWith<$Res> get elementDefinition;
 
 }
 /// @nodoc
@@ -88,12 +62,12 @@ class _$CueCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? blueprint = null,Object? data = null,Object? inwardLinks = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as DynamicData,inwardLinks: null == inwardLinks ? _self.inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
+as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as RecordValue,inwardLinks: null == inwardLinks ? _self.inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,
   ));
 }
@@ -101,10 +75,10 @@ as List<ElementLink>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }
 }
@@ -191,11 +165,11 @@ return keyframe(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String id,  int startFrame,  int endFrame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)?  segment,TResult Function( String id,  int frame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks)?  keyframe,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)?  segment,TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks)?  keyframe,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case Segment() when segment != null:
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.blueprint,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe() when keyframe != null:
-return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLinks);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe() when keyframe != null:
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks);case _:
   return orElse();
 
 }
@@ -213,11 +187,11 @@ return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLink
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String id,  int startFrame,  int endFrame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)  segment,required TResult Function( String id,  int frame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks)  keyframe,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)  segment,required TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks)  keyframe,}) {final _that = this;
 switch (_that) {
 case Segment():
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.blueprint,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe():
-return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLinks);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe():
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -234,11 +208,11 @@ return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLink
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String id,  int startFrame,  int endFrame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)?  segment,TResult? Function( String id,  int frame,  ElementBlueprint blueprint,  DynamicData data,  List<ElementLink> inwardLinks)?  keyframe,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks)?  segment,TResult? Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks)?  keyframe,}) {final _that = this;
 switch (_that) {
 case Segment() when segment != null:
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.blueprint,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe() when keyframe != null:
-return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLinks);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks);case Keyframe() when keyframe != null:
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks);case _:
   return null;
 
 }
@@ -247,17 +221,17 @@ return keyframe(_that.id,_that.frame,_that.blueprint,_that.data,_that.inwardLink
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class Segment implements Cue {
-  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(startFrame >= 0, 'Start frame must not be negative.'),assert(endFrame >= startFrame, 'End frame must not precede start frame.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks,$type = $type ?? 'segment';
-  factory Segment.fromJson(Map<String, dynamic> json) => _$SegmentFromJson(json);
+  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks}): assert(id != "", 'ID must not be empty.'),assert(startFrame >= 0, 'Start frame must not be negative.'),assert(endFrame >= startFrame, 'End frame must not precede start frame.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks;
+
 
 @override final  String id;
  final  int startFrame;
  final  int endFrame;
-@override final  ElementBlueprint blueprint;
-@override final  DynamicData data;
+@override final  ElementDefinition elementDefinition;
+@override final  RecordValue data;
  final  List<ElementLink> _inwardLinks;
 @override List<ElementLink> get inwardLinks {
   if (_inwardLinks is EqualUnmodifiableListView) return _inwardLinks;
@@ -273,33 +247,26 @@ class Segment implements Cue {
 }
 
 
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SegmentCopyWith<Segment> get copyWith => _$SegmentCopyWithImpl<Segment>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$SegmentToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment&&(identical(other.id, id) || other.id == id)&&(identical(other.startFrame, startFrame) || other.startFrame == startFrame)&&(identical(other.endFrame, endFrame) || other.endFrame == endFrame)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment&&(identical(other.id, id) || other.id == id)&&(identical(other.startFrame, startFrame) || other.startFrame == startFrame)&&(identical(other.endFrame, endFrame) || other.endFrame == endFrame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,startFrame,endFrame,blueprint,data,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks));
+int get hashCode => Object.hash(runtimeType,id,startFrame,endFrame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks));
 
 @override
 String toString() {
-  return 'Cue.segment(id: $id, startFrame: $startFrame, endFrame: $endFrame, blueprint: $blueprint, data: $data, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks)';
+  return 'Cue.segment(id: $id, startFrame: $startFrame, endFrame: $endFrame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks)';
 }
 
 
@@ -310,11 +277,11 @@ abstract mixin class $SegmentCopyWith<$Res> implements $CueCopyWith<$Res> {
   factory $SegmentCopyWith(Segment value, $Res Function(Segment) _then) = _$SegmentCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int startFrame, int endFrame, ElementBlueprint blueprint, DynamicData data, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks
+ String id, int startFrame, int endFrame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks
 });
 
 
-@override $ElementBlueprintCopyWith<$Res> get blueprint;
+@override $ElementDefinitionCopyWith<$Res> get elementDefinition;
 
 }
 /// @nodoc
@@ -327,14 +294,14 @@ class _$SegmentCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? startFrame = null,Object? endFrame = null,Object? blueprint = null,Object? data = null,Object? inwardLinks = null,Object? outwardLinks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? startFrame = null,Object? endFrame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? outwardLinks = null,}) {
   return _then(Segment(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,startFrame: null == startFrame ? _self.startFrame : startFrame // ignore: cast_nullable_to_non_nullable
 as int,endFrame: null == endFrame ? _self.endFrame : endFrame // ignore: cast_nullable_to_non_nullable
-as int,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as DynamicData,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
+as int,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as RecordValue,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,outwardLinks: null == outwardLinks ? _self._outwardLinks : outwardLinks // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,
   ));
@@ -344,25 +311,25 @@ as List<ElementLink>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class Keyframe implements Cue {
-  const Keyframe({required this.id, required this.frame, required this.blueprint, required this.data, required final  List<ElementLink> inwardLinks, final  String? $type}): assert(id != "", 'ID must not be empty.'),assert(frame >= 0, 'Frame must not be negative.'),_inwardLinks = inwardLinks,$type = $type ?? 'keyframe';
-  factory Keyframe.fromJson(Map<String, dynamic> json) => _$KeyframeFromJson(json);
+  const Keyframe({required this.id, required this.frame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks}): assert(id != "", 'ID must not be empty.'),assert(frame >= 0, 'Frame must not be negative.'),_inwardLinks = inwardLinks;
+
 
 @override final  String id;
  final  int frame;
-@override final  ElementBlueprint blueprint;
-@override final  DynamicData data;
+@override final  ElementDefinition elementDefinition;
+@override final  RecordValue data;
  final  List<ElementLink> _inwardLinks;
 @override List<ElementLink> get inwardLinks {
   if (_inwardLinks is EqualUnmodifiableListView) return _inwardLinks;
@@ -371,33 +338,26 @@ class Keyframe implements Cue {
 }
 
 
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $KeyframeCopyWith<Keyframe> get copyWith => _$KeyframeCopyWithImpl<Keyframe>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$KeyframeToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Keyframe&&(identical(other.id, id) || other.id == id)&&(identical(other.frame, frame) || other.frame == frame)&&(identical(other.blueprint, blueprint) || other.blueprint == blueprint)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Keyframe&&(identical(other.id, id) || other.id == id)&&(identical(other.frame, frame) || other.frame == frame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
-int get hashCode => Object.hash(runtimeType,id,frame,blueprint,data,const DeepCollectionEquality().hash(_inwardLinks));
+int get hashCode => Object.hash(runtimeType,id,frame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks));
 
 @override
 String toString() {
-  return 'Cue.keyframe(id: $id, frame: $frame, blueprint: $blueprint, data: $data, inwardLinks: $inwardLinks)';
+  return 'Cue.keyframe(id: $id, frame: $frame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks)';
 }
 
 
@@ -408,11 +368,11 @@ abstract mixin class $KeyframeCopyWith<$Res> implements $CueCopyWith<$Res> {
   factory $KeyframeCopyWith(Keyframe value, $Res Function(Keyframe) _then) = _$KeyframeCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int frame, ElementBlueprint blueprint, DynamicData data, List<ElementLink> inwardLinks
+ String id, int frame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks
 });
 
 
-@override $ElementBlueprintCopyWith<$Res> get blueprint;
+@override $ElementDefinitionCopyWith<$Res> get elementDefinition;
 
 }
 /// @nodoc
@@ -425,13 +385,13 @@ class _$KeyframeCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? frame = null,Object? blueprint = null,Object? data = null,Object? inwardLinks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? frame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,}) {
   return _then(Keyframe(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,frame: null == frame ? _self.frame : frame // ignore: cast_nullable_to_non_nullable
-as int,blueprint: null == blueprint ? _self.blueprint : blueprint // ignore: cast_nullable_to_non_nullable
-as ElementBlueprint,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as DynamicData,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
+as int,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
+as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as RecordValue,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,
   ));
 }
@@ -440,10 +400,10 @@ as List<ElementLink>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$ElementBlueprintCopyWith<$Res> get blueprint {
-  
-  return $ElementBlueprintCopyWith<$Res>(_self.blueprint, (value) {
-    return _then(_self.copyWith(blueprint: value));
+$ElementDefinitionCopyWith<$Res> get elementDefinition {
+
+  return $ElementDefinitionCopyWith<$Res>(_self.elementDefinition, (value) {
+    return _then(_self.copyWith(elementDefinition: value));
   });
 }
 }

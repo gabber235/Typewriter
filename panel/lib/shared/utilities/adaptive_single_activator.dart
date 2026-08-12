@@ -11,17 +11,21 @@ bool get isApple =>
 /// key is pressed. Otherwise, it will return true if the [control] key is
 /// pressed.
 bool get hasOverrideDown =>
-    HardwareKeyboard.instance
-            .isLogicalKeyPressed(LogicalKeyboardKey.controlLeft) &&
+    HardwareKeyboard.instance.isLogicalKeyPressed(
+          LogicalKeyboardKey.controlLeft,
+        ) &&
         !isApple ||
-    HardwareKeyboard.instance
-            .isLogicalKeyPressed(LogicalKeyboardKey.controlRight) &&
+    HardwareKeyboard.instance.isLogicalKeyPressed(
+          LogicalKeyboardKey.controlRight,
+        ) &&
         !isApple ||
-    HardwareKeyboard.instance
-            .isLogicalKeyPressed(LogicalKeyboardKey.metaLeft) &&
+    HardwareKeyboard.instance.isLogicalKeyPressed(
+          LogicalKeyboardKey.metaLeft,
+        ) &&
         isApple ||
-    HardwareKeyboard.instance
-            .isLogicalKeyPressed(LogicalKeyboardKey.metaRight) &&
+    HardwareKeyboard.instance.isLogicalKeyPressed(
+          LogicalKeyboardKey.metaRight,
+        ) &&
         isApple;
 
 /// A [SingleActivator] that automatically maps the [control] key to the [meta]

@@ -1,45 +1,40 @@
 import "package:faker/faker.dart";
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/data_blueprint.dart";
+import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
 
-ElementBlueprint generateRandomElementBlueprint() {
+ElementDefinition generateRandomElementDefinition() {
   final extensions = ["basic", "combat", "dialogue", "quest", "npc", "item"];
+  final namespace = extensions.randomOrNull()!;
 
-  return ElementBlueprint(
-    id: faker.guid.guid(),
+  return ElementDefinition(
+    rootType: ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: namespace, name: faker.guid.guid()),
+      revision: 1,
+    ),
     name: faker.lorem.words(2).join(" ").formatted,
     description: faker.lorem.sentence(),
-    extension: extensions.randomOrNull()!,
-    dataBlueprint: generateRandomObjectBlueprint(maxDepth: 2),
     color: safeColors.randomOrNull()!,
-    icon: generateRandomIconName(),
-    tags:
-        List.generate(
-          faker.randomGenerator.integer(3, min: 0),
-          (_) => faker.lorem.word(),
-        ) +
-        [PageType.values.randomOrNull()!.tag],
+    icon: IconValue.iconify(generateRandomIconName()),
   );
 }
 
 EntryDefinition generateRandomEntryDefinition() {
   final width = faker.randomGenerator.integer(3, min: 2) * 50;
   final height = faker.randomGenerator.integer(3, min: 2) * 30;
-  final blueprint = generateRandomElementBlueprint();
-
-  final defaultData = blueprint.dataBlueprint.defaultValue();
+  final elementDefinition = generateRandomElementDefinition();
+  final data = generateRandomRecordData(maxDepth: 2).value;
 
   return EntryDefinition(
     id: faker.guid.guid(),
     name: faker.lorem.words(2).join(" ").formatted,
-    blueprint: blueprint,
+    elementDefinition: elementDefinition,
     placement: EntryPlacement(
       x: faker.randomGenerator.integer(400),
       y: faker.randomGenerator.integer(300),
       width: width,
       height: height,
     ),
-    data: DynamicData(defaultData is Map<String, dynamic> ? defaultData : {}),
+    data: data,
     inwardEdges: const [],
     outwardEdges: const [],
   );

@@ -2,11 +2,13 @@ import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 abstract interface class EditorSource implements Listenable {
-  ObjectBlueprint? get blueprint;
+  TypeExpression? get rootType;
 
-  EditorValue value(String path);
+  TypeRegistry? get registry;
 
-  void update(String path, dynamic value);
+  EditorValue value(DataPath path);
+
+  EditorMutationResult update(DataPath path, DataValue value);
 
   void dispose();
 }

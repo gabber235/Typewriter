@@ -346,20 +346,14 @@ class _InspectorContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // TODO: Add shimmer when loading.
     final selectedHeader = ref.watch(inspectedHeaderProvider);
-    final selectedDataBlueprint = ref.watch(inspectedDataBlueprintProvider);
+    final selectedRootType = ref.watch(inspectedRootTypeProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: context.spacing.space3,
       children: [
         ?selectedHeader,
-        if (selectedDataBlueprint != null)
-          ObjectEditorWidget(
-            path: "",
-            objectBlueprint: selectedDataBlueprint,
-            editorMode: EditorMode.interactiveInspector,
-            defaultExpanded: true,
-          ),
+        if (selectedRootType != null) const TypedEditor(),
         const SizedBox(height: 5),
         InspectorOperations(),
         const SizedBox(height: 30),

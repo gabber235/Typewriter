@@ -4,25 +4,23 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
+part "entry_grid.stories.dart";
+
+@widgetbook.UseCase(name: "Multiple Entries Grid", type: EntryNode)
+Widget entryNodeMultipleEntriesUseCase(BuildContext context) =>
+    entryNodeMultipleEntriesStory(context);
+
 @widgetbook.UseCase(name: "Definition Entry", type: EntryNode)
 Widget entryNodeDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "test-entry-id",
     name: "Test Entry",
-    blueprint: ElementBlueprint(
-      id: "test-blueprint",
+    elementDefinition: _elementDefinition(
+      id: "test-elementDefinition",
       name: "Test Blueprint",
-      description: "A test blueprint for the story",
-      extension: "basic",
-      dataBlueprint: ObjectBlueprint(
-        fields: {
-          "name": DataBlueprint.string(defaultValue: "Test"),
-          "value": DataBlueprint.integer(defaultValue: 42),
-        },
-      ),
+      description: "A test elementDefinition for the story",
       color: safeColors.randomOrNull()!,
       icon: "fa-solid:star",
-      tags: ["test", "example"],
     ),
     placement: EntryPlacement(
       x: 0,
@@ -40,7 +38,10 @@ Widget entryNodeDefinitionUseCase(BuildContext context) {
         max: 10,
       ),
     ),
-    data: DynamicData({"name": "Test Entry", "value": 42}),
+    data: RecordValue({
+      "name": const StringValue("Test Entry"),
+      "value": IntegerValue(BigInt.from(42)),
+    }),
     inwardEdges: const [],
     outwardEdges: const [],
     metadata: const [],
@@ -65,20 +66,13 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
   final definition = EntryDefinition(
     id: "deprecated-entry-id",
     name: "Deprecated Entry",
-    blueprint: ElementBlueprint(
-      id: "deprecated-blueprint",
+    elementDefinition: _elementDefinition(
+      id: "deprecated-elementDefinition",
       name: "Deprecated Blueprint",
-      description: "A deprecated blueprint for the story",
-      extension: "basic",
-      dataBlueprint: ObjectBlueprint(
-        fields: {"name": DataBlueprint.string(defaultValue: "Deprecated")},
-      ),
+      description: "A deprecated elementDefinition for the story",
       color: safeColors.randomOrNull()!,
       icon: "fa-solid:exclamation-triangle",
-      tags: const ["deprecated"],
-      modifiers: const [
-        ElementModifier.deprecated(reason: "This entry type is deprecated"),
-      ],
+      deprecated: true,
     ),
     placement: EntryPlacement(
       x: 0,
@@ -96,7 +90,7 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
         max: 10,
       ),
     ),
-    data: DynamicData({"name": "Deprecated Entry"}),
+    data: RecordValue({"name": const StringValue("Deprecated Entry")}),
     inwardEdges: const [],
     outwardEdges: const [],
     metadata: const [],
@@ -118,15 +112,12 @@ Widget entryNodeDeprecatedDefinitionUseCase(BuildContext context) {
 
 @widgetbook.UseCase(name: "Reference Entry", type: EntryNode)
 Widget entryNodeReferenceUseCase(BuildContext context) {
-  final blueprint = ElementBlueprint(
-    id: "reference-blueprint",
+  final elementDefinition = _elementDefinition(
+    id: "reference-elementDefinition",
     name: "Reference Blueprint",
-    description: "A blueprint for reference entries",
-    extension: "basic",
-    dataBlueprint: ObjectBlueprint(fields: const {}),
+    description: "A elementDefinition for reference entries",
     color: safeColors.randomOrNull()!,
     icon: "fa-solid:link",
-    tags: const ["reference"],
   );
 
   final width = context.knobs.int.slider(
@@ -151,7 +142,7 @@ Widget entryNodeReferenceUseCase(BuildContext context) {
           entry: PageEntry.reference(
             id: "reference-entry-id",
             name: "Referenced Entry",
-            blueprint: blueprint,
+            elementDefinition: elementDefinition,
             pageId: "other-page-id",
             metadata: const [],
           ),
@@ -189,8 +180,8 @@ Widget entryNodeNonexistentUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "No Blueprint Entry", type: EntryNode)
-Widget entryNodeNoBlueprintUseCase(BuildContext context) {
+@widgetbook.UseCase(name: "Missing Element Definition", type: EntryNode)
+Widget entryNodeMissingElementDefinitionUseCase(BuildContext context) {
   final placement = EntryPlacement(
     x: 0,
     y: 0,
@@ -213,164 +204,13 @@ Widget entryNodeNoBlueprintUseCase(BuildContext context) {
         width: placement.width * entryGraphCellSize,
         height: placement.height * entryGraphCellSize,
         child: EntryNode(
-          entry: PageEntry.noBlueprint(
-            id: "no-blueprint-entry-id",
-            name: "Entry Without Blueprint",
+          entry: PageEntry.missingElementDefinition(
+            id: "no-elementDefinition-entry-id",
+            name: "Entry Without Element Definition",
             placement: placement,
             inwardLinks: const [],
             outwardLinks: const [],
             metadata: const [],
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-@widgetbook.UseCase(name: "Multiple Entries Grid", type: EntryNode)
-Widget entryNodeMultipleEntriesUseCase(BuildContext context) {
-  // Knobs for small entries (e.g., Quest and NPC)
-  final smallWidth = context.knobs.int.slider(
-    label: "Small Width",
-    initialValue: 4,
-    min: 1,
-    max: 10,
-  );
-  final smallHeight = context.knobs.int.slider(
-    label: "Small Height",
-    initialValue: 1,
-    min: 1,
-    max: 10,
-  );
-
-  // Knobs for big entries (e.g., Dialogue and External Reference)
-  final bigWidth = context.knobs.int.slider(
-    label: "Big Width",
-    initialValue: 4,
-    min: 1,
-    max: 10,
-  );
-  final bigHeight = context.knobs.int.slider(
-    label: "Big Height",
-    initialValue: 2,
-    min: 1,
-    max: 10,
-  );
-
-  final definitions = [
-    EntryDefinition(
-      id: "quest-entry",
-      name: "Main Quest",
-      blueprint: ElementBlueprint(
-        id: "quest-blueprint",
-        name: "Quest",
-        description: "A quest entry",
-        extension: "quest",
-        dataBlueprint: ObjectBlueprint(fields: const {}),
-        color: safeColors.randomOrNull()!,
-        icon: "fa-solid:flag",
-        tags: const ["quest"],
-      ),
-      placement: EntryPlacement(
-        x: 0,
-        y: 0,
-        width: smallWidth,
-        height: smallHeight,
-      ),
-      data: DynamicData(const {}),
-      inwardEdges: const [],
-      outwardEdges: const [],
-      metadata: const [],
-    ),
-    EntryDefinition(
-      id: "npc-entry",
-      name: "Village Elder",
-      blueprint: ElementBlueprint(
-        id: "npc-blueprint",
-        name: "NPC",
-        description: "A non-player character",
-        extension: "npc",
-        dataBlueprint: ObjectBlueprint(fields: const {}),
-        color: safeColors.randomOrNull()!,
-        icon: "fa-solid:user",
-        tags: const ["npc"],
-      ),
-      placement: EntryPlacement(
-        x: 0,
-        y: 0,
-        width: smallWidth,
-        height: smallHeight,
-      ),
-      data: DynamicData(const {}),
-      inwardEdges: const [],
-      outwardEdges: const [],
-      metadata: const [],
-    ),
-    EntryDefinition(
-      id: "dialogue-entry",
-      name: "Welcome Message",
-      blueprint: ElementBlueprint(
-        id: "dialogue-blueprint",
-        name: "Dialogue",
-        description: "A dialogue entry",
-        extension: "dialogue",
-        dataBlueprint: ObjectBlueprint(fields: const {}),
-        color: safeColors.randomOrNull()!,
-        icon: "fa-solid:comment",
-        tags: const ["dialogue"],
-        modifiers: const [
-          ElementModifier.deprecated(reason: "This entry type is deprecated"),
-        ],
-      ),
-      placement: EntryPlacement(x: 0, y: 0, width: bigWidth, height: bigHeight),
-      data: DynamicData(const {}),
-      inwardEdges: const [],
-      outwardEdges: const [],
-      metadata: const [],
-    ),
-  ];
-
-  return FakeApp(
-    child: Center(
-      child: GraphDrag(
-        draggingInsideGraph: ValueNotifier(false),
-        child: SizedBox(
-          width: 9 * entryGraphCellSize,
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              for (final def in definitions)
-                SizedBox(
-                  width: def.placement.width * entryGraphCellSize,
-                  height: def.placement.height * entryGraphCellSize,
-                  child: EntryNode(
-                    entry: PageEntry.definition(definition: def),
-                  ),
-                ),
-              SizedBox(
-                width: bigWidth * entryGraphCellSize,
-                height: bigHeight * entryGraphCellSize,
-                child: EntryNode(
-                  entry: PageEntry.reference(
-                    id: "external-entry",
-                    name: "External Entry",
-                    blueprint: ElementBlueprint(
-                      id: "external-blueprint",
-                      name: "External",
-                      description: "An external entry",
-                      extension: "basic",
-                      dataBlueprint: ObjectBlueprint(fields: const {}),
-                      color: safeColors.randomOrNull()!,
-                      icon: "fa-solid:external-link-alt",
-                      tags: const ["external"],
-                    ),
-                    pageId: "other-page",
-                    metadata: const [],
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

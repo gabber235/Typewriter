@@ -11,41 +11,11 @@ part of 'page_elements.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-PageElement _$PageElementFromJson(
-  Map<String, dynamic> json
-) {
-        switch (json['_kind']) {
-                  case 'entry':
-          return PageElementEntry.fromJson(
-            json
-          );
-                case 'group':
-          return PageElementGroup.fromJson(
-            json
-          );
-                case 'cue':
-          return PageElementCue.fromJson(
-            json
-          );
-        
-          default:
-            throw CheckedFromJsonException(
-  json,
-  '_kind',
-  'PageElement',
-  'Invalid union type "${json['_kind']}"!'
-);
-        }
-      
-}
-
 /// @nodoc
 mixin _$PageElement {
 
 
 
-  /// Serializes this PageElement to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -53,7 +23,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PageElement);
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => runtimeType.hashCode;
 
@@ -214,17 +184,13 @@ return cue(_that.cue);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class PageElementEntry implements PageElement {
-  const PageElementEntry({required this.entry, final  String? $type}): $type = $type ?? 'entry';
-  factory PageElementEntry.fromJson(Map<String, dynamic> json) => _$PageElementEntryFromJson(json);
+  const PageElementEntry({required this.entry});
+
 
  final  PageEntry entry;
-
-@JsonKey(name: '_kind')
-final String $type;
-
 
 /// Create a copy of PageElement
 /// with the given fields replaced by the non-null parameter values.
@@ -232,17 +198,14 @@ final String $type;
 @pragma('vm:prefer-inline')
 $PageElementEntryCopyWith<PageElementEntry> get copyWith => _$PageElementEntryCopyWithImpl<PageElementEntry>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$PageElementEntryToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PageElementEntry&&(identical(other.entry, entry) || other.entry == entry));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,entry);
 
@@ -288,7 +251,7 @@ as PageEntry,
 @override
 @pragma('vm:prefer-inline')
 $PageEntryCopyWith<$Res> get entry {
-  
+
   return $PageEntryCopyWith<$Res>(_self.entry, (value) {
     return _then(_self.copyWith(entry: value));
   });
@@ -296,19 +259,15 @@ $PageEntryCopyWith<$Res> get entry {
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class PageElementGroup implements PageElement {
-  const PageElementGroup({required this.id, required this.name, required this.placement, final  String? $type}): assert(id != "", 'ID must not be empty.'),$type = $type ?? 'group';
-  factory PageElementGroup.fromJson(Map<String, dynamic> json) => _$PageElementGroupFromJson(json);
+  const PageElementGroup({required this.id, required this.name, required this.placement}): assert(id != "", 'ID must not be empty.');
+
 
  final  String id;
  final  String name;
  final  EntryPlacement placement;
-
-@JsonKey(name: '_kind')
-final String $type;
-
 
 /// Create a copy of PageElement
 /// with the given fields replaced by the non-null parameter values.
@@ -316,17 +275,14 @@ final String $type;
 @pragma('vm:prefer-inline')
 $PageElementGroupCopyWith<PageElementGroup> get copyWith => _$PageElementGroupCopyWithImpl<PageElementGroup>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$PageElementGroupToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PageElementGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.placement, placement) || other.placement == placement));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,name,placement);
 
@@ -374,7 +330,7 @@ as EntryPlacement,
 @override
 @pragma('vm:prefer-inline')
 $EntryPlacementCopyWith<$Res> get placement {
-  
+
   return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
     return _then(_self.copyWith(placement: value));
   });
@@ -382,17 +338,13 @@ $EntryPlacementCopyWith<$Res> get placement {
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class PageElementCue implements PageElement {
-  const PageElementCue({required this.cue, final  String? $type}): $type = $type ?? 'cue';
-  factory PageElementCue.fromJson(Map<String, dynamic> json) => _$PageElementCueFromJson(json);
+  const PageElementCue({required this.cue});
+
 
  final  Cue cue;
-
-@JsonKey(name: '_kind')
-final String $type;
-
 
 /// Create a copy of PageElement
 /// with the given fields replaced by the non-null parameter values.
@@ -400,17 +352,14 @@ final String $type;
 @pragma('vm:prefer-inline')
 $PageElementCueCopyWith<PageElementCue> get copyWith => _$PageElementCueCopyWithImpl<PageElementCue>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$PageElementCueToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PageElementCue&&(identical(other.cue, cue) || other.cue == cue));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,cue);
 
@@ -456,7 +405,7 @@ as Cue,
 @override
 @pragma('vm:prefer-inline')
 $CueCopyWith<$Res> get cue {
-  
+
   return $CueCopyWith<$Res>(_self.cue, (value) {
     return _then(_self.copyWith(cue: value));
   });

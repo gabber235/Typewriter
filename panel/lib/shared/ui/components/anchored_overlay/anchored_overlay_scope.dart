@@ -9,8 +9,10 @@ class AnchoredOverlayScope extends StatefulWidget {
     BuildContext context, {
     required RenderBox overlayBox,
   }) {
-    final inherited = context.dependOnInheritedWidgetOfExactType<_AnchoredOverlayScopeMarker>();
-    final scopeRenderObject = inherited?.scopeKey.currentContext?.findRenderObject();
+    final inherited = context
+        .dependOnInheritedWidgetOfExactType<_AnchoredOverlayScopeMarker>();
+    final scopeRenderObject = inherited?.scopeKey.currentContext
+        ?.findRenderObject();
     if (scopeRenderObject is! RenderBox || !scopeRenderObject.hasSize) {
       return null;
     }
@@ -31,10 +33,7 @@ class _AnchoredOverlayScopeState extends State<AnchoredOverlayScope> {
   Widget build(BuildContext context) {
     return _AnchoredOverlayScopeMarker(
       scopeKey: _scopeKey,
-      child: KeyedSubtree(
-        key: _scopeKey,
-        child: widget.child,
-      ),
+      child: KeyedSubtree(key: _scopeKey, child: widget.child),
     );
   }
 }
