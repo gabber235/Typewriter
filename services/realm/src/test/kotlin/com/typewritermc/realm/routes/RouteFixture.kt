@@ -23,6 +23,7 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
+    editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
     decorateBooks: (BookRepository) -> BookRepository = { it },
 ) : AutoCloseable {
     val repositories = RepositoryFixture()
@@ -36,6 +37,7 @@ internal class RouteFixture(
                 decorateBooks(repositories.books),
                 repositories.pages,
                 repositories.tags,
+                editorCatalog,
             ).create(RealmAddress("realm", "organization")),
             scope,
         )
