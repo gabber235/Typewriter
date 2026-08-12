@@ -217,58 +217,46 @@ final conditionalRendererScenario = RendererStoryScenario(
                     ),
                     whenTrue: storyNode(
                       "timedDialogueEditor",
-                      PresentationElement.section(
-                        title: "Timed dialogue".asStringLiteral,
-                        description:
-                            "Representative fields from TimedDialogueEntry."
-                                .asStringLiteral,
-                        child: storyNode(
-                          "timedDialogueFields",
-                          PresentationElement.column(
-                            spacing: 12,
-                            children: [
-                              storyInput(
-                                "dialogueText",
-                                label: "Text",
-                                binding: _dialogueTextBinding,
-                                description: "The message shown to the player.",
-                                build: (control) =>
-                                    PresentationElement.textInput(
-                                      control: control,
-                                      multiline: true,
-                                      placeholder:
-                                          "What should the speaker say?"
-                                              .asStringLiteral,
-                                    ),
-                              ),
-                              storyInput(
-                                "dialogueTypingDuration",
-                                label: "Typing duration",
-                                binding: _typingDurationBinding,
-                                description:
-                                    "Time used to animate the full message.",
-                                build: PresentationElement.durationInput,
-                              ),
-                              storyInput(
-                                "dialogueWaitDuration",
-                                label: "Wait duration",
-                                binding: _waitDurationBinding,
-                                description:
-                                    "Pause before the dialogue continues.",
-                                build: PresentationElement.durationInput,
-                              ),
-                              storyInput(
-                                "dialogueAllowSkip",
-                                label: "Allow skip",
-                                binding: _allowSkipBinding,
-                                description:
-                                    "Let the confirmation key complete or skip the dialogue.",
-                                showHeader: true,
-                                build: PresentationElement.toggleInput,
-                              ),
-                            ],
+                      PresentationElement.column(
+                        spacing: 12,
+                        children: [
+                          storyInput(
+                            "dialogueText",
+                            label: "Text",
+                            binding: _dialogueTextBinding,
+                            description: "The message shown to the player.",
+                            build: (control) => PresentationElement.textInput(
+                              control: control,
+                              multiline: true,
+                              placeholder: "What should the speaker say?"
+                                  .asStringLiteral,
+                            ),
                           ),
-                        ),
+                          storyInput(
+                            "dialogueTypingDuration",
+                            label: "Typing duration",
+                            binding: _typingDurationBinding,
+                            description:
+                                "Time used to animate the full message.",
+                            build: PresentationElement.durationInput,
+                          ),
+                          storyInput(
+                            "dialogueWaitDuration",
+                            label: "Wait duration",
+                            binding: _waitDurationBinding,
+                            description: "Pause before the dialogue continues.",
+                            build: PresentationElement.durationInput,
+                          ),
+                          storyInput(
+                            "dialogueAllowSkip",
+                            label: "Allow skip",
+                            binding: _allowSkipBinding,
+                            description:
+                                "Let the confirmation key complete or skip the dialogue.",
+                            showHeader: true,
+                            build: PresentationElement.toggleInput,
+                          ),
+                        ],
                       ),
                     ),
                     whenFalse: storyNode(
