@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
@@ -71,17 +72,7 @@ final dataRendererScenarios = [
         condition: bindingExpression(rootBinding, const BooleanType()),
         whenTrue: storyNode(
           "conditionTrue",
-          PresentationElement.badge(
-            label: "Condition is true".asStringLiteral,
-            tone: "success",
-          ),
-        ),
-        whenFalse: storyNode(
-          "conditionFalse",
-          PresentationElement.badge(
-            label: "Condition is false".asStringLiteral,
-            tone: "neutral",
-          ),
+          PresentationElement.text("Conditional content".asStringLiteral),
         ),
       ),
     ),
@@ -330,7 +321,80 @@ final conditionalRendererScenario = RendererStoryScenario(
   path: _repeatedPath,
 )
 Widget repeatedRendererUseCase(BuildContext context) =>
-    rendererStory(context, dataRendererScenarios[4]);
+    rendererStory(context, _repeatedScenario(_repeatedItems(context)));
+
+List<StringValue> _repeatedItems(BuildContext context) {
+  final count = context.knobs.int.slider(
+    label: "Item count",
+    initialValue: 3,
+    min: 0,
+    max: 3,
+  );
+  final items = [
+    context.knobs.string(label: "Item 1", initialValue: "Meet the guide"),
+    context.knobs.string(label: "Item 2", initialValue: "Find the hidden path"),
+    context.knobs.string(
+      label: "Item 3",
+      initialValue: "Return to the village",
+    ),
+  ];
+
+  return items.take(count).map(StringValue.new).toList();
+}
+
+RendererStoryScenario _repeatedScenario(
+  List<StringValue> items,
+) => RendererStoryScenario(
+  kind: RendererStoryKind.repeated,
+  name: "Repeated",
+  type: const ListType(element: StringType()),
+  value: ListValue(items),
+  presentation: storyNode(
+    "repeated",
+    PresentationElement.column(
+      children: [
+        storyNode(
+          "repeatedHint",
+          PresentationElement.text(
+            "Change Item count or an item value in the knobs panel. Each "
+                    "list value is bound to the template alias, so the card "
+                    "is rendered once per item."
+                .asStringLiteral,
+          ),
+        ),
+        storyNode(
+          "repeatedItems",
+          PresentationElement.repeated(
+            source: bindingExpression(
+              rootBinding,
+              const ListType(element: StringType()),
+            ),
+            itemBindingId: const BindingId(1),
+            template: storyNode(
+              "repeatedItem",
+              PresentationElement.card(
+                storyNode(
+                  "repeatedText",
+                  PresentationElement.text(
+                    bindingExpression(_itemBinding, const StringType()),
+                  ),
+                ),
+              ),
+            ),
+            empty: storyNode(
+              "repeatedEmpty",
+              PresentationElement.text(
+                "No items means the empty presentation is rendered."
+                    .asStringLiteral,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
 final customRepeatedEmptyScenario = RendererStoryScenario(
   kind: RendererStoryKind.repeated,
   name: "Custom repeated empty state",
@@ -410,5 +474,55 @@ Widget customRepeatedEmptyUseCase(BuildContext context) =>
   type: PresentationRendererStory,
   path: _path,
 )
-Widget scopedBindingRendererUseCase(BuildContext context) =>
-    rendererStory(context, dataRendererScenarios[5]);
+Widget scopedBindingRendererUseCase(BuildContext context) => rendererStory(
+  context,
+  _scopedBindingScenario(
+    context.knobs.string(
+      label: "Root value",
+      initialValue: "Value from a scoped alias",
+    ),
+  ),
+);
+
+RendererStoryScenario _scopedBindingScenario(
+  String value,
+) => RendererStoryScenario(
+  kind: RendererStoryKind.scopedBinding,
+  name: "Scoped binding",
+  type: const StringType(),
+  value: StringValue(value),
+  presentation: storyNode(
+    "scopedBinding",
+    PresentationElement.column(
+      children: [
+        storyNode(
+          "scopedBindingHint",
+          PresentationElement.text(
+            "Change Root value in the knobs panel. The scoped binding maps "
+                    "the root value to its alias, and the child resolves that "
+                    "alias instead of reading the root directly."
+                .asStringLiteral,
+          ),
+        ),
+        storyNode(
+          "scopedBindingResult",
+          PresentationElement.scopedBinding(
+            binding: rootBinding,
+            scopeBindingId: const BindingId(1),
+            child: storyNode(
+              "scopedText",
+              PresentationElement.card(
+                storyNode(
+                  "scopedValue",
+                  PresentationElement.text(
+                    bindingExpression(_itemBinding, const StringType()),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
