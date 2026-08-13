@@ -32,6 +32,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
+import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -261,6 +262,24 @@ class ContentInteraction(
         val item = items[slot] ?: return
         item.action(ItemInteraction(ItemInteractionType.SWAP, slot, null))
         event.isCancelled = true
+    }
+
+    /**
+     * Keeps the editor's own tools out of the death drops. They are not the player's items:
+     * the real contents of those slots are held for them and handed back on exit, so dropping
+     * the tools would scatter barrier blocks and editor wands on the ground for anyone.
+     *
+     * One drop per tool, matched on the whole stack, so a mode handing out a plain item takes
+     * only its own copy and leaves the player's with them.
+     */
+    @EventHandler
+    fun onDeath(event: PlayerDeathEvent) {
+        if (event.entity != player) return
+        for (item in items.values) {
+            val index = event.drops.indexOfFirst { it.isSimilar(item.item) && it.amount == item.item.amount }
+            if (index < 0) continue
+            event.drops.removeAt(index)
+        }
     }
 }
 
