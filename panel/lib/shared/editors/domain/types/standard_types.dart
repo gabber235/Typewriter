@@ -6,6 +6,10 @@ const standardColorPresentationId = PresentationId(
   namespace: "typewriter",
   name: "color",
 );
+const standardColorAlphaPresentationId = PresentationId(
+  namespace: "typewriter",
+  name: "color.alpha",
+);
 const standardIconifyPresentationId = PresentationId(
   namespace: "typewriter",
   name: "iconifyIcon",

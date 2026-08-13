@@ -167,7 +167,8 @@ extension on PresentationElement {
         value.control._substituteTypes(substitutions),
       ),
       ColorInputElement() => ColorInputElement(
-        value.control._substituteTypes(substitutions),
+        control: value.control._substituteTypes(substitutions),
+        includeAlpha: value.includeAlpha,
       ),
       IconInputElement() => IconInputElement(
         value.control._substituteTypes(substitutions),

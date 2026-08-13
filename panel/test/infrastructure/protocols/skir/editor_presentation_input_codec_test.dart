@@ -47,7 +47,8 @@ void main() {
       ),
       const DateTimeInputElement(control),
       const DurationInputElement(control),
-      const ColorInputElement(control),
+      const ColorInputElement(control: control),
+      const ColorInputElement(control: control, includeAlpha: true),
       const BytesInputElement(control),
       const EnumInputElement(control),
       const NamedInputElement(control),
@@ -85,6 +86,28 @@ void main() {
 
     for (final element in elements) {
       codecs.expectRoundTrip(element);
+    }
+  });
+
+  test("encodes both color modes through one color control", () {
+    for (final includeAlpha in [false, true]) {
+      final encoded = codecs.encoder
+          .encodeNode(
+            PresentationNode(
+              id: "color",
+              element: ColorInputElement(
+                control: control,
+                includeAlpha: includeAlpha,
+              ),
+            ),
+          )
+          .valueOrNull!;
+
+      final element = encoded.element;
+      expect(element, isA<wire.PresentationElement_colorInputWrapper>());
+      final color =
+          (element! as wire.PresentationElement_colorInputWrapper).value;
+      expect(color.includeAlpha, includeAlpha);
     }
   });
 

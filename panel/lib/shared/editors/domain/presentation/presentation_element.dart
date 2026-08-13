@@ -92,8 +92,10 @@ sealed class PresentationElement with _$PresentationElement {
   const factory PresentationElement.durationInput(BoundControl control) =
       DurationInputElement;
   @Implements<SimpleInputElement>()
-  const factory PresentationElement.colorInput(BoundControl control) =
-      ColorInputElement;
+  const factory PresentationElement.colorInput({
+    required BoundControl control,
+    @Default(false) bool includeAlpha,
+  }) = ColorInputElement;
   @Implements<SimpleInputElement>()
   const factory PresentationElement.iconInput(BoundControl control) =
       IconInputElement;

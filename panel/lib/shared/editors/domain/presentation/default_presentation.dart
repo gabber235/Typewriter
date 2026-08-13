@@ -25,7 +25,22 @@ List<PresentationDefinition> builtinPresentationDefinitions() => [
     root: const PresentationNode(
       id: "color.default",
       element: ColorInputElement(
-        BoundControl(binding: BindingReference(bindingId: BindingId(0))),
+        control: BoundControl(
+          binding: BindingReference(bindingId: BindingId(0)),
+        ),
+      ),
+    ),
+  ),
+  PresentationDefinition(
+    id: standardColorAlphaPresentationId,
+    target: NamedType(standardTypeRefs.color),
+    root: const PresentationNode(
+      id: "color.alpha",
+      element: ColorInputElement(
+        control: BoundControl(
+          binding: BindingReference(bindingId: BindingId(0)),
+        ),
+        includeAlpha: true,
       ),
     ),
   ),

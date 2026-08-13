@@ -1390,6 +1390,45 @@ impl TextControl {
 }
 
 // ==============================================================================
+// struct ColorControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ColorControl {
+    pub control: BoundControl,
+    pub include_alpha: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ColorControl>>,
+}
+
+impl ColorControl {
+    pub fn default_ref() -> &'static ColorControl {
+        static D: std::sync::LazyLock<ColorControl> = std::sync::LazyLock::new(ColorControl::default);
+        &D
+    }
+}
+
+impl ColorControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ColorControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ColorControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "ColorControl",
+                    "",
+                    |x: &ColorControl| &x._unrecognized,
+                    |x: &mut ColorControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ColorControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ColorControl::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct SelectOption
 // ==============================================================================
 
@@ -2021,7 +2060,7 @@ pub enum PresentationElement {
     SliderInput(Box<SliderControl>),
     DateTimeInput(Box<BoundControl>),
     DurationInput(Box<BoundControl>),
-    ColorInput(Box<BoundControl>),
+    ColorInput(Box<ColorControl>),
     BytesInput(Box<BoundControl>),
     NamedInput(Box<BoundControl>),
     Button(Box<ButtonElement>),
@@ -2405,6 +2444,12 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ColorControl> = ColorControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &ColorControl| &x.control, |x: &mut ColorControl, v| x.control = v);
+                (*a).add_field("include_alpha", 1, crate::skir_client::Serializer::bool(), "", |x: &ColorControl| &x.include_alpha, |x: &mut ColorControl, v| x.include_alpha = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SelectOption> = SelectOption::_adapter() as *const _ as *mut _;
                 (*a).add_field("option_id", 0, crate::skir_client::Serializer::string(), "", |x: &SelectOption| &x.option_id, |x: &mut SelectOption, v| x.option_id = v);
                 (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SelectOption| &x.label, |x: &mut SelectOption, v| x.label = v);
@@ -2535,7 +2580,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("slider_input", 26, 26, crate::skir_client::internal::struct_serializer_from_static(SliderControl::_adapter()), "", |v| PresentationElement::SliderInput(Box::new(v)), |x| match x { PresentationElement::SliderInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("date_time_input", 27, 27, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DateTimeInput(Box::new(v)), |x| match x { PresentationElement::DateTimeInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("duration_input", 28, 28, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DurationInput(Box::new(v)), |x| match x { PresentationElement::DurationInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("color_input", 29, 29, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::ColorInput(Box::new(v)), |x| match x { PresentationElement::ColorInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("color_input", 29, 29, crate::skir_client::internal::struct_serializer_from_static(ColorControl::_adapter()), "", |v| PresentationElement::ColorInput(Box::new(v)), |x| match x { PresentationElement::ColorInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("bytes_input", 30, 30, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::BytesInput(Box::new(v)), |x| match x { PresentationElement::BytesInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("named_input", 31, 31, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NamedInput(Box::new(v)), |x| match x { PresentationElement::NamedInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("button", 32, 32, crate::skir_client::internal::struct_serializer_from_static(ButtonElement::_adapter()), "", |v| PresentationElement::Button(Box::new(v)), |x| match x { PresentationElement::Button(b) => b.as_ref(), _ => unreachable!() });

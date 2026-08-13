@@ -109,10 +109,7 @@ final class SkirPresentationEncoder {
           value.control,
           wire.PresentationElement.wrapDurationInput,
         ),
-        ColorInputElement() => _boundElement(
-          value.control,
-          wire.PresentationElement.wrapColorInput,
-        ),
+        ColorInputElement() => _colorInput(value),
         BytesInputElement() => _boundElement(
           value.control,
           wire.PresentationElement.wrapBytesInput,
