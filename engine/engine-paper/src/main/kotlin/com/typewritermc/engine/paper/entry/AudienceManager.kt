@@ -234,3 +234,42 @@ fun <E : AudienceEntry> Ref<out AudienceFilterEntry>.descendants(klass: KClass<E
     val entry = get() ?: return emptyList()
     return entry.children.descendants(klass)
 }
+
+/**
+ * The entries of type [E] found by walking up from these refs, through every filter that
+ * declared them as a child. The reverse of [descendants].
+ *
+ * A ref that is itself an [E] is reported instead of its parents, the same way [descendants]
+ * stops at a match on the way down. The nearest matches come first, and an entry reachable
+ * through more than one parent is reported once, so a filter above a diamond is not counted
+ * twice.
+ *
+ * Which entries are parents of which is only known once the audience tree is loaded, so this
+ * asks the [AudienceManager] rather than reading it off the entries.
+ */
+fun <E : AudienceEntry> List<Ref<out AudienceEntry>>.ascendants(klass: KClass<E>): List<Ref<E>> {
+    val manager = get<AudienceManager>(AudienceManager::class.java)
+    val found = mutableListOf<Ref<E>>()
+    val visited = mutableSetOf<Ref<out AudienceEntry>>()
+    val pending = ArrayDeque(this)
+
+    while (pending.isNotEmpty()) {
+        val ref = pending.removeFirst()
+        if (!visited.add(ref)) continue
+        val entry = ref.get() ?: continue
+        if (klass.isInstance(entry)) {
+            @Suppress("UNCHECKED_CAST")
+            found.add(ref as Ref<E>)
+            continue
+        }
+        pending.addAll(manager.getParents(ref))
+    }
+    return found
+}
+
+fun <E : AudienceEntry> AudienceEntry.ascendants(klass: KClass<E>): List<Ref<E>> = ref().ascendants(klass)
+
+fun <E : AudienceEntry> Ref<out AudienceEntry>.ascendants(klass: KClass<E>): List<Ref<E>> {
+    val manager = get<AudienceManager>(AudienceManager::class.java)
+    return manager.getParents(this).ascendants(klass)
+}
