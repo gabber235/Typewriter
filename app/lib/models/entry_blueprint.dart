@@ -354,6 +354,10 @@ extension DataBlueprintExtension on DataBlueprint {
               .map((key, value) => MapEntry(key, value.defaultValue()));
         },
         algebraic: (data) {
+          final declared = data.internalDefaultValue;
+          if (declared is Map && data.cases.containsKey(declared["case"])) {
+            return declared;
+          }
           final first = data.cases.entries.first;
           return {
             "case": first.key,
