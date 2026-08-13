@@ -6853,6 +6853,178 @@ class TextControl private constructor(
     }
 }
 
+sealed interface ColorControl_OrMutable {
+    val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
+    val includeAlpha: kotlin.Boolean;
+
+    fun toFrozen(): skirout.editor.v1.presentation.ColorControl;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ColorControl private constructor(
+    override val control: skirout.editor.v1.presentation.BoundControl,
+    override val includeAlpha: kotlin.Boolean,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ColorControl>? =
+        null,
+): skirout.editor.v1.presentation.ColorControl_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+        includeAlpha: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ColorControl>? =
+            null,
+    ): this(
+        control.toFrozen(),
+        includeAlpha,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        control = this.control,
+        includeAlpha = this.includeAlpha,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            this.control,
+        includeAlpha: kotlin.Boolean =
+            this.includeAlpha,
+    ) = skirout.editor.v1.presentation.ColorControl(
+        control.toFrozen(),
+        includeAlpha,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.ColorControl && this.control == other.control && this.includeAlpha == other.includeAlpha);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.includeAlpha).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.ColorControl.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ColorControl]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            skirout.editor.v1.presentation.BoundControl.partial(),
+        override var includeAlpha: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ColorControl>? =
+            null,
+    ): skirout.editor.v1.presentation.ColorControl_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.ColorControl(
+            control = this.control,
+            includeAlpha = this.includeAlpha,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [control] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [control] and returns it.
+         */
+        val mutableControl: skirout.editor.v1.presentation.BoundControl.Mutable get() {
+            var value = this.control;
+            return when (value) {
+                is skirout.editor.v1.presentation.BoundControl -> {
+                    value = value.toMutable();
+                    this.control = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.BoundControl.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.ColorControl(
+                skirout.editor.v1.presentation.BoundControl.partial(),
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ColorControl].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+                skirout.editor.v1.presentation.BoundControl.partial(),
+            includeAlpha: kotlin.Boolean =
+                false,
+        ) = skirout.editor.v1.presentation.ColorControl(
+            control = control,
+            includeAlpha = includeAlpha,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:ColorControl",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ColorControl] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ColorControl] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "control",
+                "control",
+                0,
+                skirout.editor.v1.presentation.BoundControl.serializer,
+                "",
+                { it.control },
+                { mut, v -> mut.control = v },
+            );
+            serializerImpl.addField(
+                "include_alpha",
+                "includeAlpha",
+                1,
+                build.skir.Serializers.bool,
+                "",
+                { it.includeAlpha },
+                { mut, v -> mut.includeAlpha = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface SelectOption_OrMutable {
     val optionId: kotlin.String;
     val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
@@ -10423,10 +10595,10 @@ sealed class PresentationElement private constructor() {
     }
 
     class ColorInputWrapper private constructor (
-        val value: skirout.editor.v1.presentation.BoundControl,
+        val value: skirout.editor.v1.presentation.ColorControl,
     ) : skirout.editor.v1.presentation.PresentationElement() {
         constructor(
-            value: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            value: skirout.editor.v1.presentation.ColorControl_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.COLOR_INPUT_WRAPPER;
@@ -11134,19 +11306,17 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `ColorInputWrapper(skirout.editor.v1.presentation.BoundControl(...))`. */
+        /** Shortcut for `ColorInputWrapper(skirout.editor.v1.presentation.ColorControl(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createColorInput(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-            label: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-            description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            includeAlpha: kotlin.Boolean,
         ) = ColorInputWrapper(
-            skirout.editor.v1.presentation.BoundControl(
-                binding = binding,
-                label = label,
-                description = description,
+            skirout.editor.v1.presentation.ColorControl(
+                control = control,
+                includeAlpha = includeAlpha,
             )
         );
 
@@ -11659,7 +11829,7 @@ sealed class PresentationElement private constructor() {
                     29,
                     "color_input",
                     Kind.COLOR_INPUT_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.BoundControl.serializer,
+                    skirout.editor.v1.presentation.ColorControl.serializer,
                     "",
                     { ColorInputWrapper(it) },
                     { it.value },

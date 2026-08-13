@@ -1,5 +1,6 @@
 library;
 
+export "application/color_library.dart";
 export "application/editor_controller.dart";
 export "application/editor_source.dart";
 export "domain/catalog/catalog.dart";
@@ -33,6 +34,7 @@ export "domain/values/data_value.dart";
 export "domain/values/data_value_json_converter.dart";
 export "domain/values/icon_value.dart";
 export "domain/values/initial_value.dart";
+export "presentation/components/color_picker/color_picker.dart";
 export "presentation/components/decorated_text_field.dart";
 export "presentation/components/formatted_text_field.dart";
 export "presentation/components/input_field_container.dart";

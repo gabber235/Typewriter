@@ -1,6 +1,38 @@
 part of "../../simple_input_renderer.dart";
 
 extension ColorInputElementRendering on ColorInputElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) =>
-      _renderNamedInput(control: control, context: context, scope: scope);
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    final result = scope.resolve(control.binding);
+    if (result case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    final binding = result.valueOrNull!;
+    if (binding.type is! NamedType) {
+      return _inputDiagnostic("Color control requires a nominal binding");
+    }
+    final namedType = binding.type as NamedType;
+    final resolved = scope.registry.resolve(namedType);
+    if (resolved case TypeFailure(:final diagnostics)) {
+      return presentationDiagnostic(context, diagnostics);
+    }
+    const expected = IntegerType(width: IntegerWidth.unsigned32);
+    if (!resolved.valueOrNull!.isConcrete ||
+        resolved.valueOrNull!.representation != expected ||
+        binding.value is! IntegerValue) {
+      return _inputDiagnostic(
+        "Color control requires a concrete unsigned 32 bit value",
+      );
+    }
+    final value = binding.value as IntegerValue;
+    final child = ColorPickerField(
+      color: Color(value.value.toInt()),
+      includeAlpha: includeAlpha,
+      enabled: scope.enabled && binding.writable,
+      readOnly: scope.readOnly,
+      onChanged: (next) {
+        scope.update(binding.reference, next.integerValue);
+      },
+    );
+    return LabeledControl(control: control, scope: scope, child: child);
+  }
 }

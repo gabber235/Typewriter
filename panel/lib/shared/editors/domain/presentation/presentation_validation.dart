@@ -103,6 +103,7 @@ extension on PresentationElement {
     SelectInputElement(:final control) ||
     SliderInputElement(:final control) ||
     SimpleInputElement(:final control) ||
+    ColorInputElement(:final control) ||
     ListInputElement(:final control) ||
     MapInputElement(:final control) ||
     RecordInputElement(:final control) ||
@@ -124,7 +125,8 @@ extension on PresentationElement {
     MapInputElement() => type is MapType,
     RecordInputElement() => type is RecordType,
     PolymorphicInputElement() => type is NamedType,
-    ColorInputElement() || SelectInputElement() => true,
+    ColorInputElement() => type is NamedType,
+    SelectInputElement() => true,
     _ => true,
   };
 }

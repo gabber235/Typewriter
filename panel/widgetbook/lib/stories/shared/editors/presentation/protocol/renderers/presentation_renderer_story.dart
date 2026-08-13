@@ -75,15 +75,21 @@ class PresentationRendererStory extends StatelessWidget {
     required this.scenario,
     required this.width,
     this.readOnly = false,
+    this.colorLibraryStorage,
     super.key,
   });
 
   final RendererStoryScenario scenario;
   final double width;
   final bool readOnly;
+  final ColorLibraryStorage? colorLibraryStorage;
 
   @override
   Widget build(BuildContext context) => FakeApp(
+    overrides: [
+      if (colorLibraryStorage case final storage?)
+        colorLibraryStorageProvider.overrideWithValue(storage),
+    ],
     child: Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -115,6 +121,7 @@ class PresentationRendererStory extends StatelessWidget {
           ),
         ),
       ),
+      bottomNavigationBar: const ActionRow(),
     ),
   );
 }

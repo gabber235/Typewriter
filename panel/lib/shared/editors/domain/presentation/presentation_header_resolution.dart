@@ -54,7 +54,9 @@ extension on ToggleInputElement {
               resultType: const BooleanType(),
               expression: BindingExpression(control.binding),
             ),
-            priority: 0x7fffffffffffffff.asSigned64Literal,
+            priority: IntegerValue(
+              BigInt.parse("9223372036854775807"),
+            ).asLiteral(const IntegerType(width: IntegerWidth.signed64)),
             enabledIf: writable.asBooleanLiteral,
             placement: HeaderActionPlacement.beforeTitle,
             action: LocalEditorAction(

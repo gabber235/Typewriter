@@ -1,5 +1,6 @@
 import "package:flutter/cupertino.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart";
@@ -106,6 +107,30 @@ void main() {
           .controller
           .text,
       "Meet me beside the old watchtower at dusk.",
+    );
+  });
+
+  testWidgets("stories show contextual keybinds in the bottom action bar", (
+    tester,
+  ) async {
+    final textInputScenario = inputRendererScenarios.singleWhere(
+      (scenario) => scenario.kind == RendererStoryKind.textInput,
+    );
+
+    await tester.pumpWidget(
+      PresentationRendererStory(scenario: textInputScenario, width: 520),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ActionRow), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+
+    expect(find.text("Focus Input"), findsOneWidget);
+    expect(
+      tester.getBottomLeft(find.byType(ActionRow)).dy,
+      tester.getSize(find.byType(PresentationRendererStory)).height,
     );
   });
 

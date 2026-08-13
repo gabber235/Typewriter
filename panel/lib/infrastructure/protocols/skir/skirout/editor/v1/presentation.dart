@@ -5696,6 +5696,147 @@ final class TextControl_mutable implements TextControl_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct ColorControl
+// -----------------------------------------------------------------------------
+
+sealed class ColorControl_orMutable {
+  BoundControl_orMutable get control;
+  _core.bool get includeAlpha;
+
+  ColorControl toFrozen();
+}
+
+/// Deeply immutable.
+final class ColorControl implements ColorControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final _core.bool includeAlpha;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ColorControl({
+    required BoundControl_orMutable control,
+    required _core.bool includeAlpha,
+  }) => ColorControl._(
+    control.toFrozen(),
+    includeAlpha,
+  );
+
+  ColorControl._(
+    this.control,
+    this.includeAlpha,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ColorControl._(
+    BoundControl.defaultInstance,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ColorControl_mutable mutable() => ColorControl_mutable._(
+    BoundControl.defaultInstance,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ColorControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ColorControl_mutable toMutable() => ColorControl_mutable._(
+    this.control,
+    this.includeAlpha,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ColorControl) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.includeAlpha,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ColorControl` instances.
+  static _skir.StructSerializer<ColorControl, ColorControl_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "include_alpha",
+        "includeAlpha",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.includeAlpha,
+        (it, v) => it.includeAlpha = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:ColorControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ColorControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ColorControl].
+final class ColorControl_mutable implements ColorControl_orMutable {
+  BoundControl_orMutable control;
+  _core.bool includeAlpha;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ColorControl_mutable._(
+    this.control,
+    this.includeAlpha,
+  );
+
+  /// If the value of [control] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [control] and returns it.
+  BoundControl_mutable get mutableControl {
+    final value = this.control;
+    if (value is BoundControl_mutable) {
+      return value;
+    } else {
+      return this.control = (value as BoundControl).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ColorControl toFrozen() => ColorControl(
+    control: this.control,
+    includeAlpha: this.includeAlpha,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct SelectOption
 // -----------------------------------------------------------------------------
 
@@ -8721,19 +8862,17 @@ sealed class PresentationElement {
 
   /// Create a 'color_input' variant wrapping around the given value.
   factory PresentationElement.wrapColorInput(
-    BoundControl value
+    ColorControl value
   ) => PresentationElement_colorInputWrapper._(value);
 
-  /// Same as `wrapColorInput(BoundControl(...))`.
+  /// Same as `wrapColorInput(ColorControl(...))`.
   factory PresentationElement.createColorInput({
-    required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required BoundControl_orMutable control,
+    required _core.bool includeAlpha,
   }) => PresentationElement.wrapColorInput(
-    BoundControl(
-      binding: binding,
-      label: label,
-      description: description,
+    ColorControl(
+      control: control,
+      includeAlpha: includeAlpha,
     )
   );
 
@@ -9280,7 +9419,7 @@ sealed class PresentationElement {
         29,
         "color_input",
         "wrapColorInput",
-        BoundControl.serializer,
+        ColorControl.serializer,
         "",
         PresentationElement_colorInputWrapper._,
         (it) => it.value,
@@ -9784,7 +9923,7 @@ final class PresentationElement_durationInputWrapper extends _PresentationElemen
 }
 
 final class PresentationElement_colorInputWrapper extends _PresentationElement_wrapper {
-  final BoundControl value;
+  final ColorControl value;
 
   PresentationElement_colorInputWrapper._(this.value);
 

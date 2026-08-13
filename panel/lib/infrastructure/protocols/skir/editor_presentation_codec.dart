@@ -116,9 +116,9 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_durationInputWrapper(:final value) => _bound(
       value,
     ).mapValue(DurationInputElement.new),
-    wire.PresentationElement_colorInputWrapper(:final value) => _bound(
+    wire.PresentationElement_colorInputWrapper(:final value) => _colorInput(
       value,
-    ).mapValue(ColorInputElement.new),
+    ),
     wire.PresentationElement_bytesInputWrapper(:final value) => _bound(
       value,
     ).mapValue(BytesInputElement.new),

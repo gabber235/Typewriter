@@ -224,6 +224,11 @@ struct TextControl(810900022) {
   placeholder: TypedExpression? = 2;
 }
 
+struct ColorControl(810900066) {
+  control: BoundControl = 0;
+  include_alpha: bool = 1;
+}
+
 struct SelectOption(810900023) {
   option_id: string = 0;
   label: TypedExpression = 1;
@@ -340,7 +345,7 @@ enum PresentationElement(810900034) {
   slider_input: SliderControl = 26;
   date_time_input: BoundControl = 27;
   duration_input: BoundControl = 28;
-  color_input: BoundControl = 29;
+  color_input: ColorControl = 29;
   bytes_input: BoundControl = 30;
   named_input: BoundControl = 31;
   button: ButtonElement = 32;

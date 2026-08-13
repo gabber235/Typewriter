@@ -114,18 +114,11 @@ final inputRendererScenarios = [
   RendererStoryScenario(
     kind: RendererStoryKind.colorInput,
     name: "Color input",
-    type: NamedType(_namedValue),
-    value: const StringValue("#7C4DFF"),
-    definitions: [
-      TypeDefinition(
-        id: _namedValue,
-        kind: NominalTypeKind.concrete,
-        representation: const StringType(),
-      ),
-    ],
+    type: NamedType(standardTypeRefs.color),
+    value: IntegerValue(BigInt.from(0xFF7C4DFF)),
     presentation: storyNode(
       "colorInput",
-      PresentationElement.colorInput(storyControl("Accent color")),
+      PresentationElement.colorInput(control: storyControl("Accent color")),
     ),
   ),
   RendererStoryScenario(

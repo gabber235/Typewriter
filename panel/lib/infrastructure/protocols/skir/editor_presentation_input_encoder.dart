@@ -40,6 +40,14 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
     );
   }
 
+  TypeResult<wire.PresentationElement> _colorInput(ColorInputElement value) =>
+      _bound(value.control).mapValue(
+        (control) => wire.PresentationElement.createColorInput(
+          control: control,
+          includeAlpha: value.includeAlpha,
+        ),
+      );
+
   TypeResult<wire.PresentationElement> _select(SelectInputElement value) {
     final control = _bound(value.control);
     final options = <wire.SelectOption>[];
