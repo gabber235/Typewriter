@@ -400,25 +400,48 @@ enum class StagingState {
 }
 
 inline fun <reified T : Any> Ref<out Entry>.fieldValue(path: String, value: T) = fieldValue(path, value, T::class.java)
+
+/**
+ * Writes [value] into this entry's [path] in staging and tells the panel about it.
+ *
+ * A failed write is logged and otherwise passes unnoticed. Use [writeFieldValue] where the
+ * caller tells a player the write succeeded.
+ */
 fun Ref<out Entry>.fieldValue(path: String, value: Any, type: Type) {
+    writeFieldValue(path, value, type)
+}
+
+inline fun <reified T : Any> Ref<out Entry>.writeFieldValue(path: String, value: T): Result<Unit> =
+    writeFieldValue(path, value, T::class.java)
+
+/**
+ * Writes [value] into this entry's [path] in staging and tells the panel about it, reporting
+ * the outcome.
+ *
+ * An entry moved to another page between resolving the ref and writing resolves its page id
+ * against the published library, and the write then lands nowhere. A caller that reports back
+ * to a player needs to know that, rather than playing the confirmation sound regardless.
+ */
+fun Ref<out Entry>.writeFieldValue(path: String, value: Any, type: Type): Result<Unit> {
     val stagingManager = KoinJavaComponent.get<StagingManager>(StagingManager::class.java)
     val gson = KoinJavaComponent.get<Gson>(Gson::class.java, named("dataSerializer"))
 
     val pageId = pageId
     if (pageId == null) {
         logger.warning("No pageId found for $this. Did you forgot to publish?")
-        return
+        return Result.failure(IllegalStateException("No page found for $this. Publish the page first."))
     }
 
     val json = gson.toJsonTree(value, type)
     val result = stagingManager.updateEntryField(pageId, id, path, json)
     if (result.isFailure) {
         logger.warning("Failed to update field: ${result.exceptionOrNull()}")
-        return
+        return result.map { }
     }
 
     val clientSynchronizer = KoinJavaComponent.get<ClientSynchronizer>(ClientSynchronizer::class.java)
     clientSynchronizer.sendEntryFieldUpdate(pageId, id, path, json)
+    return Result.success(Unit)
 }
 
 /**
