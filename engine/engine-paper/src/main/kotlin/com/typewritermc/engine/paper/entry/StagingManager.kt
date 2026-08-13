@@ -421,6 +421,25 @@ fun Ref<out Entry>.fieldValue(path: String, value: Any, type: Type) {
     clientSynchronizer.sendEntryFieldUpdate(pageId, id, path, json)
 }
 
+/**
+ * The entry as it exists in staging, including field edits not yet published, or `null` when
+ * the entry is not on a staged page or cannot be parsed. Deserialized fresh from the staging
+ * json, so it reflects writes made through [fieldValue] that [Ref.get] (the published
+ * runtime) does not see until a publish.
+ */
+fun <E : Entry> Ref<E>.stagedEntry(): E? {
+    val published = get() ?: return null
+    val pageId = pageId ?: return null
+    val stagingManager = KoinJavaComponent.get<StagingManager>(StagingManager::class.java)
+    val entries = stagingManager.pages[pageId]?.getAsJsonArray("entries") ?: return null
+    val json = entries
+        .firstOrNull { it.isJsonObject && it.asJsonObject.get("id")?.asString == id }
+        ?.asJsonObject ?: return null
+    val gson = KoinJavaComponent.get<Gson>(Gson::class.java, named("dataSerializer"))
+    // The target type is the published entry's own class, so the parse already yields an E.
+    return runCatching { gson.fromJson(json, published.javaClass) }.getOrNull()
+}
+
 fun List<File>.backupAndMove() {
     if (isEmpty()) {
         // Nothing to back up
