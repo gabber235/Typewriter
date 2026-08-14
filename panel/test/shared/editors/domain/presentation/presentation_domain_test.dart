@@ -39,6 +39,19 @@ void main() {
       expect((element as TextInputElement).multiline, isTrue);
     });
 
+    test("only labels generated controls when explicitly requested", () {
+      final unlabeled = (const StringType()).generateDefaultPresentation();
+      final labeled = (const StringType()).generateDefaultPresentation(
+        label: "questValue",
+      );
+
+      expect((unlabeled.element as TextInputElement).control.label, isNull);
+      expect(
+        (labeled.element as TextInputElement).control.label,
+        "Quest Value".asStringLiteral,
+      );
+    });
+
     test("localizes unresolved parameters", () {
       expect(
         (const AnyType()).generateDefaultPresentation().element,
