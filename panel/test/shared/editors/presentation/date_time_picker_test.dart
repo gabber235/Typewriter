@@ -34,7 +34,9 @@ void main() {
     final field = tester.widget<InputDecorator>(find.byType(InputDecorator));
     expect(field.decoration.hintText, "YYYY-MM-DD HH:mm:ss");
     expect(field.decoration.helperText, isNull);
-    expect(field.decoration.prefixIcon, isA<Center>());
+    final prefix = field.decoration.prefixIcon! as Padding;
+    expect(prefix.padding, const EdgeInsets.all(8));
+    expect((prefix.child! as Icones).size, 18);
   });
 
   testWidgets("picker opens, dismisses, and returns focus to its action", (
@@ -157,22 +159,49 @@ void main() {
     await tester.tap(find.byTooltip("Open picker"));
     await tester.pumpAndSettle();
 
-    final monthPicker = tester.widget<Dropdown<int>>(
-      find.byKey(const ValueKey("date_time_month_picker")),
-    );
-    monthPicker.onSelected?.call(2);
+    await tester.tap(find.byKey(const ValueKey("date_time_month_picker")));
+    await tester.pumpAndSettle();
+    expect(find.byType(DateTimeCalendarSelectionGrid), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel(RegExp("February")));
     await tester.pump();
+    expect(find.byType(DateTimePickerSurface), findsOneWidget);
     expect(find.bySemanticsLabel("Monday, February 12, 2024"), findsOneWidget);
 
-    final yearPicker = tester.widget<Dropdown<int>>(
-      find.byKey(const ValueKey("date_time_year_picker")),
-    );
-    yearPicker.onSelected?.call(2028);
+    await tester.tap(find.byKey(const ValueKey("date_time_year_picker")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel(RegExp("2028")));
     await tester.pump();
+    expect(find.byType(DateTimePickerSurface), findsOneWidget);
     expect(
       find.bySemanticsLabel("Saturday, February 12, 2028"),
       findsOneWidget,
     );
+  });
+
+  testWidgets("month and year pickers support keyboard selection", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(child: const _DateTimeFieldHarness());
+    await tester.tap(find.byTooltip("Open picker"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey("date_time_month_picker")));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel("Thursday, September 12, 2024"),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey("date_time_year_picker")));
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel("Friday, September 12, 2025"), findsOneWidget);
+    expect(find.byType(DateTimePickerSurface), findsOneWidget);
   });
 
   testWidgets("time fields support direct typing and keyboard increments", (
@@ -236,6 +265,29 @@ void main() {
     expect(key.currentState!.value.microsecond, 456);
   });
 
+  testWidgets("escape leaves time editing before closing the picker", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: const _DateTimeFieldHarness(includeDate: false),
+    );
+    await tester.tap(find.byTooltip("Open picker"));
+    await tester.pumpAndSettle();
+    expect(FocusManager.instance.primaryFocus?.debugLabel, "Hour");
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(DateTimePickerSurface), findsOneWidget);
+    expect(
+      FocusManager.instance.primaryFocus?.debugLabel,
+      "SurroundingInputFieldContainer",
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(DateTimePickerSurface), findsNothing);
+  });
+
   testWidgets("two valid digits advance through the time fields", (
     tester,
   ) async {
@@ -264,6 +316,76 @@ void main() {
     await tester.enterText(minuteField, "08");
     await tester.pumpAndSettle();
     expect(FocusManager.instance.primaryFocus?.debugLabel, "Second");
+  });
+
+  testWidgets("time fields use external labels and select all on focus", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: const _DateTimeFieldHarness(includeDate: false),
+    );
+    await tester.tap(find.byTooltip("Open picker"));
+    await tester.pumpAndSettle();
+
+    for (final label in ["Hour", "Minute", "Second"]) {
+      final editor = find.byKey(ValueKey("date_time_${label.toLowerCase()}"));
+      final decoration = tester
+          .widget<InputDecorator>(
+            find.descendant(of: editor, matching: find.byType(InputDecorator)),
+          )
+          .decoration;
+      expect(decoration.labelText, isNull);
+      expect(find.text(label), findsOneWidget);
+    }
+
+    final hourEditor = find.byKey(const ValueKey("date_time_hour"));
+    final hourText = tester.widget<EditableText>(
+      find.descendant(of: hourEditor, matching: find.byType(EditableText)),
+    );
+    expect(
+      hourText.controller.selection,
+      const TextSelection(baseOffset: 0, extentOffset: 2),
+    );
+
+    await tester.enterText(
+      find.descendant(of: hourEditor, matching: find.byType(TextFormField)),
+      "09",
+    );
+    await tester.pumpAndSettle();
+
+    final minuteEditor = find.byKey(const ValueKey("date_time_minute"));
+    final minuteText = tester.widget<EditableText>(
+      find.descendant(of: minuteEditor, matching: find.byType(EditableText)),
+    );
+    expect(
+      minuteText.controller.selection,
+      const TextSelection(baseOffset: 0, extentOffset: 2),
+    );
+
+    await tester.enterText(
+      find.descendant(of: minuteEditor, matching: find.byType(TextFormField)),
+      "99",
+    );
+    await tester.pump();
+
+    final fieldTops = [
+      for (final part in ["hour", "minute", "second"])
+        tester.getTopLeft(find.byKey(ValueKey("date_time_$part"))).dy,
+    ];
+    expect(fieldTops.toSet(), hasLength(1));
+
+    final hourInputCenter = tester.getCenter(
+      find.descendant(
+        of: find.byKey(const ValueKey("date_time_hour")),
+        matching: find.byType(InputDecorator),
+      ),
+    );
+    for (final index in [1, 2]) {
+      final separatorCenter = tester.getCenter(
+        find.byKey(ValueKey("date_time_separator_$index")),
+      );
+      expect(separatorCenter.dy, closeTo(hourInputCenter.dy, 0.1));
+    }
   });
 
   testWidgets("focus remains trapped inside the open picker", (tester) async {
@@ -297,7 +419,11 @@ void main() {
     await tester.pumpTestApp(
       child: _DateTimeFieldHarness(key: readOnlyKey, readOnly: true),
     );
-    await tester.tap(find.byTooltip("Open picker"));
+    expect(find.byTooltip("Open picker"), findsNothing);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
     await tester.pumpAndSettle();
     expect(find.byType(DateTimePickerSurface), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);

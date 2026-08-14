@@ -25,6 +25,7 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
 
   late DateTime _focusedDate;
   late DateTime _visibleMonth;
+  DateTimeCalendarView _view = DateTimeCalendarView.days;
 
   @override
   void initState() {
@@ -71,6 +72,33 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
     );
   }
 
+  void _toggleMonthPicker() {
+    setState(() {
+      _view = _view == DateTimeCalendarView.months
+          ? DateTimeCalendarView.days
+          : DateTimeCalendarView.months;
+    });
+  }
+
+  void _toggleYearPicker() {
+    setState(() {
+      _view = _view == DateTimeCalendarView.years
+          ? DateTimeCalendarView.days
+          : DateTimeCalendarView.years;
+    });
+  }
+
+  void _stepHeader(int delta) {
+    switch (_view) {
+      case DateTimeCalendarView.days:
+        _moveMonth(delta);
+      case DateTimeCalendarView.months:
+        _selectYear(_focusedDate.year + delta);
+      case DateTimeCalendarView.years:
+        _selectYear((_focusedDate.year + delta * 16).clamp(1, 9999));
+    }
+  }
+
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
@@ -109,19 +137,64 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final first = DateTime.utc(_visibleMonth.year, _visibleMonth.month);
-    final gridStart = first.subtract(Duration(days: first.weekday - 1));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DateTimeCalendarHeader(
           visibleMonth: _visibleMonth,
-          onPreviousMonth: () => _moveMonth(-1),
-          onNextMonth: () => _moveMonth(1),
-          onMonthSelected: _selectMonth,
-          onYearSelected: _selectYear,
+          view: _view,
+          onPrevious: () => _stepHeader(-1),
+          onNext: () => _stepHeader(1),
+          onMonthPickerRequested: _toggleMonthPicker,
+          onYearPickerRequested: _toggleYearPicker,
         ),
+        const SizedBox(height: 4),
+        switch (_view) {
+          DateTimeCalendarView.days => _buildDays(context),
+          DateTimeCalendarView.months => _buildMonths(),
+          DateTimeCalendarView.years => _buildYears(),
+        },
+      ],
+    );
+  }
+
+  Widget _buildMonths() => DateTimeCalendarSelectionGrid(
+    label: "Choose month",
+    items: [
+      for (var index = 0; index < DateTimeCalendarHeader.months.length; index++)
+        (value: index + 1, label: DateTimeCalendarHeader.months[index]),
+    ],
+    selectedValue: _visibleMonth.month,
+    columns: 3,
+    onSelected: (month) {
+      _selectMonth(month);
+      setState(() => _view = DateTimeCalendarView.days);
+    },
+  );
+
+  Widget _buildYears() {
+    final startYear = ((_visibleMonth.year - 1) ~/ 16) * 16 + 1;
+    return DateTimeCalendarSelectionGrid(
+      label: "Choose year",
+      items: [
+        for (var year = startYear; year < startYear + 16; year++)
+          (value: year, label: "$year"),
+      ],
+      selectedValue: _visibleMonth.year,
+      columns: 4,
+      onSelected: (year) {
+        _selectYear(year);
+        setState(() => _view = DateTimeCalendarView.days);
+      },
+    );
+  }
+
+  Widget _buildDays(BuildContext context) {
+    final first = DateTime.utc(_visibleMonth.year, _visibleMonth.month);
+    final gridStart = first.subtract(Duration(days: first.weekday - 1));
+    return Column(
+      children: [
         Row(
           children: [
             for (final weekday in _weekdays)
@@ -137,7 +210,6 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
               ),
           ],
         ),
-        const SizedBox(height: 4),
         Focus(
           autofocus: widget.autofocus,
           onKeyEvent: _handleKey,
