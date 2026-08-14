@@ -31,26 +31,17 @@ final class FieldPathSegment implements FieldPathSegment_orMutable {
   final _core.String fieldName;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FieldPathSegment({
-    required _core.String fieldName,
-  }) => FieldPathSegment._(
-    fieldName,
-  );
+  factory FieldPathSegment({required _core.String fieldName}) =>
+      FieldPathSegment._(fieldName);
 
-  FieldPathSegment._(
-    this.fieldName,
-  );
+  FieldPathSegment._(this.fieldName);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = FieldPathSegment._(
-    "",
-  );
+  static final defaultInstance = FieldPathSegment._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FieldPathSegment_mutable mutable() => FieldPathSegment_mutable._(
-    "",
-  );
+  static FieldPathSegment_mutable mutable() => FieldPathSegment_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -58,29 +49,30 @@ final class FieldPathSegment implements FieldPathSegment_orMutable {
   FieldPathSegment toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FieldPathSegment_mutable toMutable() => FieldPathSegment_mutable._(
-    this.fieldName,
-  );
+  FieldPathSegment_mutable toMutable() =>
+      FieldPathSegment_mutable._(this.fieldName);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FieldPathSegment) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.fieldName,
-  ];
+  _core.List get _equality_proxy => [this.fieldName];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FieldPathSegment` instances.
-  static _skir.StructSerializer<FieldPathSegment, FieldPathSegment_mutable> get serializer {
+  static _skir.StructSerializer<FieldPathSegment, FieldPathSegment_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "field_name",
@@ -112,15 +104,12 @@ final class FieldPathSegment_mutable implements FieldPathSegment_orMutable {
   _core.String fieldName;
   _skir.internal__UnrecognizedFields? _u;
 
-  FieldPathSegment_mutable._(
-    this.fieldName,
-  );
+  FieldPathSegment_mutable._(this.fieldName);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FieldPathSegment toFrozen() => FieldPathSegment(
-    fieldName: this.fieldName,
-  ).._u = this._u;
+  FieldPathSegment toFrozen() =>
+      FieldPathSegment(fieldName: this.fieldName).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -139,26 +128,17 @@ final class IndexPathSegment implements IndexPathSegment_orMutable {
   final _core.int index;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory IndexPathSegment({
-    required _core.int index,
-  }) => IndexPathSegment._(
-    index,
-  );
+  factory IndexPathSegment({required _core.int index}) =>
+      IndexPathSegment._(index);
 
-  IndexPathSegment._(
-    this.index,
-  );
+  IndexPathSegment._(this.index);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = IndexPathSegment._(
-    0,
-  );
+  static final defaultInstance = IndexPathSegment._(0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static IndexPathSegment_mutable mutable() => IndexPathSegment_mutable._(
-    0,
-  );
+  static IndexPathSegment_mutable mutable() => IndexPathSegment_mutable._(0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -166,29 +146,30 @@ final class IndexPathSegment implements IndexPathSegment_orMutable {
   IndexPathSegment toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  IndexPathSegment_mutable toMutable() => IndexPathSegment_mutable._(
-    this.index,
-  );
+  IndexPathSegment_mutable toMutable() =>
+      IndexPathSegment_mutable._(this.index);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! IndexPathSegment) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.index,
-  ];
+  _core.List get _equality_proxy => [this.index];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `IndexPathSegment` instances.
-  static _skir.StructSerializer<IndexPathSegment, IndexPathSegment_mutable> get serializer {
+  static _skir.StructSerializer<IndexPathSegment, IndexPathSegment_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "index",
@@ -220,15 +201,12 @@ final class IndexPathSegment_mutable implements IndexPathSegment_orMutable {
   _core.int index;
   _skir.internal__UnrecognizedFields? _u;
 
-  IndexPathSegment_mutable._(
-    this.index,
-  );
+  IndexPathSegment_mutable._(this.index);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  IndexPathSegment toFrozen() => IndexPathSegment(
-    index: this.index,
-  ).._u = this._u;
+  IndexPathSegment toFrozen() =>
+      IndexPathSegment(index: this.index).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -249,13 +227,9 @@ final class MapKeyPathSegment implements MapKeyPathSegment_orMutable {
 
   factory MapKeyPathSegment({
     required _lib_editor_v1_type_catalog.TypedValue key,
-  }) => MapKeyPathSegment._(
-    key,
-  );
+  }) => MapKeyPathSegment._(key);
 
-  MapKeyPathSegment._(
-    this.key,
-  );
+  MapKeyPathSegment._(this.key);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = MapKeyPathSegment._(
@@ -274,29 +248,30 @@ final class MapKeyPathSegment implements MapKeyPathSegment_orMutable {
   MapKeyPathSegment toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  MapKeyPathSegment_mutable toMutable() => MapKeyPathSegment_mutable._(
-    this.key,
-  );
+  MapKeyPathSegment_mutable toMutable() =>
+      MapKeyPathSegment_mutable._(this.key);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MapKeyPathSegment) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.key,
-  ];
+  _core.List get _equality_proxy => [this.key];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `MapKeyPathSegment` instances.
-  static _skir.StructSerializer<MapKeyPathSegment, MapKeyPathSegment_mutable> get serializer {
+  static _skir.StructSerializer<MapKeyPathSegment, MapKeyPathSegment_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -328,15 +303,12 @@ final class MapKeyPathSegment_mutable implements MapKeyPathSegment_orMutable {
   _lib_editor_v1_type_catalog.TypedValue key;
   _skir.internal__UnrecognizedFields? _u;
 
-  MapKeyPathSegment_mutable._(
-    this.key,
-  );
+  MapKeyPathSegment_mutable._(this.key);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  MapKeyPathSegment toFrozen() => MapKeyPathSegment(
-    key: this.key,
-  ).._u = this._u;
+  MapKeyPathSegment toFrozen() =>
+      MapKeyPathSegment(key: this.key).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -360,46 +332,29 @@ sealed class DataPathSegment {
   static const DataPathSegment unknown = DataPathSegment_unknown._instance;
 
   /// Create a 'field' variant wrapping around the given value.
-  factory DataPathSegment.wrapField(
-    FieldPathSegment value
-  ) => DataPathSegment_fieldWrapper._(value);
+  factory DataPathSegment.wrapField(FieldPathSegment value) =>
+      DataPathSegment_fieldWrapper._(value);
 
   /// Same as `wrapField(FieldPathSegment(...))`.
-  factory DataPathSegment.createField({
-    required _core.String fieldName,
-  }) => DataPathSegment.wrapField(
-    FieldPathSegment(
-      fieldName: fieldName,
-    )
-  );
+  factory DataPathSegment.createField({required _core.String fieldName}) =>
+      DataPathSegment.wrapField(FieldPathSegment(fieldName: fieldName));
 
   /// Create a 'index' variant wrapping around the given value.
-  factory DataPathSegment.wrapIndex(
-    IndexPathSegment value
-  ) => DataPathSegment_indexWrapper._(value);
+  factory DataPathSegment.wrapIndex(IndexPathSegment value) =>
+      DataPathSegment_indexWrapper._(value);
 
   /// Same as `wrapIndex(IndexPathSegment(...))`.
-  factory DataPathSegment.createIndex({
-    required _core.int index,
-  }) => DataPathSegment.wrapIndex(
-    IndexPathSegment(
-      index: index,
-    )
-  );
+  factory DataPathSegment.createIndex({required _core.int index}) =>
+      DataPathSegment.wrapIndex(IndexPathSegment(index: index));
 
   /// Create a 'map_key' variant wrapping around the given value.
-  factory DataPathSegment.wrapMapKey(
-    MapKeyPathSegment value
-  ) => DataPathSegment_mapKeyWrapper._(value);
+  factory DataPathSegment.wrapMapKey(MapKeyPathSegment value) =>
+      DataPathSegment_mapKeyWrapper._(value);
 
   /// Same as `wrapMapKey(MapKeyPathSegment(...))`.
   factory DataPathSegment.createMapKey({
     required _lib_editor_v1_type_catalog.TypedValue key,
-  }) => DataPathSegment.wrapMapKey(
-    MapKeyPathSegment(
-      key: key,
-    )
-  );
+  }) => DataPathSegment.wrapMapKey(MapKeyPathSegment(key: key));
 
   /// Returns the kind of variant held by this DataPathSegment.
   DataPathSegment_kind get kind;
@@ -442,15 +397,16 @@ sealed class DataPathSegment {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/path.skir:DataPathSegment",
-    doc: "",
-    unknownInstance: DataPathSegment_unknown._instance,
-    enumInstance: DataPathSegment.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: DataPathSegment_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/path.skir:DataPathSegment",
+        doc: "",
+        unknownInstance: DataPathSegment_unknown._instance,
+        enumInstance: DataPathSegment.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: DataPathSegment_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `DataPathSegment`.
@@ -480,7 +436,8 @@ final class DataPathSegment_unknown implements DataPathSegment {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DataPathSegment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DataPathSegment.serializer);
 }
 
 sealed class _DataPathSegment_wrapper implements DataPathSegment {
@@ -496,7 +453,8 @@ sealed class _DataPathSegment_wrapper implements DataPathSegment {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DataPathSegment.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DataPathSegment.serializer);
 }
 
 final class DataPathSegment_fieldWrapper extends _DataPathSegment_wrapper {
@@ -542,26 +500,18 @@ final class DataPath implements DataPath_orMutable {
   final _core.Iterable<DataPathSegment> segments;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory DataPath({
-    required _core.Iterable<DataPathSegment> segments,
-  }) => DataPath._(
-    _skir.internal__frozenCopy(segments),
-  );
+  factory DataPath({required _core.Iterable<DataPathSegment> segments}) =>
+      DataPath._(_skir.internal__frozenCopy(segments));
 
-  DataPath._(
-    this.segments,
-  );
+  DataPath._(this.segments);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = DataPath._(
-    _skir.KeyedIterable.empty,
-  );
+  static final defaultInstance = DataPath._(_skir.KeyedIterable.empty);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DataPath_mutable mutable() => DataPath_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static DataPath_mutable mutable() =>
+      DataPath_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -569,23 +519,22 @@ final class DataPath implements DataPath_orMutable {
   DataPath toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DataPath_mutable toMutable() => DataPath_mutable._(
-    this.segments,
-  );
+  DataPath_mutable toMutable() => DataPath_mutable._(this.segments);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DataPath) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.segments,
-  ];
+  _core.List get _equality_proxy => [this.segments];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -597,9 +546,7 @@ final class DataPath implements DataPath_orMutable {
         "segments",
         "segments",
         0,
-        _skir.Serializers.iterable(
-          DataPathSegment.serializer,
-        ),
+        _skir.Serializers.iterable(DataPathSegment.serializer),
         "",
         (it) => it.segments,
         (it, v) => it.segments = v,
@@ -625,9 +572,7 @@ final class DataPath_mutable implements DataPath_orMutable {
   _core.Iterable<DataPathSegment> segments;
   _skir.internal__UnrecognizedFields? _u;
 
-  DataPath_mutable._(
-    this.segments,
-  );
+  DataPath_mutable._(this.segments);
 
   /// If the value of [segments] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [segments] and returns it.
@@ -642,7 +587,5 @@ final class DataPath_mutable implements DataPath_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DataPath toFrozen() => DataPath(
-    segments: this.segments,
-  ).._u = this._u;
+  DataPath toFrozen() => DataPath(segments: this.segments).._u = this._u;
 }
