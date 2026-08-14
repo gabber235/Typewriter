@@ -205,6 +205,27 @@ void main() {
     expect(children.first.element, isA<TextInputElement>());
     expect(children.last.element, isA<DiagnosticElement>());
   });
+
+  test("rejects a date and time control with no visible parts", () {
+    final localized =
+        const PresentationNode(
+          id: "dateTime",
+          element: DateTimeInputElement(
+            control: BoundControl(binding: _rootBinding),
+            includeDate: false,
+            includeTime: false,
+          ),
+        ).localizeFailures(
+          _context(const TimestampType(), TimestampValue(DateTime.utc(2024))),
+          registry: null,
+        );
+
+    expect(localized.element, isA<DiagnosticElement>());
+    expect(
+      (localized.element as DiagnosticElement).diagnostics.single.message,
+      "Date and time control must enable at least one part",
+    );
+  });
 }
 
 const _rootBinding = BindingReference(bindingId: BindingId(0));

@@ -98,7 +98,9 @@ final inputRendererScenarios = [
     value: TimestampValue(DateTime.utc(2026, 8, 12, 18, 30)),
     presentation: storyNode(
       "dateTimeInput",
-      PresentationElement.dateTimeInput(storyControl("Available from")),
+      PresentationElement.dateTimeInput(
+        control: storyControl("Available from"),
+      ),
     ),
   ),
   RendererStoryScenario(

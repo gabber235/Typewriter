@@ -102,7 +102,7 @@ final class _DefaultPresentationGenerator {
       IntegerType() ||
       FloatType() ||
       DecimalType() => NumericInputElement(control),
-      TimestampType() => DateTimeInputElement(control),
+      TimestampType() => DateTimeInputElement(control: control),
       DurationType() => DurationInputElement(control),
       ListType() => ListInputElement(control: control),
       MapType() => MapInputElement(control: control),

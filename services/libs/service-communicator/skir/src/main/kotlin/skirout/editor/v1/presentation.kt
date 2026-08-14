@@ -3291,138 +3291,6 @@ class ChildrenLayout private constructor(
     }
 }
 
-sealed interface SingleChildLayout_OrMutable {
-    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.presentation.SingleChildLayout;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class SingleChildLayout private constructor(
-    override val child: skirout.editor.v1.presentation.PresentationNode,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SingleChildLayout>? =
-        null,
-): skirout.editor.v1.presentation.SingleChildLayout_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SingleChildLayout>? =
-            null,
-    ): this(
-        child.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        child = this.child,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-            this.child,
-    ) = skirout.editor.v1.presentation.SingleChildLayout(
-        child.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SingleChildLayout && this.child == other.child);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.child).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.presentation.SingleChildLayout.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [SingleChildLayout]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var child: skirout.editor.v1.presentation.PresentationNode =
-            skirout.editor.v1.presentation.PresentationNode.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SingleChildLayout>? =
-            null,
-    ): skirout.editor.v1.presentation.SingleChildLayout_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.SingleChildLayout(
-            child = this.child,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.presentation.SingleChildLayout(
-                skirout.editor.v1.presentation.PresentationNode.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [SingleChildLayout].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-                skirout.editor.v1.presentation.PresentationNode.partial(),
-        ) = skirout.editor.v1.presentation.SingleChildLayout(
-            child = child,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:SingleChildLayout",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [SingleChildLayout] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [SingleChildLayout] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "child",
-                "child",
-                0,
-                skirout.editor.v1.presentation.PresentationNode.serializer,
-                "",
-                { it.child },
-                { mut, v -> mut.child = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
 sealed interface GridLayout_OrMutable {
     val children: kotlin.collections.List<skirout.editor.v1.presentation.PresentationNode_OrMutable>;
     val columns: kotlin.Int;
@@ -7025,6 +6893,206 @@ class ColorControl private constructor(
     }
 }
 
+sealed interface DateTimeControl_OrMutable {
+    val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
+    val includeDate: kotlin.Boolean?;
+    val includeTime: kotlin.Boolean?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.DateTimeControl;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DateTimeControl private constructor(
+    override val control: skirout.editor.v1.presentation.BoundControl,
+    override val includeDate: kotlin.Boolean?,
+    override val includeTime: kotlin.Boolean?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeControl>? =
+        null,
+): skirout.editor.v1.presentation.DateTimeControl_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+        includeDate: kotlin.Boolean?,
+        includeTime: kotlin.Boolean?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeControl>? =
+            null,
+    ): this(
+        control.toFrozen(),
+        includeDate,
+        includeTime,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        control = this.control,
+        includeDate = this.includeDate,
+        includeTime = this.includeTime,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            this.control,
+        includeDate: kotlin.Boolean? =
+            this.includeDate,
+        includeTime: kotlin.Boolean? =
+            this.includeTime,
+    ) = skirout.editor.v1.presentation.DateTimeControl(
+        control.toFrozen(),
+        includeDate,
+        includeTime,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.DateTimeControl && this.control == other.control && this.includeDate == other.includeDate && this.includeTime == other.includeTime);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.includeDate, this.includeTime).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DateTimeControl.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DateTimeControl]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            skirout.editor.v1.presentation.BoundControl.partial(),
+        override var includeDate: kotlin.Boolean? =
+            null,
+        override var includeTime: kotlin.Boolean? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeControl>? =
+            null,
+    ): skirout.editor.v1.presentation.DateTimeControl_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.DateTimeControl(
+            control = this.control,
+            includeDate = this.includeDate,
+            includeTime = this.includeTime,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [control] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [control] and returns it.
+         */
+        val mutableControl: skirout.editor.v1.presentation.BoundControl.Mutable get() {
+            var value = this.control;
+            return when (value) {
+                is skirout.editor.v1.presentation.BoundControl -> {
+                    value = value.toMutable();
+                    this.control = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.BoundControl.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.DateTimeControl(
+                skirout.editor.v1.presentation.BoundControl.partial(),
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DateTimeControl].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+                skirout.editor.v1.presentation.BoundControl.partial(),
+            includeDate: kotlin.Boolean? =
+                null,
+            includeTime: kotlin.Boolean? =
+                null,
+        ) = skirout.editor.v1.presentation.DateTimeControl(
+            control = control,
+            includeDate = includeDate,
+            includeTime = includeTime,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:DateTimeControl",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DateTimeControl] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DateTimeControl] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "control",
+                "control",
+                0,
+                skirout.editor.v1.presentation.BoundControl.serializer,
+                "",
+                { it.control },
+                { mut, v -> mut.control = v },
+            );
+            serializerImpl.addField(
+                "include_date",
+                "includeDate",
+                1,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.bool,
+                ),
+                "",
+                { it.includeDate },
+                { mut, v -> mut.includeDate = v },
+            );
+            serializerImpl.addField(
+                "include_time",
+                "includeTime",
+                2,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.bool,
+                ),
+                "",
+                { it.includeTime },
+                { mut, v -> mut.includeTime = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface SelectOption_OrMutable {
     val optionId: kotlin.String;
     val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
@@ -10038,7 +10106,6 @@ sealed class PresentationElement private constructor() {
         WRAP_WRAPPER,
         STACK_WRAPPER,
         GRID_WRAPPER,
-        SCROLL_WRAPPER,
         CARD_WRAPPER,
         SECTION_WRAPPER,
         TABS_WRAPPER,
@@ -10195,24 +10262,6 @@ sealed class PresentationElement private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 3181382;
-        }
-    }
-
-    class ScrollWrapper private constructor (
-        val value: skirout.editor.v1.presentation.SingleChildLayout,
-    ) : skirout.editor.v1.presentation.PresentationElement() {
-        constructor(
-            value: skirout.editor.v1.presentation.SingleChildLayout_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SCROLL_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.ScrollWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -907680051;
         }
     }
 
@@ -10559,10 +10608,10 @@ sealed class PresentationElement private constructor() {
     }
 
     class DateTimeInputWrapper private constructor (
-        val value: skirout.editor.v1.presentation.BoundControl,
+        val value: skirout.editor.v1.presentation.DateTimeControl,
     ) : skirout.editor.v1.presentation.PresentationElement() {
         constructor(
-            value: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            value: skirout.editor.v1.presentation.DateTimeControl_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.DATE_TIME_INPUT_WRAPPER;
@@ -10972,18 +11021,6 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `ScrollWrapper(skirout.editor.v1.presentation.SingleChildLayout(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createScroll(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        ) = ScrollWrapper(
-            skirout.editor.v1.presentation.SingleChildLayout(
-                child = child,
-            )
-        );
-
         /** Shortcut for `CardWrapper(skirout.editor.v1.presentation.CardLayout(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createCard(
@@ -11274,19 +11311,19 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `DateTimeInputWrapper(skirout.editor.v1.presentation.BoundControl(...))`. */
+        /** Shortcut for `DateTimeInputWrapper(skirout.editor.v1.presentation.DateTimeControl(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createDateTimeInput(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-            label: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-            description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            includeDate: kotlin.Boolean?,
+            includeTime: kotlin.Boolean?,
         ) = DateTimeInputWrapper(
-            skirout.editor.v1.presentation.BoundControl(
-                binding = binding,
-                label = label,
-                description = description,
+            skirout.editor.v1.presentation.DateTimeControl(
+                control = control,
+                includeDate = includeDate,
+                includeTime = includeTime,
             )
         );
 
@@ -11628,15 +11665,6 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    6,
-                    "scroll",
-                    Kind.SCROLL_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.SingleChildLayout.serializer,
-                    "",
-                    { ScrollWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
                     7,
                     "card",
                     Kind.CARD_WRAPPER.ordinal,
@@ -11811,7 +11839,7 @@ sealed class PresentationElement private constructor() {
                     27,
                     "date_time_input",
                     Kind.DATE_TIME_INPUT_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.BoundControl.serializer,
+                    skirout.editor.v1.presentation.DateTimeControl.serializer,
                     "",
                     { DateTimeInputWrapper(it) },
                     { it.value },

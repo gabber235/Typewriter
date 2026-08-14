@@ -55,7 +55,7 @@ extension PresentationElementPatterns on PresentationElement {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ProgressElement value)?  progress,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( IconInputElement value)?  iconInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( ScrollElement value)?  scroll,TResult Function( CardElement value)?  card,TResult Function( SectionElement value)?  section,TResult Function( CollapsibleElement value)?  collapsible,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ProgressElement value)?  progress,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( IconInputElement value)?  iconInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( CardElement value)?  card,TResult Function( SectionElement value)?  section,TResult Function( CollapsibleElement value)?  collapsible,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -95,8 +95,7 @@ return column(_that);case RowElement() when row != null:
 return row(_that);case WrapElement() when wrap != null:
 return wrap(_that);case StackElement() when stack != null:
 return stack(_that);case GridElement() when grid != null:
-return grid(_that);case ScrollElement() when scroll != null:
-return scroll(_that);case CardElement() when card != null:
+return grid(_that);case CardElement() when card != null:
 return card(_that);case SectionElement() when section != null:
 return section(_that);case CollapsibleElement() when collapsible != null:
 return collapsible(_that);case TabsElement() when tabs != null:
@@ -120,7 +119,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ProgressElement value)  progress,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( IconInputElement value)  iconInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( ScrollElement value)  scroll,required TResult Function( CardElement value)  card,required TResult Function( SectionElement value)  section,required TResult Function( CollapsibleElement value)  collapsible,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ProgressElement value)  progress,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( IconInputElement value)  iconInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( CardElement value)  card,required TResult Function( SectionElement value)  section,required TResult Function( CollapsibleElement value)  collapsible,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement():
@@ -160,8 +159,7 @@ return column(_that);case RowElement():
 return row(_that);case WrapElement():
 return wrap(_that);case StackElement():
 return stack(_that);case GridElement():
-return grid(_that);case ScrollElement():
-return scroll(_that);case CardElement():
+return grid(_that);case CardElement():
 return card(_that);case SectionElement():
 return section(_that);case CollapsibleElement():
 return collapsible(_that);case TabsElement():
@@ -181,7 +179,7 @@ return spacer(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ProgressElement value)?  progress,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( IconInputElement value)?  iconInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( ScrollElement value)?  scroll,TResult? Function( CardElement value)?  card,TResult? Function( SectionElement value)?  section,TResult? Function( CollapsibleElement value)?  collapsible,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ProgressElement value)?  progress,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( IconInputElement value)?  iconInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( CardElement value)?  card,TResult? Function( SectionElement value)?  section,TResult? Function( CollapsibleElement value)?  collapsible,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -221,8 +219,7 @@ return column(_that);case RowElement() when row != null:
 return row(_that);case WrapElement() when wrap != null:
 return wrap(_that);case StackElement() when stack != null:
 return stack(_that);case GridElement() when grid != null:
-return grid(_that);case ScrollElement() when scroll != null:
-return scroll(_that);case CardElement() when card != null:
+return grid(_that);case CardElement() when card != null:
 return card(_that);case SectionElement() when section != null:
 return section(_that);case CollapsibleElement() when collapsible != null:
 return collapsible(_that);case TabsElement() when tabs != null:
@@ -245,7 +242,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value)?  text,TResult Function( TypedExpression value)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control)?  iconInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child)?  scroll,TResult Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value)?  text,TResult Function( TypedExpression value)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control)?  iconInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -265,7 +262,7 @@ return numericInput(_that.control);case ToggleInputElement() when toggleInput !=
 return toggleInput(_that.control);case SelectInputElement() when selectInput != null:
 return selectInput(_that.control,_that.options,_that.allowCustomValue);case SliderInputElement() when sliderInput != null:
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement() when dateTimeInput != null:
-return dateTimeInput(_that.control);case DurationInputElement() when durationInput != null:
+return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement() when durationInput != null:
 return durationInput(_that.control);case ColorInputElement() when colorInput != null:
 return colorInput(_that.control,_that.includeAlpha);case IconInputElement() when iconInput != null:
 return iconInput(_that.control);case BytesInputElement() when bytesInput != null:
@@ -284,8 +281,7 @@ return column(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAx
 return row(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case WrapElement() when wrap != null:
 return wrap(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case StackElement() when stack != null:
 return stack(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case GridElement() when grid != null:
-return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case ScrollElement() when scroll != null:
-return scroll(_that.child);case CardElement() when card != null:
+return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case CardElement() when card != null:
 return card(_that.child,_that.initiallyExpanded);case SectionElement() when section != null:
 return section(_that.title,_that.child,_that.description,_that.initiallyExpanded);case CollapsibleElement() when collapsible != null:
 return collapsible(_that.title,_that.child,_that.initiallyExpanded);case TabsElement() when tabs != null:
@@ -309,7 +305,7 @@ return spacer(_that.width,_that.height);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value)  text,required TResult Function( TypedExpression value)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control)  iconInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child)  scroll,required TResult Function( PresentationNode child,  bool? initiallyExpanded)  card,required TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)  section,required TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)  collapsible,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value)  text,required TResult Function( TypedExpression value)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control)  iconInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  bool? initiallyExpanded)  card,required TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)  section,required TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)  collapsible,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement():
 return diagnostic(_that.diagnostics);case DefaultPresentationElement():
@@ -329,7 +325,7 @@ return numericInput(_that.control);case ToggleInputElement():
 return toggleInput(_that.control);case SelectInputElement():
 return selectInput(_that.control,_that.options,_that.allowCustomValue);case SliderInputElement():
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement():
-return dateTimeInput(_that.control);case DurationInputElement():
+return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement():
 return durationInput(_that.control);case ColorInputElement():
 return colorInput(_that.control,_that.includeAlpha);case IconInputElement():
 return iconInput(_that.control);case BytesInputElement():
@@ -348,8 +344,7 @@ return column(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAx
 return row(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case WrapElement():
 return wrap(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case StackElement():
 return stack(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case GridElement():
-return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case ScrollElement():
-return scroll(_that.child);case CardElement():
+return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case CardElement():
 return card(_that.child,_that.initiallyExpanded);case SectionElement():
 return section(_that.title,_that.child,_that.description,_that.initiallyExpanded);case CollapsibleElement():
 return collapsible(_that.title,_that.child,_that.initiallyExpanded);case TabsElement():
@@ -369,7 +364,7 @@ return spacer(_that.width,_that.height);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value)?  text,TResult? Function( TypedExpression value)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control)?  iconInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child)?  scroll,TResult? Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult? Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult? Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value)?  text,TResult? Function( TypedExpression value)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control)?  iconInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult? Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult? Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -389,7 +384,7 @@ return numericInput(_that.control);case ToggleInputElement() when toggleInput !=
 return toggleInput(_that.control);case SelectInputElement() when selectInput != null:
 return selectInput(_that.control,_that.options,_that.allowCustomValue);case SliderInputElement() when sliderInput != null:
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement() when dateTimeInput != null:
-return dateTimeInput(_that.control);case DurationInputElement() when durationInput != null:
+return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement() when durationInput != null:
 return durationInput(_that.control);case ColorInputElement() when colorInput != null:
 return colorInput(_that.control,_that.includeAlpha);case IconInputElement() when iconInput != null:
 return iconInput(_that.control);case BytesInputElement() when bytesInput != null:
@@ -408,8 +403,7 @@ return column(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAx
 return row(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case WrapElement() when wrap != null:
 return wrap(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case StackElement() when stack != null:
 return stack(_that.children,_that.spacing,_that.mainAxisAlignment,_that.crossAxisAlignment);case GridElement() when grid != null:
-return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case ScrollElement() when scroll != null:
-return scroll(_that.child);case CardElement() when card != null:
+return grid(_that.children,_that.columns,_that.horizontalSpacing,_that.verticalSpacing);case CardElement() when card != null:
 return card(_that.child,_that.initiallyExpanded);case SectionElement() when section != null:
 return section(_that.title,_that.child,_that.description,_that.initiallyExpanded);case CollapsibleElement() when collapsible != null:
 return collapsible(_that.title,_that.child,_that.initiallyExpanded);case TabsElement() when tabs != null:
@@ -1938,10 +1932,12 @@ $TypedExpressionCopyWith<$Res>? get divisions {
 
 
 class DateTimeInputElement implements PresentationElement, SimpleInputElement {
-  const DateTimeInputElement(this.control);
+  const DateTimeInputElement({required this.control, this.includeDate = true, this.includeTime = true});
   
 
  final  BoundControl control;
+@JsonKey() final  bool includeDate;
+@JsonKey() final  bool includeTime;
 
 /// Create a copy of PresentationElement
 /// with the given fields replaced by the non-null parameter values.
@@ -1953,16 +1949,16 @@ $DateTimeInputElementCopyWith<DateTimeInputElement> get copyWith => _$DateTimeIn
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DateTimeInputElement&&(identical(other.control, control) || other.control == control));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DateTimeInputElement&&(identical(other.control, control) || other.control == control)&&(identical(other.includeDate, includeDate) || other.includeDate == includeDate)&&(identical(other.includeTime, includeTime) || other.includeTime == includeTime));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,control);
+int get hashCode => Object.hash(runtimeType,control,includeDate,includeTime);
 
 @override
 String toString() {
-  return 'PresentationElement.dateTimeInput(control: $control)';
+  return 'PresentationElement.dateTimeInput(control: $control, includeDate: $includeDate, includeTime: $includeTime)';
 }
 
 
@@ -1973,7 +1969,7 @@ abstract mixin class $DateTimeInputElementCopyWith<$Res> implements $Presentatio
   factory $DateTimeInputElementCopyWith(DateTimeInputElement value, $Res Function(DateTimeInputElement) _then) = _$DateTimeInputElementCopyWithImpl;
 @useResult
 $Res call({
- BoundControl control
+ BoundControl control, bool includeDate, bool includeTime
 });
 
 
@@ -1990,10 +1986,12 @@ class _$DateTimeInputElementCopyWithImpl<$Res>
 
 /// Create a copy of PresentationElement
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? control = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? control = null,Object? includeDate = null,Object? includeTime = null,}) {
   return _then(DateTimeInputElement(
-null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
-as BoundControl,
+control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
+as BoundControl,includeDate: null == includeDate ? _self.includeDate : includeDate // ignore: cast_nullable_to_non_nullable
+as bool,includeTime: null == includeTime ? _self.includeTime : includeTime // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -3622,81 +3620,6 @@ as double,
 }
 
 
-}
-
-/// @nodoc
-
-
-class ScrollElement implements PresentationElement, SingleChildLayoutElement {
-  const ScrollElement(this.child);
-  
-
- final  PresentationNode child;
-
-/// Create a copy of PresentationElement
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ScrollElementCopyWith<ScrollElement> get copyWith => _$ScrollElementCopyWithImpl<ScrollElement>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScrollElement&&(identical(other.child, child) || other.child == child));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,child);
-
-@override
-String toString() {
-  return 'PresentationElement.scroll(child: $child)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ScrollElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
-  factory $ScrollElementCopyWith(ScrollElement value, $Res Function(ScrollElement) _then) = _$ScrollElementCopyWithImpl;
-@useResult
-$Res call({
- PresentationNode child
-});
-
-
-$PresentationNodeCopyWith<$Res> get child;
-
-}
-/// @nodoc
-class _$ScrollElementCopyWithImpl<$Res>
-    implements $ScrollElementCopyWith<$Res> {
-  _$ScrollElementCopyWithImpl(this._self, this._then);
-
-  final ScrollElement _self;
-  final $Res Function(ScrollElement) _then;
-
-/// Create a copy of PresentationElement
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? child = null,}) {
-  return _then(ScrollElement(
-null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
-as PresentationNode,
-  ));
-}
-
-/// Create a copy of PresentationElement
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationNodeCopyWith<$Res> get child {
-  
-  return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
-    return _then(_self.copyWith(child: value));
-  });
-}
 }
 
 /// @nodoc

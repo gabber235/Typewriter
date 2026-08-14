@@ -586,12 +586,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .rowRendererUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
-                            name: 'Scroll',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
-                                    .scrollRendererUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
                             name: 'Section',
                             builder:
                                 _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories

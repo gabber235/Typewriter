@@ -29,17 +29,9 @@ Widget stackRendererUseCase(BuildContext context) =>
 Widget gridRendererUseCase(BuildContext context) =>
     rendererStory(context, layoutRendererScenarios[4]);
 
-@widgetbook.UseCase(
-  name: "Scroll",
-  type: PresentationRendererStory,
-  path: _path,
-)
-Widget scrollRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[5]);
-
 @widgetbook.UseCase(name: "Card", type: PresentationRendererStory, path: _path)
 Widget cardRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[6]);
+    rendererStory(context, layoutRendererScenarios[5]);
 
 @widgetbook.UseCase(
   name: "Section",
@@ -47,7 +39,7 @@ Widget cardRendererUseCase(BuildContext context) =>
   path: _path,
 )
 Widget sectionRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[7]);
+    rendererStory(context, layoutRendererScenarios[6]);
 
 @widgetbook.UseCase(
   name: "Collapsible",
@@ -55,11 +47,11 @@ Widget sectionRendererUseCase(BuildContext context) =>
   path: _path,
 )
 Widget collapsibleRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[8]);
+    rendererStory(context, layoutRendererScenarios[7]);
 
 @widgetbook.UseCase(name: "Tabs", type: PresentationRendererStory, path: _path)
 Widget tabsRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[9]);
+    rendererStory(context, layoutRendererScenarios[8]);
 
 @widgetbook.UseCase(
   name: "Divider",
@@ -67,7 +59,7 @@ Widget tabsRendererUseCase(BuildContext context) =>
   path: _path,
 )
 Widget dividerRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[10]);
+    rendererStory(context, layoutRendererScenarios[9]);
 
 @widgetbook.UseCase(
   name: "Spacer",
@@ -75,4 +67,4 @@ Widget dividerRendererUseCase(BuildContext context) =>
   path: _path,
 )
 Widget spacerRendererUseCase(BuildContext context) =>
-    rendererStory(context, layoutRendererScenarios[11]);
+    rendererStory(context, layoutRendererScenarios[10]);

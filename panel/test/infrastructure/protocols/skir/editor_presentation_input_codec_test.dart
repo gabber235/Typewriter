@@ -45,7 +45,7 @@ void main() {
         maximum: number,
         divisions: number,
       ),
-      const DateTimeInputElement(control),
+      const DateTimeInputElement(control: control),
       const DurationInputElement(control),
       const ColorInputElement(control: control),
       const ColorInputElement(control: control, includeAlpha: true),
@@ -108,6 +108,27 @@ void main() {
       final color =
           (element! as wire.PresentationElement_colorInputWrapper).value;
       expect(color.includeAlpha, includeAlpha);
+    }
+  });
+
+  test("round trips every date and time visibility combination", () {
+    for (final includeDate in [false, true]) {
+      for (final includeTime in [false, true]) {
+        final element = DateTimeInputElement(
+          control: control,
+          includeDate: includeDate,
+          includeTime: includeTime,
+        );
+        codecs.expectRoundTrip(element);
+
+        final encoded = codecs.encoder
+            .encodeNode(PresentationNode(id: "dateTime", element: element))
+            .valueOrNull!;
+        final wrapper =
+            encoded.element! as wire.PresentationElement_dateTimeInputWrapper;
+        expect(wrapper.value.includeDate, includeDate);
+        expect(wrapper.value.includeTime, includeTime);
+      }
     }
   });
 

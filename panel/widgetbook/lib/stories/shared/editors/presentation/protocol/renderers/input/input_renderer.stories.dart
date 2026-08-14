@@ -50,7 +50,55 @@ Widget sliderInputRendererUseCase(BuildContext context) =>
   path: _path,
 )
 Widget dateTimeInputRendererUseCase(BuildContext context) =>
-    rendererStory(context, inputRendererScenarios[5]);
+    _dateTimeRendererStory(context);
+
+Widget _dateTimeRendererStory(BuildContext context) {
+  final includeDate = context.knobs.boolean(
+    label: "Include date",
+    initialValue: true,
+  );
+  final includeTime = context.knobs.boolean(
+    label: "Include time",
+    initialValue: true,
+  );
+  final timestampDraft = context.knobs.string(
+    label: "Timestamp value",
+    initialValue: "2026-08-12T18:30:45.123456Z",
+  );
+  final readOnly = context.knobs.boolean(label: "Read only");
+  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
+  final width = context.knobs.double.slider(
+    label: "Width",
+    initialValue: 520,
+    min: 280,
+    max: 760,
+  );
+  final timestamp =
+      DateTime.tryParse(timestampDraft)?.toUtc() ??
+      DateTime.utc(2026, 8, 12, 18, 30, 45, 123, 456);
+  final base = inputRendererScenarios[5];
+  final scenario = RendererStoryScenario(
+    kind: base.kind,
+    name: base.name,
+    type: base.type,
+    value: TimestampValue(timestamp),
+    definitions: base.definitions,
+    presentation: storyNode(
+      "dateTimeInput",
+      PresentationElement.dateTimeInput(
+        control: storyControl("Available from"),
+        includeDate: includeDate,
+        includeTime: includeTime,
+      ),
+      properties: PresentationProperties(enabledIf: enabled.asBooleanLiteral),
+    ),
+  );
+  return PresentationRendererStory(
+    scenario: scenario,
+    width: width,
+    readOnly: readOnly,
+  );
+}
 
 @widgetbook.UseCase(
   name: "Duration",

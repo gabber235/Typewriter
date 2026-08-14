@@ -61,10 +61,6 @@ final class SkirPresentationEncoder {
         WrapElement() => _children(value, wire.PresentationElement.wrapWrap),
         StackElement() => _children(value, wire.PresentationElement.wrapStack),
         GridElement() => _grid(value),
-        ScrollElement() => _single(
-          value.child,
-          wire.PresentationElement.wrapScroll,
-        ),
         CardElement() => encodeNode(value.child).mapValue(
           (child) => wire.PresentationElement.createCard(
             child: child,
@@ -101,10 +97,7 @@ final class SkirPresentationEncoder {
         ),
         SelectInputElement() => _select(value),
         SliderInputElement() => _slider(value),
-        DateTimeInputElement() => _boundElement(
-          value.control,
-          wire.PresentationElement.wrapDateTimeInput,
-        ),
+        DateTimeInputElement() => _dateTimeInput(value),
         DurationInputElement() => _boundElement(
           value.control,
           wire.PresentationElement.wrapDurationInput,

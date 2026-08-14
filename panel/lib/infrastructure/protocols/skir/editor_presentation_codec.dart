@@ -62,9 +62,6 @@ final class SkirPresentationDecoder {
       StackElement.new,
     ),
     wire.PresentationElement_gridWrapper(:final value) => _grid(value),
-    wire.PresentationElement_scrollWrapper(:final value) => TypeResult.success(
-      ScrollElement(decodeNode(value.child)),
-    ),
     wire.PresentationElement_cardWrapper(:final value) => TypeResult.success(
       CardElement(
         decodeNode(value.child),
@@ -110,9 +107,8 @@ final class SkirPresentationDecoder {
     ).mapValue(ToggleInputElement.new),
     wire.PresentationElement_selectInputWrapper(:final value) => _select(value),
     wire.PresentationElement_sliderInputWrapper(:final value) => _slider(value),
-    wire.PresentationElement_dateTimeInputWrapper(:final value) => _bound(
-      value,
-    ).mapValue(DateTimeInputElement.new),
+    wire.PresentationElement_dateTimeInputWrapper(:final value) =>
+      _dateTimeInput(value),
     wire.PresentationElement_durationInputWrapper(:final value) => _bound(
       value,
     ).mapValue(DurationInputElement.new),
