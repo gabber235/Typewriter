@@ -41,6 +41,15 @@ extension SkirPresentationInputDecoder on SkirPresentationDecoder {
         ),
       );
 
+  TypeResult<PresentationElement> _dateTimeInput(wire.DateTimeControl value) =>
+      _bound(value.control).mapValue(
+        (control) => DateTimeInputElement(
+          control: control,
+          includeDate: value.includeDate ?? true,
+          includeTime: value.includeTime ?? true,
+        ),
+      );
+
   TypeResult<PresentationElement> _select(wire.SelectControl value) {
     final control = _bound(value.control);
     final options = <SelectOption>[];

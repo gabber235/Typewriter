@@ -66,9 +66,6 @@ extension on PresentationElement {
         horizontalSpacing: element.horizontalSpacing,
         verticalSpacing: element.verticalSpacing,
       ),
-      ScrollElement(:final child) => ScrollElement(
-        child.localizeFailures(context, registry: registry, budget: budget),
-      ),
       CardElement(:final child, :final initiallyExpanded) => CardElement(
         child.localizeFailures(context, registry: registry, budget: budget),
         initiallyExpanded: initiallyExpanded,

@@ -30,6 +30,14 @@ extension on PresentationElement {
             .evaluate(context, registry: registry, budget: budget)
             .diagnostics,
     ];
+    if (element case DateTimeInputElement(
+      includeDate: false,
+      includeTime: false,
+    )) {
+      diagnostics.add(
+        _invalid("Date and time control must enable at least one part"),
+      );
+    }
     if (element case TypedFieldElement(:final binding, :final expectedType)) {
       final resolved = context.bindings.resolve(binding);
       diagnostics.addAll(resolved.diagnostics);

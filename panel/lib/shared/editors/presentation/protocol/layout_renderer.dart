@@ -8,7 +8,6 @@ part "renderers/layout/divider_renderer.dart";
 part "renderers/layout/grid_renderer.dart";
 part "renderers/layout/layout_support.dart";
 part "renderers/layout/row_renderer.dart";
-part "renderers/layout/scroll_renderer.dart";
 part "renderers/layout/section_renderer.dart";
 part "renderers/layout/spacer_renderer.dart";
 part "renderers/layout/stack_renderer.dart";
@@ -23,7 +22,6 @@ extension LayoutElementRendering on PresentationElement {
         WrapElement() => (this as WrapElement).render(scope),
         StackElement() => (this as StackElement).render(scope),
         GridElement() => (this as GridElement).render(scope),
-        ScrollElement() => (this as ScrollElement).render(scope),
         CardElement() => (this as CardElement).render(scope),
         SectionElement() => (this as SectionElement).render(scope),
         CollapsibleElement() => (this as CollapsibleElement).render(scope),

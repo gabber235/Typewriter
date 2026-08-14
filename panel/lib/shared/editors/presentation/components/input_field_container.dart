@@ -47,6 +47,7 @@ class InputFieldController {
   final FocusNode surroundingFocusNode;
 
   VoidCallback? _endInteraction;
+  VoidCallback? _beginInteraction;
 
   final bool _ownsInputFocusNode;
   final bool _ownsSurroundingFocusNode;
@@ -54,6 +55,8 @@ class InputFieldController {
   void requestInputFocus() => inputFocusNode.requestFocus();
 
   void requestSurroundingFocus() => surroundingFocusNode.requestFocus();
+
+  void beginInteraction() => _beginInteraction?.call();
 
   void endInteraction() => _endInteraction?.call();
 
@@ -141,14 +144,26 @@ class InputFieldContainer extends HookConsumerWidget {
     }, [currentMode]);
 
     useEffect(() {
+      void beginInteraction() {
+        surroundingNode.requestFocus();
+        ref
+            .read(currentInteractionModeProvider.notifier)
+            .setMode(InsertMode(id));
+        inputFocusNode.requestFocus();
+      }
+
       void endInteraction() {
         final mode = ref.read(currentInteractionModeProvider);
         if (mode is! InsertMode || mode.id != id) return;
         ref.read(currentInteractionModeProvider.notifier).normal();
       }
 
+      controller._beginInteraction = beginInteraction;
       controller._endInteraction = endInteraction;
       return () {
+        if (controller._beginInteraction == beginInteraction) {
+          controller._beginInteraction = null;
+        }
         if (controller._endInteraction == endInteraction) {
           controller._endInteraction = null;
         }

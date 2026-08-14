@@ -620,44 +620,6 @@ impl ChildrenLayout {
 }
 
 // ==============================================================================
-// struct SingleChildLayout
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct SingleChildLayout {
-    pub child: PresentationNode,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SingleChildLayout>>,
-}
-
-impl SingleChildLayout {
-    pub fn default_ref() -> &'static SingleChildLayout {
-        static D: std::sync::LazyLock<SingleChildLayout> = std::sync::LazyLock::new(SingleChildLayout::default);
-        &D
-    }
-}
-
-impl SingleChildLayout {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SingleChildLayout> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SingleChildLayout>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/presentation.skir",
-                    "SingleChildLayout",
-                    "",
-                    |x: &SingleChildLayout| &x._unrecognized,
-                    |x: &mut SingleChildLayout, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<SingleChildLayout> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(SingleChildLayout::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct GridLayout
 // ==============================================================================
 
@@ -1429,6 +1391,46 @@ impl ColorControl {
 }
 
 // ==============================================================================
+// struct DateTimeControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DateTimeControl {
+    pub control: BoundControl,
+    pub include_date: Option<bool>,
+    pub include_time: Option<bool>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DateTimeControl>>,
+}
+
+impl DateTimeControl {
+    pub fn default_ref() -> &'static DateTimeControl {
+        static D: std::sync::LazyLock<DateTimeControl> = std::sync::LazyLock::new(DateTimeControl::default);
+        &D
+    }
+}
+
+impl DateTimeControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DateTimeControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DateTimeControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "DateTimeControl",
+                    "",
+                    |x: &DateTimeControl| &x._unrecognized,
+                    |x: &mut DateTimeControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DateTimeControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DateTimeControl::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct SelectOption
 // ==============================================================================
 
@@ -2037,7 +2039,6 @@ pub enum PresentationElement {
     Wrap(Box<ChildrenLayout>),
     Stack(Box<ChildrenLayout>),
     Grid(Box<GridLayout>),
-    Scroll(Box<SingleChildLayout>),
     Card(Box<CardLayout>),
     Section(Box<SectionLayout>),
     Tabs(Box<TabsLayout>),
@@ -2058,7 +2059,7 @@ pub enum PresentationElement {
     ToggleInput(Box<BoundControl>),
     SelectInput(Box<SelectControl>),
     SliderInput(Box<SliderControl>),
-    DateTimeInput(Box<BoundControl>),
+    DateTimeInput(Box<DateTimeControl>),
     DurationInput(Box<BoundControl>),
     ColorInput(Box<ColorControl>),
     BytesInput(Box<BoundControl>),
@@ -2095,44 +2096,43 @@ impl PresentationElement {
                         PresentationElement::Wrap(_) => 3,
                         PresentationElement::Stack(_) => 4,
                         PresentationElement::Grid(_) => 5,
-                        PresentationElement::Scroll(_) => 6,
-                        PresentationElement::Card(_) => 7,
-                        PresentationElement::Section(_) => 8,
-                        PresentationElement::Tabs(_) => 9,
-                        PresentationElement::Divider => 10,
-                        PresentationElement::Spacer(_) => 11,
-                        PresentationElement::Text(_) => 12,
-                        PresentationElement::Markdown(_) => 13,
-                        PresentationElement::Icon(_) => 14,
-                        PresentationElement::Image(_) => 15,
-                        PresentationElement::Badge(_) => 16,
-                        PresentationElement::Progress(_) => 17,
-                        PresentationElement::TypedField(_) => 18,
-                        PresentationElement::Conditional(_) => 19,
-                        PresentationElement::Repeated(_) => 20,
-                        PresentationElement::ScopedBinding(_) => 21,
-                        PresentationElement::TextInput(_) => 22,
-                        PresentationElement::NumericInput(_) => 23,
-                        PresentationElement::ToggleInput(_) => 24,
-                        PresentationElement::SelectInput(_) => 25,
-                        PresentationElement::SliderInput(_) => 26,
-                        PresentationElement::DateTimeInput(_) => 27,
-                        PresentationElement::DurationInput(_) => 28,
-                        PresentationElement::ColorInput(_) => 29,
-                        PresentationElement::BytesInput(_) => 30,
-                        PresentationElement::NamedInput(_) => 31,
-                        PresentationElement::Button(_) => 32,
-                        PresentationElement::IconButton(_) => 33,
-                        PresentationElement::Menu(_) => 34,
-                        PresentationElement::Tooltip(_) => 35,
-                        PresentationElement::ListInput(_) => 36,
-                        PresentationElement::MapInput(_) => 37,
-                        PresentationElement::RecordInput(_) => 38,
-                        PresentationElement::EnumInput(_) => 39,
-                        PresentationElement::PolymorphicInput(_) => 40,
-                        PresentationElement::DefaultPresentation(_) => 41,
-                        PresentationElement::Collapsible(_) => 42,
-                        PresentationElement::IconInput(_) => 43,
+                        PresentationElement::Card(_) => 6,
+                        PresentationElement::Section(_) => 7,
+                        PresentationElement::Tabs(_) => 8,
+                        PresentationElement::Divider => 9,
+                        PresentationElement::Spacer(_) => 10,
+                        PresentationElement::Text(_) => 11,
+                        PresentationElement::Markdown(_) => 12,
+                        PresentationElement::Icon(_) => 13,
+                        PresentationElement::Image(_) => 14,
+                        PresentationElement::Badge(_) => 15,
+                        PresentationElement::Progress(_) => 16,
+                        PresentationElement::TypedField(_) => 17,
+                        PresentationElement::Conditional(_) => 18,
+                        PresentationElement::Repeated(_) => 19,
+                        PresentationElement::ScopedBinding(_) => 20,
+                        PresentationElement::TextInput(_) => 21,
+                        PresentationElement::NumericInput(_) => 22,
+                        PresentationElement::ToggleInput(_) => 23,
+                        PresentationElement::SelectInput(_) => 24,
+                        PresentationElement::SliderInput(_) => 25,
+                        PresentationElement::DateTimeInput(_) => 26,
+                        PresentationElement::DurationInput(_) => 27,
+                        PresentationElement::ColorInput(_) => 28,
+                        PresentationElement::BytesInput(_) => 29,
+                        PresentationElement::NamedInput(_) => 30,
+                        PresentationElement::Button(_) => 31,
+                        PresentationElement::IconButton(_) => 32,
+                        PresentationElement::Menu(_) => 33,
+                        PresentationElement::Tooltip(_) => 34,
+                        PresentationElement::ListInput(_) => 35,
+                        PresentationElement::MapInput(_) => 36,
+                        PresentationElement::RecordInput(_) => 37,
+                        PresentationElement::EnumInput(_) => 38,
+                        PresentationElement::PolymorphicInput(_) => 39,
+                        PresentationElement::DefaultPresentation(_) => 40,
+                        PresentationElement::Collapsible(_) => 41,
+                        PresentationElement::IconInput(_) => 42,
                     },
                     |u| PresentationElement::Unknown(Some(u)),
                     |x: &PresentationElement| match x { PresentationElement::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -2318,11 +2318,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SingleChildLayout> = SingleChildLayout::_adapter() as *const _ as *mut _;
-                (*a).add_field("child", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &SingleChildLayout| &x.child, |x: &mut SingleChildLayout, v| x.child = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<GridLayout> = GridLayout::_adapter() as *const _ as *mut _;
                 (*a).add_field("children", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &GridLayout| &x.children, |x: &mut GridLayout, v| x.children = v);
                 (*a).add_field("columns", 1, crate::skir_client::Serializer::int32(), "", |x: &GridLayout| &x.columns, |x: &mut GridLayout, v| x.columns = v);
@@ -2450,6 +2445,13 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DateTimeControl> = DateTimeControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &DateTimeControl| &x.control, |x: &mut DateTimeControl, v| x.control = v);
+                (*a).add_field("include_date", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::bool()), "", |x: &DateTimeControl| &x.include_date, |x: &mut DateTimeControl, v| x.include_date = v);
+                (*a).add_field("include_time", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::bool()), "", |x: &DateTimeControl| &x.include_time, |x: &mut DateTimeControl, v| x.include_time = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SelectOption> = SelectOption::_adapter() as *const _ as *mut _;
                 (*a).add_field("option_id", 0, crate::skir_client::Serializer::string(), "", |x: &SelectOption| &x.option_id, |x: &mut SelectOption, v| x.option_id = v);
                 (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SelectOption| &x.label, |x: &mut SelectOption, v| x.label = v);
@@ -2557,44 +2559,43 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("wrap", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ChildrenLayout::_adapter()), "", |v| PresentationElement::Wrap(Box::new(v)), |x| match x { PresentationElement::Wrap(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("stack", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ChildrenLayout::_adapter()), "", |v| PresentationElement::Stack(Box::new(v)), |x| match x { PresentationElement::Stack(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("grid", 5, 5, crate::skir_client::internal::struct_serializer_from_static(GridLayout::_adapter()), "", |v| PresentationElement::Grid(Box::new(v)), |x| match x { PresentationElement::Grid(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("scroll", 6, 6, crate::skir_client::internal::struct_serializer_from_static(SingleChildLayout::_adapter()), "", |v| PresentationElement::Scroll(Box::new(v)), |x| match x { PresentationElement::Scroll(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("card", 7, 7, crate::skir_client::internal::struct_serializer_from_static(CardLayout::_adapter()), "", |v| PresentationElement::Card(Box::new(v)), |x| match x { PresentationElement::Card(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("section", 8, 8, crate::skir_client::internal::struct_serializer_from_static(SectionLayout::_adapter()), "", |v| PresentationElement::Section(Box::new(v)), |x| match x { PresentationElement::Section(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tabs", 9, 9, crate::skir_client::internal::struct_serializer_from_static(TabsLayout::_adapter()), "", |v| PresentationElement::Tabs(Box::new(v)), |x| match x { PresentationElement::Tabs(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_constant_variant("divider", 10, 10, "", PresentationElement::Divider);
-                (*a).add_wrapper_variant("spacer", 11, 11, crate::skir_client::internal::struct_serializer_from_static(SpacerLayout::_adapter()), "", |v| PresentationElement::Spacer(Box::new(v)), |x| match x { PresentationElement::Spacer(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("text", 12, 12, crate::skir_client::internal::struct_serializer_from_static(TextContent::_adapter()), "", |v| PresentationElement::Text(Box::new(v)), |x| match x { PresentationElement::Text(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("markdown", 13, 13, crate::skir_client::internal::struct_serializer_from_static(TextContent::_adapter()), "", |v| PresentationElement::Markdown(Box::new(v)), |x| match x { PresentationElement::Markdown(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("icon", 14, 14, crate::skir_client::internal::struct_serializer_from_static(IconContent::_adapter()), "", |v| PresentationElement::Icon(Box::new(v)), |x| match x { PresentationElement::Icon(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("image", 15, 15, crate::skir_client::internal::struct_serializer_from_static(ImageContent::_adapter()), "", |v| PresentationElement::Image(Box::new(v)), |x| match x { PresentationElement::Image(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("badge", 16, 16, crate::skir_client::internal::struct_serializer_from_static(BadgeContent::_adapter()), "", |v| PresentationElement::Badge(Box::new(v)), |x| match x { PresentationElement::Badge(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("progress", 17, 17, crate::skir_client::internal::struct_serializer_from_static(ProgressContent::_adapter()), "", |v| PresentationElement::Progress(Box::new(v)), |x| match x { PresentationElement::Progress(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("typed_field", 18, 18, crate::skir_client::internal::struct_serializer_from_static(TypedFieldElement::_adapter()), "", |v| PresentationElement::TypedField(Box::new(v)), |x| match x { PresentationElement::TypedField(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("conditional", 19, 19, crate::skir_client::internal::struct_serializer_from_static(ConditionalElement::_adapter()), "", |v| PresentationElement::Conditional(Box::new(v)), |x| match x { PresentationElement::Conditional(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("repeated", 20, 20, crate::skir_client::internal::struct_serializer_from_static(RepeatedElement::_adapter()), "", |v| PresentationElement::Repeated(Box::new(v)), |x| match x { PresentationElement::Repeated(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("scoped_binding", 21, 21, crate::skir_client::internal::struct_serializer_from_static(ScopedBindingElement::_adapter()), "", |v| PresentationElement::ScopedBinding(Box::new(v)), |x| match x { PresentationElement::ScopedBinding(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("text_input", 22, 22, crate::skir_client::internal::struct_serializer_from_static(TextControl::_adapter()), "", |v| PresentationElement::TextInput(Box::new(v)), |x| match x { PresentationElement::TextInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("numeric_input", 23, 23, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NumericInput(Box::new(v)), |x| match x { PresentationElement::NumericInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("toggle_input", 24, 24, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::ToggleInput(Box::new(v)), |x| match x { PresentationElement::ToggleInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("select_input", 25, 25, crate::skir_client::internal::struct_serializer_from_static(SelectControl::_adapter()), "", |v| PresentationElement::SelectInput(Box::new(v)), |x| match x { PresentationElement::SelectInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("slider_input", 26, 26, crate::skir_client::internal::struct_serializer_from_static(SliderControl::_adapter()), "", |v| PresentationElement::SliderInput(Box::new(v)), |x| match x { PresentationElement::SliderInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("date_time_input", 27, 27, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DateTimeInput(Box::new(v)), |x| match x { PresentationElement::DateTimeInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("duration_input", 28, 28, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DurationInput(Box::new(v)), |x| match x { PresentationElement::DurationInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("color_input", 29, 29, crate::skir_client::internal::struct_serializer_from_static(ColorControl::_adapter()), "", |v| PresentationElement::ColorInput(Box::new(v)), |x| match x { PresentationElement::ColorInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("bytes_input", 30, 30, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::BytesInput(Box::new(v)), |x| match x { PresentationElement::BytesInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("named_input", 31, 31, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NamedInput(Box::new(v)), |x| match x { PresentationElement::NamedInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("button", 32, 32, crate::skir_client::internal::struct_serializer_from_static(ButtonElement::_adapter()), "", |v| PresentationElement::Button(Box::new(v)), |x| match x { PresentationElement::Button(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("icon_button", 33, 33, crate::skir_client::internal::struct_serializer_from_static(IconButtonElement::_adapter()), "", |v| PresentationElement::IconButton(Box::new(v)), |x| match x { PresentationElement::IconButton(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("menu", 34, 34, crate::skir_client::internal::struct_serializer_from_static(MenuElement::_adapter()), "", |v| PresentationElement::Menu(Box::new(v)), |x| match x { PresentationElement::Menu(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tooltip", 35, 35, crate::skir_client::internal::struct_serializer_from_static(TooltipElement::_adapter()), "", |v| PresentationElement::Tooltip(Box::new(v)), |x| match x { PresentationElement::Tooltip(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("list_input", 36, 36, crate::skir_client::internal::struct_serializer_from_static(ListControl::_adapter()), "", |v| PresentationElement::ListInput(Box::new(v)), |x| match x { PresentationElement::ListInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("map_input", 37, 37, crate::skir_client::internal::struct_serializer_from_static(MapControl::_adapter()), "", |v| PresentationElement::MapInput(Box::new(v)), |x| match x { PresentationElement::MapInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("record_input", 38, 38, crate::skir_client::internal::struct_serializer_from_static(RecordControl::_adapter()), "", |v| PresentationElement::RecordInput(Box::new(v)), |x| match x { PresentationElement::RecordInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("enum_input", 39, 39, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::EnumInput(Box::new(v)), |x| match x { PresentationElement::EnumInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("polymorphic_input", 40, 40, crate::skir_client::internal::struct_serializer_from_static(PolymorphicControl::_adapter()), "", |v| PresentationElement::PolymorphicInput(Box::new(v)), |x| match x { PresentationElement::PolymorphicInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("default_presentation", 41, 41, crate::skir_client::internal::struct_serializer_from_static(DefaultPresentationElement::_adapter()), "", |v| PresentationElement::DefaultPresentation(Box::new(v)), |x| match x { PresentationElement::DefaultPresentation(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("collapsible", 42, 42, crate::skir_client::internal::struct_serializer_from_static(CollapsibleLayout::_adapter()), "", |v| PresentationElement::Collapsible(Box::new(v)), |x| match x { PresentationElement::Collapsible(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("icon_input", 43, 43, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::IconInput(Box::new(v)), |x| match x { PresentationElement::IconInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("card", 7, 6, crate::skir_client::internal::struct_serializer_from_static(CardLayout::_adapter()), "", |v| PresentationElement::Card(Box::new(v)), |x| match x { PresentationElement::Card(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("section", 8, 7, crate::skir_client::internal::struct_serializer_from_static(SectionLayout::_adapter()), "", |v| PresentationElement::Section(Box::new(v)), |x| match x { PresentationElement::Section(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("tabs", 9, 8, crate::skir_client::internal::struct_serializer_from_static(TabsLayout::_adapter()), "", |v| PresentationElement::Tabs(Box::new(v)), |x| match x { PresentationElement::Tabs(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_constant_variant("divider", 10, 9, "", PresentationElement::Divider);
+                (*a).add_wrapper_variant("spacer", 11, 10, crate::skir_client::internal::struct_serializer_from_static(SpacerLayout::_adapter()), "", |v| PresentationElement::Spacer(Box::new(v)), |x| match x { PresentationElement::Spacer(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("text", 12, 11, crate::skir_client::internal::struct_serializer_from_static(TextContent::_adapter()), "", |v| PresentationElement::Text(Box::new(v)), |x| match x { PresentationElement::Text(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("markdown", 13, 12, crate::skir_client::internal::struct_serializer_from_static(TextContent::_adapter()), "", |v| PresentationElement::Markdown(Box::new(v)), |x| match x { PresentationElement::Markdown(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("icon", 14, 13, crate::skir_client::internal::struct_serializer_from_static(IconContent::_adapter()), "", |v| PresentationElement::Icon(Box::new(v)), |x| match x { PresentationElement::Icon(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("image", 15, 14, crate::skir_client::internal::struct_serializer_from_static(ImageContent::_adapter()), "", |v| PresentationElement::Image(Box::new(v)), |x| match x { PresentationElement::Image(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("badge", 16, 15, crate::skir_client::internal::struct_serializer_from_static(BadgeContent::_adapter()), "", |v| PresentationElement::Badge(Box::new(v)), |x| match x { PresentationElement::Badge(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("progress", 17, 16, crate::skir_client::internal::struct_serializer_from_static(ProgressContent::_adapter()), "", |v| PresentationElement::Progress(Box::new(v)), |x| match x { PresentationElement::Progress(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("typed_field", 18, 17, crate::skir_client::internal::struct_serializer_from_static(TypedFieldElement::_adapter()), "", |v| PresentationElement::TypedField(Box::new(v)), |x| match x { PresentationElement::TypedField(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conditional", 19, 18, crate::skir_client::internal::struct_serializer_from_static(ConditionalElement::_adapter()), "", |v| PresentationElement::Conditional(Box::new(v)), |x| match x { PresentationElement::Conditional(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("repeated", 20, 19, crate::skir_client::internal::struct_serializer_from_static(RepeatedElement::_adapter()), "", |v| PresentationElement::Repeated(Box::new(v)), |x| match x { PresentationElement::Repeated(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("scoped_binding", 21, 20, crate::skir_client::internal::struct_serializer_from_static(ScopedBindingElement::_adapter()), "", |v| PresentationElement::ScopedBinding(Box::new(v)), |x| match x { PresentationElement::ScopedBinding(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("text_input", 22, 21, crate::skir_client::internal::struct_serializer_from_static(TextControl::_adapter()), "", |v| PresentationElement::TextInput(Box::new(v)), |x| match x { PresentationElement::TextInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("numeric_input", 23, 22, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NumericInput(Box::new(v)), |x| match x { PresentationElement::NumericInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("toggle_input", 24, 23, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::ToggleInput(Box::new(v)), |x| match x { PresentationElement::ToggleInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("select_input", 25, 24, crate::skir_client::internal::struct_serializer_from_static(SelectControl::_adapter()), "", |v| PresentationElement::SelectInput(Box::new(v)), |x| match x { PresentationElement::SelectInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("slider_input", 26, 25, crate::skir_client::internal::struct_serializer_from_static(SliderControl::_adapter()), "", |v| PresentationElement::SliderInput(Box::new(v)), |x| match x { PresentationElement::SliderInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("date_time_input", 27, 26, crate::skir_client::internal::struct_serializer_from_static(DateTimeControl::_adapter()), "", |v| PresentationElement::DateTimeInput(Box::new(v)), |x| match x { PresentationElement::DateTimeInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("duration_input", 28, 27, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DurationInput(Box::new(v)), |x| match x { PresentationElement::DurationInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("color_input", 29, 28, crate::skir_client::internal::struct_serializer_from_static(ColorControl::_adapter()), "", |v| PresentationElement::ColorInput(Box::new(v)), |x| match x { PresentationElement::ColorInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("bytes_input", 30, 29, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::BytesInput(Box::new(v)), |x| match x { PresentationElement::BytesInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("named_input", 31, 30, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NamedInput(Box::new(v)), |x| match x { PresentationElement::NamedInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("button", 32, 31, crate::skir_client::internal::struct_serializer_from_static(ButtonElement::_adapter()), "", |v| PresentationElement::Button(Box::new(v)), |x| match x { PresentationElement::Button(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("icon_button", 33, 32, crate::skir_client::internal::struct_serializer_from_static(IconButtonElement::_adapter()), "", |v| PresentationElement::IconButton(Box::new(v)), |x| match x { PresentationElement::IconButton(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("menu", 34, 33, crate::skir_client::internal::struct_serializer_from_static(MenuElement::_adapter()), "", |v| PresentationElement::Menu(Box::new(v)), |x| match x { PresentationElement::Menu(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("tooltip", 35, 34, crate::skir_client::internal::struct_serializer_from_static(TooltipElement::_adapter()), "", |v| PresentationElement::Tooltip(Box::new(v)), |x| match x { PresentationElement::Tooltip(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("list_input", 36, 35, crate::skir_client::internal::struct_serializer_from_static(ListControl::_adapter()), "", |v| PresentationElement::ListInput(Box::new(v)), |x| match x { PresentationElement::ListInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("map_input", 37, 36, crate::skir_client::internal::struct_serializer_from_static(MapControl::_adapter()), "", |v| PresentationElement::MapInput(Box::new(v)), |x| match x { PresentationElement::MapInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("record_input", 38, 37, crate::skir_client::internal::struct_serializer_from_static(RecordControl::_adapter()), "", |v| PresentationElement::RecordInput(Box::new(v)), |x| match x { PresentationElement::RecordInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("enum_input", 39, 38, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::EnumInput(Box::new(v)), |x| match x { PresentationElement::EnumInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("polymorphic_input", 40, 39, crate::skir_client::internal::struct_serializer_from_static(PolymorphicControl::_adapter()), "", |v| PresentationElement::PolymorphicInput(Box::new(v)), |x| match x { PresentationElement::PolymorphicInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("default_presentation", 41, 40, crate::skir_client::internal::struct_serializer_from_static(DefaultPresentationElement::_adapter()), "", |v| PresentationElement::DefaultPresentation(Box::new(v)), |x| match x { PresentationElement::DefaultPresentation(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("collapsible", 42, 41, crate::skir_client::internal::struct_serializer_from_static(CollapsibleLayout::_adapter()), "", |v| PresentationElement::Collapsible(Box::new(v)), |x| match x { PresentationElement::Collapsible(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("icon_input", 43, 42, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::IconInput(Box::new(v)), |x| match x { PresentationElement::IconInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

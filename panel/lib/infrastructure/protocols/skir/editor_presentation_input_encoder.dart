@@ -48,6 +48,16 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
         ),
       );
 
+  TypeResult<wire.PresentationElement> _dateTimeInput(
+    DateTimeInputElement value,
+  ) => _bound(value.control).mapValue(
+    (control) => wire.PresentationElement.createDateTimeInput(
+      control: control,
+      includeDate: value.includeDate,
+      includeTime: value.includeTime,
+    ),
+  );
+
   TypeResult<wire.PresentationElement> _select(SelectInputElement value) {
     final control = _bound(value.control);
     final options = <wire.SelectOption>[];

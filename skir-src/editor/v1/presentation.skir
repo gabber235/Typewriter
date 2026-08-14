@@ -117,10 +117,6 @@ struct ChildrenLayout(810900005) {
   cross_axis_alignment: CrossAxisAlignment = 3;
 }
 
-struct SingleChildLayout(810900006) {
-  child: PresentationNode = 0;
-}
-
 struct GridLayout(810900007) {
   children: [PresentationNode] = 0;
   columns: int32 = 1;
@@ -229,6 +225,12 @@ struct ColorControl(810900066) {
   include_alpha: bool = 1;
 }
 
+struct DateTimeControl(810900067) {
+  control: BoundControl = 0;
+  include_date: bool? = 1;
+  include_time: bool? = 2;
+}
+
 struct SelectOption(810900023) {
   option_id: string = 0;
   label: TypedExpression = 1;
@@ -322,7 +324,6 @@ enum PresentationElement(810900034) {
   wrap: ChildrenLayout = 3;
   stack: ChildrenLayout = 4;
   grid: GridLayout = 5;
-  scroll: SingleChildLayout = 6;
   card: CardLayout = 7;
   section: SectionLayout = 8;
   tabs: TabsLayout = 9;
@@ -343,7 +344,7 @@ enum PresentationElement(810900034) {
   toggle_input: BoundControl = 24;
   select_input: SelectControl = 25;
   slider_input: SliderControl = 26;
-  date_time_input: BoundControl = 27;
+  date_time_input: DateTimeControl = 27;
   duration_input: BoundControl = 28;
   color_input: ColorControl = 29;
   bytes_input: BoundControl = 30;

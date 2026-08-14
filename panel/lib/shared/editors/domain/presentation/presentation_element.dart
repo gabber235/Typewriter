@@ -86,8 +86,11 @@ sealed class PresentationElement with _$PresentationElement {
     TypedExpression? divisions,
   }) = SliderInputElement;
   @Implements<SimpleInputElement>()
-  const factory PresentationElement.dateTimeInput(BoundControl control) =
-      DateTimeInputElement;
+  const factory PresentationElement.dateTimeInput({
+    required BoundControl control,
+    @Default(true) bool includeDate,
+    @Default(true) bool includeTime,
+  }) = DateTimeInputElement;
   @Implements<SimpleInputElement>()
   const factory PresentationElement.durationInput(BoundControl control) =
       DurationInputElement;
@@ -204,9 +207,6 @@ sealed class PresentationElement with _$PresentationElement {
     @Default(0) double horizontalSpacing,
     @Default(0) double verticalSpacing,
   }) = GridElement;
-  @Implements<SingleChildLayoutElement>()
-  const factory PresentationElement.scroll(PresentationNode child) =
-      ScrollElement;
   @Implements<SingleChildLayoutElement>()
   const factory PresentationElement.card(
     PresentationNode child, {

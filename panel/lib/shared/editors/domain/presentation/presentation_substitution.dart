@@ -53,9 +53,6 @@ extension on PresentationElement {
         horizontalSpacing: value.horizontalSpacing,
         verticalSpacing: value.verticalSpacing,
       ),
-      ScrollElement() => ScrollElement(
-        value.child._substituteTypes(substitutions),
-      ),
       CardElement() => CardElement(
         value.child._substituteTypes(substitutions),
         initiallyExpanded: value.initiallyExpanded,
@@ -161,7 +158,9 @@ extension on PresentationElement {
         divisions: value.divisions._substituteTypes(substitutions),
       ),
       DateTimeInputElement() => DateTimeInputElement(
-        value.control._substituteTypes(substitutions),
+        control: value.control._substituteTypes(substitutions),
+        includeDate: value.includeDate,
+        includeTime: value.includeTime,
       ),
       DurationInputElement() => DurationInputElement(
         value.control._substituteTypes(substitutions),

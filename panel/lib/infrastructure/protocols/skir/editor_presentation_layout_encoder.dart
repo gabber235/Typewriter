@@ -28,13 +28,6 @@ extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
         ),
       );
 
-  TypeResult<wire.PresentationElement> _single(
-    PresentationNode value,
-    wire.PresentationElement Function(wire.SingleChildLayout) wrap,
-  ) => encodeNode(
-    value,
-  ).mapValue((child) => wrap(wire.SingleChildLayout(child: child)));
-
   TypeResult<wire.PresentationElement> _section(SectionElement value) {
     final title = expressions.encode(value.title);
     final description = _optional(value.description);

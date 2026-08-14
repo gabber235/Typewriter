@@ -37,7 +37,6 @@ void main() {
         horizontalSpacing: 3,
         verticalSpacing: 4,
       ),
-      const ScrollElement(leaf),
       const CardElement(leaf, initiallyExpanded: true),
       const SectionElement(
         title: text,

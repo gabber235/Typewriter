@@ -35,6 +35,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     required this.value,
     this.controller,
     this.focusNode,
+    this.inputFieldController,
     this.autofocus = DecoratedTextFieldAutoFocus.none,
     this.name = "",
     this.icon = Ic.round_text_fields,
@@ -63,6 +64,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final T value;
   final TextEditingController? controller;
   final FocusNode? focusNode;
+  final InputFieldController? inputFieldController;
   final DecoratedTextFieldAutoFocus autofocus;
   final String name;
   final String icon;
@@ -126,7 +128,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final focus = focusNode ?? useFocusNode();
+    final fallbackFocus = useFocusNode();
+    final focus =
+        inputFieldController?.inputFocusNode ?? focusNode ?? fallbackFocus;
     final state = useState<_State>(_initial);
 
     final formattedValue = deserialize?.call(value) ?? value.toString();
@@ -165,6 +169,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       children: [
         DecoratedTextField(
           focusNode: focus,
+          inputFieldController: inputFieldController,
           autofocus: autofocus,
           controller: controller,
           text: formattedValue,

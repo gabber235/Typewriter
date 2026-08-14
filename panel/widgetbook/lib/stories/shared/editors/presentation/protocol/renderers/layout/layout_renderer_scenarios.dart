@@ -144,26 +144,6 @@ final layoutRendererScenarios = [
     ),
   ),
   RendererStoryScenario(
-    kind: RendererStoryKind.scroll,
-    name: "Scroll",
-    type: const UnitType(),
-    value: const UnitValue(),
-    presentation: storyNode(
-      "scroll",
-      PresentationElement.scroll(
-        storyNode(
-          "scrollContent",
-          PresentationElement.markdown(
-            List.filled(
-              8,
-              "A longer line of scrollable renderer content.",
-            ).join("\n\n").asStringLiteral,
-          ),
-        ),
-      ),
-    ),
-  ),
-  RendererStoryScenario(
     kind: RendererStoryKind.card,
     name: "Card",
     type: const UnitType(),

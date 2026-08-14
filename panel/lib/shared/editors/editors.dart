@@ -37,6 +37,7 @@ export "domain/values/data_value_json_converter.dart";
 export "domain/values/icon_value.dart";
 export "domain/values/initial_value.dart";
 export "presentation/components/color_picker/color_picker.dart";
+export "presentation/components/date_time_picker/date_time_picker.dart";
 export "presentation/components/decorated_text_field.dart";
 export "presentation/components/formatted_text_field.dart";
 export "presentation/components/icon_selector/icon_selector.dart";
