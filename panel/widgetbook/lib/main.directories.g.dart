@@ -63,6 +63,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/icon_selector.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart'
@@ -153,6 +155,28 @@ final directories = <_widgetbook.WidgetbookNode>[
       _widgetbook.WidgetbookFolder(
         name: 'Editors',
         children: [
+          _widgetbook.WidgetbookFolder(
+            name: 'Components',
+            children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'IconSelector',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Deterministic',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories
+                            .iconSelectorDeterministicUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Live Iconify search',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories
+                            .iconSelectorLiveUseCase,
+                  ),
+                ],
+              ),
+            ],
+          ),
           _widgetbook.WidgetbookFolder(
             name: 'Presentation protocol',
             children: [

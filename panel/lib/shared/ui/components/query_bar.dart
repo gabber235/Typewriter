@@ -12,6 +12,15 @@ class QueryBar extends HookWidget {
     this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
     this.autofocus = DecoratedTextFieldAutoFocus.none,
+    this.onSubmitted,
+    this.onEditingComplete,
+    this.onDone,
+    this.onInputFocus,
+    this.onDismiss,
+    this.textFieldActions,
+    this.selectAllOnFocus = false,
+    this.enabled = true,
+    this.readOnly = false,
     super.key,
   });
 
@@ -21,6 +30,15 @@ class QueryBar extends HookWidget {
   final List<QuerySelectorDefinition> selectors;
   final InputDecoration inputDecoration;
   final DecoratedTextFieldAutoFocus autofocus;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onEditingComplete;
+  final ValueChanged<String>? onDone;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onDismiss;
+  final List<ActionShortcut>? textFieldActions;
+  final bool selectAllOnFocus;
+  final bool enabled;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -271,11 +289,25 @@ class QueryBar extends HookWidget {
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
                 ],
+                textFieldActions: textFieldActions,
+                selectAllOnFocus: selectAllOnFocus,
+                enabled: enabled,
+                readOnly: readOnly,
+                onInputFocus: onInputFocus,
+                onDismiss: onDismiss,
                 onChanged: (value) {
                   dismissedSignature.value = null;
                   onQueryChanged(value);
                 },
-                onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+                onDone: onDone,
+                onEditingComplete: onEditingComplete,
+                onSubmitted: (value) {
+                  if (popupSuggestionsVisible) {
+                    acceptActiveOrFirstSuggestion();
+                    return;
+                  }
+                  onSubmitted?.call(value);
+                },
               ),
               overlayBuilder: (context, _) => _buildSuggestionPanel(
                 context: context,

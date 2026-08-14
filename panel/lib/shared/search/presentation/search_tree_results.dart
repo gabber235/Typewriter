@@ -166,7 +166,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final rowContext = SearchResultRowContext(
       result: result,
       selected: controller.isSelected(result.id),
-      focused: focused.value,
+      focused: focused.value || controller.currentPreview?.id == result.id,
       loading: actionsBusy && actionConcersThis,
       onTap: () {
         if (controller.selectionMode == .single && actions.isNotEmpty) {

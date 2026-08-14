@@ -221,6 +221,48 @@ void main() {
   });
 
   group("QueryBar keyboard", () {
+    testWidgets("Enter delegates when suggestions are not visible", (
+      tester,
+    ) async {
+      String? submitted;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: const [],
+          onQueryChanged: (_) {},
+          onSubmitted: (value) => submitted = value,
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "mdi:home");
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      expect(submitted, "mdi:home");
+    });
+
+    testWidgets("Escape delegates when suggestions are not visible", (
+      tester,
+    ) async {
+      var dismissals = 0;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: const [],
+          onQueryChanged: (_) {},
+          onDismiss: () => dismissals++,
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+
+      expect(dismissals, 1);
+    });
+
     testWidgets("arrow keys navigate and Enter applies active suggestion", (
       tester,
     ) async {

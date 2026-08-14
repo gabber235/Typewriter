@@ -121,18 +121,22 @@ class InputFieldContainer extends HookConsumerWidget {
     final currentMode = ref.watch(currentInteractionModeProvider);
 
     useEffect(() {
-      if (currentMode is InsertMode && surroundingNode.hasPrimaryFocus) {
-        if (currentMode.id != id) {
-          ref
-              .read(currentInteractionModeProvider.notifier)
-              .setMode(InsertMode(id));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        final mode = ref.read(currentInteractionModeProvider);
+        if (mode is InsertMode && surroundingNode.hasPrimaryFocus) {
+          if (mode.id != id) {
+            ref
+                .read(currentInteractionModeProvider.notifier)
+                .setMode(InsertMode(id));
+          }
+          inputFocusNode.requestFocus();
         }
-        inputFocusNode.requestFocus();
-      }
 
-      if (currentMode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
-        surroundingNode.requestFocus();
-      }
+        if (mode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
+          surroundingNode.requestFocus();
+        }
+      });
       return null;
     }, [currentMode]);
 
@@ -152,7 +156,13 @@ class InputFieldContainer extends HookConsumerWidget {
     }, [controller, id]);
 
     useEffect(() {
-      if (inputFocusNode.hasPrimaryFocus) onInputFocus?.call();
+      if (inputFocusNode.hasPrimaryFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted && inputFocusNode.hasPrimaryFocus) {
+            onInputFocus?.call();
+          }
+        });
+      }
       return null;
     }, [inputFocusNode.hasPrimaryFocus]);
 
@@ -216,6 +226,7 @@ class InputFieldContainer extends HookConsumerWidget {
                 if (inputFocusNode.hasPrimaryFocus)
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
+                      onDismiss?.call();
                       ref
                           .read(currentInteractionModeProvider.notifier)
                           .normal();
