@@ -59,6 +59,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.maxLines = 1,
     this.textAlign = TextAlign.start,
     this.readOnly = false,
+    this.selectAllOnFocus = false,
     super.key,
   });
   final T value;
@@ -105,6 +106,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final int? maxLines;
   final TextAlign textAlign;
   final bool readOnly;
+  final bool selectAllOnFocus;
 
   _State _parse(String value) {
     try {
@@ -180,6 +182,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           maxLines: maxLines,
           textAlign: textAlign,
           readOnly: readOnly,
+          selectAllOnFocus: selectAllOnFocus,
           actions: actions,
           textFieldActions: textFieldActions,
           surroundingActions: surroundingActions,

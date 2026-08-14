@@ -82,21 +82,30 @@ class DateTimePickerField extends HookConsumerWidget {
         ),
         overlayBuilder: (context, anchorSize) => TapRegion(
           groupId: tapGroup,
-          child: CallbackShortcuts(
-            bindings: {
-              const SingleActivator(LogicalKeyboardKey.escape): close,
-              AdaptiveSingleActivator(LogicalKeyboardKey.keyP): toggle,
+          child: Actions(
+            actions: {
+              DismissIntent: CallbackAction<DismissIntent>(
+                onInvoke: (intent) {
+                  close();
+                  return null;
+                },
+              ),
             },
-            child: FocusScope(
-              node: pickerScope,
-              child: SizedBox(
-                width: 372,
-                child: DateTimePickerSurface(
-                  value: value,
-                  includeDate: includeDate,
-                  includeTime: includeTime,
-                  enabled: editable,
-                  onChanged: onChanged,
+            child: CallbackShortcuts(
+              bindings: {
+                AdaptiveSingleActivator(LogicalKeyboardKey.keyP): toggle,
+              },
+              child: FocusScope(
+                node: pickerScope,
+                child: SizedBox(
+                  width: 372,
+                  child: DateTimePickerSurface(
+                    value: value,
+                    includeDate: includeDate,
+                    includeTime: includeTime,
+                    enabled: editable,
+                    onChanged: onChanged,
+                  ),
                 ),
               ),
             ),
@@ -109,6 +118,9 @@ class DateTimePickerField extends HookConsumerWidget {
               : includeDate
               ? "date"
               : "time",
+          icon: includeDate
+              ? MaterialSymbols.calendar_month_rounded
+              : MaterialSymbols.schedule_rounded,
           readOnly: !editable,
           deserialize: (value) => formatDateTimeEditorValue(
             value,
@@ -156,39 +168,29 @@ class DateTimePickerField extends HookConsumerWidget {
           ],
           decoration: InputDecoration(
             hintText: format,
-            prefixIcon: Center(
-              child: Icones(
-                includeDate
-                    ? MaterialSymbols.calendar_month_rounded
-                    : MaterialSymbols.schedule_rounded,
-                size: 16,
-              ),
-            ),
-            prefixIconConstraints: const BoxConstraints.tightFor(
-              width: 30,
-              height: 36,
-            ),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  focusNode: pickerFocus,
-                  tooltip: open.value ? "Close picker" : "Open picker",
-                  constraints: const BoxConstraints.tightFor(
-                    width: 30,
-                    height: 36,
+            suffixIcon: readOnly
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        focusNode: pickerFocus,
+                        tooltip: open.value ? "Close picker" : "Open picker",
+                        constraints: const BoxConstraints.tightFor(
+                          width: 30,
+                          height: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: enabled ? toggle : null,
+                        icon: Icones(
+                          includeDate
+                              ? MaterialSymbols.calendar_month_rounded
+                              : MaterialSymbols.schedule_rounded,
+                          size: 18,
+                        ),
+                      ),
+                    ],
                   ),
-                  padding: EdgeInsets.zero,
-                  onPressed: enabled ? toggle : null,
-                  icon: Icones(
-                    includeDate
-                        ? MaterialSymbols.calendar_month_rounded
-                        : MaterialSymbols.schedule_rounded,
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

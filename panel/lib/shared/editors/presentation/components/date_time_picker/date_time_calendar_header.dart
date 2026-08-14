@@ -2,13 +2,16 @@ import "package:flutter/material.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+enum DateTimeCalendarView { days, months, years }
+
 class DateTimeCalendarHeader extends StatelessWidget {
   const DateTimeCalendarHeader({
     required this.visibleMonth,
-    required this.onPreviousMonth,
-    required this.onNextMonth,
-    required this.onMonthSelected,
-    required this.onYearSelected,
+    required this.view,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onMonthPickerRequested,
+    required this.onYearPickerRequested,
     super.key,
   });
 
@@ -28,88 +31,99 @@ class DateTimeCalendarHeader extends StatelessWidget {
   ];
 
   final DateTime visibleMonth;
-  final VoidCallback onPreviousMonth;
-  final VoidCallback onNextMonth;
-  final ValueChanged<int> onMonthSelected;
-  final ValueChanged<int> onYearSelected;
+  final DateTimeCalendarView view;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onMonthPickerRequested;
+  final VoidCallback onYearPickerRequested;
+
+  String get _previousTooltip => switch (view) {
+    DateTimeCalendarView.days => "Previous month",
+    DateTimeCalendarView.months => "Previous year",
+    DateTimeCalendarView.years => "Previous group of years",
+  };
+
+  String get _nextTooltip => switch (view) {
+    DateTimeCalendarView.days => "Next month",
+    DateTimeCalendarView.months => "Next year",
+    DateTimeCalendarView.years => "Next group of years",
+  };
 
   @override
-  Widget build(BuildContext context) {
-    final startYear = (visibleMonth.year - 100).clamp(1, 9999);
-    final endYear = (visibleMonth.year + 100).clamp(1, 9999);
-    final decoration = InputDecorationTheme(
-      filled: true,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      constraints: const BoxConstraints.tightFor(height: 36),
-      border: OutlineInputBorder(
-        borderRadius: context.shapes.smallBorderRadius,
-        borderSide: BorderSide.none,
-      ),
-    );
-
-    return Semantics(
-      container: true,
-      label: "Calendar month and year",
-      child: Row(
-        children: [
-          _MonthStepButton(
-            tooltip: "Previous month",
-            icon: MaterialSymbols.chevron_left_rounded,
-            onPressed: onPreviousMonth,
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            flex: 3,
-            child: Dropdown<int>(
-              key: const ValueKey("date_time_month_picker"),
-              selected: visibleMonth.month,
-              dropdownMenuEntries: [
-                for (var index = 0; index < months.length; index++)
-                  DropdownMenuEntry(value: index + 1, label: months[index]),
-              ],
-              inputDecorationTheme: decoration,
-              menuStyle: const MenuStyle(
-                maximumSize: WidgetStatePropertyAll(Size.fromHeight(320)),
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    label: "Calendar month and year",
+    child: Row(
+      children: [
+        _StepButton(
+          tooltip: _previousTooltip,
+          icon: MaterialSymbols.chevron_left_rounded,
+          onPressed: onPrevious,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: _PickerButton(
+                  key: const ValueKey("date_time_month_picker"),
+                  label: months[visibleMonth.month - 1],
+                  selected: view == DateTimeCalendarView.months,
+                  onPressed: onMonthPickerRequested,
+                ),
               ),
-              onSelected: (month) {
-                if (month != null) onMonthSelected(month);
-              },
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            flex: 2,
-            child: Dropdown<int>(
-              key: const ValueKey("date_time_year_picker"),
-              selected: visibleMonth.year,
-              dropdownMenuEntries: [
-                for (var year = startYear; year <= endYear; year++)
-                  DropdownMenuEntry(value: year, label: "$year"),
-              ],
-              inputDecorationTheme: decoration,
-              menuStyle: const MenuStyle(
-                maximumSize: WidgetStatePropertyAll(Size.fromHeight(320)),
+              const SizedBox(width: 4),
+              _PickerButton(
+                key: const ValueKey("date_time_year_picker"),
+                label: "${visibleMonth.year}",
+                selected: view == DateTimeCalendarView.years,
+                onPressed: onYearPickerRequested,
               ),
-              onSelected: (year) {
-                if (year != null) onYearSelected(year);
-              },
-            ),
+            ],
           ),
-          const SizedBox(width: 4),
-          _MonthStepButton(
-            tooltip: "Next month",
-            icon: MaterialSymbols.chevron_right_rounded,
-            onPressed: onNextMonth,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 4),
+        _StepButton(
+          tooltip: _nextTooltip,
+          icon: MaterialSymbols.chevron_right_rounded,
+          onPressed: onNext,
+        ),
+      ],
+    ),
+  );
 }
 
-class _MonthStepButton extends StatelessWidget {
-  const _MonthStepButton({
+class _PickerButton extends StatelessWidget {
+  const _PickerButton({
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+    super.key,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => TextButton.icon(
+    style: TextButton.styleFrom(
+      minimumSize: const Size(0, 36),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      backgroundColor: selected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : null,
+    ),
+    onPressed: onPressed,
+    iconAlignment: IconAlignment.end,
+    icon: const Icones(MaterialSymbols.arrow_drop_down_rounded, size: 16),
+    label: Text(label, overflow: TextOverflow.ellipsis),
+  );
+}
+
+class _StepButton extends StatelessWidget {
+  const _StepButton({
     required this.tooltip,
     required this.icon,
     required this.onPressed,

@@ -49,6 +49,17 @@ class DateTimeFields extends HookWidget {
           const SizedBox(height: 10),
           Row(
             children: [
+              const Expanded(child: _TimeFieldLabel("Hour")),
+              const SizedBox(width: 28),
+              const Expanded(child: _TimeFieldLabel("Minute")),
+              const SizedBox(width: 28),
+              const Expanded(child: _TimeFieldLabel("Second")),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Expanded(
                 child: _TimeNumberField(
                   label: "Hour",
@@ -62,13 +73,7 @@ class DateTimeFields extends HookWidget {
                       onChanged(replaceTimePart(value, hour: hour)),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Text(
-                  ":",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
+              const _TimeSeparator(key: ValueKey("date_time_separator_1")),
               Expanded(
                 child: _TimeNumberField(
                   label: "Minute",
@@ -82,13 +87,7 @@ class DateTimeFields extends HookWidget {
                       onChanged(replaceTimePart(value, minute: minute)),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Text(
-                  ":",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
+              const _TimeSeparator(key: ValueKey("date_time_separator_2")),
               Expanded(
                 child: _TimeNumberField(
                   label: "Second",
@@ -107,6 +106,53 @@ class DateTimeFields extends HookWidget {
       ),
     );
   }
+}
+
+class _TimeFieldLabel extends StatelessWidget {
+  const _TimeFieldLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(left: 2),
+    child: Text(label, style: Theme.of(context).textTheme.labelSmall),
+  );
+}
+
+class _TimeSeparator extends StatelessWidget {
+  const _TimeSeparator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = DefaultTextStyle.of(context).style.color;
+    return SizedBox(
+      width: 28,
+      height: 52,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _TimeSeparatorDot(color: color),
+            const SizedBox(height: 4),
+            _TimeSeparatorDot(color: color),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TimeSeparatorDot extends StatelessWidget {
+  const _TimeSeparatorDot({required this.color});
+
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    child: const SizedBox.square(dimension: 3),
+  );
 }
 
 class _TimeNumberField extends HookWidget {
@@ -179,6 +225,7 @@ class _TimeNumberField extends HookWidget {
           inputFieldController: inputFieldController,
           name: label.toLowerCase(),
           readOnly: !enabled,
+          selectAllOnFocus: true,
           deserialize: (value) => value.toString().padLeft(2, "0"),
           serialize: (draft) {
             final parsed = int.tryParse(draft);
@@ -193,11 +240,10 @@ class _TimeNumberField extends HookWidget {
           ],
           textAlign: TextAlign.center,
           onChanged: updateDraft,
-          decoration: InputDecoration(
-            labelText: label,
+          decoration: const InputDecoration(
             hintText: "00",
-            prefixIcon: const SizedBox.shrink(),
-            prefixIconConstraints: const BoxConstraints(),
+            prefixIcon: SizedBox.shrink(),
+            prefixIconConstraints: BoxConstraints(),
           ),
         ),
       ),
