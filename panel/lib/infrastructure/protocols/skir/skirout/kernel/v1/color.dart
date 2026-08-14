@@ -30,26 +30,16 @@ final class Color implements Color_orMutable {
   final _core.int argb;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory Color({
-    required _core.int argb,
-  }) => Color._(
-    argb,
-  );
+  factory Color({required _core.int argb}) => Color._(argb);
 
-  Color._(
-    this.argb,
-  );
+  Color._(this.argb);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = Color._(
-    0,
-  );
+  static final defaultInstance = Color._(0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static Color_mutable mutable() => Color_mutable._(
-    0,
-  );
+  static Color_mutable mutable() => Color_mutable._(0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -57,23 +47,22 @@ final class Color implements Color_orMutable {
   Color toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  Color_mutable toMutable() => Color_mutable._(
-    this.argb,
-  );
+  Color_mutable toMutable() => Color_mutable._(this.argb);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Color) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.argb,
-  ];
+  _core.List get _equality_proxy => [this.argb];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -111,13 +100,9 @@ final class Color_mutable implements Color_orMutable {
   _core.int argb;
   _skir.internal__UnrecognizedFields? _u;
 
-  Color_mutable._(
-    this.argb,
-  );
+  Color_mutable._(this.argb);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  Color toFrozen() => Color(
-    argb: this.argb,
-  ).._u = this._u;
+  Color toFrozen() => Color(argb: this.argb).._u = this._u;
 }

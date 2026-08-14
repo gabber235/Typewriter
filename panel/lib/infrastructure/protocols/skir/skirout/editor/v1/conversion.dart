@@ -51,27 +51,22 @@ sealed class ConversionSafety {
         "",
         lossless,
       );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "lossy",
-        "lossy",
-        "",
-        lossy,
-      );
+      _serializerBuilder.addConstantVariant(2, "lossy", "lossy", "", lossy);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/conversion.skir:ConversionSafety",
-    doc: "",
-    unknownInstance: ConversionSafety_unknown._instance,
-    enumInstance: ConversionSafety.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConversionSafety_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/conversion.skir:ConversionSafety",
+        doc: "",
+        unknownInstance: ConversionSafety_unknown._instance,
+        enumInstance: ConversionSafety.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConversionSafety_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConversionSafety`.
@@ -100,7 +95,8 @@ final class ConversionSafety_unknown implements ConversionSafety {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionSafety.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionSafety.serializer);
 }
 
 enum _ConversionSafety_consts implements ConversionSafety {
@@ -113,7 +109,8 @@ enum _ConversionSafety_consts implements ConversionSafety {
   const _ConversionSafety_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionSafety.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionSafety.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -133,7 +130,8 @@ enum _ConversionSafety_consts implements ConversionSafety {
 sealed class ConversionFallibility {
   /// Constant indicating an unknown `ConversionFallibility`.
   /// Default value for fields of type `ConversionFallibility`.
-  static const ConversionFallibility unknown = ConversionFallibility_unknown._instance;
+  static const ConversionFallibility unknown =
+      ConversionFallibility_unknown._instance;
 
   static const infallible = _ConversionFallibility_consts.infallibleConst;
   static const fallible = _ConversionFallibility_consts.fallibleConst;
@@ -163,15 +161,16 @@ sealed class ConversionFallibility {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/conversion.skir:ConversionFallibility",
-    doc: "",
-    unknownInstance: ConversionFallibility_unknown._instance,
-    enumInstance: ConversionFallibility.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConversionFallibility_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/conversion.skir:ConversionFallibility",
+        doc: "",
+        unknownInstance: ConversionFallibility_unknown._instance,
+        enumInstance: ConversionFallibility.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConversionFallibility_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConversionFallibility`.
@@ -200,7 +199,8 @@ final class ConversionFallibility_unknown implements ConversionFallibility {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionFallibility.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionFallibility.serializer);
 }
 
 enum _ConversionFallibility_consts implements ConversionFallibility {
@@ -213,7 +213,8 @@ enum _ConversionFallibility_consts implements ConversionFallibility {
   const _ConversionFallibility_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionFallibility.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionFallibility.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -233,7 +234,8 @@ enum _ConversionFallibility_consts implements ConversionFallibility {
 sealed class ConversionLocality {
   /// Constant indicating an unknown `ConversionLocality`.
   /// Default value for fields of type `ConversionLocality`.
-  static const ConversionLocality unknown = ConversionLocality_unknown._instance;
+  static const ConversionLocality unknown =
+      ConversionLocality_unknown._instance;
 
   static const local = _ConversionLocality_consts.localConst;
   static const realm = _ConversionLocality_consts.realmConst;
@@ -244,34 +246,23 @@ sealed class ConversionLocality {
   /// Serializer for `ConversionLocality` instances.
   static _skir.EnumSerializer<ConversionLocality> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "local",
-        "local",
-        "",
-        local,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "realm",
-        "realm",
-        "",
-        realm,
-      );
+      _serializerBuilder.addConstantVariant(1, "local", "local", "", local);
+      _serializerBuilder.addConstantVariant(2, "realm", "realm", "", realm);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/conversion.skir:ConversionLocality",
-    doc: "",
-    unknownInstance: ConversionLocality_unknown._instance,
-    enumInstance: ConversionLocality.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConversionLocality_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/conversion.skir:ConversionLocality",
+        doc: "",
+        unknownInstance: ConversionLocality_unknown._instance,
+        enumInstance: ConversionLocality.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConversionLocality_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConversionLocality`.
@@ -300,7 +291,8 @@ final class ConversionLocality_unknown implements ConversionLocality {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionLocality.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionLocality.serializer);
 }
 
 enum _ConversionLocality_consts implements ConversionLocality {
@@ -313,7 +305,8 @@ enum _ConversionLocality_consts implements ConversionLocality {
   const _ConversionLocality_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionLocality.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionLocality.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -353,8 +346,10 @@ sealed class ScalarCastKind {
   static const floatToInteger = _ScalarCastKind_consts.floatToIntegerConst;
   static const numericToDecimal = _ScalarCastKind_consts.numericToDecimalConst;
   static const decimalToNumeric = _ScalarCastKind_consts.decimalToNumericConst;
-  static const timestampToString = _ScalarCastKind_consts.timestampToStringConst;
-  static const stringToTimestamp = _ScalarCastKind_consts.stringToTimestampConst;
+  static const timestampToString =
+      _ScalarCastKind_consts.timestampToStringConst;
+  static const stringToTimestamp =
+      _ScalarCastKind_consts.stringToTimestampConst;
   static const durationToString = _ScalarCastKind_consts.durationToStringConst;
   static const stringToDuration = _ScalarCastKind_consts.stringToDurationConst;
 
@@ -453,15 +448,16 @@ sealed class ScalarCastKind {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/conversion.skir:ScalarCastKind",
-    doc: "",
-    unknownInstance: ScalarCastKind_unknown._instance,
-    enumInstance: ScalarCastKind.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ScalarCastKind_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/conversion.skir:ScalarCastKind",
+        doc: "",
+        unknownInstance: ScalarCastKind_unknown._instance,
+        enumInstance: ScalarCastKind.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ScalarCastKind_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ScalarCastKind`.
@@ -500,7 +496,8 @@ final class ScalarCastKind_unknown implements ScalarCastKind {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ScalarCastKind.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ScalarCastKind.serializer);
 }
 
 enum _ScalarCastKind_consts implements ScalarCastKind {
@@ -523,7 +520,8 @@ enum _ScalarCastKind_consts implements ScalarCastKind {
   const _ScalarCastKind_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ScalarCastKind.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ScalarCastKind.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -558,11 +556,7 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
     (conversionId != null) ? conversionId.toFrozen() : null,
   );
 
-  RecordProjectionField._(
-    this.source,
-    this.target,
-    this.conversionId,
-  );
+  RecordProjectionField._(this.source, this.target, this.conversionId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordProjectionField._(
@@ -573,11 +567,12 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordProjectionField_mutable mutable() => RecordProjectionField_mutable._(
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    null,
-  );
+  static RecordProjectionField_mutable mutable() =>
+      RecordProjectionField_mutable._(
+        _lib_editor_v1_path.DataPath.defaultInstance,
+        _lib_editor_v1_path.DataPath.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -595,7 +590,10 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordProjectionField) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -611,7 +609,11 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RecordProjectionField` instances.
-  static _skir.StructSerializer<RecordProjectionField, RecordProjectionField_mutable> get serializer {
+  static _skir.StructSerializer<
+    RecordProjectionField,
+    RecordProjectionField_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -659,17 +661,14 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
 }
 
 /// Mutable version of [RecordProjectionField].
-final class RecordProjectionField_mutable implements RecordProjectionField_orMutable {
+final class RecordProjectionField_mutable
+    implements RecordProjectionField_orMutable {
   _lib_editor_v1_path.DataPath_orMutable source;
   _lib_editor_v1_path.DataPath_orMutable target;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId;
   _skir.internal__UnrecognizedFields? _u;
 
-  RecordProjectionField_mutable._(
-    this.source,
-    this.target,
-    this.conversionId,
-  );
+  RecordProjectionField_mutable._(this.source, this.target, this.conversionId);
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
@@ -724,9 +723,7 @@ final class RecordProjectionRule implements RecordProjectionRule_orMutable {
     _skir.internal__frozenMappedCopy(fields, (it) => it.toFrozen()),
   );
 
-  RecordProjectionRule._(
-    this.fields,
-  );
+  RecordProjectionRule._(this.fields);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordProjectionRule._(
@@ -735,9 +732,8 @@ final class RecordProjectionRule implements RecordProjectionRule_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordProjectionRule_mutable mutable() => RecordProjectionRule_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static RecordProjectionRule_mutable mutable() =>
+      RecordProjectionRule_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -745,37 +741,39 @@ final class RecordProjectionRule implements RecordProjectionRule_orMutable {
   RecordProjectionRule toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RecordProjectionRule_mutable toMutable() => RecordProjectionRule_mutable._(
-    this.fields,
-  );
+  RecordProjectionRule_mutable toMutable() =>
+      RecordProjectionRule_mutable._(this.fields);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordProjectionRule) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.fields,
-  ];
+  _core.List get _equality_proxy => [this.fields];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RecordProjectionRule` instances.
-  static _skir.StructSerializer<RecordProjectionRule, RecordProjectionRule_mutable> get serializer {
+  static _skir.StructSerializer<
+    RecordProjectionRule,
+    RecordProjectionRule_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "fields",
         "fields",
         0,
-        _skir.Serializers.iterable(
-          RecordProjectionField.serializer,
-        ),
+        _skir.Serializers.iterable(RecordProjectionField.serializer),
         "",
         (it) => it.fields,
         (it, v) => it.fields = v,
@@ -797,13 +795,12 @@ final class RecordProjectionRule implements RecordProjectionRule_orMutable {
 }
 
 /// Mutable version of [RecordProjectionRule].
-final class RecordProjectionRule_mutable implements RecordProjectionRule_orMutable {
+final class RecordProjectionRule_mutable
+    implements RecordProjectionRule_orMutable {
   _core.Iterable<RecordProjectionField_orMutable> fields;
   _skir.internal__UnrecognizedFields? _u;
 
-  RecordProjectionRule_mutable._(
-    this.fields,
-  );
+  RecordProjectionRule_mutable._(this.fields);
 
   /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
@@ -818,9 +815,8 @@ final class RecordProjectionRule_mutable implements RecordProjectionRule_orMutab
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RecordProjectionRule toFrozen() => RecordProjectionRule(
-    fields: this.fields,
-  ).._u = this._u;
+  RecordProjectionRule toFrozen() =>
+      RecordProjectionRule(fields: this.fields).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -836,7 +832,8 @@ sealed class RecordConstructionField_orMutable {
 }
 
 /// Deeply immutable.
-final class RecordConstructionField implements RecordConstructionField_orMutable {
+final class RecordConstructionField
+    implements RecordConstructionField_orMutable {
   @_core.override
   final _core.String targetField;
   @_core.override
@@ -855,11 +852,7 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
     (conversionId != null) ? conversionId.toFrozen() : null,
   );
 
-  RecordConstructionField._(
-    this.targetField,
-    this.source,
-    this.conversionId,
-  );
+  RecordConstructionField._(this.targetField, this.source, this.conversionId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordConstructionField._(
@@ -870,11 +863,12 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordConstructionField_mutable mutable() => RecordConstructionField_mutable._(
-    "",
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    null,
-  );
+  static RecordConstructionField_mutable mutable() =>
+      RecordConstructionField_mutable._(
+        "",
+        _lib_editor_v1_path.DataPath.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -882,17 +876,21 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
   RecordConstructionField toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RecordConstructionField_mutable toMutable() => RecordConstructionField_mutable._(
-    this.targetField,
-    this.source,
-    this.conversionId,
-  );
+  RecordConstructionField_mutable toMutable() =>
+      RecordConstructionField_mutable._(
+        this.targetField,
+        this.source,
+        this.conversionId,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordConstructionField) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -908,7 +906,11 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RecordConstructionField` instances.
-  static _skir.StructSerializer<RecordConstructionField, RecordConstructionField_mutable> get serializer {
+  static _skir.StructSerializer<
+    RecordConstructionField,
+    RecordConstructionField_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target_field",
@@ -956,7 +958,8 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
 }
 
 /// Mutable version of [RecordConstructionField].
-final class RecordConstructionField_mutable implements RecordConstructionField_orMutable {
+final class RecordConstructionField_mutable
+    implements RecordConstructionField_orMutable {
   _core.String targetField;
   _lib_editor_v1_path.DataPath_orMutable source;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId;
@@ -1007,12 +1010,15 @@ final class RecordConstructionRule implements RecordConstructionRule_orMutable {
   factory RecordConstructionRule({
     required _core.Iterable<RecordConstructionField_orMutable> fields,
   }) => RecordConstructionRule._(
-    _skir.internal__keyedMappedCopy(fields, "targetField", (it) => it.targetField, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      fields,
+      "targetField",
+      (it) => it.targetField,
+      (it) => it.toFrozen(),
+    ),
   );
 
-  RecordConstructionRule._(
-    this.fields,
-  );
+  RecordConstructionRule._(this.fields);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordConstructionRule._(
@@ -1021,9 +1027,8 @@ final class RecordConstructionRule implements RecordConstructionRule_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordConstructionRule_mutable mutable() => RecordConstructionRule_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static RecordConstructionRule_mutable mutable() =>
+      RecordConstructionRule_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1031,29 +1036,33 @@ final class RecordConstructionRule implements RecordConstructionRule_orMutable {
   RecordConstructionRule toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RecordConstructionRule_mutable toMutable() => RecordConstructionRule_mutable._(
-    this.fields,
-  );
+  RecordConstructionRule_mutable toMutable() =>
+      RecordConstructionRule_mutable._(this.fields);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordConstructionRule) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.fields,
-  ];
+  _core.List get _equality_proxy => [this.fields];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RecordConstructionRule` instances.
-  static _skir.StructSerializer<RecordConstructionRule, RecordConstructionRule_mutable> get serializer {
+  static _skir.StructSerializer<
+    RecordConstructionRule,
+    RecordConstructionRule_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "fields",
@@ -1085,19 +1094,19 @@ final class RecordConstructionRule implements RecordConstructionRule_orMutable {
 }
 
 /// Mutable version of [RecordConstructionRule].
-final class RecordConstructionRule_mutable implements RecordConstructionRule_orMutable {
+final class RecordConstructionRule_mutable
+    implements RecordConstructionRule_orMutable {
   _core.Iterable<RecordConstructionField_orMutable> fields;
   _skir.internal__UnrecognizedFields? _u;
 
-  RecordConstructionRule_mutable._(
-    this.fields,
-  );
+  RecordConstructionRule_mutable._(this.fields);
 
   /// If the value of [fields] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<RecordConstructionField_orMutable> get mutableFields {
     final value = this.fields;
-    if (value is _skir.internal__MutableList<RecordConstructionField_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<RecordConstructionField_orMutable>) {
       return value;
     } else {
       return this.fields = _skir.internal__MutableList([...value]);
@@ -1106,9 +1115,8 @@ final class RecordConstructionRule_mutable implements RecordConstructionRule_orM
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RecordConstructionRule toFrozen() => RecordConstructionRule(
-    fields: this.fields,
-  ).._u = this._u;
+  RecordConstructionRule toFrozen() =>
+      RecordConstructionRule(fields: this.fields).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1128,14 +1136,11 @@ final class CollectionMappingRule implements CollectionMappingRule_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory CollectionMappingRule({
-    required _lib_editor_v1_type_catalog.ConversionId_orMutable elementConversionId,
-  }) => CollectionMappingRule._(
-    elementConversionId.toFrozen(),
-  );
+    required _lib_editor_v1_type_catalog.ConversionId_orMutable
+    elementConversionId,
+  }) => CollectionMappingRule._(elementConversionId.toFrozen());
 
-  CollectionMappingRule._(
-    this.elementConversionId,
-  );
+  CollectionMappingRule._(this.elementConversionId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CollectionMappingRule._(
@@ -1144,9 +1149,10 @@ final class CollectionMappingRule implements CollectionMappingRule_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionMappingRule_mutable mutable() => CollectionMappingRule_mutable._(
-    _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
-  );
+  static CollectionMappingRule_mutable mutable() =>
+      CollectionMappingRule_mutable._(
+        _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1154,29 +1160,33 @@ final class CollectionMappingRule implements CollectionMappingRule_orMutable {
   CollectionMappingRule toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionMappingRule_mutable toMutable() => CollectionMappingRule_mutable._(
-    this.elementConversionId,
-  );
+  CollectionMappingRule_mutable toMutable() =>
+      CollectionMappingRule_mutable._(this.elementConversionId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionMappingRule) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.elementConversionId,
-  ];
+  _core.List get _equality_proxy => [this.elementConversionId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionMappingRule` instances.
-  static _skir.StructSerializer<CollectionMappingRule, CollectionMappingRule_mutable> get serializer {
+  static _skir.StructSerializer<
+    CollectionMappingRule,
+    CollectionMappingRule_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "element_conversion_id",
@@ -1204,30 +1214,31 @@ final class CollectionMappingRule implements CollectionMappingRule_orMutable {
 }
 
 /// Mutable version of [CollectionMappingRule].
-final class CollectionMappingRule_mutable implements CollectionMappingRule_orMutable {
+final class CollectionMappingRule_mutable
+    implements CollectionMappingRule_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable elementConversionId;
   _skir.internal__UnrecognizedFields? _u;
 
-  CollectionMappingRule_mutable._(
-    this.elementConversionId,
-  );
+  CollectionMappingRule_mutable._(this.elementConversionId);
 
   /// If the value of [elementConversionId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [elementConversionId] and returns it.
-  _lib_editor_v1_type_catalog.ConversionId_mutable get mutableElementConversionId {
+  _lib_editor_v1_type_catalog.ConversionId_mutable
+  get mutableElementConversionId {
     final value = this.elementConversionId;
     if (value is _lib_editor_v1_type_catalog.ConversionId_mutable) {
       return value;
     } else {
-      return this.elementConversionId = (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
+      return this.elementConversionId =
+          (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CollectionMappingRule toFrozen() => CollectionMappingRule(
-    elementConversionId: this.elementConversionId,
-  ).._u = this._u;
+  CollectionMappingRule toFrozen() =>
+      CollectionMappingRule(elementConversionId: this.elementConversionId)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1241,20 +1252,20 @@ sealed class ConversionCompositionRule_orMutable {
 }
 
 /// Deeply immutable.
-final class ConversionCompositionRule implements ConversionCompositionRule_orMutable {
+final class ConversionCompositionRule
+    implements ConversionCompositionRule_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ConversionId> steps;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConversionCompositionRule({
-    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> steps,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+    steps,
   }) => ConversionCompositionRule._(
     _skir.internal__frozenMappedCopy(steps, (it) => it.toFrozen()),
   );
 
-  ConversionCompositionRule._(
-    this.steps,
-  );
+  ConversionCompositionRule._(this.steps);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConversionCompositionRule._(
@@ -1263,9 +1274,8 @@ final class ConversionCompositionRule implements ConversionCompositionRule_orMut
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConversionCompositionRule_mutable mutable() => ConversionCompositionRule_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static ConversionCompositionRule_mutable mutable() =>
+      ConversionCompositionRule_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1273,29 +1283,33 @@ final class ConversionCompositionRule implements ConversionCompositionRule_orMut
   ConversionCompositionRule toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConversionCompositionRule_mutable toMutable() => ConversionCompositionRule_mutable._(
-    this.steps,
-  );
+  ConversionCompositionRule_mutable toMutable() =>
+      ConversionCompositionRule_mutable._(this.steps);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConversionCompositionRule) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.steps,
-  ];
+  _core.List get _equality_proxy => [this.steps];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConversionCompositionRule` instances.
-  static _skir.StructSerializer<ConversionCompositionRule, ConversionCompositionRule_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConversionCompositionRule,
+    ConversionCompositionRule_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "steps",
@@ -1325,19 +1339,22 @@ final class ConversionCompositionRule implements ConversionCompositionRule_orMut
 }
 
 /// Mutable version of [ConversionCompositionRule].
-final class ConversionCompositionRule_mutable implements ConversionCompositionRule_orMutable {
+final class ConversionCompositionRule_mutable
+    implements ConversionCompositionRule_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> steps;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConversionCompositionRule_mutable._(
-    this.steps,
-  );
+  ConversionCompositionRule_mutable._(this.steps);
 
   /// If the value of [steps] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [steps] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable> get mutableSteps {
+  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+  get mutableSteps {
     final value = this.steps;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ConversionId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ConversionId_orMutable
+        >) {
       return value;
     } else {
       return this.steps = _skir.internal__MutableList([...value]);
@@ -1346,9 +1363,8 @@ final class ConversionCompositionRule_mutable implements ConversionCompositionRu
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConversionCompositionRule toFrozen() => ConversionCompositionRule(
-    steps: this.steps,
-  ).._u = this._u;
+  ConversionCompositionRule toFrozen() =>
+      ConversionCompositionRule(steps: this.steps).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1372,7 +1388,8 @@ final class RealmConversionRule implements RealmConversionRule_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RealmConversionRule_mutable mutable() => RealmConversionRule_mutable._();
+  static RealmConversionRule_mutable mutable() =>
+      RealmConversionRule_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1386,7 +1403,10 @@ final class RealmConversionRule implements RealmConversionRule_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmConversionRule) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1398,7 +1418,11 @@ final class RealmConversionRule implements RealmConversionRule_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmConversionRule` instances.
-  static _skir.StructSerializer<RealmConversionRule, RealmConversionRule_mutable> get serializer {
+  static _skir.StructSerializer<
+    RealmConversionRule,
+    RealmConversionRule_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1417,7 +1441,8 @@ final class RealmConversionRule implements RealmConversionRule_orMutable {
 }
 
 /// Mutable version of [RealmConversionRule].
-final class RealmConversionRule_mutable implements RealmConversionRule_orMutable {
+final class RealmConversionRule_mutable
+    implements RealmConversionRule_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   RealmConversionRule_mutable._();
@@ -1454,79 +1479,65 @@ sealed class ConversionRule {
   static const ConversionRule unknown = ConversionRule_unknown._instance;
 
   static const identity = _ConversionRule_consts.identityConst;
-  static const inheritanceUpcast = _ConversionRule_consts.inheritanceUpcastConst;
-  static const validatedDowncast = _ConversionRule_consts.validatedDowncastConst;
+  static const inheritanceUpcast =
+      _ConversionRule_consts.inheritanceUpcastConst;
+  static const validatedDowncast =
+      _ConversionRule_consts.validatedDowncastConst;
 
   /// Create a 'scalar_cast' variant wrapping around the given value.
-  factory ConversionRule.wrapScalarCast(
-    ScalarCastKind value
-  ) => ConversionRule_scalarCastWrapper._(value);
+  factory ConversionRule.wrapScalarCast(ScalarCastKind value) =>
+      ConversionRule_scalarCastWrapper._(value);
 
   /// Create a 'record_projection' variant wrapping around the given value.
-  factory ConversionRule.wrapRecordProjection(
-    RecordProjectionRule value
-  ) => ConversionRule_recordProjectionWrapper._(value);
+  factory ConversionRule.wrapRecordProjection(RecordProjectionRule value) =>
+      ConversionRule_recordProjectionWrapper._(value);
 
   /// Same as `wrapRecordProjection(RecordProjectionRule(...))`.
   factory ConversionRule.createRecordProjection({
     required _core.Iterable<RecordProjectionField_orMutable> fields,
-  }) => ConversionRule.wrapRecordProjection(
-    RecordProjectionRule(
-      fields: fields,
-    )
-  );
+  }) =>
+      ConversionRule.wrapRecordProjection(RecordProjectionRule(fields: fields));
 
   /// Create a 'record_construction' variant wrapping around the given value.
-  factory ConversionRule.wrapRecordConstruction(
-    RecordConstructionRule value
-  ) => ConversionRule_recordConstructionWrapper._(value);
+  factory ConversionRule.wrapRecordConstruction(RecordConstructionRule value) =>
+      ConversionRule_recordConstructionWrapper._(value);
 
   /// Same as `wrapRecordConstruction(RecordConstructionRule(...))`.
   factory ConversionRule.createRecordConstruction({
     required _core.Iterable<RecordConstructionField_orMutable> fields,
   }) => ConversionRule.wrapRecordConstruction(
-    RecordConstructionRule(
-      fields: fields,
-    )
+    RecordConstructionRule(fields: fields),
   );
 
   /// Create a 'collection_mapping' variant wrapping around the given value.
-  factory ConversionRule.wrapCollectionMapping(
-    CollectionMappingRule value
-  ) => ConversionRule_collectionMappingWrapper._(value);
+  factory ConversionRule.wrapCollectionMapping(CollectionMappingRule value) =>
+      ConversionRule_collectionMappingWrapper._(value);
 
   /// Same as `wrapCollectionMapping(CollectionMappingRule(...))`.
   factory ConversionRule.createCollectionMapping({
-    required _lib_editor_v1_type_catalog.ConversionId_orMutable elementConversionId,
+    required _lib_editor_v1_type_catalog.ConversionId_orMutable
+    elementConversionId,
   }) => ConversionRule.wrapCollectionMapping(
-    CollectionMappingRule(
-      elementConversionId: elementConversionId,
-    )
+    CollectionMappingRule(elementConversionId: elementConversionId),
   );
 
   /// Create a 'composition' variant wrapping around the given value.
-  factory ConversionRule.wrapComposition(
-    ConversionCompositionRule value
-  ) => ConversionRule_compositionWrapper._(value);
+  factory ConversionRule.wrapComposition(ConversionCompositionRule value) =>
+      ConversionRule_compositionWrapper._(value);
 
   /// Same as `wrapComposition(ConversionCompositionRule(...))`.
   factory ConversionRule.createComposition({
-    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> steps,
-  }) => ConversionRule.wrapComposition(
-    ConversionCompositionRule(
-      steps: steps,
-    )
-  );
+    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable>
+    steps,
+  }) => ConversionRule.wrapComposition(ConversionCompositionRule(steps: steps));
 
   /// Create a 'realm' variant wrapping around the given value.
-  factory ConversionRule.wrapRealm(
-    RealmConversionRule value
-  ) => ConversionRule_realmWrapper._(value);
+  factory ConversionRule.wrapRealm(RealmConversionRule value) =>
+      ConversionRule_realmWrapper._(value);
 
   /// Same as `wrapRealm(RealmConversionRule(...))`.
-  factory ConversionRule.createRealm() => ConversionRule.wrapRealm(
-    RealmConversionRule()
-  );
+  factory ConversionRule.createRealm() =>
+      ConversionRule.wrapRealm(RealmConversionRule());
 
   /// Returns the kind of variant held by this ConversionRule.
   ConversionRule_kind get kind;
@@ -1620,15 +1631,16 @@ sealed class ConversionRule {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/conversion.skir:ConversionRule",
-    doc: "",
-    unknownInstance: ConversionRule_unknown._instance,
-    enumInstance: ConversionRule.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConversionRule_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/conversion.skir:ConversionRule",
+        doc: "",
+        unknownInstance: ConversionRule_unknown._instance,
+        enumInstance: ConversionRule.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConversionRule_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConversionRule`.
@@ -1664,7 +1676,8 @@ final class ConversionRule_unknown implements ConversionRule {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionRule.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionRule.serializer);
 }
 
 enum _ConversionRule_consts implements ConversionRule {
@@ -1678,7 +1691,8 @@ enum _ConversionRule_consts implements ConversionRule {
   const _ConversionRule_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionRule.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionRule.serializer);
 }
 
 sealed class _ConversionRule_wrapper implements ConversionRule {
@@ -1694,7 +1708,8 @@ sealed class _ConversionRule_wrapper implements ConversionRule {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConversionRule.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConversionRule.serializer);
 }
 
 final class ConversionRule_scalarCastWrapper extends _ConversionRule_wrapper {
@@ -1706,7 +1721,8 @@ final class ConversionRule_scalarCastWrapper extends _ConversionRule_wrapper {
   ConversionRule_kind get kind => ConversionRule_kind.scalarCastWrapper;
 }
 
-final class ConversionRule_recordProjectionWrapper extends _ConversionRule_wrapper {
+final class ConversionRule_recordProjectionWrapper
+    extends _ConversionRule_wrapper {
   final RecordProjectionRule value;
 
   ConversionRule_recordProjectionWrapper._(this.value);
@@ -1715,7 +1731,8 @@ final class ConversionRule_recordProjectionWrapper extends _ConversionRule_wrapp
   ConversionRule_kind get kind => ConversionRule_kind.recordProjectionWrapper;
 }
 
-final class ConversionRule_recordConstructionWrapper extends _ConversionRule_wrapper {
+final class ConversionRule_recordConstructionWrapper
+    extends _ConversionRule_wrapper {
   final RecordConstructionRule value;
 
   ConversionRule_recordConstructionWrapper._(this.value);
@@ -1724,7 +1741,8 @@ final class ConversionRule_recordConstructionWrapper extends _ConversionRule_wra
   ConversionRule_kind get kind => ConversionRule_kind.recordConstructionWrapper;
 }
 
-final class ConversionRule_collectionMappingWrapper extends _ConversionRule_wrapper {
+final class ConversionRule_collectionMappingWrapper
+    extends _ConversionRule_wrapper {
   final CollectionMappingRule value;
 
   ConversionRule_collectionMappingWrapper._(this.value);
@@ -1833,16 +1851,17 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConversionDefinition_mutable mutable() => ConversionDefinition_mutable._(
-    _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    ConversionSafety.unknown,
-    ConversionFallibility.unknown,
-    ConversionLocality.unknown,
-    0,
-    ConversionRule.unknown,
-  );
+  static ConversionDefinition_mutable mutable() =>
+      ConversionDefinition_mutable._(
+        _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+        _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+        ConversionSafety.unknown,
+        ConversionFallibility.unknown,
+        ConversionLocality.unknown,
+        0,
+        ConversionRule.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1865,7 +1884,10 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConversionDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1886,7 +1908,11 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConversionDefinition` instances.
-  static _skir.StructSerializer<ConversionDefinition, ConversionDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConversionDefinition,
+    ConversionDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "conversion_id",
@@ -1977,7 +2003,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
 }
 
 /// Mutable version of [ConversionDefinition].
-final class ConversionDefinition_mutable implements ConversionDefinition_orMutable {
+final class ConversionDefinition_mutable
+    implements ConversionDefinition_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable source;
   _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target;
@@ -2006,7 +2033,8 @@ final class ConversionDefinition_mutable implements ConversionDefinition_orMutab
     if (value is _lib_editor_v1_type_catalog.ConversionId_mutable) {
       return value;
     } else {
-      return this.conversionId = (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
+      return this.conversionId =
+          (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
     }
   }
 
@@ -2017,7 +2045,8 @@ final class ConversionDefinition_mutable implements ConversionDefinition_orMutab
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.source =
+          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
@@ -2028,7 +2057,8 @@ final class ConversionDefinition_mutable implements ConversionDefinition_orMutab
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.target =
+          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 

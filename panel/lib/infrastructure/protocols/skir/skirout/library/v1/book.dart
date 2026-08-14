@@ -59,13 +59,7 @@ final class Book implements Book_orMutable {
     _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()),
   );
 
-  Book._(
-    this.bookId,
-    this.title,
-    this.icon,
-    this.color,
-    this.tagIds,
-  );
+  Book._(this.bookId, this.title, this.icon, this.color, this.tagIds);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = Book._(
@@ -104,7 +98,10 @@ final class Book implements Book_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Book) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -196,13 +193,7 @@ final class Book_mutable implements Book_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  Book_mutable._(
-    this.bookId,
-    this.title,
-    this.icon,
-    this.color,
-    this.tagIds,
-  );
+  Book_mutable._(this.bookId, this.title, this.icon, this.color, this.tagIds);
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -211,7 +202,8 @@ final class Book_mutable implements Book_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -230,7 +222,10 @@ final class Book_mutable implements Book_orMutable {
   /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
     final value = this.tagIds;
-    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_kernel_v1_record_id.RecordId_orMutable
+        >) {
       return value;
     } else {
       return this.tagIds = _skir.internal__MutableList([...value]);
@@ -265,7 +260,8 @@ final class Book_mutable implements Book_orMutable {
 sealed class BookValidationError {
   /// Constant indicating an unknown `BookValidationError`.
   /// Default value for fields of type `BookValidationError`.
-  static const BookValidationError unknown = BookValidationError_unknown._instance;
+  static const BookValidationError unknown =
+      BookValidationError_unknown._instance;
 
   static const titleRequired = _BookValidationError_consts.titleRequiredConst;
   static const iconRequired = _BookValidationError_consts.iconRequiredConst;
@@ -295,15 +291,16 @@ sealed class BookValidationError {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/book.skir:BookValidationError",
-    doc: "",
-    unknownInstance: BookValidationError_unknown._instance,
-    enumInstance: BookValidationError.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: BookValidationError_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "library/v1/book.skir:BookValidationError",
+        doc: "",
+        unknownInstance: BookValidationError_unknown._instance,
+        enumInstance: BookValidationError.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: BookValidationError_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `BookValidationError`.
@@ -332,7 +329,8 @@ final class BookValidationError_unknown implements BookValidationError {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BookValidationError.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BookValidationError.serializer);
 }
 
 enum _BookValidationError_consts implements BookValidationError {
@@ -345,7 +343,8 @@ enum _BookValidationError_consts implements BookValidationError {
   const _BookValidationError_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BookValidationError.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BookValidationError.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -383,7 +382,10 @@ final class WatchBooksRequest implements WatchBooksRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBooksRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -395,7 +397,8 @@ final class WatchBooksRequest implements WatchBooksRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBooksRequest` instances.
-  static _skir.StructSerializer<WatchBooksRequest, WatchBooksRequest_mutable> get serializer {
+  static _skir.StructSerializer<WatchBooksRequest, WatchBooksRequest_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -444,27 +447,27 @@ final class WatchBooksRequest_mutable implements WatchBooksRequest_orMutable {
 sealed class WatchBooksResponse {
   /// Constant indicating an unknown `WatchBooksResponse`.
   /// Default value for fields of type `WatchBooksResponse`.
-  static const WatchBooksResponse unknown = WatchBooksResponse_unknown._instance;
+  static const WatchBooksResponse unknown =
+      WatchBooksResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchBooksResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchBooksResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchBooksResponse.createInternalError() => WatchBooksResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchBooksResponse.createInternalError() =>
+      WatchBooksResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'list' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapList(
-    _core.Iterable<Book> value
-  ) => WatchBooksResponse_listWrapper._(value);
+  factory WatchBooksResponse.wrapList(_core.Iterable<Book> value) =>
+      WatchBooksResponse_listWrapper._(value);
 
   /// Create a 'add' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapAdd(
-    Book value
-  ) => WatchBooksResponse_addWrapper._(value);
+  factory WatchBooksResponse.wrapAdd(Book value) =>
+      WatchBooksResponse_addWrapper._(value);
 
   /// Same as `wrapAdd(Book(...))`.
   factory WatchBooksResponse.createAdd({
@@ -480,13 +483,12 @@ sealed class WatchBooksResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapUpdate(
-    Book value
-  ) => WatchBooksResponse_updateWrapper._(value);
+  factory WatchBooksResponse.wrapUpdate(Book value) =>
+      WatchBooksResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBooksResponse.createUpdate({
@@ -502,12 +504,12 @@ sealed class WatchBooksResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchBooksResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value
+    _lib_kernel_v1_record_id.RecordId value,
   ) => WatchBooksResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -515,10 +517,7 @@ sealed class WatchBooksResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchBooksResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(
-      table: table,
-      key: key,
-    )
+    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
   );
 
   /// Returns the kind of variant held by this WatchBooksResponse.
@@ -541,9 +540,7 @@ sealed class WatchBooksResponse {
         2,
         "list",
         "wrapList",
-        _skir.Serializers.iterable(
-          Book.serializer,
-        ),
+        _skir.Serializers.iterable(Book.serializer),
         "",
         WatchBooksResponse_listWrapper._,
         (it) => it.value,
@@ -584,15 +581,16 @@ sealed class WatchBooksResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/book.skir:WatchBooksResponse",
-    doc: "",
-    unknownInstance: WatchBooksResponse_unknown._instance,
-    enumInstance: WatchBooksResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchBooksResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "library/v1/book.skir:WatchBooksResponse",
+        doc: "",
+        unknownInstance: WatchBooksResponse_unknown._instance,
+        enumInstance: WatchBooksResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchBooksResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchBooksResponse`.
@@ -624,7 +622,8 @@ final class WatchBooksResponse_unknown implements WatchBooksResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchBooksResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchBooksResponse.serializer);
 }
 
 sealed class _WatchBooksResponse_wrapper implements WatchBooksResponse {
@@ -640,16 +639,19 @@ sealed class _WatchBooksResponse_wrapper implements WatchBooksResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchBooksResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchBooksResponse.serializer);
 }
 
-final class WatchBooksResponse_internalErrorWrapper extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_internalErrorWrapper
+    extends _WatchBooksResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchBooksResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchBooksResponse_kind get kind => WatchBooksResponse_kind.internalErrorWrapper;
+  WatchBooksResponse_kind get kind =>
+      WatchBooksResponse_kind.internalErrorWrapper;
 }
 
 final class WatchBooksResponse_listWrapper extends _WatchBooksResponse_wrapper {
@@ -670,7 +672,8 @@ final class WatchBooksResponse_addWrapper extends _WatchBooksResponse_wrapper {
   WatchBooksResponse_kind get kind => WatchBooksResponse_kind.addWrapper;
 }
 
-final class WatchBooksResponse_updateWrapper extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_updateWrapper
+    extends _WatchBooksResponse_wrapper {
   final Book value;
 
   WatchBooksResponse_updateWrapper._(this.value);
@@ -679,7 +682,8 @@ final class WatchBooksResponse_updateWrapper extends _WatchBooksResponse_wrapper
   WatchBooksResponse_kind get kind => WatchBooksResponse_kind.updateWrapper;
 }
 
-final class WatchBooksResponse_removeWrapper extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_removeWrapper
+    extends _WatchBooksResponse_wrapper {
   final _lib_kernel_v1_record_id.RecordId value;
 
   WatchBooksResponse_removeWrapper._(this.value);
@@ -706,13 +710,9 @@ final class WatchBookRequest implements WatchBookRequest_orMutable {
 
   factory WatchBookRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => WatchBookRequest._(
-    bookId.toFrozen(),
-  );
+  }) => WatchBookRequest._(bookId.toFrozen());
 
-  WatchBookRequest._(
-    this.bookId,
-  );
+  WatchBookRequest._(this.bookId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchBookRequest._(
@@ -731,29 +731,30 @@ final class WatchBookRequest implements WatchBookRequest_orMutable {
   WatchBookRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchBookRequest_mutable toMutable() => WatchBookRequest_mutable._(
-    this.bookId,
-  );
+  WatchBookRequest_mutable toMutable() =>
+      WatchBookRequest_mutable._(this.bookId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBookRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.bookId,
-  ];
+  _core.List get _equality_proxy => [this.bookId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBookRequest` instances.
-  static _skir.StructSerializer<WatchBookRequest, WatchBookRequest_mutable> get serializer {
+  static _skir.StructSerializer<WatchBookRequest, WatchBookRequest_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -785,9 +786,7 @@ final class WatchBookRequest_mutable implements WatchBookRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchBookRequest_mutable._(
-    this.bookId,
-  );
+  WatchBookRequest_mutable._(this.bookId);
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -796,15 +795,15 @@ final class WatchBookRequest_mutable implements WatchBookRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchBookRequest toFrozen() => WatchBookRequest(
-    bookId: this.bookId,
-  ).._u = this._u;
+  WatchBookRequest toFrozen() =>
+      WatchBookRequest(bookId: this.bookId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -818,20 +817,17 @@ sealed class WatchBookResponse_BookNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchBookResponse_BookNotFoundError implements WatchBookResponse_BookNotFoundError_orMutable {
+final class WatchBookResponse_BookNotFoundError
+    implements WatchBookResponse_BookNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchBookResponse_BookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => WatchBookResponse_BookNotFoundError._(
-    bookId.toFrozen(),
-  );
+  }) => WatchBookResponse_BookNotFoundError._(bookId.toFrozen());
 
-  WatchBookResponse_BookNotFoundError._(
-    this.bookId,
-  );
+  WatchBookResponse_BookNotFoundError._(this.bookId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchBookResponse_BookNotFoundError._(
@@ -840,9 +836,10 @@ final class WatchBookResponse_BookNotFoundError implements WatchBookResponse_Boo
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchBookResponse_BookNotFoundError_mutable mutable() => WatchBookResponse_BookNotFoundError_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static WatchBookResponse_BookNotFoundError_mutable mutable() =>
+      WatchBookResponse_BookNotFoundError_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -850,29 +847,33 @@ final class WatchBookResponse_BookNotFoundError implements WatchBookResponse_Boo
   WatchBookResponse_BookNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchBookResponse_BookNotFoundError_mutable toMutable() => WatchBookResponse_BookNotFoundError_mutable._(
-    this.bookId,
-  );
+  WatchBookResponse_BookNotFoundError_mutable toMutable() =>
+      WatchBookResponse_BookNotFoundError_mutable._(this.bookId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBookResponse_BookNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.bookId,
-  ];
+  _core.List get _equality_proxy => [this.bookId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBookResponse_BookNotFoundError` instances.
-  static _skir.StructSerializer<WatchBookResponse_BookNotFoundError, WatchBookResponse_BookNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchBookResponse_BookNotFoundError,
+    WatchBookResponse_BookNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -900,13 +901,12 @@ final class WatchBookResponse_BookNotFoundError implements WatchBookResponse_Boo
 }
 
 /// Mutable version of [WatchBookResponse_BookNotFoundError].
-final class WatchBookResponse_BookNotFoundError_mutable implements WatchBookResponse_BookNotFoundError_orMutable {
+final class WatchBookResponse_BookNotFoundError_mutable
+    implements WatchBookResponse_BookNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchBookResponse_BookNotFoundError_mutable._(
-    this.bookId,
-  );
+  WatchBookResponse_BookNotFoundError_mutable._(this.bookId);
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -915,15 +915,15 @@ final class WatchBookResponse_BookNotFoundError_mutable implements WatchBookResp
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchBookResponse_BookNotFoundError toFrozen() => WatchBookResponse_BookNotFoundError(
-    bookId: this.bookId,
-  ).._u = this._u;
+  WatchBookResponse_BookNotFoundError toFrozen() =>
+      WatchBookResponse_BookNotFoundError(bookId: this.bookId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -951,18 +951,18 @@ sealed class WatchBookResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchBookResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchBookResponse.createInternalError() => WatchBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchBookResponse.createInternalError() =>
+      WatchBookResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'initial' variant wrapping around the given value.
-  factory WatchBookResponse.wrapInitial(
-    Book value
-  ) => WatchBookResponse_initialWrapper._(value);
+  factory WatchBookResponse.wrapInitial(Book value) =>
+      WatchBookResponse_initialWrapper._(value);
 
   /// Same as `wrapInitial(Book(...))`.
   factory WatchBookResponse.createInitial({
@@ -978,13 +978,12 @@ sealed class WatchBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchBookResponse.wrapUpdate(
-    Book value
-  ) => WatchBookResponse_updateWrapper._(value);
+  factory WatchBookResponse.wrapUpdate(Book value) =>
+      WatchBookResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBookResponse.createUpdate({
@@ -1000,12 +999,12 @@ sealed class WatchBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchBookResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value
+    _lib_kernel_v1_record_id.RecordId value,
   ) => WatchBookResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -1013,29 +1012,24 @@ sealed class WatchBookResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchBookResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(
-      table: table,
-      key: key,
-    )
+    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
   );
 
   /// Create a 'book_not_found_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapBookNotFoundError(
-    WatchBookResponse_BookNotFoundError value
+    WatchBookResponse_BookNotFoundError value,
   ) => WatchBookResponse_bookNotFoundErrorWrapper._(value);
 
   /// Same as `wrapBookNotFoundError(WatchBookResponse_BookNotFoundError(...))`.
   factory WatchBookResponse.createBookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
   }) => WatchBookResponse.wrapBookNotFoundError(
-    WatchBookResponse_BookNotFoundError(
-      bookId: bookId,
-    )
+    WatchBookResponse_BookNotFoundError(bookId: bookId),
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => WatchBookResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1046,7 +1040,7 @@ sealed class WatchBookResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this WatchBookResponse.
@@ -1120,15 +1114,16 @@ sealed class WatchBookResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/book.skir:WatchBookResponse",
-    doc: "",
-    unknownInstance: WatchBookResponse_unknown._instance,
-    enumInstance: WatchBookResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchBookResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "library/v1/book.skir:WatchBookResponse",
+        doc: "",
+        unknownInstance: WatchBookResponse_unknown._instance,
+        enumInstance: WatchBookResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchBookResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchBookResponse`.
@@ -1161,7 +1156,8 @@ final class WatchBookResponse_unknown implements WatchBookResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchBookResponse.serializer);
 }
 
 sealed class _WatchBookResponse_wrapper implements WatchBookResponse {
@@ -1177,19 +1173,23 @@ sealed class _WatchBookResponse_wrapper implements WatchBookResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchBookResponse.serializer);
 }
 
-final class WatchBookResponse_internalErrorWrapper extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_internalErrorWrapper
+    extends _WatchBookResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchBookResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind => WatchBookResponse_kind.internalErrorWrapper;
+  WatchBookResponse_kind get kind =>
+      WatchBookResponse_kind.internalErrorWrapper;
 }
 
-final class WatchBookResponse_initialWrapper extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_initialWrapper
+    extends _WatchBookResponse_wrapper {
   final Book value;
 
   WatchBookResponse_initialWrapper._(this.value);
@@ -1216,22 +1216,26 @@ final class WatchBookResponse_removeWrapper extends _WatchBookResponse_wrapper {
   WatchBookResponse_kind get kind => WatchBookResponse_kind.removeWrapper;
 }
 
-final class WatchBookResponse_bookNotFoundErrorWrapper extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_bookNotFoundErrorWrapper
+    extends _WatchBookResponse_wrapper {
   final WatchBookResponse_BookNotFoundError value;
 
   WatchBookResponse_bookNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind => WatchBookResponse_kind.bookNotFoundErrorWrapper;
+  WatchBookResponse_kind get kind =>
+      WatchBookResponse_kind.bookNotFoundErrorWrapper;
 }
 
-final class WatchBookResponse_invalidRecordIdErrorWrapper extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_invalidRecordIdErrorWrapper
+    extends _WatchBookResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   WatchBookResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind => WatchBookResponse_kind.invalidRecordIdErrorWrapper;
+  WatchBookResponse_kind get kind =>
+      WatchBookResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1271,12 +1275,7 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
     _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()),
   );
 
-  CreateBookRequest._(
-    this.title,
-    this.icon,
-    this.color,
-    this.tagIds,
-  );
+  CreateBookRequest._(this.title, this.icon, this.color, this.tagIds);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateBookRequest._(
@@ -1288,12 +1287,8 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CreateBookRequest_mutable mutable() => CreateBookRequest_mutable._(
-    "",
-    null,
-    null,
-    _skir.KeyedIterable.empty,
-  );
+  static CreateBookRequest_mutable mutable() =>
+      CreateBookRequest_mutable._("", null, null, _skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1312,7 +1307,10 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CreateBookRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1329,7 +1327,8 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CreateBookRequest` instances.
-  static _skir.StructSerializer<CreateBookRequest, CreateBookRequest_mutable> get serializer {
+  static _skir.StructSerializer<CreateBookRequest, CreateBookRequest_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "title",
@@ -1344,9 +1343,7 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
         "icon",
         "icon",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1355,9 +1352,7 @@ final class CreateBookRequest implements CreateBookRequest_orMutable {
         "color",
         "color",
         2,
-        _skir.Serializers.optional(
-          _lib_kernel_v1_color.Color.serializer,
-        ),
+        _skir.Serializers.optional(_lib_kernel_v1_color.Color.serializer),
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -1397,18 +1392,16 @@ final class CreateBookRequest_mutable implements CreateBookRequest_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  CreateBookRequest_mutable._(
-    this.title,
-    this.icon,
-    this.color,
-    this.tagIds,
-  );
+  CreateBookRequest_mutable._(this.title, this.icon, this.color, this.tagIds);
 
   /// If the value of [tagIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
     final value = this.tagIds;
-    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_kernel_v1_record_id.RecordId_orMutable
+        >) {
       return value;
     } else {
       return this.tagIds = _skir.internal__MutableList([...value]);
@@ -1436,7 +1429,8 @@ sealed class CreateBookResponse_TagsNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class CreateBookResponse_TagsNotFoundError implements CreateBookResponse_TagsNotFoundError_orMutable {
+final class CreateBookResponse_TagsNotFoundError
+    implements CreateBookResponse_TagsNotFoundError_orMutable {
   @_core.override
   final _core.Iterable<_lib_kernel_v1_record_id.RecordId> tagIds;
   _skir.internal__UnrecognizedFields? _u;
@@ -1447,9 +1441,7 @@ final class CreateBookResponse_TagsNotFoundError implements CreateBookResponse_T
     _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()),
   );
 
-  CreateBookResponse_TagsNotFoundError._(
-    this.tagIds,
-  );
+  CreateBookResponse_TagsNotFoundError._(this.tagIds);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateBookResponse_TagsNotFoundError._(
@@ -1458,9 +1450,8 @@ final class CreateBookResponse_TagsNotFoundError implements CreateBookResponse_T
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CreateBookResponse_TagsNotFoundError_mutable mutable() => CreateBookResponse_TagsNotFoundError_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static CreateBookResponse_TagsNotFoundError_mutable mutable() =>
+      CreateBookResponse_TagsNotFoundError_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1468,29 +1459,33 @@ final class CreateBookResponse_TagsNotFoundError implements CreateBookResponse_T
   CreateBookResponse_TagsNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CreateBookResponse_TagsNotFoundError_mutable toMutable() => CreateBookResponse_TagsNotFoundError_mutable._(
-    this.tagIds,
-  );
+  CreateBookResponse_TagsNotFoundError_mutable toMutable() =>
+      CreateBookResponse_TagsNotFoundError_mutable._(this.tagIds);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CreateBookResponse_TagsNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.tagIds,
-  ];
+  _core.List get _equality_proxy => [this.tagIds];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CreateBookResponse_TagsNotFoundError` instances.
-  static _skir.StructSerializer<CreateBookResponse_TagsNotFoundError, CreateBookResponse_TagsNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    CreateBookResponse_TagsNotFoundError,
+    CreateBookResponse_TagsNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_ids",
@@ -1513,26 +1508,29 @@ final class CreateBookResponse_TagsNotFoundError implements CreateBookResponse_T
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CreateBookResponse_TagsNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (CreateBookResponse_TagsNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CreateBookResponse_TagsNotFoundError].
-final class CreateBookResponse_TagsNotFoundError_mutable implements CreateBookResponse_TagsNotFoundError_orMutable {
+final class CreateBookResponse_TagsNotFoundError_mutable
+    implements CreateBookResponse_TagsNotFoundError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  CreateBookResponse_TagsNotFoundError_mutable._(
-    this.tagIds,
-  );
+  CreateBookResponse_TagsNotFoundError_mutable._(this.tagIds);
 
   /// If the value of [tagIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
     final value = this.tagIds;
-    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_kernel_v1_record_id.RecordId_orMutable
+        >) {
       return value;
     } else {
       return this.tagIds = _skir.internal__MutableList([...value]);
@@ -1541,9 +1539,8 @@ final class CreateBookResponse_TagsNotFoundError_mutable implements CreateBookRe
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CreateBookResponse_TagsNotFoundError toFrozen() => CreateBookResponse_TagsNotFoundError(
-    tagIds: this.tagIds,
-  ).._u = this._u;
+  CreateBookResponse_TagsNotFoundError toFrozen() =>
+      CreateBookResponse_TagsNotFoundError(tagIds: this.tagIds).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1566,22 +1563,23 @@ final class CreateBookResponse_TagsNotFoundError_mutable implements CreateBookRe
 sealed class CreateBookResponse {
   /// Constant indicating an unknown `CreateBookResponse`.
   /// Default value for fields of type `CreateBookResponse`.
-  static const CreateBookResponse unknown = CreateBookResponse_unknown._instance;
+  static const CreateBookResponse unknown =
+      CreateBookResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory CreateBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => CreateBookResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory CreateBookResponse.createInternalError() => CreateBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory CreateBookResponse.createInternalError() =>
+      CreateBookResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory CreateBookResponse.wrapSuccess(
-    Book value
-  ) => CreateBookResponse_successWrapper._(value);
+  factory CreateBookResponse.wrapSuccess(Book value) =>
+      CreateBookResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(Book(...))`.
   factory CreateBookResponse.createSuccess({
@@ -1597,31 +1595,28 @@ sealed class CreateBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'validation_error' variant wrapping around the given value.
-  factory CreateBookResponse.wrapValidationError(
-    BookValidationError value
-  ) => CreateBookResponse_validationErrorWrapper._(value);
+  factory CreateBookResponse.wrapValidationError(BookValidationError value) =>
+      CreateBookResponse_validationErrorWrapper._(value);
 
   /// Create a 'tags_not_found_error' variant wrapping around the given value.
   factory CreateBookResponse.wrapTagsNotFoundError(
-    CreateBookResponse_TagsNotFoundError value
+    CreateBookResponse_TagsNotFoundError value,
   ) => CreateBookResponse_tagsNotFoundErrorWrapper._(value);
 
   /// Same as `wrapTagsNotFoundError(CreateBookResponse_TagsNotFoundError(...))`.
   factory CreateBookResponse.createTagsNotFoundError({
     required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds,
   }) => CreateBookResponse.wrapTagsNotFoundError(
-    CreateBookResponse_TagsNotFoundError(
-      tagIds: tagIds,
-    )
+    CreateBookResponse_TagsNotFoundError(tagIds: tagIds),
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory CreateBookResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => CreateBookResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1632,7 +1627,7 @@ sealed class CreateBookResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this CreateBookResponse.
@@ -1696,15 +1691,16 @@ sealed class CreateBookResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/book.skir:CreateBookResponse",
-    doc: "",
-    unknownInstance: CreateBookResponse_unknown._instance,
-    enumInstance: CreateBookResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CreateBookResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "library/v1/book.skir:CreateBookResponse",
+        doc: "",
+        unknownInstance: CreateBookResponse_unknown._instance,
+        enumInstance: CreateBookResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CreateBookResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CreateBookResponse`.
@@ -1736,7 +1732,8 @@ final class CreateBookResponse_unknown implements CreateBookResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CreateBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CreateBookResponse.serializer);
 }
 
 sealed class _CreateBookResponse_wrapper implements CreateBookResponse {
@@ -1752,19 +1749,23 @@ sealed class _CreateBookResponse_wrapper implements CreateBookResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CreateBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CreateBookResponse.serializer);
 }
 
-final class CreateBookResponse_internalErrorWrapper extends _CreateBookResponse_wrapper {
+final class CreateBookResponse_internalErrorWrapper
+    extends _CreateBookResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   CreateBookResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  CreateBookResponse_kind get kind => CreateBookResponse_kind.internalErrorWrapper;
+  CreateBookResponse_kind get kind =>
+      CreateBookResponse_kind.internalErrorWrapper;
 }
 
-final class CreateBookResponse_successWrapper extends _CreateBookResponse_wrapper {
+final class CreateBookResponse_successWrapper
+    extends _CreateBookResponse_wrapper {
   final Book value;
 
   CreateBookResponse_successWrapper._(this.value);
@@ -1773,31 +1774,37 @@ final class CreateBookResponse_successWrapper extends _CreateBookResponse_wrappe
   CreateBookResponse_kind get kind => CreateBookResponse_kind.successWrapper;
 }
 
-final class CreateBookResponse_validationErrorWrapper extends _CreateBookResponse_wrapper {
+final class CreateBookResponse_validationErrorWrapper
+    extends _CreateBookResponse_wrapper {
   final BookValidationError value;
 
   CreateBookResponse_validationErrorWrapper._(this.value);
 
   @_core.override
-  CreateBookResponse_kind get kind => CreateBookResponse_kind.validationErrorWrapper;
+  CreateBookResponse_kind get kind =>
+      CreateBookResponse_kind.validationErrorWrapper;
 }
 
-final class CreateBookResponse_tagsNotFoundErrorWrapper extends _CreateBookResponse_wrapper {
+final class CreateBookResponse_tagsNotFoundErrorWrapper
+    extends _CreateBookResponse_wrapper {
   final CreateBookResponse_TagsNotFoundError value;
 
   CreateBookResponse_tagsNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  CreateBookResponse_kind get kind => CreateBookResponse_kind.tagsNotFoundErrorWrapper;
+  CreateBookResponse_kind get kind =>
+      CreateBookResponse_kind.tagsNotFoundErrorWrapper;
 }
 
-final class CreateBookResponse_invalidRecordIdErrorWrapper extends _CreateBookResponse_wrapper {
+final class CreateBookResponse_invalidRecordIdErrorWrapper
+    extends _CreateBookResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   CreateBookResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  CreateBookResponse_kind get kind => CreateBookResponse_kind.invalidRecordIdErrorWrapper;
+  CreateBookResponse_kind get kind =>
+      CreateBookResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1833,13 +1840,16 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
     required _core.String? title,
     required _core.String? icon,
     required _lib_kernel_v1_color.Color_orMutable? color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>? tagIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>?
+    tagIds,
   }) => UpdateBookRequest._(
     bookId.toFrozen(),
     title,
     icon,
     (color != null) ? color.toFrozen() : null,
-    (tagIds != null) ? _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()) : null,
+    (tagIds != null)
+        ? _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen())
+        : null,
   );
 
   UpdateBookRequest._(
@@ -1887,7 +1897,10 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateBookRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1905,7 +1918,8 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateBookRequest` instances.
-  static _skir.StructSerializer<UpdateBookRequest, UpdateBookRequest_mutable> get serializer {
+  static _skir.StructSerializer<UpdateBookRequest, UpdateBookRequest_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -1920,9 +1934,7 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
         "title",
         "title",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.title,
         (it, v) => it.title = v,
@@ -1931,9 +1943,7 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
         "icon",
         "icon",
         2,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1942,9 +1952,7 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
         "color",
         "color",
         3,
-        _skir.Serializers.optional(
-          _lib_kernel_v1_color.Color.serializer,
-        ),
+        _skir.Serializers.optional(_lib_kernel_v1_color.Color.serializer),
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -2002,7 +2010,8 @@ final class UpdateBookRequest_mutable implements UpdateBookRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -2028,20 +2037,17 @@ sealed class UpdateBookResponse_BookNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateBookResponse_BookNotFoundError implements UpdateBookResponse_BookNotFoundError_orMutable {
+final class UpdateBookResponse_BookNotFoundError
+    implements UpdateBookResponse_BookNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory UpdateBookResponse_BookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => UpdateBookResponse_BookNotFoundError._(
-    bookId.toFrozen(),
-  );
+  }) => UpdateBookResponse_BookNotFoundError._(bookId.toFrozen());
 
-  UpdateBookResponse_BookNotFoundError._(
-    this.bookId,
-  );
+  UpdateBookResponse_BookNotFoundError._(this.bookId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateBookResponse_BookNotFoundError._(
@@ -2050,9 +2056,10 @@ final class UpdateBookResponse_BookNotFoundError implements UpdateBookResponse_B
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateBookResponse_BookNotFoundError_mutable mutable() => UpdateBookResponse_BookNotFoundError_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static UpdateBookResponse_BookNotFoundError_mutable mutable() =>
+      UpdateBookResponse_BookNotFoundError_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2060,29 +2067,33 @@ final class UpdateBookResponse_BookNotFoundError implements UpdateBookResponse_B
   UpdateBookResponse_BookNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateBookResponse_BookNotFoundError_mutable toMutable() => UpdateBookResponse_BookNotFoundError_mutable._(
-    this.bookId,
-  );
+  UpdateBookResponse_BookNotFoundError_mutable toMutable() =>
+      UpdateBookResponse_BookNotFoundError_mutable._(this.bookId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateBookResponse_BookNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.bookId,
-  ];
+  _core.List get _equality_proxy => [this.bookId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateBookResponse_BookNotFoundError` instances.
-  static _skir.StructSerializer<UpdateBookResponse_BookNotFoundError, UpdateBookResponse_BookNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    UpdateBookResponse_BookNotFoundError,
+    UpdateBookResponse_BookNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -2103,20 +2114,20 @@ final class UpdateBookResponse_BookNotFoundError implements UpdateBookResponse_B
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UpdateBookResponse_BookNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (UpdateBookResponse_BookNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateBookResponse_BookNotFoundError].
-final class UpdateBookResponse_BookNotFoundError_mutable implements UpdateBookResponse_BookNotFoundError_orMutable {
+final class UpdateBookResponse_BookNotFoundError_mutable
+    implements UpdateBookResponse_BookNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateBookResponse_BookNotFoundError_mutable._(
-    this.bookId,
-  );
+  UpdateBookResponse_BookNotFoundError_mutable._(this.bookId);
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -2125,15 +2136,15 @@ final class UpdateBookResponse_BookNotFoundError_mutable implements UpdateBookRe
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateBookResponse_BookNotFoundError toFrozen() => UpdateBookResponse_BookNotFoundError(
-    bookId: this.bookId,
-  ).._u = this._u;
+  UpdateBookResponse_BookNotFoundError toFrozen() =>
+      UpdateBookResponse_BookNotFoundError(bookId: this.bookId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2147,7 +2158,8 @@ sealed class UpdateBookResponse_TagsNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateBookResponse_TagsNotFoundError implements UpdateBookResponse_TagsNotFoundError_orMutable {
+final class UpdateBookResponse_TagsNotFoundError
+    implements UpdateBookResponse_TagsNotFoundError_orMutable {
   @_core.override
   final _core.Iterable<_lib_kernel_v1_record_id.RecordId> tagIds;
   _skir.internal__UnrecognizedFields? _u;
@@ -2158,9 +2170,7 @@ final class UpdateBookResponse_TagsNotFoundError implements UpdateBookResponse_T
     _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()),
   );
 
-  UpdateBookResponse_TagsNotFoundError._(
-    this.tagIds,
-  );
+  UpdateBookResponse_TagsNotFoundError._(this.tagIds);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateBookResponse_TagsNotFoundError._(
@@ -2169,9 +2179,8 @@ final class UpdateBookResponse_TagsNotFoundError implements UpdateBookResponse_T
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateBookResponse_TagsNotFoundError_mutable mutable() => UpdateBookResponse_TagsNotFoundError_mutable._(
-    _skir.KeyedIterable.empty,
-  );
+  static UpdateBookResponse_TagsNotFoundError_mutable mutable() =>
+      UpdateBookResponse_TagsNotFoundError_mutable._(_skir.KeyedIterable.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2179,29 +2188,33 @@ final class UpdateBookResponse_TagsNotFoundError implements UpdateBookResponse_T
   UpdateBookResponse_TagsNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateBookResponse_TagsNotFoundError_mutable toMutable() => UpdateBookResponse_TagsNotFoundError_mutable._(
-    this.tagIds,
-  );
+  UpdateBookResponse_TagsNotFoundError_mutable toMutable() =>
+      UpdateBookResponse_TagsNotFoundError_mutable._(this.tagIds);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateBookResponse_TagsNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.tagIds,
-  ];
+  _core.List get _equality_proxy => [this.tagIds];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateBookResponse_TagsNotFoundError` instances.
-  static _skir.StructSerializer<UpdateBookResponse_TagsNotFoundError, UpdateBookResponse_TagsNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    UpdateBookResponse_TagsNotFoundError,
+    UpdateBookResponse_TagsNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_ids",
@@ -2224,26 +2237,29 @@ final class UpdateBookResponse_TagsNotFoundError implements UpdateBookResponse_T
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UpdateBookResponse_TagsNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (UpdateBookResponse_TagsNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateBookResponse_TagsNotFoundError].
-final class UpdateBookResponse_TagsNotFoundError_mutable implements UpdateBookResponse_TagsNotFoundError_orMutable {
+final class UpdateBookResponse_TagsNotFoundError_mutable
+    implements UpdateBookResponse_TagsNotFoundError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateBookResponse_TagsNotFoundError_mutable._(
-    this.tagIds,
-  );
+  UpdateBookResponse_TagsNotFoundError_mutable._(this.tagIds);
 
   /// If the value of [tagIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
     final value = this.tagIds;
-    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_kernel_v1_record_id.RecordId_orMutable
+        >) {
       return value;
     } else {
       return this.tagIds = _skir.internal__MutableList([...value]);
@@ -2252,9 +2268,8 @@ final class UpdateBookResponse_TagsNotFoundError_mutable implements UpdateBookRe
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateBookResponse_TagsNotFoundError toFrozen() => UpdateBookResponse_TagsNotFoundError(
-    tagIds: this.tagIds,
-  ).._u = this._u;
+  UpdateBookResponse_TagsNotFoundError toFrozen() =>
+      UpdateBookResponse_TagsNotFoundError(tagIds: this.tagIds).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2278,22 +2293,23 @@ final class UpdateBookResponse_TagsNotFoundError_mutable implements UpdateBookRe
 sealed class UpdateBookResponse {
   /// Constant indicating an unknown `UpdateBookResponse`.
   /// Default value for fields of type `UpdateBookResponse`.
-  static const UpdateBookResponse unknown = UpdateBookResponse_unknown._instance;
+  static const UpdateBookResponse unknown =
+      UpdateBookResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory UpdateBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => UpdateBookResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory UpdateBookResponse.createInternalError() => UpdateBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory UpdateBookResponse.createInternalError() =>
+      UpdateBookResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory UpdateBookResponse.wrapSuccess(
-    Book value
-  ) => UpdateBookResponse_successWrapper._(value);
+  factory UpdateBookResponse.wrapSuccess(Book value) =>
+      UpdateBookResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(Book(...))`.
   factory UpdateBookResponse.createSuccess({
@@ -2309,45 +2325,40 @@ sealed class UpdateBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    )
+    ),
   );
 
   /// Create a 'book_not_found_error' variant wrapping around the given value.
   factory UpdateBookResponse.wrapBookNotFoundError(
-    UpdateBookResponse_BookNotFoundError value
+    UpdateBookResponse_BookNotFoundError value,
   ) => UpdateBookResponse_bookNotFoundErrorWrapper._(value);
 
   /// Same as `wrapBookNotFoundError(UpdateBookResponse_BookNotFoundError(...))`.
   factory UpdateBookResponse.createBookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
   }) => UpdateBookResponse.wrapBookNotFoundError(
-    UpdateBookResponse_BookNotFoundError(
-      bookId: bookId,
-    )
+    UpdateBookResponse_BookNotFoundError(bookId: bookId),
   );
 
   /// Create a 'tags_not_found_error' variant wrapping around the given value.
   factory UpdateBookResponse.wrapTagsNotFoundError(
-    UpdateBookResponse_TagsNotFoundError value
+    UpdateBookResponse_TagsNotFoundError value,
   ) => UpdateBookResponse_tagsNotFoundErrorWrapper._(value);
 
   /// Same as `wrapTagsNotFoundError(UpdateBookResponse_TagsNotFoundError(...))`.
   factory UpdateBookResponse.createTagsNotFoundError({
     required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds,
   }) => UpdateBookResponse.wrapTagsNotFoundError(
-    UpdateBookResponse_TagsNotFoundError(
-      tagIds: tagIds,
-    )
+    UpdateBookResponse_TagsNotFoundError(tagIds: tagIds),
   );
 
   /// Create a 'validation_error' variant wrapping around the given value.
-  factory UpdateBookResponse.wrapValidationError(
-    BookValidationError value
-  ) => UpdateBookResponse_validationErrorWrapper._(value);
+  factory UpdateBookResponse.wrapValidationError(BookValidationError value) =>
+      UpdateBookResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory UpdateBookResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => UpdateBookResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -2358,7 +2369,7 @@ sealed class UpdateBookResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this UpdateBookResponse.
@@ -2432,15 +2443,16 @@ sealed class UpdateBookResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "library/v1/book.skir:UpdateBookResponse",
-    doc: "",
-    unknownInstance: UpdateBookResponse_unknown._instance,
-    enumInstance: UpdateBookResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: UpdateBookResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "library/v1/book.skir:UpdateBookResponse",
+        doc: "",
+        unknownInstance: UpdateBookResponse_unknown._instance,
+        enumInstance: UpdateBookResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: UpdateBookResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `UpdateBookResponse`.
@@ -2473,7 +2485,8 @@ final class UpdateBookResponse_unknown implements UpdateBookResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, UpdateBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, UpdateBookResponse.serializer);
 }
 
 sealed class _UpdateBookResponse_wrapper implements UpdateBookResponse {
@@ -2489,19 +2502,23 @@ sealed class _UpdateBookResponse_wrapper implements UpdateBookResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, UpdateBookResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, UpdateBookResponse.serializer);
 }
 
-final class UpdateBookResponse_internalErrorWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_internalErrorWrapper
+    extends _UpdateBookResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   UpdateBookResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.internalErrorWrapper;
+  UpdateBookResponse_kind get kind =>
+      UpdateBookResponse_kind.internalErrorWrapper;
 }
 
-final class UpdateBookResponse_successWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_successWrapper
+    extends _UpdateBookResponse_wrapper {
   final Book value;
 
   UpdateBookResponse_successWrapper._(this.value);
@@ -2510,86 +2527,82 @@ final class UpdateBookResponse_successWrapper extends _UpdateBookResponse_wrappe
   UpdateBookResponse_kind get kind => UpdateBookResponse_kind.successWrapper;
 }
 
-final class UpdateBookResponse_bookNotFoundErrorWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_bookNotFoundErrorWrapper
+    extends _UpdateBookResponse_wrapper {
   final UpdateBookResponse_BookNotFoundError value;
 
   UpdateBookResponse_bookNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.bookNotFoundErrorWrapper;
+  UpdateBookResponse_kind get kind =>
+      UpdateBookResponse_kind.bookNotFoundErrorWrapper;
 }
 
-final class UpdateBookResponse_tagsNotFoundErrorWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_tagsNotFoundErrorWrapper
+    extends _UpdateBookResponse_wrapper {
   final UpdateBookResponse_TagsNotFoundError value;
 
   UpdateBookResponse_tagsNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.tagsNotFoundErrorWrapper;
+  UpdateBookResponse_kind get kind =>
+      UpdateBookResponse_kind.tagsNotFoundErrorWrapper;
 }
 
-final class UpdateBookResponse_validationErrorWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_validationErrorWrapper
+    extends _UpdateBookResponse_wrapper {
   final BookValidationError value;
 
   UpdateBookResponse_validationErrorWrapper._(this.value);
 
   @_core.override
-  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.validationErrorWrapper;
+  UpdateBookResponse_kind get kind =>
+      UpdateBookResponse_kind.validationErrorWrapper;
 }
 
-final class UpdateBookResponse_invalidRecordIdErrorWrapper extends _UpdateBookResponse_wrapper {
+final class UpdateBookResponse_invalidRecordIdErrorWrapper
+    extends _UpdateBookResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   UpdateBookResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.invalidRecordIdErrorWrapper;
+  UpdateBookResponse_kind get kind =>
+      UpdateBookResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-final _skir.Method<
-  WatchBooksRequest,
-  WatchBooksResponse
-> watchBooksMethod =
-  _skir.Method(
-    "WatchBooks",
-    216867,
-    WatchBooksRequest.serializer,
-    WatchBooksResponse.serializer,
-    "",
-  );
+final _skir.Method<WatchBooksRequest, WatchBooksResponse> watchBooksMethod =
+    _skir.Method(
+      "WatchBooks",
+      216867,
+      WatchBooksRequest.serializer,
+      WatchBooksResponse.serializer,
+      "",
+    );
 
-final _skir.Method<
-  WatchBookRequest,
-  WatchBookResponse
-> watchBookMethod =
-  _skir.Method(
-    "WatchBook",
-    452891,
-    WatchBookRequest.serializer,
-    WatchBookResponse.serializer,
-    "",
-  );
+final _skir.Method<WatchBookRequest, WatchBookResponse> watchBookMethod =
+    _skir.Method(
+      "WatchBook",
+      452891,
+      WatchBookRequest.serializer,
+      WatchBookResponse.serializer,
+      "",
+    );
 
-final _skir.Method<
-  CreateBookRequest,
-  CreateBookResponse
-> createBookMethod =
-  _skir.Method(
-    "CreateBook",
-    721728,
-    CreateBookRequest.serializer,
-    CreateBookResponse.serializer,
-    "",
-  );
+final _skir.Method<CreateBookRequest, CreateBookResponse> createBookMethod =
+    _skir.Method(
+      "CreateBook",
+      721728,
+      CreateBookRequest.serializer,
+      CreateBookResponse.serializer,
+      "",
+    );
 
-final _skir.Method<
-  UpdateBookRequest,
-  UpdateBookResponse
-> updateBookMethod =
-  _skir.Method(
-    "UpdateBook",
-    979951,
-    UpdateBookRequest.serializer,
-    UpdateBookResponse.serializer,
-    "",
-  );
+final _skir.Method<UpdateBookRequest, UpdateBookResponse> updateBookMethod =
+    _skir.Method(
+      "UpdateBook",
+      979951,
+      UpdateBookRequest.serializer,
+      UpdateBookResponse.serializer,
+      "",
+    );
