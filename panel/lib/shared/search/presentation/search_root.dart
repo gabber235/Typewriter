@@ -1,4 +1,5 @@
 import "package:flutter/material.dart" hide SearchController;
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hooks_riverpod/legacy.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -16,8 +17,13 @@ class SearchRoot extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final latestCreate = useRef(create)..value = create;
+    final stableCreate = useMemoized(
+      () =>
+          (providerRef) => latestCreate.value(providerRef),
+    );
     return ProviderScope(
-      overrides: [searchProvider.overrideWith(create)],
+      overrides: [searchProvider.overrideWith(stableCreate)],
       child: child,
     );
   }

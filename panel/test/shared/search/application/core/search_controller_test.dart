@@ -229,5 +229,39 @@ void main() {
         ],
       );
     });
+
+    test("refresh repeats the current query", () {
+      final source = FakeSearchSource();
+      final controller = SearchController(
+        source: source,
+        baseSelectors: selectors,
+      );
+      addTearDown(controller.dispose);
+      controller.updateQuery("current #tag");
+      final first = source.lastSearchContext;
+
+      controller.refresh();
+
+      expect(source.searches.last, first);
+      expect(source.searches, hasLength(2));
+    });
+
+    test("keeps the current preview when a refreshed result still exists", () {
+      final source = FakeSearchSource();
+      final controller = SearchController(
+        source: source,
+        baseSelectors: selectors,
+      );
+      addTearDown(controller.dispose);
+      source.emitSnapshot(readySnapshot(nodes: [resultNode("a")]));
+      controller.preview(controller.snapshot.nodes.findResults({"a"}).single);
+
+      source.emitSnapshot(
+        readySnapshot(nodes: [resultNode("a", title: "Updated")]),
+      );
+
+      expect(controller.currentPreview?.id, "a");
+      expect(controller.currentPreview?.title, "Updated");
+    });
   });
 }

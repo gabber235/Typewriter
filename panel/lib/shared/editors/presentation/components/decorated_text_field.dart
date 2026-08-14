@@ -29,6 +29,9 @@ class DecoratedTextField extends HookWidget {
     this.textAlign = TextAlign.start,
     this.readOnly = false,
     this.enabled = true,
+    this.selectAllOnFocus = false,
+    this.onInputFocus,
+    this.onDismiss,
     super.key,
   }) : super();
   final TextEditingController? controller;
@@ -79,6 +82,9 @@ class DecoratedTextField extends HookWidget {
   final TextAlign textAlign;
   final bool enabled;
   final bool readOnly;
+  final bool selectAllOnFocus;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +128,8 @@ class DecoratedTextField extends HookWidget {
       actions: actions,
       inputActions: textFieldActions,
       surroundingActions: surroundingActions,
+      onInputFocus: onInputFocus,
+      onDismiss: onDismiss,
       child: TextFormField(
         focusNode: focusNode,
         autofocus: autofocus == DecoratedTextFieldAutoFocus.textField,
@@ -142,7 +150,7 @@ class DecoratedTextField extends HookWidget {
         keyboardType: maxLines == 1 ? keyboardType : TextInputType.multiline,
         enabled: enabled,
         readOnly: readOnly,
-        selectAllOnFocus: false,
+        selectAllOnFocus: selectAllOnFocus,
         inputFormatters: [...?inputFormatters],
         decoration: decoration,
       ),
