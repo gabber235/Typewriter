@@ -91,7 +91,7 @@ final class _DefaultPresentationGenerator {
   ]) {
     final control = BoundControl(
       binding: binding,
-      label: (label ?? id)._presentationLabel.asStringLiteral,
+      label: label?._presentationLabel.asStringLiteral,
     );
     final element = switch (type) {
       AnyType() => _invalid("Any values do not have a safe default editor"),
