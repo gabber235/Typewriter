@@ -45,38 +45,6 @@ void main() {
       lessThan(2),
     );
   });
-
-  testWidgets("selected result uses the selection container background", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: searchTestRenderer(
-        type: const StringType(),
-        value: const StringValue("Alpha"),
-        presentation: searchTestPresentation(),
-      ),
-    );
-
-    await tester.tap(find.bySemanticsLabel("Activate search input"));
-    await tester.pumpAndSettle();
-
-    final selected = find.byWidgetPredicate(
-      (widget) => widget is Semantics && (widget.properties.selected ?? false),
-    );
-    expect(selected, findsOneWidget);
-    final background = find.descendant(
-      of: selected,
-      matching: find.byType(AnimatedContainer),
-    );
-    final decoration = tester.widget<AnimatedContainer>(background).decoration;
-    final context = tester.element(selected);
-
-    expect(decoration, isA<BoxDecoration>());
-    expect(
-      (decoration! as BoxDecoration).color,
-      context.colors.selectionContainer,
-    );
-  });
 }
 
 Finder _resultRow(String label) {

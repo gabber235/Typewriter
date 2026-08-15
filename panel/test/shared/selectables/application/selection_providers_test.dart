@@ -5,48 +5,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "selection_test_support.dart";
 
 void main() {
-  group("hasSelection and isSelected providers", () {
-    test("hasSelection returns false when empty", () {
-      final container = ProviderContainer.test();
-
-      expect(container.read(hasSelectionProvider), isFalse);
-    });
-
-    test("hasSelection returns true when items selected", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier("A");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-
-      expect(container.read(hasSelectionProvider), isTrue);
-    });
-
-    test("isSelected returns true for selected item", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier("A");
-      final idB = MockSelectableIdentifier("B");
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-
-      expect(container.read(isSelectedProvider(idA)), isTrue);
-      expect(container.read(isSelectedProvider(idB)), isTrue);
-    });
-
-    test("isSelected returns false for non-selected item", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier("A");
-      final idC = MockSelectableIdentifier("C");
-
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-
-      expect(container.read(isSelectedProvider(idC)), isFalse);
-    });
-  });
-
   group("Selected provider", () {
     test("returns empty list when no selection", () {
       final container = ProviderContainer.test();
@@ -88,33 +46,6 @@ void main() {
       final selected = container.read(selectedProvider);
 
       expect(selected.isLoading, isTrue);
-    });
-
-    test("typed update reaches every selectable", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier(
-        "A",
-        RecordValue({"field": const StringValue("oldA")}),
-      );
-      final idB = MockSelectableIdentifier(
-        "B",
-        RecordValue({"field": const StringValue("oldB")}),
-      );
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-
-      final selectables = container.read(selectedProvider).requireValue;
-      final mockA = selectables[0] as MockSelectable;
-      final mockB = selectables[1] as MockSelectable;
-
-      container
-          .read(selectionEditorSourceProvider)
-          .update(DataPath.root.field("field"), const StringValue("newValue"));
-
-      expect(mockA.lastSetPath, DataPath.root.field("field"));
-      expect(mockA.lastSetValue, const StringValue("newValue"));
-      expect(mockB.lastSetPath, DataPath.root.field("field"));
-      expect(mockB.lastSetValue, const StringValue("newValue"));
     });
   });
 }

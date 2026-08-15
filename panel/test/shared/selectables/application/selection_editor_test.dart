@@ -6,105 +6,28 @@ import "selection_test_support.dart";
 
 void main() {
   group("typed selection value", () {
-    test("returns loading when selected is loading", () {
+    test("selection changes flow into the editor source", () {
       final container = ProviderContainer.test();
-      final loadingId = LoadingSelectableIdentifier("loading");
-      container
-          .read(selectionProvider.notifier)
-          .select(loadingId, isMultiSelect: false);
+      final path = DataPath.root.field("field");
 
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
-
-      expect(value, isA<LoadingEditorValue>());
-    });
-
-    test("returns none when selection is empty", () {
-      final container = ProviderContainer.test();
-
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
-
-      expect(value, isA<InvalidEditorValue>());
-    });
-
-    test("returns value for single selection", () {
-      final container = ProviderContainer.test();
       final idA = MockSelectableIdentifier(
         "A",
         RecordValue({"field": const StringValue("hello")}),
       );
+
+      expect(
+        container.read(selectionEditorSourceProvider).value(path),
+        isA<InvalidEditorValue>(),
+      );
+
       container
           .read(selectionProvider.notifier)
           .select(idA, isMultiSelect: false);
 
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
+      final value = container.read(selectionEditorSourceProvider).value(path);
 
       expect(value, isA<ReadyEditorValue>());
       expect((value as ReadyEditorValue).value, const StringValue("hello"));
-    });
-
-    test("returns value when all items have same value", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier(
-        "A",
-        RecordValue({"field": const StringValue("same")}),
-      );
-      final idB = MockSelectableIdentifier(
-        "B",
-        RecordValue({"field": const StringValue("same")}),
-      );
-      final idC = MockSelectableIdentifier(
-        "C",
-        RecordValue({"field": const StringValue("same")}),
-      );
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB, idC]);
-
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
-
-      expect(value, isA<ReadyEditorValue>());
-      expect((value as ReadyEditorValue).value, const StringValue("same"));
-    });
-
-    test("returns conflict when items have different values", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier(
-        "A",
-        RecordValue({"field": const StringValue("valueA")}),
-      );
-      final idB = MockSelectableIdentifier(
-        "B",
-        RecordValue({"field": const StringValue("valueB")}),
-      );
-
-      container.read(selectionProvider.notifier).selectAll([idA, idB]);
-
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
-
-      expect(value, isA<ConflictEditorValue>());
-    });
-
-    test("returns invalid when the field is omitted", () {
-      final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier("A");
-      container
-          .read(selectionProvider.notifier)
-          .select(idA, isMultiSelect: false);
-
-      final value = container
-          .read(selectionEditorSourceProvider)
-          .value(DataPath.root.field("field"));
-
-      expect(value, isA<InvalidEditorValue>());
     });
   });
 

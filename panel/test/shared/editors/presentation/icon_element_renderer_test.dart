@@ -11,7 +11,9 @@ void main() {
     expect(icon.typedValue.iconValueOrNull, icon);
   });
 
-  testWidgets("renders a sanitized SVG value through Icones", (tester) async {
+  testWidgets("renders a sanitized SVG with accessible semantics", (
+    tester,
+  ) async {
     const icon = IconValue.svg(
       '<svg viewBox="0 0 24 24"><path d="M0 0h1v1z"/></svg>',
     );
@@ -24,9 +26,8 @@ void main() {
       ),
     );
 
-    final rendered = tester.widget<Icones>(find.byType(Icones));
-    expect(rendered.iconValue, icon);
     expect(find.bySemanticsLabel("Quest icon"), findsOneWidget);
+    expect(find.textContaining("Icon content must"), findsNothing);
   });
 
   testWidgets("localizes values outside the Icon hierarchy", (tester) async {

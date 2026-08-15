@@ -18,7 +18,7 @@ void main() {
     revision: 2,
   );
 
-  test("round trips every conversion rule variant as bytes", () {
+  test("maps every conversion rule variant and definition field", () {
     final rules = <ConversionRule>[
       const InputConversionRule(),
       const InheritanceUpcastRule(),
@@ -65,11 +65,58 @@ void main() {
         cost: entry.$1,
       );
       final encoded = encoder.encode([definition]).valueOrNull!.single;
-      final bytes = wire.ConversionDefinition.serializer.toBytes(encoded);
-      final decodedWire = wire.ConversionDefinition.serializer.fromBytes(bytes);
-      final decoded = decoder.decode([decodedWire]).valueOrNull!.single;
-      final reencoded = encoder.encode([decoded]).valueOrNull!.single;
-      expect(wire.ConversionDefinition.serializer.toBytes(reencoded), bytes);
+      expect(encoded.conversionId.namespace, "example");
+      expect(encoded.conversionId.name, "conversion_${entry.$1}");
+      expect(encoded.source, types.encodeReference(source).valueOrNull);
+      expect(encoded.target, types.encodeReference(target).valueOrNull);
+      expect(encoded.rule.kind, _wireKind(entry.$2));
+      expect(encoded.cost, entry.$1);
+      expect(
+        encoded.safety.kind,
+        entry.$1.isEven
+            ? wire.ConversionSafety_kind.losslessConst
+            : wire.ConversionSafety_kind.lossyConst,
+      );
+      expect(
+        encoded.fallibility.kind,
+        entry.$1.isOdd
+            ? wire.ConversionFallibility_kind.fallibleConst
+            : wire.ConversionFallibility_kind.infallibleConst,
+      );
+      expect(
+        encoded.locality.kind,
+        entry.$2 is RealmConversionRule
+            ? wire.ConversionLocality_kind.realmConst
+            : wire.ConversionLocality_kind.localConst,
+      );
+      expect(
+        decoder.decode([encoded]).valueOrNull!.single,
+        definition.copyWith(rule: _canonicalRule(entry.$2)),
+      );
     }
   });
 }
+
+wire.ConversionRule_kind _wireKind(ConversionRule rule) => switch (rule) {
+  InputConversionRule() => wire.ConversionRule_kind.identityConst,
+  InheritanceUpcastRule() => wire.ConversionRule_kind.inheritanceUpcastConst,
+  ValidatedDowncastRule() => wire.ConversionRule_kind.validatedDowncastConst,
+  ScalarConversionRule() => wire.ConversionRule_kind.scalarCastWrapper,
+  RecordProjectionConversionRule() =>
+    wire.ConversionRule_kind.recordProjectionWrapper,
+  RecordConstructionConversionRule() =>
+    wire.ConversionRule_kind.recordConstructionWrapper,
+  CollectionMappingConversionRule() =>
+    wire.ConversionRule_kind.collectionMappingWrapper,
+  ConversionCompositionIdsRule() => wire.ConversionRule_kind.compositionWrapper,
+  RealmConversionRule() => wire.ConversionRule_kind.realmWrapper,
+  _ => throw StateError("Unsupported conversion rule in mapping test"),
+};
+
+ConversionRule _canonicalRule(ConversionRule rule) => switch (rule) {
+  ScalarConversionRule(conversion: ScalarConversion.floatToDecimal) =>
+    const ScalarConversionRule(ScalarConversion.integerToDecimal),
+  ScalarConversionRule(conversion: ScalarConversion.decimalToInteger) =>
+    const ScalarConversionRule(ScalarConversion.decimalToFloat),
+  _ => rule,
+};

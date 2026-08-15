@@ -37,116 +37,151 @@ void main() {
     expression: LiteralExpression(IntegerValue(BigInt.one)),
   );
 
-  test("round trips every expression variant as bytes", () {
-    final expressions = <TypedExpression>[
-      text,
-      const TypedExpression(
-        resultType: StringType(),
-        expression: BindingExpression(binding),
-      ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: FieldAccessExpression(target: text, fieldName: "name"),
-      ),
-      TypedExpression(
-        resultType: const StringType(),
-        expression: InterpolationExpression(const [
-          InterpolationText("Name: "),
-          InterpolationValue(text),
-        ]),
-      ),
-      const TypedExpression(
-        resultType: BooleanType(),
-        expression: ComparisonExpression(
-          operator: ComparisonOperator.equal,
-          left: text,
-          right: text,
+  test("maps every expression variant and its fields", () {
+    final expressions = <(TypedExpression, wire_expression.Expression_kind)>[
+      (text, wire_expression.Expression_kind.literalWrapper),
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: BindingExpression(binding),
         ),
+        wire_expression.Expression_kind.bindingWrapper,
       ),
-      TypedExpression(
-        resultType: const BooleanType(),
-        expression: BooleanExpression(
-          operator: BooleanOperator.and,
-          operands: const [truth, truth],
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: FieldAccessExpression(target: text, fieldName: "name"),
         ),
+        wire_expression.Expression_kind.fieldAccessWrapper,
       ),
-      TypedExpression(
-        resultType: const IntegerType(width: IntegerWidth.signed64),
-        expression: ArithmeticExpression(
-          operator: ArithmeticOperator.add,
-          operands: [one, one],
+      (
+        TypedExpression(
+          resultType: const StringType(),
+          expression: InterpolationExpression(const [
+            InterpolationText("Name: "),
+            InterpolationValue(text),
+          ]),
         ),
+        wire_expression.Expression_kind.interpolationWrapper,
       ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: ConditionalExpression(
-          condition: truth,
-          whenTrue: text,
-          whenFalse: text,
-        ),
-      ),
-      TypedExpression(
-        resultType: const ListType(element: StringType()),
-        expression: CollectionProjectionExpression(
-          source: TypedExpression(
-            resultType: const ListType(element: StringType()),
-            expression: LiteralExpression(ListValue(const [StringValue("a")])),
+      (
+        const TypedExpression(
+          resultType: BooleanType(),
+          expression: ComparisonExpression(
+            operator: ComparisonOperator.equal,
+            left: text,
+            right: text,
           ),
-          itemBindingId: const BindingId(9),
-          projection: const TypedExpression(
-            resultType: StringType(),
-            expression: BindingExpression(
-              BindingReference(bindingId: BindingId(9)),
+        ),
+        wire_expression.Expression_kind.comparisonWrapper,
+      ),
+      (
+        TypedExpression(
+          resultType: const BooleanType(),
+          expression: BooleanExpression(
+            operator: BooleanOperator.and,
+            operands: const [truth, truth],
+          ),
+        ),
+        wire_expression.Expression_kind.booleanOperationWrapper,
+      ),
+      (
+        TypedExpression(
+          resultType: const IntegerType(width: IntegerWidth.signed64),
+          expression: ArithmeticExpression(
+            operator: ArithmeticOperator.add,
+            operands: [one, one],
+          ),
+        ),
+        wire_expression.Expression_kind.arithmeticWrapper,
+      ),
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: ConditionalExpression(
+            condition: truth,
+            whenTrue: text,
+            whenFalse: text,
+          ),
+        ),
+        wire_expression.Expression_kind.conditionalWrapper,
+      ),
+      (
+        TypedExpression(
+          resultType: const ListType(element: StringType()),
+          expression: CollectionProjectionExpression(
+            source: TypedExpression(
+              resultType: const ListType(element: StringType()),
+              expression: LiteralExpression(
+                ListValue(const [StringValue("a")]),
+              ),
+            ),
+            itemBindingId: const BindingId(9),
+            projection: const TypedExpression(
+              resultType: StringType(),
+              expression: BindingExpression(
+                BindingReference(bindingId: BindingId(9)),
+              ),
             ),
           ),
         ),
+        wire_expression.Expression_kind.collectionProjectionWrapper,
       ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: ConversionExpression(
-          conversionId: ConversionId(namespace: "example", name: "to_string"),
-          input: text,
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: ConversionExpression(
+            conversionId: ConversionId(namespace: "example", name: "to_string"),
+            input: text,
+          ),
         ),
+        wire_expression.Expression_kind.conversionWrapper,
       ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: StringOperationExpression(
-          operation: StringOperation.titleCase,
-          operands: [text],
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: StringOperationExpression(
+            operation: StringOperation.titleCase,
+            operands: [text],
+          ),
         ),
+        wire_expression.Expression_kind.stringOperationWrapper,
       ),
-      TypedExpression(
-        resultType: const IntegerType(width: IntegerWidth.signed64),
-        expression: CollectionOperationExpression(
-          operation: CollectionOperation.length,
-          operands: const [text],
+      (
+        TypedExpression(
+          resultType: const IntegerType(width: IntegerWidth.signed64),
+          expression: CollectionOperationExpression(
+            operation: CollectionOperation.length,
+            operands: const [text],
+          ),
         ),
+        wire_expression.Expression_kind.collectionOperationWrapper,
       ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: RegexExpression(
-          operation: RegexOperation.capture,
-          source: text,
-          pattern: "(value)",
-          group: 1,
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: RegexExpression(
+            operation: RegexOperation.capture,
+            source: text,
+            pattern: "(value)",
+            group: 1,
+          ),
         ),
+        wire_expression.Expression_kind.regexWrapper,
       ),
-      const TypedExpression(
-        resultType: StringType(),
-        expression: CoalesceExpression([text, text]),
+      (
+        const TypedExpression(
+          resultType: StringType(),
+          expression: CoalesceExpression([text, text]),
+        ),
+        wire_expression.Expression_kind.coalesceWrapper,
       ),
     ];
 
-    for (final expression in expressions) {
+    for (final (expression, expectedKind) in expressions) {
       final encoded = expressionEncoder.encode(expression).valueOrNull!;
-      final bytes = wire_expression.TypedExpression.serializer.toBytes(encoded);
-      final wire = wire_expression.TypedExpression.serializer.fromBytes(bytes);
-      final decoded = expressionDecoder.decode(wire).valueOrNull!;
-      final reencoded = expressionEncoder.encode(decoded).valueOrNull!;
-      expect(
-        wire_expression.TypedExpression.serializer.toBytes(reencoded),
-        bytes,
-      );
+      expect(encoded.expression?.kind, expectedKind);
+      expect(expressionDecoder.decode(encoded).valueOrNull, expression);
     }
   });
 
@@ -163,51 +198,88 @@ void main() {
     expect(result.diagnostics.single.code, TypeDiagnosticCode.invalidValue);
   });
 
-  test("round trips every editor action variant as bytes", () {
-    final actions = <EditorAction>[
-      const EditorAction.local(SetValueAction(target: binding, value: text)),
-      EditorAction.local(
-        InsertListItemAction(target: binding, index: one, value: text),
+  test("maps every editor action variant and its fields", () {
+    final actions = <(EditorAction, Object)>[
+      (
+        const EditorAction.local(SetValueAction(target: binding, value: text)),
+        wire_action.LocalEditorAction_kind.setValueWrapper,
       ),
-      EditorAction.local(RemoveListItemAction(target: binding, index: one)),
-      const EditorAction.local(
-        AppendListItemAction(target: binding, value: text),
-      ),
-      const EditorAction.local(DuplicateListItemAction(source: binding)),
-      EditorAction.local(ReorderListItemAction(source: binding, newIndex: one)),
-      const EditorAction.local(
-        PutMapEntryAction(target: binding, key: text, value: text),
-      ),
-      const EditorAction.local(
-        RemoveMapEntryAction(target: binding, key: text),
-      ),
-      EditorAction.local(
-        ReplaceConcreteTypeAction(
-          target: binding,
-          concreteType: named,
-          initialValue: text,
+      (
+        EditorAction.local(
+          InsertListItemAction(target: binding, index: one, value: text),
         ),
+        wire_action.LocalEditorAction_kind.insertListItemWrapper,
       ),
-      const EditorAction.realm(ReloadRealmAction()),
-      const EditorAction.realm(
-        InvokeRealmCallbackAction(
-          actionId: RealmActionId(namespace: "example", name: "save"),
-          payload: text,
+      (
+        EditorAction.local(RemoveListItemAction(target: binding, index: one)),
+        wire_action.LocalEditorAction_kind.removeListItemWrapper,
+      ),
+      (
+        const EditorAction.local(
+          AppendListItemAction(target: binding, value: text),
         ),
+        wire_action.LocalEditorAction_kind.appendListItemWrapper,
+      ),
+      (
+        const EditorAction.local(DuplicateListItemAction(source: binding)),
+        wire_action.LocalEditorAction_kind.duplicateListItemWrapper,
+      ),
+      (
+        EditorAction.local(
+          ReorderListItemAction(source: binding, newIndex: one),
+        ),
+        wire_action.LocalEditorAction_kind.reorderListItemWrapper,
+      ),
+      (
+        const EditorAction.local(
+          PutMapEntryAction(target: binding, key: text, value: text),
+        ),
+        wire_action.LocalEditorAction_kind.putMapEntryWrapper,
+      ),
+      (
+        const EditorAction.local(
+          RemoveMapEntryAction(target: binding, key: text),
+        ),
+        wire_action.LocalEditorAction_kind.removeMapEntryWrapper,
+      ),
+      (
+        EditorAction.local(
+          ReplaceConcreteTypeAction(
+            target: binding,
+            concreteType: named,
+            initialValue: text,
+          ),
+        ),
+        wire_action.LocalEditorAction_kind.replaceConcreteNominalTypeWrapper,
+      ),
+      (
+        const EditorAction.realm(ReloadRealmAction()),
+        wire_action.RealmEditorAction_kind.reloadWrapper,
+      ),
+      (
+        const EditorAction.realm(
+          InvokeRealmCallbackAction(
+            actionId: RealmActionId(namespace: "example", name: "save"),
+            payload: text,
+          ),
+        ),
+        wire_action.RealmEditorAction_kind.callbackWrapper,
       ),
     ];
 
-    for (final action in actions) {
+    for (final (action, expectedKind) in actions) {
       final encoded = actionEncoder.encode(action).valueOrNull!;
-      final bytes = wire_action.EditorAction.serializer.toBytes(encoded);
-      final wire = wire_action.EditorAction.serializer.fromBytes(bytes);
-      final decoded = actionDecoder.decode(wire).valueOrNull!;
-      final reencoded = actionEncoder.encode(decoded).valueOrNull!;
-      expect(wire_action.EditorAction.serializer.toBytes(reencoded), bytes);
+      final actualKind = switch (encoded) {
+        wire_action.EditorAction_localWrapper(:final value) => value.kind,
+        wire_action.EditorAction_realmWrapper(:final value) => value.kind,
+        wire_action.EditorAction_unknown() => null,
+      };
+      expect(actualKind, expectedKind);
+      expect(actionDecoder.decode(encoded).valueOrNull, action);
     }
   });
 
-  test("round trips every typed mutation result variant as bytes", () {
+  test("decodes every independently authored mutation result", () {
     final diagnostic = wire_diagnostic.TypeDiagnostic(
       code: wire_diagnostic.DiagnosticCode.invalidValue,
       severity: wire_diagnostic.DiagnosticSeverity.error,
@@ -232,17 +304,30 @@ void main() {
         message: "Denied by policy",
       ),
     ];
-    for (final result in results) {
-      final bytes = wire_action.TypedMutationResult.serializer.toBytes(result);
-      final decodedWire = wire_action.TypedMutationResult.serializer.fromBytes(
-        bytes,
-      );
-      final domain = actionDecoder.decodeMutation(decodedWire).valueOrNull!;
-      final reencoded = actionEncoder.encodeMutation(domain).valueOrNull!;
-      expect(
-        wire_action.TypedMutationResult.serializer.toBytes(reencoded),
-        bytes,
-      );
-    }
+    expect(
+      actionDecoder.decodeMutation(results[0]).valueOrNull,
+      const MutationSuccess(revision: 2, value: StringValue("saved")),
+    );
+    expect(
+      actionDecoder.decodeMutation(results[1]).valueOrNull,
+      const MutationConflict(
+        expectedRevision: 1,
+        actualRevision: 2,
+        actualValue: StringValue("actual"),
+      ),
+    );
+    final invalid = actionDecoder.decodeMutation(results[2]).valueOrNull!;
+    expect(invalid, isA<MutationInvalid>());
+    expect((invalid as MutationInvalid).diagnostics.single.message, "Invalid");
+    final unavailable = actionDecoder.decodeMutation(results[3]).valueOrNull!;
+    expect(unavailable, isA<MutationUnavailable>());
+    expect(
+      (unavailable as MutationUnavailable).diagnostics.single.code,
+      TypeDiagnosticCode.invalidValue,
+    );
+    expect(
+      actionDecoder.decodeMutation(results[4]).valueOrNull,
+      const MutationPermissionDenied("Denied by policy"),
+    );
   });
 }

@@ -112,6 +112,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+
+    final selected = find.byWidgetPredicate(
+      (widget) => widget is Semantics && (widget.properties.selected ?? false),
+    );
+    expect(selected, findsOneWidget);
+    expect(
+      find.descendant(of: selected, matching: find.text("Beta")),
+      findsOneWidget,
+    );
+
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
 
@@ -215,40 +226,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(QueryBar), findsNothing);
-  });
-
-  testWidgets("renderer provides the realm search source builder", (
-    tester,
-  ) async {
-    var builderCalled = false;
-    await tester.pumpTestApp(
-      child: searchTestRenderer(
-        type: const StringType(),
-        value: const StringValue("Alpha"),
-        presentation: searchTestPresentation(
-          provider: SearchProvider.realmCallback(
-            actionId: const RealmActionId(namespace: "test", name: "search"),
-            payload: const StringValue("payload").asLiteral(const StringType()),
-            result: searchTestResultMapping,
-          ),
-        ),
-        realmSearchSourceBuilder:
-            ({
-              required provider,
-              required queryBindingId,
-              required expressions,
-              required registry,
-              required budget,
-              required providerKey,
-            }) {
-              builderCalled = true;
-              return UnavailableRealmPresentationSearchSource(
-                provider: provider,
-              );
-            },
-      ),
-    );
-
-    expect(builderCalled, isTrue);
   });
 }

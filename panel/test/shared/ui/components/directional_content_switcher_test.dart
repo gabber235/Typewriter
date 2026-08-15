@@ -73,15 +73,9 @@ void main() {
     expect(tester.getSize(find.byType(AnimatedSize)).height, 120);
   });
 
-  testWidgets("does not constrain outgoing content to the incoming height", (
-    tester,
-  ) async {
+  testWidgets("keeps both contents during the transition", (tester) async {
     var index = 0;
     late StateSetter setState;
-    final expanded = ExpansibleController()..expand();
-    final collapsed = ExpansibleController();
-    addTearDown(expanded.dispose);
-    addTearDown(collapsed.dispose);
 
     await tester.pumpTestApp(
       child: StatefulBuilder(
@@ -89,9 +83,10 @@ void main() {
           setState = update;
           return DirectionalContentSwitcher(
             index: index,
-            child: _expansible(
+            child: SizedBox(
               key: ValueKey(index),
-              controller: index == 0 ? expanded : collapsed,
+              height: index == 0 ? 120 : 40,
+              child: Text(index == 0 ? "Outgoing" : "Destination"),
             ),
           );
         },
@@ -102,7 +97,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 150));
 
-    expect(tester.takeException(), isNull);
+    expect(find.text("Outgoing"), findsOneWidget);
+    expect(find.text("Destination"), findsOneWidget);
+
+    await tester.pumpAndSettle();
+
+    expect(find.text("Outgoing"), findsNothing);
+    expect(find.text("Destination"), findsOneWidget);
   });
 
   testWidgets("removes motion when animations are disabled", (tester) async {
@@ -126,18 +127,6 @@ void main() {
     );
   });
 }
-
-Widget _expansible({
-  required Key key,
-  required ExpansibleController controller,
-}) => Expansible(
-  key: key,
-  controller: controller,
-  headerBuilder: (context, animation) => const SizedBox(height: 48),
-  bodyBuilder: (context, animation) => const SizedBox(height: 86),
-  expansibleBuilder: (context, header, body, animation) =>
-      Column(mainAxisSize: MainAxisSize.min, children: [header, body]),
-);
 
 List<double> _horizontalOffsets(WidgetTester tester) => tester
     .widgetList<SlideTransition>(

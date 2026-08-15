@@ -1,14 +1,12 @@
 import "package:flutter/material.dart";
-import "package:flutter_markdown_plus/flutter_markdown_plus.dart";
+import "package:flutter/semantics.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
 
 void main() {
-  testWidgets("renders selectable Markdown through Flutter Markdown Plus", (
-    tester,
-  ) async {
+  testWidgets("renders Markdown text with selection semantics", (tester) async {
     const markdown = "# Quest notes\n\nUse **clear objectives**.";
 
     await tester.pumpTestApp(
@@ -22,10 +20,89 @@ void main() {
       ),
     );
 
-    final widget = tester.widget<MarkdownBody>(find.byType(MarkdownBody));
+    final semantics = tester.ensureSemantics();
 
-    expect(widget.data, markdown);
-    expect(widget.selectable, isTrue);
+    expect(find.text("Quest notes", findRichText: true), findsOneWidget);
+    expect(
+      find.text("Use clear objectives.", findRichText: true),
+      findsOneWidget,
+    );
+    await tester.tap(find.text("Quest notes", findRichText: true));
+    await tester.pump();
+    expect(
+      tester
+          .getSemantics(find.byType(EditableText).first)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.setSelection),
+      isTrue,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets("selecting an option updates its bound value", (tester) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const StringType(),
+        value: const StringValue("one"),
+        presentation: PresentationNode(
+          id: "selectRoot",
+          element: ColumnElement(
+            children: [
+              PresentationNode(
+                id: "select",
+                element: SelectInputElement(
+                  control: const BoundControl(binding: _rootBinding),
+                  options: [
+                    SelectOption(
+                      id: "one",
+                      label: "One".asStringLiteral,
+                      value: "one".asStringLiteral,
+                    ),
+                    SelectOption(
+                      id: "two",
+                      label: "Two".asStringLiteral,
+                      value: "two".asStringLiteral,
+                    ),
+                  ],
+                ),
+              ),
+              const PresentationNode(
+                id: "value",
+                element: TextElement(
+                  TypedExpression(
+                    resultType: StringType(),
+                    expression: BindingExpression(_rootBinding),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("one"), findsOneWidget);
+
+    await tester.tap(find.text("Two"));
+    await tester.pump();
+
+    expect(find.text("two"), findsOneWidget);
+    expect(find.text("one"), findsNothing);
+  });
+
+  testWidgets("switching a polymorphic type changes its visible content", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(child: _polymorphicRenderer());
+
+    expect(find.text("Dog content"), findsOneWidget);
+    expect(find.text("Cat content"), findsNothing);
+
+    await tester.tap(find.text("Cat"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Dog content"), findsNothing);
+    expect(find.text("Cat content"), findsOneWidget);
   });
 
   testWidgets("executes local actions and refreshes bound content", (
@@ -291,7 +368,88 @@ void main() {
   });
 }
 
+Widget _polymorphicRenderer() => EditorProtocolRenderer(
+  envelope: TypedValueEnvelope(
+    rootType: _polymorphicRootType,
+    rootValue: RecordValue({
+      "choice": PolymorphicValue(concreteType: _dogType, value: UnitValue()),
+    }),
+  ),
+  typeCatalog: const TypeCatalog([
+    TypeDefinition(
+      id: _polymorphicRootType,
+      kind: NominalTypeKind.concrete,
+      representation: RecordType(
+        fields: {
+          "choice": TypeField(name: "choice", type: NamedType(_animalType)),
+        },
+      ),
+    ),
+    TypeDefinition(
+      id: _animalType,
+      kind: NominalTypeKind.openAbstract,
+      representation: UnitType(),
+    ),
+    TypeDefinition(
+      id: _dogType,
+      kind: NominalTypeKind.concrete,
+      parents: [_animalType],
+      representation: UnitType(),
+    ),
+    TypeDefinition(
+      id: _catType,
+      kind: NominalTypeKind.concrete,
+      parents: [_animalType],
+      representation: UnitType(),
+    ),
+  ]),
+  presentation: PresentationNode(
+    id: "polymorphic",
+    element: PolymorphicInputElement(
+      control: const BoundControl(binding: _polymorphicBinding),
+      concreteTypes: [
+        ConcreteTypePresentation(
+          type: _dogType,
+          label: "Dog".asStringLiteral,
+          presentation: PresentationNode(
+            id: "dog",
+            element: TextElement("Dog content".asStringLiteral),
+          ),
+        ),
+        ConcreteTypePresentation(
+          type: _catType,
+          label: "Cat".asStringLiteral,
+          presentation: PresentationNode(
+            id: "cat",
+            element: TextElement("Cat content".asStringLiteral),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
 const _rootBinding = BindingReference(bindingId: BindingId(0));
+const _polymorphicBinding = BindingReference(
+  bindingId: BindingId(0),
+  path: DataPath([DataPathSegment.field("choice")]),
+);
+const _polymorphicRootType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "PolymorphicRoot"),
+  revision: 1,
+);
+const _animalType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Animal"),
+  revision: 1,
+);
+const _dogType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Dog"),
+  revision: 1,
+);
+const _catType = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "test", name: "Cat"),
+  revision: 1,
+);
 
 EditorProtocolRenderer _renderer({
   required TypeExpression type,

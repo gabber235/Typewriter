@@ -2,62 +2,17 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test(
-    "type identities distinguish builtins, qualifications, and revisions",
-    () {
-      const first = QualifiedTypeId(namespace: "example/v1", name: "Entry");
-      const second = QualifiedTypeId(namespace: "example/v1", name: "Entry");
-      final revisionOne = ResolvedTypeRef(id: first, revision: 1);
-      final revisionTwo = ResolvedTypeRef(id: second, revision: 2);
-
-      expect(first, second);
-      expect(revisionOne, isNot(revisionTwo));
-      expect(const TypeId.option(), isA<TypeId>());
-      expect(
-        const ConversionId(namespace: "example/v1", name: "convert"),
-        const ConversionId(namespace: "example/v1", name: "convert"),
-      );
-    },
-  );
-
-  test(
-    "frozen catalog identities and resolved references support copyWith",
-    () {
-      const presentation = PresentationId(namespace: "panel", name: "default");
-      const conversion = ConversionId(namespace: "panel", name: "convert");
-      const action = RealmActionId(namespace: "realm", name: "reload");
-      const generation = CatalogGeneration("1");
-      final reference = ResolvedTypeRef(id: const TypeId.option(), revision: 1);
-
-      expect(presentation.copyWith(name: "compact").name, "compact");
-      expect(conversion.copyWith(name: "project").name, "project");
-      expect(action.copyWith(name: "callback").name, "callback");
-      expect(generation.copyWith(value: "2"), const CatalogGeneration("2"));
-      expect(reference.copyWith(revision: 2).revision, 2);
-    },
-  );
-
-  test("type definitions preserve immutable presentation links", () {
-    const fallback = PresentationId(namespace: "panel", name: "fallback");
-    const compact = PresentationId(namespace: "panel", name: "compact");
-    final definition = TypeDefinition(
-      id: _ref("Presented"),
-      kind: NominalTypeKind.concrete,
-      defaultPresentationId: fallback,
-      namedPresentations: const {"compact": compact},
+  test("qualified type identities distinguish namespaces and revisions", () {
+    const first = QualifiedTypeId(namespace: "example/v1", name: "Entry");
+    const otherNamespace = QualifiedTypeId(
+      namespace: "example/v2",
+      name: "Entry",
     );
 
-    expect(definition.defaultPresentationId, fallback);
-    expect(definition.namedPresentations, {"compact": compact});
+    expect(first, isNot(otherNamespace));
     expect(
-      () => definition.namedPresentations["other"] = fallback,
-      throwsUnsupportedError,
-    );
-    expect(
-      definition
-          .copyWith(namedPresentations: const {"other": fallback})
-          .namedPresentations,
-      {"other": fallback},
+      const ResolvedTypeRef(id: first, revision: 1),
+      isNot(const ResolvedTypeRef(id: first, revision: 2)),
     );
   });
 

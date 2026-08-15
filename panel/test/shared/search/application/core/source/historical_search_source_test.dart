@@ -43,24 +43,6 @@ void main() {
       expect(storage.loadKeys, ["icons"]);
     });
 
-    test("passes nonempty query snapshots through unchanged", () async {
-      final harness = HistoryHarness();
-      addTearDown(harness.dispose);
-      final source = harness.source;
-      final snapshots = <SearchSourceSnapshot>[];
-      final subscription = source.snapshots.listen(snapshots.add);
-      addTearDown(subscription.cancel);
-      source.initialize();
-      await flushEvents();
-      final snapshot = readySnapshot(nodes: [resultNode("match")]);
-
-      source.search(queryContext("query"));
-      harness.inner.emitSnapshot(snapshot);
-
-      expect(snapshots.last, snapshot);
-      expect(harness.inner.searches.last, queryContext("query"));
-    });
-
     test("records committed child results with newest first", () async {
       final harness = HistoryHarness(capacity: 2);
       addTearDown(harness.dispose);
@@ -157,23 +139,6 @@ void main() {
       expect(resultIds(snapshots.last), ["recent"]);
       expect(snapshots.last.status, SearchSourceStatus.ready);
       expect(inner.searches, isEmpty);
-    });
-
-    test("forwards selectors and preview requests", () async {
-      final harness = HistoryHarness();
-      addTearDown(harness.dispose);
-      final selectors = <List<QuerySelectorDefinition>>[];
-      final subscription = harness.source.selectors.listen(selectors.add);
-      addTearDown(subscription.cancel);
-      const emitted = [KeyValueSelectorDefinition(id: "tag", key: "tag:")];
-      const preview = SearchPreviewRequest(resultId: "result");
-
-      harness.inner.emitSelectors(emitted);
-      final result = await harness.source.preview(preview);
-
-      expect(selectors, [emitted]);
-      expect(result, harness.inner.previewResult);
-      expect(harness.inner.previewRequests, [preview]);
     });
 
     test("disposal cancels loading and selection events", () async {

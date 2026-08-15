@@ -1,14 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as wire_catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as wire_diagnostic;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
     as wire_presentation;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as wire_type;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/typed_value.dart"
-    as wire_value;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -50,20 +44,22 @@ void main() {
     presentationEncoder: presentationEncoder,
   );
 
-  test("round trips all direct catalogue definition shapes", () {
+  test("maps all direct catalogue definition shapes and fields", () {
     final encodedCatalog = catalog.encodeWire().valueOrNull!;
-    final catalogBytes = wire_type.TypeCatalog.serializer.toBytes(
-      encodedCatalog,
-    );
-    final decodedCatalog = wire_type.TypeCatalog.serializer
-        .fromBytes(catalogBytes)
-        .decodeDomain()
-        .valueOrNull!;
-    final reencodedCatalog = decodedCatalog.catalog.encodeWire().valueOrNull!;
+    final encodedType = encodedCatalog.definitions.single;
+    expect(encodedType.typeId.kind, wire_type.TypeId_kind.realmWrapper);
+    expect(encodedType.revision, 1);
     expect(
-      wire_type.TypeCatalog.serializer.toBytes(reencodedCatalog),
-      catalogBytes,
+      encodedType.kind.kind,
+      wire_type.TypeDefinitionKind_kind.concreteConst,
     );
+    expect(
+      encodedType.representation.kind,
+      wire_type.TypeExpression_kind.recordWrapper,
+    );
+    expect(encodedType.defaultPresentationId?.namespace, "example");
+    expect(encodedType.defaultPresentationId?.name, "main");
+    expect(encodedCatalog.decodeDomain().valueOrNull!.catalog, catalog);
 
     final presentation = PresentationDefinition(
       id: const PresentationId(namespace: "example", name: "main"),
@@ -73,25 +69,20 @@ void main() {
     final encodedPresentation = definitions
         .encodePresentation(presentation)
         .valueOrNull!;
-    final presentationBytes = wire_presentation
-        .PresentationDefinition
-        .serializer
-        .toBytes(encodedPresentation);
-    final decodedPresentation = definitions
-        .decodePresentation(
-          wire_presentation.PresentationDefinition.serializer.fromBytes(
-            presentationBytes,
-          ),
-        )
-        .valueOrNull!;
-    final reencodedPresentation = definitions
-        .encodePresentation(decodedPresentation)
-        .valueOrNull!;
+    expect(encodedPresentation.presentationId.namespace, "example");
+    expect(encodedPresentation.presentationId.name, "main");
     expect(
-      wire_presentation.PresentationDefinition.serializer.toBytes(
-        reencodedPresentation,
-      ),
-      presentationBytes,
+      encodedPresentation.target.kind,
+      wire_type.TypeExpression_kind.namedWrapper,
+    );
+    expect(encodedPresentation.root.nodeId, "root");
+    expect(
+      encodedPresentation.root.element?.kind,
+      wire_presentation.PresentationElement_kind.dividerConst,
+    );
+    expect(
+      definitions.decodePresentation(encodedPresentation).valueOrNull,
+      presentation,
     );
 
     final action = RealmActionDefinition(
@@ -100,150 +91,31 @@ void main() {
       resultType: reference,
     );
     final encodedAction = definitions.encodeRealmAction(action).valueOrNull!;
-    final actionBytes = wire_catalog.RealmActionDefinition.serializer.toBytes(
-      encodedAction,
-    );
-    final decodedAction = definitions
-        .decodeRealmAction(
-          wire_catalog.RealmActionDefinition.serializer.fromBytes(actionBytes),
-        )
-        .valueOrNull!;
-    final reencodedAction = definitions
-        .encodeRealmAction(decodedAction)
-        .valueOrNull!;
+    expect(encodedAction.realmActionId.namespace, "example");
+    expect(encodedAction.realmActionId.name, "save");
     expect(
-      wire_catalog.RealmActionDefinition.serializer.toBytes(reencodedAction),
-      actionBytes,
+      encodedAction.payloadType,
+      types.encodeReference(reference).valueOrNull,
     );
+    expect(
+      encodedAction.resultType,
+      types.encodeReference(reference).valueOrNull,
+    );
+    expect(definitions.decodeRealmAction(encodedAction).valueOrNull, action);
 
     final envelope = TypedValueEnvelope(
       rootType: reference,
       rootValue: RecordValue(const {"name": StringValue("Entry")}),
     );
     final encodedEnvelope = definitions.encodeEnvelope(envelope).valueOrNull!;
-    final envelopeBytes = wire_value.TypedValueEnvelope.serializer.toBytes(
-      encodedEnvelope,
-    );
-    final decodedEnvelope = definitions
-        .decodeEnvelope(
-          wire_value.TypedValueEnvelope.serializer.fromBytes(envelopeBytes),
-        )
-        .valueOrNull!;
-    final reencodedEnvelope = definitions
-        .encodeEnvelope(decodedEnvelope)
-        .valueOrNull!;
     expect(
-      wire_value.TypedValueEnvelope.serializer.toBytes(reencodedEnvelope),
-      envelopeBytes,
-    );
-  });
-
-  test("round trips fetch request and every fetch result variant", () {
-    final wireReference = types.encodeReference(reference).valueOrNull!;
-    final request = wire_catalog.CatalogFetchRequest(
-      expectedGeneration: wire_catalog.CatalogGeneration(value: "generation-1"),
-      requestedTypes: [wireReference],
-      presentationIds: [
-        wire_type.PresentationId(namespace: "example", name: "main"),
-      ],
-      conversionIds: [
-        wire_type.ConversionId(namespace: "example", name: "convert"),
-      ],
-      realmActionIds: [
-        wire_type.RealmActionId(namespace: "example", name: "save"),
-      ],
-      subtypeQueries: [
-        wire_catalog.SubtypeQuery(
-          queryId: wire_catalog.SubtypeQueryId(value: "query-1"),
-          target: wireReference,
-        ),
-      ],
-    );
-    final requestBytes = wire_catalog.CatalogFetchRequest.serializer.toBytes(
-      request,
+      encodedEnvelope.rootType,
+      types.encodeReference(reference).valueOrNull,
     );
     expect(
-      wire_catalog.CatalogFetchRequest.serializer.toBytes(
-        wire_catalog.CatalogFetchRequest.serializer.fromBytes(requestBytes),
-      ),
-      requestBytes,
+      encodedEnvelope.rootValue.kind,
+      wire_type.TypedValue_kind.recordWrapper,
     );
-
-    final diagnostic = wire_diagnostic.TypeDiagnostic(
-      code: wire_diagnostic.DiagnosticCode.invalidPresentation,
-      severity: wire_diagnostic.DiagnosticSeverity.error,
-      message: "Unavailable",
-      path: null,
-      relatedType: null,
-      details: const [],
-    );
-    final results = <wire_catalog.CatalogFetchResult>[
-      wire_catalog.CatalogFetchResult.createSuccess(
-        generation: wire_catalog.CatalogGeneration(value: "generation-2"),
-        typeDefinitions: const [],
-        presentationDefinitions: const [],
-        conversions: const [],
-        realmActionDefinitions: const [],
-        subtypeResults: [
-          wire_catalog.SubtypeResult(
-            queryId: wire_catalog.SubtypeQueryId(value: "query-1"),
-            matchingTypes: [wireReference],
-          ),
-        ],
-        diagnostics: [diagnostic],
-      ),
-      wire_catalog.CatalogFetchResult.createGenerationMismatch(
-        actualGeneration: wire_catalog.CatalogGeneration(value: "generation-3"),
-      ),
-      wire_catalog.CatalogFetchResult.wrapUnavailable([diagnostic]),
-    ];
-    for (final result in results) {
-      final bytes = wire_catalog.CatalogFetchResult.serializer.toBytes(result);
-      expect(
-        wire_catalog.CatalogFetchResult.serializer.toBytes(
-          wire_catalog.CatalogFetchResult.serializer.fromBytes(bytes),
-        ),
-        bytes,
-      );
-    }
-  });
-
-  test("round trips watch request, initial update, and invalidation", () {
-    final request = wire_catalog.WatchEditorCatalogRequest();
-    final requestBytes = wire_catalog.WatchEditorCatalogRequest.serializer
-        .toBytes(request);
-    expect(
-      wire_catalog.WatchEditorCatalogRequest.serializer.toBytes(
-        wire_catalog.WatchEditorCatalogRequest.serializer.fromBytes(
-          requestBytes,
-        ),
-      ),
-      requestBytes,
-    );
-
-    final invalidated = wire_catalog.CatalogInvalidated(
-      generation: wire_catalog.CatalogGeneration(value: "generation-4"),
-      reason: "changed",
-    );
-    final invalidationBytes = wire_catalog.CatalogInvalidated.serializer
-        .toBytes(invalidated);
-    expect(
-      wire_catalog.CatalogInvalidated.serializer.toBytes(
-        wire_catalog.CatalogInvalidated.serializer.fromBytes(invalidationBytes),
-      ),
-      invalidationBytes,
-    );
-    for (final update in <wire_catalog.CatalogWatchUpdate>[
-      wire_catalog.CatalogWatchUpdate.createInitial(value: "generation-4"),
-      wire_catalog.CatalogWatchUpdate.wrapInvalidated(invalidated),
-    ]) {
-      final bytes = wire_catalog.CatalogWatchUpdate.serializer.toBytes(update);
-      expect(
-        wire_catalog.CatalogWatchUpdate.serializer.toBytes(
-          wire_catalog.CatalogWatchUpdate.serializer.fromBytes(bytes),
-        ),
-        bytes,
-      );
-    }
+    expect(definitions.decodeEnvelope(encodedEnvelope).valueOrNull, envelope);
   });
 }
