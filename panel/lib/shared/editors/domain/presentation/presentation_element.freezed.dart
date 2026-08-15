@@ -55,7 +55,7 @@ extension PresentationElementPatterns on PresentationElement {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ProgressElement value)?  progress,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( IconInputElement value)?  iconInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( CardElement value)?  card,TResult Function( SectionElement value)?  section,TResult Function( CollapsibleElement value)?  collapsible,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( DiagnosticElement value)?  diagnostic,TResult Function( DefaultPresentationElement value)?  defaultPresentation,TResult Function( TextElement value)?  text,TResult Function( MarkdownElement value)?  markdown,TResult Function( IconElement value)?  icon,TResult Function( ImageElement value)?  image,TResult Function( BadgeElement value)?  badge,TResult Function( ProgressElement value)?  progress,TResult Function( TypedFieldElement value)?  typedField,TResult Function( ConditionalElement value)?  conditional,TResult Function( RepeatedElement value)?  repeated,TResult Function( ScopedBindingElement value)?  scopedBinding,TResult Function( TextInputElement value)?  textInput,TResult Function( NumericInputElement value)?  numericInput,TResult Function( ToggleInputElement value)?  toggleInput,TResult Function( SelectInputElement value)?  selectInput,TResult Function( SliderInputElement value)?  sliderInput,TResult Function( DateTimeInputElement value)?  dateTimeInput,TResult Function( DurationInputElement value)?  durationInput,TResult Function( ColorInputElement value)?  colorInput,TResult Function( SearchInputElement value)?  searchInput,TResult Function( BytesInputElement value)?  bytesInput,TResult Function( EnumInputElement value)?  enumInput,TResult Function( NamedInputElement value)?  namedInput,TResult Function( ListInputElement value)?  listInput,TResult Function( MapInputElement value)?  mapInput,TResult Function( RecordInputElement value)?  recordInput,TResult Function( PolymorphicInputElement value)?  polymorphicInput,TResult Function( ButtonElement value)?  button,TResult Function( IconButtonElement value)?  iconButton,TResult Function( MenuElement value)?  menu,TResult Function( TooltipElement value)?  tooltip,TResult Function( ColumnElement value)?  column,TResult Function( RowElement value)?  row,TResult Function( WrapElement value)?  wrap,TResult Function( StackElement value)?  stack,TResult Function( GridElement value)?  grid,TResult Function( CardElement value)?  card,TResult Function( SectionElement value)?  section,TResult Function( CollapsibleElement value)?  collapsible,TResult Function( TabsElement value)?  tabs,TResult Function( DividerElement value)?  divider,TResult Function( SpacerElement value)?  spacer,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -78,8 +78,8 @@ return selectInput(_that);case SliderInputElement() when sliderInput != null:
 return sliderInput(_that);case DateTimeInputElement() when dateTimeInput != null:
 return dateTimeInput(_that);case DurationInputElement() when durationInput != null:
 return durationInput(_that);case ColorInputElement() when colorInput != null:
-return colorInput(_that);case IconInputElement() when iconInput != null:
-return iconInput(_that);case BytesInputElement() when bytesInput != null:
+return colorInput(_that);case SearchInputElement() when searchInput != null:
+return searchInput(_that);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that);case EnumInputElement() when enumInput != null:
 return enumInput(_that);case NamedInputElement() when namedInput != null:
 return namedInput(_that);case ListInputElement() when listInput != null:
@@ -119,7 +119,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ProgressElement value)  progress,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( IconInputElement value)  iconInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( CardElement value)  card,required TResult Function( SectionElement value)  section,required TResult Function( CollapsibleElement value)  collapsible,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( DiagnosticElement value)  diagnostic,required TResult Function( DefaultPresentationElement value)  defaultPresentation,required TResult Function( TextElement value)  text,required TResult Function( MarkdownElement value)  markdown,required TResult Function( IconElement value)  icon,required TResult Function( ImageElement value)  image,required TResult Function( BadgeElement value)  badge,required TResult Function( ProgressElement value)  progress,required TResult Function( TypedFieldElement value)  typedField,required TResult Function( ConditionalElement value)  conditional,required TResult Function( RepeatedElement value)  repeated,required TResult Function( ScopedBindingElement value)  scopedBinding,required TResult Function( TextInputElement value)  textInput,required TResult Function( NumericInputElement value)  numericInput,required TResult Function( ToggleInputElement value)  toggleInput,required TResult Function( SelectInputElement value)  selectInput,required TResult Function( SliderInputElement value)  sliderInput,required TResult Function( DateTimeInputElement value)  dateTimeInput,required TResult Function( DurationInputElement value)  durationInput,required TResult Function( ColorInputElement value)  colorInput,required TResult Function( SearchInputElement value)  searchInput,required TResult Function( BytesInputElement value)  bytesInput,required TResult Function( EnumInputElement value)  enumInput,required TResult Function( NamedInputElement value)  namedInput,required TResult Function( ListInputElement value)  listInput,required TResult Function( MapInputElement value)  mapInput,required TResult Function( RecordInputElement value)  recordInput,required TResult Function( PolymorphicInputElement value)  polymorphicInput,required TResult Function( ButtonElement value)  button,required TResult Function( IconButtonElement value)  iconButton,required TResult Function( MenuElement value)  menu,required TResult Function( TooltipElement value)  tooltip,required TResult Function( ColumnElement value)  column,required TResult Function( RowElement value)  row,required TResult Function( WrapElement value)  wrap,required TResult Function( StackElement value)  stack,required TResult Function( GridElement value)  grid,required TResult Function( CardElement value)  card,required TResult Function( SectionElement value)  section,required TResult Function( CollapsibleElement value)  collapsible,required TResult Function( TabsElement value)  tabs,required TResult Function( DividerElement value)  divider,required TResult Function( SpacerElement value)  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement():
@@ -142,8 +142,8 @@ return selectInput(_that);case SliderInputElement():
 return sliderInput(_that);case DateTimeInputElement():
 return dateTimeInput(_that);case DurationInputElement():
 return durationInput(_that);case ColorInputElement():
-return colorInput(_that);case IconInputElement():
-return iconInput(_that);case BytesInputElement():
+return colorInput(_that);case SearchInputElement():
+return searchInput(_that);case BytesInputElement():
 return bytesInput(_that);case EnumInputElement():
 return enumInput(_that);case NamedInputElement():
 return namedInput(_that);case ListInputElement():
@@ -179,7 +179,7 @@ return spacer(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ProgressElement value)?  progress,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( IconInputElement value)?  iconInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( CardElement value)?  card,TResult? Function( SectionElement value)?  section,TResult? Function( CollapsibleElement value)?  collapsible,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( DiagnosticElement value)?  diagnostic,TResult? Function( DefaultPresentationElement value)?  defaultPresentation,TResult? Function( TextElement value)?  text,TResult? Function( MarkdownElement value)?  markdown,TResult? Function( IconElement value)?  icon,TResult? Function( ImageElement value)?  image,TResult? Function( BadgeElement value)?  badge,TResult? Function( ProgressElement value)?  progress,TResult? Function( TypedFieldElement value)?  typedField,TResult? Function( ConditionalElement value)?  conditional,TResult? Function( RepeatedElement value)?  repeated,TResult? Function( ScopedBindingElement value)?  scopedBinding,TResult? Function( TextInputElement value)?  textInput,TResult? Function( NumericInputElement value)?  numericInput,TResult? Function( ToggleInputElement value)?  toggleInput,TResult? Function( SelectInputElement value)?  selectInput,TResult? Function( SliderInputElement value)?  sliderInput,TResult? Function( DateTimeInputElement value)?  dateTimeInput,TResult? Function( DurationInputElement value)?  durationInput,TResult? Function( ColorInputElement value)?  colorInput,TResult? Function( SearchInputElement value)?  searchInput,TResult? Function( BytesInputElement value)?  bytesInput,TResult? Function( EnumInputElement value)?  enumInput,TResult? Function( NamedInputElement value)?  namedInput,TResult? Function( ListInputElement value)?  listInput,TResult? Function( MapInputElement value)?  mapInput,TResult? Function( RecordInputElement value)?  recordInput,TResult? Function( PolymorphicInputElement value)?  polymorphicInput,TResult? Function( ButtonElement value)?  button,TResult? Function( IconButtonElement value)?  iconButton,TResult? Function( MenuElement value)?  menu,TResult? Function( TooltipElement value)?  tooltip,TResult? Function( ColumnElement value)?  column,TResult? Function( RowElement value)?  row,TResult? Function( WrapElement value)?  wrap,TResult? Function( StackElement value)?  stack,TResult? Function( GridElement value)?  grid,TResult? Function( CardElement value)?  card,TResult? Function( SectionElement value)?  section,TResult? Function( CollapsibleElement value)?  collapsible,TResult? Function( TabsElement value)?  tabs,TResult? Function( DividerElement value)?  divider,TResult? Function( SpacerElement value)?  spacer,}){
 final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
@@ -202,8 +202,8 @@ return selectInput(_that);case SliderInputElement() when sliderInput != null:
 return sliderInput(_that);case DateTimeInputElement() when dateTimeInput != null:
 return dateTimeInput(_that);case DurationInputElement() when durationInput != null:
 return durationInput(_that);case ColorInputElement() when colorInput != null:
-return colorInput(_that);case IconInputElement() when iconInput != null:
-return iconInput(_that);case BytesInputElement() when bytesInput != null:
+return colorInput(_that);case SearchInputElement() when searchInput != null:
+return searchInput(_that);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that);case EnumInputElement() when enumInput != null:
 return enumInput(_that);case NamedInputElement() when namedInput != null:
 return namedInput(_that);case ListInputElement() when listInput != null:
@@ -242,7 +242,7 @@ return spacer(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value)?  text,TResult Function( TypedExpression value)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control)?  iconInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult Function( TypedExpression value)?  text,TResult Function( TypedExpression value)?  markdown,TResult Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult Function( TypedExpression label,  String tone)?  badge,TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult Function( BoundControl control)?  numericInput,TResult Function( BoundControl control)?  toggleInput,TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult Function( BoundControl control)?  durationInput,TResult Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue)?  searchInput,TResult Function( BoundControl control)?  bytesInput,TResult Function( BoundControl control)?  enumInput,TResult Function( BoundControl control)?  namedInput,TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult Function( TypedExpression label,  EditorAction action)?  button,TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult Function()?  divider,TResult Function( TypedExpression? width,  TypedExpression? height)?  spacer,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -264,8 +264,8 @@ return selectInput(_that.control,_that.options,_that.allowCustomValue);case Slid
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement() when dateTimeInput != null:
 return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement() when durationInput != null:
 return durationInput(_that.control);case ColorInputElement() when colorInput != null:
-return colorInput(_that.control,_that.includeAlpha);case IconInputElement() when iconInput != null:
-return iconInput(_that.control);case BytesInputElement() when bytesInput != null:
+return colorInput(_that.control,_that.includeAlpha);case SearchInputElement() when searchInput != null:
+return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that.control);case EnumInputElement() when enumInput != null:
 return enumInput(_that.control);case NamedInputElement() when namedInput != null:
 return namedInput(_that.control);case ListInputElement() when listInput != null:
@@ -305,7 +305,7 @@ return spacer(_that.width,_that.height);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value)  text,required TResult Function( TypedExpression value)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control)  iconInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  bool? initiallyExpanded)  card,required TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)  section,required TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)  collapsible,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<TypeDiagnostic> diagnostics)  diagnostic,required TResult Function( BindingReference binding,  PresentationId? presentationId)  defaultPresentation,required TResult Function( TypedExpression value)  text,required TResult Function( TypedExpression value)  markdown,required TResult Function( TypedExpression name,  TypedExpression? semanticLabel)  icon,required TResult Function( TypedExpression source,  TypedExpression? semanticLabel)  image,required TResult Function( TypedExpression label,  String tone)  badge,required TResult Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)  progress,required TResult Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)  typedField,required TResult Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)  repeated,required TResult Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)  scopedBinding,required TResult Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)  textInput,required TResult Function( BoundControl control)  numericInput,required TResult Function( BoundControl control)  toggleInput,required TResult Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)  selectInput,required TResult Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)  sliderInput,required TResult Function( BoundControl control,  bool includeDate,  bool includeTime)  dateTimeInput,required TResult Function( BoundControl control)  durationInput,required TResult Function( BoundControl control,  bool includeAlpha)  colorInput,required TResult Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue)  searchInput,required TResult Function( BoundControl control)  bytesInput,required TResult Function( BoundControl control)  enumInput,required TResult Function( BoundControl control)  namedInput,required TResult Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)  listInput,required TResult Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)  mapInput,required TResult Function( BoundControl control,  PresentationNode? fieldPresentation)  recordInput,required TResult Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)  polymorphicInput,required TResult Function( TypedExpression label,  EditorAction action)  button,required TResult Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)  iconButton,required TResult Function( List<PresentationMenuItem> items,  TypedExpression? label)  menu,required TResult Function( TypedExpression message,  PresentationNode child)  tooltip,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  column,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  row,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  wrap,required TResult Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)  stack,required TResult Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)  grid,required TResult Function( PresentationNode child,  bool? initiallyExpanded)  card,required TResult Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)  section,required TResult Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)  collapsible,required TResult Function( List<TabItem> tabs,  String? initiallySelectedTabId)  tabs,required TResult Function()  divider,required TResult Function( TypedExpression? width,  TypedExpression? height)  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement():
 return diagnostic(_that.diagnostics);case DefaultPresentationElement():
@@ -327,8 +327,8 @@ return selectInput(_that.control,_that.options,_that.allowCustomValue);case Slid
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement():
 return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement():
 return durationInput(_that.control);case ColorInputElement():
-return colorInput(_that.control,_that.includeAlpha);case IconInputElement():
-return iconInput(_that.control);case BytesInputElement():
+return colorInput(_that.control,_that.includeAlpha);case SearchInputElement():
+return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue);case BytesInputElement():
 return bytesInput(_that.control);case EnumInputElement():
 return enumInput(_that.control);case NamedInputElement():
 return namedInput(_that.control);case ListInputElement():
@@ -364,7 +364,7 @@ return spacer(_that.width,_that.height);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value)?  text,TResult? Function( TypedExpression value)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control)?  iconInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult? Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult? Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<TypeDiagnostic> diagnostics)?  diagnostic,TResult? Function( BindingReference binding,  PresentationId? presentationId)?  defaultPresentation,TResult? Function( TypedExpression value)?  text,TResult? Function( TypedExpression value)?  markdown,TResult? Function( TypedExpression name,  TypedExpression? semanticLabel)?  icon,TResult? Function( TypedExpression source,  TypedExpression? semanticLabel)?  image,TResult? Function( TypedExpression label,  String tone)?  badge,TResult? Function( TypedExpression value,  TypedExpression maximum,  TypedExpression? label)?  progress,TResult? Function( BindingReference binding,  TypeExpression expectedType,  PresentationNode? presentation)?  typedField,TResult? Function( TypedExpression condition,  PresentationNode whenTrue,  PresentationNode? whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  PresentationNode template,  PresentationNode? empty)?  repeated,TResult? Function( BindingReference binding,  BindingId scopeBindingId,  PresentationNode child)?  scopedBinding,TResult? Function( BoundControl control,  bool multiline,  TypedExpression? placeholder)?  textInput,TResult? Function( BoundControl control)?  numericInput,TResult? Function( BoundControl control)?  toggleInput,TResult? Function( BoundControl control,  List<SelectOption> options,  bool allowCustomValue)?  selectInput,TResult? Function( BoundControl control,  TypedExpression minimum,  TypedExpression maximum,  TypedExpression? divisions)?  sliderInput,TResult? Function( BoundControl control,  bool includeDate,  bool includeTime)?  dateTimeInput,TResult? Function( BoundControl control)?  durationInput,TResult? Function( BoundControl control,  bool includeAlpha)?  colorInput,TResult? Function( BoundControl control,  SearchSelectionMode selectionMode,  BindingId queryBindingId,  BindingId summaryBindingId,  TypedExpression maximumExtent,  SearchProvider provider,  PresentationNode? summary,  TypedExpression? placeholder,  TypedExpression? customValue)?  searchInput,TResult? Function( BoundControl control)?  bytesInput,TResult? Function( BoundControl control)?  enumInput,TResult? Function( BoundControl control)?  namedInput,TResult? Function( BoundControl control,  PresentationNode? itemPresentation,  bool allowAdd,  bool allowRemove,  bool allowReorder,  BindingId itemBindingId,  BindingId indexBindingId)?  listInput,TResult? Function( BoundControl control,  PresentationNode? keyPresentation,  PresentationNode? valuePresentation,  bool allowAdd,  bool allowRemove,  BindingId keyBindingId,  BindingId valueBindingId)?  mapInput,TResult? Function( BoundControl control,  PresentationNode? fieldPresentation)?  recordInput,TResult? Function( BoundControl control,  List<ConcreteTypePresentation> concreteTypes)?  polymorphicInput,TResult? Function( TypedExpression label,  EditorAction action)?  button,TResult? Function( TypedExpression icon,  TypedExpression semanticLabel,  EditorAction action)?  iconButton,TResult? Function( List<PresentationMenuItem> items,  TypedExpression? label)?  menu,TResult? Function( TypedExpression message,  PresentationNode child)?  tooltip,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  column,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  row,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  wrap,TResult? Function( List<PresentationNode> children,  double spacing,  PresentationMainAxisAlignment mainAxisAlignment,  PresentationCrossAxisAlignment crossAxisAlignment)?  stack,TResult? Function( List<PresentationNode> children,  int columns,  double horizontalSpacing,  double verticalSpacing)?  grid,TResult? Function( PresentationNode child,  bool? initiallyExpanded)?  card,TResult? Function( TypedExpression title,  PresentationNode child,  TypedExpression? description,  bool? initiallyExpanded)?  section,TResult? Function( TypedExpression title,  PresentationNode child,  bool initiallyExpanded)?  collapsible,TResult? Function( List<TabItem> tabs,  String? initiallySelectedTabId)?  tabs,TResult? Function()?  divider,TResult? Function( TypedExpression? width,  TypedExpression? height)?  spacer,}) {final _that = this;
 switch (_that) {
 case DiagnosticElement() when diagnostic != null:
 return diagnostic(_that.diagnostics);case DefaultPresentationElement() when defaultPresentation != null:
@@ -386,8 +386,8 @@ return selectInput(_that.control,_that.options,_that.allowCustomValue);case Slid
 return sliderInput(_that.control,_that.minimum,_that.maximum,_that.divisions);case DateTimeInputElement() when dateTimeInput != null:
 return dateTimeInput(_that.control,_that.includeDate,_that.includeTime);case DurationInputElement() when durationInput != null:
 return durationInput(_that.control);case ColorInputElement() when colorInput != null:
-return colorInput(_that.control,_that.includeAlpha);case IconInputElement() when iconInput != null:
-return iconInput(_that.control);case BytesInputElement() when bytesInput != null:
+return colorInput(_that.control,_that.includeAlpha);case SearchInputElement() when searchInput != null:
+return searchInput(_that.control,_that.selectionMode,_that.queryBindingId,_that.summaryBindingId,_that.maximumExtent,_that.provider,_that.summary,_that.placeholder,_that.customValue);case BytesInputElement() when bytesInput != null:
 return bytesInput(_that.control);case EnumInputElement() when enumInput != null:
 return enumInput(_that.control);case NamedInputElement() when namedInput != null:
 return namedInput(_that.control);case ListInputElement() when listInput != null:
@@ -2162,63 +2162,79 @@ $BoundControlCopyWith<$Res> get control {
 /// @nodoc
 
 
-class IconInputElement implements PresentationElement, SimpleInputElement {
-  const IconInputElement(this.control);
+class SearchInputElement implements PresentationElement {
+  const SearchInputElement({required this.control, required this.selectionMode, required this.queryBindingId, required this.summaryBindingId, required this.maximumExtent, required this.provider, this.summary, this.placeholder, this.customValue});
   
 
  final  BoundControl control;
+ final  SearchSelectionMode selectionMode;
+ final  BindingId queryBindingId;
+ final  BindingId summaryBindingId;
+ final  TypedExpression maximumExtent;
+ final  SearchProvider provider;
+ final  PresentationNode? summary;
+ final  TypedExpression? placeholder;
+ final  TypedExpression? customValue;
 
 /// Create a copy of PresentationElement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$IconInputElementCopyWith<IconInputElement> get copyWith => _$IconInputElementCopyWithImpl<IconInputElement>(this, _$identity);
+$SearchInputElementCopyWith<SearchInputElement> get copyWith => _$SearchInputElementCopyWithImpl<SearchInputElement>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IconInputElement&&(identical(other.control, control) || other.control == control));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchInputElement&&(identical(other.control, control) || other.control == control)&&(identical(other.selectionMode, selectionMode) || other.selectionMode == selectionMode)&&(identical(other.queryBindingId, queryBindingId) || other.queryBindingId == queryBindingId)&&(identical(other.summaryBindingId, summaryBindingId) || other.summaryBindingId == summaryBindingId)&&(identical(other.maximumExtent, maximumExtent) || other.maximumExtent == maximumExtent)&&(identical(other.provider, provider) || other.provider == provider)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.placeholder, placeholder) || other.placeholder == placeholder)&&(identical(other.customValue, customValue) || other.customValue == customValue));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,control);
+int get hashCode => Object.hash(runtimeType,control,selectionMode,queryBindingId,summaryBindingId,maximumExtent,provider,summary,placeholder,customValue);
 
 @override
 String toString() {
-  return 'PresentationElement.iconInput(control: $control)';
+  return 'PresentationElement.searchInput(control: $control, selectionMode: $selectionMode, queryBindingId: $queryBindingId, summaryBindingId: $summaryBindingId, maximumExtent: $maximumExtent, provider: $provider, summary: $summary, placeholder: $placeholder, customValue: $customValue)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $IconInputElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
-  factory $IconInputElementCopyWith(IconInputElement value, $Res Function(IconInputElement) _then) = _$IconInputElementCopyWithImpl;
+abstract mixin class $SearchInputElementCopyWith<$Res> implements $PresentationElementCopyWith<$Res> {
+  factory $SearchInputElementCopyWith(SearchInputElement value, $Res Function(SearchInputElement) _then) = _$SearchInputElementCopyWithImpl;
 @useResult
 $Res call({
- BoundControl control
+ BoundControl control, SearchSelectionMode selectionMode, BindingId queryBindingId, BindingId summaryBindingId, TypedExpression maximumExtent, SearchProvider provider, PresentationNode? summary, TypedExpression? placeholder, TypedExpression? customValue
 });
 
 
-$BoundControlCopyWith<$Res> get control;
+$BoundControlCopyWith<$Res> get control;$BindingIdCopyWith<$Res> get queryBindingId;$BindingIdCopyWith<$Res> get summaryBindingId;$TypedExpressionCopyWith<$Res> get maximumExtent;$SearchProviderCopyWith<$Res> get provider;$PresentationNodeCopyWith<$Res>? get summary;$TypedExpressionCopyWith<$Res>? get placeholder;$TypedExpressionCopyWith<$Res>? get customValue;
 
 }
 /// @nodoc
-class _$IconInputElementCopyWithImpl<$Res>
-    implements $IconInputElementCopyWith<$Res> {
-  _$IconInputElementCopyWithImpl(this._self, this._then);
+class _$SearchInputElementCopyWithImpl<$Res>
+    implements $SearchInputElementCopyWith<$Res> {
+  _$SearchInputElementCopyWithImpl(this._self, this._then);
 
-  final IconInputElement _self;
-  final $Res Function(IconInputElement) _then;
+  final SearchInputElement _self;
+  final $Res Function(SearchInputElement) _then;
 
 /// Create a copy of PresentationElement
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? control = null,}) {
-  return _then(IconInputElement(
-null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
-as BoundControl,
+@pragma('vm:prefer-inline') $Res call({Object? control = null,Object? selectionMode = null,Object? queryBindingId = null,Object? summaryBindingId = null,Object? maximumExtent = null,Object? provider = null,Object? summary = freezed,Object? placeholder = freezed,Object? customValue = freezed,}) {
+  return _then(SearchInputElement(
+control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
+as BoundControl,selectionMode: null == selectionMode ? _self.selectionMode : selectionMode // ignore: cast_nullable_to_non_nullable
+as SearchSelectionMode,queryBindingId: null == queryBindingId ? _self.queryBindingId : queryBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,summaryBindingId: null == summaryBindingId ? _self.summaryBindingId : summaryBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,maximumExtent: null == maximumExtent ? _self.maximumExtent : maximumExtent // ignore: cast_nullable_to_non_nullable
+as TypedExpression,provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as SearchProvider,summary: freezed == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
+as PresentationNode?,placeholder: freezed == placeholder ? _self.placeholder : placeholder // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,customValue: freezed == customValue ? _self.customValue : customValue // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
   ));
 }
 
@@ -2230,6 +2246,78 @@ $BoundControlCopyWith<$Res> get control {
   
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get queryBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.queryBindingId, (value) {
+    return _then(_self.copyWith(queryBindingId: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get summaryBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.summaryBindingId, (value) {
+    return _then(_self.copyWith(summaryBindingId: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get maximumExtent {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.maximumExtent, (value) {
+    return _then(_self.copyWith(maximumExtent: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get provider {
+  
+  return $SearchProviderCopyWith<$Res>(_self.provider, (value) {
+    return _then(_self.copyWith(provider: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res>? get summary {
+    if (_self.summary == null) {
+    return null;
+  }
+
+  return $PresentationNodeCopyWith<$Res>(_self.summary!, (value) {
+    return _then(_self.copyWith(summary: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get placeholder {
+    if (_self.placeholder == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.placeholder!, (value) {
+    return _then(_self.copyWith(placeholder: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get customValue {
+    if (_self.customValue == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.customValue!, (value) {
+    return _then(_self.copyWith(customValue: value));
   });
 }
 }
@@ -3236,7 +3324,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 
 class ColumnElement implements PresentationElement, ChildrenLayoutElement {
-  const ColumnElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
+  const ColumnElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
   
 
  final  List<PresentationNode> _children;
@@ -3314,7 +3402,7 @@ as PresentationCrossAxisAlignment,
 
 
 class RowElement implements PresentationElement, ChildrenLayoutElement {
-  const RowElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
+  const RowElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
   
 
  final  List<PresentationNode> _children;
@@ -3470,7 +3558,7 @@ as PresentationCrossAxisAlignment,
 
 
 class StackElement implements PresentationElement, ChildrenLayoutElement {
-  const StackElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
+  const StackElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
   
 
  final  List<PresentationNode> _children;
@@ -5634,6 +5722,3071 @@ $PresentationNodeCopyWith<$Res> get child {
     return _then(_self.copyWith(child: value));
   });
 }
+}
+
+/// @nodoc
+mixin _$SearchSelectorValues {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorValues);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'SearchSelectorValues()';
+}
+
+
+}
+
+/// @nodoc
+class $SearchSelectorValuesCopyWith<$Res>  {
+$SearchSelectorValuesCopyWith(SearchSelectorValues _, $Res Function(SearchSelectorValues) __);
+}
+
+
+/// Adds pattern-matching-related methods to [SearchSelectorValues].
+extension SearchSelectorValuesPatterns on SearchSelectorValues {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( FreeTextSearchSelectorValues value)?  freeText,TResult Function( EnumeratedSearchSelectorValues value)?  enumeration,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues() when freeText != null:
+return freeText(_that);case EnumeratedSearchSelectorValues() when enumeration != null:
+return enumeration(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( FreeTextSearchSelectorValues value)  freeText,required TResult Function( EnumeratedSearchSelectorValues value)  enumeration,}){
+final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues():
+return freeText(_that);case EnumeratedSearchSelectorValues():
+return enumeration(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( FreeTextSearchSelectorValues value)?  freeText,TResult? Function( EnumeratedSearchSelectorValues value)?  enumeration,}){
+final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues() when freeText != null:
+return freeText(_that);case EnumeratedSearchSelectorValues() when enumeration != null:
+return enumeration(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  freeText,TResult Function( List<String> values)?  enumeration,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues() when freeText != null:
+return freeText();case EnumeratedSearchSelectorValues() when enumeration != null:
+return enumeration(_that.values);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  freeText,required TResult Function( List<String> values)  enumeration,}) {final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues():
+return freeText();case EnumeratedSearchSelectorValues():
+return enumeration(_that.values);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  freeText,TResult? Function( List<String> values)?  enumeration,}) {final _that = this;
+switch (_that) {
+case FreeTextSearchSelectorValues() when freeText != null:
+return freeText();case EnumeratedSearchSelectorValues() when enumeration != null:
+return enumeration(_that.values);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class FreeTextSearchSelectorValues implements SearchSelectorValues {
+  const FreeTextSearchSelectorValues();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FreeTextSearchSelectorValues);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'SearchSelectorValues.freeText()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class EnumeratedSearchSelectorValues implements SearchSelectorValues {
+   EnumeratedSearchSelectorValues(final  List<String> values): assert(values.isNotEmpty, 'Selector values must not be empty.'),_values = values;
+  
+
+ final  List<String> _values;
+ List<String> get values {
+  if (_values is EqualUnmodifiableListView) return _values;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_values);
+}
+
+
+/// Create a copy of SearchSelectorValues
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$EnumeratedSearchSelectorValuesCopyWith<EnumeratedSearchSelectorValues> get copyWith => _$EnumeratedSearchSelectorValuesCopyWithImpl<EnumeratedSearchSelectorValues>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EnumeratedSearchSelectorValues&&const DeepCollectionEquality().equals(other._values, _values));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_values));
+
+@override
+String toString() {
+  return 'SearchSelectorValues.enumeration(values: $values)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $EnumeratedSearchSelectorValuesCopyWith<$Res> implements $SearchSelectorValuesCopyWith<$Res> {
+  factory $EnumeratedSearchSelectorValuesCopyWith(EnumeratedSearchSelectorValues value, $Res Function(EnumeratedSearchSelectorValues) _then) = _$EnumeratedSearchSelectorValuesCopyWithImpl;
+@useResult
+$Res call({
+ List<String> values
+});
+
+
+
+
+}
+/// @nodoc
+class _$EnumeratedSearchSelectorValuesCopyWithImpl<$Res>
+    implements $EnumeratedSearchSelectorValuesCopyWith<$Res> {
+  _$EnumeratedSearchSelectorValuesCopyWithImpl(this._self, this._then);
+
+  final EnumeratedSearchSelectorValues _self;
+  final $Res Function(EnumeratedSearchSelectorValues) _then;
+
+/// Create a copy of SearchSelectorValues
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? values = null,}) {
+  return _then(EnumeratedSearchSelectorValues(
+null == values ? _self._values : values // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$SearchSelectorDefinition {
+
+ String get id; String get key; BindingId get valueBindingId; SearchSelectorValues get values; bool get caseSensitive; SearchSelectorMultiplicity get multiplicity; int? get colorValue;
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchSelectorDefinitionCopyWith<SearchSelectorDefinition> get copyWith => _$SearchSelectorDefinitionCopyWithImpl<SearchSelectorDefinition>(this as SearchSelectorDefinition, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.key, key) || other.key == key)&&(identical(other.valueBindingId, valueBindingId) || other.valueBindingId == valueBindingId)&&(identical(other.values, values) || other.values == values)&&(identical(other.caseSensitive, caseSensitive) || other.caseSensitive == caseSensitive)&&(identical(other.multiplicity, multiplicity) || other.multiplicity == multiplicity)&&(identical(other.colorValue, colorValue) || other.colorValue == colorValue));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,key,valueBindingId,values,caseSensitive,multiplicity,colorValue);
+
+@override
+String toString() {
+  return 'SearchSelectorDefinition(id: $id, key: $key, valueBindingId: $valueBindingId, values: $values, caseSensitive: $caseSensitive, multiplicity: $multiplicity, colorValue: $colorValue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchSelectorDefinitionCopyWith<$Res>  {
+  factory $SearchSelectorDefinitionCopyWith(SearchSelectorDefinition value, $Res Function(SearchSelectorDefinition) _then) = _$SearchSelectorDefinitionCopyWithImpl;
+@useResult
+$Res call({
+ String id, String key, BindingId valueBindingId, SearchSelectorValues values, bool caseSensitive, SearchSelectorMultiplicity multiplicity, int? colorValue
+});
+
+
+$BindingIdCopyWith<$Res> get valueBindingId;$SearchSelectorValuesCopyWith<$Res> get values;
+
+}
+/// @nodoc
+class _$SearchSelectorDefinitionCopyWithImpl<$Res>
+    implements $SearchSelectorDefinitionCopyWith<$Res> {
+  _$SearchSelectorDefinitionCopyWithImpl(this._self, this._then);
+
+  final SearchSelectorDefinition _self;
+  final $Res Function(SearchSelectorDefinition) _then;
+
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? key = null,Object? valueBindingId = null,Object? values = null,Object? caseSensitive = null,Object? multiplicity = null,Object? colorValue = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,valueBindingId: null == valueBindingId ? _self.valueBindingId : valueBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,values: null == values ? _self.values : values // ignore: cast_nullable_to_non_nullable
+as SearchSelectorValues,caseSensitive: null == caseSensitive ? _self.caseSensitive : caseSensitive // ignore: cast_nullable_to_non_nullable
+as bool,multiplicity: null == multiplicity ? _self.multiplicity : multiplicity // ignore: cast_nullable_to_non_nullable
+as SearchSelectorMultiplicity,colorValue: freezed == colorValue ? _self.colorValue : colorValue // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get valueBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
+    return _then(_self.copyWith(valueBindingId: value));
+  });
+}/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorValuesCopyWith<$Res> get values {
+  
+  return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
+    return _then(_self.copyWith(values: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [SearchSelectorDefinition].
+extension SearchSelectorDefinitionPatterns on SearchSelectorDefinition {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( KeyValueSearchSelectorDefinition value)?  keyValue,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition() when keyValue != null:
+return keyValue(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( KeyValueSearchSelectorDefinition value)  keyValue,}){
+final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition():
+return keyValue(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( KeyValueSearchSelectorDefinition value)?  keyValue,}){
+final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition() when keyValue != null:
+return keyValue(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String id,  String key,  BindingId valueBindingId,  SearchSelectorValues values,  bool caseSensitive,  SearchSelectorMultiplicity multiplicity,  int? colorValue)?  keyValue,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition() when keyValue != null:
+return keyValue(_that.id,_that.key,_that.valueBindingId,_that.values,_that.caseSensitive,_that.multiplicity,_that.colorValue);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String id,  String key,  BindingId valueBindingId,  SearchSelectorValues values,  bool caseSensitive,  SearchSelectorMultiplicity multiplicity,  int? colorValue)  keyValue,}) {final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition():
+return keyValue(_that.id,_that.key,_that.valueBindingId,_that.values,_that.caseSensitive,_that.multiplicity,_that.colorValue);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String id,  String key,  BindingId valueBindingId,  SearchSelectorValues values,  bool caseSensitive,  SearchSelectorMultiplicity multiplicity,  int? colorValue)?  keyValue,}) {final _that = this;
+switch (_that) {
+case KeyValueSearchSelectorDefinition() when keyValue != null:
+return keyValue(_that.id,_that.key,_that.valueBindingId,_that.values,_that.caseSensitive,_that.multiplicity,_that.colorValue);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class KeyValueSearchSelectorDefinition implements SearchSelectorDefinition {
+  const KeyValueSearchSelectorDefinition({required this.id, required this.key, required this.valueBindingId, required this.values, this.caseSensitive = false, this.multiplicity = SearchSelectorMultiplicity.single, this.colorValue}): assert(id != "", 'Selector ID must not be empty.'),assert(key != "", 'Selector key must not be empty.');
+  
+
+@override final  String id;
+@override final  String key;
+@override final  BindingId valueBindingId;
+@override final  SearchSelectorValues values;
+@override@JsonKey() final  bool caseSensitive;
+@override@JsonKey() final  SearchSelectorMultiplicity multiplicity;
+@override final  int? colorValue;
+
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$KeyValueSearchSelectorDefinitionCopyWith<KeyValueSearchSelectorDefinition> get copyWith => _$KeyValueSearchSelectorDefinitionCopyWithImpl<KeyValueSearchSelectorDefinition>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeyValueSearchSelectorDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.key, key) || other.key == key)&&(identical(other.valueBindingId, valueBindingId) || other.valueBindingId == valueBindingId)&&(identical(other.values, values) || other.values == values)&&(identical(other.caseSensitive, caseSensitive) || other.caseSensitive == caseSensitive)&&(identical(other.multiplicity, multiplicity) || other.multiplicity == multiplicity)&&(identical(other.colorValue, colorValue) || other.colorValue == colorValue));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,key,valueBindingId,values,caseSensitive,multiplicity,colorValue);
+
+@override
+String toString() {
+  return 'SearchSelectorDefinition.keyValue(id: $id, key: $key, valueBindingId: $valueBindingId, values: $values, caseSensitive: $caseSensitive, multiplicity: $multiplicity, colorValue: $colorValue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $KeyValueSearchSelectorDefinitionCopyWith<$Res> implements $SearchSelectorDefinitionCopyWith<$Res> {
+  factory $KeyValueSearchSelectorDefinitionCopyWith(KeyValueSearchSelectorDefinition value, $Res Function(KeyValueSearchSelectorDefinition) _then) = _$KeyValueSearchSelectorDefinitionCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String key, BindingId valueBindingId, SearchSelectorValues values, bool caseSensitive, SearchSelectorMultiplicity multiplicity, int? colorValue
+});
+
+
+@override $BindingIdCopyWith<$Res> get valueBindingId;@override $SearchSelectorValuesCopyWith<$Res> get values;
+
+}
+/// @nodoc
+class _$KeyValueSearchSelectorDefinitionCopyWithImpl<$Res>
+    implements $KeyValueSearchSelectorDefinitionCopyWith<$Res> {
+  _$KeyValueSearchSelectorDefinitionCopyWithImpl(this._self, this._then);
+
+  final KeyValueSearchSelectorDefinition _self;
+  final $Res Function(KeyValueSearchSelectorDefinition) _then;
+
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? key = null,Object? valueBindingId = null,Object? values = null,Object? caseSensitive = null,Object? multiplicity = null,Object? colorValue = freezed,}) {
+  return _then(KeyValueSearchSelectorDefinition(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,valueBindingId: null == valueBindingId ? _self.valueBindingId : valueBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,values: null == values ? _self.values : values // ignore: cast_nullable_to_non_nullable
+as SearchSelectorValues,caseSensitive: null == caseSensitive ? _self.caseSensitive : caseSensitive // ignore: cast_nullable_to_non_nullable
+as bool,multiplicity: null == multiplicity ? _self.multiplicity : multiplicity // ignore: cast_nullable_to_non_nullable
+as SearchSelectorMultiplicity,colorValue: freezed == colorValue ? _self.colorValue : colorValue // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get valueBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
+    return _then(_self.copyWith(valueBindingId: value));
+  });
+}/// Create a copy of SearchSelectorDefinition
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorValuesCopyWith<$Res> get values {
+  
+  return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
+    return _then(_self.copyWith(values: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$SearchResultMapping {
+
+ BindingId get bindingId; TypedExpression get key; TypedExpression get selectedValue; PresentationNode get presentation;
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchResultMappingCopyWith<SearchResultMapping> get copyWith => _$SearchResultMappingCopyWithImpl<SearchResultMapping>(this as SearchResultMapping, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchResultMapping&&(identical(other.bindingId, bindingId) || other.bindingId == bindingId)&&(identical(other.key, key) || other.key == key)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.presentation, presentation) || other.presentation == presentation));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,bindingId,key,selectedValue,presentation);
+
+@override
+String toString() {
+  return 'SearchResultMapping(bindingId: $bindingId, key: $key, selectedValue: $selectedValue, presentation: $presentation)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchResultMappingCopyWith<$Res>  {
+  factory $SearchResultMappingCopyWith(SearchResultMapping value, $Res Function(SearchResultMapping) _then) = _$SearchResultMappingCopyWithImpl;
+@useResult
+$Res call({
+ BindingId bindingId, TypedExpression key, TypedExpression selectedValue, PresentationNode presentation
+});
+
+
+$BindingIdCopyWith<$Res> get bindingId;$TypedExpressionCopyWith<$Res> get key;$TypedExpressionCopyWith<$Res> get selectedValue;$PresentationNodeCopyWith<$Res> get presentation;
+
+}
+/// @nodoc
+class _$SearchResultMappingCopyWithImpl<$Res>
+    implements $SearchResultMappingCopyWith<$Res> {
+  _$SearchResultMappingCopyWithImpl(this._self, this._then);
+
+  final SearchResultMapping _self;
+  final $Res Function(SearchResultMapping) _then;
+
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? bindingId = null,Object? key = null,Object? selectedValue = null,Object? presentation = null,}) {
+  return _then(_self.copyWith(
+bindingId: null == bindingId ? _self.bindingId : bindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
+as TypedExpression,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
+as PresentationNode,
+  ));
+}
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get bindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
+    return _then(_self.copyWith(bindingId: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get key {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
+    return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get selectedValue {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
+    return _then(_self.copyWith(selectedValue: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res> get presentation {
+  
+  return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
+    return _then(_self.copyWith(presentation: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [SearchResultMapping].
+extension SearchResultMappingPatterns on SearchResultMapping {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SearchResultMapping value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SearchResultMapping() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SearchResultMapping value)  $default,){
+final _that = this;
+switch (_that) {
+case _SearchResultMapping():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SearchResultMapping value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SearchResultMapping() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingId bindingId,  TypedExpression key,  TypedExpression selectedValue,  PresentationNode presentation)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SearchResultMapping() when $default != null:
+return $default(_that.bindingId,_that.key,_that.selectedValue,_that.presentation);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingId bindingId,  TypedExpression key,  TypedExpression selectedValue,  PresentationNode presentation)  $default,) {final _that = this;
+switch (_that) {
+case _SearchResultMapping():
+return $default(_that.bindingId,_that.key,_that.selectedValue,_that.presentation);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingId bindingId,  TypedExpression key,  TypedExpression selectedValue,  PresentationNode presentation)?  $default,) {final _that = this;
+switch (_that) {
+case _SearchResultMapping() when $default != null:
+return $default(_that.bindingId,_that.key,_that.selectedValue,_that.presentation);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SearchResultMapping implements SearchResultMapping {
+  const _SearchResultMapping({required this.bindingId, required this.key, required this.selectedValue, required this.presentation});
+  
+
+@override final  BindingId bindingId;
+@override final  TypedExpression key;
+@override final  TypedExpression selectedValue;
+@override final  PresentationNode presentation;
+
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SearchResultMappingCopyWith<_SearchResultMapping> get copyWith => __$SearchResultMappingCopyWithImpl<_SearchResultMapping>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchResultMapping&&(identical(other.bindingId, bindingId) || other.bindingId == bindingId)&&(identical(other.key, key) || other.key == key)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.presentation, presentation) || other.presentation == presentation));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,bindingId,key,selectedValue,presentation);
+
+@override
+String toString() {
+  return 'SearchResultMapping(bindingId: $bindingId, key: $key, selectedValue: $selectedValue, presentation: $presentation)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SearchResultMappingCopyWith<$Res> implements $SearchResultMappingCopyWith<$Res> {
+  factory _$SearchResultMappingCopyWith(_SearchResultMapping value, $Res Function(_SearchResultMapping) _then) = __$SearchResultMappingCopyWithImpl;
+@override @useResult
+$Res call({
+ BindingId bindingId, TypedExpression key, TypedExpression selectedValue, PresentationNode presentation
+});
+
+
+@override $BindingIdCopyWith<$Res> get bindingId;@override $TypedExpressionCopyWith<$Res> get key;@override $TypedExpressionCopyWith<$Res> get selectedValue;@override $PresentationNodeCopyWith<$Res> get presentation;
+
+}
+/// @nodoc
+class __$SearchResultMappingCopyWithImpl<$Res>
+    implements _$SearchResultMappingCopyWith<$Res> {
+  __$SearchResultMappingCopyWithImpl(this._self, this._then);
+
+  final _SearchResultMapping _self;
+  final $Res Function(_SearchResultMapping) _then;
+
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? bindingId = null,Object? key = null,Object? selectedValue = null,Object? presentation = null,}) {
+  return _then(_SearchResultMapping(
+bindingId: null == bindingId ? _self.bindingId : bindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
+as TypedExpression,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
+as PresentationNode,
+  ));
+}
+
+/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get bindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
+    return _then(_self.copyWith(bindingId: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get key {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
+    return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get selectedValue {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
+    return _then(_self.copyWith(selectedValue: value));
+  });
+}/// Create a copy of SearchResultMapping
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res> get presentation {
+  
+  return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
+    return _then(_self.copyWith(presentation: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$HttpQueryParameter {
+
+ String get name; TypedExpression get value; bool get omitIfEmpty;
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HttpQueryParameterCopyWith<HttpQueryParameter> get copyWith => _$HttpQueryParameterCopyWithImpl<HttpQueryParameter>(this as HttpQueryParameter, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpQueryParameter&&(identical(other.name, name) || other.name == name)&&(identical(other.value, value) || other.value == value)&&(identical(other.omitIfEmpty, omitIfEmpty) || other.omitIfEmpty == omitIfEmpty));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,name,value,omitIfEmpty);
+
+@override
+String toString() {
+  return 'HttpQueryParameter(name: $name, value: $value, omitIfEmpty: $omitIfEmpty)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HttpQueryParameterCopyWith<$Res>  {
+  factory $HttpQueryParameterCopyWith(HttpQueryParameter value, $Res Function(HttpQueryParameter) _then) = _$HttpQueryParameterCopyWithImpl;
+@useResult
+$Res call({
+ String name, TypedExpression value, bool omitIfEmpty
+});
+
+
+$TypedExpressionCopyWith<$Res> get value;
+
+}
+/// @nodoc
+class _$HttpQueryParameterCopyWithImpl<$Res>
+    implements $HttpQueryParameterCopyWith<$Res> {
+  _$HttpQueryParameterCopyWithImpl(this._self, this._then);
+
+  final HttpQueryParameter _self;
+  final $Res Function(HttpQueryParameter) _then;
+
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? value = null,Object? omitIfEmpty = null,}) {
+  return _then(_self.copyWith(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,omitIfEmpty: null == omitIfEmpty ? _self.omitIfEmpty : omitIfEmpty // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [HttpQueryParameter].
+extension HttpQueryParameterPatterns on HttpQueryParameter {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _HttpQueryParameter value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _HttpQueryParameter() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _HttpQueryParameter value)  $default,){
+final _that = this;
+switch (_that) {
+case _HttpQueryParameter():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _HttpQueryParameter value)?  $default,){
+final _that = this;
+switch (_that) {
+case _HttpQueryParameter() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  TypedExpression value,  bool omitIfEmpty)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _HttpQueryParameter() when $default != null:
+return $default(_that.name,_that.value,_that.omitIfEmpty);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  TypedExpression value,  bool omitIfEmpty)  $default,) {final _that = this;
+switch (_that) {
+case _HttpQueryParameter():
+return $default(_that.name,_that.value,_that.omitIfEmpty);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  TypedExpression value,  bool omitIfEmpty)?  $default,) {final _that = this;
+switch (_that) {
+case _HttpQueryParameter() when $default != null:
+return $default(_that.name,_that.value,_that.omitIfEmpty);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _HttpQueryParameter implements HttpQueryParameter {
+  const _HttpQueryParameter({required this.name, required this.value, this.omitIfEmpty = false}): assert(name != "", 'Query parameter name must not be empty.');
+  
+
+@override final  String name;
+@override final  TypedExpression value;
+@override@JsonKey() final  bool omitIfEmpty;
+
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$HttpQueryParameterCopyWith<_HttpQueryParameter> get copyWith => __$HttpQueryParameterCopyWithImpl<_HttpQueryParameter>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HttpQueryParameter&&(identical(other.name, name) || other.name == name)&&(identical(other.value, value) || other.value == value)&&(identical(other.omitIfEmpty, omitIfEmpty) || other.omitIfEmpty == omitIfEmpty));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,name,value,omitIfEmpty);
+
+@override
+String toString() {
+  return 'HttpQueryParameter(name: $name, value: $value, omitIfEmpty: $omitIfEmpty)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$HttpQueryParameterCopyWith<$Res> implements $HttpQueryParameterCopyWith<$Res> {
+  factory _$HttpQueryParameterCopyWith(_HttpQueryParameter value, $Res Function(_HttpQueryParameter) _then) = __$HttpQueryParameterCopyWithImpl;
+@override @useResult
+$Res call({
+ String name, TypedExpression value, bool omitIfEmpty
+});
+
+
+@override $TypedExpressionCopyWith<$Res> get value;
+
+}
+/// @nodoc
+class __$HttpQueryParameterCopyWithImpl<$Res>
+    implements _$HttpQueryParameterCopyWith<$Res> {
+  __$HttpQueryParameterCopyWithImpl(this._self, this._then);
+
+  final _HttpQueryParameter _self;
+  final $Res Function(_HttpQueryParameter) _then;
+
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? value = null,Object? omitIfEmpty = null,}) {
+  return _then(_HttpQueryParameter(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,omitIfEmpty: null == omitIfEmpty ? _self.omitIfEmpty : omitIfEmpty // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+/// Create a copy of HttpQueryParameter
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$HttpJsonContextBinding {
+
+ BindingId get bindingId; String get path; TypeExpression get type;
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HttpJsonContextBindingCopyWith<HttpJsonContextBinding> get copyWith => _$HttpJsonContextBindingCopyWithImpl<HttpJsonContextBinding>(this as HttpJsonContextBinding, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpJsonContextBinding&&(identical(other.bindingId, bindingId) || other.bindingId == bindingId)&&(identical(other.path, path) || other.path == path)&&(identical(other.type, type) || other.type == type));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,bindingId,path,type);
+
+@override
+String toString() {
+  return 'HttpJsonContextBinding(bindingId: $bindingId, path: $path, type: $type)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HttpJsonContextBindingCopyWith<$Res>  {
+  factory $HttpJsonContextBindingCopyWith(HttpJsonContextBinding value, $Res Function(HttpJsonContextBinding) _then) = _$HttpJsonContextBindingCopyWithImpl;
+@useResult
+$Res call({
+ BindingId bindingId, String path, TypeExpression type
+});
+
+
+$BindingIdCopyWith<$Res> get bindingId;$TypeExpressionCopyWith<$Res> get type;
+
+}
+/// @nodoc
+class _$HttpJsonContextBindingCopyWithImpl<$Res>
+    implements $HttpJsonContextBindingCopyWith<$Res> {
+  _$HttpJsonContextBindingCopyWithImpl(this._self, this._then);
+
+  final HttpJsonContextBinding _self;
+  final $Res Function(HttpJsonContextBinding) _then;
+
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? bindingId = null,Object? path = null,Object? type = null,}) {
+  return _then(_self.copyWith(
+bindingId: null == bindingId ? _self.bindingId : bindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as TypeExpression,
+  ));
+}
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get bindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
+    return _then(_self.copyWith(bindingId: value));
+  });
+}/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypeExpressionCopyWith<$Res> get type {
+  
+  return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
+    return _then(_self.copyWith(type: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [HttpJsonContextBinding].
+extension HttpJsonContextBindingPatterns on HttpJsonContextBinding {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _HttpJsonContextBinding value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _HttpJsonContextBinding value)  $default,){
+final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _HttpJsonContextBinding value)?  $default,){
+final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingId bindingId,  String path,  TypeExpression type)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding() when $default != null:
+return $default(_that.bindingId,_that.path,_that.type);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingId bindingId,  String path,  TypeExpression type)  $default,) {final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding():
+return $default(_that.bindingId,_that.path,_that.type);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingId bindingId,  String path,  TypeExpression type)?  $default,) {final _that = this;
+switch (_that) {
+case _HttpJsonContextBinding() when $default != null:
+return $default(_that.bindingId,_that.path,_that.type);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _HttpJsonContextBinding implements HttpJsonContextBinding {
+  const _HttpJsonContextBinding({required this.bindingId, required this.path, required this.type}): assert(path != "", 'Context binding path must not be empty.');
+  
+
+@override final  BindingId bindingId;
+@override final  String path;
+@override final  TypeExpression type;
+
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$HttpJsonContextBindingCopyWith<_HttpJsonContextBinding> get copyWith => __$HttpJsonContextBindingCopyWithImpl<_HttpJsonContextBinding>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HttpJsonContextBinding&&(identical(other.bindingId, bindingId) || other.bindingId == bindingId)&&(identical(other.path, path) || other.path == path)&&(identical(other.type, type) || other.type == type));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,bindingId,path,type);
+
+@override
+String toString() {
+  return 'HttpJsonContextBinding(bindingId: $bindingId, path: $path, type: $type)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$HttpJsonContextBindingCopyWith<$Res> implements $HttpJsonContextBindingCopyWith<$Res> {
+  factory _$HttpJsonContextBindingCopyWith(_HttpJsonContextBinding value, $Res Function(_HttpJsonContextBinding) _then) = __$HttpJsonContextBindingCopyWithImpl;
+@override @useResult
+$Res call({
+ BindingId bindingId, String path, TypeExpression type
+});
+
+
+@override $BindingIdCopyWith<$Res> get bindingId;@override $TypeExpressionCopyWith<$Res> get type;
+
+}
+/// @nodoc
+class __$HttpJsonContextBindingCopyWithImpl<$Res>
+    implements _$HttpJsonContextBindingCopyWith<$Res> {
+  __$HttpJsonContextBindingCopyWithImpl(this._self, this._then);
+
+  final _HttpJsonContextBinding _self;
+  final $Res Function(_HttpJsonContextBinding) _then;
+
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? bindingId = null,Object? path = null,Object? type = null,}) {
+  return _then(_HttpJsonContextBinding(
+bindingId: null == bindingId ? _self.bindingId : bindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as TypeExpression,
+  ));
+}
+
+/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get bindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
+    return _then(_self.copyWith(bindingId: value));
+  });
+}/// Create a copy of HttpJsonContextBinding
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypeExpressionCopyWith<$Res> get type {
+  
+  return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
+    return _then(_self.copyWith(type: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$SearchRankingField {
+
+ TypedExpression get expression; int get weight;
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchRankingFieldCopyWith<SearchRankingField> get copyWith => _$SearchRankingFieldCopyWithImpl<SearchRankingField>(this as SearchRankingField, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchRankingField&&(identical(other.expression, expression) || other.expression == expression)&&(identical(other.weight, weight) || other.weight == weight));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,expression,weight);
+
+@override
+String toString() {
+  return 'SearchRankingField(expression: $expression, weight: $weight)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchRankingFieldCopyWith<$Res>  {
+  factory $SearchRankingFieldCopyWith(SearchRankingField value, $Res Function(SearchRankingField) _then) = _$SearchRankingFieldCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression expression, int weight
+});
+
+
+$TypedExpressionCopyWith<$Res> get expression;
+
+}
+/// @nodoc
+class _$SearchRankingFieldCopyWithImpl<$Res>
+    implements $SearchRankingFieldCopyWith<$Res> {
+  _$SearchRankingFieldCopyWithImpl(this._self, this._then);
+
+  final SearchRankingField _self;
+  final $Res Function(SearchRankingField) _then;
+
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? expression = null,Object? weight = null,}) {
+  return _then(_self.copyWith(
+expression: null == expression ? _self.expression : expression // ignore: cast_nullable_to_non_nullable
+as TypedExpression,weight: null == weight ? _self.weight : weight // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get expression {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
+    return _then(_self.copyWith(expression: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [SearchRankingField].
+extension SearchRankingFieldPatterns on SearchRankingField {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SearchRankingField value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SearchRankingField() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SearchRankingField value)  $default,){
+final _that = this;
+switch (_that) {
+case _SearchRankingField():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SearchRankingField value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SearchRankingField() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( TypedExpression expression,  int weight)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SearchRankingField() when $default != null:
+return $default(_that.expression,_that.weight);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( TypedExpression expression,  int weight)  $default,) {final _that = this;
+switch (_that) {
+case _SearchRankingField():
+return $default(_that.expression,_that.weight);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( TypedExpression expression,  int weight)?  $default,) {final _that = this;
+switch (_that) {
+case _SearchRankingField() when $default != null:
+return $default(_that.expression,_that.weight);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SearchRankingField implements SearchRankingField {
+  const _SearchRankingField({required this.expression, required this.weight}): assert(weight > 0, 'Ranking weight must be positive.');
+  
+
+@override final  TypedExpression expression;
+@override final  int weight;
+
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SearchRankingFieldCopyWith<_SearchRankingField> get copyWith => __$SearchRankingFieldCopyWithImpl<_SearchRankingField>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchRankingField&&(identical(other.expression, expression) || other.expression == expression)&&(identical(other.weight, weight) || other.weight == weight));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,expression,weight);
+
+@override
+String toString() {
+  return 'SearchRankingField(expression: $expression, weight: $weight)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SearchRankingFieldCopyWith<$Res> implements $SearchRankingFieldCopyWith<$Res> {
+  factory _$SearchRankingFieldCopyWith(_SearchRankingField value, $Res Function(_SearchRankingField) _then) = __$SearchRankingFieldCopyWithImpl;
+@override @useResult
+$Res call({
+ TypedExpression expression, int weight
+});
+
+
+@override $TypedExpressionCopyWith<$Res> get expression;
+
+}
+/// @nodoc
+class __$SearchRankingFieldCopyWithImpl<$Res>
+    implements _$SearchRankingFieldCopyWith<$Res> {
+  __$SearchRankingFieldCopyWithImpl(this._self, this._then);
+
+  final _SearchRankingField _self;
+  final $Res Function(_SearchRankingField) _then;
+
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? expression = null,Object? weight = null,}) {
+  return _then(_SearchRankingField(
+expression: null == expression ? _self.expression : expression // ignore: cast_nullable_to_non_nullable
+as TypedExpression,weight: null == weight ? _self.weight : weight // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+/// Create a copy of SearchRankingField
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get expression {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
+    return _then(_self.copyWith(expression: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$SearchProvider {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchProvider);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'SearchProvider()';
+}
+
+
+}
+
+/// @nodoc
+class $SearchProviderCopyWith<$Res>  {
+$SearchProviderCopyWith(SearchProvider _, $Res Function(SearchProvider) __);
+}
+
+
+/// Adds pattern-matching-related methods to [SearchProvider].
+extension SearchProviderPatterns on SearchProvider {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( StaticSearchProvider value)?  staticValues,TResult Function( HttpJsonSearchProvider value)?  httpJson,TResult Function( RealmCallbackSearchProvider value)?  realmCallback,TResult Function( GatedSearchProvider value)?  gate,TResult Function( DebouncedSearchProvider value)?  debounce,TResult Function( CachedSearchProvider value)?  cache,TResult Function( RankedSearchProvider value)?  rank,TResult Function( LimitedSearchProvider value)?  limit,TResult Function( DistinctSearchProvider value)?  distinct,TResult Function( HistoricalSearchProvider value)?  history,TResult Function( SectionSearchProvider value)?  section,TResult Function( MergedSearchProvider value)?  merge,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case StaticSearchProvider() when staticValues != null:
+return staticValues(_that);case HttpJsonSearchProvider() when httpJson != null:
+return httpJson(_that);case RealmCallbackSearchProvider() when realmCallback != null:
+return realmCallback(_that);case GatedSearchProvider() when gate != null:
+return gate(_that);case DebouncedSearchProvider() when debounce != null:
+return debounce(_that);case CachedSearchProvider() when cache != null:
+return cache(_that);case RankedSearchProvider() when rank != null:
+return rank(_that);case LimitedSearchProvider() when limit != null:
+return limit(_that);case DistinctSearchProvider() when distinct != null:
+return distinct(_that);case HistoricalSearchProvider() when history != null:
+return history(_that);case SectionSearchProvider() when section != null:
+return section(_that);case MergedSearchProvider() when merge != null:
+return merge(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( StaticSearchProvider value)  staticValues,required TResult Function( HttpJsonSearchProvider value)  httpJson,required TResult Function( RealmCallbackSearchProvider value)  realmCallback,required TResult Function( GatedSearchProvider value)  gate,required TResult Function( DebouncedSearchProvider value)  debounce,required TResult Function( CachedSearchProvider value)  cache,required TResult Function( RankedSearchProvider value)  rank,required TResult Function( LimitedSearchProvider value)  limit,required TResult Function( DistinctSearchProvider value)  distinct,required TResult Function( HistoricalSearchProvider value)  history,required TResult Function( SectionSearchProvider value)  section,required TResult Function( MergedSearchProvider value)  merge,}){
+final _that = this;
+switch (_that) {
+case StaticSearchProvider():
+return staticValues(_that);case HttpJsonSearchProvider():
+return httpJson(_that);case RealmCallbackSearchProvider():
+return realmCallback(_that);case GatedSearchProvider():
+return gate(_that);case DebouncedSearchProvider():
+return debounce(_that);case CachedSearchProvider():
+return cache(_that);case RankedSearchProvider():
+return rank(_that);case LimitedSearchProvider():
+return limit(_that);case DistinctSearchProvider():
+return distinct(_that);case HistoricalSearchProvider():
+return history(_that);case SectionSearchProvider():
+return section(_that);case MergedSearchProvider():
+return merge(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( StaticSearchProvider value)?  staticValues,TResult? Function( HttpJsonSearchProvider value)?  httpJson,TResult? Function( RealmCallbackSearchProvider value)?  realmCallback,TResult? Function( GatedSearchProvider value)?  gate,TResult? Function( DebouncedSearchProvider value)?  debounce,TResult? Function( CachedSearchProvider value)?  cache,TResult? Function( RankedSearchProvider value)?  rank,TResult? Function( LimitedSearchProvider value)?  limit,TResult? Function( DistinctSearchProvider value)?  distinct,TResult? Function( HistoricalSearchProvider value)?  history,TResult? Function( SectionSearchProvider value)?  section,TResult? Function( MergedSearchProvider value)?  merge,}){
+final _that = this;
+switch (_that) {
+case StaticSearchProvider() when staticValues != null:
+return staticValues(_that);case HttpJsonSearchProvider() when httpJson != null:
+return httpJson(_that);case RealmCallbackSearchProvider() when realmCallback != null:
+return realmCallback(_that);case GatedSearchProvider() when gate != null:
+return gate(_that);case DebouncedSearchProvider() when debounce != null:
+return debounce(_that);case CachedSearchProvider() when cache != null:
+return cache(_that);case RankedSearchProvider() when rank != null:
+return rank(_that);case LimitedSearchProvider() when limit != null:
+return limit(_that);case DistinctSearchProvider() when distinct != null:
+return distinct(_that);case HistoricalSearchProvider() when history != null:
+return history(_that);case SectionSearchProvider() when section != null:
+return section(_that);case MergedSearchProvider() when merge != null:
+return merge(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult Function( Duration duration,  SearchProvider child)?  debounce,TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult Function( SearchProvider child)?  distinct,TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult Function( List<SearchProvider> children)?  merge,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case StaticSearchProvider() when staticValues != null:
+return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider() when httpJson != null:
+return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider() when realmCallback != null:
+return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
+return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider() when debounce != null:
+return debounce(_that.duration,_that.child);case CachedSearchProvider() when cache != null:
+return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider() when rank != null:
+return rank(_that.fields,_that.child);case LimitedSearchProvider() when limit != null:
+return limit(_that.maximum,_that.child);case DistinctSearchProvider() when distinct != null:
+return distinct(_that.child);case HistoricalSearchProvider() when history != null:
+return history(_that.key,_that.label,_that.capacity,_that.child);case SectionSearchProvider() when section != null:
+return section(_that.id,_that.label,_that.child);case MergedSearchProvider() when merge != null:
+return merge(_that.children);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  staticValues,required TResult Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)  httpJson,required TResult Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)  realmCallback,required TResult Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)  gate,required TResult Function( Duration duration,  SearchProvider child)  debounce,required TResult Function( int capacity,  SearchProvider child,  bool retainStaleResults)  cache,required TResult Function( List<SearchRankingField> fields,  SearchProvider child)  rank,required TResult Function( TypedExpression maximum,  SearchProvider child)  limit,required TResult Function( SearchProvider child)  distinct,required TResult Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)  history,required TResult Function( String id,  TypedExpression label,  SearchProvider child)  section,required TResult Function( List<SearchProvider> children)  merge,}) {final _that = this;
+switch (_that) {
+case StaticSearchProvider():
+return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider():
+return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider():
+return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider():
+return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider():
+return debounce(_that.duration,_that.child);case CachedSearchProvider():
+return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider():
+return rank(_that.fields,_that.child);case LimitedSearchProvider():
+return limit(_that.maximum,_that.child);case DistinctSearchProvider():
+return distinct(_that.child);case HistoricalSearchProvider():
+return history(_that.key,_that.label,_that.capacity,_that.child);case SectionSearchProvider():
+return section(_that.id,_that.label,_that.child);case MergedSearchProvider():
+return merge(_that.children);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TypedExpression values,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  staticValues,TResult? Function( TypedExpression uri,  List<HttpQueryParameter> parameters,  String resultPath,  TypeExpression resultType,  SearchResultMapping result,  List<HttpJsonContextBinding> contextBindings,  List<SearchSelectorDefinition> selectors,  Duration timeout)?  httpJson,TResult? Function( RealmActionId actionId,  TypedExpression payload,  SearchResultMapping result,  List<SearchSelectorDefinition> selectors)?  realmCallback,TResult? Function( TypedExpression condition,  SearchProvider child,  TypedExpression? guidance)?  gate,TResult? Function( Duration duration,  SearchProvider child)?  debounce,TResult? Function( int capacity,  SearchProvider child,  bool retainStaleResults)?  cache,TResult? Function( List<SearchRankingField> fields,  SearchProvider child)?  rank,TResult? Function( TypedExpression maximum,  SearchProvider child)?  limit,TResult? Function( SearchProvider child)?  distinct,TResult? Function( String key,  TypedExpression label,  int capacity,  SearchProvider child)?  history,TResult? Function( String id,  TypedExpression label,  SearchProvider child)?  section,TResult? Function( List<SearchProvider> children)?  merge,}) {final _that = this;
+switch (_that) {
+case StaticSearchProvider() when staticValues != null:
+return staticValues(_that.values,_that.result,_that.selectors);case HttpJsonSearchProvider() when httpJson != null:
+return httpJson(_that.uri,_that.parameters,_that.resultPath,_that.resultType,_that.result,_that.contextBindings,_that.selectors,_that.timeout);case RealmCallbackSearchProvider() when realmCallback != null:
+return realmCallback(_that.actionId,_that.payload,_that.result,_that.selectors);case GatedSearchProvider() when gate != null:
+return gate(_that.condition,_that.child,_that.guidance);case DebouncedSearchProvider() when debounce != null:
+return debounce(_that.duration,_that.child);case CachedSearchProvider() when cache != null:
+return cache(_that.capacity,_that.child,_that.retainStaleResults);case RankedSearchProvider() when rank != null:
+return rank(_that.fields,_that.child);case LimitedSearchProvider() when limit != null:
+return limit(_that.maximum,_that.child);case DistinctSearchProvider() when distinct != null:
+return distinct(_that.child);case HistoricalSearchProvider() when history != null:
+return history(_that.key,_that.label,_that.capacity,_that.child);case SectionSearchProvider() when section != null:
+return section(_that.id,_that.label,_that.child);case MergedSearchProvider() when merge != null:
+return merge(_that.children);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class StaticSearchProvider implements SearchProvider {
+  const StaticSearchProvider({required this.values, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
+  
+
+ final  TypedExpression values;
+ final  SearchResultMapping result;
+ final  List<SearchSelectorDefinition> _selectors;
+@JsonKey() List<SearchSelectorDefinition> get selectors {
+  if (_selectors is EqualUnmodifiableListView) return _selectors;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_selectors);
+}
+
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StaticSearchProviderCopyWith<StaticSearchProvider> get copyWith => _$StaticSearchProviderCopyWithImpl<StaticSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StaticSearchProvider&&(identical(other.values, values) || other.values == values)&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._selectors, _selectors));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,values,result,const DeepCollectionEquality().hash(_selectors));
+
+@override
+String toString() {
+  return 'SearchProvider.staticValues(values: $values, result: $result, selectors: $selectors)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StaticSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $StaticSearchProviderCopyWith(StaticSearchProvider value, $Res Function(StaticSearchProvider) _then) = _$StaticSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression values, SearchResultMapping result, List<SearchSelectorDefinition> selectors
+});
+
+
+$TypedExpressionCopyWith<$Res> get values;$SearchResultMappingCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class _$StaticSearchProviderCopyWithImpl<$Res>
+    implements $StaticSearchProviderCopyWith<$Res> {
+  _$StaticSearchProviderCopyWithImpl(this._self, this._then);
+
+  final StaticSearchProvider _self;
+  final $Res Function(StaticSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? values = null,Object? result = null,Object? selectors = null,}) {
+  return _then(StaticSearchProvider(
+values: null == values ? _self.values : values // ignore: cast_nullable_to_non_nullable
+as TypedExpression,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as SearchResultMapping,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
+as List<SearchSelectorDefinition>,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get values {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.values, (value) {
+    return _then(_self.copyWith(values: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchResultMappingCopyWith<$Res> get result {
+  
+  return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class HttpJsonSearchProvider implements SearchProvider {
+  const HttpJsonSearchProvider({required this.uri, required final  List<HttpQueryParameter> parameters, required this.resultPath, required this.resultType, required this.result, final  List<HttpJsonContextBinding> contextBindings = const [], final  List<SearchSelectorDefinition> selectors = const [], this.timeout = const Duration(seconds: 5)}): assert(resultPath != "", 'Result path must not be empty.'),_parameters = parameters,_contextBindings = contextBindings,_selectors = selectors;
+  
+
+ final  TypedExpression uri;
+ final  List<HttpQueryParameter> _parameters;
+ List<HttpQueryParameter> get parameters {
+  if (_parameters is EqualUnmodifiableListView) return _parameters;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_parameters);
+}
+
+ final  String resultPath;
+ final  TypeExpression resultType;
+ final  SearchResultMapping result;
+ final  List<HttpJsonContextBinding> _contextBindings;
+@JsonKey() List<HttpJsonContextBinding> get contextBindings {
+  if (_contextBindings is EqualUnmodifiableListView) return _contextBindings;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_contextBindings);
+}
+
+ final  List<SearchSelectorDefinition> _selectors;
+@JsonKey() List<SearchSelectorDefinition> get selectors {
+  if (_selectors is EqualUnmodifiableListView) return _selectors;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_selectors);
+}
+
+@JsonKey() final  Duration timeout;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HttpJsonSearchProviderCopyWith<HttpJsonSearchProvider> get copyWith => _$HttpJsonSearchProviderCopyWithImpl<HttpJsonSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpJsonSearchProvider&&(identical(other.uri, uri) || other.uri == uri)&&const DeepCollectionEquality().equals(other._parameters, _parameters)&&(identical(other.resultPath, resultPath) || other.resultPath == resultPath)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._contextBindings, _contextBindings)&&const DeepCollectionEquality().equals(other._selectors, _selectors)&&(identical(other.timeout, timeout) || other.timeout == timeout));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,uri,const DeepCollectionEquality().hash(_parameters),resultPath,resultType,result,const DeepCollectionEquality().hash(_contextBindings),const DeepCollectionEquality().hash(_selectors),timeout);
+
+@override
+String toString() {
+  return 'SearchProvider.httpJson(uri: $uri, parameters: $parameters, resultPath: $resultPath, resultType: $resultType, result: $result, contextBindings: $contextBindings, selectors: $selectors, timeout: $timeout)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HttpJsonSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $HttpJsonSearchProviderCopyWith(HttpJsonSearchProvider value, $Res Function(HttpJsonSearchProvider) _then) = _$HttpJsonSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression uri, List<HttpQueryParameter> parameters, String resultPath, TypeExpression resultType, SearchResultMapping result, List<HttpJsonContextBinding> contextBindings, List<SearchSelectorDefinition> selectors, Duration timeout
+});
+
+
+$TypedExpressionCopyWith<$Res> get uri;$TypeExpressionCopyWith<$Res> get resultType;$SearchResultMappingCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class _$HttpJsonSearchProviderCopyWithImpl<$Res>
+    implements $HttpJsonSearchProviderCopyWith<$Res> {
+  _$HttpJsonSearchProviderCopyWithImpl(this._self, this._then);
+
+  final HttpJsonSearchProvider _self;
+  final $Res Function(HttpJsonSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? uri = null,Object? parameters = null,Object? resultPath = null,Object? resultType = null,Object? result = null,Object? contextBindings = null,Object? selectors = null,Object? timeout = null,}) {
+  return _then(HttpJsonSearchProvider(
+uri: null == uri ? _self.uri : uri // ignore: cast_nullable_to_non_nullable
+as TypedExpression,parameters: null == parameters ? _self._parameters : parameters // ignore: cast_nullable_to_non_nullable
+as List<HttpQueryParameter>,resultPath: null == resultPath ? _self.resultPath : resultPath // ignore: cast_nullable_to_non_nullable
+as String,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
+as TypeExpression,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as SearchResultMapping,contextBindings: null == contextBindings ? _self._contextBindings : contextBindings // ignore: cast_nullable_to_non_nullable
+as List<HttpJsonContextBinding>,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
+as List<SearchSelectorDefinition>,timeout: null == timeout ? _self.timeout : timeout // ignore: cast_nullable_to_non_nullable
+as Duration,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get uri {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.uri, (value) {
+    return _then(_self.copyWith(uri: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypeExpressionCopyWith<$Res> get resultType {
+  
+  return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
+    return _then(_self.copyWith(resultType: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchResultMappingCopyWith<$Res> get result {
+  
+  return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class RealmCallbackSearchProvider implements SearchProvider {
+  const RealmCallbackSearchProvider({required this.actionId, required this.payload, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
+  
+
+ final  RealmActionId actionId;
+ final  TypedExpression payload;
+ final  SearchResultMapping result;
+ final  List<SearchSelectorDefinition> _selectors;
+@JsonKey() List<SearchSelectorDefinition> get selectors {
+  if (_selectors is EqualUnmodifiableListView) return _selectors;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_selectors);
+}
+
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RealmCallbackSearchProviderCopyWith<RealmCallbackSearchProvider> get copyWith => _$RealmCallbackSearchProviderCopyWithImpl<RealmCallbackSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmCallbackSearchProvider&&(identical(other.actionId, actionId) || other.actionId == actionId)&&(identical(other.payload, payload) || other.payload == payload)&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._selectors, _selectors));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,actionId,payload,result,const DeepCollectionEquality().hash(_selectors));
+
+@override
+String toString() {
+  return 'SearchProvider.realmCallback(actionId: $actionId, payload: $payload, result: $result, selectors: $selectors)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RealmCallbackSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $RealmCallbackSearchProviderCopyWith(RealmCallbackSearchProvider value, $Res Function(RealmCallbackSearchProvider) _then) = _$RealmCallbackSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ RealmActionId actionId, TypedExpression payload, SearchResultMapping result, List<SearchSelectorDefinition> selectors
+});
+
+
+$RealmActionIdCopyWith<$Res> get actionId;$TypedExpressionCopyWith<$Res> get payload;$SearchResultMappingCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class _$RealmCallbackSearchProviderCopyWithImpl<$Res>
+    implements $RealmCallbackSearchProviderCopyWith<$Res> {
+  _$RealmCallbackSearchProviderCopyWithImpl(this._self, this._then);
+
+  final RealmCallbackSearchProvider _self;
+  final $Res Function(RealmCallbackSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? actionId = null,Object? payload = null,Object? result = null,Object? selectors = null,}) {
+  return _then(RealmCallbackSearchProvider(
+actionId: null == actionId ? _self.actionId : actionId // ignore: cast_nullable_to_non_nullable
+as RealmActionId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as TypedExpression,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as SearchResultMapping,selectors: null == selectors ? _self._selectors : selectors // ignore: cast_nullable_to_non_nullable
+as List<SearchSelectorDefinition>,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$RealmActionIdCopyWith<$Res> get actionId {
+  
+  return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
+    return _then(_self.copyWith(actionId: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get payload {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.payload, (value) {
+    return _then(_self.copyWith(payload: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchResultMappingCopyWith<$Res> get result {
+  
+  return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class GatedSearchProvider implements SearchProvider {
+  const GatedSearchProvider({required this.condition, required this.child, this.guidance});
+  
+
+ final  TypedExpression condition;
+ final  SearchProvider child;
+ final  TypedExpression? guidance;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GatedSearchProviderCopyWith<GatedSearchProvider> get copyWith => _$GatedSearchProviderCopyWithImpl<GatedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GatedSearchProvider&&(identical(other.condition, condition) || other.condition == condition)&&(identical(other.child, child) || other.child == child)&&(identical(other.guidance, guidance) || other.guidance == guidance));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,condition,child,guidance);
+
+@override
+String toString() {
+  return 'SearchProvider.gate(condition: $condition, child: $child, guidance: $guidance)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $GatedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $GatedSearchProviderCopyWith(GatedSearchProvider value, $Res Function(GatedSearchProvider) _then) = _$GatedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression condition, SearchProvider child, TypedExpression? guidance
+});
+
+
+$TypedExpressionCopyWith<$Res> get condition;$SearchProviderCopyWith<$Res> get child;$TypedExpressionCopyWith<$Res>? get guidance;
+
+}
+/// @nodoc
+class _$GatedSearchProviderCopyWithImpl<$Res>
+    implements $GatedSearchProviderCopyWith<$Res> {
+  _$GatedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final GatedSearchProvider _self;
+  final $Res Function(GatedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? condition = null,Object? child = null,Object? guidance = freezed,}) {
+  return _then(GatedSearchProvider(
+condition: null == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
+as TypedExpression,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,guidance: freezed == guidance ? _self.guidance : guidance // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get condition {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
+    return _then(_self.copyWith(condition: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get guidance {
+    if (_self.guidance == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.guidance!, (value) {
+    return _then(_self.copyWith(guidance: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class DebouncedSearchProvider implements SearchProvider {
+  const DebouncedSearchProvider({required this.duration, required this.child});
+  
+
+ final  Duration duration;
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DebouncedSearchProviderCopyWith<DebouncedSearchProvider> get copyWith => _$DebouncedSearchProviderCopyWithImpl<DebouncedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DebouncedSearchProvider&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,duration,child);
+
+@override
+String toString() {
+  return 'SearchProvider.debounce(duration: $duration, child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DebouncedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $DebouncedSearchProviderCopyWith(DebouncedSearchProvider value, $Res Function(DebouncedSearchProvider) _then) = _$DebouncedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ Duration duration, SearchProvider child
+});
+
+
+$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$DebouncedSearchProviderCopyWithImpl<$Res>
+    implements $DebouncedSearchProviderCopyWith<$Res> {
+  _$DebouncedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final DebouncedSearchProvider _self;
+  final $Res Function(DebouncedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? duration = null,Object? child = null,}) {
+  return _then(DebouncedSearchProvider(
+duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
+as Duration,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CachedSearchProvider implements SearchProvider {
+  const CachedSearchProvider({required this.capacity, required this.child, this.retainStaleResults = true}): assert(capacity > 0, 'Cache capacity must be positive.');
+  
+
+ final  int capacity;
+ final  SearchProvider child;
+@JsonKey() final  bool retainStaleResults;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CachedSearchProviderCopyWith<CachedSearchProvider> get copyWith => _$CachedSearchProviderCopyWithImpl<CachedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CachedSearchProvider&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.child, child) || other.child == child)&&(identical(other.retainStaleResults, retainStaleResults) || other.retainStaleResults == retainStaleResults));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,capacity,child,retainStaleResults);
+
+@override
+String toString() {
+  return 'SearchProvider.cache(capacity: $capacity, child: $child, retainStaleResults: $retainStaleResults)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CachedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $CachedSearchProviderCopyWith(CachedSearchProvider value, $Res Function(CachedSearchProvider) _then) = _$CachedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ int capacity, SearchProvider child, bool retainStaleResults
+});
+
+
+$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$CachedSearchProviderCopyWithImpl<$Res>
+    implements $CachedSearchProviderCopyWith<$Res> {
+  _$CachedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final CachedSearchProvider _self;
+  final $Res Function(CachedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? capacity = null,Object? child = null,Object? retainStaleResults = null,}) {
+  return _then(CachedSearchProvider(
+capacity: null == capacity ? _self.capacity : capacity // ignore: cast_nullable_to_non_nullable
+as int,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,retainStaleResults: null == retainStaleResults ? _self.retainStaleResults : retainStaleResults // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class RankedSearchProvider implements SearchProvider {
+   RankedSearchProvider({required final  List<SearchRankingField> fields, required this.child}): assert(fields.isNotEmpty, 'Ranking fields must not be empty.'),_fields = fields;
+  
+
+ final  List<SearchRankingField> _fields;
+ List<SearchRankingField> get fields {
+  if (_fields is EqualUnmodifiableListView) return _fields;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_fields);
+}
+
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RankedSearchProviderCopyWith<RankedSearchProvider> get copyWith => _$RankedSearchProviderCopyWithImpl<RankedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RankedSearchProvider&&const DeepCollectionEquality().equals(other._fields, _fields)&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_fields),child);
+
+@override
+String toString() {
+  return 'SearchProvider.rank(fields: $fields, child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RankedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $RankedSearchProviderCopyWith(RankedSearchProvider value, $Res Function(RankedSearchProvider) _then) = _$RankedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ List<SearchRankingField> fields, SearchProvider child
+});
+
+
+$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$RankedSearchProviderCopyWithImpl<$Res>
+    implements $RankedSearchProviderCopyWith<$Res> {
+  _$RankedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final RankedSearchProvider _self;
+  final $Res Function(RankedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? fields = null,Object? child = null,}) {
+  return _then(RankedSearchProvider(
+fields: null == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
+as List<SearchRankingField>,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class LimitedSearchProvider implements SearchProvider {
+  const LimitedSearchProvider({required this.maximum, required this.child});
+  
+
+ final  TypedExpression maximum;
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LimitedSearchProviderCopyWith<LimitedSearchProvider> get copyWith => _$LimitedSearchProviderCopyWithImpl<LimitedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LimitedSearchProvider&&(identical(other.maximum, maximum) || other.maximum == maximum)&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,maximum,child);
+
+@override
+String toString() {
+  return 'SearchProvider.limit(maximum: $maximum, child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LimitedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $LimitedSearchProviderCopyWith(LimitedSearchProvider value, $Res Function(LimitedSearchProvider) _then) = _$LimitedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression maximum, SearchProvider child
+});
+
+
+$TypedExpressionCopyWith<$Res> get maximum;$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$LimitedSearchProviderCopyWithImpl<$Res>
+    implements $LimitedSearchProviderCopyWith<$Res> {
+  _$LimitedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final LimitedSearchProvider _self;
+  final $Res Function(LimitedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? maximum = null,Object? child = null,}) {
+  return _then(LimitedSearchProvider(
+maximum: null == maximum ? _self.maximum : maximum // ignore: cast_nullable_to_non_nullable
+as TypedExpression,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get maximum {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
+    return _then(_self.copyWith(maximum: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class DistinctSearchProvider implements SearchProvider {
+  const DistinctSearchProvider({required this.child});
+  
+
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DistinctSearchProviderCopyWith<DistinctSearchProvider> get copyWith => _$DistinctSearchProviderCopyWithImpl<DistinctSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DistinctSearchProvider&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,child);
+
+@override
+String toString() {
+  return 'SearchProvider.distinct(child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DistinctSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $DistinctSearchProviderCopyWith(DistinctSearchProvider value, $Res Function(DistinctSearchProvider) _then) = _$DistinctSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ SearchProvider child
+});
+
+
+$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$DistinctSearchProviderCopyWithImpl<$Res>
+    implements $DistinctSearchProviderCopyWith<$Res> {
+  _$DistinctSearchProviderCopyWithImpl(this._self, this._then);
+
+  final DistinctSearchProvider _self;
+  final $Res Function(DistinctSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? child = null,}) {
+  return _then(DistinctSearchProvider(
+child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class HistoricalSearchProvider implements SearchProvider {
+  const HistoricalSearchProvider({required this.key, required this.label, required this.capacity, required this.child}): assert(key != "", 'History key must not be empty.'),assert(capacity > 0, 'History capacity must be positive.');
+  
+
+ final  String key;
+ final  TypedExpression label;
+ final  int capacity;
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HistoricalSearchProviderCopyWith<HistoricalSearchProvider> get copyWith => _$HistoricalSearchProviderCopyWithImpl<HistoricalSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HistoricalSearchProvider&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,key,label,capacity,child);
+
+@override
+String toString() {
+  return 'SearchProvider.history(key: $key, label: $label, capacity: $capacity, child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $HistoricalSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $HistoricalSearchProviderCopyWith(HistoricalSearchProvider value, $Res Function(HistoricalSearchProvider) _then) = _$HistoricalSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ String key, TypedExpression label, int capacity, SearchProvider child
+});
+
+
+$TypedExpressionCopyWith<$Res> get label;$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$HistoricalSearchProviderCopyWithImpl<$Res>
+    implements $HistoricalSearchProviderCopyWith<$Res> {
+  _$HistoricalSearchProviderCopyWithImpl(this._self, this._then);
+
+  final HistoricalSearchProvider _self;
+  final $Res Function(HistoricalSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? capacity = null,Object? child = null,}) {
+  return _then(HistoricalSearchProvider(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression,capacity: null == capacity ? _self.capacity : capacity // ignore: cast_nullable_to_non_nullable
+as int,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get label {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class SectionSearchProvider implements SearchProvider {
+  const SectionSearchProvider({required this.id, required this.label, required this.child}): assert(id != "", 'Section ID must not be empty.');
+  
+
+ final  String id;
+ final  TypedExpression label;
+ final  SearchProvider child;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SectionSearchProviderCopyWith<SectionSearchProvider> get copyWith => _$SectionSearchProviderCopyWithImpl<SectionSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SectionSearchProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.child, child) || other.child == child));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,id,label,child);
+
+@override
+String toString() {
+  return 'SearchProvider.section(id: $id, label: $label, child: $child)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SectionSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $SectionSearchProviderCopyWith(SectionSearchProvider value, $Res Function(SectionSearchProvider) _then) = _$SectionSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ String id, TypedExpression label, SearchProvider child
+});
+
+
+$TypedExpressionCopyWith<$Res> get label;$SearchProviderCopyWith<$Res> get child;
+
+}
+/// @nodoc
+class _$SectionSearchProviderCopyWithImpl<$Res>
+    implements $SectionSearchProviderCopyWith<$Res> {
+  _$SectionSearchProviderCopyWithImpl(this._self, this._then);
+
+  final SectionSearchProvider _self;
+  final $Res Function(SectionSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? child = null,}) {
+  return _then(SectionSearchProvider(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as TypedExpression,child: null == child ? _self.child : child // ignore: cast_nullable_to_non_nullable
+as SearchProvider,
+  ));
+}
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get label {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
+    return _then(_self.copyWith(label: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchProviderCopyWith<$Res> get child {
+  
+  return $SearchProviderCopyWith<$Res>(_self.child, (value) {
+    return _then(_self.copyWith(child: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class MergedSearchProvider implements SearchProvider {
+   MergedSearchProvider({required final  List<SearchProvider> children}): assert(children.isNotEmpty, 'Merged providers must not be empty.'),_children = children;
+  
+
+ final  List<SearchProvider> _children;
+ List<SearchProvider> get children {
+  if (_children is EqualUnmodifiableListView) return _children;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_children);
+}
+
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MergedSearchProviderCopyWith<MergedSearchProvider> get copyWith => _$MergedSearchProviderCopyWithImpl<MergedSearchProvider>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MergedSearchProvider&&const DeepCollectionEquality().equals(other._children, _children));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_children));
+
+@override
+String toString() {
+  return 'SearchProvider.merge(children: $children)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MergedSearchProviderCopyWith<$Res> implements $SearchProviderCopyWith<$Res> {
+  factory $MergedSearchProviderCopyWith(MergedSearchProvider value, $Res Function(MergedSearchProvider) _then) = _$MergedSearchProviderCopyWithImpl;
+@useResult
+$Res call({
+ List<SearchProvider> children
+});
+
+
+
+
+}
+/// @nodoc
+class _$MergedSearchProviderCopyWithImpl<$Res>
+    implements $MergedSearchProviderCopyWith<$Res> {
+  _$MergedSearchProviderCopyWithImpl(this._self, this._then);
+
+  final MergedSearchProvider _self;
+  final $Res Function(MergedSearchProvider) _then;
+
+/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? children = null,}) {
+  return _then(MergedSearchProvider(
+children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
+as List<SearchProvider>,
+  ));
+}
+
+
 }
 
 // dart format on

@@ -47,19 +47,14 @@ List<PresentationDefinition> builtinPresentationDefinitions() => [
   PresentationDefinition(
     id: standardIconifyPresentationId,
     target: NamedType(standardTypeRefs.iconifyIcon),
-    root: const PresentationNode(
-      id: "iconify.default",
-      element: IconInputElement(
-        BoundControl(binding: BindingReference(bindingId: BindingId(0))),
-      ),
-    ),
+    root: iconifySearchPresentation(),
   ),
   PresentationDefinition(
     id: standardSvgIconPresentationId,
     target: NamedType(standardTypeRefs.svgIcon),
     root: const PresentationNode(
       id: "svg.default",
-      element: IconInputElement(
+      element: NamedInputElement(
         BoundControl(binding: BindingReference(bindingId: BindingId(0))),
       ),
     ),

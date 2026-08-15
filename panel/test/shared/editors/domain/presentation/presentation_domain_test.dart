@@ -75,11 +75,11 @@ void main() {
       );
       expect(
         definitions[standardIconifyPresentationId],
-        isA<IconInputElement>(),
+        isA<SearchInputElement>(),
       );
       expect(
         definitions[standardSvgIconPresentationId],
-        isA<IconInputElement>(),
+        isA<NamedInputElement>(),
       );
     });
   });

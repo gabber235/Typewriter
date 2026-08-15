@@ -52,7 +52,26 @@ void main() {
       const BytesInputElement(control),
       const EnumInputElement(control),
       const NamedInputElement(control),
-      const IconInputElement(control),
+      SearchInputElement(
+        control: control,
+        selectionMode: SearchSelectionMode.single,
+        queryBindingId: const BindingId(10),
+        summaryBindingId: const BindingId(11),
+        maximumExtent: 280.asFloatLiteral,
+        provider: SearchProvider.staticValues(
+          values: const ListValue([
+            StringValue("mdi:home"),
+          ]).asLiteral(
+            ListType(element: NamedType(standardTypeRefs.iconifyIcon)),
+          ),
+          result: SearchResultMapping(
+            bindingId: const BindingId(12),
+            key: text,
+            selectedValue: text,
+            presentation: leaf,
+          ),
+        ),
+      ),
       const ListInputElement(
         control: control,
         itemPresentation: leaf,

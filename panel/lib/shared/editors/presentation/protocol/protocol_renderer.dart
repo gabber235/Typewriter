@@ -6,7 +6,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef RealmActionExecutor =
     FutureOr<TypedMutationResult> Function(RealmAction action);
-
 final _defaultEditorHeaderShortcuts =
     Map<HeaderItemCommandId, List<ShortcutActivator>>.unmodifiable({
       HeaderItemCommandId(
@@ -35,8 +34,10 @@ class EditorProtocolRenderer extends StatefulWidget {
     this.presentation,
     this.diagnostics = const [],
     this.onRealmAction,
+    this.realmSearchSourceBuilder,
     this.headerShortcuts = const {},
     this.readOnly = false,
+    this.historyNamespace = "local",
     super.key,
   });
 
@@ -48,9 +49,10 @@ class EditorProtocolRenderer extends StatefulWidget {
   final PresentationNode? presentation;
   final List<TypeDiagnostic> diagnostics;
   final RealmActionExecutor? onRealmAction;
+  final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final bool readOnly;
-
+  final String historyNamespace;
   @override
   State<EditorProtocolRenderer> createState() => _EditorProtocolRendererState();
 }
@@ -128,6 +130,8 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
       registry: registry,
       budget: _budget,
       readOnly: widget.readOnly,
+      historyNamespace: widget.historyNamespace,
+      realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
       setBinding: _setBinding,
       executeAction: _executeAction,
       resolvePresentation: _resolvePresentation,

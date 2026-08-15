@@ -108,6 +108,33 @@ void main() {
           input: text,
         ),
       ),
+      const TypedExpression(
+        resultType: StringType(),
+        expression: StringOperationExpression(
+          operation: StringOperation.titleCase,
+          operands: [text],
+        ),
+      ),
+      TypedExpression(
+        resultType: const IntegerType(width: IntegerWidth.signed64),
+        expression: CollectionOperationExpression(
+          operation: CollectionOperation.length,
+          operands: const [text],
+        ),
+      ),
+      const TypedExpression(
+        resultType: StringType(),
+        expression: RegexExpression(
+          operation: RegexOperation.capture,
+          source: text,
+          pattern: "(value)",
+          group: 1,
+        ),
+      ),
+      const TypedExpression(
+        resultType: StringType(),
+        expression: CoalesceExpression([text, text]),
+      ),
     ];
 
     for (final expression in expressions) {

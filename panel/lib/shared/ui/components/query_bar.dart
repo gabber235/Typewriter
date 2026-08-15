@@ -192,14 +192,11 @@ class QueryBar extends HookWidget {
     final shortcuts = useMemoized(() {
       return [
         if (popupSuggestionsVisible) ...[
-          ActionShortcut(
+          ActionShortcut.intent(
             id: "query_bar_accept_first_suggestion",
             label: "Accept suggestion",
             description: "Accept the first suggestion",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.enter),
-              SingleActivator(LogicalKeyboardKey.numpadEnter),
-            ],
+            intent: ActivateIntent,
             priority: 2000,
             show: true,
             onInvoke: (_) => acceptActiveOrFirstSuggestion(),
@@ -209,9 +206,13 @@ class QueryBar extends HookWidget {
             label: "Switch suggestions",
             description: "Switch between the suggestions popup",
             activators: [
-              SortedLogicalKeyActivator(
-                LogicalKeyboardKey.arrowUp,
-                LogicalKeyboardKey.arrowDown,
+              ...shortcutsFor(PreviousFocusIntent),
+              ...shortcutsFor(NextFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.up,
+              ),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.down,
               ),
             ],
             show: true,
@@ -221,9 +222,11 @@ class QueryBar extends HookWidget {
             id: "query_bar_previous_suggestion",
             label: "",
             description: "",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.arrowUp),
-              SingleActivator(LogicalKeyboardKey.keyP, control: true),
+            activators: [
+              ...shortcutsFor(PreviousFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.up,
+              ),
             ],
             onInvoke: (_) => selectPreviousSuggestion(),
             show: false,
@@ -233,9 +236,11 @@ class QueryBar extends HookWidget {
             id: "query_bar_next_suggestion",
             label: "",
             description: "",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.arrowDown),
-              SingleActivator(LogicalKeyboardKey.keyN, control: true),
+            activators: [
+              ...shortcutsFor(NextFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.down,
+              ),
             ],
             onInvoke: (_) => selectNextSuggestion(),
             show: false,
@@ -289,7 +294,7 @@ class QueryBar extends HookWidget {
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
                 ],
-                textFieldActions: textFieldActions,
+                textFieldActions: [...?textFieldActions, ...shortcuts],
                 selectAllOnFocus: selectAllOnFocus,
                 enabled: enabled,
                 readOnly: readOnly,

@@ -5,6 +5,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editor_expression_encoder_operations.dart";
+
 final class SkirExpressionEncoder {
   SkirExpressionEncoder(this.types, this.values)
     : paths = SkirDataPathCodec(values);
@@ -97,6 +99,39 @@ final class SkirExpressionEncoder {
           input: encode(input).valueOrNull!,
         ),
       ),
+    StringOperationExpression(:final operation, :final operands) =>
+      _operands(operands).mapValue(
+        (operands) => wire.Expression.createStringOperation(
+          operation: operation._encodeWire,
+          operands: operands,
+        ),
+      ),
+    CollectionOperationExpression(:final operation, :final operands) =>
+      _operands(operands).mapValue(
+        (operands) => wire.Expression.createCollectionOperation(
+          operation: operation._encodeWire,
+          operands: operands,
+        ),
+      ),
+    RegexExpression(
+      :final operation,
+      :final source,
+      :final pattern,
+      :final group,
+      :final replacement,
+    ) =>
+      encode(source).mapValue(
+        (source) => wire.Expression.createRegex(
+          operation: operation._encodeWire,
+          source: source,
+          pattern: pattern,
+          group: group,
+          replacement: replacement,
+        ),
+      ),
+    CoalesceExpression(:final operands) => _operands(operands).mapValue(
+      (operands) => wire.Expression.createCoalesce(operands: operands),
+    ),
   };
 
   TypeResult<wire.Expression> _interpolation(List<InterpolationPart> parts) {
@@ -157,36 +192,4 @@ final class SkirExpressionEncoder {
           )
         : TypeResult.failure(diagnostics);
   }
-}
-
-extension on ComparisonOperator {
-  wire.ComparisonOperator get _encodeWire => switch (this) {
-    ComparisonOperator.equal => wire.ComparisonOperator.equal,
-    ComparisonOperator.notEqual => wire.ComparisonOperator.notEqual,
-    ComparisonOperator.lessThan => wire.ComparisonOperator.lessThan,
-    ComparisonOperator.lessThanOrEqual =>
-      wire.ComparisonOperator.lessThanOrEqual,
-    ComparisonOperator.greaterThan => wire.ComparisonOperator.greaterThan,
-    ComparisonOperator.greaterThanOrEqual =>
-      wire.ComparisonOperator.greaterThanOrEqual,
-  };
-}
-
-extension on BooleanOperator {
-  wire.BooleanOperator get _encodeWire => switch (this) {
-    BooleanOperator.and => wire.BooleanOperator.and,
-    BooleanOperator.or => wire.BooleanOperator.or,
-    BooleanOperator.not => wire.BooleanOperator.not,
-  };
-}
-
-extension on ArithmeticOperator {
-  wire.ArithmeticOperator get _encodeWire => switch (this) {
-    ArithmeticOperator.add => wire.ArithmeticOperator.add,
-    ArithmeticOperator.subtract => wire.ArithmeticOperator.subtract,
-    ArithmeticOperator.multiply => wire.ArithmeticOperator.multiply,
-    ArithmeticOperator.divide => wire.ArithmeticOperator.divide,
-    ArithmeticOperator.remainder => wire.ArithmeticOperator.remainder,
-    ArithmeticOperator.negate => wire.ArithmeticOperator.negate,
-  };
 }

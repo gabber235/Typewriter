@@ -67,6 +67,15 @@ final class SkirExpressionDecoder {
                 input: input,
               ),
             ),
+    wire.Expression_stringOperationWrapper(:final value) => _string(value),
+    wire.Expression_collectionOperationWrapper(:final value) => _collection(
+      value,
+    ),
+    wire.Expression_regexWrapper(:final value) => _regex(value),
+    wire.Expression_coalesceWrapper(:final value) => _operands(
+      value.operands,
+      CoalesceExpression.new,
+    ),
     wire.Expression_unknown() => invalidWire("Unknown expression variant"),
   };
 
@@ -146,6 +155,72 @@ final class SkirExpressionDecoder {
           ? null
           : (items) =>
                 ArithmeticExpression(operator: operator, operands: items),
+    );
+  }
+
+  TypeResult<Expression> _string(wire.StringOperationExpression value) {
+    final operation = switch (value.operation) {
+      wire.StringOperation.trim => StringOperation.trim,
+      wire.StringOperation.lowerCase => StringOperation.lowerCase,
+      wire.StringOperation.upperCase => StringOperation.upperCase,
+      wire.StringOperation.titleCase => StringOperation.titleCase,
+      wire.StringOperation.replace => StringOperation.replace,
+      wire.StringOperation.split => StringOperation.split,
+      wire.StringOperation.join => StringOperation.join,
+      wire.StringOperation.substring => StringOperation.substring,
+      wire.StringOperation.contains => StringOperation.contains,
+      wire.StringOperation.startsWith => StringOperation.startsWith,
+      wire.StringOperation.endsWith => StringOperation.endsWith,
+      _ => null,
+    };
+    return _operands(
+      value.operands,
+      operation == null
+          ? null
+          : (operands) => StringOperationExpression(
+              operation: operation,
+              operands: operands,
+            ),
+    );
+  }
+
+  TypeResult<Expression> _collection(wire.CollectionOperationExpression value) {
+    final operation = switch (value.operation) {
+      wire.CollectionOperation.access => CollectionOperation.access,
+      wire.CollectionOperation.length => CollectionOperation.length,
+      wire.CollectionOperation.contains => CollectionOperation.contains,
+      _ => null,
+    };
+    return _operands(
+      value.operands,
+      operation == null
+          ? null
+          : (operands) => CollectionOperationExpression(
+              operation: operation,
+              operands: operands,
+            ),
+    );
+  }
+
+  TypeResult<Expression> _regex(wire.RegexExpression value) {
+    final operation = switch (value.operation) {
+      wire.RegexOperation.matches => RegexOperation.matches,
+      wire.RegexOperation.capture => RegexOperation.capture,
+      wire.RegexOperation.replace => RegexOperation.replace,
+      _ => null,
+    };
+    if (operation == null) return invalidWire("Unknown regex operation");
+    if (value.group case final group? when group < 0) {
+      return invalidWire("Regex capture group is negative");
+    }
+    return decode(value.source).mapValue(
+      (source) => RegexExpression(
+        operation: operation,
+        source: source,
+        pattern: value.pattern,
+        group: value.group,
+        replacement: value.replacement,
+      ),
     );
   }
 

@@ -66,12 +66,14 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     required ActionExecutor executeAction,
     required PresentationResolver resolvePresentation,
     required HeaderExpansionStore expansionStore,
+    RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
     @Default({}) Map<BindingId, BindingReference> aliases,
     @Default({})
     Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,
     @Default({}) Set<(String, BindingReference?)> suppressedHeaders,
     @Default(true) bool enabled,
     @Default(false) bool readOnly,
+    @Default("local") String historyNamespace,
     @Default({}) Set<PresentationId> activePresentations,
   }) = _PresentationRenderScope;
 

@@ -15,6 +15,8 @@ part "editor_presentation_header_codec.dart";
 part "editor_presentation_input_codec.dart";
 part "editor_presentation_interaction_codec.dart";
 part "editor_presentation_layout_codec.dart";
+part "editor_presentation_search_codec.dart";
+part "editor_presentation_search_provider_codec.dart";
 
 final class SkirPresentationDecoder {
   const SkirPresentationDecoder(this.expressions, this.actions, this.types);
@@ -115,6 +117,9 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_colorInputWrapper(:final value) => _colorInput(
       value,
     ),
+    wire.PresentationElement_searchInputWrapper(:final value) => _searchInput(
+      value,
+    ),
     wire.PresentationElement_bytesInputWrapper(:final value) => _bound(
       value,
     ).mapValue(BytesInputElement.new),
@@ -133,9 +138,6 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_namedInputWrapper(:final value) => _bound(
       value,
     ).mapValue(NamedInputElement.new),
-    wire.PresentationElement_iconInputWrapper(:final value) => _bound(
-      value,
-    ).mapValue(IconInputElement.new),
     wire.PresentationElement_defaultPresentationWrapper(:final value) =>
       _defaultPresentation(value),
     wire.PresentationElement_collapsibleWrapper(:final value) => _collapsible(

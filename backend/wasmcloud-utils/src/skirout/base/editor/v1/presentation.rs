@@ -1775,6 +1775,996 @@ impl PolymorphicControl {
 }
 
 // ==============================================================================
+// enum SearchSelectionMode
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SearchSelectionMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchSelectionMode>>),
+    Single,
+    Multiple,
+}
+
+impl Default for SearchSelectionMode {
+    fn default() -> Self {
+        SearchSelectionMode::Unknown(None)
+    }
+}
+
+impl SearchSelectionMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SearchSelectionMode> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SearchSelectionMode>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SearchSelectionMode| match x {
+                        SearchSelectionMode::Unknown(_) => 0,
+                        SearchSelectionMode::Single => 1,
+                        SearchSelectionMode::Multiple => 2,
+                    },
+                    |u| SearchSelectionMode::Unknown(Some(u)),
+                    |x: &SearchSelectionMode| match x { SearchSelectionMode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "SearchSelectionMode",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchSelectionMode> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SearchSelectionMode::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SearchSelectorMultiplicity
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SearchSelectorMultiplicity {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchSelectorMultiplicity>>),
+    Single,
+    Multiple,
+}
+
+impl Default for SearchSelectorMultiplicity {
+    fn default() -> Self {
+        SearchSelectorMultiplicity::Unknown(None)
+    }
+}
+
+impl SearchSelectorMultiplicity {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SearchSelectorMultiplicity> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SearchSelectorMultiplicity>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SearchSelectorMultiplicity| match x {
+                        SearchSelectorMultiplicity::Unknown(_) => 0,
+                        SearchSelectorMultiplicity::Single => 1,
+                        SearchSelectorMultiplicity::Multiple => 2,
+                    },
+                    |u| SearchSelectorMultiplicity::Unknown(Some(u)),
+                    |x: &SearchSelectorMultiplicity| match x { SearchSelectorMultiplicity::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "SearchSelectorMultiplicity",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchSelectorMultiplicity> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SearchSelectorMultiplicity::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchSelectorEnumValues
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchSelectorEnumValues {
+    pub values: Vec<String>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchSelectorEnumValues>>,
+}
+
+impl SearchSelectorEnumValues {
+    pub fn default_ref() -> &'static SearchSelectorEnumValues {
+        static D: std::sync::LazyLock<SearchSelectorEnumValues> = std::sync::LazyLock::new(SearchSelectorEnumValues::default);
+        &D
+    }
+}
+
+impl SearchSelectorEnumValues {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchSelectorEnumValues> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchSelectorEnumValues>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SearchSelectorEnumValues",
+                    "",
+                    |x: &SearchSelectorEnumValues| &x._unrecognized,
+                    |x: &mut SearchSelectorEnumValues, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchSelectorEnumValues> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchSelectorEnumValues::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SearchSelectorValues
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SearchSelectorValues {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchSelectorValues>>),
+    FreeText,
+    Enumeration(Box<SearchSelectorEnumValues>),
+}
+
+impl Default for SearchSelectorValues {
+    fn default() -> Self {
+        SearchSelectorValues::Unknown(None)
+    }
+}
+
+impl SearchSelectorValues {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SearchSelectorValues> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SearchSelectorValues>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SearchSelectorValues| match x {
+                        SearchSelectorValues::Unknown(_) => 0,
+                        SearchSelectorValues::FreeText => 1,
+                        SearchSelectorValues::Enumeration(_) => 2,
+                    },
+                    |u| SearchSelectorValues::Unknown(Some(u)),
+                    |x: &SearchSelectorValues| match x { SearchSelectorValues::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "SearchSelectorValues",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchSelectorValues> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SearchSelectorValues::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchSelectorDefinition
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchSelectorDefinition {
+    pub selector_id: String,
+    pub key: String,
+    pub value_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub values: SearchSelectorValues,
+    pub case_sensitive: bool,
+    pub multiplicity: SearchSelectorMultiplicity,
+    pub color: Option<i64>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchSelectorDefinition>>,
+}
+
+impl SearchSelectorDefinition {
+    pub fn default_ref() -> &'static SearchSelectorDefinition {
+        static D: std::sync::LazyLock<SearchSelectorDefinition> = std::sync::LazyLock::new(SearchSelectorDefinition::default);
+        &D
+    }
+}
+
+pub struct SearchSelectorDefinition_bySelectorId;
+
+impl crate::skir_client::KeyedVecSpec for SearchSelectorDefinition_bySelectorId {
+    type Item = SearchSelectorDefinition;
+    type StorageKey = String;
+    type Lookup = crate::skir_client::internal::BorrowLookup;
+    fn get_key(item: &SearchSelectorDefinition) -> String {
+        item.selector_id.clone()
+    }
+    fn key_extractor() -> &'static str {
+        "selector_id"
+    }
+    fn default_item() -> &'static SearchSelectorDefinition {
+        SearchSelectorDefinition::default_ref()
+    }
+}
+
+impl SearchSelectorDefinition {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchSelectorDefinition> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchSelectorDefinition>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SearchSelectorDefinition",
+                    "",
+                    |x: &SearchSelectorDefinition| &x._unrecognized,
+                    |x: &mut SearchSelectorDefinition, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchSelectorDefinition> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchResultMapping
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchResultMapping {
+    pub binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub key: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub selected_value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub presentation: PresentationNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchResultMapping>>,
+}
+
+impl SearchResultMapping {
+    pub fn default_ref() -> &'static SearchResultMapping {
+        static D: std::sync::LazyLock<SearchResultMapping> = std::sync::LazyLock::new(SearchResultMapping::default);
+        &D
+    }
+}
+
+impl SearchResultMapping {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchResultMapping> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchResultMapping>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SearchResultMapping",
+                    "",
+                    |x: &SearchResultMapping| &x._unrecognized,
+                    |x: &mut SearchResultMapping, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchResultMapping> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct HttpQueryParameter
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HttpQueryParameter {
+    pub name: String,
+    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub omit_if_empty: bool,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpQueryParameter>>,
+}
+
+impl HttpQueryParameter {
+    pub fn default_ref() -> &'static HttpQueryParameter {
+        static D: std::sync::LazyLock<HttpQueryParameter> = std::sync::LazyLock::new(HttpQueryParameter::default);
+        &D
+    }
+}
+
+pub struct HttpQueryParameter_byName;
+
+impl crate::skir_client::KeyedVecSpec for HttpQueryParameter_byName {
+    type Item = HttpQueryParameter;
+    type StorageKey = String;
+    type Lookup = crate::skir_client::internal::BorrowLookup;
+    fn get_key(item: &HttpQueryParameter) -> String {
+        item.name.clone()
+    }
+    fn key_extractor() -> &'static str {
+        "name"
+    }
+    fn default_item() -> &'static HttpQueryParameter {
+        HttpQueryParameter::default_ref()
+    }
+}
+
+impl HttpQueryParameter {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HttpQueryParameter> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HttpQueryParameter>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "HttpQueryParameter",
+                    "",
+                    |x: &HttpQueryParameter| &x._unrecognized,
+                    |x: &mut HttpQueryParameter, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HttpQueryParameter> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(HttpQueryParameter::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct HttpJsonContextBinding
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HttpJsonContextBinding {
+    pub binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub path: String,
+    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpJsonContextBinding>>,
+}
+
+impl HttpJsonContextBinding {
+    pub fn default_ref() -> &'static HttpJsonContextBinding {
+        static D: std::sync::LazyLock<HttpJsonContextBinding> = std::sync::LazyLock::new(HttpJsonContextBinding::default);
+        &D
+    }
+}
+
+impl HttpJsonContextBinding {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HttpJsonContextBinding> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HttpJsonContextBinding>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "HttpJsonContextBinding",
+                    "",
+                    |x: &HttpJsonContextBinding| &x._unrecognized,
+                    |x: &mut HttpJsonContextBinding, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HttpJsonContextBinding> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(HttpJsonContextBinding::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct StaticSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct StaticSearchProvider {
+    pub values: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub result: SearchResultMapping,
+    pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StaticSearchProvider>>,
+}
+
+impl StaticSearchProvider {
+    pub fn default_ref() -> &'static StaticSearchProvider {
+        static D: std::sync::LazyLock<StaticSearchProvider> = std::sync::LazyLock::new(StaticSearchProvider::default);
+        &D
+    }
+}
+
+impl StaticSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<StaticSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<StaticSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "StaticSearchProvider",
+                    "",
+                    |x: &StaticSearchProvider| &x._unrecognized,
+                    |x: &mut StaticSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<StaticSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(StaticSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct HttpJsonSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HttpJsonSearchProvider {
+    pub uri: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub parameters: crate::skir_client::KeyedVec<HttpQueryParameter_byName>,
+    pub result_path: String,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub result: SearchResultMapping,
+    pub context_bindings: Vec<HttpJsonContextBinding>,
+    pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
+    pub timeout_milliseconds: i64,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpJsonSearchProvider>>,
+}
+
+impl HttpJsonSearchProvider {
+    pub fn default_ref() -> &'static HttpJsonSearchProvider {
+        static D: std::sync::LazyLock<HttpJsonSearchProvider> = std::sync::LazyLock::new(HttpJsonSearchProvider::default);
+        &D
+    }
+}
+
+impl HttpJsonSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HttpJsonSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HttpJsonSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "HttpJsonSearchProvider",
+                    "",
+                    |x: &HttpJsonSearchProvider| &x._unrecognized,
+                    |x: &mut HttpJsonSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HttpJsonSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(HttpJsonSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RealmCallbackSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RealmCallbackSearchProvider {
+    pub realm_action_id: crate::skirout::base::editor::v1::type_catalog::RealmActionId,
+    pub payload: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub result: SearchResultMapping,
+    pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmCallbackSearchProvider>>,
+}
+
+impl RealmCallbackSearchProvider {
+    pub fn default_ref() -> &'static RealmCallbackSearchProvider {
+        static D: std::sync::LazyLock<RealmCallbackSearchProvider> = std::sync::LazyLock::new(RealmCallbackSearchProvider::default);
+        &D
+    }
+}
+
+impl RealmCallbackSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmCallbackSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmCallbackSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "RealmCallbackSearchProvider",
+                    "",
+                    |x: &RealmCallbackSearchProvider| &x._unrecognized,
+                    |x: &mut RealmCallbackSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RealmCallbackSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RealmCallbackSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct GatedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GatedSearchProvider {
+    pub condition: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub guidance: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GatedSearchProvider>>,
+}
+
+impl GatedSearchProvider {
+    pub fn default_ref() -> &'static GatedSearchProvider {
+        static D: std::sync::LazyLock<GatedSearchProvider> = std::sync::LazyLock::new(GatedSearchProvider::default);
+        &D
+    }
+}
+
+impl GatedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GatedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GatedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "GatedSearchProvider",
+                    "",
+                    |x: &GatedSearchProvider| &x._unrecognized,
+                    |x: &mut GatedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GatedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GatedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct DebouncedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DebouncedSearchProvider {
+    pub duration_milliseconds: i64,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DebouncedSearchProvider>>,
+}
+
+impl DebouncedSearchProvider {
+    pub fn default_ref() -> &'static DebouncedSearchProvider {
+        static D: std::sync::LazyLock<DebouncedSearchProvider> = std::sync::LazyLock::new(DebouncedSearchProvider::default);
+        &D
+    }
+}
+
+impl DebouncedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DebouncedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DebouncedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "DebouncedSearchProvider",
+                    "",
+                    |x: &DebouncedSearchProvider| &x._unrecognized,
+                    |x: &mut DebouncedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DebouncedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DebouncedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CachedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CachedSearchProvider {
+    pub capacity: i32,
+    pub retain_stale_results: bool,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CachedSearchProvider>>,
+}
+
+impl CachedSearchProvider {
+    pub fn default_ref() -> &'static CachedSearchProvider {
+        static D: std::sync::LazyLock<CachedSearchProvider> = std::sync::LazyLock::new(CachedSearchProvider::default);
+        &D
+    }
+}
+
+impl CachedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CachedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CachedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "CachedSearchProvider",
+                    "",
+                    |x: &CachedSearchProvider| &x._unrecognized,
+                    |x: &mut CachedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CachedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CachedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchRankingField
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchRankingField {
+    pub expression: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub weight: i32,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchRankingField>>,
+}
+
+impl SearchRankingField {
+    pub fn default_ref() -> &'static SearchRankingField {
+        static D: std::sync::LazyLock<SearchRankingField> = std::sync::LazyLock::new(SearchRankingField::default);
+        &D
+    }
+}
+
+impl SearchRankingField {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchRankingField> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchRankingField>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SearchRankingField",
+                    "",
+                    |x: &SearchRankingField| &x._unrecognized,
+                    |x: &mut SearchRankingField, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchRankingField> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchRankingField::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RankedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RankedSearchProvider {
+    pub fields: Vec<SearchRankingField>,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RankedSearchProvider>>,
+}
+
+impl RankedSearchProvider {
+    pub fn default_ref() -> &'static RankedSearchProvider {
+        static D: std::sync::LazyLock<RankedSearchProvider> = std::sync::LazyLock::new(RankedSearchProvider::default);
+        &D
+    }
+}
+
+impl RankedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RankedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RankedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "RankedSearchProvider",
+                    "",
+                    |x: &RankedSearchProvider| &x._unrecognized,
+                    |x: &mut RankedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RankedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RankedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct LimitedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct LimitedSearchProvider {
+    pub maximum: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LimitedSearchProvider>>,
+}
+
+impl LimitedSearchProvider {
+    pub fn default_ref() -> &'static LimitedSearchProvider {
+        static D: std::sync::LazyLock<LimitedSearchProvider> = std::sync::LazyLock::new(LimitedSearchProvider::default);
+        &D
+    }
+}
+
+impl LimitedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<LimitedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<LimitedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "LimitedSearchProvider",
+                    "",
+                    |x: &LimitedSearchProvider| &x._unrecognized,
+                    |x: &mut LimitedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<LimitedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(LimitedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct DistinctSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DistinctSearchProvider {
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DistinctSearchProvider>>,
+}
+
+impl DistinctSearchProvider {
+    pub fn default_ref() -> &'static DistinctSearchProvider {
+        static D: std::sync::LazyLock<DistinctSearchProvider> = std::sync::LazyLock::new(DistinctSearchProvider::default);
+        &D
+    }
+}
+
+impl DistinctSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DistinctSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DistinctSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "DistinctSearchProvider",
+                    "",
+                    |x: &DistinctSearchProvider| &x._unrecognized,
+                    |x: &mut DistinctSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DistinctSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DistinctSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct HistoricalSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HistoricalSearchProvider {
+    pub history_key: String,
+    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub capacity: i32,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HistoricalSearchProvider>>,
+}
+
+impl HistoricalSearchProvider {
+    pub fn default_ref() -> &'static HistoricalSearchProvider {
+        static D: std::sync::LazyLock<HistoricalSearchProvider> = std::sync::LazyLock::new(HistoricalSearchProvider::default);
+        &D
+    }
+}
+
+impl HistoricalSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HistoricalSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HistoricalSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "HistoricalSearchProvider",
+                    "",
+                    |x: &HistoricalSearchProvider| &x._unrecognized,
+                    |x: &mut HistoricalSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HistoricalSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(HistoricalSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SectionSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SectionSearchProvider {
+    pub section_id: String,
+    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub child: SearchProvider,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SectionSearchProvider>>,
+}
+
+impl SectionSearchProvider {
+    pub fn default_ref() -> &'static SectionSearchProvider {
+        static D: std::sync::LazyLock<SectionSearchProvider> = std::sync::LazyLock::new(SectionSearchProvider::default);
+        &D
+    }
+}
+
+impl SectionSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SectionSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SectionSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SectionSearchProvider",
+                    "",
+                    |x: &SectionSearchProvider| &x._unrecognized,
+                    |x: &mut SectionSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SectionSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SectionSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct MergedSearchProvider
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct MergedSearchProvider {
+    pub children: Vec<SearchProvider>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MergedSearchProvider>>,
+}
+
+impl MergedSearchProvider {
+    pub fn default_ref() -> &'static MergedSearchProvider {
+        static D: std::sync::LazyLock<MergedSearchProvider> = std::sync::LazyLock::new(MergedSearchProvider::default);
+        &D
+    }
+}
+
+impl MergedSearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<MergedSearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<MergedSearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "MergedSearchProvider",
+                    "",
+                    |x: &MergedSearchProvider| &x._unrecognized,
+                    |x: &mut MergedSearchProvider, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<MergedSearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(MergedSearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SearchProvider
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SearchProvider {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SearchProvider>>),
+    StaticValues(Box<StaticSearchProvider>),
+    HttpJson(Box<HttpJsonSearchProvider>),
+    RealmCallback(Box<RealmCallbackSearchProvider>),
+    Gate(Box<GatedSearchProvider>),
+    Debounce(Box<DebouncedSearchProvider>),
+    Cache(Box<CachedSearchProvider>),
+    Rank(Box<RankedSearchProvider>),
+    Limit(Box<LimitedSearchProvider>),
+    Distinct(Box<DistinctSearchProvider>),
+    History(Box<HistoricalSearchProvider>),
+    Section(Box<SectionSearchProvider>),
+    Merge(Box<MergedSearchProvider>),
+}
+
+impl Default for SearchProvider {
+    fn default() -> Self {
+        SearchProvider::Unknown(None)
+    }
+}
+
+impl SearchProvider {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SearchProvider> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<SearchProvider>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &SearchProvider| match x {
+                        SearchProvider::Unknown(_) => 0,
+                        SearchProvider::StaticValues(_) => 1,
+                        SearchProvider::HttpJson(_) => 2,
+                        SearchProvider::RealmCallback(_) => 3,
+                        SearchProvider::Gate(_) => 4,
+                        SearchProvider::Debounce(_) => 5,
+                        SearchProvider::Cache(_) => 6,
+                        SearchProvider::Rank(_) => 7,
+                        SearchProvider::Limit(_) => 8,
+                        SearchProvider::Distinct(_) => 9,
+                        SearchProvider::History(_) => 10,
+                        SearchProvider::Section(_) => 11,
+                        SearchProvider::Merge(_) => 12,
+                    },
+                    |u| SearchProvider::Unknown(Some(u)),
+                    |x: &SearchProvider| match x { SearchProvider::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "SearchProvider",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchProvider> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SearchControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SearchControl {
+    pub control: BoundControl,
+    pub selection_mode: SearchSelectionMode,
+    pub query_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub summary_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub maximum_extent: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub provider: SearchProvider,
+    pub summary: Option<PresentationNode>,
+    pub placeholder: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub custom_value: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchControl>>,
+}
+
+impl SearchControl {
+    pub fn default_ref() -> &'static SearchControl {
+        static D: std::sync::LazyLock<SearchControl> = std::sync::LazyLock::new(SearchControl::default);
+        &D
+    }
+}
+
+impl SearchControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SearchControl",
+                    "",
+                    |x: &SearchControl| &x._unrecognized,
+                    |x: &mut SearchControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SearchControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SearchControl::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct DefaultPresentationElement
 // ==============================================================================
 
@@ -2075,7 +3065,7 @@ pub enum PresentationElement {
     PolymorphicInput(Box<PolymorphicControl>),
     DefaultPresentation(Box<DefaultPresentationElement>),
     Collapsible(Box<CollapsibleLayout>),
-    IconInput(Box<BoundControl>),
+    SearchInput(Box<SearchControl>),
 }
 
 impl Default for PresentationElement {
@@ -2132,7 +3122,7 @@ impl PresentationElement {
                         PresentationElement::PolymorphicInput(_) => 39,
                         PresentationElement::DefaultPresentation(_) => 40,
                         PresentationElement::Collapsible(_) => 41,
-                        PresentationElement::IconInput(_) => 42,
+                        PresentationElement::SearchInput(_) => 42,
                     },
                     |u| PresentationElement::Unknown(Some(u)),
                     |x: &PresentationElement| match x { PresentationElement::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -2515,6 +3505,181 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SearchSelectionMode> = SearchSelectionMode::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("single", 1, 1, "", SearchSelectionMode::Single);
+                (*a).add_constant_variant("multiple", 2, 2, "", SearchSelectionMode::Multiple);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SearchSelectorMultiplicity> = SearchSelectorMultiplicity::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("single", 1, 1, "", SearchSelectorMultiplicity::Single);
+                (*a).add_constant_variant("multiple", 2, 2, "", SearchSelectorMultiplicity::Multiple);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchSelectorEnumValues> = SearchSelectorEnumValues::_adapter() as *const _ as *mut _;
+                (*a).add_field("values", 0, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &SearchSelectorEnumValues| &x.values, |x: &mut SearchSelectorEnumValues, v| x.values = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SearchSelectorValues> = SearchSelectorValues::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("free_text", 1, 1, "", SearchSelectorValues::FreeText);
+                (*a).add_wrapper_variant("enumeration", 2, 2, crate::skir_client::internal::struct_serializer_from_static(SearchSelectorEnumValues::_adapter()), "", |v| SearchSelectorValues::Enumeration(Box::new(v)), |x| match x { SearchSelectorValues::Enumeration(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchSelectorDefinition> = SearchSelectorDefinition::_adapter() as *const _ as *mut _;
+                (*a).add_field("selector_id", 0, crate::skir_client::Serializer::string(), "", |x: &SearchSelectorDefinition| &x.selector_id, |x: &mut SearchSelectorDefinition, v| x.selector_id = v);
+                (*a).add_field("key", 1, crate::skir_client::Serializer::string(), "", |x: &SearchSelectorDefinition| &x.key, |x: &mut SearchSelectorDefinition, v| x.key = v);
+                (*a).add_field("value_binding_id", 2, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchSelectorDefinition| &x.value_binding_id, |x: &mut SearchSelectorDefinition, v| x.value_binding_id = v);
+                (*a).add_field("values", 3, crate::skir_client::internal::enum_serializer_from_static(SearchSelectorValues::_adapter()), "", |x: &SearchSelectorDefinition| &x.values, |x: &mut SearchSelectorDefinition, v| x.values = v);
+                (*a).add_field("case_sensitive", 4, crate::skir_client::Serializer::bool(), "", |x: &SearchSelectorDefinition| &x.case_sensitive, |x: &mut SearchSelectorDefinition, v| x.case_sensitive = v);
+                (*a).add_field("multiplicity", 5, crate::skir_client::internal::enum_serializer_from_static(SearchSelectorMultiplicity::_adapter()), "", |x: &SearchSelectorDefinition| &x.multiplicity, |x: &mut SearchSelectorDefinition, v| x.multiplicity = v);
+                (*a).add_field("color", 6, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int64()), "", |x: &SearchSelectorDefinition| &x.color, |x: &mut SearchSelectorDefinition, v| x.color = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchResultMapping> = SearchResultMapping::_adapter() as *const _ as *mut _;
+                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchResultMapping| &x.binding_id, |x: &mut SearchResultMapping, v| x.binding_id = v);
+                (*a).add_field("key", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchResultMapping| &x.key, |x: &mut SearchResultMapping, v| x.key = v);
+                (*a).add_field("selected_value", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchResultMapping| &x.selected_value, |x: &mut SearchResultMapping, v| x.selected_value = v);
+                (*a).add_field("presentation", 3, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &SearchResultMapping| &x.presentation, |x: &mut SearchResultMapping, v| x.presentation = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<HttpQueryParameter> = HttpQueryParameter::_adapter() as *const _ as *mut _;
+                (*a).add_field("name", 0, crate::skir_client::Serializer::string(), "", |x: &HttpQueryParameter| &x.name, |x: &mut HttpQueryParameter, v| x.name = v);
+                (*a).add_field("value", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HttpQueryParameter| &x.value, |x: &mut HttpQueryParameter, v| x.value = v);
+                (*a).add_field("omit_if_empty", 2, crate::skir_client::Serializer::bool(), "", |x: &HttpQueryParameter| &x.omit_if_empty, |x: &mut HttpQueryParameter, v| x.omit_if_empty = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<HttpJsonContextBinding> = HttpJsonContextBinding::_adapter() as *const _ as *mut _;
+                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &HttpJsonContextBinding| &x.binding_id, |x: &mut HttpJsonContextBinding, v| x.binding_id = v);
+                (*a).add_field("path", 1, crate::skir_client::Serializer::string(), "", |x: &HttpJsonContextBinding| &x.path, |x: &mut HttpJsonContextBinding, v| x.path = v);
+                (*a).add_field("value_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &HttpJsonContextBinding| &x.value_type, |x: &mut HttpJsonContextBinding, v| x.value_type = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<StaticSearchProvider> = StaticSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("values", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &StaticSearchProvider| &x.values, |x: &mut StaticSearchProvider, v| x.values = v);
+                (*a).add_field("result", 1, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &StaticSearchProvider| &x.result, |x: &mut StaticSearchProvider, v| x.result = v);
+                (*a).add_field("selectors", 2, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &StaticSearchProvider| &x.selectors, |x: &mut StaticSearchProvider, v| x.selectors = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<HttpJsonSearchProvider> = HttpJsonSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("uri", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HttpJsonSearchProvider| &x.uri, |x: &mut HttpJsonSearchProvider, v| x.uri = v);
+                (*a).add_field("parameters", 1, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<HttpQueryParameter_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(HttpQueryParameter::_adapter())), "", |x: &HttpJsonSearchProvider| &x.parameters, |x: &mut HttpJsonSearchProvider, v| x.parameters = v);
+                (*a).add_field("result_path", 2, crate::skir_client::Serializer::string(), "", |x: &HttpJsonSearchProvider| &x.result_path, |x: &mut HttpJsonSearchProvider, v| x.result_path = v);
+                (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &HttpJsonSearchProvider| &x.result_type, |x: &mut HttpJsonSearchProvider, v| x.result_type = v);
+                (*a).add_field("result", 4, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &HttpJsonSearchProvider| &x.result, |x: &mut HttpJsonSearchProvider, v| x.result = v);
+                (*a).add_field("context_bindings", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(HttpJsonContextBinding::_adapter())), "", |x: &HttpJsonSearchProvider| &x.context_bindings, |x: &mut HttpJsonSearchProvider, v| x.context_bindings = v);
+                (*a).add_field("selectors", 6, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &HttpJsonSearchProvider| &x.selectors, |x: &mut HttpJsonSearchProvider, v| x.selectors = v);
+                (*a).add_field("timeout_milliseconds", 7, crate::skir_client::Serializer::int64(), "", |x: &HttpJsonSearchProvider| &x.timeout_milliseconds, |x: &mut HttpJsonSearchProvider, v| x.timeout_milliseconds = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RealmCallbackSearchProvider> = RealmCallbackSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("realm_action_id", 0, crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer(), "", |x: &RealmCallbackSearchProvider| &x.realm_action_id, |x: &mut RealmCallbackSearchProvider, v| x.realm_action_id = v);
+                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RealmCallbackSearchProvider| &x.payload, |x: &mut RealmCallbackSearchProvider, v| x.payload = v);
+                (*a).add_field("result", 2, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &RealmCallbackSearchProvider| &x.result, |x: &mut RealmCallbackSearchProvider, v| x.result = v);
+                (*a).add_field("selectors", 3, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &RealmCallbackSearchProvider| &x.selectors, |x: &mut RealmCallbackSearchProvider, v| x.selectors = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GatedSearchProvider> = GatedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("condition", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &GatedSearchProvider| &x.condition, |x: &mut GatedSearchProvider, v| x.condition = v);
+                (*a).add_field("guidance", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &GatedSearchProvider| &x.guidance, |x: &mut GatedSearchProvider, v| x.guidance = v);
+                (*a).add_field("child", 2, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &GatedSearchProvider| &x.child, |x: &mut GatedSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DebouncedSearchProvider> = DebouncedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("duration_milliseconds", 0, crate::skir_client::Serializer::int64(), "", |x: &DebouncedSearchProvider| &x.duration_milliseconds, |x: &mut DebouncedSearchProvider, v| x.duration_milliseconds = v);
+                (*a).add_field("child", 1, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &DebouncedSearchProvider| &x.child, |x: &mut DebouncedSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<CachedSearchProvider> = CachedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("capacity", 0, crate::skir_client::Serializer::int32(), "", |x: &CachedSearchProvider| &x.capacity, |x: &mut CachedSearchProvider, v| x.capacity = v);
+                (*a).add_field("retain_stale_results", 1, crate::skir_client::Serializer::bool(), "", |x: &CachedSearchProvider| &x.retain_stale_results, |x: &mut CachedSearchProvider, v| x.retain_stale_results = v);
+                (*a).add_field("child", 2, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &CachedSearchProvider| &x.child, |x: &mut CachedSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchRankingField> = SearchRankingField::_adapter() as *const _ as *mut _;
+                (*a).add_field("expression", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchRankingField| &x.expression, |x: &mut SearchRankingField, v| x.expression = v);
+                (*a).add_field("weight", 1, crate::skir_client::Serializer::int32(), "", |x: &SearchRankingField| &x.weight, |x: &mut SearchRankingField, v| x.weight = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RankedSearchProvider> = RankedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("fields", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SearchRankingField::_adapter())), "", |x: &RankedSearchProvider| &x.fields, |x: &mut RankedSearchProvider, v| x.fields = v);
+                (*a).add_field("child", 1, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &RankedSearchProvider| &x.child, |x: &mut RankedSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<LimitedSearchProvider> = LimitedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("maximum", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &LimitedSearchProvider| &x.maximum, |x: &mut LimitedSearchProvider, v| x.maximum = v);
+                (*a).add_field("child", 1, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &LimitedSearchProvider| &x.child, |x: &mut LimitedSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DistinctSearchProvider> = DistinctSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("child", 0, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &DistinctSearchProvider| &x.child, |x: &mut DistinctSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<HistoricalSearchProvider> = HistoricalSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("history_key", 0, crate::skir_client::Serializer::string(), "", |x: &HistoricalSearchProvider| &x.history_key, |x: &mut HistoricalSearchProvider, v| x.history_key = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HistoricalSearchProvider| &x.label, |x: &mut HistoricalSearchProvider, v| x.label = v);
+                (*a).add_field("capacity", 2, crate::skir_client::Serializer::int32(), "", |x: &HistoricalSearchProvider| &x.capacity, |x: &mut HistoricalSearchProvider, v| x.capacity = v);
+                (*a).add_field("child", 3, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &HistoricalSearchProvider| &x.child, |x: &mut HistoricalSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SectionSearchProvider> = SectionSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("section_id", 0, crate::skir_client::Serializer::string(), "", |x: &SectionSearchProvider| &x.section_id, |x: &mut SectionSearchProvider, v| x.section_id = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SectionSearchProvider| &x.label, |x: &mut SectionSearchProvider, v| x.label = v);
+                (*a).add_field("child", 2, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &SectionSearchProvider| &x.child, |x: &mut SectionSearchProvider, v| x.child = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<MergedSearchProvider> = MergedSearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_field("children", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter())), "", |x: &MergedSearchProvider| &x.children, |x: &mut MergedSearchProvider, v| x.children = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<SearchProvider> = SearchProvider::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("static_values", 1, 1, crate::skir_client::internal::struct_serializer_from_static(StaticSearchProvider::_adapter()), "", |v| SearchProvider::StaticValues(Box::new(v)), |x| match x { SearchProvider::StaticValues(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("http_json", 2, 2, crate::skir_client::internal::struct_serializer_from_static(HttpJsonSearchProvider::_adapter()), "", |v| SearchProvider::HttpJson(Box::new(v)), |x| match x { SearchProvider::HttpJson(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("realm_callback", 3, 3, crate::skir_client::internal::struct_serializer_from_static(RealmCallbackSearchProvider::_adapter()), "", |v| SearchProvider::RealmCallback(Box::new(v)), |x| match x { SearchProvider::RealmCallback(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("gate", 4, 4, crate::skir_client::internal::struct_serializer_from_static(GatedSearchProvider::_adapter()), "", |v| SearchProvider::Gate(Box::new(v)), |x| match x { SearchProvider::Gate(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("debounce", 5, 5, crate::skir_client::internal::struct_serializer_from_static(DebouncedSearchProvider::_adapter()), "", |v| SearchProvider::Debounce(Box::new(v)), |x| match x { SearchProvider::Debounce(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("cache", 6, 6, crate::skir_client::internal::struct_serializer_from_static(CachedSearchProvider::_adapter()), "", |v| SearchProvider::Cache(Box::new(v)), |x| match x { SearchProvider::Cache(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("rank", 7, 7, crate::skir_client::internal::struct_serializer_from_static(RankedSearchProvider::_adapter()), "", |v| SearchProvider::Rank(Box::new(v)), |x| match x { SearchProvider::Rank(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("limit", 8, 8, crate::skir_client::internal::struct_serializer_from_static(LimitedSearchProvider::_adapter()), "", |v| SearchProvider::Limit(Box::new(v)), |x| match x { SearchProvider::Limit(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("distinct", 9, 9, crate::skir_client::internal::struct_serializer_from_static(DistinctSearchProvider::_adapter()), "", |v| SearchProvider::Distinct(Box::new(v)), |x| match x { SearchProvider::Distinct(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("history", 10, 10, crate::skir_client::internal::struct_serializer_from_static(HistoricalSearchProvider::_adapter()), "", |v| SearchProvider::History(Box::new(v)), |x| match x { SearchProvider::History(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("section", 11, 11, crate::skir_client::internal::struct_serializer_from_static(SectionSearchProvider::_adapter()), "", |v| SearchProvider::Section(Box::new(v)), |x| match x { SearchProvider::Section(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("merge", 12, 12, crate::skir_client::internal::struct_serializer_from_static(MergedSearchProvider::_adapter()), "", |v| SearchProvider::Merge(Box::new(v)), |x| match x { SearchProvider::Merge(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SearchControl> = SearchControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &SearchControl| &x.control, |x: &mut SearchControl, v| x.control = v);
+                (*a).add_field("selection_mode", 1, crate::skir_client::internal::enum_serializer_from_static(SearchSelectionMode::_adapter()), "", |x: &SearchControl| &x.selection_mode, |x: &mut SearchControl, v| x.selection_mode = v);
+                (*a).add_field("query_binding_id", 2, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchControl| &x.query_binding_id, |x: &mut SearchControl, v| x.query_binding_id = v);
+                (*a).add_field("summary_binding_id", 3, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchControl| &x.summary_binding_id, |x: &mut SearchControl, v| x.summary_binding_id = v);
+                (*a).add_field("maximum_extent", 4, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchControl| &x.maximum_extent, |x: &mut SearchControl, v| x.maximum_extent = v);
+                (*a).add_field("provider", 5, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &SearchControl| &x.provider, |x: &mut SearchControl, v| x.provider = v);
+                (*a).add_field("summary", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &SearchControl| &x.summary, |x: &mut SearchControl, v| x.summary = v);
+                (*a).add_field("placeholder", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchControl| &x.placeholder, |x: &mut SearchControl, v| x.placeholder = v);
+                (*a).add_field("custom_value", 8, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchControl| &x.custom_value, |x: &mut SearchControl, v| x.custom_value = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<DefaultPresentationElement> = DefaultPresentationElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &DefaultPresentationElement| &x.binding, |x: &mut DefaultPresentationElement, v| x.binding = v);
                 (*a).add_field("presentation_id", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer()), "", |x: &DefaultPresentationElement| &x.presentation_id, |x: &mut DefaultPresentationElement, v| x.presentation_id = v);
@@ -2595,7 +3760,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("polymorphic_input", 40, 39, crate::skir_client::internal::struct_serializer_from_static(PolymorphicControl::_adapter()), "", |v| PresentationElement::PolymorphicInput(Box::new(v)), |x| match x { PresentationElement::PolymorphicInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("default_presentation", 41, 40, crate::skir_client::internal::struct_serializer_from_static(DefaultPresentationElement::_adapter()), "", |v| PresentationElement::DefaultPresentation(Box::new(v)), |x| match x { PresentationElement::DefaultPresentation(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("collapsible", 42, 41, crate::skir_client::internal::struct_serializer_from_static(CollapsibleLayout::_adapter()), "", |v| PresentationElement::Collapsible(Box::new(v)), |x| match x { PresentationElement::Collapsible(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("icon_input", 43, 42, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::IconInput(Box::new(v)), |x| match x { PresentationElement::IconInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("search_input", 44, 42, crate::skir_client::internal::struct_serializer_from_static(SearchControl::_adapter()), "", |v| PresentationElement::SearchInput(Box::new(v)), |x| match x { PresentationElement::SearchInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

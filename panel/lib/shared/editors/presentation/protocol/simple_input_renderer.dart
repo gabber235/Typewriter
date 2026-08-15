@@ -12,7 +12,6 @@ part "renderers/input/color_input_renderer.dart";
 part "renderers/input/date_time_input_renderer.dart";
 part "renderers/input/duration_input_renderer.dart";
 part "renderers/input/enum_input_renderer.dart";
-part "renderers/input/icon_input_renderer.dart";
 part "renderers/input/named_input_renderer.dart";
 part "renderers/input/numeric_input_renderer.dart";
 part "renderers/input/simple_input_support.dart";
@@ -39,7 +38,6 @@ extension SimpleInputRendering on PresentationElement {
     BytesInputElement() => (this as BytesInputElement).render(context, scope),
     EnumInputElement() => (this as EnumInputElement).render(context, scope),
     ColorInputElement() => (this as ColorInputElement).render(context, scope),
-    IconInputElement() => (this as IconInputElement).render(context, scope),
     NamedInputElement() => (this as NamedInputElement).render(context, scope),
     _ => const SizedBox.shrink(),
   };

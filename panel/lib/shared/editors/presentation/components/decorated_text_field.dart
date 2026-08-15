@@ -99,6 +99,19 @@ class DecoratedTextField extends HookWidget {
     final focusNode = inputFieldController.inputFocusNode;
     final surroundingFocusNode = inputFieldController.surroundingFocusNode;
 
+    useEffect(() {
+      if (!selectAllOnFocus || !focusNode.hasPrimaryFocus) return null;
+      var active = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!active || !focusNode.hasPrimaryFocus) return;
+        controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: controller.text.length,
+        );
+      });
+      return () => active = false;
+    }, [controller, focusNode.hasPrimaryFocus, selectAllOnFocus]);
+
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
     // However, when we are focused, we don't want to update the controller as this causes the cursor to jump.

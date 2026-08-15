@@ -209,7 +209,7 @@ return $default(_that.recent,_that.favorites,_that.format);case _:
 
 class _ColorLibraryState implements ColorLibraryState {
   const _ColorLibraryState({final  List<int> recent = const [], final  List<int> favorites = const [], this.format = ColorFieldFormat.hex}): _recent = recent,_favorites = favorites;
-
+  
 
  final  List<int> _recent;
 @override@JsonKey() List<int> get recent {

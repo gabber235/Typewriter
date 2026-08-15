@@ -2,6 +2,8 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "expression_evaluator.freezed.dart";
+part "expression_advanced_evaluator.dart";
+part "expression_collection_operations.dart";
 
 @freezed
 abstract class ExpressionContext with _$ExpressionContext {
@@ -71,6 +73,13 @@ final class _ExpressionEvaluator {
         ConditionalExpression() => _conditional(expression, depth),
         CollectionProjectionExpression() => _project(expression, depth),
         ConversionExpression() => _convert(expression, depth),
+        StringOperationExpression() => _stringOperation(expression, depth),
+        CollectionOperationExpression() => _collectionOperation(
+          expression,
+          depth,
+        ),
+        RegexExpression() => _regex(expression, depth),
+        CoalesceExpression() => _coalesce(expression, depth),
       };
 
   TypeResult<DataValue> _binding(BindingReference reference) {

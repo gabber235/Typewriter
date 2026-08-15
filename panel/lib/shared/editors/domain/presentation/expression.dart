@@ -16,6 +16,24 @@ enum BooleanOperator { and, or, not }
 
 enum ArithmeticOperator { add, subtract, multiply, divide, remainder, negate }
 
+enum StringOperation {
+  trim,
+  lowerCase,
+  upperCase,
+  titleCase,
+  replace,
+  split,
+  join,
+  substring,
+  contains,
+  startsWith,
+  endsWith,
+}
+
+enum CollectionOperation { access, length, contains }
+
+enum RegexOperation { matches, capture, replace }
+
 @freezed
 abstract class TypedExpression with _$TypedExpression {
   const factory TypedExpression({
@@ -71,6 +89,27 @@ sealed class Expression with _$Expression {
     required ConversionId conversionId,
     required TypedExpression input,
   }) = ConversionExpression;
+
+  const factory Expression.stringOperation({
+    required StringOperation operation,
+    required List<TypedExpression> operands,
+  }) = StringOperationExpression;
+
+  const factory Expression.collectionOperation({
+    required CollectionOperation operation,
+    required List<TypedExpression> operands,
+  }) = CollectionOperationExpression;
+
+  const factory Expression.regex({
+    required RegexOperation operation,
+    required TypedExpression source,
+    required String pattern,
+    int? group,
+    String? replacement,
+  }) = RegexExpression;
+
+  const factory Expression.coalesce(List<TypedExpression> operands) =
+      CoalesceExpression;
 }
 
 @freezed
@@ -103,6 +142,14 @@ extension IntegerExpressionLiteral on int {
   TypedExpression get asSigned64Literal => IntegerValue(
     BigInt.from(this),
   ).asLiteral(const IntegerType(width: IntegerWidth.signed64));
+
+  TypedExpression get asIntegerLiteral => asSigned64Literal;
+}
+
+extension FloatExpressionLiteral on num {
+  TypedExpression get asFloatLiteral => FloatValue(
+    toDouble(),
+  ).asLiteral(const FloatType(width: FloatWidth.float64));
 }
 
 extension BooleanExpressionLiteral on bool {

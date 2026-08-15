@@ -6,6 +6,7 @@ import {
 import { TypedExpression } from "editor/v1/expression.skir";
 import {
   PresentationId,
+  RealmActionId,
   ResolvedTypeRef,
   TypeExpression,
 } from "editor/v1/type_catalog.skir";
@@ -286,6 +287,158 @@ struct PolymorphicControl(810900048) {
   concrete_types: [ConcreteTypePresentation] = 1;
 }
 
+enum SearchSelectionMode(810900068) {
+  single = 1;
+  multiple = 2;
+}
+
+enum SearchSelectorMultiplicity(810900069) {
+  single = 1;
+  multiple = 2;
+}
+
+struct SearchSelectorEnumValues(810900070) {
+  values: [string] = 0;
+}
+
+enum SearchSelectorValues(810900071) {
+  free_text = 1;
+  enumeration: SearchSelectorEnumValues = 2;
+}
+
+struct SearchSelectorDefinition(810900072) {
+  selector_id: string = 0;
+  key: string = 1;
+  value_binding_id: BindingId = 2;
+  values: SearchSelectorValues = 3;
+  case_sensitive: bool = 4;
+  multiplicity: SearchSelectorMultiplicity = 5;
+  color: int64? = 6;
+}
+
+struct SearchResultMapping(810900073) {
+  binding_id: BindingId = 0;
+  key: TypedExpression = 1;
+  selected_value: TypedExpression = 2;
+  presentation: PresentationNode = 3;
+}
+
+struct HttpQueryParameter(810900074) {
+  name: string = 0;
+  value: TypedExpression = 1;
+  omit_if_empty: bool = 2;
+}
+
+struct HttpJsonContextBinding(810900075) {
+  binding_id: BindingId = 0;
+  path: string = 1;
+  value_type: TypeExpression = 2;
+}
+
+struct StaticSearchProvider(810900076) {
+  values: TypedExpression = 0;
+  result: SearchResultMapping = 1;
+  selectors: [SearchSelectorDefinition|selector_id] = 2;
+}
+
+struct HttpJsonSearchProvider(810900077) {
+  uri: TypedExpression = 0;
+  parameters: [HttpQueryParameter|name] = 1;
+  result_path: string = 2;
+  result_type: TypeExpression = 3;
+  result: SearchResultMapping = 4;
+  context_bindings: [HttpJsonContextBinding] = 5;
+  selectors: [SearchSelectorDefinition|selector_id] = 6;
+  timeout_milliseconds: int64 = 7;
+}
+
+struct RealmCallbackSearchProvider(810900078) {
+  realm_action_id: RealmActionId = 0;
+  payload: TypedExpression = 1;
+  result: SearchResultMapping = 2;
+  selectors: [SearchSelectorDefinition|selector_id] = 3;
+}
+
+struct GatedSearchProvider(810900079) {
+  condition: TypedExpression = 0;
+  guidance: TypedExpression? = 1;
+  child: SearchProvider = 2;
+}
+
+struct DebouncedSearchProvider(810900080) {
+  duration_milliseconds: int64 = 0;
+  child: SearchProvider = 1;
+}
+
+struct CachedSearchProvider(810900081) {
+  capacity: int32 = 0;
+  retain_stale_results: bool = 1;
+  child: SearchProvider = 2;
+}
+
+struct SearchRankingField(810900082) {
+  expression: TypedExpression = 0;
+  weight: int32 = 1;
+}
+
+struct RankedSearchProvider(810900083) {
+  fields: [SearchRankingField] = 0;
+  child: SearchProvider = 1;
+}
+
+struct LimitedSearchProvider(810900084) {
+  maximum: TypedExpression = 0;
+  child: SearchProvider = 1;
+}
+
+struct DistinctSearchProvider(810900085) {
+  child: SearchProvider = 0;
+}
+
+struct HistoricalSearchProvider(810900086) {
+  history_key: string = 0;
+  label: TypedExpression = 1;
+  capacity: int32 = 2;
+  child: SearchProvider = 3;
+}
+
+struct SectionSearchProvider(810900087) {
+  section_id: string = 0;
+  label: TypedExpression = 1;
+  child: SearchProvider = 2;
+}
+
+struct MergedSearchProvider(810900088) {
+  children: [SearchProvider] = 0;
+}
+
+enum SearchProvider(810900089) {
+  static_values: StaticSearchProvider = 1;
+  http_json: HttpJsonSearchProvider = 2;
+  realm_callback: RealmCallbackSearchProvider = 3;
+  gate: GatedSearchProvider = 4;
+  debounce: DebouncedSearchProvider = 5;
+  cache: CachedSearchProvider = 6;
+  rank: RankedSearchProvider = 7;
+  limit: LimitedSearchProvider = 8;
+  distinct: DistinctSearchProvider = 9;
+  history: HistoricalSearchProvider = 10;
+  section: SectionSearchProvider = 11;
+  merge: MergedSearchProvider = 12;
+}
+
+struct SearchControl(810900090) {
+  control: BoundControl = 0;
+  selection_mode: SearchSelectionMode = 1;
+  query_binding_id: BindingId = 2;
+  summary_binding_id: BindingId = 3;
+  maximum_extent: TypedExpression = 4;
+  provider: SearchProvider = 5;
+  summary: PresentationNode? = 6;
+  placeholder: TypedExpression? = 7;
+  custom_value: TypedExpression? = 8;
+}
+
 struct DefaultPresentationElement(810900049) {
   binding: BindingRef = 0;
   presentation_id: PresentationId? = 1;
@@ -360,7 +513,7 @@ enum PresentationElement(810900034) {
   polymorphic_input: PolymorphicControl = 40;
   default_presentation: DefaultPresentationElement = 41;
   collapsible: CollapsibleLayout = 42;
-  icon_input: BoundControl = 43;
+  search_input: SearchControl = 44;
 }
 
 struct PresentationDefinition(810900050) {

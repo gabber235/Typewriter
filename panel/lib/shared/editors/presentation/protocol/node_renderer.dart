@@ -109,6 +109,7 @@ extension on PresentationElement {
     PolymorphicInputElement() => InputElementRendering(
       this,
     ).render(context, scope),
+    SearchInputElement() => InputElementRendering(this).render(context, scope),
     ButtonElement() ||
     IconButtonElement() ||
     MenuElement() ||

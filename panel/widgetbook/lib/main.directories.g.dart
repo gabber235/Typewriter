@@ -63,8 +63,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
-import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/icon_selector.stories.dart'
-    as _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/search_input/search_input.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_components_search_input_search_input_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart'
@@ -156,22 +156,32 @@ final directories = <_widgetbook.WidgetbookNode>[
         name: 'Editors',
         children: [
           _widgetbook.WidgetbookFolder(
-            name: 'Components',
+            name: 'Presentation',
             children: [
-              _widgetbook.WidgetbookComponent(
-                name: 'IconSelector',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Deterministic',
-                    builder:
-                        _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories
-                            .iconSelectorDeterministicUseCase,
-                  ),
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Live Iconify search',
-                    builder:
-                        _widgetbook_workspace_stories_shared_editors_presentation_components_icon_selector_stories
-                            .iconSelectorLiveUseCase,
+              _widgetbook.WidgetbookFolder(
+                name: 'Components',
+                children: [
+                  _widgetbook.WidgetbookFolder(
+                    name: 'SearchInput',
+                    children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'PresentationSearchInput',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Live Iconify',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_components_search_input_search_input_stories
+                                    .liveIconifySearchInput,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Playground',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_components_search_input_search_input_stories
+                                    .searchInputPlayground,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -354,12 +364,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .enumInputRendererUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
-                            name: 'Icon',
-                            builder:
-                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
-                                    .iconInputRendererUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
                             name: 'List',
                             builder:
                                 _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
@@ -394,6 +398,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
                                     .recordInputRendererUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Search',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_stories
+                                    .searchInputRendererUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
                             name: 'Select',

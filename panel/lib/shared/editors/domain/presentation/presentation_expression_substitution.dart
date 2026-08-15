@@ -61,6 +61,30 @@ extension on Expression {
         conversionId: value.conversionId,
         input: value.input.substituteTypes(substitutions),
       ),
+      StringOperationExpression() => StringOperationExpression(
+        operation: value.operation,
+        operands: value.operands
+            .map((operand) => operand.substituteTypes(substitutions))
+            .toList(),
+      ),
+      CollectionOperationExpression() => CollectionOperationExpression(
+        operation: value.operation,
+        operands: value.operands
+            .map((operand) => operand.substituteTypes(substitutions))
+            .toList(),
+      ),
+      RegexExpression() => RegexExpression(
+        operation: value.operation,
+        source: value.source.substituteTypes(substitutions),
+        pattern: value.pattern,
+        group: value.group,
+        replacement: value.replacement,
+      ),
+      CoalesceExpression() => CoalesceExpression(
+        value.operands
+            .map((operand) => operand.substituteTypes(substitutions))
+            .toList(),
+      ),
     };
   }
 }

@@ -79,6 +79,54 @@ struct ConversionExpression(810700012) {
   input: TypedExpression = 1;
 }
 
+enum StringOperation(810700015) {
+  trim = 1;
+  lower_case = 2;
+  upper_case = 3;
+  title_case = 4;
+  replace = 5;
+  split = 6;
+  join = 7;
+  substring = 8;
+  contains = 9;
+  starts_with = 10;
+  ends_with = 11;
+}
+
+struct StringOperationExpression(810700016) {
+  operation: StringOperation = 0;
+  operands: [TypedExpression] = 1;
+}
+
+enum CollectionOperation(810700017) {
+  access = 1;
+  length = 2;
+  contains = 3;
+}
+
+struct CollectionOperationExpression(810700018) {
+  operation: CollectionOperation = 0;
+  operands: [TypedExpression] = 1;
+}
+
+enum RegexOperation(810700019) {
+  matches = 1;
+  capture = 2;
+  replace = 3;
+}
+
+struct RegexExpression(810700020) {
+  operation: RegexOperation = 0;
+  source: TypedExpression = 1;
+  pattern: string = 2;
+  group: int32? = 3;
+  replacement: string? = 4;
+}
+
+struct CoalesceExpression(810700021) {
+  operands: [TypedExpression] = 0;
+}
+
 enum Expression(810700013) {
   literal: TypedValue = 1;
   binding: BindingRef = 2;
@@ -90,6 +138,10 @@ enum Expression(810700013) {
   conditional: ConditionalExpression = 8;
   collection_projection: CollectionProjectionExpression = 9;
   conversion: ConversionExpression = 10;
+  string_operation: StringOperationExpression = 11;
+  collection_operation: CollectionOperationExpression = 12;
+  regex: RegexExpression = 13;
+  coalesce: CoalesceExpression = 14;
 }
 
 struct TypedExpression(810700014) {

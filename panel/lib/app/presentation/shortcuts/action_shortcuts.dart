@@ -167,6 +167,10 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
             in callableShortcuts.whereType<ActivatorActionShortcut>())
           for (final activator in action.activators)
             activator: _ActionIntent(action),
+        for (final action
+            in callableShortcuts.whereType<IntentActionShortcut>())
+          for (final activator in action.shortcuts)
+            activator: typewriterShortcuts[activator]!,
       },
       child: Actions(
         actions: {

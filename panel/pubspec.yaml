@@ -30,6 +30,7 @@ dependencies:
   http: ^1.2.0
   iconify_flutter_plus: ^1.0.4
   json_annotation: ^4.11.0
+  json_path: ^0.9.0
   localstorage: ^6.0.0
   material_color_utilities:
   oidc: ^2.0.0

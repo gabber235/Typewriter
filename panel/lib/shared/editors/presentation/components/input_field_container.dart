@@ -184,37 +184,36 @@ class InputFieldContainer extends HookConsumerWidget {
     return FocusHighlight(
       type: focusType.value,
       borderRadius: borderRadius ?? context.shapes.largeBorderRadius,
-      child: ManagedActionSet(
-        shortcuts: [
-          if (surroundingNode.hasPrimaryFocus) ...[
-            ActionShortcut(
-              id: "focus_input",
-              label: "Focus Input",
-              description: "Focus the input field",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.enter),
-                const SingleActivator(LogicalKeyboardKey.space),
-              ],
-              priority: 100,
-            ),
-            ...?surroundingActions,
+      child: Actions(
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (intent) {
+              if (surroundingNode.hasPrimaryFocus) {
+                ref
+                    .read(currentInteractionModeProvider.notifier)
+                    .setMode(InsertMode(id));
+              }
+              return null;
+            },
+          ),
+        },
+        child: ManagedActionSet(
+          shortcuts: [
+            if (surroundingNode.hasPrimaryFocus) ...[
+              ActionShortcut(
+                id: "focus_input",
+                label: "Focus Input",
+                description: "Focus the input field",
+                activators: [
+                  const SingleActivator(LogicalKeyboardKey.enter),
+                  const SingleActivator(LogicalKeyboardKey.space),
+                ],
+                priority: 100,
+              ),
+              ...?surroundingActions,
+              ...?actions,
+            ],
           ],
-          if (inputFocusNode.hasPrimaryFocus) ...[...?inputActions],
-          if (surroundingNode.hasFocus) ...?actions,
-        ],
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (intent) {
-                if (surroundingNode.hasPrimaryFocus) {
-                  ref
-                      .read(currentInteractionModeProvider.notifier)
-                      .setMode(InsertMode(id));
-                }
-                return null;
-              },
-            ),
-          },
           child: Focus(
             focusNode: surroundingNode,
             autofocus: autofocus,
@@ -249,7 +248,15 @@ class InputFieldContainer extends HookConsumerWidget {
                     },
                   ),
               },
-              child: child,
+              child: ManagedActionSet(
+                shortcuts: [
+                  if (inputFocusNode.hasPrimaryFocus) ...[
+                    ...?inputActions,
+                    ...?actions,
+                  ],
+                ],
+                child: child,
+              ),
             ),
           ),
         ),

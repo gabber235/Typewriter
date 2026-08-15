@@ -1618,6 +1618,968 @@ final class ConversionExpression_mutable
 }
 
 // -----------------------------------------------------------------------------
+// enum StringOperation
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case StringOperation_unknown(): { ... }
+///     case StringOperation.trim: { ... }
+///     case StringOperation.lowerCase: { ... }
+///     case StringOperation.upperCase: { ... }
+///     case StringOperation.titleCase: { ... }
+///     case StringOperation.replace: { ... }
+///     case StringOperation.split: { ... }
+///     case StringOperation.join: { ... }
+///     case StringOperation.substring: { ... }
+///     case StringOperation.contains: { ... }
+///     case StringOperation.startsWith: { ... }
+///     case StringOperation.endsWith: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class StringOperation {
+  /// Constant indicating an unknown `StringOperation`.
+  /// Default value for fields of type `StringOperation`.
+  static const StringOperation unknown = StringOperation_unknown._instance;
+
+  static const trim = _StringOperation_consts.trimConst;
+  static const lowerCase = _StringOperation_consts.lowerCaseConst;
+  static const upperCase = _StringOperation_consts.upperCaseConst;
+  static const titleCase = _StringOperation_consts.titleCaseConst;
+  static const replace = _StringOperation_consts.replaceConst;
+  static const split = _StringOperation_consts.splitConst;
+  static const join = _StringOperation_consts.joinConst;
+  static const substring = _StringOperation_consts.substringConst;
+  static const contains = _StringOperation_consts.containsConst;
+  static const startsWith = _StringOperation_consts.startsWithConst;
+  static const endsWith = _StringOperation_consts.endsWithConst;
+
+  /// Returns the kind of variant held by this StringOperation.
+  StringOperation_kind get kind;
+
+  /// Serializer for `StringOperation` instances.
+  static _skir.EnumSerializer<StringOperation> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "trim", "trim", "", trim);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "lower_case",
+        "lowerCase",
+        "",
+        lowerCase,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "upper_case",
+        "upperCase",
+        "",
+        upperCase,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "title_case",
+        "titleCase",
+        "",
+        titleCase,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
+        "replace",
+        "replace",
+        "",
+        replace,
+      );
+      _serializerBuilder.addConstantVariant(6, "split", "split", "", split);
+      _serializerBuilder.addConstantVariant(7, "join", "join", "", join);
+      _serializerBuilder.addConstantVariant(
+        8,
+        "substring",
+        "substring",
+        "",
+        substring,
+      );
+      _serializerBuilder.addConstantVariant(
+        9,
+        "contains",
+        "contains",
+        "",
+        contains,
+      );
+      _serializerBuilder.addConstantVariant(
+        10,
+        "starts_with",
+        "startsWith",
+        "",
+        startsWith,
+      );
+      _serializerBuilder.addConstantVariant(
+        11,
+        "ends_with",
+        "endsWith",
+        "",
+        endsWith,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/expression.skir:StringOperation",
+        doc: "",
+        unknownInstance: StringOperation_unknown._instance,
+        enumInstance: StringOperation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: StringOperation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `StringOperation`.
+enum StringOperation_kind {
+  unknown(0),
+  trimConst(1),
+  lowerCaseConst(2),
+  upperCaseConst(3),
+  titleCaseConst(4),
+  replaceConst(5),
+  splitConst(6),
+  joinConst(7),
+  substringConst(8),
+  containsConst(9),
+  startsWithConst(10),
+  endsWithConst(11);
+
+  final _core.int _ordinal;
+
+  const StringOperation_kind(this._ordinal);
+}
+
+final class StringOperation_unknown implements StringOperation {
+  static const _instance = StringOperation_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const StringOperation_unknown._() : _u = null;
+  StringOperation_unknown._unrecognized(this._u);
+
+  @_core.override
+  StringOperation_kind get kind => StringOperation_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is StringOperation_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, StringOperation.serializer);
+}
+
+enum _StringOperation_consts implements StringOperation {
+  trimConst(StringOperation_kind.trimConst),
+  lowerCaseConst(StringOperation_kind.lowerCaseConst),
+  upperCaseConst(StringOperation_kind.upperCaseConst),
+  titleCaseConst(StringOperation_kind.titleCaseConst),
+  replaceConst(StringOperation_kind.replaceConst),
+  splitConst(StringOperation_kind.splitConst),
+  joinConst(StringOperation_kind.joinConst),
+  substringConst(StringOperation_kind.substringConst),
+  containsConst(StringOperation_kind.containsConst),
+  startsWithConst(StringOperation_kind.startsWithConst),
+  endsWithConst(StringOperation_kind.endsWithConst);
+
+  @_core.override
+  final StringOperation_kind kind;
+
+  const _StringOperation_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, StringOperation.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct StringOperationExpression
+// -----------------------------------------------------------------------------
+
+sealed class StringOperationExpression_orMutable {
+  StringOperation get operation;
+  _core.Iterable<TypedExpression_orMutable> get operands;
+
+  StringOperationExpression toFrozen();
+}
+
+/// Deeply immutable.
+final class StringOperationExpression
+    implements StringOperationExpression_orMutable {
+  @_core.override
+  final StringOperation operation;
+  @_core.override
+  final _core.Iterable<TypedExpression> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory StringOperationExpression({
+    required StringOperation operation,
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => StringOperationExpression._(
+    operation,
+    _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
+  );
+
+  StringOperationExpression._(this.operation, this.operands);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = StringOperationExpression._(
+    StringOperation.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static StringOperationExpression_mutable mutable() =>
+      StringOperationExpression_mutable._(
+        StringOperation.unknown,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  StringOperationExpression toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  StringOperationExpression_mutable toMutable() =>
+      StringOperationExpression_mutable._(this.operation, this.operands);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! StringOperationExpression) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.operation, this.operands];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `StringOperationExpression` instances.
+  static _skir.StructSerializer<
+    StringOperationExpression,
+    StringOperationExpression_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "operation",
+        "operation",
+        0,
+        StringOperation.serializer,
+        "",
+        (it) => it.operation,
+        (it, v) => it.operation = v,
+      );
+      _serializerBuilder.addField(
+        "operands",
+        "operands",
+        1,
+        _skir.Serializers.iterable(TypedExpression.serializer),
+        "",
+        (it) => it.operands,
+        (it, v) => it.operands = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:StringOperationExpression",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (StringOperationExpression_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [StringOperationExpression].
+final class StringOperationExpression_mutable
+    implements StringOperationExpression_orMutable {
+  StringOperation operation;
+  _core.Iterable<TypedExpression_orMutable> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  StringOperationExpression_mutable._(this.operation, this.operands);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  StringOperationExpression toFrozen() => StringOperationExpression(
+    operation: this.operation,
+    operands: this.operands,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum CollectionOperation
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case CollectionOperation_unknown(): { ... }
+///     case CollectionOperation.access: { ... }
+///     case CollectionOperation.length: { ... }
+///     case CollectionOperation.contains: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class CollectionOperation {
+  /// Constant indicating an unknown `CollectionOperation`.
+  /// Default value for fields of type `CollectionOperation`.
+  static const CollectionOperation unknown =
+      CollectionOperation_unknown._instance;
+
+  static const access = _CollectionOperation_consts.accessConst;
+  static const length = _CollectionOperation_consts.lengthConst;
+  static const contains = _CollectionOperation_consts.containsConst;
+
+  /// Returns the kind of variant held by this CollectionOperation.
+  CollectionOperation_kind get kind;
+
+  /// Serializer for `CollectionOperation` instances.
+  static _skir.EnumSerializer<CollectionOperation> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "access", "access", "", access);
+      _serializerBuilder.addConstantVariant(2, "length", "length", "", length);
+      _serializerBuilder.addConstantVariant(
+        3,
+        "contains",
+        "contains",
+        "",
+        contains,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/expression.skir:CollectionOperation",
+        doc: "",
+        unknownInstance: CollectionOperation_unknown._instance,
+        enumInstance: CollectionOperation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CollectionOperation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `CollectionOperation`.
+enum CollectionOperation_kind {
+  unknown(0),
+  accessConst(1),
+  lengthConst(2),
+  containsConst(3);
+
+  final _core.int _ordinal;
+
+  const CollectionOperation_kind(this._ordinal);
+}
+
+final class CollectionOperation_unknown implements CollectionOperation {
+  static const _instance = CollectionOperation_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const CollectionOperation_unknown._() : _u = null;
+  CollectionOperation_unknown._unrecognized(this._u);
+
+  @_core.override
+  CollectionOperation_kind get kind => CollectionOperation_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is CollectionOperation_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, CollectionOperation.serializer);
+}
+
+enum _CollectionOperation_consts implements CollectionOperation {
+  accessConst(CollectionOperation_kind.accessConst),
+  lengthConst(CollectionOperation_kind.lengthConst),
+  containsConst(CollectionOperation_kind.containsConst);
+
+  @_core.override
+  final CollectionOperation_kind kind;
+
+  const _CollectionOperation_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, CollectionOperation.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct CollectionOperationExpression
+// -----------------------------------------------------------------------------
+
+sealed class CollectionOperationExpression_orMutable {
+  CollectionOperation get operation;
+  _core.Iterable<TypedExpression_orMutable> get operands;
+
+  CollectionOperationExpression toFrozen();
+}
+
+/// Deeply immutable.
+final class CollectionOperationExpression
+    implements CollectionOperationExpression_orMutable {
+  @_core.override
+  final CollectionOperation operation;
+  @_core.override
+  final _core.Iterable<TypedExpression> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CollectionOperationExpression({
+    required CollectionOperation operation,
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => CollectionOperationExpression._(
+    operation,
+    _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
+  );
+
+  CollectionOperationExpression._(this.operation, this.operands);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CollectionOperationExpression._(
+    CollectionOperation.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CollectionOperationExpression_mutable mutable() =>
+      CollectionOperationExpression_mutable._(
+        CollectionOperation.unknown,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CollectionOperationExpression toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CollectionOperationExpression_mutable toMutable() =>
+      CollectionOperationExpression_mutable._(this.operation, this.operands);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CollectionOperationExpression) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.operation, this.operands];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CollectionOperationExpression` instances.
+  static _skir.StructSerializer<
+    CollectionOperationExpression,
+    CollectionOperationExpression_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "operation",
+        "operation",
+        0,
+        CollectionOperation.serializer,
+        "",
+        (it) => it.operation,
+        (it, v) => it.operation = v,
+      );
+      _serializerBuilder.addField(
+        "operands",
+        "operands",
+        1,
+        _skir.Serializers.iterable(TypedExpression.serializer),
+        "",
+        (it) => it.operands,
+        (it, v) => it.operands = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:CollectionOperationExpression",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CollectionOperationExpression_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CollectionOperationExpression].
+final class CollectionOperationExpression_mutable
+    implements CollectionOperationExpression_orMutable {
+  CollectionOperation operation;
+  _core.Iterable<TypedExpression_orMutable> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CollectionOperationExpression_mutable._(this.operation, this.operands);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CollectionOperationExpression toFrozen() => CollectionOperationExpression(
+    operation: this.operation,
+    operands: this.operands,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum RegexOperation
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case RegexOperation_unknown(): { ... }
+///     case RegexOperation.matches: { ... }
+///     case RegexOperation.capture: { ... }
+///     case RegexOperation.replace: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class RegexOperation {
+  /// Constant indicating an unknown `RegexOperation`.
+  /// Default value for fields of type `RegexOperation`.
+  static const RegexOperation unknown = RegexOperation_unknown._instance;
+
+  static const matches = _RegexOperation_consts.matchesConst;
+  static const capture = _RegexOperation_consts.captureConst;
+  static const replace = _RegexOperation_consts.replaceConst;
+
+  /// Returns the kind of variant held by this RegexOperation.
+  RegexOperation_kind get kind;
+
+  /// Serializer for `RegexOperation` instances.
+  static _skir.EnumSerializer<RegexOperation> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "matches",
+        "matches",
+        "",
+        matches,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "capture",
+        "capture",
+        "",
+        capture,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "replace",
+        "replace",
+        "",
+        replace,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/expression.skir:RegexOperation",
+        doc: "",
+        unknownInstance: RegexOperation_unknown._instance,
+        enumInstance: RegexOperation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RegexOperation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `RegexOperation`.
+enum RegexOperation_kind {
+  unknown(0),
+  matchesConst(1),
+  captureConst(2),
+  replaceConst(3);
+
+  final _core.int _ordinal;
+
+  const RegexOperation_kind(this._ordinal);
+}
+
+final class RegexOperation_unknown implements RegexOperation {
+  static const _instance = RegexOperation_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const RegexOperation_unknown._() : _u = null;
+  RegexOperation_unknown._unrecognized(this._u);
+
+  @_core.override
+  RegexOperation_kind get kind => RegexOperation_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is RegexOperation_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, RegexOperation.serializer);
+}
+
+enum _RegexOperation_consts implements RegexOperation {
+  matchesConst(RegexOperation_kind.matchesConst),
+  captureConst(RegexOperation_kind.captureConst),
+  replaceConst(RegexOperation_kind.replaceConst);
+
+  @_core.override
+  final RegexOperation_kind kind;
+
+  const _RegexOperation_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, RegexOperation.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct RegexExpression
+// -----------------------------------------------------------------------------
+
+sealed class RegexExpression_orMutable {
+  RegexOperation get operation;
+  TypedExpression_orMutable get source;
+  _core.String get pattern;
+  _core.int? get group;
+  _core.String? get replacement;
+
+  RegexExpression toFrozen();
+}
+
+/// Deeply immutable.
+final class RegexExpression implements RegexExpression_orMutable {
+  @_core.override
+  final RegexOperation operation;
+  @_core.override
+  final TypedExpression source;
+  @_core.override
+  final _core.String pattern;
+  @_core.override
+  final _core.int? group;
+  @_core.override
+  final _core.String? replacement;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RegexExpression({
+    required RegexOperation operation,
+    required TypedExpression_orMutable source,
+    required _core.String pattern,
+    required _core.int? group,
+    required _core.String? replacement,
+  }) => RegexExpression._(
+    operation,
+    source.toFrozen(),
+    pattern,
+    group,
+    replacement,
+  );
+
+  RegexExpression._(
+    this.operation,
+    this.source,
+    this.pattern,
+    this.group,
+    this.replacement,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RegexExpression._(
+    RegexOperation.unknown,
+    TypedExpression.defaultInstance,
+    "",
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RegexExpression_mutable mutable() => RegexExpression_mutable._(
+    RegexOperation.unknown,
+    TypedExpression.defaultInstance,
+    "",
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RegexExpression toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RegexExpression_mutable toMutable() => RegexExpression_mutable._(
+    this.operation,
+    this.source,
+    this.pattern,
+    this.group,
+    this.replacement,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RegexExpression) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.operation,
+    this.source,
+    this.pattern,
+    this.group,
+    this.replacement,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RegexExpression` instances.
+  static _skir.StructSerializer<RegexExpression, RegexExpression_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "operation",
+        "operation",
+        0,
+        RegexOperation.serializer,
+        "",
+        (it) => it.operation,
+        (it, v) => it.operation = v,
+      );
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        1,
+        TypedExpression.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.addField(
+        "pattern",
+        "pattern",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.pattern,
+        (it, v) => it.pattern = v,
+      );
+      _serializerBuilder.addField(
+        "group",
+        "group",
+        3,
+        _skir.Serializers.optional(_skir.Serializers.int32),
+        "",
+        (it) => it.group,
+        (it, v) => it.group = v,
+      );
+      _serializerBuilder.addField(
+        "replacement",
+        "replacement",
+        4,
+        _skir.Serializers.optional(_skir.Serializers.string),
+        "",
+        (it) => it.replacement,
+        (it, v) => it.replacement = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:RegexExpression",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RegexExpression_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RegexExpression].
+final class RegexExpression_mutable implements RegexExpression_orMutable {
+  RegexOperation operation;
+  TypedExpression_orMutable source;
+  _core.String pattern;
+  _core.int? group;
+  _core.String? replacement;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RegexExpression_mutable._(
+    this.operation,
+    this.source,
+    this.pattern,
+    this.group,
+    this.replacement,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RegexExpression toFrozen() => RegexExpression(
+    operation: this.operation,
+    source: this.source,
+    pattern: this.pattern,
+    group: this.group,
+    replacement: this.replacement,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CoalesceExpression
+// -----------------------------------------------------------------------------
+
+sealed class CoalesceExpression_orMutable {
+  _core.Iterable<TypedExpression_orMutable> get operands;
+
+  CoalesceExpression toFrozen();
+}
+
+/// Deeply immutable.
+final class CoalesceExpression implements CoalesceExpression_orMutable {
+  @_core.override
+  final _core.Iterable<TypedExpression> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CoalesceExpression({
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => CoalesceExpression._(
+    _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
+  );
+
+  CoalesceExpression._(this.operands);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CoalesceExpression._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CoalesceExpression_mutable mutable() =>
+      CoalesceExpression_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CoalesceExpression toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CoalesceExpression_mutable toMutable() =>
+      CoalesceExpression_mutable._(this.operands);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CoalesceExpression) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.operands];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CoalesceExpression` instances.
+  static _skir.StructSerializer<CoalesceExpression, CoalesceExpression_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "operands",
+        "operands",
+        0,
+        _skir.Serializers.iterable(TypedExpression.serializer),
+        "",
+        (it) => it.operands,
+        (it, v) => it.operands = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/expression.skir:CoalesceExpression",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CoalesceExpression_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CoalesceExpression].
+final class CoalesceExpression_mutable implements CoalesceExpression_orMutable {
+  _core.Iterable<TypedExpression_orMutable> operands;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CoalesceExpression_mutable._(this.operands);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CoalesceExpression toFrozen() =>
+      CoalesceExpression(operands: this.operands).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum Expression
 // -----------------------------------------------------------------------------
 
@@ -1635,6 +2597,10 @@ final class ConversionExpression_mutable
 ///     case Expression_conditional(:var value): { ... }
 ///     case Expression_collectionProjection(:var value): { ... }
 ///     case Expression_conversion(:var value): { ... }
+///     case Expression_stringOperation(:var value): { ... }
+///     case Expression_collectionOperation(:var value): { ... }
+///     case Expression_regex(:var value): { ... }
+///     case Expression_coalesce(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1766,6 +2732,61 @@ sealed class Expression {
     ConversionExpression(conversionId: conversionId, input: input),
   );
 
+  /// Create a 'string_operation' variant wrapping around the given value.
+  factory Expression.wrapStringOperation(StringOperationExpression value) =>
+      Expression_stringOperationWrapper._(value);
+
+  /// Same as `wrapStringOperation(StringOperationExpression(...))`.
+  factory Expression.createStringOperation({
+    required StringOperation operation,
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => Expression.wrapStringOperation(
+    StringOperationExpression(operation: operation, operands: operands),
+  );
+
+  /// Create a 'collection_operation' variant wrapping around the given value.
+  factory Expression.wrapCollectionOperation(
+    CollectionOperationExpression value,
+  ) => Expression_collectionOperationWrapper._(value);
+
+  /// Same as `wrapCollectionOperation(CollectionOperationExpression(...))`.
+  factory Expression.createCollectionOperation({
+    required CollectionOperation operation,
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => Expression.wrapCollectionOperation(
+    CollectionOperationExpression(operation: operation, operands: operands),
+  );
+
+  /// Create a 'regex' variant wrapping around the given value.
+  factory Expression.wrapRegex(RegexExpression value) =>
+      Expression_regexWrapper._(value);
+
+  /// Same as `wrapRegex(RegexExpression(...))`.
+  factory Expression.createRegex({
+    required RegexOperation operation,
+    required TypedExpression_orMutable source,
+    required _core.String pattern,
+    required _core.int? group,
+    required _core.String? replacement,
+  }) => Expression.wrapRegex(
+    RegexExpression(
+      operation: operation,
+      source: source,
+      pattern: pattern,
+      group: group,
+      replacement: replacement,
+    ),
+  );
+
+  /// Create a 'coalesce' variant wrapping around the given value.
+  factory Expression.wrapCoalesce(CoalesceExpression value) =>
+      Expression_coalesceWrapper._(value);
+
+  /// Same as `wrapCoalesce(CoalesceExpression(...))`.
+  factory Expression.createCoalesce({
+    required _core.Iterable<TypedExpression_orMutable> operands,
+  }) => Expression.wrapCoalesce(CoalesceExpression(operands: operands));
+
   /// Returns the kind of variant held by this Expression.
   Expression_kind get kind;
 
@@ -1872,6 +2893,46 @@ sealed class Expression {
         (it) => it.value,
         ordinal: Expression_kind.conversionWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        11,
+        "string_operation",
+        "wrapStringOperation",
+        StringOperationExpression.serializer,
+        "",
+        Expression_stringOperationWrapper._,
+        (it) => it.value,
+        ordinal: Expression_kind.stringOperationWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        12,
+        "collection_operation",
+        "wrapCollectionOperation",
+        CollectionOperationExpression.serializer,
+        "",
+        Expression_collectionOperationWrapper._,
+        (it) => it.value,
+        ordinal: Expression_kind.collectionOperationWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        13,
+        "regex",
+        "wrapRegex",
+        RegexExpression.serializer,
+        "",
+        Expression_regexWrapper._,
+        (it) => it.value,
+        ordinal: Expression_kind.regexWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        14,
+        "coalesce",
+        "wrapCoalesce",
+        CoalesceExpression.serializer,
+        "",
+        Expression_coalesceWrapper._,
+        (it) => it.value,
+        ordinal: Expression_kind.coalesceWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1901,7 +2962,11 @@ enum Expression_kind {
   arithmeticWrapper(7),
   conditionalWrapper(8),
   collectionProjectionWrapper(9),
-  conversionWrapper(10);
+  conversionWrapper(10),
+  stringOperationWrapper(11),
+  collectionOperationWrapper(12),
+  regexWrapper(13),
+  coalesceWrapper(14);
 
   final _core.int _ordinal;
 
@@ -2032,6 +3097,42 @@ final class Expression_conversionWrapper extends _Expression_wrapper {
 
   @_core.override
   Expression_kind get kind => Expression_kind.conversionWrapper;
+}
+
+final class Expression_stringOperationWrapper extends _Expression_wrapper {
+  final StringOperationExpression value;
+
+  Expression_stringOperationWrapper._(this.value);
+
+  @_core.override
+  Expression_kind get kind => Expression_kind.stringOperationWrapper;
+}
+
+final class Expression_collectionOperationWrapper extends _Expression_wrapper {
+  final CollectionOperationExpression value;
+
+  Expression_collectionOperationWrapper._(this.value);
+
+  @_core.override
+  Expression_kind get kind => Expression_kind.collectionOperationWrapper;
+}
+
+final class Expression_regexWrapper extends _Expression_wrapper {
+  final RegexExpression value;
+
+  Expression_regexWrapper._(this.value);
+
+  @_core.override
+  Expression_kind get kind => Expression_kind.regexWrapper;
+}
+
+final class Expression_coalesceWrapper extends _Expression_wrapper {
+  final CoalesceExpression value;
+
+  Expression_coalesceWrapper._(this.value);
+
+  @_core.override
+  Expression_kind get kind => Expression_kind.coalesceWrapper;
 }
 
 // -----------------------------------------------------------------------------
