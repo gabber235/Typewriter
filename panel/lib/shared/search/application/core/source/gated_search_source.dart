@@ -25,6 +25,7 @@ final class GatedSearchSource implements SearchSource {
 
   StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
   bool _acceptSnapshots = true;
+  bool _disposed = false;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
@@ -66,6 +67,8 @@ final class GatedSearchSource implements SearchSource {
 
   @override
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
     unawaited(_snapshotSubscription?.cancel());
     _snapshotSubscription = null;
     unawaited(_snapshots.close());

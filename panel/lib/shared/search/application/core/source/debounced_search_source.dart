@@ -14,6 +14,7 @@ final class DebouncedSearchSource implements SearchSource {
   Timer? _previewTimer;
   SearchPreviewRequest? _pendingPreviewRequest;
   Completer<SearchPreviewRequestResult>? _pendingPreviewCompleter;
+  bool _disposed = false;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => source.snapshots;
@@ -80,6 +81,8 @@ final class DebouncedSearchSource implements SearchSource {
 
   @override
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
     _timer?.cancel();
     _timer = null;
     _pendingContext = null;
