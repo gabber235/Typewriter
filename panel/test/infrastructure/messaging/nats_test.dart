@@ -294,6 +294,30 @@ void main() {
 
       expect(await firstResponse, isA<skir.GetSentinelCredentialsResponse>());
     });
+
+    test("unsubscribes when the response stream is canceled", () async {
+      const listenSubject = "test.cancel.responses";
+      final stream = container
+          .read(_testRefProvider)
+          .watchRequest(
+            subject: "test.cancel",
+            listenSubject: listenSubject,
+            requestBytes: Uint8List.fromList([1, 2, 3]),
+            serializer: skir.GetSentinelCredentialsResponse.serializer,
+            transformer: (_, response) => response,
+          );
+      final subscription = stream.listen(null);
+
+      while (mockClient.publications.isEmpty) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      expect(mockClient.subscriptionSubjects, contains(listenSubject));
+
+      await subscription.cancel();
+
+      expect(mockClient.subscriptionSubjects, isEmpty);
+    });
   });
 
   group("NatsStatus", () {

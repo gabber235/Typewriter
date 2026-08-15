@@ -21,4 +21,5 @@ pub mod action;
 pub mod conversion;
 pub mod presentation;
 pub mod catalog;
+pub mod search;
 pub mod typed_value;

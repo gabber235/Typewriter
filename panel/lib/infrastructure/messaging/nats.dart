@@ -149,38 +149,59 @@ extension RefNatsExtension on Ref {
     required Uint8List requestBytes,
     required Serializer<TResponse> serializer,
     required TData Function(TData?, TResponse) transformer,
-  }) async* {
+  }) => Stream<TData>.multi((controller) async {
     final status = watch(natsStatusProvider);
     if (status != Status.connected) {
-      throw Exception("NATS is not connected");
+      controller.addError(Exception("NATS is not connected"));
+      await controller.close();
+      return;
     }
     final client = watch(natsProvider);
     final sub = client.sub(listenSubject);
-    onDispose(() => client.unSub(sub));
-
-    debugPrint("requesting: $subject");
-    final telemetry = await read(panelTelemetryProvider.future);
-    await telemetry.traceNats(
-      subject: subject,
-      payloadSize: requestBytes.length,
-      operationName: "publish",
-      operation: (header) => client.pub(
-        subject,
-        requestBytes,
-        replyTo: listenSubject,
-        header: header,
-      ),
-    );
-
-    TData? lastData;
-
-    await for (final msg in sub.stream.timeoutFirstValue(
-      _requestTimeout,
-      message: "No response received for '$subject' within $_requestTimeout",
-    )) {
-      final response = transformer(lastData, serializer.fromBytes(msg.data));
-      yield response;
-      lastData = response;
+    var subscribed = true;
+    void unsubscribe() {
+      if (!subscribed) {
+        return;
+      }
+      subscribed = false;
+      client.unSub(sub);
     }
-  }
+
+    controller.onCancel = unsubscribe;
+    onDispose(unsubscribe);
+
+    try {
+      debugPrint("requesting: $subject");
+      final telemetry = await read(panelTelemetryProvider.future);
+      if (!subscribed) {
+        return;
+      }
+      await telemetry.traceNats(
+        subject: subject,
+        payloadSize: requestBytes.length,
+        operationName: "publish",
+        operation: (header) => client.pub(
+          subject,
+          requestBytes,
+          replyTo: listenSubject,
+          header: header,
+        ),
+      );
+
+      TData? lastData;
+      await for (final msg in sub.stream.timeoutFirstValue(
+        _requestTimeout,
+        message: "No response received for '$subject' within $_requestTimeout",
+      )) {
+        final response = transformer(lastData, serializer.fromBytes(msg.data));
+        controller.add(response);
+        lastData = response;
+      }
+    } on Object catch (error, stackTrace) {
+      controller.addError(error, stackTrace);
+    } finally {
+      unsubscribe();
+      await controller.close();
+    }
+  });
 }

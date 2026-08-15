@@ -40,7 +40,7 @@ val BookRoutesTest by testSuite {
     test("book collection watch returns the persisted initial state") {
         runTest {
             RouteFixture().use { fixture ->
-                fixture.transport.activeSubscriptionCount shouldBe 19
+                fixture.transport.activeSubscriptionCount shouldBe 20
                 val book =
                     fixture.repositories.books
                         .createBook(
