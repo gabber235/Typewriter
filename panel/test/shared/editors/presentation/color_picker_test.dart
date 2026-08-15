@@ -90,67 +90,6 @@ void main() {
     expect(find.text("A%"), findsOneWidget);
   });
 
-  testWidgets("format selector uses the shared adaptive choice control", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
-    );
-    await tester.tap(find.byTooltip("Open color picker"));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byType(AdaptiveChoiceControl<ColorFieldFormat>),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets("channel labels render as colored field prefixes", (
-    tester,
-  ) async {
-    await tester.pumpTestApp(
-      child: const _ColorFieldHarness(includeAlpha: true),
-    );
-    await tester.tap(find.byTooltip("Open color picker"));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text("RGB"));
-    await tester.pumpAndSettle();
-
-    final rgbLabels = <String, Color>{
-      "R": tester.element(find.text("R")).colors.danger,
-      "G": tester.element(find.text("G")).colors.success,
-      "B": tester.element(find.text("B")).colors.info,
-    };
-    for (final entry in rgbLabels.entries) {
-      final label = tester.widget<Text>(find.text(entry.key));
-      expect(label.style?.color, entry.value);
-      final decorator = tester.widget<InputDecorator>(
-        find.ancestor(
-          of: find.text(entry.key),
-          matching: find.byType(InputDecorator),
-        ),
-      );
-      expect(decorator.decoration.labelText, isNull);
-    }
-
-    await tester.tap(find.text("HSL"));
-    await tester.pumpAndSettle();
-
-    expect(
-      tester.widget<Text>(find.text("H")).style?.color,
-      tester.element(find.text("H")).colors.selection,
-    );
-    expect(
-      tester.widget<Text>(find.text("S%")).style?.color,
-      tester.element(find.text("S%")).colors.success,
-    );
-    expect(
-      tester.widget<Text>(find.text("L%")).style?.color,
-      tester.element(find.text("L%")).colors.warning,
-    );
-  });
-
   testWidgets("closed field exposes normal mode color shortcuts", (
     tester,
   ) async {

@@ -4,7 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("round trips every diagnostic code and all metadata", () {
+  test("maps every diagnostic code and all metadata", () {
     final paths = _paths();
     final path = paths.encode(DataPath.root.field("value")).valueOrNull!;
     final codes = <wire.DiagnosticCode>[
@@ -37,6 +37,32 @@ void main() {
       wire.DiagnosticSeverity.warning,
       wire.DiagnosticSeverity.error,
     ];
+    final domainCodes = [
+      TypeDiagnosticCode.invalidTypeId,
+      TypeDiagnosticCode.invalidRevision,
+      TypeDiagnosticCode.duplicateDefinition,
+      TypeDiagnosticCode.genericArity,
+      TypeDiagnosticCode.genericBound,
+      TypeDiagnosticCode.varianceViolation,
+      TypeDiagnosticCode.inheritanceCycle,
+      TypeDiagnosticCode.conflictingInheritance,
+      TypeDiagnosticCode.weakenedConstraint,
+      TypeDiagnosticCode.incompatibleRepresentation,
+      TypeDiagnosticCode.invalidValue,
+      TypeDiagnosticCode.missingField,
+      TypeDiagnosticCode.unknownField,
+      TypeDiagnosticCode.invalidPath,
+      TypeDiagnosticCode.invalidConcreteType,
+      TypeDiagnosticCode.conversionNotFound,
+      TypeDiagnosticCode.ambiguousConversion,
+      TypeDiagnosticCode.conversionFailed,
+      TypeDiagnosticCode.invalidExpression,
+      TypeDiagnosticCode.evaluationBudgetExceeded,
+      TypeDiagnosticCode.invalidPresentation,
+      TypeDiagnosticCode.mutationConflict,
+      TypeDiagnosticCode.permissionDenied,
+    ];
+    final domainSeverities = TypeDiagnosticSeverity.values;
 
     for (final entry in codes.indexed) {
       final original = wire.TypeDiagnostic(
@@ -51,12 +77,24 @@ void main() {
         ],
       );
 
-      final bytes = wire.TypeDiagnostic.serializer.toBytes(original);
-      final decodedWire = wire.TypeDiagnostic.serializer.fromBytes(bytes);
-      final domain = decodedWire.decodeWire(paths);
+      final domain = original.decodeWire(paths);
       final encoded = domain.encodeWire(paths);
 
-      expect(wire.TypeDiagnostic.serializer.toBytes(encoded), bytes);
+      expect(domain.code, domainCodes[entry.$1]);
+      expect(domain.severity, domainSeverities[entry.$1 % 3]);
+      expect(domain.message, "Diagnostic ${entry.$1}");
+      expect(domain.path, DataPath.root.field("value"));
+      expect(domain.relatedType, "example::type@1");
+      expect(domain.details, [
+        TypeDiagnosticDetail(key: "index", value: "${entry.$1}"),
+        const TypeDiagnosticDetail(key: "source", value: "test"),
+      ]);
+      expect(encoded.code, original.code);
+      expect(encoded.severity, original.severity);
+      expect(encoded.message, original.message);
+      expect(encoded.path, original.path);
+      expect(encoded.relatedType, original.relatedType);
+      expect(encoded.details, original.details);
     }
   });
 

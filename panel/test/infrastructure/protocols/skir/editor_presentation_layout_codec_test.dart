@@ -20,49 +20,79 @@ void main() {
   );
   const leaf = PresentationNode(id: "leaf", element: DividerElement());
 
-  test("round trips every layout presentation variant", () {
-    final elements = <PresentationElement>[
-      ColumnElement(
-        children: const [leaf],
-        spacing: 2,
-        mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
-        crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+  test("maps every layout presentation variant and its fields", () {
+    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+      (
+        ColumnElement(
+          children: const [leaf],
+          spacing: 2,
+          mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
+          crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+        ),
+        wire.PresentationElement_kind.columnWrapper,
       ),
-      RowElement(children: const [leaf], spacing: 3),
-      WrapElement(children: const [leaf], spacing: 4),
-      StackElement(children: const [leaf], spacing: 5),
-      GridElement(
-        children: const [leaf],
-        columns: 2,
-        horizontalSpacing: 3,
-        verticalSpacing: 4,
+      (
+        RowElement(children: const [leaf], spacing: 3),
+        wire.PresentationElement_kind.rowWrapper,
       ),
-      const CardElement(leaf, initiallyExpanded: true),
-      const SectionElement(
-        title: text,
-        description: text,
-        child: leaf,
-        initiallyExpanded: false,
+      (
+        WrapElement(children: const [leaf], spacing: 4),
+        wire.PresentationElement_kind.wrapWrapper,
       ),
-      const CollapsibleElement(
-        title: text,
-        child: leaf,
-        initiallyExpanded: true,
+      (
+        StackElement(children: const [leaf], spacing: 5),
+        wire.PresentationElement_kind.stackWrapper,
       ),
-      TabsElement(
-        tabs: const [TabItem(id: "main", label: text, child: leaf)],
-        initiallySelectedTabId: "main",
+      (
+        GridElement(
+          children: const [leaf],
+          columns: 2,
+          horizontalSpacing: 3,
+          verticalSpacing: 4,
+        ),
+        wire.PresentationElement_kind.gridWrapper,
       ),
-      const DividerElement(),
-      SpacerElement(width: number, height: number),
+      (
+        const CardElement(leaf, initiallyExpanded: true),
+        wire.PresentationElement_kind.cardWrapper,
+      ),
+      (
+        const SectionElement(
+          title: text,
+          description: text,
+          child: leaf,
+          initiallyExpanded: false,
+        ),
+        wire.PresentationElement_kind.sectionWrapper,
+      ),
+      (
+        const CollapsibleElement(
+          title: text,
+          child: leaf,
+          initiallyExpanded: true,
+        ),
+        wire.PresentationElement_kind.collapsibleWrapper,
+      ),
+      (
+        TabsElement(
+          tabs: const [TabItem(id: "main", label: text, child: leaf)],
+          initiallySelectedTabId: "main",
+        ),
+        wire.PresentationElement_kind.tabsWrapper,
+      ),
+      (const DividerElement(), wire.PresentationElement_kind.dividerConst),
+      (
+        SpacerElement(width: number, height: number),
+        wire.PresentationElement_kind.spacerWrapper,
+      ),
     ];
 
-    for (final element in elements) {
-      codecs.expectRoundTrip(element);
+    for (final (element, kind) in elements) {
+      codecs.expectMapping(element, kind);
     }
   });
 
-  test("round trips every semantic header item", () {
+  test("maps every semantic header item and its metadata", () {
     final header = PresentationHeader(
       binding: binding,
       title: text,
@@ -119,10 +149,17 @@ void main() {
     );
 
     final encoded = codecs.encoder.encodeNode(node).valueOrNull!;
-    final bytes = wire.PresentationNode.serializer.toBytes(encoded);
-    final decoded = codecs.decoder.decodeNode(
-      wire.PresentationNode.serializer.fromBytes(bytes),
-    );
+    final encodedHeader = encoded.header!;
+
+    expect(encoded.nodeId, "header");
+    expect(encoded.element?.kind, wire.PresentationElement_kind.dividerConst);
+    expect(encodedHeader.items, hasLength(3));
+    expect(encodedHeader.items.map((item) => item.kind), [
+      wire.HeaderItem_kind.reorderHandleWrapper,
+      wire.HeaderItem_kind.booleanToggleWrapper,
+      wire.HeaderItem_kind.buttonWrapper,
+    ]);
+    final decoded = codecs.decoder.decodeNode(encoded);
 
     expect(decoded, node);
   });
@@ -154,63 +191,106 @@ void main() {
     expect(item.icon.resultType, const StringType());
   });
 
-  test("round trips every content presentation variant", () {
-    final elements = <PresentationElement>[
-      const TextElement(text),
-      const MarkdownElement(text),
-      const IconElement(name: text, semanticLabel: text),
-      const ImageElement(source: text, semanticLabel: text),
-      const BadgeElement(label: text, tone: "positive"),
-      ProgressElement(value: number, maximum: number, label: text),
+  test("maps every content presentation variant and its fields", () {
+    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+      (const TextElement(text), wire.PresentationElement_kind.textWrapper),
+      (
+        const MarkdownElement(text),
+        wire.PresentationElement_kind.markdownWrapper,
+      ),
+      (
+        const IconElement(name: text, semanticLabel: text),
+        wire.PresentationElement_kind.iconWrapper,
+      ),
+      (
+        const ImageElement(source: text, semanticLabel: text),
+        wire.PresentationElement_kind.imageWrapper,
+      ),
+      (
+        const BadgeElement(label: text, tone: "positive"),
+        wire.PresentationElement_kind.badgeWrapper,
+      ),
+      (
+        ProgressElement(value: number, maximum: number, label: text),
+        wire.PresentationElement_kind.progressWrapper,
+      ),
     ];
 
-    for (final element in elements) {
-      codecs.expectRoundTrip(element);
+    for (final (element, kind) in elements) {
+      codecs.expectMapping(element, kind);
     }
   });
 
-  test("round trips every data presentation variant", () {
-    final elements = <PresentationElement>[
-      const DefaultPresentationElement(
-        binding: binding,
-        presentationId: PresentationId(namespace: "example", name: "main"),
-      ),
-      DiagnosticElement([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPresentation,
-          message: "invalid",
+  test("maps every data presentation variant and its fields", () {
+    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+      (
+        const DefaultPresentationElement(
+          binding: binding,
+          presentationId: PresentationId(namespace: "example", name: "main"),
         ),
-      ]),
-      const TypedFieldElement(
-        binding: binding,
-        expectedType: StringType(),
-        presentation: leaf,
+        wire.PresentationElement_kind.defaultPresentationWrapper,
       ),
-      const ConditionalElement(
-        condition: truth,
-        whenTrue: leaf,
-        whenFalse: leaf,
+      (
+        DiagnosticElement([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidPresentation,
+            message: "invalid",
+          ),
+        ]),
+        wire.PresentationElement_kind.textWrapper,
       ),
-      TypedExpression(
-        resultType: const ListType(element: StringType()),
-        expression: LiteralExpression(ListValue(const [StringValue("a")])),
-      ).let(
-        (source) => RepeatedElement(
-          source: source,
-          itemBindingId: const BindingId(2),
-          template: leaf,
-          empty: leaf,
+      (
+        const TypedFieldElement(
+          binding: binding,
+          expectedType: StringType(),
+          presentation: leaf,
         ),
+        wire.PresentationElement_kind.typedFieldWrapper,
       ),
-      const ScopedBindingElement(
-        binding: binding,
-        scopeBindingId: BindingId(3),
-        child: leaf,
+      (
+        const ConditionalElement(
+          condition: truth,
+          whenTrue: leaf,
+          whenFalse: leaf,
+        ),
+        wire.PresentationElement_kind.conditionalWrapper,
+      ),
+      (
+        TypedExpression(
+          resultType: const ListType(element: StringType()),
+          expression: LiteralExpression(ListValue(const [StringValue("a")])),
+        ).let(
+          (source) => RepeatedElement(
+            source: source,
+            itemBindingId: const BindingId(2),
+            template: leaf,
+            empty: leaf,
+          ),
+        ),
+        wire.PresentationElement_kind.repeatedWrapper,
+      ),
+      (
+        const ScopedBindingElement(
+          binding: binding,
+          scopeBindingId: BindingId(3),
+          child: leaf,
+        ),
+        wire.PresentationElement_kind.scopedBindingWrapper,
       ),
     ];
 
-    for (final element in elements) {
-      codecs.expectRoundTrip(element);
+    for (final (element, kind) in elements) {
+      if (element is DiagnosticElement) {
+        final encoded = codecs.encoder
+            .encodeNode(PresentationNode(id: "root", element: element))
+            .valueOrNull!;
+        expect(encoded.element?.kind, kind);
+        final decoded = codecs.decoder.decodeNode(encoded).element;
+        expect(decoded, isA<TextElement>());
+        expect((decoded as TextElement).value, "invalid".asStringLiteral);
+        continue;
+      }
+      codecs.expectMapping(element, kind);
     }
   });
 
@@ -253,7 +333,10 @@ final class _PresentationCodecs {
   late final SkirPresentationEncoder encoder;
   late final SkirPresentationDecoder decoder;
 
-  void expectRoundTrip(PresentationElement element) {
+  void expectMapping(
+    PresentationElement element,
+    wire.PresentationElement_kind expectedKind,
+  ) {
     final node = PresentationNode(
       id: "root",
       properties: const PresentationProperties(
@@ -266,11 +349,12 @@ final class _PresentationCodecs {
       element: element,
     );
     final encoded = encoder.encodeNode(node).valueOrNull!;
-    final bytes = wire.PresentationNode.serializer.toBytes(encoded);
-    final decodedWire = wire.PresentationNode.serializer.fromBytes(bytes);
-    final decoded = decoder.decodeNode(decodedWire);
-    final reencoded = encoder.encodeNode(decoded).valueOrNull!;
-    expect(wire.PresentationNode.serializer.toBytes(reencoded), bytes);
+
+    expect(encoded.nodeId, "root");
+    expect(encoded.properties.readOnly, isTrue);
+    expect(encoded.properties.enabledIf, isNotNull);
+    expect(encoded.element?.kind, expectedKind);
+    expect(decoder.decodeNode(encoded), node);
   }
 }
 

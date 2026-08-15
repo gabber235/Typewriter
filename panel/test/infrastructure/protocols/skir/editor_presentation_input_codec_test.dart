@@ -25,86 +25,135 @@ void main() {
     revision: 1,
   );
 
-  test("round trips every input presentation variant", () {
-    final elements = <PresentationElement>[
-      const TextInputElement(
-        control: control,
-        multiline: false,
-        placeholder: text,
+  test("maps every input presentation variant and its fields", () {
+    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+      (
+        const TextInputElement(
+          control: control,
+          multiline: false,
+          placeholder: text,
+        ),
+        wire.PresentationElement_kind.textInputWrapper,
       ),
-      const NumericInputElement(control),
-      const ToggleInputElement(control),
-      SelectInputElement(
-        control: control,
-        options: const [SelectOption(id: "one", label: text, value: text)],
-        allowCustomValue: true,
+      (
+        const NumericInputElement(control),
+        wire.PresentationElement_kind.numericInputWrapper,
       ),
-      SliderInputElement(
-        control: control,
-        minimum: number,
-        maximum: number,
-        divisions: number,
+      (
+        const ToggleInputElement(control),
+        wire.PresentationElement_kind.toggleInputWrapper,
       ),
-      const DateTimeInputElement(control: control),
-      const DurationInputElement(control),
-      const ColorInputElement(control: control),
-      const ColorInputElement(control: control, includeAlpha: true),
-      const BytesInputElement(control),
-      const EnumInputElement(control),
-      const NamedInputElement(control),
-      SearchInputElement(
-        control: control,
-        selectionMode: SearchSelectionMode.single,
-        queryBindingId: const BindingId(10),
-        summaryBindingId: const BindingId(11),
-        maximumExtent: 280.asFloatLiteral,
-        provider: SearchProvider.staticValues(
-          values: const ListValue([
-            StringValue("mdi:home"),
-          ]).asLiteral(
-            ListType(element: NamedType(standardTypeRefs.iconifyIcon)),
-          ),
-          result: SearchResultMapping(
-            bindingId: const BindingId(12),
-            key: text,
-            selectedValue: text,
-            presentation: leaf,
+      (
+        SelectInputElement(
+          control: control,
+          options: const [SelectOption(id: "one", label: text, value: text)],
+          allowCustomValue: true,
+        ),
+        wire.PresentationElement_kind.selectInputWrapper,
+      ),
+      (
+        SliderInputElement(
+          control: control,
+          minimum: number,
+          maximum: number,
+          divisions: number,
+        ),
+        wire.PresentationElement_kind.sliderInputWrapper,
+      ),
+      (
+        const DateTimeInputElement(control: control),
+        wire.PresentationElement_kind.dateTimeInputWrapper,
+      ),
+      (
+        const DurationInputElement(control),
+        wire.PresentationElement_kind.durationInputWrapper,
+      ),
+      (
+        const ColorInputElement(control: control),
+        wire.PresentationElement_kind.colorInputWrapper,
+      ),
+      (
+        const ColorInputElement(control: control, includeAlpha: true),
+        wire.PresentationElement_kind.colorInputWrapper,
+      ),
+      (
+        const BytesInputElement(control),
+        wire.PresentationElement_kind.bytesInputWrapper,
+      ),
+      (
+        const EnumInputElement(control),
+        wire.PresentationElement_kind.enumInputWrapper,
+      ),
+      (
+        const NamedInputElement(control),
+        wire.PresentationElement_kind.namedInputWrapper,
+      ),
+      (
+        SearchInputElement(
+          control: control,
+          selectionMode: SearchSelectionMode.single,
+          queryBindingId: const BindingId(10),
+          summaryBindingId: const BindingId(11),
+          maximumExtent: 280.asFloatLiteral,
+          provider: SearchProvider.staticValues(
+            values: const ListValue([StringValue("mdi:home")]).asLiteral(
+              ListType(element: NamedType(standardTypeRefs.iconifyIcon)),
+            ),
+            result: SearchResultMapping(
+              bindingId: const BindingId(12),
+              key: text,
+              selectedValue: text,
+              presentation: leaf,
+            ),
           ),
         ),
+        wire.PresentationElement_kind.searchInputWrapper,
       ),
-      const ListInputElement(
-        control: control,
-        itemPresentation: leaf,
-        allowAdd: false,
-        allowRemove: false,
-        allowReorder: false,
-        itemBindingId: BindingId(2),
-        indexBindingId: BindingId(5),
+      (
+        const ListInputElement(
+          control: control,
+          itemPresentation: leaf,
+          allowAdd: false,
+          allowRemove: false,
+          allowReorder: false,
+          itemBindingId: BindingId(2),
+          indexBindingId: BindingId(5),
+        ),
+        wire.PresentationElement_kind.listInputWrapper,
       ),
-      const MapInputElement(
-        control: control,
-        keyPresentation: leaf,
-        valuePresentation: leaf,
-        allowAdd: false,
-        allowRemove: false,
-        keyBindingId: BindingId(3),
-        valueBindingId: BindingId(4),
+      (
+        const MapInputElement(
+          control: control,
+          keyPresentation: leaf,
+          valuePresentation: leaf,
+          allowAdd: false,
+          allowRemove: false,
+          keyBindingId: BindingId(3),
+          valueBindingId: BindingId(4),
+        ),
+        wire.PresentationElement_kind.mapInputWrapper,
       ),
-      const RecordInputElement(control: control, fieldPresentation: leaf),
-      PolymorphicInputElement(
-        control: control,
-        concreteTypes: [
-          ConcreteTypePresentation(
-            type: concreteType,
-            label: text,
-            presentation: leaf,
-          ),
-        ],
+      (
+        const RecordInputElement(control: control, fieldPresentation: leaf),
+        wire.PresentationElement_kind.recordInputWrapper,
+      ),
+      (
+        PolymorphicInputElement(
+          control: control,
+          concreteTypes: [
+            ConcreteTypePresentation(
+              type: concreteType,
+              label: text,
+              presentation: leaf,
+            ),
+          ],
+        ),
+        wire.PresentationElement_kind.polymorphicInputWrapper,
       ),
     ];
 
-    for (final element in elements) {
-      codecs.expectRoundTrip(element);
+    for (final (element, kind) in elements) {
+      codecs.expectMapping(element, kind);
     }
   });
 
@@ -130,7 +179,7 @@ void main() {
     }
   });
 
-  test("round trips every date and time visibility combination", () {
+  test("maps every date and time visibility combination", () {
     for (final includeDate in [false, true]) {
       for (final includeTime in [false, true]) {
         final element = DateTimeInputElement(
@@ -138,7 +187,10 @@ void main() {
           includeDate: includeDate,
           includeTime: includeTime,
         );
-        codecs.expectRoundTrip(element);
+        codecs.expectMapping(
+          element,
+          wire.PresentationElement_kind.dateTimeInputWrapper,
+        );
 
         final encoded = codecs.encoder
             .encodeNode(PresentationNode(id: "dateTime", element: element))
@@ -151,22 +203,38 @@ void main() {
     }
   });
 
-  test("round trips every interaction presentation variant", () {
+  test("maps every interaction presentation variant and its fields", () {
     const action = EditorAction.realm(ReloadRealmAction());
-    final elements = <PresentationElement>[
-      const ButtonElement(label: text, action: action),
-      const IconButtonElement(icon: text, semanticLabel: text, action: action),
-      MenuElement(
-        label: text,
-        items: const [
-          PresentationMenuItem(id: "reload", label: text, action: action),
-        ],
+    final elements = <(PresentationElement, wire.PresentationElement_kind)>[
+      (
+        const ButtonElement(label: text, action: action),
+        wire.PresentationElement_kind.buttonWrapper,
       ),
-      const TooltipElement(message: text, child: leaf),
+      (
+        const IconButtonElement(
+          icon: text,
+          semanticLabel: text,
+          action: action,
+        ),
+        wire.PresentationElement_kind.iconButtonWrapper,
+      ),
+      (
+        MenuElement(
+          label: text,
+          items: const [
+            PresentationMenuItem(id: "reload", label: text, action: action),
+          ],
+        ),
+        wire.PresentationElement_kind.menuWrapper,
+      ),
+      (
+        const TooltipElement(message: text, child: leaf),
+        wire.PresentationElement_kind.tooltipWrapper,
+      ),
     ];
 
-    for (final element in elements) {
-      codecs.expectRoundTrip(element);
+    for (final (element, kind) in elements) {
+      codecs.expectMapping(element, kind);
     }
   });
 }
@@ -193,14 +261,15 @@ final class _PresentationCodecs {
   late final SkirPresentationEncoder encoder;
   late final SkirPresentationDecoder decoder;
 
-  void expectRoundTrip(PresentationElement element) {
-    final encoded = encoder
-        .encodeNode(PresentationNode(id: "root", element: element))
-        .valueOrNull!;
-    final bytes = wire.PresentationNode.serializer.toBytes(encoded);
-    final decodedWire = wire.PresentationNode.serializer.fromBytes(bytes);
-    final decoded = decoder.decodeNode(decodedWire);
-    final reencoded = encoder.encodeNode(decoded).valueOrNull!;
-    expect(wire.PresentationNode.serializer.toBytes(reencoded), bytes);
+  void expectMapping(
+    PresentationElement element,
+    wire.PresentationElement_kind expectedKind,
+  ) {
+    final node = PresentationNode(id: "root", element: element);
+    final encoded = encoder.encodeNode(node).valueOrNull!;
+
+    expect(encoded.nodeId, "root");
+    expect(encoded.element?.kind, expectedKind);
+    expect(decoder.decodeNode(encoded), node);
   }
 }

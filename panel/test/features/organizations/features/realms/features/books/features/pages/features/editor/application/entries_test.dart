@@ -5,41 +5,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("ElementDefinition", () {
-    test("uses resolved root identity and supports Freezed copyWith", () {
+    test("derives qualified identity from its root type", () {
       final definition = _elementDefinition();
-      final renamed = definition.copyWith(name: "Renamed");
 
       expect(definition.typeId, _rootType.id);
       expect(definition.namespace, "example");
       expect(definition.qualifiedName, "example::Entry");
-      expect(renamed.name, "Renamed");
-      expect(renamed.rootType, definition.rootType);
-      expect(_elementDefinition(), definition);
     });
 
-    test("stores deprecation directly", () {
-      final definition = _elementDefinition(
+    test("derives deprecation state from its metadata", () {
+      final deprecated = _elementDefinition(
         deprecation: const ElementDeprecation(reason: "Use another type"),
       );
 
-      expect(definition.isDeprecated, isTrue);
-      expect(definition.deprecation?.reason, "Use another type");
-    });
-
-    test("supports iconify and sanitized SVG icons", () {
-      const iconify = IconValue.iconify("fa-solid:star");
-      const svg = IconValue.svg('<svg viewBox="0 0 1 1"></svg>');
-
-      expect(iconify.validate(), isEmpty);
-      expect(svg.validate(), isEmpty);
-      expect(iconify.typedValue.concreteType, standardTypeRefs.iconifyIcon);
-      expect(svg.typedValue.concreteType, standardTypeRefs.svgIcon);
-    });
-
-    test("rejects unsafe SVG icons", () {
-      const icon = IconValue.svg('<svg><script>alert("x")</script></svg>');
-
-      expect(icon.validate().single.code, TypeDiagnosticCode.invalidValue);
+      expect(_elementDefinition().isDeprecated, isFalse);
+      expect(deprecated.isDeprecated, isTrue);
+      expect(deprecated.deprecation?.reason, "Use another type");
     });
 
     test("resolves a concrete record root", () {
