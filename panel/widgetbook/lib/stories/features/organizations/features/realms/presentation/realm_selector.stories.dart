@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "RealmSelector", type: RealmSelector)
+@widgetbook.UseCase(name: "Default", type: RealmSelector)
 Widget realmSelectorUseCase(BuildContext context) {
   final displayState = context.knobs.displayState();
   return FakeApp(

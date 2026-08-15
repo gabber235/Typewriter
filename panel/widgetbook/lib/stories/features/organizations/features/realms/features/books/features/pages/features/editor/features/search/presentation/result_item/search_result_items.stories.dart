@@ -50,7 +50,7 @@ Widget searchResultItemCatalogUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Entry", type: EntrySearchResultItem)
+@widgetbook.UseCase(name: "Default", type: EntrySearchResultItem)
 Widget entrySearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
@@ -62,10 +62,7 @@ Widget entrySearchResultItemUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(
-  name: "Element definition",
-  type: ElementDefinitionSearchResultItem,
-)
+@widgetbook.UseCase(name: "Default", type: ElementDefinitionSearchResultItem)
 Widget elementDefinitionSearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
@@ -77,7 +74,7 @@ Widget elementDefinitionSearchResultItemUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Page", type: PageSearchResultItem)
+@widgetbook.UseCase(name: "Default", type: PageSearchResultItem)
 Widget pageSearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
@@ -89,7 +86,7 @@ Widget pageSearchResultItemUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Book", type: BookSearchResultItem)
+@widgetbook.UseCase(name: "Default", type: BookSearchResultItem)
 Widget bookSearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(
@@ -101,7 +98,7 @@ Widget bookSearchResultItemUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Tag", type: TagSearchResultItem)
+@widgetbook.UseCase(name: "Default", type: TagSearchResultItem)
 Widget tagSearchResultItemUseCase(BuildContext context) {
   return FakeApp(
     child: Center(

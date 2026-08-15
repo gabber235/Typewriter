@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "ServicesPage", type: ServicesPage)
+@widgetbook.UseCase(name: "Default", type: ServicesPage)
 Widget servicesPageUseCase(BuildContext context) {
   final servicesState = context.knobs.displayState(
     label: "Services State",

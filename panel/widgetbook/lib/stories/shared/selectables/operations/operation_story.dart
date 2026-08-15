@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-Widget operationUseCase(
+Widget operationStory(
   BuildContext context,
   List<SelectableIdentifier Function(BuildContext)> builders,
 ) {

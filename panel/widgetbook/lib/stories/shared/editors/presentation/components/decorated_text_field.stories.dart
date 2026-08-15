@@ -6,7 +6,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 @widgetbook.UseCase(name: "Default", type: DecoratedTextField)
-Widget inputFieldUseCase(BuildContext context) {
+Widget decoratedTextFieldDefaultUseCase(BuildContext context) {
   final hint = context.knobs.string(
     label: "Hint",
     initialValue: "Enter text here",
@@ -39,7 +39,7 @@ Widget inputFieldUseCase(BuildContext context) {
 }
 
 @widgetbook.UseCase(name: "Error", type: DecoratedTextField)
-Widget inputFieldErrorUseCase(BuildContext context) {
+Widget decoratedTextFieldErrorUseCase(BuildContext context) {
   final hint = context.knobs.string(
     label: "Hint",
     initialValue: "Enter text here",
@@ -58,7 +58,7 @@ Widget inputFieldErrorUseCase(BuildContext context) {
 }
 
 @widgetbook.UseCase(name: "With Prefix Icon", type: DecoratedTextField)
-Widget inputFieldWithPrefixIconUseCase(BuildContext context) {
+Widget decoratedTextFieldWithPrefixIconUseCase(BuildContext context) {
   final hint = context.knobs.string(
     label: "Hint",
     initialValue: "Enter text here",
@@ -84,7 +84,7 @@ Widget inputFieldWithPrefixIconUseCase(BuildContext context) {
 }
 
 @widgetbook.UseCase(name: "With Callbacks", type: DecoratedTextField)
-Widget inputFieldWithCallbacksUseCase(BuildContext context) {
+Widget decoratedTextFieldWithCallbacksUseCase(BuildContext context) {
   final hint = context.knobs.string(
     label: "Hint",
     initialValue: "Enter text here",
@@ -275,7 +275,7 @@ String _formatTime(DateTime time) {
 }
 
 @widgetbook.UseCase(name: "Multiline", type: DecoratedTextField)
-Widget inputFieldMultilineUseCase(BuildContext context) {
+Widget decoratedTextFieldMultilineUseCase(BuildContext context) {
   final hint = context.knobs.string(
     label: "Hint",
     initialValue: "Enter text here",

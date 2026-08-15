@@ -5,7 +5,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Data";
+const _path = "shared/editors/presentation/protocol/renderers/data";
 const _conditionalPath = "$_path/Conditional";
 const _repeatedPath = "$_path/Repeated";
 const _itemBinding = BindingReference(bindingId: BindingId(1));
@@ -135,7 +135,7 @@ final dataRendererScenarios = [
 
 @widgetbook.UseCase(
   name: "Diagnostic",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget diagnosticRendererUseCase(BuildContext context) =>
@@ -143,7 +143,7 @@ Widget diagnosticRendererUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Default presentation",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget defaultPresentationRendererUseCase(BuildContext context) =>
@@ -151,7 +151,7 @@ Widget defaultPresentationRendererUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Typed field",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget typedFieldRendererUseCase(BuildContext context) =>
@@ -159,7 +159,7 @@ Widget typedFieldRendererUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Interactive",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _conditionalPath,
 )
 Widget conditionalRendererUseCase(BuildContext context) =>
@@ -314,7 +314,7 @@ final conditionalRendererScenario = RendererStoryScenario(
 
 @widgetbook.UseCase(
   name: "Interactive list",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _repeatedPath,
 )
 Widget repeatedRendererUseCase(BuildContext context) =>
@@ -460,7 +460,7 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
 
 @widgetbook.UseCase(
   name: "Custom empty state",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _repeatedPath,
 )
 Widget customRepeatedEmptyUseCase(BuildContext context) =>
@@ -468,7 +468,7 @@ Widget customRepeatedEmptyUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Scoped binding",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget scopedBindingRendererUseCase(BuildContext context) => rendererStory(

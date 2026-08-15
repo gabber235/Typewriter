@@ -5,7 +5,7 @@ import "package:widgetbook_workspace/stories/shared/editors/presentation/protoco
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
 const _path =
-    "[Shared]/Editors/Presentation protocol/Renderers/Interaction states";
+    "shared/editors/presentation/protocol/renderers/interaction_states";
 
 final interactionRendererVariantScenarios = [
   RendererStoryScenario(
@@ -44,7 +44,7 @@ final interactionRendererVariantScenarios = [
 
 @widgetbook.UseCase(
   name: "Disabled button",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget disabledButtonUseCase(BuildContext context) =>
@@ -52,7 +52,7 @@ Widget disabledButtonUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Unavailable realm action",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget unavailableRealmActionUseCase(BuildContext context) =>

@@ -5,7 +5,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Interaction";
+const _path = "shared/editors/presentation/protocol/renderers/interaction";
 
 final interactionRendererScenarios = [
   RendererStoryScenario(
@@ -90,30 +90,22 @@ final interactionRendererScenarios = [
   ),
 ];
 
-@widgetbook.UseCase(
-  name: "Button",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Button", type: EditorProtocolRenderer, path: _path)
 Widget buttonRendererUseCase(BuildContext context) =>
     rendererStory(context, interactionRendererScenarios[0]);
 
 @widgetbook.UseCase(
   name: "Icon button",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget iconButtonRendererUseCase(BuildContext context) =>
     rendererStory(context, interactionRendererScenarios[1]);
 
-@widgetbook.UseCase(name: "Menu", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Menu", type: EditorProtocolRenderer, path: _path)
 Widget menuRendererUseCase(BuildContext context) =>
     rendererStory(context, interactionRendererScenarios[2]);
 
-@widgetbook.UseCase(
-  name: "Tooltip",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Tooltip", type: EditorProtocolRenderer, path: _path)
 Widget tooltipRendererUseCase(BuildContext context) =>
     rendererStory(context, interactionRendererScenarios[3]);

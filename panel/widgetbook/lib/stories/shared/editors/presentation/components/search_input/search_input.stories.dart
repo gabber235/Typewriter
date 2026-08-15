@@ -5,8 +5,6 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/search_input/search_input_scenarios.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/components/search_input/search_input_story.dart";
 
-const _path = "[Shared]/Editors/Presentation/Components/SearchInput";
-
 enum _Scenario {
   ready,
   selectors,
@@ -31,11 +29,7 @@ extension on _Scenario {
   };
 }
 
-@widgetbook.UseCase(
-  name: "Playground",
-  type: PresentationSearchInput,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Playground", type: PresentationSearchInput)
 Widget searchInputPlayground(BuildContext context) {
   final scenario = context.knobs.object.dropdown(
     label: "Scenario",
@@ -100,11 +94,7 @@ Widget searchInputPlayground(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(
-  name: "Live Iconify",
-  type: PresentationSearchInput,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Live Iconify", type: PresentationSearchInput)
 Widget liveIconifySearchInput(BuildContext context) {
   final maximumExtent = context.knobs.double.slider(
     label: "Maximum result height",

@@ -6,7 +6,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "BookPage", type: BookPage)
+@widgetbook.UseCase(name: "Default", type: BookPage)
 Widget bookPageUseCase(BuildContext context) {
   final pagesState = context.knobs.displayState(
     label: "Pages State",

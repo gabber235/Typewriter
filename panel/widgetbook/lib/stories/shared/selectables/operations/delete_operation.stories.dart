@@ -5,11 +5,11 @@ import "package:flutter_animate/flutter_animate.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/features/editor/features/inspector/presentation/operations/operations.stories.dart";
+import "package:widgetbook_workspace/stories/shared/selectables/operations/operation_story.dart";
 
 @widgetbook.UseCase(name: "Single Success", type: DeleteOperationButton)
 Widget deleteSingleSuccessUseCase(BuildContext context) {
-  return operationUseCase(context, [
+  return operationStory(context, [
     (ctx) => _DeleteSelectableIdentifier(
       "test",
       onDelete: () => delayedSnack(ctx, delay: 1.seconds, text: "Deleted"),
@@ -19,7 +19,7 @@ Widget deleteSingleSuccessUseCase(BuildContext context) {
 
 @widgetbook.UseCase(name: "Multiple Success", type: DeleteOperationButton)
 Widget deleteMultipleSuccessUseCase(BuildContext context) {
-  return operationUseCase(context, [
+  return operationStory(context, [
     (ctx) => _DeleteSelectableIdentifier(
       "alpha",
       onDelete: () => delayedSnack(ctx, delay: 500.ms, text: "Deleted alpha"),
@@ -33,7 +33,7 @@ Widget deleteMultipleSuccessUseCase(BuildContext context) {
 
 @widgetbook.UseCase(name: "Partial Failures", type: DeleteOperationButton)
 Widget deletePartialFailureUseCase(BuildContext context) {
-  return operationUseCase(context, [
+  return operationStory(context, [
     (ctx) => _DeleteSelectableIdentifier(
       "success",
       onDelete: () => delayedSnack(ctx, delay: 400.ms, text: "Deleted success"),
