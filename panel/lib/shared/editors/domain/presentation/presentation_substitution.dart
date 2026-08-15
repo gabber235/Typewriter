@@ -1,6 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "presentation_header_substitution.dart";
+part "presentation_search_substitution.dart";
 
 extension PresentationNodeSubstitution on PresentationNode {
   PresentationNode substitute(Map<String, TypeExpression> substitutions) =>
@@ -169,9 +170,7 @@ extension on PresentationElement {
         control: value.control._substituteTypes(substitutions),
         includeAlpha: value.includeAlpha,
       ),
-      IconInputElement() => IconInputElement(
-        value.control._substituteTypes(substitutions),
-      ),
+      SearchInputElement() => value._substituteTypes(substitutions),
       BytesInputElement() => BytesInputElement(
         value.control._substituteTypes(substitutions),
       ),

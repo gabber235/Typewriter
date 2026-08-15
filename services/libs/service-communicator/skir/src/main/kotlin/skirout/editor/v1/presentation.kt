@@ -8991,6 +8991,5049 @@ class PolymorphicControl private constructor(
     }
 }
 
+/** Deeply immutable. */
+sealed class SearchSelectionMode private constructor() {
+    /** The kind of variant held by a `SearchSelectionMode`. */
+    enum class Kind {
+        UNKNOWN,
+        SINGLE_CONST,
+        MULTIPLE_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectionMode>?,
+    ) : skirout.editor.v1.presentation.SearchSelectionMode() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectionMode && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object SINGLE : skirout.editor.v1.presentation.SearchSelectionMode() {
+        override val kind get() = Kind.SINGLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectionMode && other.kind == Kind.SINGLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SINGLE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object MULTIPLE : skirout.editor.v1.presentation.SearchSelectionMode() {
+        override val kind get() = Kind.MULTIPLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectionMode && other.kind == Kind.MULTIPLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.MULTIPLE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectionMode>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchSelectionMode._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [SearchSelectionMode].
+         * Default value for fields of type [SearchSelectionMode].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.SearchSelectionMode, Unknown>(
+                recordId = "editor/v1/presentation.skir:SearchSelectionMode",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [SearchSelectionMode] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [SearchSelectionMode] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            SINGLE;
+            MULTIPLE;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 3) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "single",
+                    Kind.SINGLE_CONST.ordinal,
+                    "",
+                    SINGLE,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "multiple",
+                    Kind.MULTIPLE_CONST.ordinal,
+                    "",
+                    MULTIPLE,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class SearchSelectorMultiplicity private constructor() {
+    /** The kind of variant held by a `SearchSelectorMultiplicity`. */
+    enum class Kind {
+        UNKNOWN,
+        SINGLE_CONST,
+        MULTIPLE_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.SearchSelectorMultiplicity.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectorMultiplicity>?,
+    ) : skirout.editor.v1.presentation.SearchSelectorMultiplicity() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorMultiplicity && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object SINGLE : skirout.editor.v1.presentation.SearchSelectorMultiplicity() {
+        override val kind get() = Kind.SINGLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorMultiplicity && other.kind == Kind.SINGLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SINGLE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object MULTIPLE : skirout.editor.v1.presentation.SearchSelectorMultiplicity() {
+        override val kind get() = Kind.MULTIPLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorMultiplicity && other.kind == Kind.MULTIPLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.MULTIPLE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectorMultiplicity>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchSelectorMultiplicity._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [SearchSelectorMultiplicity].
+         * Default value for fields of type [SearchSelectorMultiplicity].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.SearchSelectorMultiplicity, Unknown>(
+                recordId = "editor/v1/presentation.skir:SearchSelectorMultiplicity",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [SearchSelectorMultiplicity] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [SearchSelectorMultiplicity] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            SINGLE;
+            MULTIPLE;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 3) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "single",
+                    Kind.SINGLE_CONST.ordinal,
+                    "",
+                    SINGLE,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "multiple",
+                    Kind.MULTIPLE_CONST.ordinal,
+                    "",
+                    MULTIPLE,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface SearchSelectorEnumValues_OrMutable {
+    val values: kotlin.collections.List<kotlin.String>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SearchSelectorEnumValues;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SearchSelectorEnumValues private constructor(
+    override val values: kotlin.collections.List<kotlin.String>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorEnumValues>? =
+        null,
+): skirout.editor.v1.presentation.SearchSelectorEnumValues_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        values: kotlin.collections.Iterable<kotlin.String>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorEnumValues>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(values),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        values = this.values,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        values: kotlin.collections.Iterable<kotlin.String> =
+            this.values,
+    ) = skirout.editor.v1.presentation.SearchSelectorEnumValues(
+        build.skir.internal.toFrozenList(values),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SearchSelectorEnumValues && this.values == other.values);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.values).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchSelectorEnumValues.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SearchSelectorEnumValues]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var values: kotlin.collections.List<kotlin.String> =
+            build.skir.internal.emptyFrozenList<kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorEnumValues>? =
+            null,
+    ): skirout.editor.v1.presentation.SearchSelectorEnumValues_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SearchSelectorEnumValues(
+            values = this.values,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [values] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
+         */
+        val mutableValues: kotlin.collections.MutableList<kotlin.String> get() {
+            var value = this.values;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.values = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SearchSelectorEnumValues(
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SearchSelectorEnumValues].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            values: kotlin.collections.Iterable<kotlin.String> =
+                build.skir.internal.emptyFrozenList<kotlin.String>(),
+        ) = skirout.editor.v1.presentation.SearchSelectorEnumValues(
+            values = values,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SearchSelectorEnumValues",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SearchSelectorEnumValues] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SearchSelectorEnumValues] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "values",
+                "values",
+                0,
+                build.skir.Serializers.list(
+                    build.skir.Serializers.string,
+                ),
+                "",
+                { it.values },
+                { mut, v -> mut.values = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class SearchSelectorValues private constructor() {
+    /** The kind of variant held by a `SearchSelectorValues`. */
+    enum class Kind {
+        UNKNOWN,
+        FREE_TEXT_CONST,
+        ENUMERATION_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectorValues>?,
+    ) : skirout.editor.v1.presentation.SearchSelectorValues() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorValues && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object FREE_TEXT : skirout.editor.v1.presentation.SearchSelectorValues() {
+        override val kind get() = Kind.FREE_TEXT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorValues && other.kind == Kind.FREE_TEXT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.FREE_TEXT_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    class EnumerationWrapper private constructor (
+        val value: skirout.editor.v1.presentation.SearchSelectorEnumValues,
+    ) : skirout.editor.v1.presentation.SearchSelectorValues() {
+        constructor(
+            value: skirout.editor.v1.presentation.SearchSelectorEnumValues_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ENUMERATION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchSelectorValues.EnumerationWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1524304455;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchSelectorValues>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchSelectorValues._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [SearchSelectorValues].
+         * Default value for fields of type [SearchSelectorValues].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `EnumerationWrapper(skirout.editor.v1.presentation.SearchSelectorEnumValues(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createEnumeration(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            values: kotlin.collections.Iterable<kotlin.String>,
+        ) = EnumerationWrapper(
+            skirout.editor.v1.presentation.SearchSelectorEnumValues(
+                values = values,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.SearchSelectorValues, Unknown>(
+                recordId = "editor/v1/presentation.skir:SearchSelectorValues",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [SearchSelectorValues] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [SearchSelectorValues] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            FREE_TEXT;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 2) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "free_text",
+                    Kind.FREE_TEXT_CONST.ordinal,
+                    "",
+                    FREE_TEXT,
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "enumeration",
+                    Kind.ENUMERATION_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.SearchSelectorEnumValues.serializer,
+                    "",
+                    { EnumerationWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface SearchSelectorDefinition_OrMutable {
+    val selectorId: kotlin.String;
+    val key: kotlin.String;
+    val valueBindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val values: skirout.editor.v1.presentation.SearchSelectorValues;
+    val caseSensitive: kotlin.Boolean;
+    val multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity;
+    val color: kotlin.Long?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SearchSelectorDefinition;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SearchSelectorDefinition private constructor(
+    override val selectorId: kotlin.String,
+    override val key: kotlin.String,
+    override val valueBindingId: skirout.editor.v1.binding.BindingId,
+    override val values: skirout.editor.v1.presentation.SearchSelectorValues,
+    override val caseSensitive: kotlin.Boolean,
+    override val multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity,
+    override val color: kotlin.Long?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorDefinition>? =
+        null,
+): skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        selectorId: kotlin.String,
+        key: kotlin.String,
+        valueBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        values: skirout.editor.v1.presentation.SearchSelectorValues,
+        caseSensitive: kotlin.Boolean,
+        multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity,
+        color: kotlin.Long?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorDefinition>? =
+            null,
+    ): this(
+        selectorId,
+        key,
+        valueBindingId.toFrozen(),
+        values,
+        caseSensitive,
+        multiplicity,
+        color,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        selectorId = this.selectorId,
+        key = this.key,
+        valueBindingId = this.valueBindingId,
+        values = this.values,
+        caseSensitive = this.caseSensitive,
+        multiplicity = this.multiplicity,
+        color = this.color,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        selectorId: kotlin.String =
+            this.selectorId,
+        key: kotlin.String =
+            this.key,
+        valueBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.valueBindingId,
+        values: skirout.editor.v1.presentation.SearchSelectorValues =
+            this.values,
+        caseSensitive: kotlin.Boolean =
+            this.caseSensitive,
+        multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity =
+            this.multiplicity,
+        color: kotlin.Long? =
+            this.color,
+    ) = skirout.editor.v1.presentation.SearchSelectorDefinition(
+        selectorId,
+        key,
+        valueBindingId.toFrozen(),
+        values,
+        caseSensitive,
+        multiplicity,
+        color,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SearchSelectorDefinition && this.selectorId == other.selectorId && this.key == other.key && this.valueBindingId == other.valueBindingId && this.values == other.values && this.caseSensitive == other.caseSensitive && this.multiplicity == other.multiplicity && this.color == other.color);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.selectorId, this.key, this.valueBindingId, this.values, this.caseSensitive, this.multiplicity, this.color).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchSelectorDefinition.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SearchSelectorDefinition]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var selectorId: kotlin.String =
+            "",
+        override var key: kotlin.String =
+            "",
+        override var valueBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
+        override var values: skirout.editor.v1.presentation.SearchSelectorValues =
+            skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
+        override var caseSensitive: kotlin.Boolean =
+            false,
+        override var multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity =
+            skirout.editor.v1.presentation.SearchSelectorMultiplicity.UNKNOWN,
+        override var color: kotlin.Long? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchSelectorDefinition>? =
+            null,
+    ): skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SearchSelectorDefinition(
+            selectorId = this.selectorId,
+            key = this.key,
+            valueBindingId = this.valueBindingId,
+            values = this.values,
+            caseSensitive = this.caseSensitive,
+            multiplicity = this.multiplicity,
+            color = this.color,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [valueBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
+         */
+        val mutableValueBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.valueBindingId;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingId -> {
+                    value = value.toMutable();
+                    this.valueBindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SearchSelectorDefinition(
+                "",
+                "",
+                skirout.editor.v1.binding.BindingId.partial(),
+                skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
+                false,
+                skirout.editor.v1.presentation.SearchSelectorMultiplicity.UNKNOWN,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SearchSelectorDefinition].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            selectorId: kotlin.String =
+                "",
+            key: kotlin.String =
+                "",
+            valueBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
+            values: skirout.editor.v1.presentation.SearchSelectorValues =
+                skirout.editor.v1.presentation.SearchSelectorValues.UNKNOWN,
+            caseSensitive: kotlin.Boolean =
+                false,
+            multiplicity: skirout.editor.v1.presentation.SearchSelectorMultiplicity =
+                skirout.editor.v1.presentation.SearchSelectorMultiplicity.UNKNOWN,
+            color: kotlin.Long? =
+                null,
+        ) = skirout.editor.v1.presentation.SearchSelectorDefinition(
+            selectorId = selectorId,
+            key = key,
+            valueBindingId = valueBindingId,
+            values = values,
+            caseSensitive = caseSensitive,
+            multiplicity = multiplicity,
+            color = color,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SearchSelectorDefinition",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SearchSelectorDefinition] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SearchSelectorDefinition] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "selector_id",
+                "selectorId",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.selectorId },
+                { mut, v -> mut.selectorId = v },
+            );
+            serializerImpl.addField(
+                "key",
+                "key",
+                1,
+                build.skir.Serializers.string,
+                "",
+                { it.key },
+                { mut, v -> mut.key = v },
+            );
+            serializerImpl.addField(
+                "value_binding_id",
+                "valueBindingId",
+                2,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.valueBindingId },
+                { mut, v -> mut.valueBindingId = v },
+            );
+            serializerImpl.addField(
+                "values",
+                "values",
+                3,
+                skirout.editor.v1.presentation.SearchSelectorValues.serializer,
+                "",
+                { it.values },
+                { mut, v -> mut.values = v },
+            );
+            serializerImpl.addField(
+                "case_sensitive",
+                "caseSensitive",
+                4,
+                build.skir.Serializers.bool,
+                "",
+                { it.caseSensitive },
+                { mut, v -> mut.caseSensitive = v },
+            );
+            serializerImpl.addField(
+                "multiplicity",
+                "multiplicity",
+                5,
+                skirout.editor.v1.presentation.SearchSelectorMultiplicity.serializer,
+                "",
+                { it.multiplicity },
+                { mut, v -> mut.multiplicity = v },
+            );
+            serializerImpl.addField(
+                "color",
+                "color",
+                6,
+                build.skir.Serializers.optional(
+                    build.skir.Serializers.int64,
+                ),
+                "",
+                { it.color },
+                { mut, v -> mut.color = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface SearchResultMapping_OrMutable {
+    val bindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val key: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val selectedValue: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SearchResultMapping;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SearchResultMapping private constructor(
+    override val bindingId: skirout.editor.v1.binding.BindingId,
+    override val key: skirout.editor.v1.expression.TypedExpression,
+    override val selectedValue: skirout.editor.v1.expression.TypedExpression,
+    override val presentation: skirout.editor.v1.presentation.PresentationNode,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchResultMapping>? =
+        null,
+): skirout.editor.v1.presentation.SearchResultMapping_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        bindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        key: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        selectedValue: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchResultMapping>? =
+            null,
+    ): this(
+        bindingId.toFrozen(),
+        key.toFrozen(),
+        selectedValue.toFrozen(),
+        presentation.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        bindingId = this.bindingId,
+        key = this.key,
+        selectedValue = this.selectedValue,
+        presentation = this.presentation,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.bindingId,
+        key: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.key,
+        selectedValue: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.selectedValue,
+        presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+            this.presentation,
+    ) = skirout.editor.v1.presentation.SearchResultMapping(
+        bindingId.toFrozen(),
+        key.toFrozen(),
+        selectedValue.toFrozen(),
+        presentation.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SearchResultMapping && this.bindingId == other.bindingId && this.key == other.key && this.selectedValue == other.selectedValue && this.presentation == other.presentation);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.key, this.selectedValue, this.presentation).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchResultMapping.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SearchResultMapping]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
+        override var key: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var selectedValue: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var presentation: skirout.editor.v1.presentation.PresentationNode =
+            skirout.editor.v1.presentation.PresentationNode.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchResultMapping>? =
+            null,
+    ): skirout.editor.v1.presentation.SearchResultMapping_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SearchResultMapping(
+            bindingId = this.bindingId,
+            key = this.key,
+            selectedValue = this.selectedValue,
+            presentation = this.presentation,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [bindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         */
+        val mutableBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.bindingId;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingId -> {
+                    value = value.toMutable();
+                    this.bindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [key] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
+         */
+        val mutableKey: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.key;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.key = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [selectedValue] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [selectedValue] and returns it.
+         */
+        val mutableSelectedValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.selectedValue;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.selectedValue = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SearchResultMapping(
+                skirout.editor.v1.binding.BindingId.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SearchResultMapping].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
+            key: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            selectedValue: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            presentation: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+        ) = skirout.editor.v1.presentation.SearchResultMapping(
+            bindingId = bindingId,
+            key = key,
+            selectedValue = selectedValue,
+            presentation = presentation,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SearchResultMapping",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SearchResultMapping] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SearchResultMapping] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "binding_id",
+                "bindingId",
+                0,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.bindingId },
+                { mut, v -> mut.bindingId = v },
+            );
+            serializerImpl.addField(
+                "key",
+                "key",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.key },
+                { mut, v -> mut.key = v },
+            );
+            serializerImpl.addField(
+                "selected_value",
+                "selectedValue",
+                2,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.selectedValue },
+                { mut, v -> mut.selectedValue = v },
+            );
+            serializerImpl.addField(
+                "presentation",
+                "presentation",
+                3,
+                skirout.editor.v1.presentation.PresentationNode.serializer,
+                "",
+                { it.presentation },
+                { mut, v -> mut.presentation = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface HttpQueryParameter_OrMutable {
+    val name: kotlin.String;
+    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val omitIfEmpty: kotlin.Boolean;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HttpQueryParameter;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HttpQueryParameter private constructor(
+    override val name: kotlin.String,
+    override val value: skirout.editor.v1.expression.TypedExpression,
+    override val omitIfEmpty: kotlin.Boolean,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpQueryParameter>? =
+        null,
+): skirout.editor.v1.presentation.HttpQueryParameter_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        name: kotlin.String,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        omitIfEmpty: kotlin.Boolean,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpQueryParameter>? =
+            null,
+    ): this(
+        name,
+        value.toFrozen(),
+        omitIfEmpty,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        name = this.name,
+        value = this.value,
+        omitIfEmpty = this.omitIfEmpty,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        name: kotlin.String =
+            this.name,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.value,
+        omitIfEmpty: kotlin.Boolean =
+            this.omitIfEmpty,
+    ) = skirout.editor.v1.presentation.HttpQueryParameter(
+        name,
+        value.toFrozen(),
+        omitIfEmpty,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HttpQueryParameter && this.name == other.name && this.value == other.value && this.omitIfEmpty == other.omitIfEmpty);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.name, this.value, this.omitIfEmpty).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HttpQueryParameter.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HttpQueryParameter]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var name: kotlin.String =
+            "",
+        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var omitIfEmpty: kotlin.Boolean =
+            false,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpQueryParameter>? =
+            null,
+    ): skirout.editor.v1.presentation.HttpQueryParameter_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HttpQueryParameter(
+            name = this.name,
+            value = this.value,
+            omitIfEmpty = this.omitIfEmpty,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [value] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+         */
+        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.value;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.value = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HttpQueryParameter(
+                "",
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                false,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HttpQueryParameter].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            name: kotlin.String =
+                "",
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            omitIfEmpty: kotlin.Boolean =
+                false,
+        ) = skirout.editor.v1.presentation.HttpQueryParameter(
+            name = name,
+            value = value,
+            omitIfEmpty = omitIfEmpty,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HttpQueryParameter",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HttpQueryParameter] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HttpQueryParameter] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "name",
+                "name",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.name },
+                { mut, v -> mut.name = v },
+            );
+            serializerImpl.addField(
+                "value",
+                "value",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.addField(
+                "omit_if_empty",
+                "omitIfEmpty",
+                2,
+                build.skir.Serializers.bool,
+                "",
+                { it.omitIfEmpty },
+                { mut, v -> mut.omitIfEmpty = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface HttpJsonContextBinding_OrMutable {
+    val bindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val path: kotlin.String;
+    val valueType: skirout.editor.v1.type_catalog.TypeExpression;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HttpJsonContextBinding;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HttpJsonContextBinding private constructor(
+    override val bindingId: skirout.editor.v1.binding.BindingId,
+    override val path: kotlin.String,
+    override val valueType: skirout.editor.v1.type_catalog.TypeExpression,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
+        null,
+): skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        bindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        path: kotlin.String,
+        valueType: skirout.editor.v1.type_catalog.TypeExpression,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
+            null,
+    ): this(
+        bindingId.toFrozen(),
+        path,
+        valueType,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        bindingId = this.bindingId,
+        path = this.path,
+        valueType = this.valueType,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.bindingId,
+        path: kotlin.String =
+            this.path,
+        valueType: skirout.editor.v1.type_catalog.TypeExpression =
+            this.valueType,
+    ) = skirout.editor.v1.presentation.HttpJsonContextBinding(
+        bindingId.toFrozen(),
+        path,
+        valueType,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HttpJsonContextBinding && this.bindingId == other.bindingId && this.path == other.path && this.valueType == other.valueType);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.bindingId, this.path, this.valueType).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HttpJsonContextBinding.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HttpJsonContextBinding]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
+        override var path: kotlin.String =
+            "",
+        override var valueType: skirout.editor.v1.type_catalog.TypeExpression =
+            skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonContextBinding>? =
+            null,
+    ): skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HttpJsonContextBinding(
+            bindingId = this.bindingId,
+            path = this.path,
+            valueType = this.valueType,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [bindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+         */
+        val mutableBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.bindingId;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingId -> {
+                    value = value.toMutable();
+                    this.bindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HttpJsonContextBinding(
+                skirout.editor.v1.binding.BindingId.partial(),
+                "",
+                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HttpJsonContextBinding].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
+            path: kotlin.String =
+                "",
+            valueType: skirout.editor.v1.type_catalog.TypeExpression =
+                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+        ) = skirout.editor.v1.presentation.HttpJsonContextBinding(
+            bindingId = bindingId,
+            path = path,
+            valueType = valueType,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HttpJsonContextBinding",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HttpJsonContextBinding] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HttpJsonContextBinding] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "binding_id",
+                "bindingId",
+                0,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.bindingId },
+                { mut, v -> mut.bindingId = v },
+            );
+            serializerImpl.addField(
+                "path",
+                "path",
+                1,
+                build.skir.Serializers.string,
+                "",
+                { it.path },
+                { mut, v -> mut.path = v },
+            );
+            serializerImpl.addField(
+                "value_type",
+                "valueType",
+                2,
+                skirout.editor.v1.type_catalog.TypeExpression.serializer,
+                "",
+                { it.valueType },
+                { mut, v -> mut.valueType = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface StaticSearchProvider_OrMutable {
+    val values: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable;
+    val selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.StaticSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class StaticSearchProvider private constructor(
+    override val values: skirout.editor.v1.expression.TypedExpression,
+    override val result: skirout.editor.v1.presentation.SearchResultMapping,
+    override val selectors: build.skir.KeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StaticSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.StaticSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        values: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StaticSearchProvider>? =
+            null,
+    ): this(
+        values.toFrozen(),
+        result.toFrozen(),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        values = this.values,
+        result = this.result,
+        selectors = this.selectors,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        values: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.values,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+            this.result,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            this.selectors,
+    ) = skirout.editor.v1.presentation.StaticSearchProvider(
+        values.toFrozen(),
+        result.toFrozen(),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.StaticSearchProvider && this.values == other.values && this.result == other.result && this.selectors == other.selectors);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.values, this.result, this.selectors).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.StaticSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [StaticSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var values: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var result: skirout.editor.v1.presentation.SearchResultMapping =
+            skirout.editor.v1.presentation.SearchResultMapping.partial(),
+        override var selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StaticSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.StaticSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.StaticSearchProvider(
+            values = this.values,
+            result = this.result,
+            selectors = this.selectors,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [values] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
+         */
+        val mutableValues: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.values;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.values = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [selectors] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+         */
+        val mutableSelectors: kotlin.collections.MutableList<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> get() {
+            var value = this.selectors;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.selectors = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.StaticSearchProvider(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [StaticSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            values: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+        ) = skirout.editor.v1.presentation.StaticSearchProvider(
+            values = values,
+            result = result,
+            selectors = selectors,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:StaticSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [StaticSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [StaticSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "values",
+                "values",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.values },
+                { mut, v -> mut.values = v },
+            );
+            serializerImpl.addField(
+                "result",
+                "result",
+                1,
+                skirout.editor.v1.presentation.SearchResultMapping.serializer,
+                "",
+                { it.result },
+                { mut, v -> mut.result = v },
+            );
+            serializerImpl.addField(
+                "selectors",
+                "selectors",
+                2,
+                build.skir.internal.keyedListSerializer(
+                    skirout.editor.v1.presentation.SearchSelectorDefinition.serializer,
+                    "selector_id",
+                    { it.selectorId },
+                ),
+                "",
+                { it.selectors },
+                { mut, v -> mut.selectors = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface HttpJsonSearchProvider_OrMutable {
+    val uri: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val parameters: kotlin.collections.List<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable>;
+    val resultPath: kotlin.String;
+    val resultType: skirout.editor.v1.type_catalog.TypeExpression;
+    val result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable;
+    val contextBindings: kotlin.collections.List<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable>;
+    val selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>;
+    val timeoutMilliseconds: kotlin.Long;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HttpJsonSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HttpJsonSearchProvider private constructor(
+    override val uri: skirout.editor.v1.expression.TypedExpression,
+    override val parameters: build.skir.KeyedList<skirout.editor.v1.presentation.HttpQueryParameter, kotlin.String>,
+    override val resultPath: kotlin.String,
+    override val resultType: skirout.editor.v1.type_catalog.TypeExpression,
+    override val result: skirout.editor.v1.presentation.SearchResultMapping,
+    override val contextBindings: kotlin.collections.List<skirout.editor.v1.presentation.HttpJsonContextBinding>,
+    override val selectors: build.skir.KeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>,
+    override val timeoutMilliseconds: kotlin.Long,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.HttpJsonSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        uri: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        parameters: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable>,
+        resultPath: kotlin.String,
+        resultType: skirout.editor.v1.type_catalog.TypeExpression,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+        contextBindings: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable>,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+        timeoutMilliseconds: kotlin.Long,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonSearchProvider>? =
+            null,
+    ): this(
+        uri.toFrozen(),
+        build.skir.internal.toKeyedList(parameters, "name", { it.name }, { it.toFrozen() }),
+        resultPath,
+        resultType,
+        result.toFrozen(),
+        build.skir.internal.toFrozenList(contextBindings, { it.toFrozen() }),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        timeoutMilliseconds,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        uri = this.uri,
+        parameters = this.parameters,
+        resultPath = this.resultPath,
+        resultType = this.resultType,
+        result = this.result,
+        contextBindings = this.contextBindings,
+        selectors = this.selectors,
+        timeoutMilliseconds = this.timeoutMilliseconds,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        uri: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.uri,
+        parameters: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable> =
+            this.parameters,
+        resultPath: kotlin.String =
+            this.resultPath,
+        resultType: skirout.editor.v1.type_catalog.TypeExpression =
+            this.resultType,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+            this.result,
+        contextBindings: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable> =
+            this.contextBindings,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            this.selectors,
+        timeoutMilliseconds: kotlin.Long =
+            this.timeoutMilliseconds,
+    ) = skirout.editor.v1.presentation.HttpJsonSearchProvider(
+        uri.toFrozen(),
+        build.skir.internal.toKeyedList(parameters, "name", { it.name }, { it.toFrozen() }),
+        resultPath,
+        resultType,
+        result.toFrozen(),
+        build.skir.internal.toFrozenList(contextBindings, { it.toFrozen() }),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        timeoutMilliseconds,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HttpJsonSearchProvider && this.uri == other.uri && this.parameters == other.parameters && this.resultPath == other.resultPath && this.resultType == other.resultType && this.result == other.result && this.contextBindings == other.contextBindings && this.selectors == other.selectors && this.timeoutMilliseconds == other.timeoutMilliseconds);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.uri, this.parameters, this.resultPath, this.resultType, this.result, this.contextBindings, this.selectors, this.timeoutMilliseconds).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HttpJsonSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HttpJsonSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var uri: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var parameters: kotlin.collections.List<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable> =
+            build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.HttpQueryParameter, kotlin.String>(),
+        override var resultPath: kotlin.String =
+            "",
+        override var resultType: skirout.editor.v1.type_catalog.TypeExpression =
+            skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+        override var result: skirout.editor.v1.presentation.SearchResultMapping =
+            skirout.editor.v1.presentation.SearchResultMapping.partial(),
+        override var contextBindings: kotlin.collections.List<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HttpJsonContextBinding>(),
+        override var selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+        override var timeoutMilliseconds: kotlin.Long =
+            0L,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HttpJsonSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.HttpJsonSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HttpJsonSearchProvider(
+            uri = this.uri,
+            parameters = this.parameters,
+            resultPath = this.resultPath,
+            resultType = this.resultType,
+            result = this.result,
+            contextBindings = this.contextBindings,
+            selectors = this.selectors,
+            timeoutMilliseconds = this.timeoutMilliseconds,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [uri] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [uri] and returns it.
+         */
+        val mutableUri: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.uri;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.uri = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [parameters] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
+         */
+        val mutableParameters: kotlin.collections.MutableList<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable> get() {
+            var value = this.parameters;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.parameters = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [contextBindings] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [contextBindings] and returns it.
+         */
+        val mutableContextBindings: kotlin.collections.MutableList<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable> get() {
+            var value = this.contextBindings;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.contextBindings = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [selectors] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+         */
+        val mutableSelectors: kotlin.collections.MutableList<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> get() {
+            var value = this.selectors;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.selectors = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HttpJsonSearchProvider(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.HttpQueryParameter, kotlin.String>(),
+                "",
+                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HttpJsonContextBinding>(),
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+                0L,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HttpJsonSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            uri: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            parameters: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable> =
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.HttpQueryParameter, kotlin.String>(),
+            resultPath: kotlin.String =
+                "",
+            resultType: skirout.editor.v1.type_catalog.TypeExpression =
+                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+            contextBindings: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.HttpJsonContextBinding>(),
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+            timeoutMilliseconds: kotlin.Long =
+                0L,
+        ) = skirout.editor.v1.presentation.HttpJsonSearchProvider(
+            uri = uri,
+            parameters = parameters,
+            resultPath = resultPath,
+            resultType = resultType,
+            result = result,
+            contextBindings = contextBindings,
+            selectors = selectors,
+            timeoutMilliseconds = timeoutMilliseconds,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HttpJsonSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HttpJsonSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HttpJsonSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "uri",
+                "uri",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.uri },
+                { mut, v -> mut.uri = v },
+            );
+            serializerImpl.addField(
+                "parameters",
+                "parameters",
+                1,
+                build.skir.internal.keyedListSerializer(
+                    skirout.editor.v1.presentation.HttpQueryParameter.serializer,
+                    "name",
+                    { it.name },
+                ),
+                "",
+                { it.parameters },
+                { mut, v -> mut.parameters = v },
+            );
+            serializerImpl.addField(
+                "result_path",
+                "resultPath",
+                2,
+                build.skir.Serializers.string,
+                "",
+                { it.resultPath },
+                { mut, v -> mut.resultPath = v },
+            );
+            serializerImpl.addField(
+                "result_type",
+                "resultType",
+                3,
+                skirout.editor.v1.type_catalog.TypeExpression.serializer,
+                "",
+                { it.resultType },
+                { mut, v -> mut.resultType = v },
+            );
+            serializerImpl.addField(
+                "result",
+                "result",
+                4,
+                skirout.editor.v1.presentation.SearchResultMapping.serializer,
+                "",
+                { it.result },
+                { mut, v -> mut.result = v },
+            );
+            serializerImpl.addField(
+                "context_bindings",
+                "contextBindings",
+                5,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.presentation.HttpJsonContextBinding.serializer,
+                ),
+                "",
+                { it.contextBindings },
+                { mut, v -> mut.contextBindings = v },
+            );
+            serializerImpl.addField(
+                "selectors",
+                "selectors",
+                6,
+                build.skir.internal.keyedListSerializer(
+                    skirout.editor.v1.presentation.SearchSelectorDefinition.serializer,
+                    "selector_id",
+                    { it.selectorId },
+                ),
+                "",
+                { it.selectors },
+                { mut, v -> mut.selectors = v },
+            );
+            serializerImpl.addField(
+                "timeout_milliseconds",
+                "timeoutMilliseconds",
+                7,
+                build.skir.Serializers.int64,
+                "",
+                { it.timeoutMilliseconds },
+                { mut, v -> mut.timeoutMilliseconds = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface RealmCallbackSearchProvider_OrMutable {
+    val realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable;
+    val payload: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable;
+    val selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.RealmCallbackSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RealmCallbackSearchProvider private constructor(
+    override val realmActionId: skirout.editor.v1.type_catalog.RealmActionId,
+    override val payload: skirout.editor.v1.expression.TypedExpression,
+    override val result: skirout.editor.v1.presentation.SearchResultMapping,
+    override val selectors: build.skir.KeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RealmCallbackSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.RealmCallbackSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+        payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RealmCallbackSearchProvider>? =
+            null,
+    ): this(
+        realmActionId.toFrozen(),
+        payload.toFrozen(),
+        result.toFrozen(),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        realmActionId = this.realmActionId,
+        payload = this.payload,
+        result = this.result,
+        selectors = this.selectors,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
+            this.realmActionId,
+        payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.payload,
+        result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+            this.result,
+        selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            this.selectors,
+    ) = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
+        realmActionId.toFrozen(),
+        payload.toFrozen(),
+        result.toFrozen(),
+        build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.RealmCallbackSearchProvider && this.realmActionId == other.realmActionId && this.payload == other.payload && this.result == other.result && this.selectors == other.selectors);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.realmActionId, this.payload, this.result, this.selectors).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.RealmCallbackSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RealmCallbackSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
+            skirout.editor.v1.type_catalog.RealmActionId.partial(),
+        override var payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var result: skirout.editor.v1.presentation.SearchResultMapping =
+            skirout.editor.v1.presentation.SearchResultMapping.partial(),
+        override var selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+            build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RealmCallbackSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.RealmCallbackSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
+            realmActionId = this.realmActionId,
+            payload = this.payload,
+            result = this.result,
+            selectors = this.selectors,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [realmActionId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
+         */
+        val mutableRealmActionId: skirout.editor.v1.type_catalog.RealmActionId.Mutable get() {
+            var value = this.realmActionId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.RealmActionId -> {
+                    value = value.toMutable();
+                    this.realmActionId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.RealmActionId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [payload] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [payload] and returns it.
+         */
+        val mutablePayload: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.payload;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.payload = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [selectors] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+         */
+        val mutableSelectors: kotlin.collections.MutableList<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> get() {
+            var value = this.selectors;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.selectors = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.RealmCallbackSearchProvider(
+                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RealmCallbackSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
+                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+            payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
+                skirout.editor.v1.presentation.SearchResultMapping.partial(),
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
+                build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
+        ) = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
+            realmActionId = realmActionId,
+            payload = payload,
+            result = result,
+            selectors = selectors,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:RealmCallbackSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RealmCallbackSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RealmCallbackSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "realm_action_id",
+                "realmActionId",
+                0,
+                skirout.editor.v1.type_catalog.RealmActionId.serializer,
+                "",
+                { it.realmActionId },
+                { mut, v -> mut.realmActionId = v },
+            );
+            serializerImpl.addField(
+                "payload",
+                "payload",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.payload },
+                { mut, v -> mut.payload = v },
+            );
+            serializerImpl.addField(
+                "result",
+                "result",
+                2,
+                skirout.editor.v1.presentation.SearchResultMapping.serializer,
+                "",
+                { it.result },
+                { mut, v -> mut.result = v },
+            );
+            serializerImpl.addField(
+                "selectors",
+                "selectors",
+                3,
+                build.skir.internal.keyedListSerializer(
+                    skirout.editor.v1.presentation.SearchSelectorDefinition.serializer,
+                    "selector_id",
+                    { it.selectorId },
+                ),
+                "",
+                { it.selectors },
+                { mut, v -> mut.selectors = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface GatedSearchProvider_OrMutable {
+    val condition: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val guidance: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.GatedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class GatedSearchProvider private constructor(
+    override val condition: skirout.editor.v1.expression.TypedExpression,
+    override val guidance: skirout.editor.v1.expression.TypedExpression?,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GatedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.GatedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        condition: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        guidance: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GatedSearchProvider>? =
+            null,
+    ): this(
+        condition.toFrozen(),
+        if (guidance != null) guidance.toFrozen() else null,
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        condition = this.condition,
+        guidance = this.guidance,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        condition: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.condition,
+        guidance: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.guidance,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.GatedSearchProvider(
+        condition.toFrozen(),
+        if (guidance != null) guidance.toFrozen() else null,
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.GatedSearchProvider && this.condition == other.condition && this.guidance == other.guidance && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.condition, this.guidance, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.GatedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [GatedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var condition: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var guidance: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.GatedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.GatedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.GatedSearchProvider(
+            condition = this.condition,
+            guidance = this.guidance,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [condition] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
+         */
+        val mutableCondition: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.condition;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.condition = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.GatedSearchProvider(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                null,
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [GatedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            condition: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            guidance: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.GatedSearchProvider(
+            condition = condition,
+            guidance = guidance,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:GatedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [GatedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [GatedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "condition",
+                "condition",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.condition },
+                { mut, v -> mut.condition = v },
+            );
+            serializerImpl.addField(
+                "guidance",
+                "guidance",
+                1,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.guidance },
+                { mut, v -> mut.guidance = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                2,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface DebouncedSearchProvider_OrMutable {
+    val durationMilliseconds: kotlin.Long;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.DebouncedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DebouncedSearchProvider private constructor(
+    override val durationMilliseconds: kotlin.Long,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DebouncedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.DebouncedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        durationMilliseconds: kotlin.Long,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DebouncedSearchProvider>? =
+            null,
+    ): this(
+        durationMilliseconds,
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        durationMilliseconds = this.durationMilliseconds,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        durationMilliseconds: kotlin.Long =
+            this.durationMilliseconds,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.DebouncedSearchProvider(
+        durationMilliseconds,
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.DebouncedSearchProvider && this.durationMilliseconds == other.durationMilliseconds && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.durationMilliseconds, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DebouncedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DebouncedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var durationMilliseconds: kotlin.Long =
+            0L,
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DebouncedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.DebouncedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.DebouncedSearchProvider(
+            durationMilliseconds = this.durationMilliseconds,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.DebouncedSearchProvider(
+                0L,
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DebouncedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            durationMilliseconds: kotlin.Long =
+                0L,
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.DebouncedSearchProvider(
+            durationMilliseconds = durationMilliseconds,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:DebouncedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DebouncedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DebouncedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "duration_milliseconds",
+                "durationMilliseconds",
+                0,
+                build.skir.Serializers.int64,
+                "",
+                { it.durationMilliseconds },
+                { mut, v -> mut.durationMilliseconds = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                1,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface CachedSearchProvider_OrMutable {
+    val capacity: kotlin.Int;
+    val retainStaleResults: kotlin.Boolean;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.CachedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CachedSearchProvider private constructor(
+    override val capacity: kotlin.Int,
+    override val retainStaleResults: kotlin.Boolean,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CachedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.CachedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capacity: kotlin.Int,
+        retainStaleResults: kotlin.Boolean,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CachedSearchProvider>? =
+            null,
+    ): this(
+        capacity,
+        retainStaleResults,
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        capacity = this.capacity,
+        retainStaleResults = this.retainStaleResults,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capacity: kotlin.Int =
+            this.capacity,
+        retainStaleResults: kotlin.Boolean =
+            this.retainStaleResults,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.CachedSearchProvider(
+        capacity,
+        retainStaleResults,
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.CachedSearchProvider && this.capacity == other.capacity && this.retainStaleResults == other.retainStaleResults && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.capacity, this.retainStaleResults, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.CachedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [CachedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var capacity: kotlin.Int =
+            0,
+        override var retainStaleResults: kotlin.Boolean =
+            false,
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CachedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.CachedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.CachedSearchProvider(
+            capacity = this.capacity,
+            retainStaleResults = this.retainStaleResults,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.CachedSearchProvider(
+                0,
+                false,
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CachedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capacity: kotlin.Int =
+                0,
+            retainStaleResults: kotlin.Boolean =
+                false,
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.CachedSearchProvider(
+            capacity = capacity,
+            retainStaleResults = retainStaleResults,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:CachedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [CachedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [CachedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "capacity",
+                "capacity",
+                0,
+                build.skir.Serializers.int32,
+                "",
+                { it.capacity },
+                { mut, v -> mut.capacity = v },
+            );
+            serializerImpl.addField(
+                "retain_stale_results",
+                "retainStaleResults",
+                1,
+                build.skir.Serializers.bool,
+                "",
+                { it.retainStaleResults },
+                { mut, v -> mut.retainStaleResults = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                2,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface SearchRankingField_OrMutable {
+    val expression: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val weight: kotlin.Int;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SearchRankingField;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SearchRankingField private constructor(
+    override val expression: skirout.editor.v1.expression.TypedExpression,
+    override val weight: kotlin.Int,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchRankingField>? =
+        null,
+): skirout.editor.v1.presentation.SearchRankingField_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        expression: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        weight: kotlin.Int,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchRankingField>? =
+            null,
+    ): this(
+        expression.toFrozen(),
+        weight,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        expression = this.expression,
+        weight = this.weight,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        expression: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.expression,
+        weight: kotlin.Int =
+            this.weight,
+    ) = skirout.editor.v1.presentation.SearchRankingField(
+        expression.toFrozen(),
+        weight,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SearchRankingField && this.expression == other.expression && this.weight == other.weight);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.expression, this.weight).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchRankingField.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SearchRankingField]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var expression: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var weight: kotlin.Int =
+            0,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchRankingField>? =
+            null,
+    ): skirout.editor.v1.presentation.SearchRankingField_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SearchRankingField(
+            expression = this.expression,
+            weight = this.weight,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [expression] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [expression] and returns it.
+         */
+        val mutableExpression: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.expression;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.expression = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SearchRankingField(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                0,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SearchRankingField].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expression: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            weight: kotlin.Int =
+                0,
+        ) = skirout.editor.v1.presentation.SearchRankingField(
+            expression = expression,
+            weight = weight,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SearchRankingField",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SearchRankingField] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SearchRankingField] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "expression",
+                "expression",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.expression },
+                { mut, v -> mut.expression = v },
+            );
+            serializerImpl.addField(
+                "weight",
+                "weight",
+                1,
+                build.skir.Serializers.int32,
+                "",
+                { it.weight },
+                { mut, v -> mut.weight = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface RankedSearchProvider_OrMutable {
+    val fields: kotlin.collections.List<skirout.editor.v1.presentation.SearchRankingField_OrMutable>;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.RankedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RankedSearchProvider private constructor(
+    override val fields: kotlin.collections.List<skirout.editor.v1.presentation.SearchRankingField>,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RankedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.RankedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchRankingField_OrMutable>,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RankedSearchProvider>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        fields = this.fields,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchRankingField_OrMutable> =
+            this.fields,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.RankedSearchProvider(
+        build.skir.internal.toFrozenList(fields, { it.toFrozen() }),
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.RankedSearchProvider && this.fields == other.fields && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.fields, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.RankedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RankedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var fields: kotlin.collections.List<skirout.editor.v1.presentation.SearchRankingField_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchRankingField>(),
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RankedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.RankedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.RankedSearchProvider(
+            fields = this.fields,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [fields] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
+         */
+        val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.presentation.SearchRankingField_OrMutable> get() {
+            var value = this.fields;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.fields = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.RankedSearchProvider(
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchRankingField>(),
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RankedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchRankingField_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchRankingField>(),
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.RankedSearchProvider(
+            fields = fields,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:RankedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RankedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RankedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "fields",
+                "fields",
+                0,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.presentation.SearchRankingField.serializer,
+                ),
+                "",
+                { it.fields },
+                { mut, v -> mut.fields = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                1,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface LimitedSearchProvider_OrMutable {
+    val maximum: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.LimitedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class LimitedSearchProvider private constructor(
+    override val maximum: skirout.editor.v1.expression.TypedExpression,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.LimitedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.LimitedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        maximum: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.LimitedSearchProvider>? =
+            null,
+    ): this(
+        maximum.toFrozen(),
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        maximum = this.maximum,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        maximum: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.maximum,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.LimitedSearchProvider(
+        maximum.toFrozen(),
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.LimitedSearchProvider && this.maximum == other.maximum && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.maximum, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.LimitedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [LimitedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var maximum: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.LimitedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.LimitedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.LimitedSearchProvider(
+            maximum = this.maximum,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [maximum] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
+         */
+        val mutableMaximum: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.maximum;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.maximum = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.LimitedSearchProvider(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [LimitedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            maximum: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.LimitedSearchProvider(
+            maximum = maximum,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:LimitedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [LimitedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [LimitedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "maximum",
+                "maximum",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.maximum },
+                { mut, v -> mut.maximum = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                1,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface DistinctSearchProvider_OrMutable {
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.DistinctSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DistinctSearchProvider private constructor(
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DistinctSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.DistinctSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DistinctSearchProvider>? =
+            null,
+    ): this(
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.DistinctSearchProvider(
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.DistinctSearchProvider && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DistinctSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DistinctSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DistinctSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.DistinctSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.DistinctSearchProvider(
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.DistinctSearchProvider(
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DistinctSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.DistinctSearchProvider(
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:DistinctSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DistinctSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DistinctSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "child",
+                "child",
+                0,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface HistoricalSearchProvider_OrMutable {
+    val historyKey: kotlin.String;
+    val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val capacity: kotlin.Int;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.HistoricalSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HistoricalSearchProvider private constructor(
+    override val historyKey: kotlin.String,
+    override val label: skirout.editor.v1.expression.TypedExpression,
+    override val capacity: kotlin.Int,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HistoricalSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.HistoricalSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        historyKey: kotlin.String,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        capacity: kotlin.Int,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HistoricalSearchProvider>? =
+            null,
+    ): this(
+        historyKey,
+        label.toFrozen(),
+        capacity,
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        historyKey = this.historyKey,
+        label = this.label,
+        capacity = this.capacity,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        historyKey: kotlin.String =
+            this.historyKey,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.label,
+        capacity: kotlin.Int =
+            this.capacity,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.HistoricalSearchProvider(
+        historyKey,
+        label.toFrozen(),
+        capacity,
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.HistoricalSearchProvider && this.historyKey == other.historyKey && this.label == other.label && this.capacity == other.capacity && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.historyKey, this.label, this.capacity, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.HistoricalSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [HistoricalSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var historyKey: kotlin.String =
+            "",
+        override var label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var capacity: kotlin.Int =
+            0,
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.HistoricalSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.HistoricalSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.HistoricalSearchProvider(
+            historyKey = this.historyKey,
+            label = this.label,
+            capacity = this.capacity,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [label] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+         */
+        val mutableLabel: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.label;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.label = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.HistoricalSearchProvider(
+                "",
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                0,
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [HistoricalSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            historyKey: kotlin.String =
+                "",
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            capacity: kotlin.Int =
+                0,
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.HistoricalSearchProvider(
+            historyKey = historyKey,
+            label = label,
+            capacity = capacity,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:HistoricalSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [HistoricalSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [HistoricalSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "history_key",
+                "historyKey",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.historyKey },
+                { mut, v -> mut.historyKey = v },
+            );
+            serializerImpl.addField(
+                "label",
+                "label",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.label },
+                { mut, v -> mut.label = v },
+            );
+            serializerImpl.addField(
+                "capacity",
+                "capacity",
+                2,
+                build.skir.Serializers.int32,
+                "",
+                { it.capacity },
+                { mut, v -> mut.capacity = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                3,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface SectionSearchProvider_OrMutable {
+    val sectionId: kotlin.String;
+    val label: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val child: skirout.editor.v1.presentation.SearchProvider;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SectionSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SectionSearchProvider private constructor(
+    override val sectionId: kotlin.String,
+    override val label: skirout.editor.v1.expression.TypedExpression,
+    override val child: skirout.editor.v1.presentation.SearchProvider,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.SectionSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        sectionId: kotlin.String,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        child: skirout.editor.v1.presentation.SearchProvider,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionSearchProvider>? =
+            null,
+    ): this(
+        sectionId,
+        label.toFrozen(),
+        child,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        sectionId = this.sectionId,
+        label = this.label,
+        child = this.child,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        sectionId: kotlin.String =
+            this.sectionId,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.label,
+        child: skirout.editor.v1.presentation.SearchProvider =
+            this.child,
+    ) = skirout.editor.v1.presentation.SectionSearchProvider(
+        sectionId,
+        label.toFrozen(),
+        child,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SectionSearchProvider && this.sectionId == other.sectionId && this.label == other.label && this.child == other.child);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.sectionId, this.label, this.child).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SectionSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SectionSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var sectionId: kotlin.String =
+            "",
+        override var label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var child: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.SectionSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SectionSearchProvider(
+            sectionId = this.sectionId,
+            label = this.label,
+            child = this.child,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [label] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+         */
+        val mutableLabel: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.label;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.label = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SectionSearchProvider(
+                "",
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SectionSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            sectionId: kotlin.String =
+                "",
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            child: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        ) = skirout.editor.v1.presentation.SectionSearchProvider(
+            sectionId = sectionId,
+            label = label,
+            child = child,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SectionSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SectionSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SectionSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "section_id",
+                "sectionId",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.sectionId },
+                { mut, v -> mut.sectionId = v },
+            );
+            serializerImpl.addField(
+                "label",
+                "label",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.label },
+                { mut, v -> mut.label = v },
+            );
+            serializerImpl.addField(
+                "child",
+                "child",
+                2,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface MergedSearchProvider_OrMutable {
+    val children: kotlin.collections.List<skirout.editor.v1.presentation.SearchProvider>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.MergedSearchProvider;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class MergedSearchProvider private constructor(
+    override val children: kotlin.collections.List<skirout.editor.v1.presentation.SearchProvider>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.MergedSearchProvider>? =
+        null,
+): skirout.editor.v1.presentation.MergedSearchProvider_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        children: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchProvider>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.MergedSearchProvider>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(children),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        children = this.children,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        children: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchProvider> =
+            this.children,
+    ) = skirout.editor.v1.presentation.MergedSearchProvider(
+        build.skir.internal.toFrozenList(children),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.MergedSearchProvider && this.children == other.children);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.children).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.MergedSearchProvider.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [MergedSearchProvider]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var children: kotlin.collections.List<skirout.editor.v1.presentation.SearchProvider> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchProvider>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.MergedSearchProvider>? =
+            null,
+    ): skirout.editor.v1.presentation.MergedSearchProvider_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.MergedSearchProvider(
+            children = this.children,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.MergedSearchProvider(
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchProvider>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [MergedSearchProvider].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            children: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchProvider> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.SearchProvider>(),
+        ) = skirout.editor.v1.presentation.MergedSearchProvider(
+            children = children,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:MergedSearchProvider",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [MergedSearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [MergedSearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "children",
+                "children",
+                0,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.presentation.SearchProvider.serializer,
+                ),
+                "",
+                { it.children },
+                { mut, v -> mut.children = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class SearchProvider private constructor() {
+    /** The kind of variant held by a `SearchProvider`. */
+    enum class Kind {
+        UNKNOWN,
+        STATIC_VALUES_WRAPPER,
+        HTTP_JSON_WRAPPER,
+        REALM_CALLBACK_WRAPPER,
+        GATE_WRAPPER,
+        DEBOUNCE_WRAPPER,
+        CACHE_WRAPPER,
+        RANK_WRAPPER,
+        LIMIT_WRAPPER,
+        DISTINCT_WRAPPER,
+        HISTORY_WRAPPER,
+        SECTION_WRAPPER,
+        MERGE_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.SearchProvider.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchProvider>?,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class StaticValuesWrapper private constructor (
+        val value: skirout.editor.v1.presentation.StaticSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.StaticSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.STATIC_VALUES_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.StaticValuesWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 700797971;
+        }
+    }
+
+    class HttpJsonWrapper private constructor (
+        val value: skirout.editor.v1.presentation.HttpJsonSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.HttpJsonSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.HTTP_JSON_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.HttpJsonWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 179548735;
+        }
+    }
+
+    class RealmCallbackWrapper private constructor (
+        val value: skirout.editor.v1.presentation.RealmCallbackSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.RealmCallbackSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REALM_CALLBACK_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.RealmCallbackWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1738991605;
+        }
+    }
+
+    class GateWrapper private constructor (
+        val value: skirout.editor.v1.presentation.GatedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.GatedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.GATE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.GateWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3165387;
+        }
+    }
+
+    class DebounceWrapper private constructor (
+        val value: skirout.editor.v1.presentation.DebouncedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.DebouncedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.DEBOUNCE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.DebounceWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 542694985;
+        }
+    }
+
+    class CacheWrapper private constructor (
+        val value: skirout.editor.v1.presentation.CachedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.CachedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CACHE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.CacheWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 94416770;
+        }
+    }
+
+    class RankWrapper private constructor (
+        val value: skirout.editor.v1.presentation.RankedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.RankedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.RANK_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.RankWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3492908;
+        }
+    }
+
+    class LimitWrapper private constructor (
+        val value: skirout.editor.v1.presentation.LimitedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.LimitedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.LIMIT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.LimitWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 102976443;
+        }
+    }
+
+    class DistinctWrapper private constructor (
+        val value: skirout.editor.v1.presentation.DistinctSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.DistinctSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.DISTINCT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.DistinctWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 288698108;
+        }
+    }
+
+    class HistoryWrapper private constructor (
+        val value: skirout.editor.v1.presentation.HistoricalSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.HistoricalSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.HISTORY_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.HistoryWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 926934164;
+        }
+    }
+
+    class SectionWrapper private constructor (
+        val value: skirout.editor.v1.presentation.SectionSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.SectionSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SECTION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.SectionWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1970241253;
+        }
+    }
+
+    class MergeWrapper private constructor (
+        val value: skirout.editor.v1.presentation.MergedSearchProvider,
+    ) : skirout.editor.v1.presentation.SearchProvider() {
+        constructor(
+            value: skirout.editor.v1.presentation.MergedSearchProvider_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.MERGE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.SearchProvider.MergeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 103785528;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.SearchProvider>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchProvider._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [SearchProvider].
+         * Default value for fields of type [SearchProvider].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `StaticValuesWrapper(skirout.editor.v1.presentation.StaticSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStaticValues(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            values: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+        ) = StaticValuesWrapper(
+            skirout.editor.v1.presentation.StaticSearchProvider(
+                values = values,
+                result = result,
+                selectors = selectors,
+            )
+        );
+
+        /** Shortcut for `HttpJsonWrapper(skirout.editor.v1.presentation.HttpJsonSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createHttpJson(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            uri: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            parameters: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpQueryParameter_OrMutable>,
+            resultPath: kotlin.String,
+            resultType: skirout.editor.v1.type_catalog.TypeExpression,
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+            contextBindings: kotlin.collections.Iterable<skirout.editor.v1.presentation.HttpJsonContextBinding_OrMutable>,
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+            timeoutMilliseconds: kotlin.Long,
+        ) = HttpJsonWrapper(
+            skirout.editor.v1.presentation.HttpJsonSearchProvider(
+                uri = uri,
+                parameters = parameters,
+                resultPath = resultPath,
+                resultType = resultType,
+                result = result,
+                contextBindings = contextBindings,
+                selectors = selectors,
+                timeoutMilliseconds = timeoutMilliseconds,
+            )
+        );
+
+        /** Shortcut for `RealmCallbackWrapper(skirout.editor.v1.presentation.RealmCallbackSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRealmCallback(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+            payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
+            selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
+        ) = RealmCallbackWrapper(
+            skirout.editor.v1.presentation.RealmCallbackSearchProvider(
+                realmActionId = realmActionId,
+                payload = payload,
+                result = result,
+                selectors = selectors,
+            )
+        );
+
+        /** Shortcut for `GateWrapper(skirout.editor.v1.presentation.GatedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createGate(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            condition: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            guidance: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = GateWrapper(
+            skirout.editor.v1.presentation.GatedSearchProvider(
+                condition = condition,
+                guidance = guidance,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `DebounceWrapper(skirout.editor.v1.presentation.DebouncedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createDebounce(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            durationMilliseconds: kotlin.Long,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = DebounceWrapper(
+            skirout.editor.v1.presentation.DebouncedSearchProvider(
+                durationMilliseconds = durationMilliseconds,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `CacheWrapper(skirout.editor.v1.presentation.CachedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createCache(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capacity: kotlin.Int,
+            retainStaleResults: kotlin.Boolean,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = CacheWrapper(
+            skirout.editor.v1.presentation.CachedSearchProvider(
+                capacity = capacity,
+                retainStaleResults = retainStaleResults,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `RankWrapper(skirout.editor.v1.presentation.RankedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRank(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            fields: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchRankingField_OrMutable>,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = RankWrapper(
+            skirout.editor.v1.presentation.RankedSearchProvider(
+                fields = fields,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `LimitWrapper(skirout.editor.v1.presentation.LimitedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createLimit(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            maximum: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = LimitWrapper(
+            skirout.editor.v1.presentation.LimitedSearchProvider(
+                maximum = maximum,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `DistinctWrapper(skirout.editor.v1.presentation.DistinctSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createDistinct(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = DistinctWrapper(
+            skirout.editor.v1.presentation.DistinctSearchProvider(
+                child = child,
+            )
+        );
+
+        /** Shortcut for `HistoryWrapper(skirout.editor.v1.presentation.HistoricalSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createHistory(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            historyKey: kotlin.String,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            capacity: kotlin.Int,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = HistoryWrapper(
+            skirout.editor.v1.presentation.HistoricalSearchProvider(
+                historyKey = historyKey,
+                label = label,
+                capacity = capacity,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `SectionWrapper(skirout.editor.v1.presentation.SectionSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSection(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            sectionId: kotlin.String,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            child: skirout.editor.v1.presentation.SearchProvider,
+        ) = SectionWrapper(
+            skirout.editor.v1.presentation.SectionSearchProvider(
+                sectionId = sectionId,
+                label = label,
+                child = child,
+            )
+        );
+
+        /** Shortcut for `MergeWrapper(skirout.editor.v1.presentation.MergedSearchProvider(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createMerge(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            children: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchProvider>,
+        ) = MergeWrapper(
+            skirout.editor.v1.presentation.MergedSearchProvider(
+                children = children,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.SearchProvider, Unknown>(
+                recordId = "editor/v1/presentation.skir:SearchProvider",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [SearchProvider] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [SearchProvider] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "static_values",
+                    Kind.STATIC_VALUES_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.StaticSearchProvider.serializer,
+                    "",
+                    { StaticValuesWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "http_json",
+                    Kind.HTTP_JSON_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.HttpJsonSearchProvider.serializer,
+                    "",
+                    { HttpJsonWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "realm_callback",
+                    Kind.REALM_CALLBACK_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.RealmCallbackSearchProvider.serializer,
+                    "",
+                    { RealmCallbackWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
+                    "gate",
+                    Kind.GATE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.GatedSearchProvider.serializer,
+                    "",
+                    { GateWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    5,
+                    "debounce",
+                    Kind.DEBOUNCE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.DebouncedSearchProvider.serializer,
+                    "",
+                    { DebounceWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    6,
+                    "cache",
+                    Kind.CACHE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.CachedSearchProvider.serializer,
+                    "",
+                    { CacheWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    7,
+                    "rank",
+                    Kind.RANK_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.RankedSearchProvider.serializer,
+                    "",
+                    { RankWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    8,
+                    "limit",
+                    Kind.LIMIT_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.LimitedSearchProvider.serializer,
+                    "",
+                    { LimitWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    9,
+                    "distinct",
+                    Kind.DISTINCT_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.DistinctSearchProvider.serializer,
+                    "",
+                    { DistinctWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    10,
+                    "history",
+                    Kind.HISTORY_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.HistoricalSearchProvider.serializer,
+                    "",
+                    { HistoryWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    11,
+                    "section",
+                    Kind.SECTION_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.SectionSearchProvider.serializer,
+                    "",
+                    { SectionWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    12,
+                    "merge",
+                    Kind.MERGE_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.MergedSearchProvider.serializer,
+                    "",
+                    { MergeWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface SearchControl_OrMutable {
+    val control: skirout.editor.v1.presentation.BoundControl_OrMutable;
+    val selectionMode: skirout.editor.v1.presentation.SearchSelectionMode;
+    val queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val provider: skirout.editor.v1.presentation.SearchProvider;
+    val summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?;
+    val placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val customValue: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SearchControl;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SearchControl private constructor(
+    override val control: skirout.editor.v1.presentation.BoundControl,
+    override val selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
+    override val queryBindingId: skirout.editor.v1.binding.BindingId,
+    override val summaryBindingId: skirout.editor.v1.binding.BindingId,
+    override val maximumExtent: skirout.editor.v1.expression.TypedExpression,
+    override val provider: skirout.editor.v1.presentation.SearchProvider,
+    override val summary: skirout.editor.v1.presentation.PresentationNode?,
+    override val placeholder: skirout.editor.v1.expression.TypedExpression?,
+    override val customValue: skirout.editor.v1.expression.TypedExpression?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchControl>? =
+        null,
+): skirout.editor.v1.presentation.SearchControl_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+        selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
+        queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        provider: skirout.editor.v1.presentation.SearchProvider,
+        summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
+        placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        customValue: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchControl>? =
+            null,
+    ): this(
+        control.toFrozen(),
+        selectionMode,
+        queryBindingId.toFrozen(),
+        summaryBindingId.toFrozen(),
+        maximumExtent.toFrozen(),
+        provider,
+        if (summary != null) summary.toFrozen() else null,
+        if (placeholder != null) placeholder.toFrozen() else null,
+        if (customValue != null) customValue.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        control = this.control,
+        selectionMode = this.selectionMode,
+        queryBindingId = this.queryBindingId,
+        summaryBindingId = this.summaryBindingId,
+        maximumExtent = this.maximumExtent,
+        provider = this.provider,
+        summary = this.summary,
+        placeholder = this.placeholder,
+        customValue = this.customValue,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            this.control,
+        selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
+            this.selectionMode,
+        queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.queryBindingId,
+        summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.summaryBindingId,
+        maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.maximumExtent,
+        provider: skirout.editor.v1.presentation.SearchProvider =
+            this.provider,
+        summary: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
+            this.summary,
+        placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.placeholder,
+        customValue: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.customValue,
+    ) = skirout.editor.v1.presentation.SearchControl(
+        control.toFrozen(),
+        selectionMode,
+        queryBindingId.toFrozen(),
+        summaryBindingId.toFrozen(),
+        maximumExtent.toFrozen(),
+        provider,
+        if (summary != null) summary.toFrozen() else null,
+        if (placeholder != null) placeholder.toFrozen() else null,
+        if (customValue != null) customValue.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SearchControl && this.control == other.control && this.selectionMode == other.selectionMode && this.queryBindingId == other.queryBindingId && this.summaryBindingId == other.summaryBindingId && this.maximumExtent == other.maximumExtent && this.provider == other.provider && this.summary == other.summary && this.placeholder == other.placeholder && this.customValue == other.customValue);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.control, this.selectionMode, this.queryBindingId, this.summaryBindingId, this.maximumExtent, this.provider, this.summary, this.placeholder, this.customValue).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.SearchControl.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [SearchControl]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+            skirout.editor.v1.presentation.BoundControl.partial(),
+        override var selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
+            skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
+        override var queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
+        override var summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
+        override var maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var provider: skirout.editor.v1.presentation.SearchProvider =
+            skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+        override var summary: skirout.editor.v1.presentation.PresentationNode? =
+            null,
+        override var placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        override var customValue: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SearchControl>? =
+            null,
+    ): skirout.editor.v1.presentation.SearchControl_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.SearchControl(
+            control = this.control,
+            selectionMode = this.selectionMode,
+            queryBindingId = this.queryBindingId,
+            summaryBindingId = this.summaryBindingId,
+            maximumExtent = this.maximumExtent,
+            provider = this.provider,
+            summary = this.summary,
+            placeholder = this.placeholder,
+            customValue = this.customValue,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [control] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [control] and returns it.
+         */
+        val mutableControl: skirout.editor.v1.presentation.BoundControl.Mutable get() {
+            var value = this.control;
+            return when (value) {
+                is skirout.editor.v1.presentation.BoundControl -> {
+                    value = value.toMutable();
+                    this.control = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.BoundControl.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [queryBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [queryBindingId] and returns it.
+         */
+        val mutableQueryBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.queryBindingId;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingId -> {
+                    value = value.toMutable();
+                    this.queryBindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [summaryBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [summaryBindingId] and returns it.
+         */
+        val mutableSummaryBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.summaryBindingId;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingId -> {
+                    value = value.toMutable();
+                    this.summaryBindingId = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [maximumExtent] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [maximumExtent] and returns it.
+         */
+        val mutableMaximumExtent: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.maximumExtent;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.maximumExtent = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.SearchControl(
+                skirout.editor.v1.presentation.BoundControl.partial(),
+                skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
+                skirout.editor.v1.binding.BindingId.partial(),
+                skirout.editor.v1.binding.BindingId.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+                null,
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [SearchControl].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable =
+                skirout.editor.v1.presentation.BoundControl.partial(),
+            selectionMode: skirout.editor.v1.presentation.SearchSelectionMode =
+                skirout.editor.v1.presentation.SearchSelectionMode.UNKNOWN,
+            queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
+            summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
+            maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            provider: skirout.editor.v1.presentation.SearchProvider =
+                skirout.editor.v1.presentation.SearchProvider.UNKNOWN,
+            summary: skirout.editor.v1.presentation.PresentationNode_OrMutable? =
+                null,
+            placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+            customValue: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.SearchControl(
+            control = control,
+            selectionMode = selectionMode,
+            queryBindingId = queryBindingId,
+            summaryBindingId = summaryBindingId,
+            maximumExtent = maximumExtent,
+            provider = provider,
+            summary = summary,
+            placeholder = placeholder,
+            customValue = customValue,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:SearchControl",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [SearchControl] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [SearchControl] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "control",
+                "control",
+                0,
+                skirout.editor.v1.presentation.BoundControl.serializer,
+                "",
+                { it.control },
+                { mut, v -> mut.control = v },
+            );
+            serializerImpl.addField(
+                "selection_mode",
+                "selectionMode",
+                1,
+                skirout.editor.v1.presentation.SearchSelectionMode.serializer,
+                "",
+                { it.selectionMode },
+                { mut, v -> mut.selectionMode = v },
+            );
+            serializerImpl.addField(
+                "query_binding_id",
+                "queryBindingId",
+                2,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.queryBindingId },
+                { mut, v -> mut.queryBindingId = v },
+            );
+            serializerImpl.addField(
+                "summary_binding_id",
+                "summaryBindingId",
+                3,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.summaryBindingId },
+                { mut, v -> mut.summaryBindingId = v },
+            );
+            serializerImpl.addField(
+                "maximum_extent",
+                "maximumExtent",
+                4,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.maximumExtent },
+                { mut, v -> mut.maximumExtent = v },
+            );
+            serializerImpl.addField(
+                "provider",
+                "provider",
+                5,
+                skirout.editor.v1.presentation.SearchProvider.serializer,
+                "",
+                { it.provider },
+                { mut, v -> mut.provider = v },
+            );
+            serializerImpl.addField(
+                "summary",
+                "summary",
+                6,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.PresentationNode.serializer,
+                ),
+                "",
+                { it.summary },
+                { mut, v -> mut.summary = v },
+            );
+            serializerImpl.addField(
+                "placeholder",
+                "placeholder",
+                7,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.placeholder },
+                { mut, v -> mut.placeholder = v },
+            );
+            serializerImpl.addField(
+                "custom_value",
+                "customValue",
+                8,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.customValue },
+                { mut, v -> mut.customValue = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface DefaultPresentationElement_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable;
     val presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable?;
@@ -10141,7 +15184,7 @@ sealed class PresentationElement private constructor() {
         POLYMORPHIC_INPUT_WRAPPER,
         DEFAULT_PRESENTATION_WRAPPER,
         COLLAPSIBLE_WRAPPER,
-        ICON_INPUT_WRAPPER,
+        SEARCH_INPUT_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationElement.UNKNOWN")) internal constructor(
@@ -10895,21 +15938,21 @@ sealed class PresentationElement private constructor() {
         }
     }
 
-    class IconInputWrapper private constructor (
-        val value: skirout.editor.v1.presentation.BoundControl,
+    class SearchInputWrapper private constructor (
+        val value: skirout.editor.v1.presentation.SearchControl,
     ) : skirout.editor.v1.presentation.PresentationElement() {
         constructor(
-            value: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            value: skirout.editor.v1.presentation.SearchControl_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.ICON_INPUT_WRAPPER;
+        override val kind get() = Kind.SEARCH_INPUT_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.IconInputWrapper && value == other.value;
+            return other is skirout.editor.v1.presentation.PresentationElement.SearchInputWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -163710844;
+            return this.value.hashCode() + 453591667;
         }
     }
 
@@ -11569,19 +16612,31 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `IconInputWrapper(skirout.editor.v1.presentation.BoundControl(...))`. */
+        /** Shortcut for `SearchInputWrapper(skirout.editor.v1.presentation.SearchControl(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createIconInput(
+        fun createSearchInput(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            binding: skirout.editor.v1.binding.BindingRef_OrMutable,
-            label: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-            description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-        ) = IconInputWrapper(
-            skirout.editor.v1.presentation.BoundControl(
-                binding = binding,
-                label = label,
-                description = description,
+            control: skirout.editor.v1.presentation.BoundControl_OrMutable,
+            selectionMode: skirout.editor.v1.presentation.SearchSelectionMode,
+            queryBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+            summaryBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+            maximumExtent: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            provider: skirout.editor.v1.presentation.SearchProvider,
+            summary: skirout.editor.v1.presentation.PresentationNode_OrMutable?,
+            placeholder: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            customValue: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        ) = SearchInputWrapper(
+            skirout.editor.v1.presentation.SearchControl(
+                control = control,
+                selectionMode = selectionMode,
+                queryBindingId = queryBindingId,
+                summaryBindingId = summaryBindingId,
+                maximumExtent = maximumExtent,
+                provider = provider,
+                summary = summary,
+                placeholder = placeholder,
+                customValue = customValue,
             )
         );
 
@@ -11980,12 +17035,12 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    43,
-                    "icon_input",
-                    Kind.ICON_INPUT_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.BoundControl.serializer,
+                    44,
+                    "search_input",
+                    Kind.SEARCH_INPUT_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.SearchControl.serializer,
                     "",
-                    { IconInputWrapper(it) },
+                    { SearchInputWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

@@ -9,6 +9,8 @@ part "presentation_data.dart";
 part "presentation_input.dart";
 part "presentation_interaction.dart";
 part "presentation_layout.dart";
+part "presentation_search.dart";
+part "presentation_search_composition.dart";
 
 @freezed
 sealed class PresentationElement with _$PresentationElement {
@@ -99,9 +101,17 @@ sealed class PresentationElement with _$PresentationElement {
     required BoundControl control,
     @Default(false) bool includeAlpha,
   }) = ColorInputElement;
-  @Implements<SimpleInputElement>()
-  const factory PresentationElement.iconInput(BoundControl control) =
-      IconInputElement;
+  const factory PresentationElement.searchInput({
+    required BoundControl control,
+    required SearchSelectionMode selectionMode,
+    required BindingId queryBindingId,
+    required BindingId summaryBindingId,
+    required TypedExpression maximumExtent,
+    required SearchProvider provider,
+    PresentationNode? summary,
+    TypedExpression? placeholder,
+    TypedExpression? customValue,
+  }) = SearchInputElement;
   @Implements<SimpleInputElement>()
   const factory PresentationElement.bytesInput(BoundControl control) =
       BytesInputElement;
@@ -165,7 +175,7 @@ sealed class PresentationElement with _$PresentationElement {
     @Default(0) double spacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
-    @Default(PresentationCrossAxisAlignment.start)
+    @Default(PresentationCrossAxisAlignment.center)
     PresentationCrossAxisAlignment crossAxisAlignment,
   }) = ColumnElement;
   @Implements<ChildrenLayoutElement>()
@@ -175,7 +185,7 @@ sealed class PresentationElement with _$PresentationElement {
     @Default(0) double spacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
-    @Default(PresentationCrossAxisAlignment.start)
+    @Default(PresentationCrossAxisAlignment.center)
     PresentationCrossAxisAlignment crossAxisAlignment,
   }) = RowElement;
   @Implements<ChildrenLayoutElement>()
@@ -195,7 +205,7 @@ sealed class PresentationElement with _$PresentationElement {
     @Default(0) double spacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
-    @Default(PresentationCrossAxisAlignment.start)
+    @Default(PresentationCrossAxisAlignment.center)
     PresentationCrossAxisAlignment crossAxisAlignment,
   }) = StackElement;
   @Assert("columns > 0", "Column count must be positive.")

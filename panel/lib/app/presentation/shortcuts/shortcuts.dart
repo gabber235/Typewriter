@@ -15,6 +15,9 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   AdaptiveSingleActivator(LogicalKeyboardKey.keyP, control: true):
       PreviousFocusIntent(),
 
+  SingleActivator(LogicalKeyboardKey.home): FirstItemIntent(),
+  SingleActivator(LogicalKeyboardKey.end): LastItemIntent(),
+
   SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(
     direction: AxisDirection.down,
     type: ScrollIncrementType.page,
@@ -79,6 +82,14 @@ class ActivateAllIntent extends Intent {
 
 class DeleteIntent extends Intent {
   const DeleteIntent();
+}
+
+class FirstItemIntent extends Intent {
+  const FirstItemIntent();
+}
+
+class LastItemIntent extends Intent {
+  const LastItemIntent();
 }
 
 List<ShortcutActivator> shortcutsFor(Type intent) {

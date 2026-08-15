@@ -7282,6 +7282,4246 @@ final class PolymorphicControl_mutable implements PolymorphicControl_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// enum SearchSelectionMode
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SearchSelectionMode_unknown(): { ... }
+///     case SearchSelectionMode.single: { ... }
+///     case SearchSelectionMode.multiple: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SearchSelectionMode {
+  /// Constant indicating an unknown `SearchSelectionMode`.
+  /// Default value for fields of type `SearchSelectionMode`.
+  static const SearchSelectionMode unknown =
+      SearchSelectionMode_unknown._instance;
+
+  static const single = _SearchSelectionMode_consts.singleConst;
+  static const multiple = _SearchSelectionMode_consts.multipleConst;
+
+  /// Returns the kind of variant held by this SearchSelectionMode.
+  SearchSelectionMode_kind get kind;
+
+  /// Serializer for `SearchSelectionMode` instances.
+  static _skir.EnumSerializer<SearchSelectionMode> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "single", "single", "", single);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "multiple",
+        "multiple",
+        "",
+        multiple,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectionMode",
+        doc: "",
+        unknownInstance: SearchSelectionMode_unknown._instance,
+        enumInstance: SearchSelectionMode.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectionMode_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `SearchSelectionMode`.
+enum SearchSelectionMode_kind {
+  unknown(0),
+  singleConst(1),
+  multipleConst(2);
+
+  final _core.int _ordinal;
+
+  const SearchSelectionMode_kind(this._ordinal);
+}
+
+final class SearchSelectionMode_unknown implements SearchSelectionMode {
+  static const _instance = SearchSelectionMode_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SearchSelectionMode_unknown._() : _u = null;
+  SearchSelectionMode_unknown._unrecognized(this._u);
+
+  @_core.override
+  SearchSelectionMode_kind get kind => SearchSelectionMode_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SearchSelectionMode_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectionMode.serializer);
+}
+
+enum _SearchSelectionMode_consts implements SearchSelectionMode {
+  singleConst(SearchSelectionMode_kind.singleConst),
+  multipleConst(SearchSelectionMode_kind.multipleConst);
+
+  @_core.override
+  final SearchSelectionMode_kind kind;
+
+  const _SearchSelectionMode_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectionMode.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// enum SearchSelectorMultiplicity
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SearchSelectorMultiplicity_unknown(): { ... }
+///     case SearchSelectorMultiplicity.single: { ... }
+///     case SearchSelectorMultiplicity.multiple: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SearchSelectorMultiplicity {
+  /// Constant indicating an unknown `SearchSelectorMultiplicity`.
+  /// Default value for fields of type `SearchSelectorMultiplicity`.
+  static const SearchSelectorMultiplicity unknown =
+      SearchSelectorMultiplicity_unknown._instance;
+
+  static const single = _SearchSelectorMultiplicity_consts.singleConst;
+  static const multiple = _SearchSelectorMultiplicity_consts.multipleConst;
+
+  /// Returns the kind of variant held by this SearchSelectorMultiplicity.
+  SearchSelectorMultiplicity_kind get kind;
+
+  /// Serializer for `SearchSelectorMultiplicity` instances.
+  static _skir.EnumSerializer<SearchSelectorMultiplicity> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "single", "single", "", single);
+      _serializerBuilder.addConstantVariant(
+        2,
+        "multiple",
+        "multiple",
+        "",
+        multiple,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectorMultiplicity",
+        doc: "",
+        unknownInstance: SearchSelectorMultiplicity_unknown._instance,
+        enumInstance: SearchSelectorMultiplicity.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectorMultiplicity_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `SearchSelectorMultiplicity`.
+enum SearchSelectorMultiplicity_kind {
+  unknown(0),
+  singleConst(1),
+  multipleConst(2);
+
+  final _core.int _ordinal;
+
+  const SearchSelectorMultiplicity_kind(this._ordinal);
+}
+
+final class SearchSelectorMultiplicity_unknown
+    implements SearchSelectorMultiplicity {
+  static const _instance = SearchSelectorMultiplicity_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SearchSelectorMultiplicity_unknown._() : _u = null;
+  SearchSelectorMultiplicity_unknown._unrecognized(this._u);
+
+  @_core.override
+  SearchSelectorMultiplicity_kind get kind =>
+      SearchSelectorMultiplicity_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SearchSelectorMultiplicity_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
+}
+
+enum _SearchSelectorMultiplicity_consts implements SearchSelectorMultiplicity {
+  singleConst(SearchSelectorMultiplicity_kind.singleConst),
+  multipleConst(SearchSelectorMultiplicity_kind.multipleConst);
+
+  @_core.override
+  final SearchSelectorMultiplicity_kind kind;
+
+  const _SearchSelectorMultiplicity_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchSelectorEnumValues
+// -----------------------------------------------------------------------------
+
+sealed class SearchSelectorEnumValues_orMutable {
+  _core.Iterable<_core.String> get values;
+
+  SearchSelectorEnumValues toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchSelectorEnumValues
+    implements SearchSelectorEnumValues_orMutable {
+  @_core.override
+  final _core.Iterable<_core.String> values;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchSelectorEnumValues({
+    required _core.Iterable<_core.String> values,
+  }) => SearchSelectorEnumValues._(_skir.internal__frozenCopy(values));
+
+  SearchSelectorEnumValues._(this.values);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchSelectorEnumValues._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchSelectorEnumValues_mutable mutable() =>
+      SearchSelectorEnumValues_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchSelectorEnumValues toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchSelectorEnumValues_mutable toMutable() =>
+      SearchSelectorEnumValues_mutable._(this.values);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchSelectorEnumValues) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.values];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchSelectorEnumValues` instances.
+  static _skir.StructSerializer<
+    SearchSelectorEnumValues,
+    SearchSelectorEnumValues_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "values",
+        "values",
+        0,
+        _skir.Serializers.iterable(_skir.Serializers.string),
+        "",
+        (it) => it.values,
+        (it, v) => it.values = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SearchSelectorEnumValues",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchSelectorEnumValues_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchSelectorEnumValues].
+final class SearchSelectorEnumValues_mutable
+    implements SearchSelectorEnumValues_orMutable {
+  _core.Iterable<_core.String> values;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchSelectorEnumValues_mutable._(this.values);
+
+  /// If the value of [values] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
+  _core.List<_core.String> get mutableValues {
+    final value = this.values;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.values = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchSelectorEnumValues toFrozen() =>
+      SearchSelectorEnumValues(values: this.values).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum SearchSelectorValues
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SearchSelectorValues_unknown(): { ... }
+///     case SearchSelectorValues.freeText: { ... }
+///     case SearchSelectorValues_enumeration(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SearchSelectorValues {
+  /// Constant indicating an unknown `SearchSelectorValues`.
+  /// Default value for fields of type `SearchSelectorValues`.
+  static const SearchSelectorValues unknown =
+      SearchSelectorValues_unknown._instance;
+
+  static const freeText = _SearchSelectorValues_consts.freeTextConst;
+
+  /// Create a 'enumeration' variant wrapping around the given value.
+  factory SearchSelectorValues.wrapEnumeration(
+    SearchSelectorEnumValues value,
+  ) => SearchSelectorValues_enumerationWrapper._(value);
+
+  /// Same as `wrapEnumeration(SearchSelectorEnumValues(...))`.
+  factory SearchSelectorValues.createEnumeration({
+    required _core.Iterable<_core.String> values,
+  }) => SearchSelectorValues.wrapEnumeration(
+    SearchSelectorEnumValues(values: values),
+  );
+
+  /// Returns the kind of variant held by this SearchSelectorValues.
+  SearchSelectorValues_kind get kind;
+
+  /// Serializer for `SearchSelectorValues` instances.
+  static _skir.EnumSerializer<SearchSelectorValues> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "free_text",
+        "freeText",
+        "",
+        freeText,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "enumeration",
+        "wrapEnumeration",
+        SearchSelectorEnumValues.serializer,
+        "",
+        SearchSelectorValues_enumerationWrapper._,
+        (it) => it.value,
+        ordinal: SearchSelectorValues_kind.enumerationWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchSelectorValues",
+        doc: "",
+        unknownInstance: SearchSelectorValues_unknown._instance,
+        enumInstance: SearchSelectorValues.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchSelectorValues_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `SearchSelectorValues`.
+enum SearchSelectorValues_kind {
+  unknown(0),
+  freeTextConst(1),
+  enumerationWrapper(2);
+
+  final _core.int _ordinal;
+
+  const SearchSelectorValues_kind(this._ordinal);
+}
+
+final class SearchSelectorValues_unknown implements SearchSelectorValues {
+  static const _instance = SearchSelectorValues_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SearchSelectorValues_unknown._() : _u = null;
+  SearchSelectorValues_unknown._unrecognized(this._u);
+
+  @_core.override
+  SearchSelectorValues_kind get kind => SearchSelectorValues_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SearchSelectorValues_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
+}
+
+enum _SearchSelectorValues_consts implements SearchSelectorValues {
+  freeTextConst(SearchSelectorValues_kind.freeTextConst);
+
+  @_core.override
+  final SearchSelectorValues_kind kind;
+
+  const _SearchSelectorValues_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
+}
+
+sealed class _SearchSelectorValues_wrapper implements SearchSelectorValues {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _SearchSelectorValues_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchSelectorValues.serializer);
+}
+
+final class SearchSelectorValues_enumerationWrapper
+    extends _SearchSelectorValues_wrapper {
+  final SearchSelectorEnumValues value;
+
+  SearchSelectorValues_enumerationWrapper._(this.value);
+
+  @_core.override
+  SearchSelectorValues_kind get kind =>
+      SearchSelectorValues_kind.enumerationWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchSelectorDefinition
+// -----------------------------------------------------------------------------
+
+sealed class SearchSelectorDefinition_orMutable {
+  _core.String get selectorId;
+  _core.String get key;
+  _lib_editor_v1_binding.BindingId_orMutable get valueBindingId;
+  SearchSelectorValues get values;
+  _core.bool get caseSensitive;
+  SearchSelectorMultiplicity get multiplicity;
+  _core.int? get color;
+
+  SearchSelectorDefinition toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchSelectorDefinition
+    implements SearchSelectorDefinition_orMutable {
+  @_core.override
+  final _core.String selectorId;
+  @_core.override
+  final _core.String key;
+  @_core.override
+  final _lib_editor_v1_binding.BindingId valueBindingId;
+  @_core.override
+  final SearchSelectorValues values;
+  @_core.override
+  final _core.bool caseSensitive;
+  @_core.override
+  final SearchSelectorMultiplicity multiplicity;
+  @_core.override
+  final _core.int? color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchSelectorDefinition({
+    required _core.String selectorId,
+    required _core.String key,
+    required _lib_editor_v1_binding.BindingId_orMutable valueBindingId,
+    required SearchSelectorValues values,
+    required _core.bool caseSensitive,
+    required SearchSelectorMultiplicity multiplicity,
+    required _core.int? color,
+  }) => SearchSelectorDefinition._(
+    selectorId,
+    key,
+    valueBindingId.toFrozen(),
+    values,
+    caseSensitive,
+    multiplicity,
+    color,
+  );
+
+  SearchSelectorDefinition._(
+    this.selectorId,
+    this.key,
+    this.valueBindingId,
+    this.values,
+    this.caseSensitive,
+    this.multiplicity,
+    this.color,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchSelectorDefinition._(
+    "",
+    "",
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    SearchSelectorValues.unknown,
+    false,
+    SearchSelectorMultiplicity.unknown,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchSelectorDefinition_mutable mutable() =>
+      SearchSelectorDefinition_mutable._(
+        "",
+        "",
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        SearchSelectorValues.unknown,
+        false,
+        SearchSelectorMultiplicity.unknown,
+        null,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchSelectorDefinition toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchSelectorDefinition_mutable toMutable() =>
+      SearchSelectorDefinition_mutable._(
+        this.selectorId,
+        this.key,
+        this.valueBindingId,
+        this.values,
+        this.caseSensitive,
+        this.multiplicity,
+        this.color,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchSelectorDefinition) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.selectorId,
+    this.key,
+    this.valueBindingId,
+    this.values,
+    this.caseSensitive,
+    this.multiplicity,
+    this.color,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchSelectorDefinition` instances.
+  static _skir.StructSerializer<
+    SearchSelectorDefinition,
+    SearchSelectorDefinition_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "selector_id",
+        "selectorId",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.selectorId,
+        (it, v) => it.selectorId = v,
+      );
+      _serializerBuilder.addField(
+        "key",
+        "key",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.key,
+        (it, v) => it.key = v,
+      );
+      _serializerBuilder.addField(
+        "value_binding_id",
+        "valueBindingId",
+        2,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.valueBindingId,
+        (it, v) => it.valueBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "values",
+        "values",
+        3,
+        SearchSelectorValues.serializer,
+        "",
+        (it) => it.values,
+        (it, v) => it.values = v,
+      );
+      _serializerBuilder.addField(
+        "case_sensitive",
+        "caseSensitive",
+        4,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.caseSensitive,
+        (it, v) => it.caseSensitive = v,
+      );
+      _serializerBuilder.addField(
+        "multiplicity",
+        "multiplicity",
+        5,
+        SearchSelectorMultiplicity.serializer,
+        "",
+        (it) => it.multiplicity,
+        (it, v) => it.multiplicity = v,
+      );
+      _serializerBuilder.addField(
+        "color",
+        "color",
+        6,
+        _skir.Serializers.optional(_skir.Serializers.int64),
+        "",
+        (it) => it.color,
+        (it, v) => it.color = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SearchSelectorDefinition",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchSelectorDefinition_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchSelectorDefinition].
+final class SearchSelectorDefinition_mutable
+    implements SearchSelectorDefinition_orMutable {
+  _core.String selectorId;
+  _core.String key;
+  _lib_editor_v1_binding.BindingId_orMutable valueBindingId;
+  SearchSelectorValues values;
+  _core.bool caseSensitive;
+  SearchSelectorMultiplicity multiplicity;
+  _core.int? color;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchSelectorDefinition_mutable._(
+    this.selectorId,
+    this.key,
+    this.valueBindingId,
+    this.values,
+    this.caseSensitive,
+    this.multiplicity,
+    this.color,
+  );
+
+  /// If the value of [valueBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableValueBindingId {
+    final value = this.valueBindingId;
+    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+      return value;
+    } else {
+      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchSelectorDefinition toFrozen() => SearchSelectorDefinition(
+    selectorId: this.selectorId,
+    key: this.key,
+    valueBindingId: this.valueBindingId,
+    values: this.values,
+    caseSensitive: this.caseSensitive,
+    multiplicity: this.multiplicity,
+    color: this.color,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchResultMapping
+// -----------------------------------------------------------------------------
+
+sealed class SearchResultMapping_orMutable {
+  _lib_editor_v1_binding.BindingId_orMutable get bindingId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get key;
+  _lib_editor_v1_expression.TypedExpression_orMutable get selectedValue;
+  PresentationNode_orMutable get presentation;
+
+  SearchResultMapping toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchResultMapping implements SearchResultMapping_orMutable {
+  @_core.override
+  final _lib_editor_v1_binding.BindingId bindingId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression key;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression selectedValue;
+  @_core.override
+  final PresentationNode presentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchResultMapping({
+    required _lib_editor_v1_binding.BindingId_orMutable bindingId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable key,
+    required _lib_editor_v1_expression.TypedExpression_orMutable selectedValue,
+    required PresentationNode_orMutable presentation,
+  }) => SearchResultMapping._(
+    bindingId.toFrozen(),
+    key.toFrozen(),
+    selectedValue.toFrozen(),
+    presentation.toFrozen(),
+  );
+
+  SearchResultMapping._(
+    this.bindingId,
+    this.key,
+    this.selectedValue,
+    this.presentation,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchResultMapping._(
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    PresentationNode.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchResultMapping_mutable mutable() => SearchResultMapping_mutable._(
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    PresentationNode.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchResultMapping toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchResultMapping_mutable toMutable() => SearchResultMapping_mutable._(
+    this.bindingId,
+    this.key,
+    this.selectedValue,
+    this.presentation,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchResultMapping) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.bindingId,
+    this.key,
+    this.selectedValue,
+    this.presentation,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchResultMapping` instances.
+  static _skir.StructSerializer<
+    SearchResultMapping,
+    SearchResultMapping_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "binding_id",
+        "bindingId",
+        0,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.bindingId,
+        (it, v) => it.bindingId = v,
+      );
+      _serializerBuilder.addField(
+        "key",
+        "key",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.key,
+        (it, v) => it.key = v,
+      );
+      _serializerBuilder.addField(
+        "selected_value",
+        "selectedValue",
+        2,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.selectedValue,
+        (it, v) => it.selectedValue = v,
+      );
+      _serializerBuilder.addField(
+        "presentation",
+        "presentation",
+        3,
+        PresentationNode.serializer,
+        "",
+        (it) => it.presentation,
+        (it, v) => it.presentation = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SearchResultMapping",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchResultMapping_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchResultMapping].
+final class SearchResultMapping_mutable
+    implements SearchResultMapping_orMutable {
+  _lib_editor_v1_binding.BindingId_orMutable bindingId;
+  _lib_editor_v1_expression.TypedExpression_orMutable key;
+  _lib_editor_v1_expression.TypedExpression_orMutable selectedValue;
+  PresentationNode_orMutable presentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchResultMapping_mutable._(
+    this.bindingId,
+    this.key,
+    this.selectedValue,
+    this.presentation,
+  );
+
+  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableBindingId {
+    final value = this.bindingId;
+    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+      return value;
+    } else {
+      return this.bindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [key] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableKey {
+    final value = this.key;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.key = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [selectedValue] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selectedValue] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableSelectedValue {
+    final value = this.selectedValue;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.selectedValue =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchResultMapping toFrozen() => SearchResultMapping(
+    bindingId: this.bindingId,
+    key: this.key,
+    selectedValue: this.selectedValue,
+    presentation: this.presentation,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HttpQueryParameter
+// -----------------------------------------------------------------------------
+
+sealed class HttpQueryParameter_orMutable {
+  _core.String get name;
+  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _core.bool get omitIfEmpty;
+
+  HttpQueryParameter toFrozen();
+}
+
+/// Deeply immutable.
+final class HttpQueryParameter implements HttpQueryParameter_orMutable {
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression value;
+  @_core.override
+  final _core.bool omitIfEmpty;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HttpQueryParameter({
+    required _core.String name,
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _core.bool omitIfEmpty,
+  }) => HttpQueryParameter._(name, value.toFrozen(), omitIfEmpty);
+
+  HttpQueryParameter._(this.name, this.value, this.omitIfEmpty);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HttpQueryParameter._(
+    "",
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    false,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HttpQueryParameter_mutable mutable() => HttpQueryParameter_mutable._(
+    "",
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    false,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HttpQueryParameter toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HttpQueryParameter_mutable toMutable() =>
+      HttpQueryParameter_mutable._(this.name, this.value, this.omitIfEmpty);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HttpQueryParameter) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.name, this.value, this.omitIfEmpty];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HttpQueryParameter` instances.
+  static _skir.StructSerializer<HttpQueryParameter, HttpQueryParameter_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.addField(
+        "omit_if_empty",
+        "omitIfEmpty",
+        2,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.omitIfEmpty,
+        (it, v) => it.omitIfEmpty = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HttpQueryParameter",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HttpQueryParameter_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HttpQueryParameter].
+final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
+  _core.String name;
+  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _core.bool omitIfEmpty;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HttpQueryParameter_mutable._(this.name, this.value, this.omitIfEmpty);
+
+  /// If the value of [value] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
+    final value = this.value;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HttpQueryParameter toFrozen() => HttpQueryParameter(
+    name: this.name,
+    value: this.value,
+    omitIfEmpty: this.omitIfEmpty,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HttpJsonContextBinding
+// -----------------------------------------------------------------------------
+
+sealed class HttpJsonContextBinding_orMutable {
+  _lib_editor_v1_binding.BindingId_orMutable get bindingId;
+  _core.String get path;
+  _lib_editor_v1_type_catalog.TypeExpression get valueType;
+
+  HttpJsonContextBinding toFrozen();
+}
+
+/// Deeply immutable.
+final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
+  @_core.override
+  final _lib_editor_v1_binding.BindingId bindingId;
+  @_core.override
+  final _core.String path;
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeExpression valueType;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HttpJsonContextBinding({
+    required _lib_editor_v1_binding.BindingId_orMutable bindingId,
+    required _core.String path,
+    required _lib_editor_v1_type_catalog.TypeExpression valueType,
+  }) => HttpJsonContextBinding._(bindingId.toFrozen(), path, valueType);
+
+  HttpJsonContextBinding._(this.bindingId, this.path, this.valueType);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HttpJsonContextBinding._(
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    "",
+    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HttpJsonContextBinding_mutable mutable() =>
+      HttpJsonContextBinding_mutable._(
+        _lib_editor_v1_binding.BindingId.defaultInstance,
+        "",
+        _lib_editor_v1_type_catalog.TypeExpression.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HttpJsonContextBinding toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HttpJsonContextBinding_mutable toMutable() =>
+      HttpJsonContextBinding_mutable._(
+        this.bindingId,
+        this.path,
+        this.valueType,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HttpJsonContextBinding) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.bindingId, this.path, this.valueType];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HttpJsonContextBinding` instances.
+  static _skir.StructSerializer<
+    HttpJsonContextBinding,
+    HttpJsonContextBinding_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "binding_id",
+        "bindingId",
+        0,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.bindingId,
+        (it, v) => it.bindingId = v,
+      );
+      _serializerBuilder.addField(
+        "path",
+        "path",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.path,
+        (it, v) => it.path = v,
+      );
+      _serializerBuilder.addField(
+        "value_type",
+        "valueType",
+        2,
+        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        "",
+        (it) => it.valueType,
+        (it, v) => it.valueType = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HttpJsonContextBinding",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HttpJsonContextBinding_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HttpJsonContextBinding].
+final class HttpJsonContextBinding_mutable
+    implements HttpJsonContextBinding_orMutable {
+  _lib_editor_v1_binding.BindingId_orMutable bindingId;
+  _core.String path;
+  _lib_editor_v1_type_catalog.TypeExpression valueType;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HttpJsonContextBinding_mutable._(this.bindingId, this.path, this.valueType);
+
+  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableBindingId {
+    final value = this.bindingId;
+    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+      return value;
+    } else {
+      return this.bindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HttpJsonContextBinding toFrozen() => HttpJsonContextBinding(
+    bindingId: this.bindingId,
+    path: this.path,
+    valueType: this.valueType,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct StaticSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class StaticSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get values;
+  SearchResultMapping_orMutable get result;
+  _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
+
+  StaticSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class StaticSearchProvider implements StaticSearchProvider_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression values;
+  @_core.override
+  final SearchResultMapping result;
+  @_core.override
+  final _skir.KeyedIterable<SearchSelectorDefinition, _core.String> selectors;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory StaticSearchProvider({
+    required _lib_editor_v1_expression.TypedExpression_orMutable values,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+  }) => StaticSearchProvider._(
+    values.toFrozen(),
+    result.toFrozen(),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
+  );
+
+  StaticSearchProvider._(this.values, this.result, this.selectors);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = StaticSearchProvider._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchResultMapping.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static StaticSearchProvider_mutable mutable() =>
+      StaticSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  StaticSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  StaticSearchProvider_mutable toMutable() =>
+      StaticSearchProvider_mutable._(this.values, this.result, this.selectors);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! StaticSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.values, this.result, this.selectors];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `StaticSearchProvider` instances.
+  static _skir.StructSerializer<
+    StaticSearchProvider,
+    StaticSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "values",
+        "values",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.values,
+        (it, v) => it.values = v,
+      );
+      _serializerBuilder.addField(
+        "result",
+        "result",
+        1,
+        SearchResultMapping.serializer,
+        "",
+        (it) => it.result,
+        (it, v) => it.result = v,
+      );
+      _serializerBuilder.addField(
+        "selectors",
+        "selectors",
+        2,
+        _skir.Serializers.keyedIterable(
+          SearchSelectorDefinition.serializer,
+          (SearchSelectorDefinition it) => it.selectorId,
+          internal__getKeySpec: "selector_id",
+        ),
+        "",
+        (it) => it.selectors,
+        (it, v) => it.selectors = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:StaticSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (StaticSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [StaticSearchProvider].
+final class StaticSearchProvider_mutable
+    implements StaticSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable values;
+  SearchResultMapping_orMutable result;
+  _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
+  _skir.internal__UnrecognizedFields? _u;
+
+  StaticSearchProvider_mutable._(this.values, this.result, this.selectors);
+
+  /// If the value of [values] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableValues {
+    final value = this.values;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.values = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+  _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
+    final value = this.selectors;
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+      return value;
+    } else {
+      return this.selectors = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  StaticSearchProvider toFrozen() => StaticSearchProvider(
+    values: this.values,
+    result: this.result,
+    selectors: this.selectors,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HttpJsonSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class HttpJsonSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get uri;
+  _core.Iterable<HttpQueryParameter_orMutable> get parameters;
+  _core.String get resultPath;
+  _lib_editor_v1_type_catalog.TypeExpression get resultType;
+  SearchResultMapping_orMutable get result;
+  _core.Iterable<HttpJsonContextBinding_orMutable> get contextBindings;
+  _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
+  _core.int get timeoutMilliseconds;
+
+  HttpJsonSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression uri;
+  @_core.override
+  final _skir.KeyedIterable<HttpQueryParameter, _core.String> parameters;
+  @_core.override
+  final _core.String resultPath;
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeExpression resultType;
+  @_core.override
+  final SearchResultMapping result;
+  @_core.override
+  final _core.Iterable<HttpJsonContextBinding> contextBindings;
+  @_core.override
+  final _skir.KeyedIterable<SearchSelectorDefinition, _core.String> selectors;
+  @_core.override
+  final _core.int timeoutMilliseconds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HttpJsonSearchProvider({
+    required _lib_editor_v1_expression.TypedExpression_orMutable uri,
+    required _core.Iterable<HttpQueryParameter_orMutable> parameters,
+    required _core.String resultPath,
+    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+    required _core.int timeoutMilliseconds,
+  }) => HttpJsonSearchProvider._(
+    uri.toFrozen(),
+    _skir.internal__keyedMappedCopy(
+      parameters,
+      "name",
+      (it) => it.name,
+      (it) => it.toFrozen(),
+    ),
+    resultPath,
+    resultType,
+    result.toFrozen(),
+    _skir.internal__frozenMappedCopy(contextBindings, (it) => it.toFrozen()),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
+    timeoutMilliseconds,
+  );
+
+  HttpJsonSearchProvider._(
+    this.uri,
+    this.parameters,
+    this.resultPath,
+    this.resultType,
+    this.result,
+    this.contextBindings,
+    this.selectors,
+    this.timeoutMilliseconds,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HttpJsonSearchProvider._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _skir.KeyedIterable.empty,
+    "",
+    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    SearchResultMapping.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HttpJsonSearchProvider_mutable mutable() =>
+      HttpJsonSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        _skir.KeyedIterable.empty,
+        "",
+        _lib_editor_v1_type_catalog.TypeExpression.unknown,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        0,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HttpJsonSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HttpJsonSearchProvider_mutable toMutable() =>
+      HttpJsonSearchProvider_mutable._(
+        this.uri,
+        this.parameters,
+        this.resultPath,
+        this.resultType,
+        this.result,
+        this.contextBindings,
+        this.selectors,
+        this.timeoutMilliseconds,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HttpJsonSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.uri,
+    this.parameters,
+    this.resultPath,
+    this.resultType,
+    this.result,
+    this.contextBindings,
+    this.selectors,
+    this.timeoutMilliseconds,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HttpJsonSearchProvider` instances.
+  static _skir.StructSerializer<
+    HttpJsonSearchProvider,
+    HttpJsonSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "uri",
+        "uri",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.uri,
+        (it, v) => it.uri = v,
+      );
+      _serializerBuilder.addField(
+        "parameters",
+        "parameters",
+        1,
+        _skir.Serializers.keyedIterable(
+          HttpQueryParameter.serializer,
+          (HttpQueryParameter it) => it.name,
+          internal__getKeySpec: "name",
+        ),
+        "",
+        (it) => it.parameters,
+        (it, v) => it.parameters = v,
+      );
+      _serializerBuilder.addField(
+        "result_path",
+        "resultPath",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.resultPath,
+        (it, v) => it.resultPath = v,
+      );
+      _serializerBuilder.addField(
+        "result_type",
+        "resultType",
+        3,
+        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        "",
+        (it) => it.resultType,
+        (it, v) => it.resultType = v,
+      );
+      _serializerBuilder.addField(
+        "result",
+        "result",
+        4,
+        SearchResultMapping.serializer,
+        "",
+        (it) => it.result,
+        (it, v) => it.result = v,
+      );
+      _serializerBuilder.addField(
+        "context_bindings",
+        "contextBindings",
+        5,
+        _skir.Serializers.iterable(HttpJsonContextBinding.serializer),
+        "",
+        (it) => it.contextBindings,
+        (it, v) => it.contextBindings = v,
+      );
+      _serializerBuilder.addField(
+        "selectors",
+        "selectors",
+        6,
+        _skir.Serializers.keyedIterable(
+          SearchSelectorDefinition.serializer,
+          (SearchSelectorDefinition it) => it.selectorId,
+          internal__getKeySpec: "selector_id",
+        ),
+        "",
+        (it) => it.selectors,
+        (it, v) => it.selectors = v,
+      );
+      _serializerBuilder.addField(
+        "timeout_milliseconds",
+        "timeoutMilliseconds",
+        7,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.timeoutMilliseconds,
+        (it, v) => it.timeoutMilliseconds = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HttpJsonSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HttpJsonSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HttpJsonSearchProvider].
+final class HttpJsonSearchProvider_mutable
+    implements HttpJsonSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable uri;
+  _core.Iterable<HttpQueryParameter_orMutable> parameters;
+  _core.String resultPath;
+  _lib_editor_v1_type_catalog.TypeExpression resultType;
+  SearchResultMapping_orMutable result;
+  _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings;
+  _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
+  _core.int timeoutMilliseconds;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HttpJsonSearchProvider_mutable._(
+    this.uri,
+    this.parameters,
+    this.resultPath,
+    this.resultType,
+    this.result,
+    this.contextBindings,
+    this.selectors,
+    this.timeoutMilliseconds,
+  );
+
+  /// If the value of [uri] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [uri] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableUri {
+    final value = this.uri;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.uri = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [parameters] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
+  _core.List<HttpQueryParameter_orMutable> get mutableParameters {
+    final value = this.parameters;
+    if (value is _skir.internal__MutableList<HttpQueryParameter_orMutable>) {
+      return value;
+    } else {
+      return this.parameters = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [contextBindings] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [contextBindings] and returns it.
+  _core.List<HttpJsonContextBinding_orMutable> get mutableContextBindings {
+    final value = this.contextBindings;
+    if (value
+        is _skir.internal__MutableList<HttpJsonContextBinding_orMutable>) {
+      return value;
+    } else {
+      return this.contextBindings = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+  _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
+    final value = this.selectors;
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+      return value;
+    } else {
+      return this.selectors = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HttpJsonSearchProvider toFrozen() => HttpJsonSearchProvider(
+    uri: this.uri,
+    parameters: this.parameters,
+    resultPath: this.resultPath,
+    resultType: this.resultType,
+    result: this.result,
+    contextBindings: this.contextBindings,
+    selectors: this.selectors,
+    timeoutMilliseconds: this.timeoutMilliseconds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RealmCallbackSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class RealmCallbackSearchProvider_orMutable {
+  _lib_editor_v1_type_catalog.RealmActionId_orMutable get realmActionId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get payload;
+  SearchResultMapping_orMutable get result;
+  _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
+
+  RealmCallbackSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class RealmCallbackSearchProvider
+    implements RealmCallbackSearchProvider_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.RealmActionId realmActionId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression payload;
+  @_core.override
+  final SearchResultMapping result;
+  @_core.override
+  final _skir.KeyedIterable<SearchSelectorDefinition, _core.String> selectors;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RealmCallbackSearchProvider({
+    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable payload,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+  }) => RealmCallbackSearchProvider._(
+    realmActionId.toFrozen(),
+    payload.toFrozen(),
+    result.toFrozen(),
+    _skir.internal__keyedMappedCopy(
+      selectors,
+      "selectorId",
+      (it) => it.selectorId,
+      (it) => it.toFrozen(),
+    ),
+  );
+
+  RealmCallbackSearchProvider._(
+    this.realmActionId,
+    this.payload,
+    this.result,
+    this.selectors,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RealmCallbackSearchProvider._(
+    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchResultMapping.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RealmCallbackSearchProvider_mutable mutable() =>
+      RealmCallbackSearchProvider_mutable._(
+        _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchResultMapping.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RealmCallbackSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RealmCallbackSearchProvider_mutable toMutable() =>
+      RealmCallbackSearchProvider_mutable._(
+        this.realmActionId,
+        this.payload,
+        this.result,
+        this.selectors,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RealmCallbackSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.realmActionId,
+    this.payload,
+    this.result,
+    this.selectors,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RealmCallbackSearchProvider` instances.
+  static _skir.StructSerializer<
+    RealmCallbackSearchProvider,
+    RealmCallbackSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "realm_action_id",
+        "realmActionId",
+        0,
+        _lib_editor_v1_type_catalog.RealmActionId.serializer,
+        "",
+        (it) => it.realmActionId,
+        (it, v) => it.realmActionId = v,
+      );
+      _serializerBuilder.addField(
+        "payload",
+        "payload",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.payload,
+        (it, v) => it.payload = v,
+      );
+      _serializerBuilder.addField(
+        "result",
+        "result",
+        2,
+        SearchResultMapping.serializer,
+        "",
+        (it) => it.result,
+        (it, v) => it.result = v,
+      );
+      _serializerBuilder.addField(
+        "selectors",
+        "selectors",
+        3,
+        _skir.Serializers.keyedIterable(
+          SearchSelectorDefinition.serializer,
+          (SearchSelectorDefinition it) => it.selectorId,
+          internal__getKeySpec: "selector_id",
+        ),
+        "",
+        (it) => it.selectors,
+        (it, v) => it.selectors = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:RealmCallbackSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RealmCallbackSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RealmCallbackSearchProvider].
+final class RealmCallbackSearchProvider_mutable
+    implements RealmCallbackSearchProvider_orMutable {
+  _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId;
+  _lib_editor_v1_expression.TypedExpression_orMutable payload;
+  SearchResultMapping_orMutable result;
+  _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RealmCallbackSearchProvider_mutable._(
+    this.realmActionId,
+    this.payload,
+    this.result,
+    this.selectors,
+  );
+
+  /// If the value of [realmActionId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
+  _lib_editor_v1_type_catalog.RealmActionId_mutable get mutableRealmActionId {
+    final value = this.realmActionId;
+    if (value is _lib_editor_v1_type_catalog.RealmActionId_mutable) {
+      return value;
+    } else {
+      return this.realmActionId =
+          (value as _lib_editor_v1_type_catalog.RealmActionId).toMutable();
+    }
+  }
+
+  /// If the value of [payload] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [payload] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutablePayload {
+    final value = this.payload;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.payload = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
+  _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
+    final value = this.selectors;
+    if (value
+        is _skir.internal__MutableList<SearchSelectorDefinition_orMutable>) {
+      return value;
+    } else {
+      return this.selectors = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RealmCallbackSearchProvider toFrozen() => RealmCallbackSearchProvider(
+    realmActionId: this.realmActionId,
+    payload: this.payload,
+    result: this.result,
+    selectors: this.selectors,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GatedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class GatedSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get condition;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get guidance;
+  SearchProvider get child;
+
+  GatedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class GatedSearchProvider implements GatedSearchProvider_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression condition;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? guidance;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GatedSearchProvider({
+    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? guidance,
+    required SearchProvider child,
+  }) => GatedSearchProvider._(
+    condition.toFrozen(),
+    (guidance != null) ? guidance.toFrozen() : null,
+    child,
+  );
+
+  GatedSearchProvider._(this.condition, this.guidance, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GatedSearchProvider._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    null,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GatedSearchProvider_mutable mutable() => GatedSearchProvider_mutable._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    null,
+    SearchProvider.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GatedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GatedSearchProvider_mutable toMutable() =>
+      GatedSearchProvider_mutable._(this.condition, this.guidance, this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GatedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.condition, this.guidance, this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GatedSearchProvider` instances.
+  static _skir.StructSerializer<
+    GatedSearchProvider,
+    GatedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "condition",
+        "condition",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.condition,
+        (it, v) => it.condition = v,
+      );
+      _serializerBuilder.addField(
+        "guidance",
+        "guidance",
+        1,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.guidance,
+        (it, v) => it.guidance = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        2,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:GatedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GatedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GatedSearchProvider].
+final class GatedSearchProvider_mutable
+    implements GatedSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable condition;
+  _lib_editor_v1_expression.TypedExpression_orMutable? guidance;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GatedSearchProvider_mutable._(this.condition, this.guidance, this.child);
+
+  /// If the value of [condition] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableCondition {
+    final value = this.condition;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.condition =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GatedSearchProvider toFrozen() => GatedSearchProvider(
+    condition: this.condition,
+    guidance: this.guidance,
+    child: this.child,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct DebouncedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class DebouncedSearchProvider_orMutable {
+  _core.int get durationMilliseconds;
+  SearchProvider get child;
+
+  DebouncedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class DebouncedSearchProvider
+    implements DebouncedSearchProvider_orMutable {
+  @_core.override
+  final _core.int durationMilliseconds;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DebouncedSearchProvider({
+    required _core.int durationMilliseconds,
+    required SearchProvider child,
+  }) => DebouncedSearchProvider._(durationMilliseconds, child);
+
+  DebouncedSearchProvider._(this.durationMilliseconds, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DebouncedSearchProvider._(
+    0,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DebouncedSearchProvider_mutable mutable() =>
+      DebouncedSearchProvider_mutable._(0, SearchProvider.unknown);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DebouncedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DebouncedSearchProvider_mutable toMutable() =>
+      DebouncedSearchProvider_mutable._(this.durationMilliseconds, this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DebouncedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.durationMilliseconds, this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DebouncedSearchProvider` instances.
+  static _skir.StructSerializer<
+    DebouncedSearchProvider,
+    DebouncedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "duration_milliseconds",
+        "durationMilliseconds",
+        0,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.durationMilliseconds,
+        (it, v) => it.durationMilliseconds = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        1,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:DebouncedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DebouncedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DebouncedSearchProvider].
+final class DebouncedSearchProvider_mutable
+    implements DebouncedSearchProvider_orMutable {
+  _core.int durationMilliseconds;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DebouncedSearchProvider_mutable._(this.durationMilliseconds, this.child);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DebouncedSearchProvider toFrozen() => DebouncedSearchProvider(
+    durationMilliseconds: this.durationMilliseconds,
+    child: this.child,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct CachedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class CachedSearchProvider_orMutable {
+  _core.int get capacity;
+  _core.bool get retainStaleResults;
+  SearchProvider get child;
+
+  CachedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class CachedSearchProvider implements CachedSearchProvider_orMutable {
+  @_core.override
+  final _core.int capacity;
+  @_core.override
+  final _core.bool retainStaleResults;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory CachedSearchProvider({
+    required _core.int capacity,
+    required _core.bool retainStaleResults,
+    required SearchProvider child,
+  }) => CachedSearchProvider._(capacity, retainStaleResults, child);
+
+  CachedSearchProvider._(this.capacity, this.retainStaleResults, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = CachedSearchProvider._(
+    0,
+    false,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static CachedSearchProvider_mutable mutable() =>
+      CachedSearchProvider_mutable._(0, false, SearchProvider.unknown);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  CachedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  CachedSearchProvider_mutable toMutable() => CachedSearchProvider_mutable._(
+    this.capacity,
+    this.retainStaleResults,
+    this.child,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! CachedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.capacity,
+    this.retainStaleResults,
+    this.child,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CachedSearchProvider` instances.
+  static _skir.StructSerializer<
+    CachedSearchProvider,
+    CachedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "capacity",
+        "capacity",
+        0,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.capacity,
+        (it, v) => it.capacity = v,
+      );
+      _serializerBuilder.addField(
+        "retain_stale_results",
+        "retainStaleResults",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.retainStaleResults,
+        (it, v) => it.retainStaleResults = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        2,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:CachedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CachedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CachedSearchProvider].
+final class CachedSearchProvider_mutable
+    implements CachedSearchProvider_orMutable {
+  _core.int capacity;
+  _core.bool retainStaleResults;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CachedSearchProvider_mutable._(
+    this.capacity,
+    this.retainStaleResults,
+    this.child,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CachedSearchProvider toFrozen() => CachedSearchProvider(
+    capacity: this.capacity,
+    retainStaleResults: this.retainStaleResults,
+    child: this.child,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchRankingField
+// -----------------------------------------------------------------------------
+
+sealed class SearchRankingField_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get expression;
+  _core.int get weight;
+
+  SearchRankingField toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchRankingField implements SearchRankingField_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression expression;
+  @_core.override
+  final _core.int weight;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchRankingField({
+    required _lib_editor_v1_expression.TypedExpression_orMutable expression,
+    required _core.int weight,
+  }) => SearchRankingField._(expression.toFrozen(), weight);
+
+  SearchRankingField._(this.expression, this.weight);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchRankingField._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchRankingField_mutable mutable() => SearchRankingField_mutable._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    0,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchRankingField toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchRankingField_mutable toMutable() =>
+      SearchRankingField_mutable._(this.expression, this.weight);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchRankingField) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.expression, this.weight];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchRankingField` instances.
+  static _skir.StructSerializer<SearchRankingField, SearchRankingField_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "expression",
+        "expression",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.expression,
+        (it, v) => it.expression = v,
+      );
+      _serializerBuilder.addField(
+        "weight",
+        "weight",
+        1,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.weight,
+        (it, v) => it.weight = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SearchRankingField",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchRankingField_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchRankingField].
+final class SearchRankingField_mutable implements SearchRankingField_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable expression;
+  _core.int weight;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchRankingField_mutable._(this.expression, this.weight);
+
+  /// If the value of [expression] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [expression] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableExpression {
+    final value = this.expression;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.expression =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchRankingField toFrozen() =>
+      SearchRankingField(expression: this.expression, weight: this.weight)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RankedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class RankedSearchProvider_orMutable {
+  _core.Iterable<SearchRankingField_orMutable> get fields;
+  SearchProvider get child;
+
+  RankedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class RankedSearchProvider implements RankedSearchProvider_orMutable {
+  @_core.override
+  final _core.Iterable<SearchRankingField> fields;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RankedSearchProvider({
+    required _core.Iterable<SearchRankingField_orMutable> fields,
+    required SearchProvider child,
+  }) => RankedSearchProvider._(
+    _skir.internal__frozenMappedCopy(fields, (it) => it.toFrozen()),
+    child,
+  );
+
+  RankedSearchProvider._(this.fields, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RankedSearchProvider._(
+    _skir.KeyedIterable.empty,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RankedSearchProvider_mutable mutable() =>
+      RankedSearchProvider_mutable._(
+        _skir.KeyedIterable.empty,
+        SearchProvider.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RankedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RankedSearchProvider_mutable toMutable() =>
+      RankedSearchProvider_mutable._(this.fields, this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RankedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.fields, this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RankedSearchProvider` instances.
+  static _skir.StructSerializer<
+    RankedSearchProvider,
+    RankedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "fields",
+        "fields",
+        0,
+        _skir.Serializers.iterable(SearchRankingField.serializer),
+        "",
+        (it) => it.fields,
+        (it, v) => it.fields = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        1,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:RankedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RankedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RankedSearchProvider].
+final class RankedSearchProvider_mutable
+    implements RankedSearchProvider_orMutable {
+  _core.Iterable<SearchRankingField_orMutable> fields;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RankedSearchProvider_mutable._(this.fields, this.child);
+
+  /// If the value of [fields] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
+  _core.List<SearchRankingField_orMutable> get mutableFields {
+    final value = this.fields;
+    if (value is _skir.internal__MutableList<SearchRankingField_orMutable>) {
+      return value;
+    } else {
+      return this.fields = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RankedSearchProvider toFrozen() =>
+      RankedSearchProvider(fields: this.fields, child: this.child)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct LimitedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class LimitedSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get maximum;
+  SearchProvider get child;
+
+  LimitedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression maximum;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory LimitedSearchProvider({
+    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
+    required SearchProvider child,
+  }) => LimitedSearchProvider._(maximum.toFrozen(), child);
+
+  LimitedSearchProvider._(this.maximum, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = LimitedSearchProvider._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static LimitedSearchProvider_mutable mutable() =>
+      LimitedSearchProvider_mutable._(
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchProvider.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  LimitedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  LimitedSearchProvider_mutable toMutable() =>
+      LimitedSearchProvider_mutable._(this.maximum, this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! LimitedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.maximum, this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `LimitedSearchProvider` instances.
+  static _skir.StructSerializer<
+    LimitedSearchProvider,
+    LimitedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "maximum",
+        "maximum",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.maximum,
+        (it, v) => it.maximum = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        1,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:LimitedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (LimitedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [LimitedSearchProvider].
+final class LimitedSearchProvider_mutable
+    implements LimitedSearchProvider_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable maximum;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  LimitedSearchProvider_mutable._(this.maximum, this.child);
+
+  /// If the value of [maximum] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximum {
+    final value = this.maximum;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  LimitedSearchProvider toFrozen() =>
+      LimitedSearchProvider(maximum: this.maximum, child: this.child)
+        .._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct DistinctSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class DistinctSearchProvider_orMutable {
+  SearchProvider get child;
+
+  DistinctSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DistinctSearchProvider({required SearchProvider child}) =>
+      DistinctSearchProvider._(child);
+
+  DistinctSearchProvider._(this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DistinctSearchProvider._(
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DistinctSearchProvider_mutable mutable() =>
+      DistinctSearchProvider_mutable._(SearchProvider.unknown);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DistinctSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DistinctSearchProvider_mutable toMutable() =>
+      DistinctSearchProvider_mutable._(this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DistinctSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DistinctSearchProvider` instances.
+  static _skir.StructSerializer<
+    DistinctSearchProvider,
+    DistinctSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        0,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:DistinctSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DistinctSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DistinctSearchProvider].
+final class DistinctSearchProvider_mutable
+    implements DistinctSearchProvider_orMutable {
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DistinctSearchProvider_mutable._(this.child);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DistinctSearchProvider toFrozen() =>
+      DistinctSearchProvider(child: this.child).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct HistoricalSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class HistoricalSearchProvider_orMutable {
+  _core.String get historyKey;
+  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _core.int get capacity;
+  SearchProvider get child;
+
+  HistoricalSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class HistoricalSearchProvider
+    implements HistoricalSearchProvider_orMutable {
+  @_core.override
+  final _core.String historyKey;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression label;
+  @_core.override
+  final _core.int capacity;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HistoricalSearchProvider({
+    required _core.String historyKey,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _core.int capacity,
+    required SearchProvider child,
+  }) =>
+      HistoricalSearchProvider._(historyKey, label.toFrozen(), capacity, child);
+
+  HistoricalSearchProvider._(
+    this.historyKey,
+    this.label,
+    this.capacity,
+    this.child,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HistoricalSearchProvider._(
+    "",
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    0,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HistoricalSearchProvider_mutable mutable() =>
+      HistoricalSearchProvider_mutable._(
+        "",
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        0,
+        SearchProvider.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HistoricalSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HistoricalSearchProvider_mutable toMutable() =>
+      HistoricalSearchProvider_mutable._(
+        this.historyKey,
+        this.label,
+        this.capacity,
+        this.child,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HistoricalSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.historyKey,
+    this.label,
+    this.capacity,
+    this.child,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HistoricalSearchProvider` instances.
+  static _skir.StructSerializer<
+    HistoricalSearchProvider,
+    HistoricalSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "history_key",
+        "historyKey",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.historyKey,
+        (it, v) => it.historyKey = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "capacity",
+        "capacity",
+        2,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.capacity,
+        (it, v) => it.capacity = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        3,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:HistoricalSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HistoricalSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HistoricalSearchProvider].
+final class HistoricalSearchProvider_mutable
+    implements HistoricalSearchProvider_orMutable {
+  _core.String historyKey;
+  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _core.int capacity;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HistoricalSearchProvider_mutable._(
+    this.historyKey,
+    this.label,
+    this.capacity,
+    this.child,
+  );
+
+  /// If the value of [label] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
+    final value = this.label;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HistoricalSearchProvider toFrozen() => HistoricalSearchProvider(
+    historyKey: this.historyKey,
+    label: this.label,
+    capacity: this.capacity,
+    child: this.child,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SectionSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class SectionSearchProvider_orMutable {
+  _core.String get sectionId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  SearchProvider get child;
+
+  SectionSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class SectionSearchProvider implements SectionSearchProvider_orMutable {
+  @_core.override
+  final _core.String sectionId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression label;
+  @_core.override
+  final SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SectionSearchProvider({
+    required _core.String sectionId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required SearchProvider child,
+  }) => SectionSearchProvider._(sectionId, label.toFrozen(), child);
+
+  SectionSearchProvider._(this.sectionId, this.label, this.child);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SectionSearchProvider._(
+    "",
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchProvider.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SectionSearchProvider_mutable mutable() =>
+      SectionSearchProvider_mutable._(
+        "",
+        _lib_editor_v1_expression.TypedExpression.defaultInstance,
+        SearchProvider.unknown,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SectionSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SectionSearchProvider_mutable toMutable() =>
+      SectionSearchProvider_mutable._(this.sectionId, this.label, this.child);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SectionSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.sectionId, this.label, this.child];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SectionSearchProvider` instances.
+  static _skir.StructSerializer<
+    SectionSearchProvider,
+    SectionSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "section_id",
+        "sectionId",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.sectionId,
+        (it, v) => it.sectionId = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        2,
+        SearchProvider.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SectionSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SectionSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SectionSearchProvider].
+final class SectionSearchProvider_mutable
+    implements SectionSearchProvider_orMutable {
+  _core.String sectionId;
+  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  SearchProvider child;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SectionSearchProvider_mutable._(this.sectionId, this.label, this.child);
+
+  /// If the value of [label] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
+    final value = this.label;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.label = (value as _lib_editor_v1_expression.TypedExpression)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SectionSearchProvider toFrozen() => SectionSearchProvider(
+    sectionId: this.sectionId,
+    label: this.label,
+    child: this.child,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct MergedSearchProvider
+// -----------------------------------------------------------------------------
+
+sealed class MergedSearchProvider_orMutable {
+  _core.Iterable<SearchProvider> get children;
+
+  MergedSearchProvider toFrozen();
+}
+
+/// Deeply immutable.
+final class MergedSearchProvider implements MergedSearchProvider_orMutable {
+  @_core.override
+  final _core.Iterable<SearchProvider> children;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory MergedSearchProvider({
+    required _core.Iterable<SearchProvider> children,
+  }) => MergedSearchProvider._(_skir.internal__frozenCopy(children));
+
+  MergedSearchProvider._(this.children);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = MergedSearchProvider._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static MergedSearchProvider_mutable mutable() =>
+      MergedSearchProvider_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  MergedSearchProvider toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  MergedSearchProvider_mutable toMutable() =>
+      MergedSearchProvider_mutable._(this.children);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! MergedSearchProvider) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.children];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `MergedSearchProvider` instances.
+  static _skir.StructSerializer<
+    MergedSearchProvider,
+    MergedSearchProvider_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "children",
+        "children",
+        0,
+        _skir.Serializers.iterable(SearchProvider.serializer),
+        "",
+        (it) => it.children,
+        (it, v) => it.children = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:MergedSearchProvider",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (MergedSearchProvider_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [MergedSearchProvider].
+final class MergedSearchProvider_mutable
+    implements MergedSearchProvider_orMutable {
+  _core.Iterable<SearchProvider> children;
+  _skir.internal__UnrecognizedFields? _u;
+
+  MergedSearchProvider_mutable._(this.children);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  MergedSearchProvider toFrozen() =>
+      MergedSearchProvider(children: this.children).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum SearchProvider
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case SearchProvider_unknown(): { ... }
+///     case SearchProvider_staticValues(:var value): { ... }
+///     case SearchProvider_httpJson(:var value): { ... }
+///     case SearchProvider_realmCallback(:var value): { ... }
+///     case SearchProvider_gate(:var value): { ... }
+///     case SearchProvider_debounce(:var value): { ... }
+///     case SearchProvider_cache(:var value): { ... }
+///     case SearchProvider_rank(:var value): { ... }
+///     case SearchProvider_limit(:var value): { ... }
+///     case SearchProvider_distinct(:var value): { ... }
+///     case SearchProvider_history(:var value): { ... }
+///     case SearchProvider_section(:var value): { ... }
+///     case SearchProvider_merge(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class SearchProvider {
+  /// Constant indicating an unknown `SearchProvider`.
+  /// Default value for fields of type `SearchProvider`.
+  static const SearchProvider unknown = SearchProvider_unknown._instance;
+
+  /// Create a 'static_values' variant wrapping around the given value.
+  factory SearchProvider.wrapStaticValues(StaticSearchProvider value) =>
+      SearchProvider_staticValuesWrapper._(value);
+
+  /// Same as `wrapStaticValues(StaticSearchProvider(...))`.
+  factory SearchProvider.createStaticValues({
+    required _lib_editor_v1_expression.TypedExpression_orMutable values,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+  }) => SearchProvider.wrapStaticValues(
+    StaticSearchProvider(values: values, result: result, selectors: selectors),
+  );
+
+  /// Create a 'http_json' variant wrapping around the given value.
+  factory SearchProvider.wrapHttpJson(HttpJsonSearchProvider value) =>
+      SearchProvider_httpJsonWrapper._(value);
+
+  /// Same as `wrapHttpJson(HttpJsonSearchProvider(...))`.
+  factory SearchProvider.createHttpJson({
+    required _lib_editor_v1_expression.TypedExpression_orMutable uri,
+    required _core.Iterable<HttpQueryParameter_orMutable> parameters,
+    required _core.String resultPath,
+    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+    required _core.int timeoutMilliseconds,
+  }) => SearchProvider.wrapHttpJson(
+    HttpJsonSearchProvider(
+      uri: uri,
+      parameters: parameters,
+      resultPath: resultPath,
+      resultType: resultType,
+      result: result,
+      contextBindings: contextBindings,
+      selectors: selectors,
+      timeoutMilliseconds: timeoutMilliseconds,
+    ),
+  );
+
+  /// Create a 'realm_callback' variant wrapping around the given value.
+  factory SearchProvider.wrapRealmCallback(RealmCallbackSearchProvider value) =>
+      SearchProvider_realmCallbackWrapper._(value);
+
+  /// Same as `wrapRealmCallback(RealmCallbackSearchProvider(...))`.
+  factory SearchProvider.createRealmCallback({
+    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable payload,
+    required SearchResultMapping_orMutable result,
+    required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
+  }) => SearchProvider.wrapRealmCallback(
+    RealmCallbackSearchProvider(
+      realmActionId: realmActionId,
+      payload: payload,
+      result: result,
+      selectors: selectors,
+    ),
+  );
+
+  /// Create a 'gate' variant wrapping around the given value.
+  factory SearchProvider.wrapGate(GatedSearchProvider value) =>
+      SearchProvider_gateWrapper._(value);
+
+  /// Same as `wrapGate(GatedSearchProvider(...))`.
+  factory SearchProvider.createGate({
+    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? guidance,
+    required SearchProvider child,
+  }) => SearchProvider.wrapGate(
+    GatedSearchProvider(condition: condition, guidance: guidance, child: child),
+  );
+
+  /// Create a 'debounce' variant wrapping around the given value.
+  factory SearchProvider.wrapDebounce(DebouncedSearchProvider value) =>
+      SearchProvider_debounceWrapper._(value);
+
+  /// Same as `wrapDebounce(DebouncedSearchProvider(...))`.
+  factory SearchProvider.createDebounce({
+    required _core.int durationMilliseconds,
+    required SearchProvider child,
+  }) => SearchProvider.wrapDebounce(
+    DebouncedSearchProvider(
+      durationMilliseconds: durationMilliseconds,
+      child: child,
+    ),
+  );
+
+  /// Create a 'cache' variant wrapping around the given value.
+  factory SearchProvider.wrapCache(CachedSearchProvider value) =>
+      SearchProvider_cacheWrapper._(value);
+
+  /// Same as `wrapCache(CachedSearchProvider(...))`.
+  factory SearchProvider.createCache({
+    required _core.int capacity,
+    required _core.bool retainStaleResults,
+    required SearchProvider child,
+  }) => SearchProvider.wrapCache(
+    CachedSearchProvider(
+      capacity: capacity,
+      retainStaleResults: retainStaleResults,
+      child: child,
+    ),
+  );
+
+  /// Create a 'rank' variant wrapping around the given value.
+  factory SearchProvider.wrapRank(RankedSearchProvider value) =>
+      SearchProvider_rankWrapper._(value);
+
+  /// Same as `wrapRank(RankedSearchProvider(...))`.
+  factory SearchProvider.createRank({
+    required _core.Iterable<SearchRankingField_orMutable> fields,
+    required SearchProvider child,
+  }) => SearchProvider.wrapRank(
+    RankedSearchProvider(fields: fields, child: child),
+  );
+
+  /// Create a 'limit' variant wrapping around the given value.
+  factory SearchProvider.wrapLimit(LimitedSearchProvider value) =>
+      SearchProvider_limitWrapper._(value);
+
+  /// Same as `wrapLimit(LimitedSearchProvider(...))`.
+  factory SearchProvider.createLimit({
+    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
+    required SearchProvider child,
+  }) => SearchProvider.wrapLimit(
+    LimitedSearchProvider(maximum: maximum, child: child),
+  );
+
+  /// Create a 'distinct' variant wrapping around the given value.
+  factory SearchProvider.wrapDistinct(DistinctSearchProvider value) =>
+      SearchProvider_distinctWrapper._(value);
+
+  /// Same as `wrapDistinct(DistinctSearchProvider(...))`.
+  factory SearchProvider.createDistinct({required SearchProvider child}) =>
+      SearchProvider.wrapDistinct(DistinctSearchProvider(child: child));
+
+  /// Create a 'history' variant wrapping around the given value.
+  factory SearchProvider.wrapHistory(HistoricalSearchProvider value) =>
+      SearchProvider_historyWrapper._(value);
+
+  /// Same as `wrapHistory(HistoricalSearchProvider(...))`.
+  factory SearchProvider.createHistory({
+    required _core.String historyKey,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _core.int capacity,
+    required SearchProvider child,
+  }) => SearchProvider.wrapHistory(
+    HistoricalSearchProvider(
+      historyKey: historyKey,
+      label: label,
+      capacity: capacity,
+      child: child,
+    ),
+  );
+
+  /// Create a 'section' variant wrapping around the given value.
+  factory SearchProvider.wrapSection(SectionSearchProvider value) =>
+      SearchProvider_sectionWrapper._(value);
+
+  /// Same as `wrapSection(SectionSearchProvider(...))`.
+  factory SearchProvider.createSection({
+    required _core.String sectionId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required SearchProvider child,
+  }) => SearchProvider.wrapSection(
+    SectionSearchProvider(sectionId: sectionId, label: label, child: child),
+  );
+
+  /// Create a 'merge' variant wrapping around the given value.
+  factory SearchProvider.wrapMerge(MergedSearchProvider value) =>
+      SearchProvider_mergeWrapper._(value);
+
+  /// Same as `wrapMerge(MergedSearchProvider(...))`.
+  factory SearchProvider.createMerge({
+    required _core.Iterable<SearchProvider> children,
+  }) => SearchProvider.wrapMerge(MergedSearchProvider(children: children));
+
+  /// Returns the kind of variant held by this SearchProvider.
+  SearchProvider_kind get kind;
+
+  /// Serializer for `SearchProvider` instances.
+  static _skir.EnumSerializer<SearchProvider> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "static_values",
+        "wrapStaticValues",
+        StaticSearchProvider.serializer,
+        "",
+        SearchProvider_staticValuesWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.staticValuesWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "http_json",
+        "wrapHttpJson",
+        HttpJsonSearchProvider.serializer,
+        "",
+        SearchProvider_httpJsonWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.httpJsonWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "realm_callback",
+        "wrapRealmCallback",
+        RealmCallbackSearchProvider.serializer,
+        "",
+        SearchProvider_realmCallbackWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.realmCallbackWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "gate",
+        "wrapGate",
+        GatedSearchProvider.serializer,
+        "",
+        SearchProvider_gateWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.gateWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "debounce",
+        "wrapDebounce",
+        DebouncedSearchProvider.serializer,
+        "",
+        SearchProvider_debounceWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.debounceWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "cache",
+        "wrapCache",
+        CachedSearchProvider.serializer,
+        "",
+        SearchProvider_cacheWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.cacheWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "rank",
+        "wrapRank",
+        RankedSearchProvider.serializer,
+        "",
+        SearchProvider_rankWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.rankWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        8,
+        "limit",
+        "wrapLimit",
+        LimitedSearchProvider.serializer,
+        "",
+        SearchProvider_limitWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.limitWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        9,
+        "distinct",
+        "wrapDistinct",
+        DistinctSearchProvider.serializer,
+        "",
+        SearchProvider_distinctWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.distinctWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        10,
+        "history",
+        "wrapHistory",
+        HistoricalSearchProvider.serializer,
+        "",
+        SearchProvider_historyWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.historyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        11,
+        "section",
+        "wrapSection",
+        SectionSearchProvider.serializer,
+        "",
+        SearchProvider_sectionWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.sectionWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        12,
+        "merge",
+        "wrapMerge",
+        MergedSearchProvider.serializer,
+        "",
+        SearchProvider_mergeWrapper._,
+        (it) => it.value,
+        ordinal: SearchProvider_kind.mergeWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:SearchProvider",
+        doc: "",
+        unknownInstance: SearchProvider_unknown._instance,
+        enumInstance: SearchProvider.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: SearchProvider_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `SearchProvider`.
+enum SearchProvider_kind {
+  unknown(0),
+  staticValuesWrapper(1),
+  httpJsonWrapper(2),
+  realmCallbackWrapper(3),
+  gateWrapper(4),
+  debounceWrapper(5),
+  cacheWrapper(6),
+  rankWrapper(7),
+  limitWrapper(8),
+  distinctWrapper(9),
+  historyWrapper(10),
+  sectionWrapper(11),
+  mergeWrapper(12);
+
+  final _core.int _ordinal;
+
+  const SearchProvider_kind(this._ordinal);
+}
+
+final class SearchProvider_unknown implements SearchProvider {
+  static const _instance = SearchProvider_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const SearchProvider_unknown._() : _u = null;
+  SearchProvider_unknown._unrecognized(this._u);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is SearchProvider_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchProvider.serializer);
+}
+
+sealed class _SearchProvider_wrapper implements SearchProvider {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _SearchProvider_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, SearchProvider.serializer);
+}
+
+final class SearchProvider_staticValuesWrapper extends _SearchProvider_wrapper {
+  final StaticSearchProvider value;
+
+  SearchProvider_staticValuesWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.staticValuesWrapper;
+}
+
+final class SearchProvider_httpJsonWrapper extends _SearchProvider_wrapper {
+  final HttpJsonSearchProvider value;
+
+  SearchProvider_httpJsonWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.httpJsonWrapper;
+}
+
+final class SearchProvider_realmCallbackWrapper
+    extends _SearchProvider_wrapper {
+  final RealmCallbackSearchProvider value;
+
+  SearchProvider_realmCallbackWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.realmCallbackWrapper;
+}
+
+final class SearchProvider_gateWrapper extends _SearchProvider_wrapper {
+  final GatedSearchProvider value;
+
+  SearchProvider_gateWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.gateWrapper;
+}
+
+final class SearchProvider_debounceWrapper extends _SearchProvider_wrapper {
+  final DebouncedSearchProvider value;
+
+  SearchProvider_debounceWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.debounceWrapper;
+}
+
+final class SearchProvider_cacheWrapper extends _SearchProvider_wrapper {
+  final CachedSearchProvider value;
+
+  SearchProvider_cacheWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.cacheWrapper;
+}
+
+final class SearchProvider_rankWrapper extends _SearchProvider_wrapper {
+  final RankedSearchProvider value;
+
+  SearchProvider_rankWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.rankWrapper;
+}
+
+final class SearchProvider_limitWrapper extends _SearchProvider_wrapper {
+  final LimitedSearchProvider value;
+
+  SearchProvider_limitWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.limitWrapper;
+}
+
+final class SearchProvider_distinctWrapper extends _SearchProvider_wrapper {
+  final DistinctSearchProvider value;
+
+  SearchProvider_distinctWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.distinctWrapper;
+}
+
+final class SearchProvider_historyWrapper extends _SearchProvider_wrapper {
+  final HistoricalSearchProvider value;
+
+  SearchProvider_historyWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.historyWrapper;
+}
+
+final class SearchProvider_sectionWrapper extends _SearchProvider_wrapper {
+  final SectionSearchProvider value;
+
+  SearchProvider_sectionWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.sectionWrapper;
+}
+
+final class SearchProvider_mergeWrapper extends _SearchProvider_wrapper {
+  final MergedSearchProvider value;
+
+  SearchProvider_mergeWrapper._(this.value);
+
+  @_core.override
+  SearchProvider_kind get kind => SearchProvider_kind.mergeWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct SearchControl
+// -----------------------------------------------------------------------------
+
+sealed class SearchControl_orMutable {
+  BoundControl_orMutable get control;
+  SearchSelectionMode get selectionMode;
+  _lib_editor_v1_binding.BindingId_orMutable get queryBindingId;
+  _lib_editor_v1_binding.BindingId_orMutable get summaryBindingId;
+  _lib_editor_v1_expression.TypedExpression_orMutable get maximumExtent;
+  SearchProvider get provider;
+  PresentationNode_orMutable? get summary;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get placeholder;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get customValue;
+
+  SearchControl toFrozen();
+}
+
+/// Deeply immutable.
+final class SearchControl implements SearchControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final SearchSelectionMode selectionMode;
+  @_core.override
+  final _lib_editor_v1_binding.BindingId queryBindingId;
+  @_core.override
+  final _lib_editor_v1_binding.BindingId summaryBindingId;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression maximumExtent;
+  @_core.override
+  final SearchProvider provider;
+  @_core.override
+  final PresentationNode? summary;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? placeholder;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? customValue;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SearchControl({
+    required BoundControl_orMutable control,
+    required SearchSelectionMode selectionMode,
+    required _lib_editor_v1_binding.BindingId_orMutable queryBindingId,
+    required _lib_editor_v1_binding.BindingId_orMutable summaryBindingId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent,
+    required SearchProvider provider,
+    required PresentationNode_orMutable? summary,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? customValue,
+  }) => SearchControl._(
+    control.toFrozen(),
+    selectionMode,
+    queryBindingId.toFrozen(),
+    summaryBindingId.toFrozen(),
+    maximumExtent.toFrozen(),
+    provider,
+    (summary != null) ? summary.toFrozen() : null,
+    (placeholder != null) ? placeholder.toFrozen() : null,
+    (customValue != null) ? customValue.toFrozen() : null,
+  );
+
+  SearchControl._(
+    this.control,
+    this.selectionMode,
+    this.queryBindingId,
+    this.summaryBindingId,
+    this.maximumExtent,
+    this.provider,
+    this.summary,
+    this.placeholder,
+    this.customValue,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SearchControl._(
+    BoundControl.defaultInstance,
+    SearchSelectionMode.unknown,
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchProvider.unknown,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SearchControl_mutable mutable() => SearchControl_mutable._(
+    BoundControl.defaultInstance,
+    SearchSelectionMode.unknown,
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    SearchProvider.unknown,
+    null,
+    null,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SearchControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SearchControl_mutable toMutable() => SearchControl_mutable._(
+    this.control,
+    this.selectionMode,
+    this.queryBindingId,
+    this.summaryBindingId,
+    this.maximumExtent,
+    this.provider,
+    this.summary,
+    this.placeholder,
+    this.customValue,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SearchControl) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.selectionMode,
+    this.queryBindingId,
+    this.summaryBindingId,
+    this.maximumExtent,
+    this.provider,
+    this.summary,
+    this.placeholder,
+    this.customValue,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SearchControl` instances.
+  static _skir.StructSerializer<SearchControl, SearchControl_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "selection_mode",
+        "selectionMode",
+        1,
+        SearchSelectionMode.serializer,
+        "",
+        (it) => it.selectionMode,
+        (it, v) => it.selectionMode = v,
+      );
+      _serializerBuilder.addField(
+        "query_binding_id",
+        "queryBindingId",
+        2,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.queryBindingId,
+        (it, v) => it.queryBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "summary_binding_id",
+        "summaryBindingId",
+        3,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.summaryBindingId,
+        (it, v) => it.summaryBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "maximum_extent",
+        "maximumExtent",
+        4,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.maximumExtent,
+        (it, v) => it.maximumExtent = v,
+      );
+      _serializerBuilder.addField(
+        "provider",
+        "provider",
+        5,
+        SearchProvider.serializer,
+        "",
+        (it) => it.provider,
+        (it, v) => it.provider = v,
+      );
+      _serializerBuilder.addField(
+        "summary",
+        "summary",
+        6,
+        _skir.Serializers.optional(PresentationNode.serializer),
+        "",
+        (it) => it.summary,
+        (it, v) => it.summary = v,
+      );
+      _serializerBuilder.addField(
+        "placeholder",
+        "placeholder",
+        7,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.placeholder,
+        (it, v) => it.placeholder = v,
+      );
+      _serializerBuilder.addField(
+        "custom_value",
+        "customValue",
+        8,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.customValue,
+        (it, v) => it.customValue = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SearchControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SearchControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SearchControl].
+final class SearchControl_mutable implements SearchControl_orMutable {
+  BoundControl_orMutable control;
+  SearchSelectionMode selectionMode;
+  _lib_editor_v1_binding.BindingId_orMutable queryBindingId;
+  _lib_editor_v1_binding.BindingId_orMutable summaryBindingId;
+  _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent;
+  SearchProvider provider;
+  PresentationNode_orMutable? summary;
+  _lib_editor_v1_expression.TypedExpression_orMutable? placeholder;
+  _lib_editor_v1_expression.TypedExpression_orMutable? customValue;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SearchControl_mutable._(
+    this.control,
+    this.selectionMode,
+    this.queryBindingId,
+    this.summaryBindingId,
+    this.maximumExtent,
+    this.provider,
+    this.summary,
+    this.placeholder,
+    this.customValue,
+  );
+
+  /// If the value of [control] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [control] and returns it.
+  BoundControl_mutable get mutableControl {
+    final value = this.control;
+    if (value is BoundControl_mutable) {
+      return value;
+    } else {
+      return this.control = (value as BoundControl).toMutable();
+    }
+  }
+
+  /// If the value of [queryBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [queryBindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableQueryBindingId {
+    final value = this.queryBindingId;
+    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+      return value;
+    } else {
+      return this.queryBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [summaryBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [summaryBindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableSummaryBindingId {
+    final value = this.summaryBindingId;
+    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+      return value;
+    } else {
+      return this.summaryBindingId = (value as _lib_editor_v1_binding.BindingId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [maximumExtent] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [maximumExtent] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximumExtent {
+    final value = this.maximumExtent;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.maximumExtent =
+          (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SearchControl toFrozen() => SearchControl(
+    control: this.control,
+    selectionMode: this.selectionMode,
+    queryBindingId: this.queryBindingId,
+    summaryBindingId: this.summaryBindingId,
+    maximumExtent: this.maximumExtent,
+    provider: this.provider,
+    summary: this.summary,
+    placeholder: this.placeholder,
+    customValue: this.customValue,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct DefaultPresentationElement
 // -----------------------------------------------------------------------------
 
@@ -8183,7 +12423,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_polymorphicInput(:var value): { ... }
 ///     case PresentationElement_defaultPresentation(:var value): { ... }
 ///     case PresentationElement_collapsible(:var value): { ... }
-///     case PresentationElement_iconInput(:var value): { ... }
+///     case PresentationElement_searchInput(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -8796,17 +13036,33 @@ sealed class PresentationElement {
     ),
   );
 
-  /// Create a 'icon_input' variant wrapping around the given value.
-  factory PresentationElement.wrapIconInput(BoundControl value) =>
-      PresentationElement_iconInputWrapper._(value);
+  /// Create a 'search_input' variant wrapping around the given value.
+  factory PresentationElement.wrapSearchInput(SearchControl value) =>
+      PresentationElement_searchInputWrapper._(value);
 
-  /// Same as `wrapIconInput(BoundControl(...))`.
-  factory PresentationElement.createIconInput({
-    required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
-  }) => PresentationElement.wrapIconInput(
-    BoundControl(binding: binding, label: label, description: description),
+  /// Same as `wrapSearchInput(SearchControl(...))`.
+  factory PresentationElement.createSearchInput({
+    required BoundControl_orMutable control,
+    required SearchSelectionMode selectionMode,
+    required _lib_editor_v1_binding.BindingId_orMutable queryBindingId,
+    required _lib_editor_v1_binding.BindingId_orMutable summaryBindingId,
+    required _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent,
+    required SearchProvider provider,
+    required PresentationNode_orMutable? summary,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? customValue,
+  }) => PresentationElement.wrapSearchInput(
+    SearchControl(
+      control: control,
+      selectionMode: selectionMode,
+      queryBindingId: queryBindingId,
+      summaryBindingId: summaryBindingId,
+      maximumExtent: maximumExtent,
+      provider: provider,
+      summary: summary,
+      placeholder: placeholder,
+      customValue: customValue,
+    ),
   );
 
   /// Returns the kind of variant held by this PresentationElement.
@@ -9223,14 +13479,14 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collapsibleWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        43,
-        "icon_input",
-        "wrapIconInput",
-        BoundControl.serializer,
+        44,
+        "search_input",
+        "wrapSearchInput",
+        SearchControl.serializer,
         "",
-        PresentationElement_iconInputWrapper._,
+        PresentationElement_searchInputWrapper._,
         (it) => it.value,
-        ordinal: PresentationElement_kind.iconInputWrapper._ordinal,
+        ordinal: PresentationElement_kind.searchInputWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -9293,7 +13549,7 @@ enum PresentationElement_kind {
   polymorphicInputWrapper(39),
   defaultPresentationWrapper(40),
   collapsibleWrapper(41),
-  iconInputWrapper(42);
+  searchInputWrapper(42);
 
   final _core.int _ordinal;
 
@@ -9769,15 +14025,15 @@ final class PresentationElement_collapsibleWrapper
       PresentationElement_kind.collapsibleWrapper;
 }
 
-final class PresentationElement_iconInputWrapper
+final class PresentationElement_searchInputWrapper
     extends _PresentationElement_wrapper {
-  final BoundControl value;
+  final SearchControl value;
 
-  PresentationElement_iconInputWrapper._(this.value);
+  PresentationElement_searchInputWrapper._(this.value);
 
   @_core.override
   PresentationElement_kind get kind =>
-      PresentationElement_kind.iconInputWrapper;
+      PresentationElement_kind.searchInputWrapper;
 }
 
 // -----------------------------------------------------------------------------

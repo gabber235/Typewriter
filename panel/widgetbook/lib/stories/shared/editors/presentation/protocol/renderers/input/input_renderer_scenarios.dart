@@ -1,4 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/input/input_search_renderer_scenario.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
@@ -123,16 +124,7 @@ final inputRendererScenarios = [
       PresentationElement.colorInput(control: storyControl("Accent color")),
     ),
   ),
-  RendererStoryScenario(
-    kind: RendererStoryKind.iconInput,
-    name: "Icon input",
-    type: const StringType(),
-    value: const StringValue("mdi:map-marker-star"),
-    presentation: storyNode(
-      "iconInput",
-      PresentationElement.iconInput(storyControl("Icon")),
-    ),
-  ),
+  searchInputRendererScenario,
   RendererStoryScenario(
     kind: RendererStoryKind.bytesInput,
     name: "Bytes input",

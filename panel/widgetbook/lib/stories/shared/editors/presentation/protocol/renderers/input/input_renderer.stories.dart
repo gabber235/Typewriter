@@ -154,8 +154,8 @@ Widget colorInputRendererUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Icon", type: PresentationRendererStory, path: _path)
-Widget iconInputRendererUseCase(BuildContext context) =>
+@widgetbook.UseCase(name: "Search", type: PresentationRendererStory, path: _path)
+Widget searchInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[8]);
 
 @widgetbook.UseCase(name: "Bytes", type: PresentationRendererStory, path: _path)

@@ -17,6 +17,8 @@ part "editor_presentation_header_encoder.dart";
 part "editor_presentation_input_encoder.dart";
 part "editor_presentation_interaction_encoder.dart";
 part "editor_presentation_layout_encoder.dart";
+part "editor_presentation_search_encoder.dart";
+part "editor_presentation_search_provider_encoder.dart";
 
 final class SkirPresentationEncoder {
   const SkirPresentationEncoder(this.expressions, this.actions, this.types);
@@ -103,6 +105,7 @@ final class SkirPresentationEncoder {
           wire.PresentationElement.wrapDurationInput,
         ),
         ColorInputElement() => _colorInput(value),
+        SearchInputElement() => _searchInput(value),
         BytesInputElement() => _boundElement(
           value.control,
           wire.PresentationElement.wrapBytesInput,
@@ -118,10 +121,6 @@ final class SkirPresentationEncoder {
         NamedInputElement() => _boundElement(
           value.control,
           wire.PresentationElement.wrapNamedInput,
-        ),
-        IconInputElement() => _boundElement(
-          value.control,
-          wire.PresentationElement.wrapIconInput,
         ),
         ButtonElement() => _button(value),
         IconButtonElement() => _iconButton(value),

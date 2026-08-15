@@ -290,6 +290,39 @@ void main() {
       expect(editable.controller.text, "status:archived");
     });
 
+    testWidgets("suggestion activation precedes the containing input action", (
+      tester,
+    ) async {
+      var containingActivations = 0;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: mockQuerySelectors,
+          onQueryChanged: (_) {},
+          textFieldActions: [
+            ActionShortcut.intent(
+              id: "containing_input_activate",
+              label: "Activate input",
+              description: "Activate the containing input",
+              intent: ActivateIntent,
+              priority: 1,
+              onInvoke: (_) => containingActivations++,
+            ),
+          ],
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "status:a");
+      await _waitForSuggestionsVisible(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.controller.text, "status:active");
+      expect(containingActivations, 0);
+    });
+
     testWidgets("control navigation shortcuts work with suggestion list", (
       tester,
     ) async {

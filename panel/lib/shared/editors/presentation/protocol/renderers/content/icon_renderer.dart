@@ -6,7 +6,18 @@ extension IconElementRendering on IconElement {
     if (result case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
-    final icon = result.valueOrNull?.iconValueOrNull;
+    final value = result.valueOrNull;
+    final icon =
+        value?.iconValueOrNull ??
+        switch ((name.resultType, value)) {
+          (NamedType(reference: final type), StringValue(value: final source))
+              when type == standardTypeRefs.iconifyIcon =>
+            IconValue.iconify(source),
+          (NamedType(reference: final type), StringValue(value: final source))
+              when type == standardTypeRefs.svgIcon =>
+            IconValue.svg(source),
+          _ => null,
+        };
     if (icon == null) {
       return presentationDiagnostic(context, [
         const TypeDiagnostic(

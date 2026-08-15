@@ -101,7 +101,10 @@ final _standardDefinitions = <TypeDefinition>[
     id: standardTypeRefs.iconifyIcon,
     kind: NominalTypeKind.concrete,
     parents: [standardTypeRefs.icon],
-    representation: const StringType(minimumLength: 1),
+    representation: const StringType(
+      minimumLength: 3,
+      patterns: [r"^[a-z0-9\-]+:[a-z0-9\-]+$"],
+    ),
     defaultPresentationId: standardIconifyPresentationId,
   ),
   TypeDefinition(

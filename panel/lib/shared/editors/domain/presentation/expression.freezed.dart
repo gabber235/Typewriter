@@ -351,7 +351,7 @@ extension ExpressionPatterns on Expression {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionProjectionExpression value)?  collectionProjection,TResult Function( ConversionExpression value)?  conversion,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionProjectionExpression value)?  collectionProjection,TResult Function( ConversionExpression value)?  conversion,TResult Function( StringOperationExpression value)?  stringOperation,TResult Function( CollectionOperationExpression value)?  collectionOperation,TResult Function( RegexExpression value)?  regex,TResult Function( CoalesceExpression value)?  coalesce,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -364,7 +364,11 @@ return boolean(_that);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that);case ConditionalExpression() when conditional != null:
 return conditional(_that);case CollectionProjectionExpression() when collectionProjection != null:
 return collectionProjection(_that);case ConversionExpression() when conversion != null:
-return conversion(_that);case _:
+return conversion(_that);case StringOperationExpression() when stringOperation != null:
+return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
+return collectionOperation(_that);case RegexExpression() when regex != null:
+return regex(_that);case CoalesceExpression() when coalesce != null:
+return coalesce(_that);case _:
   return orElse();
 
 }
@@ -382,7 +386,7 @@ return conversion(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionProjectionExpression value)  collectionProjection,required TResult Function( ConversionExpression value)  conversion,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionProjectionExpression value)  collectionProjection,required TResult Function( ConversionExpression value)  conversion,required TResult Function( StringOperationExpression value)  stringOperation,required TResult Function( CollectionOperationExpression value)  collectionOperation,required TResult Function( RegexExpression value)  regex,required TResult Function( CoalesceExpression value)  coalesce,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression():
@@ -395,7 +399,11 @@ return boolean(_that);case ArithmeticExpression():
 return arithmetic(_that);case ConditionalExpression():
 return conditional(_that);case CollectionProjectionExpression():
 return collectionProjection(_that);case ConversionExpression():
-return conversion(_that);}
+return conversion(_that);case StringOperationExpression():
+return stringOperation(_that);case CollectionOperationExpression():
+return collectionOperation(_that);case RegexExpression():
+return regex(_that);case CoalesceExpression():
+return coalesce(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -409,7 +417,7 @@ return conversion(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionProjectionExpression value)?  collectionProjection,TResult? Function( ConversionExpression value)?  conversion,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionProjectionExpression value)?  collectionProjection,TResult? Function( ConversionExpression value)?  conversion,TResult? Function( StringOperationExpression value)?  stringOperation,TResult? Function( CollectionOperationExpression value)?  collectionOperation,TResult? Function( RegexExpression value)?  regex,TResult? Function( CoalesceExpression value)?  coalesce,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -422,7 +430,11 @@ return boolean(_that);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that);case ConditionalExpression() when conditional != null:
 return conditional(_that);case CollectionProjectionExpression() when collectionProjection != null:
 return collectionProjection(_that);case ConversionExpression() when conversion != null:
-return conversion(_that);case _:
+return conversion(_that);case StringOperationExpression() when stringOperation != null:
+return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
+return collectionOperation(_that);case RegexExpression() when regex != null:
+return regex(_that);case CoalesceExpression() when coalesce != null:
+return coalesce(_that);case _:
   return null;
 
 }
@@ -439,7 +451,7 @@ return conversion(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult Function( List<TypedExpression> operands)?  coalesce,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -451,7 +463,11 @@ return boolean(_that.operator,_that.operands);case ArithmeticExpression() when a
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression() when conditional != null:
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression() when collectionProjection != null:
 return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression() when conversion != null:
-return conversion(_that.conversionId,_that.input);case _:
+return conversion(_that.conversionId,_that.input);case StringOperationExpression() when stringOperation != null:
+return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
+return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
+return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
+return coalesce(_that.operands);case _:
   return orElse();
 
 }
@@ -469,7 +485,7 @@ return conversion(_that.conversionId,_that.input);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)  collectionProjection,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)  collectionProjection,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,required TResult Function( StringOperation operation,  List<TypedExpression> operands)  stringOperation,required TResult Function( CollectionOperation operation,  List<TypedExpression> operands)  collectionOperation,required TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)  regex,required TResult Function( List<TypedExpression> operands)  coalesce,}) {final _that = this;
 switch (_that) {
 case LiteralExpression():
 return literal(_that.value);case BindingExpression():
@@ -481,7 +497,11 @@ return boolean(_that.operator,_that.operands);case ArithmeticExpression():
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression():
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression():
 return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression():
-return conversion(_that.conversionId,_that.input);}
+return conversion(_that.conversionId,_that.input);case StringOperationExpression():
+return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression():
+return collectionOperation(_that.operation,_that.operands);case RegexExpression():
+return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression():
+return coalesce(_that.operands);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -495,7 +515,7 @@ return conversion(_that.conversionId,_that.input);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult? Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult? Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult? Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult? Function( List<TypedExpression> operands)?  coalesce,}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -507,7 +527,11 @@ return boolean(_that.operator,_that.operands);case ArithmeticExpression() when a
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression() when conditional != null:
 return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression() when collectionProjection != null:
 return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression() when conversion != null:
-return conversion(_that.conversionId,_that.input);case _:
+return conversion(_that.conversionId,_that.input);case StringOperationExpression() when stringOperation != null:
+return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
+return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
+return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
+return coalesce(_that.operands);case _:
   return null;
 
 }
@@ -1328,6 +1352,309 @@ $TypedExpressionCopyWith<$Res> get input {
     return _then(_self.copyWith(input: value));
   });
 }
+}
+
+/// @nodoc
+
+
+class StringOperationExpression implements Expression {
+  const StringOperationExpression({required this.operation, required final  List<TypedExpression> operands}): _operands = operands;
+  
+
+ final  StringOperation operation;
+ final  List<TypedExpression> _operands;
+ List<TypedExpression> get operands {
+  if (_operands is EqualUnmodifiableListView) return _operands;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_operands);
+}
+
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StringOperationExpressionCopyWith<StringOperationExpression> get copyWith => _$StringOperationExpressionCopyWithImpl<StringOperationExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StringOperationExpression&&(identical(other.operation, operation) || other.operation == operation)&&const DeepCollectionEquality().equals(other._operands, _operands));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,operation,const DeepCollectionEquality().hash(_operands));
+
+@override
+String toString() {
+  return 'Expression.stringOperation(operation: $operation, operands: $operands)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StringOperationExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $StringOperationExpressionCopyWith(StringOperationExpression value, $Res Function(StringOperationExpression) _then) = _$StringOperationExpressionCopyWithImpl;
+@useResult
+$Res call({
+ StringOperation operation, List<TypedExpression> operands
+});
+
+
+
+
+}
+/// @nodoc
+class _$StringOperationExpressionCopyWithImpl<$Res>
+    implements $StringOperationExpressionCopyWith<$Res> {
+  _$StringOperationExpressionCopyWithImpl(this._self, this._then);
+
+  final StringOperationExpression _self;
+  final $Res Function(StringOperationExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operation = null,Object? operands = null,}) {
+  return _then(StringOperationExpression(
+operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as StringOperation,operands: null == operands ? _self._operands : operands // ignore: cast_nullable_to_non_nullable
+as List<TypedExpression>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CollectionOperationExpression implements Expression {
+  const CollectionOperationExpression({required this.operation, required final  List<TypedExpression> operands}): _operands = operands;
+  
+
+ final  CollectionOperation operation;
+ final  List<TypedExpression> _operands;
+ List<TypedExpression> get operands {
+  if (_operands is EqualUnmodifiableListView) return _operands;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_operands);
+}
+
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionOperationExpressionCopyWith<CollectionOperationExpression> get copyWith => _$CollectionOperationExpressionCopyWithImpl<CollectionOperationExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionOperationExpression&&(identical(other.operation, operation) || other.operation == operation)&&const DeepCollectionEquality().equals(other._operands, _operands));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,operation,const DeepCollectionEquality().hash(_operands));
+
+@override
+String toString() {
+  return 'Expression.collectionOperation(operation: $operation, operands: $operands)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionOperationExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionOperationExpressionCopyWith(CollectionOperationExpression value, $Res Function(CollectionOperationExpression) _then) = _$CollectionOperationExpressionCopyWithImpl;
+@useResult
+$Res call({
+ CollectionOperation operation, List<TypedExpression> operands
+});
+
+
+
+
+}
+/// @nodoc
+class _$CollectionOperationExpressionCopyWithImpl<$Res>
+    implements $CollectionOperationExpressionCopyWith<$Res> {
+  _$CollectionOperationExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionOperationExpression _self;
+  final $Res Function(CollectionOperationExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operation = null,Object? operands = null,}) {
+  return _then(CollectionOperationExpression(
+operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as CollectionOperation,operands: null == operands ? _self._operands : operands // ignore: cast_nullable_to_non_nullable
+as List<TypedExpression>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class RegexExpression implements Expression {
+  const RegexExpression({required this.operation, required this.source, required this.pattern, this.group, this.replacement});
+  
+
+ final  RegexOperation operation;
+ final  TypedExpression source;
+ final  String pattern;
+ final  int? group;
+ final  String? replacement;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RegexExpressionCopyWith<RegexExpression> get copyWith => _$RegexExpressionCopyWithImpl<RegexExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegexExpression&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.source, source) || other.source == source)&&(identical(other.pattern, pattern) || other.pattern == pattern)&&(identical(other.group, group) || other.group == group)&&(identical(other.replacement, replacement) || other.replacement == replacement));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,operation,source,pattern,group,replacement);
+
+@override
+String toString() {
+  return 'Expression.regex(operation: $operation, source: $source, pattern: $pattern, group: $group, replacement: $replacement)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RegexExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $RegexExpressionCopyWith(RegexExpression value, $Res Function(RegexExpression) _then) = _$RegexExpressionCopyWithImpl;
+@useResult
+$Res call({
+ RegexOperation operation, TypedExpression source, String pattern, int? group, String? replacement
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;
+
+}
+/// @nodoc
+class _$RegexExpressionCopyWithImpl<$Res>
+    implements $RegexExpressionCopyWith<$Res> {
+  _$RegexExpressionCopyWithImpl(this._self, this._then);
+
+  final RegexExpression _self;
+  final $Res Function(RegexExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operation = null,Object? source = null,Object? pattern = null,Object? group = freezed,Object? replacement = freezed,}) {
+  return _then(RegexExpression(
+operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as RegexOperation,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,pattern: null == pattern ? _self.pattern : pattern // ignore: cast_nullable_to_non_nullable
+as String,group: freezed == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as int?,replacement: freezed == replacement ? _self.replacement : replacement // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CoalesceExpression implements Expression {
+  const CoalesceExpression(final  List<TypedExpression> operands): _operands = operands;
+  
+
+ final  List<TypedExpression> _operands;
+ List<TypedExpression> get operands {
+  if (_operands is EqualUnmodifiableListView) return _operands;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_operands);
+}
+
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CoalesceExpressionCopyWith<CoalesceExpression> get copyWith => _$CoalesceExpressionCopyWithImpl<CoalesceExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoalesceExpression&&const DeepCollectionEquality().equals(other._operands, _operands));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_operands));
+
+@override
+String toString() {
+  return 'Expression.coalesce(operands: $operands)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CoalesceExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CoalesceExpressionCopyWith(CoalesceExpression value, $Res Function(CoalesceExpression) _then) = _$CoalesceExpressionCopyWithImpl;
+@useResult
+$Res call({
+ List<TypedExpression> operands
+});
+
+
+
+
+}
+/// @nodoc
+class _$CoalesceExpressionCopyWithImpl<$Res>
+    implements $CoalesceExpressionCopyWith<$Res> {
+  _$CoalesceExpressionCopyWithImpl(this._self, this._then);
+
+  final CoalesceExpression _self;
+  final $Res Function(CoalesceExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operands = null,}) {
+  return _then(CoalesceExpression(
+null == operands ? _self._operands : operands // ignore: cast_nullable_to_non_nullable
+as List<TypedExpression>,
+  ));
+}
+
+
 }
 
 /// @nodoc
