@@ -82,6 +82,7 @@ internal class LibraryContracts(
             CatalogWatchUpdate.createInitial(value = "unavailable"),
             catalogWatchResponseClassifier(),
         )
+    val watchRealmPresentationSearch = realmPresentationSearchContract(address)
 
     val watchBooks =
         watch(
@@ -182,12 +183,12 @@ internal class LibraryContracts(
         )
 }
 
-private fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
+internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
     realmAddress(
         "service.to.{realm}.organization.{organization}.realm.$suffix",
     )
 
-private fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
+internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
     realmAddress(
         "service.from.{realm}.organization.{organization}.realm.$suffix",
     )

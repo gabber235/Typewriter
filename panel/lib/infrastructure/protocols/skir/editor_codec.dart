@@ -16,6 +16,7 @@ export "package:typewriter_panel/infrastructure/protocols/skir/editor_expression
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_path_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_presentation_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_presentation_encoder.dart";
+export "package:typewriter_panel/infrastructure/protocols/skir/editor_realm_search_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_type_codec.dart";
 export "package:typewriter_panel/infrastructure/protocols/skir/editor_value_codec.dart";
 
