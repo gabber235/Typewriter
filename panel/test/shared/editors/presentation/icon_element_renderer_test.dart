@@ -1,4 +1,4 @@
-import "package:flutter/widgets.dart";
+import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -42,6 +42,14 @@ void main() {
       find.text("Icon content must evaluate to the nominal Icon type"),
       findsOneWidget,
     );
+  });
+
+  testWidgets("shows a fallback for malformed SVG", (tester) async {
+    await tester.pumpTestApp(child: const Icones("<svg><path d=\"M0\""));
+
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.broken_image), findsOneWidget);
   });
 }
 

@@ -9,7 +9,6 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/mingcute.dart";
@@ -98,7 +97,7 @@ class BookScaffold extends HookConsumerWidget {
           if (organizationId != null) ...[
             const OrganizationSelector(),
             if (realmId != null) ...[
-              Iconify(
+              Icones(
                 MaterialSymbols.chevron_right,
                 size: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

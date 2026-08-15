@@ -1,7 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -50,7 +49,7 @@ class OrganizationScaffold extends HookConsumerWidget {
           if (organizationId != null) ...[
             const OrganizationSelector(),
             if (realmId != null) ...[
-              Iconify(
+              Icones(
                 MaterialSymbols.chevron_right,
                 size: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

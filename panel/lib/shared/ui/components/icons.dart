@@ -1,8 +1,9 @@
 import "package:flutter/material.dart";
-import "package:flutter_svg/flutter_svg.dart";
+import "package:jovial_svg/jovial_svg.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 final _iconRegex = RegExp(r"^([a-z0-9\-]+):([a-z0-9\-]+)$");
+final _svgCache = ScalableImageCache(size: 100);
 
 class Icones extends StatelessWidget {
   const Icones(this.icon, {this.color, this.size, super.key})
@@ -24,28 +25,70 @@ class Icones extends StatelessWidget {
     final color = this.color ?? IconTheme.of(context).color;
     final size = this.size ?? IconTheme.of(context).size;
 
-    final bytesLoader = switch (_value) {
-      IconifyIconValue(:final value) => SvgNetworkLoader(
-        value.iconifyUrl,
-        headers: {"Accept": "image/svg+xml"},
-      ),
-      SvgIconValue(:final source) => SvgStringLoader(source),
+    final source = switch (_value) {
+      IconifyIconValue(:final value) when value.isValidIconifyValue =>
+        ScalableImageSource.fromSvgHttpUrl(
+          Uri.parse(value.iconifyUrl),
+          httpHeaders: {"Accept": "image/svg+xml"},
+          warnF: _reportSvgWarning,
+        ),
+      SvgIconValue(:final source) when source.isSanitizedSvg =>
+        _SvgStringSource(source),
+      _ => null,
     };
 
-    return SvgPicture(
-      bytesLoader,
-      colorFilter: color != null
-          ? ColorFilter.mode(color, BlendMode.srcIn)
-          : null,
+    if (source == null) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: _brokenImage(color, size),
+      );
+    }
+
+    final image = ScalableImageWidget.fromSISource(
+      si: source,
+      cache: _svgCache,
+      isComplex: true,
+      onError: (context) => _brokenImage(color, size),
+    );
+
+    return SizedBox(
       width: size,
       height: size,
-      alignment: Alignment.center,
-      errorBuilder: (context, error, stackTrace) => _brokenImage(color, size),
+      child: color == null
+          ? image
+          : ColorFiltered(
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              child: image,
+            ),
     );
   }
 
   Widget _brokenImage(Color? color, double? size) =>
       Icon(Icons.broken_image, color: color, size: size);
+}
+
+final class _SvgStringSource extends ScalableImageSource {
+  _SvgStringSource(this.source);
+
+  final String source;
+
+  @override
+  Future<ScalableImage> createSI() => Future(
+    () => ScalableImage.fromSvgString(source, warnF: _reportSvgWarning),
+  );
+
+  @override
+  int get hashCode => source.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _SvgStringSource && other.source == source;
+}
+
+void _reportSvgWarning(String warning) {
+  if (warning.toLowerCase().contains("preserveaspectratio")) return;
+  debugPrint(warning);
 }
 
 extension on String {
