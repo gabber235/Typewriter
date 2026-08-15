@@ -7,8 +7,9 @@ AnimationController useForwardAnimation({
   required bool play,
   Duration duration = const Duration(milliseconds: 500),
   Duration delay = Duration.zero,
+  TickerProvider? vsync,
 }) {
-  final animation = useAnimationController(duration: duration);
+  final animation = useAnimationController(duration: duration, vsync: vsync);
 
   void handleAnimation() {
     if (play) {

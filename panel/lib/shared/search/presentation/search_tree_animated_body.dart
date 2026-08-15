@@ -15,7 +15,8 @@ class SearchTreeAnimatedBody extends StatefulWidget {
   State<SearchTreeAnimatedBody> createState() => _SearchTreeAnimatedBodyState();
 }
 
-class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
+class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody>
+    with TickerProviderStateMixin {
   static const _insertDuration = Duration(milliseconds: 750);
   static const _deleteDuration = Duration(milliseconds: 500);
 
@@ -92,6 +93,7 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
         key: ValueKey(row.key),
         row: row,
         rowRenderers: widget.rowRenderers,
+        vsync: this,
       ),
     );
   }
