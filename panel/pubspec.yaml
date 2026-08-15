@@ -23,7 +23,6 @@ dependencies:
   flutter_animate: ^4.5.2
   flutter_hooks: ^0.21.2
   flutter_reorderable_grid_view: ^5.7.0
-  flutter_svg: ^2.2.1
   freezed_annotation:
   riverpod:
   hooks_riverpod: 3.3.1
@@ -31,6 +30,7 @@ dependencies:
   iconify_flutter_plus: ^1.0.4
   json_annotation: ^4.11.0
   json_path: ^0.9.0
+  jovial_svg: ^1.1.30
   localstorage: ^6.0.0
   material_color_utilities:
   oidc: ^2.0.0
