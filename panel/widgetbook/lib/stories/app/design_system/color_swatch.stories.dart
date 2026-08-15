@@ -3,8 +3,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-class ColorSwatchWidget extends StatelessWidget {
-  const ColorSwatchWidget({required this.color, super.key});
+class ColorSwatchShowcase extends StatelessWidget {
+  const ColorSwatchShowcase({required this.color, super.key});
 
   final Color color;
 
@@ -31,7 +31,11 @@ class ColorSwatchWidget extends StatelessWidget {
   }
 }
 
-@widgetbook.UseCase(name: "Default", type: ColorSwatchWidget)
+@widgetbook.UseCase(
+  name: "Default",
+  type: ColorSwatchShowcase,
+  path: "app/design_system",
+)
 Widget colorSwatchUseCase(BuildContext context) {
   return FakeApp(
     child: Padding(
@@ -40,7 +44,7 @@ Widget colorSwatchUseCase(BuildContext context) {
         runSpacing: 4,
         children: [
           for (final color in safeColors)
-            ColorSwatchWidget(color: color, key: ValueKey(color)),
+            ColorSwatchShowcase(color: color, key: ValueKey(color)),
         ],
       ),
     ),

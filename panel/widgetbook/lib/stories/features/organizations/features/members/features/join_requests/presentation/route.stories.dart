@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "JoinRequestsPage", type: JoinRequestsPage)
+@widgetbook.UseCase(name: "Default", type: JoinRequestsPage)
 Widget useCase(BuildContext context) {
   final state = context.knobs.displayState(
     label: "Join Requests State",

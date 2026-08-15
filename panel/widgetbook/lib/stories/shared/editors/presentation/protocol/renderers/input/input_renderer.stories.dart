@@ -6,47 +6,31 @@ import "package:widgetbook_workspace/stories/shared/editors/presentation/protoco
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Input";
+const _path = "shared/editors/presentation/protocol/renderers/input";
 
-@widgetbook.UseCase(name: "Text", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Text", type: EditorProtocolRenderer, path: _path)
 Widget textInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[0]);
 
-@widgetbook.UseCase(
-  name: "Numeric",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Numeric", type: EditorProtocolRenderer, path: _path)
 Widget numericInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[1]);
 
-@widgetbook.UseCase(
-  name: "Toggle",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Toggle", type: EditorProtocolRenderer, path: _path)
 Widget toggleInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[2]);
 
-@widgetbook.UseCase(
-  name: "Select",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Select", type: EditorProtocolRenderer, path: _path)
 Widget selectInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[3]);
 
-@widgetbook.UseCase(
-  name: "Slider",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Slider", type: EditorProtocolRenderer, path: _path)
 Widget sliderInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[4]);
 
 @widgetbook.UseCase(
   name: "Date and time",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget dateTimeInputRendererUseCase(BuildContext context) =>
@@ -100,15 +84,11 @@ Widget _dateTimeRendererStory(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(
-  name: "Duration",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Duration", type: EditorProtocolRenderer, path: _path)
 Widget durationInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[6]);
 
-@widgetbook.UseCase(name: "Color", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Color", type: EditorProtocolRenderer, path: _path)
 Widget colorInputRendererUseCase(BuildContext context) {
   final includeAlpha = context.knobs.boolean(label: "Include alpha");
   final color = context.knobs.color(
@@ -154,41 +134,37 @@ Widget colorInputRendererUseCase(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: "Search", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Search", type: EditorProtocolRenderer, path: _path)
 Widget searchInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[8]);
 
-@widgetbook.UseCase(name: "Bytes", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Bytes", type: EditorProtocolRenderer, path: _path)
 Widget bytesInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[9]);
 
-@widgetbook.UseCase(name: "Enum", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Enum", type: EditorProtocolRenderer, path: _path)
 Widget enumInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[10]);
 
-@widgetbook.UseCase(name: "Named", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Named", type: EditorProtocolRenderer, path: _path)
 Widget namedInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[11]);
 
-@widgetbook.UseCase(name: "List", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "List", type: EditorProtocolRenderer, path: _path)
 Widget listInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[12]);
 
-@widgetbook.UseCase(name: "Map", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Map", type: EditorProtocolRenderer, path: _path)
 Widget mapInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[13]);
 
-@widgetbook.UseCase(
-  name: "Record",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Record", type: EditorProtocolRenderer, path: _path)
 Widget recordInputRendererUseCase(BuildContext context) =>
     rendererStory(context, inputRendererScenarios[14]);
 
 @widgetbook.UseCase(
   name: "Polymorphic",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget polymorphicInputRendererUseCase(BuildContext context) =>

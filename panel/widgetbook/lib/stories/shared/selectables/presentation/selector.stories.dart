@@ -6,14 +6,13 @@ import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "Selectable Boxes", type: SelectableBox)
+@widgetbook.UseCase(name: "Interactive grid", type: Selector)
 Widget selectableUseCase(BuildContext context) {
-  return const FakeApp(child: SelectableDemo());
+  return const FakeApp(child: _SelectorStory());
 }
 
-// Selectable box widget
-class SelectableBox extends HookConsumerWidget {
-  const SelectableBox({required this.selectable, super.key});
+class _SelectableCard extends HookConsumerWidget {
+  const _SelectableCard({required this.selectable});
 
   final TestSelectableIdentifier selectable;
 
@@ -79,9 +78,8 @@ class SelectableBox extends HookConsumerWidget {
   }
 }
 
-// Main demo widget
-class SelectableDemo extends HookConsumerWidget {
-  const SelectableDemo({super.key});
+class _SelectorStory extends HookConsumerWidget {
+  const _SelectorStory();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -149,8 +147,9 @@ class SelectableDemo extends HookConsumerWidget {
                       runSpacing: 24,
                       children: List.generate(
                         selectables.value.length,
-                        (index) =>
-                            SelectableBox(selectable: selectables.value[index]),
+                        (index) => _SelectableCard(
+                          selectable: selectables.value[index],
+                        ),
                       ),
                     ),
                   ),

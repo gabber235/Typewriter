@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
 @widgetbook.UseCase(name: "Default", type: EmptyScreen)
-Widget emptyScreenUseCase(BuildContext context) {
+Widget emptyScreenDefaultUseCase(BuildContext context) {
   final shrink = context.knobs.boolean(label: "Shrink", initialValue: false);
   final title = context.knobs.string(
     label: "title",

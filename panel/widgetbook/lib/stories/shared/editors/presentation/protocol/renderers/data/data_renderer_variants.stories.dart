@@ -4,7 +4,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Data states";
+const _path = "shared/editors/presentation/protocol/renderers/data_states";
 
 final dataRendererVariantScenarios = [
   RendererStoryScenario(
@@ -24,7 +24,7 @@ final dataRendererVariantScenarios = [
 
 @widgetbook.UseCase(
   name: "Mismatched typed field",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget mismatchedTypedFieldUseCase(BuildContext context) =>

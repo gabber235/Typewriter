@@ -4,7 +4,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "IndexPage", type: IndexPage)
+@widgetbook.UseCase(name: "Default", type: IndexPage)
 Widget indexPageWithOrgsUseCase(BuildContext context) {
   final orgsState = context.knobs.object.dropdown<DisplayState>(
     label: "Organizations State",

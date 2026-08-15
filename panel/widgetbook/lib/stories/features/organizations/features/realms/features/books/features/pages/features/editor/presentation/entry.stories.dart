@@ -4,7 +4,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-part "entry_grid.stories.dart";
+part "entry_grid_story.dart";
 
 @widgetbook.UseCase(name: "Multiple Entries Grid", type: EntryNode)
 Widget entryNodeMultipleEntriesUseCase(BuildContext context) =>

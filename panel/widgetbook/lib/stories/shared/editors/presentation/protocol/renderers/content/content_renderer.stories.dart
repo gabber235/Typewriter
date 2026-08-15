@@ -5,7 +5,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Content";
+const _path = "shared/editors/presentation/protocol/renderers/content";
 
 final contentRendererScenarios = [
   RendererStoryScenario(
@@ -88,34 +88,26 @@ final contentRendererScenarios = [
   ),
 ];
 
-@widgetbook.UseCase(name: "Text", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Text", type: EditorProtocolRenderer, path: _path)
 Widget textRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[0]);
 
-@widgetbook.UseCase(
-  name: "Markdown",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Markdown", type: EditorProtocolRenderer, path: _path)
 Widget markdownRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[1]);
 
-@widgetbook.UseCase(name: "Icon", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Icon", type: EditorProtocolRenderer, path: _path)
 Widget iconRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[2]);
 
-@widgetbook.UseCase(name: "Image", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Image", type: EditorProtocolRenderer, path: _path)
 Widget imageRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[3]);
 
-@widgetbook.UseCase(name: "Badge", type: PresentationRendererStory, path: _path)
+@widgetbook.UseCase(name: "Badge", type: EditorProtocolRenderer, path: _path)
 Widget badgeRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[4]);
 
-@widgetbook.UseCase(
-  name: "Progress",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Progress", type: EditorProtocolRenderer, path: _path)
 Widget progressRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[5]);

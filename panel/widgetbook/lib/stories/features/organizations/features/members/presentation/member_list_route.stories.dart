@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "MemberListPage", type: MemberListPage)
+@widgetbook.UseCase(name: "Default", type: MemberListPage)
 Widget memberListPageUseCase(BuildContext context) {
   final membersState = context.knobs.displayState(
     label: "Members State",

@@ -5,7 +5,7 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
-@widgetbook.UseCase(name: "LibraryPage", type: LibraryPage)
+@widgetbook.UseCase(name: "Default", type: LibraryPage)
 Widget libraryPageUseCase(BuildContext context) {
   final displayState = context.knobs.displayState();
   final connectionState = context.knobs.realmConnectionState();

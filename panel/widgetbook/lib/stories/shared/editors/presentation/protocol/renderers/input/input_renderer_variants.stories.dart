@@ -4,7 +4,7 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
 import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
 
-const _path = "[Shared]/Editors/Presentation protocol/Renderers/Input states";
+const _path = "shared/editors/presentation/protocol/renderers/input_states";
 
 final inputRendererVariantScenarios = [
   RendererStoryScenario(
@@ -142,7 +142,7 @@ final inputRendererVariantScenarios = [
 
 @widgetbook.UseCase(
   name: "Single line text",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget singleLineTextInputUseCase(BuildContext context) =>
@@ -150,23 +150,19 @@ Widget singleLineTextInputUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Empty text",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget emptyTextInputUseCase(BuildContext context) =>
     rendererStory(context, inputRendererVariantScenarios[1]);
 
-@widgetbook.UseCase(
-  name: "Decimal",
-  type: PresentationRendererStory,
-  path: _path,
-)
+@widgetbook.UseCase(name: "Decimal", type: EditorProtocolRenderer, path: _path)
 Widget decimalInputUseCase(BuildContext context) =>
     rendererStory(context, inputRendererVariantScenarios[2]);
 
 @widgetbook.UseCase(
   name: "Unchecked toggle",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget uncheckedToggleUseCase(BuildContext context) =>
@@ -174,7 +170,7 @@ Widget uncheckedToggleUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Disabled toggle",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget disabledToggleUseCase(BuildContext context) =>
@@ -182,7 +178,7 @@ Widget disabledToggleUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Empty list",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget emptyListUseCase(BuildContext context) =>
@@ -190,7 +186,7 @@ Widget emptyListUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Nested list",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget nestedListUseCase(BuildContext context) =>
@@ -198,7 +194,7 @@ Widget nestedListUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Locked list actions",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget lockedListActionsUseCase(BuildContext context) =>
@@ -206,7 +202,7 @@ Widget lockedListActionsUseCase(BuildContext context) =>
 
 @widgetbook.UseCase(
   name: "Empty map",
-  type: PresentationRendererStory,
+  type: EditorProtocolRenderer,
   path: _path,
 )
 Widget emptyMapUseCase(BuildContext context) =>
