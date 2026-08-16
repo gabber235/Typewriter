@@ -19,6 +19,7 @@ class _TextInputRenderer extends HookWidget {
       return presentationDiagnostic(context, diagnostics);
     }
     final binding = resolved.valueOrNull!;
+    final interaction = useEditorFieldInteraction(scope, binding.reference);
     final text = switch (binding.value) {
       StringValue(:final value) => value,
       _ => null,
@@ -31,14 +32,15 @@ class _TextInputRenderer extends HookWidget {
         ),
       ]);
     }
+    final prefix = renderControlPrefix(context, element.control, scope);
     return LabeledControl(
       control: element.control,
       scope: scope,
       child: FormattedTextField(
-        key: ValueKey((element.control.binding, text)),
+        key: ValueKey(binding.reference),
         focusNode: focusNode,
         text: text,
-        icon: HeroiconsSolid.pencil,
+        prefix: prefix ?? const Icones(HeroiconsSolid.pencil),
         hintText: element.placeholder == null
             ? "Enter text"
             : scope.expressionText(element.placeholder!),
@@ -46,6 +48,9 @@ class _TextInputRenderer extends HookWidget {
         minLines: 1,
         maxLines: element.multiline ? 8 : 1,
         readOnly: !scope.enabled || scope.readOnly || !binding.writable,
+        onInputFocus: interaction.begin,
+        onDone: (_) => interaction.commit(),
+        onCancel: interaction.cancel,
         onChanged: (next) {
           final value = StringValue(next);
           if (value.validateAgainst(binding.type).isEmpty) {

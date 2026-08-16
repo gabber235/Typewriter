@@ -51,6 +51,10 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.onDone,
     this.onEditingComplete,
     this.onSubmitted,
+    this.onInputFocus,
+    this.onInputBlur,
+    this.onDismiss,
+    this.onCancel,
     this.actions,
     this.textFieldActions,
     this.surroundingActions,
@@ -91,6 +95,10 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   /// Called when the user presses done.
   final ValueChanged<T>? onSubmitted;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onInputBlur;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onCancel;
 
   /// Actions that can be performed when either the text field or the surrounding is focused.
   final List<ActionShortcut>? actions;
@@ -190,17 +198,21 @@ class ValidatedTextField<T> extends HookConsumerWidget {
             final object = _updateState(value, state);
             if (object != null) onChanged?.call(object);
           },
-          onDone: keepErrorVisibleWhenUnfocused
-              ? (value) {
-                  final object = _updateState(value, state);
-                  if (object != null) onDone?.call(object);
-                }
-              : null,
+          onDone: (value) {
+            if (keepErrorVisibleWhenUnfocused) {
+              final object = _updateState(value, state);
+              if (object != null) onDone?.call(object);
+            }
+            onInputBlur?.call();
+          },
           onEditingComplete: onEditingComplete,
           onSubmitted: (value) {
             final object = _updateState(value, state);
             if (object != null) onSubmitted?.call(object);
           },
+          onInputFocus: onInputFocus,
+          onDismiss: onDismiss,
+          onCancel: onCancel,
         ),
         _StateText(
           name: name,

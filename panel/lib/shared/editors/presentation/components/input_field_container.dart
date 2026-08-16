@@ -79,6 +79,7 @@ class InputFieldContainer extends HookConsumerWidget {
     this.borderRadius,
     this.onInputFocus,
     this.onDismiss,
+    this.onCancel,
     this.autofocus = false,
     super.key,
   });
@@ -105,7 +106,12 @@ class InputFieldContainer extends HookConsumerWidget {
   final VoidCallback? onInputFocus;
 
   /// Called when a dismiss intent is handled while the input is focused.
+  /// Dismissing leaves the field but keeps what was typed.
   final VoidCallback? onDismiss;
+
+  /// Called when a cancel intent is handled while the input is focused.
+  /// Cancelling leaves the field and discards what was typed.
+  final VoidCallback? onCancel;
 
   /// Whether the surrounding focus should request focus automatically.
   final bool autofocus;
@@ -222,22 +228,27 @@ class InputFieldContainer extends HookConsumerWidget {
             onFocusChange: (_) {
               focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
 
+              // Read the mode fresh: the build-time value goes stale when
+              // focus moves between two fields in the same frame. The gaining
+              // field must take over an insert mode another field still owns,
+              // and the losing field must only clear a mode it still owns.
+              final mode = ref.read(currentInteractionModeProvider);
               if (inputFocusNode.hasPrimaryFocus &&
-                  currentMode is! InsertMode) {
+                  (mode is! InsertMode || mode.id != id)) {
                 ref
                     .read(currentInteractionModeProvider.notifier)
                     .setMode(InsertMode(id));
               }
 
-              if (currentMode is InsertMode &&
-                  currentMode.id == id &&
+              if (mode is InsertMode &&
+                  mode.id == id &&
                   !inputFocusNode.hasFocus) {
                 ref.read(currentInteractionModeProvider.notifier).normal();
               }
             },
             child: Actions(
               actions: {
-                if (inputFocusNode.hasPrimaryFocus)
+                if (inputFocusNode.hasPrimaryFocus) ...{
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
                       onDismiss?.call();
@@ -247,6 +258,16 @@ class InputFieldContainer extends HookConsumerWidget {
                       return null;
                     },
                   ),
+                  CancelIntent: CallbackAction<CancelIntent>(
+                    onInvoke: (intent) {
+                      onCancel?.call();
+                      ref
+                          .read(currentInteractionModeProvider.notifier)
+                          .normal();
+                      return null;
+                    },
+                  ),
+                },
               },
               child: ManagedActionSet(
                 shortcuts: [
