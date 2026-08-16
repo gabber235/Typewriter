@@ -341,7 +341,7 @@ class VersionFilterBar extends HookWidget {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 6),
-        DecoratedTextField(
+        EditorTextField(
           focusNode: focusNode,
           controller: queryController,
           decoration: InputDecoration(

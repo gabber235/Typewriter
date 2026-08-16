@@ -18,6 +18,13 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   final PresentationNode? rootPresentation;
 
   DataValue _value;
+  late EditorDocument _document = EditorDocument(
+    rootType: rootType,
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: _value,
+    revision: 0,
+    rootPresentation: rootPresentation,
+  );
 
   DataValue get rootValue => _value;
 
@@ -27,13 +34,7 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   DataPath? lastUpdatedPath;
 
   @override
-  EditorDocument get document => EditorDocument(
-    rootType: rootType,
-    typeCatalog: const TypeCatalog([]),
-    confirmedValue: _value,
-    revision: 0,
-    rootPresentation: rootPresentation,
-  );
+  EditorDocument get document => _document;
 
   @override
   EditorValue value(DataPath path) => _value.readEditorValue(path);
@@ -57,7 +58,11 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   @override
-  void refreshDocument(EditorDocument document) {}
+  void refreshDocument(EditorDocument document) {
+    _document = document;
+    _value = document.confirmedValue;
+    notifyListeners();
+  }
 
   @override
   EditorInteractionSession beginInteraction(DataPath path) {
@@ -144,7 +149,7 @@ extension TypedEditorTesterExtension on WidgetTester {
     );
     await pumpTestApp(
       child: EditorRoot(
-        create: (_) => EditorController(source: source),
+        create: (_) => source,
         child: Material(
           child: SizedBox(
             width: 500,

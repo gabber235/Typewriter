@@ -2,14 +2,14 @@ part of "editor_surface.dart";
 
 class _SelectionConflictEditor extends StatelessWidget {
   const _SelectionConflictEditor({
-    required this.controller,
+    required this.source,
     required this.path,
     required this.type,
     required this.registry,
     required this.readOnly,
   });
 
-  final EditorController controller;
+  final EditorSource source;
   final DataPath path;
   final TypeExpression type;
   final TypeRegistry registry;
@@ -25,7 +25,7 @@ class _SelectionConflictEditor extends StatelessWidget {
 
   void _reset() {
     final initial = type.createInitialValue(registry: registry).valueOrNull;
-    if (initial != null) controller.update(path, initial);
+    if (initial != null) source.update(path, initial);
   }
 }
 

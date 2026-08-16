@@ -203,7 +203,7 @@ class BookSidebarContent extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SidebarHeader(text: "Pages"),
-            DecoratedTextField(
+            EditorTextField(
               focusNode: focusNode,
               controller: searchController,
               onChanged: (value) =>
@@ -1101,7 +1101,7 @@ class AddPageDialogue extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValidatedTextField<String>(
-            autofocus: DecoratedTextFieldAutoFocus.textField,
+            autofocus: EditorTextFieldAutoFocus.textField,
             keepErrorVisibleWhenUnfocused: true,
             value: name.value,
             name: "Page Name",
@@ -1144,7 +1144,7 @@ class AddPageDialogue extends HookConsumerWidget {
             shape: const RoundedRectangleBorder(),
             children: [
               SizedBox(height: context.spacing.space3),
-              FormattedTextField(
+              EditorTextField(
                 focusNode: chapterFocus,
                 text: chapter.value,
                 hintText: "Chapter Name",
@@ -1167,7 +1167,7 @@ class AddPageDialogue extends HookConsumerWidget {
                     Actions.maybeInvoke(context, NextFocusIntent()),
               ),
               SizedBox(height: context.spacing.space3),
-              FormattedTextField(
+              EditorTextField(
                 focusNode: priorityFocus,
                 text: priority.value.toString(),
                 hintText: "Priority",
@@ -1253,7 +1253,7 @@ class RenamePageDialogue extends HookConsumerWidget {
     return AlertDialog(
       title: Text("Rename ${oldName.formatted}"),
       content: ValidatedTextField<String>(
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         value: name.value,
         name: "Page Name",
         icon: Ph.book_fill,
@@ -1334,9 +1334,9 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
     return AlertDialog(
       title: Text(title),
-      content: FormattedTextField(
+      content: EditorTextField(
         focusNode: focusNode,
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         text: chapter.value,
         hintText: "Chapter Name",
         prefix: Icones(Ph.book_bookmark_fill),
@@ -1416,10 +1416,10 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
     return AlertDialog(
       title: Text("Change priority of $pageName"),
-      content: FormattedTextField(
+      content: EditorTextField(
         controller: controller,
         focusNode: focusNode,
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         text: priority.toString(),
         hintText: "Priority",
         prefix: Icones(MaterialSymbols.priority_high_rounded),

@@ -160,12 +160,15 @@ final class TransactionalEditorSource extends ChangeNotifier
     return _runCommit(selected);
   }
 
-  TypedMutationResult _settledResult() => _states.hasConflicts
-      ? _unavailable("Conflicting fields require a choice")
-      : TypedMutationResult.success(
-          revision: _document.revision,
-          value: _document.confirmedValue,
-        );
+  TypedMutationResult _settledResult() {
+    if (_states.hasConflicts) {
+      return _unavailable("Conflicting fields require a choice");
+    }
+    return TypedMutationResult.success(
+      revision: _document.revision,
+      value: _document.confirmedValue,
+    );
+  }
 
   Future<TypedMutationResult> _runCommit(Set<DataPath> selected) async {
     final commit = _persist(selected);
@@ -282,8 +285,7 @@ final class TransactionalEditorSource extends ChangeNotifier
     final confirmed = <DataPath>{};
     for (final path in _states.dirtyPaths) {
       final local = path.read(_draft).valueOrNull;
-      if (committed.contains(path) &&
-          local == path.read(sent).valueOrNull) {
+      if (committed.contains(path) && local == path.read(sent).valueOrNull) {
         confirmed.add(path);
         continue;
       }
@@ -473,23 +475,26 @@ final class _Interaction implements EditorInteractionSession {
   void close() => active = false;
 }
 
-TypeDiagnostic _diagnostic(String message, [DataPath path = DataPath.root]) =>
-    TypeDiagnostic(
-      code: TypeDiagnosticCode.mutationConflict,
-      message: message,
-      path: path,
-    );
+TypeDiagnostic _diagnostic(String message, [DataPath path = DataPath.root]) {
+  return TypeDiagnostic(
+    code: TypeDiagnosticCode.mutationConflict,
+    message: message,
+    path: path,
+  );
+}
 
 TypeDiagnostic _deletedDiagnostic() => _diagnostic("Deleted elsewhere");
 
 TypedMutationResult _unavailable(String message) =>
     TypedMutationResult.unavailable([_diagnostic(message)]);
 
-bool _targetWasDeleted(List<TypeDiagnostic> diagnostics) => diagnostics.any(
-  (diagnostic) => diagnostic.details.any(
-    (detail) => detail.key == "editor.target" && detail.value == "deleted",
-  ),
-);
+bool _targetWasDeleted(List<TypeDiagnostic> diagnostics) {
+  return diagnostics.any(
+    (diagnostic) => diagnostic.details.any(
+      (detail) => detail.key == "editor.target" && detail.value == "deleted",
+    ),
+  );
+}
 
 const _retryDelays = [
   Duration(milliseconds: 50),

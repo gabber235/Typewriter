@@ -9,17 +9,3 @@ part "renderers/content/image_renderer.dart";
 part "renderers/content/markdown_renderer.dart";
 part "renderers/content/progress_renderer.dart";
 part "renderers/content/text_renderer.dart";
-
-extension ContentElementRendering on PresentationElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) =>
-      switch (this) {
-        TextElement() => (this as TextElement).render(scope),
-        MarkdownElement() => (this as MarkdownElement).render(scope),
-        IconElement() => (this as IconElement).render(context, scope),
-        ImageElement() => (this as ImageElement).render(context, scope),
-        BadgeElement() => (this as BadgeElement).render(context, scope),
-        ChipElement() => (this as ChipElement).render(context, scope),
-        ProgressElement() => (this as ProgressElement).render(context, scope),
-        _ => const SizedBox.shrink(),
-      };
-}

@@ -2,7 +2,6 @@ library;
 
 export "application/collection_presentation_search_source.dart";
 export "application/color_library.dart";
-export "application/editor_controller.dart";
 export "application/editor_retry.dart";
 export "application/editor_source.dart";
 export "application/http_json_presentation_search_source.dart";
@@ -54,8 +53,7 @@ export "domain/values/initial_value.dart";
 export "domain/values/json_data_value_decoder.dart";
 export "presentation/components/color_picker/color_picker.dart";
 export "presentation/components/date_time_picker/date_time_picker.dart";
-export "presentation/components/decorated_text_field.dart";
-export "presentation/components/formatted_text_field.dart";
+export "presentation/components/editor_text_field.dart";
 export "presentation/components/input_field_container.dart";
 export "presentation/components/search_input/search_input.dart";
 export "presentation/components/validated_text_field.dart";

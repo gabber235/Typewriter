@@ -33,7 +33,7 @@ void main() {
     expect(find.text("0"), findsNothing);
     expect(find.byType(AdaptiveChoiceControl<DataValue>), findsOneWidget);
     expect(
-      tester.widget<FormattedTextField>(find.byType(FormattedTextField)).text,
+      tester.widget<EditorTextField>(find.byType(EditorTextField)).text,
       "story",
     );
   });
@@ -54,7 +54,7 @@ void main() {
 
     expect(find.text("0"), findsNothing);
     expect(
-      tester.widget<FormattedTextField>(find.byType(FormattedTextField)).text,
+      tester.widget<EditorTextField>(find.byType(EditorTextField)).text,
       "typed field value",
     );
   });
@@ -86,7 +86,7 @@ void main() {
 
     expect(find.text("Widgetbook::Named Value"), findsNothing);
     expect(
-      tester.widget<FormattedTextField>(find.byType(FormattedTextField)).text,
+      tester.widget<EditorTextField>(find.byType(EditorTextField)).text,
       "custom:quest-value",
     );
   });
@@ -166,9 +166,7 @@ void main() {
       ),
     );
 
-    final field = tester.widget<FormattedTextField>(
-      find.byType(FormattedTextField),
-    );
+    final field = tester.widget<EditorTextField>(find.byType(EditorTextField));
     expect(field.prefix, isNotNull);
     expect(find.text("X"), findsOneWidget);
   });

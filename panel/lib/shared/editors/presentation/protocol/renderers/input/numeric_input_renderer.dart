@@ -1,48 +1,38 @@
 part of "../../simple_input_renderer.dart";
 
 extension NumericInputElementRendering on NumericInputElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) =>
-      _NumericInputRenderer(element: this, scope: scope);
-}
-
-class _NumericInputRenderer extends HookWidget {
-  const _NumericInputRenderer({required this.element, required this.scope});
-
-  final NumericInputElement element;
-  final PresentationRenderScope scope;
-
-  @override
-  Widget build(BuildContext context) {
-    final result = scope.resolve(element.control.binding);
-    if (result case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final binding = result.valueOrNull!;
-    final interaction = useEditorFieldInteraction(scope, binding.reference);
-    final prefix = renderControlPrefix(context, element.control, scope);
-    final child = ValidatedTextField<DataValue>(
-      key: ValueKey(binding.reference),
-      value: binding.value,
-      name: "number",
-      icon: HeroiconsSolid.hashtag,
-      decoration: prefix == null ? null : InputDecoration(prefixIcon: prefix),
-      deserialize: (value) => value.expressionDisplayText,
-      serialize: (text) => binding.type._parseNumber(text),
-      validator: (value) {
-        final diagnostics = value.validateAgainst(binding.type);
-        return diagnostics.isEmpty ? null : diagnostics.first.message;
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    return BoundControlShell(
+      control: control,
+      scope: scope,
+      builder: (context, field) {
+        final prefix = renderControlPrefix(context, control, scope);
+        return ValidatedTextField<DataValue>(
+          key: ValueKey(field.binding.reference),
+          value: field.binding.value,
+          name: "number",
+          icon: HeroiconsSolid.hashtag,
+          decoration: prefix == null
+              ? null
+              : InputDecoration(prefixIcon: prefix),
+          deserialize: (value) => value.expressionDisplayText,
+          serialize: (text) => field.binding.type._parseNumber(text),
+          validator: (value) {
+            final diagnostics = value.validateAgainst(field.binding.type);
+            return diagnostics.isEmpty ? null : diagnostics.first.message;
+          },
+          keyboardType: const TextInputType.numberWithOptions(
+            signed: true,
+            decimal: true,
+          ),
+          readOnly: field.locked,
+          onInputFocus: field.interaction.begin,
+          onInputBlur: field.interaction.commit,
+          onCancel: field.interaction.cancel,
+          onChanged: field.update,
+        );
       },
-      keyboardType: const TextInputType.numberWithOptions(
-        signed: true,
-        decimal: true,
-      ),
-      readOnly: _bindingLocked(binding, scope),
-      onInputFocus: interaction.begin,
-      onInputBlur: interaction.commit,
-      onCancel: interaction.cancel,
-      onChanged: (value) => scope.update(binding.reference, value),
     );
-    return LabeledControl(control: element.control, scope: scope, child: child);
   }
 }
 

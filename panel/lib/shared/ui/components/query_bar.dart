@@ -11,7 +11,7 @@ class QueryBar extends HookWidget {
     required this.selectors,
     this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
-    this.autofocus = DecoratedTextFieldAutoFocus.none,
+    this.autofocus = EditorTextFieldAutoFocus.none,
     this.onSubmitted,
     this.onEditingComplete,
     this.onDone,
@@ -29,7 +29,7 @@ class QueryBar extends HookWidget {
   final void Function(String) onQueryChanged;
   final List<QuerySelectorDefinition> selectors;
   final InputDecoration inputDecoration;
-  final DecoratedTextFieldAutoFocus autofocus;
+  final EditorTextFieldAutoFocus autofocus;
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onEditingComplete;
   final ValueChanged<String>? onDone;
@@ -277,7 +277,7 @@ class QueryBar extends HookWidget {
                 spacing: 4,
                 sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
               ),
-              child: DecoratedTextField(
+              child: EditorTextField(
                 inputFieldController: inputFieldController,
                 controller: controller,
                 autofocus: autofocus,

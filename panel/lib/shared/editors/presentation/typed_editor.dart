@@ -16,10 +16,10 @@ class TypedEditor extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.watch(editorProvider);
-    if (controller == null) return const SizedBox.shrink();
+    final source = ref.watch(editorProvider);
+    if (source == null) return const SizedBox.shrink();
     return EditorSurface(
-      controller: controller,
+      source: source,
       path: path,
       registry: registry,
       readOnly: readOnly,

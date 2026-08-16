@@ -281,9 +281,9 @@ class SelectorSearchField extends HookWidget {
     final focusNode = useFocusNode();
     return Padding(
       padding: EdgeInsets.all(context.spacing.space3),
-      child: DecoratedTextField(
+      child: EditorTextField(
         focusNode: focusNode,
-        autofocus: DecoratedTextFieldAutoFocus.surroundingField,
+        autofocus: EditorTextFieldAutoFocus.surroundingField,
         onChanged: (value) => searchQuery.value = value,
         decoration: InputDecoration(
           hintText: hintText,

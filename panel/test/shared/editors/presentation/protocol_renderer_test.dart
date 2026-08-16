@@ -450,6 +450,52 @@ void main() {
     expect(calls, 0);
     expect(find.textContaining("StringValue is not valid"), findsOneWidget);
   });
+
+  testWidgets("metadata refresh preserves the active local draft", (
+    tester,
+  ) async {
+    late StateSetter rebuild;
+    var diagnostics = <TypeDiagnostic>[];
+    const presentation = PresentationNode(
+      id: "text",
+      element: TextInputElement(
+        control: BoundControl(binding: _rootBinding),
+        multiline: false,
+      ),
+    );
+    await tester.pumpTestApp(
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          rebuild = setState;
+          return _renderer(
+            type: const StringType(),
+            value: const StringValue("Before"),
+            presentation: presentation,
+            diagnostics: diagnostics,
+          );
+        },
+      ),
+    );
+
+    final field = find.byType(TextField);
+    await tester.tap(field);
+    await tester.enterText(field, "Draft");
+    await tester.pump();
+
+    rebuild(() {
+      diagnostics = [
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Metadata changed",
+        ),
+      ];
+    });
+    await tester.pump();
+
+    expect(tester.widget<TextField>(field).controller?.text, "Draft");
+    expect(tester.widget<TextField>(field).focusNode?.hasFocus, isTrue);
+    expect(find.text("Metadata changed"), findsOneWidget);
+  });
 }
 
 Widget _polymorphicRenderer() => EditorProtocolRenderer(
@@ -540,6 +586,7 @@ EditorProtocolRenderer _renderer({
   required DataValue value,
   required PresentationNode presentation,
   bool readOnly = false,
+  List<TypeDiagnostic> diagnostics = const [],
   RealmActionExecutor? onRealmAction,
 }) {
   final root = ResolvedTypeRef(
@@ -556,6 +603,7 @@ EditorProtocolRenderer _renderer({
       ),
     ]),
     presentation: presentation,
+    diagnostics: diagnostics,
     readOnly: readOnly,
     onRealmAction: onRealmAction,
   );

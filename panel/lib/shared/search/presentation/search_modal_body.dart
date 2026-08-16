@@ -47,7 +47,7 @@ class SearchModalBody extends HookConsumerWidget {
                       query: controller.query,
                       onQueryChanged: controller.updateQuery,
                       selectors: controller.selectors,
-                      autofocus: DecoratedTextFieldAutoFocus.textField,
+                      autofocus: EditorTextFieldAutoFocus.textField,
                       inputDecoration: InputDecoration(
                         prefixIcon: Padding(
                           padding: EdgeInsets.only(

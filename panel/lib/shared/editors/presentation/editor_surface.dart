@@ -1,14 +1,16 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editor_surface.freezed.dart";
 part "editor_surface_states.dart";
 part "editor_surface_types.dart";
 
 class EditorSurface extends StatefulWidget {
   const EditorSurface({
-    required this.controller,
+    required this.source,
     this.path = DataPath.root,
     this.registry,
     this.conversions = const [],
@@ -19,7 +21,7 @@ class EditorSurface extends StatefulWidget {
     super.key,
   });
 
-  final EditorController controller;
+  final EditorSource source;
   final DataPath path;
   final TypeRegistry? registry;
   final List<ConversionDefinition> conversions;
@@ -36,23 +38,24 @@ class _EditorSurfaceState extends State<EditorSurface> {
   static const _budget = ExpressionBudget();
 
   final HeaderExpansionStore _expansionStore = HeaderExpansionStore();
+  _EditorSurfaceDefinitionResolution? _definitionResolution;
   List<TypeDiagnostic> _mutationDiagnostics = const [];
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_handleControllerChanged);
+    widget.source.addListener(_handleSourceChanged);
   }
 
   @override
   void didUpdateWidget(EditorSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_handleControllerChanged);
-      widget.controller.addListener(_handleControllerChanged);
+    if (oldWidget.source != widget.source) {
+      oldWidget.source.removeListener(_handleSourceChanged);
+      widget.source.addListener(_handleSourceChanged);
     }
-    final oldType = oldWidget.controller.document?.rootType;
-    final nextType = widget.controller.document?.rootType;
+    final oldType = oldWidget.source.document?.rootType;
+    final nextType = widget.source.document?.rootType;
     if (oldType != null &&
         nextType != null &&
         !typeExpressionsEqual(oldType, nextType)) {
@@ -60,73 +63,61 @@ class _EditorSurfaceState extends State<EditorSurface> {
     }
   }
 
-  void _handleControllerChanged() {
+  void _handleSourceChanged() {
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final document = widget.controller.document;
+    final document = widget.source.document;
     if (document == null) return const SizedBox.shrink();
-    final registry = widget.registry ?? TypeRegistry(document.typeCatalog);
-    final typeResult = document.rootType.resolvePath(
-      widget.path,
-      registry: registry,
-    );
-    if (typeResult case TypeFailure(:final diagnostics)) {
+
+    final definitionResult = _resolveDefinition(document);
+    if (definitionResult case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
     }
-    final declaredType = typeResult.valueOrNull!;
-    final type = _representation(registry, declaredType);
-    final content = switch (widget.controller.value(widget.path)) {
+    final definition = definitionResult.valueOrNull!;
+    final content = switch (widget.source.value(widget.path)) {
       LoadingEditorValue() => const _LoadingEditor(),
       ConflictEditorValue() => _SelectionConflictEditor(
-        controller: widget.controller,
+        source: widget.source,
         path: widget.path,
-        type: type,
-        registry: registry,
+        type: definition.type,
+        registry: definition.registry,
         readOnly: widget.readOnly,
       ),
       InvalidEditorValue(:final diagnostics) => presentationDiagnostic(
         context,
         diagnostics,
       ),
-      ReadyEditorValue(:final value) => _buildReady(
-        document,
-        registry,
-        declaredType,
-        type,
-        value,
-      ),
+      ReadyEditorValue(:final value) => _buildReady(definition, value),
     };
     return _withSaveStatus(content);
   }
 
-  Widget _buildReady(
+  TypeResult<_EditorSurfaceDefinition> _resolveDefinition(
     EditorDocument document,
-    TypeRegistry registry,
-    TypeExpression declaredType,
-    TypeExpression type,
-    DataValue value,
   ) {
-    final selected = _resolvePresentation(
-      document,
-      registry,
-      declaredType,
-      null,
+    final cached = _definitionResolution;
+    if (cached != null &&
+        cached.matches(document, widget.path, widget.registry)) {
+      return cached.result;
+    }
+
+    final resolution = _EditorSurfaceDefinitionResolution.resolve(
+      document: document,
+      path: widget.path,
+      registryOverride: widget.registry,
     );
-    final rootPresentation = widget.path == DataPath.root
-        ? document.rootPresentation
-        : null;
-    final bindingType = _bindingType(
-      registry,
-      declaredType,
-      type,
-      rootPresentation ?? selected?.root,
-    );
+    _definitionResolution = resolution;
+    return resolution.result;
+  }
+
+  Widget _buildReady(_EditorSurfaceDefinition definition, DataValue value) {
+    final document = definition.document;
     final bindings = BindingEnvironment({
       const BindingId(0): BindingSnapshot(
-        type: bindingType,
+        type: definition.bindingType,
         value: value,
         revision: document.revision,
         writable: !widget.readOnly && !document.readOnly,
@@ -138,13 +129,9 @@ class _EditorSurfaceState extends State<EditorSurface> {
         for (final conversion in widget.conversions) conversion.id: conversion,
       },
     );
-    final presentation =
-        rootPresentation ??
-        selected?.root ??
-        bindingType.generateDefaultPresentation();
     final scope = PresentationRenderScope(
       expressions: expressions,
-      registry: registry,
+      registry: definition.registry,
       budget: _budget,
       readOnly: widget.readOnly || document.readOnly,
       historyNamespace: widget.historyNamespace,
@@ -155,7 +142,7 @@ class _EditorSurfaceState extends State<EditorSurface> {
       expansionStore: _expansionStore,
       startInteraction: (reference) {
         if (reference.bindingId != const BindingId(0)) return null;
-        return widget.controller.beginInteraction(
+        return widget.source.beginInteraction(
           widget.path.followedBy(reference.path),
         );
       },
@@ -175,17 +162,18 @@ class _EditorSurfaceState extends State<EditorSurface> {
         _applyAt(widget.path.followedBy(canonical.path), next);
       },
       executeAction: _executeAction,
-      resolvePresentation: (requestedType, requested) =>
-          _resolvePresentation(document, registry, requestedType, requested),
+      resolvePresentation: definition.resolvePresentation,
       headerShortcuts: widget.headerShortcuts,
-      activePresentations: {if (selected != null) selected.id},
+      activePresentations: {
+        if (definition.selectedPresentation case final selected?) selected.id,
+      },
     );
-    final localized = presentation.localizeFailures(
+    final localized = definition.presentation.localizeFailures(
       expressions,
-      registry: registry,
+      registry: definition.registry,
       budget: _budget,
     );
-    final state = widget.controller.saveState(widget.path);
+    final state = widget.source.saveState(widget.path);
     return PresentationSurface(
       presentation: localized,
       scope: scope,
@@ -198,16 +186,16 @@ class _EditorSurfaceState extends State<EditorSurface> {
   }
 
   Widget _withSaveStatus(Widget content) {
-    final state = widget.controller.saveState(widget.path);
+    final state = widget.source.saveState(widget.path);
     final statePath = state.path ?? widget.path;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         EditorSaveStatus(
           state: state,
-          onRetry: () => widget.controller.flush(paths: {statePath}),
-          onUseRemote: () async => widget.controller.useRemote(statePath),
-          onKeepLocal: () => widget.controller.keepLocal(statePath),
+          onRetry: () => widget.source.flush(paths: {statePath}),
+          onUseRemote: () async => widget.source.useRemote(statePath),
+          onKeepLocal: () => widget.source.keepLocal(statePath),
         ),
         content,
       ],
@@ -219,11 +207,7 @@ class _EditorSurfaceState extends State<EditorSurface> {
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
   ) async {
-    final result = await widget.controller.executeAction(
-      action,
-      context,
-      aliases,
-    );
+    final result = await widget.source.executeAction(action, context, aliases);
     if (!mounted) return;
     switch (result) {
       case MutationSuccess(:final value):
@@ -238,7 +222,7 @@ class _EditorSurfaceState extends State<EditorSurface> {
           MutationUnavailable(:final diagnostics):
         setState(() => _mutationDiagnostics = diagnostics);
       case MutationConflict(:final actualValue):
-        widget.controller.acceptRemote(
+        widget.source.acceptRemote(
           revision: result.actualRevision,
           value: actualValue,
         );
@@ -255,7 +239,7 @@ class _EditorSurfaceState extends State<EditorSurface> {
   }
 
   void _applyAt(DataPath path, DataValue value) {
-    final result = widget.controller.update(path, value);
+    final result = widget.source.update(path, value);
     setState(() {
       _mutationDiagnostics = switch (result) {
         InvalidEditorMutation(:final diagnostics) => diagnostics,
@@ -266,7 +250,7 @@ class _EditorSurfaceState extends State<EditorSurface> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_handleControllerChanged);
+    widget.source.removeListener(_handleSourceChanged);
     super.dispose();
   }
 }

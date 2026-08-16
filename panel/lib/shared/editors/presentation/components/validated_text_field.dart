@@ -36,7 +36,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.controller,
     this.focusNode,
     this.inputFieldController,
-    this.autofocus = DecoratedTextFieldAutoFocus.none,
+    this.autofocus = EditorTextFieldAutoFocus.none,
     this.name = "",
     this.icon = Ic.round_text_fields,
     this.keyboardType = TextInputType.text,
@@ -70,7 +70,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final InputFieldController? inputFieldController;
-  final DecoratedTextFieldAutoFocus autofocus;
+  final EditorTextFieldAutoFocus autofocus;
   final String name;
   final String icon;
   final TextInputType keyboardType;
@@ -177,7 +177,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        DecoratedTextField(
+        EditorTextField(
           focusNode: focus,
           inputFieldController: inputFieldController,
           autofocus: autofocus,

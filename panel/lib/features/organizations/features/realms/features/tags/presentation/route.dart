@@ -101,10 +101,10 @@ class TagsPage extends HookConsumerWidget {
 
             return AlertDialog(
               title: const Text("Create Tag"),
-              content: DecoratedTextField(
+              content: EditorTextField(
                 focusNode: focusNode,
                 controller: controller,
-                autofocus: DecoratedTextFieldAutoFocus.textField,
+                autofocus: EditorTextFieldAutoFocus.textField,
                 decoration: const InputDecoration(hintText: "Enter tag name"),
                 inputFormatters: [SnakeCaseInputFormatter()],
                 onSubmitted: (value) {

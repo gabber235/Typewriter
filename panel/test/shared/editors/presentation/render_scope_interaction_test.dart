@@ -20,31 +20,35 @@ void main() {
       },
     );
     final outer = scope.withVirtualBinding(
-      const BindingId(1),
-      const BindingSnapshot(
-        type: StringType(),
-        value: StringValue("outer"),
-        revision: 1,
-        writable: true,
-      ),
-      (_) {},
-      interactionTarget: BindingReference(
-        bindingId: const BindingId(0),
-        path: DataPath.root.field("payload"),
+      VirtualBindingHost(
+        id: const BindingId(1),
+        snapshot: const BindingSnapshot(
+          type: StringType(),
+          value: StringValue("outer"),
+          revision: 1,
+          writable: true,
+        ),
+        onChanged: (_) {},
+        interactionTarget: BindingReference(
+          bindingId: const BindingId(0),
+          path: DataPath.root.field("payload"),
+        ),
       ),
     );
     final inner = outer.withVirtualBinding(
-      const BindingId(2),
-      const BindingSnapshot(
-        type: StringType(),
-        value: StringValue("inner"),
-        revision: 1,
-        writable: true,
-      ),
-      (_) {},
-      interactionTarget: BindingReference(
-        bindingId: const BindingId(1),
-        path: DataPath.root.field("nested"),
+      VirtualBindingHost(
+        id: const BindingId(2),
+        snapshot: const BindingSnapshot(
+          type: StringType(),
+          value: StringValue("inner"),
+          revision: 1,
+          writable: true,
+        ),
+        onChanged: (_) {},
+        interactionTarget: BindingReference(
+          bindingId: const BindingId(1),
+          path: DataPath.root.field("nested"),
+        ),
       ),
     );
 
@@ -60,6 +64,51 @@ void main() {
       started?.path,
       DataPath.root.field("payload").field("nested").field("value"),
     );
+  });
+
+  test("virtual binding actions use the latest hosted value", () {
+    const id = BindingId(1);
+    final changed = <DataValue>[];
+    final scope =
+        PresentationRenderScope(
+          expressions: const ExpressionContext(
+            bindings: BindingEnvironment({}),
+          ),
+          registry: TypeRegistry(const TypeCatalog([])),
+          budget: const ExpressionBudget(),
+          setBinding: (_, _, _, _) {},
+          executeAction: (_, _, _) {},
+          resolvePresentation: (_, _) => null,
+          expansionStore: HeaderExpansionStore(),
+        ).withVirtualBinding(
+          VirtualBindingHost(
+            id: id,
+            snapshot: const BindingSnapshot(
+              type: ListType(element: StringType()),
+              value: ListValue([]),
+              revision: 1,
+              writable: true,
+            ),
+            onChanged: changed.add,
+          ),
+        );
+
+    LocalEditorAction append(String value) {
+      return LocalEditorAction(
+        AppendListItemAction(
+          target: const BindingReference(bindingId: id),
+          value: value.asStringLiteral,
+        ),
+      );
+    }
+
+    scope.invoke(append("first"));
+    scope.invoke(append("second"));
+
+    expect(changed, const [
+      ListValue([StringValue("first")]),
+      ListValue([StringValue("first"), StringValue("second")]),
+    ]);
   });
 }
 

@@ -11,26 +11,22 @@ void main() {
     tester,
   ) async {
     final commits = <EditorCommit>[];
-    final controller = EditorController(
-      source: TransactionalEditorSource(
-        document: _document(),
-        debounce: Duration.zero,
-        commit: (commit) async {
-          commits.add(commit);
-          return TypedMutationResult.success(
-            revision: commit.expectedRevision + 1,
-            value: commit.rootValue,
-          );
-        },
-      ),
+    final source = TransactionalEditorSource(
+      document: _document(),
+      debounce: Duration.zero,
+      commit: (commit) async {
+        commits.add(commit);
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
     );
-    addTearDown(controller.dispose);
+    addTearDown(source.dispose);
     await tester.pumpTestApp(
       child: SizedBox(
         width: 500,
-        child: SingleChildScrollView(
-          child: EditorSurface(controller: controller),
-        ),
+        child: SingleChildScrollView(child: EditorSurface(source: source)),
       ),
     );
 
@@ -52,17 +48,14 @@ void main() {
     }
 
     expect(commits, isEmpty);
-    expect(controller.saveState(priority).phase, EditorSavePhase.pending);
+    expect(source.saveState(priority).phase, EditorSavePhase.pending);
 
     tester.binding.focusManager.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
 
     expect(commits.single.changedPaths, {priority});
-    expect(
-      controller.value(priority).valueOrNull,
-      IntegerValue(BigInt.from(421)),
-    );
-    expect(controller.saveState(priority).phase, EditorSavePhase.saved);
+    expect(source.value(priority).valueOrNull, IntegerValue(BigInt.from(421)));
+    expect(source.saveState(priority).phase, EditorSavePhase.saved);
     expect(find.text("Saved"), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 5));
@@ -70,20 +63,22 @@ void main() {
   });
 }
 
-EditorDocument _document() => EditorDocument(
-  rootType: RecordType(
-    fields: {
-      "title": const TypeField(name: "title", type: StringType()),
-      "priority": const TypeField(
-        name: "priority",
-        type: IntegerType(width: IntegerWidth.signed32),
-      ),
-    },
-  ),
-  typeCatalog: const TypeCatalog([]),
-  confirmedValue: RecordValue({
-    "title": const StringValue("Greet the innkeeper"),
-    "priority": IntegerValue(BigInt.two),
-  }),
-  revision: 0,
-);
+EditorDocument _document() {
+  return EditorDocument(
+    rootType: RecordType(
+      fields: {
+        "title": const TypeField(name: "title", type: StringType()),
+        "priority": const TypeField(
+          name: "priority",
+          type: IntegerType(width: IntegerWidth.signed32),
+        ),
+      },
+    ),
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: RecordValue({
+      "title": const StringValue("Greet the innkeeper"),
+      "priority": IntegerValue(BigInt.two),
+    }),
+    revision: 0,
+  );
+}

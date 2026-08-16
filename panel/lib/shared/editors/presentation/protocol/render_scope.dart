@@ -22,6 +22,63 @@ typedef ActionExecutor =
 typedef EditorInteractionStarter =
     EditorInteractionSession? Function(BindingReference reference);
 
+final class VirtualBindingHost {
+  VirtualBindingHost({
+    required this.id,
+    required BindingSnapshot snapshot,
+    required this.onChanged,
+    this.interactionTarget,
+  }) : _snapshot = snapshot;
+
+  final BindingId id;
+  final ValueChanged<DataValue> onChanged;
+  final BindingReference? interactionTarget;
+  BindingSnapshot _snapshot;
+
+  BindingSnapshot get snapshot => _snapshot;
+
+  ExpressionContext bind(ExpressionContext context) {
+    return context.withBinding(id, _snapshot);
+  }
+
+  BindingReference interactionReference(BindingReference reference) {
+    if (reference.bindingId != id || interactionTarget == null) {
+      return reference;
+    }
+    return interactionTarget!.at(reference.path);
+  }
+
+  bool update(DataPath path, DataValue value) {
+    final updated = path.replace(_snapshot.value, value).valueOrNull;
+    if (updated == null) return false;
+
+    _replace(updated);
+    return true;
+  }
+
+  TypedMutationResult execute(
+    LocalEditorAction action,
+    ExpressionContext context, {
+    required TypeRegistry registry,
+    required ExpressionBudget budget,
+  }) {
+    final result = action.execute(
+      bind(context),
+      registry: registry,
+      budget: budget,
+    );
+    if (result case MutationSuccess(:final value)) {
+      _replace(value);
+    }
+    return result;
+  }
+
+  void _replace(DataValue value) {
+    _snapshot = _snapshot.withValue(value);
+    onChanged(value);
+  }
+}
+
 @freezed
 abstract class ResolvedPresentationDefinition
     with _$ResolvedPresentationDefinition {
@@ -31,26 +88,35 @@ abstract class ResolvedPresentationDefinition
   }) = _ResolvedPresentationDefinition;
 }
 
+@freezed
+sealed class HeaderExpansionKey with _$HeaderExpansionKey {
+  const factory HeaderExpansionKey.node({
+    required String nodeId,
+    required BindingReference? binding,
+  }) = NodeHeaderExpansionKey;
+
+  const factory HeaderExpansionKey.instance(Object identity) =
+      InstanceHeaderExpansionKey;
+}
+
 final class HeaderExpansionStore {
-  final Map<Object, bool> _values = {};
+  final Map<HeaderExpansionKey, bool> _values = {};
 
-  bool value({
-    required String nodeId,
-    required BindingReference? binding,
-    required bool initial,
-    Object? identity,
-  }) => _values[identity ?? (nodeId, binding)] ?? initial;
+  bool value({required HeaderExpansionKey key, required bool initial}) {
+    return _values[key] ?? initial;
+  }
 
-  void set({
-    required String nodeId,
-    required BindingReference? binding,
-    required bool expanded,
-    Object? identity,
-  }) => _values[identity ?? (nodeId, binding)] = expanded;
+  void set({required HeaderExpansionKey key, required bool expanded}) {
+    _values[key] = expanded;
+  }
 
-  void remove(Object identity) => _values.remove(identity);
+  void remove(HeaderExpansionKey key) {
+    _values.remove(key);
+  }
 
-  void clear() => _values.clear();
+  void clear() {
+    _values.clear();
+  }
 }
 
 typedef PresentationResolver =
@@ -133,44 +199,24 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     aliases: {...aliases, id: canonical},
   );
 
-  PresentationRenderScope withVirtualBinding(
-    BindingId id,
-    BindingSnapshot snapshot,
-    ValueChanged<DataValue> onChanged, {
-    BindingReference? interactionTarget,
-  }) {
-    var currentValue = snapshot.value;
+  PresentationRenderScope withVirtualBinding(VirtualBindingHost host) {
     return copyWith(
-      expressions: expressions.withBinding(id, snapshot),
+      expressions: host.bind(expressions),
       startInteraction: (reference) {
-        if (reference.bindingId == id && interactionTarget != null) {
-          return startInteraction?.call(interactionTarget.at(reference.path));
-        }
-        return startInteraction?.call(reference);
+        return startInteraction?.call(host.interactionReference(reference));
       },
       setBinding: (reference, value, context, aliases) {
-        if (reference.bindingId != id) {
+        if (reference.bindingId != host.id) {
           setBinding(reference, value, context, aliases);
           return;
         }
-        final updated = reference.path.replace(currentValue, value).valueOrNull;
-        if (updated == null) return;
-        currentValue = updated;
-        onChanged(updated);
+        host.update(reference.path, value);
       },
       executeAction: (action, context, aliases) {
         if (action case LocalEditorAction(
           action: final local,
-        ) when local._bindingReference.bindingId == id) {
-          final result = action.execute(
-            context,
-            registry: registry,
-            budget: budget,
-          );
-          if (result case MutationSuccess(:final value)) {
-            currentValue = value;
-            onChanged(value);
-          }
+        ) when local._bindingReference.bindingId == host.id) {
+          host.execute(action, context, registry: registry, budget: budget);
           return;
         }
         executeAction(action, context, aliases);
