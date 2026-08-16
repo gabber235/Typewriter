@@ -3,6 +3,7 @@ export "bound_value_renderer.dart";
 export "composite_input_renderer.dart";
 export "content_renderer.dart";
 export "data_renderer.dart";
+export "editor_field_interaction.dart";
 export "header_combination.dart";
 export "header_renderer.dart";
 export "input_renderer.dart";

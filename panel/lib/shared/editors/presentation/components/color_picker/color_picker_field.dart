@@ -10,6 +10,9 @@ class ColorPickerField extends HookConsumerWidget {
     required this.color,
     required this.includeAlpha,
     required this.onChanged,
+    this.onInteractionStart,
+    this.onInteractionCommit,
+    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -18,6 +21,9 @@ class ColorPickerField extends HookConsumerWidget {
   final Color color;
   final bool includeAlpha;
   final ValueChanged<Color> onChanged;
+  final VoidCallback? onInteractionStart;
+  final VoidCallback? onInteractionCommit;
+  final VoidCallback? onInteractionCancel;
   final bool enabled;
   final bool readOnly;
 
@@ -29,10 +35,15 @@ class ColorPickerField extends HookConsumerWidget {
     final tapGroup = useMemoized(Object.new);
     final library = ref.watch(colorLibraryProvider);
 
-    void close() {
+    void close({bool cancel = false}) {
       if (!open.value) return;
       open.value = false;
-      if (openingColor.value != color.argbValue) {
+      if (cancel) {
+        onInteractionCancel?.call();
+      } else {
+        onInteractionCommit?.call();
+      }
+      if (!cancel && openingColor.value != color.argbValue) {
         ref.read(colorLibraryProvider.notifier).recordRecent(color.argbValue);
       }
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,6 +57,7 @@ class ColorPickerField extends HookConsumerWidget {
         return;
       }
       openingColor.value = color.argbValue;
+      onInteractionStart?.call();
       open.value = true;
     }
 
@@ -73,8 +85,12 @@ class ColorPickerField extends HookConsumerWidget {
         ),
         overlayBuilder: (context, anchorSize) => TapRegion(
           groupId: tapGroup,
-          child: CallbackShortcuts(
-            bindings: {const SingleActivator(LogicalKeyboardKey.escape): close},
+          child: Actions(
+            actions: {
+              DismissIntent: CallbackAction(
+                onInvoke: (_) => close(cancel: true),
+              ),
+            },
             child: SizedBox(
               width: 340,
               child: ColorPickerSurface(
@@ -99,6 +115,9 @@ class ColorPickerField extends HookConsumerWidget {
             LengthLimitingTextInputFormatter(includeAlpha ? 10 : 8),
           ],
           onChanged: onChanged,
+          onInputFocus: onInteractionStart,
+          onInputBlur: onInteractionCommit,
+          onCancel: onInteractionCancel,
           onDone: (value) {
             if (value.argbValue != color.argbValue) {
               ref

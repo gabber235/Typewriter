@@ -11,12 +11,7 @@ part "search_input_body.dart";
 part "search_input_navigation.dart";
 part "search_input_results.dart";
 part "search_input_row.dart";
-
-typedef PresentationSearchSourceBuilder =
-    SearchSource Function(
-      Ref ref,
-      Stream<PresentationSearchSelectionEvent> selections,
-    );
+part "search_input_types.dart";
 
 class PresentationSearchInput extends HookConsumerWidget {
   const PresentationSearchInput({
@@ -43,6 +38,7 @@ class PresentationSearchInput extends HookConsumerWidget {
     final editing = useState(false);
     final original = useRef(binding.value);
     final explicitExit = useRef(false);
+    final interaction = useEditorFieldInteraction(scope, binding.reference);
     final selectingWithPointer = useRef(false);
     final validationMessage = useState<String?>(null);
     final selections = useMemoized(
@@ -66,8 +62,17 @@ class PresentationSearchInput extends HookConsumerWidget {
       }
     }
 
-    void finish({bool restoreFocus = true}) {
+    void finish({bool restoreFocus = true, bool cancel = false}) {
       explicitExit.value = true;
+      if (interaction.active) {
+        if (cancel) {
+          interaction.cancel();
+        } else {
+          interaction.commit();
+        }
+      } else if (cancel) {
+        restoreOriginal();
+      }
       inputController.endInteraction();
       inputController.inputFocusNode.unfocus();
       editing.value = false;
@@ -95,7 +100,7 @@ class PresentationSearchInput extends HookConsumerWidget {
     bool applyValue(
       DataValue selected, {
       required bool toggle,
-      bool finishBeforeUpdate = false,
+      bool finishAfterUpdate = false,
     }) {
       final next = nextValue(selected, toggle: toggle);
       if (next == null) return false;
@@ -108,8 +113,8 @@ class PresentationSearchInput extends HookConsumerWidget {
         return false;
       }
       validationMessage.value = null;
-      if (finishBeforeUpdate) finish();
       scope.update(binding.reference, next);
+      if (finishAfterUpdate) finish();
       return true;
     }
 
@@ -122,7 +127,7 @@ class PresentationSearchInput extends HookConsumerWidget {
       if (!applyValue(
         payload.selectedValue,
         toggle: toggle,
-        finishBeforeUpdate: close,
+        finishAfterUpdate: close,
       )) {
         return;
       }
@@ -156,7 +161,7 @@ class PresentationSearchInput extends HookConsumerWidget {
       final accepted = applyValue(
         result.valueOrNull!,
         toggle: false,
-        finishBeforeUpdate: element.selectionMode == SearchSelectionMode.single,
+        finishAfterUpdate: element.selectionMode == SearchSelectionMode.single,
       );
       if (accepted && element.selectionMode == SearchSelectionMode.multiple) {
         finish();
@@ -177,6 +182,7 @@ class PresentationSearchInput extends HookConsumerWidget {
               queryBindingId: element.queryBindingId,
               selections: selections.stream,
               historyStorage: historyStorage,
+              collections: scope.collections,
               realmSourceBuilder: scope.realmSearchSourceBuilder,
             ).build(element.provider);
         return SearchController(
@@ -196,6 +202,7 @@ class PresentationSearchInput extends HookConsumerWidget {
         onStartEditing: (controller) {
           if (!scope.enabled || scope.readOnly || !binding.writable) return;
           original.value = binding.value;
+          interaction.begin();
           explicitExit.value = false;
           validationMessage.value = null;
           if (element.selectionMode == SearchSelectionMode.single) {
@@ -241,8 +248,7 @@ class PresentationSearchInput extends HookConsumerWidget {
         onDismiss: () {
           explicitExit.value = true;
           validationMessage.value = null;
-          restoreOriginal();
-          finish();
+          finish(cancel: true);
         },
         onDone: (controller) {
           if (selectingWithPointer.value) return;
@@ -258,7 +264,10 @@ class PresentationSearchInput extends HookConsumerWidget {
             selectResult(result, commit: true);
             return;
           }
-          if (!acceptCustom(controller)) restoreOriginal();
+          if (!acceptCustom(controller)) {
+            finish(cancel: true);
+            return;
+          }
           finish();
         },
         onAcceptTraversal: (controller, {required backwards}) {
@@ -268,8 +277,7 @@ class PresentationSearchInput extends HookConsumerWidget {
             selectResult(preview, commit: true);
           } else if (element.selectionMode == SearchSelectionMode.single &&
               !acceptCustom(controller)) {
-            restoreOriginal();
-            finish(restoreFocus: false);
+            finish(restoreFocus: false, cancel: true);
           } else {
             finish(restoreFocus: false);
           }

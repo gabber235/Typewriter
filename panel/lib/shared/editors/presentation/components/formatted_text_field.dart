@@ -12,10 +12,13 @@ class FormattedTextField extends HookWidget {
     this.onChanged,
     this.onDone,
     this.onSubmitted,
+    this.onInputFocus,
+    this.onDismiss,
+    this.onCancel,
     this.inputFormatters,
     this.keyboardType = TextInputType.text,
     this.hintText,
-    this.icon,
+    this.prefix,
     this.singleLine = true,
     this.minLines,
     this.maxLines,
@@ -29,10 +32,13 @@ class FormattedTextField extends HookWidget {
   final Function(String)? onChanged;
   final Function(String)? onDone;
   final Function(String)? onSubmitted;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onCancel;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType keyboardType;
   final String? hintText;
-  final String? icon;
+  final Widget? prefix;
   final bool singleLine;
   final int? minLines;
   final int? maxLines;
@@ -48,6 +54,9 @@ class FormattedTextField extends HookWidget {
       onChanged: onChanged,
       onDone: onDone,
       onSubmitted: onSubmitted,
+      onInputFocus: onInputFocus,
+      onDismiss: onDismiss,
+      onCancel: onCancel,
       minLines: minLines,
       maxLines: maxLines ?? (singleLine ? 1 : null),
       keyboardType: keyboardType,
@@ -57,10 +66,10 @@ class FormattedTextField extends HookWidget {
         ...?inputFormatters,
       ],
       decoration: InputDecoration(
-        prefixIcon: icon != null
+        prefixIcon: prefix != null
             ? Padding(
                 padding: EdgeInsets.all(context.spacing.space2),
-                child: Icones(icon, size: 18),
+                child: prefix,
               )
             : null,
         hintText: hintText,
