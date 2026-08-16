@@ -87,7 +87,8 @@ class ColorPickerField extends HookConsumerWidget {
           groupId: tapGroup,
           child: Actions(
             actions: {
-              DismissIntent: CallbackAction(
+              DismissIntent: CallbackAction(onInvoke: (_) => close()),
+              CancelIntent: CallbackAction(
                 onInvoke: (_) => close(cancel: true),
               ),
             },

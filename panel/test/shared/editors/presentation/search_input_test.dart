@@ -62,9 +62,7 @@ void main() {
     expect(find.text("Beta"), findsOneWidget);
   });
 
-  testWidgets("activate intent opens and dismiss restores preview", (
-    tester,
-  ) async {
+  testWidgets("dismiss keeps the current preview", (tester) async {
     await tester.pumpTestApp(
       child: searchTestRenderer(
         type: const StringType(),
@@ -85,12 +83,40 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(QueryBar), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField), "");
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
     Actions.invoke(
       tester.element(find.byType(QueryBar)),
       const DismissIntent(),
     );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(QueryBar), findsNothing);
+    expect(find.text("Beta"), findsOneWidget);
+  });
+
+  testWidgets("cancel restores the interaction origin", (tester) async {
+    await tester.pumpTestApp(
+      child: searchTestRenderer(
+        type: const StringType(),
+        value: const StringValue("Alpha"),
+        presentation: searchTestPresentation(),
+      ),
+    );
+
+    await tester.tap(find.bySemanticsLabel("Activate search input"));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "");
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pumpAndSettle();
 
     expect(find.byType(QueryBar), findsNothing);

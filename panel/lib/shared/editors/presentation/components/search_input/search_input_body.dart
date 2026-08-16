@@ -16,6 +16,7 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
     required this.onSelectionPointerEnd,
     required this.onSubmit,
     required this.onDismiss,
+    required this.onCancel,
     required this.onDone,
     required this.onAcceptTraversal,
   });
@@ -34,6 +35,7 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
   final VoidCallback onSelectionPointerEnd;
   final ValueChanged<SearchController> onSubmit;
   final VoidCallback onDismiss;
+  final VoidCallback onCancel;
   final ValueChanged<SearchController> onDone;
   final void Function(SearchController controller, {required bool backwards})
   onAcceptTraversal;
@@ -120,6 +122,7 @@ class _PresentationSearchInputBody extends HookConsumerWidget {
                     onEditingComplete: () {},
                     onDone: (_) => onDone(controller),
                     onDismiss: onDismiss,
+                    onCancel: onCancel,
                     textFieldActions: textFieldActions,
                     onInputFocus: controller.refresh,
                     selectAllOnFocus: true,
