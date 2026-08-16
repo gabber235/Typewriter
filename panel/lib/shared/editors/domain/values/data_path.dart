@@ -23,6 +23,15 @@ abstract class DataPath with _$DataPath {
   DataPath followedBy(DataPath suffix) =>
       DataPath([...segments, ...suffix.segments]);
 
+  /// Whether this path equals [ancestor] or points inside it.
+  bool isAtOrBelow(DataPath ancestor) {
+    if (segments.length < ancestor.segments.length) return false;
+    for (var index = 0; index < ancestor.segments.length; index++) {
+      if (segments[index] != ancestor.segments[index]) return false;
+    }
+    return true;
+  }
+
   TypeResult<DataValue> read(DataValue root) {
     var current = root;
     for (final segment in segments) {
