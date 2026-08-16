@@ -150,7 +150,7 @@ class _TokenInput extends HookConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: DecoratedTextField(
+                  child: EditorTextField(
                     controller: controller,
                     focusNode: focusNode,
                     decoration: InputDecoration(

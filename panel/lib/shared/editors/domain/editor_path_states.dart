@@ -12,9 +12,11 @@ final class EditorPathStates {
 
   Set<DataPath> get dirtyPaths => _pathsWhere((record) => record.dirty);
 
-  bool get hasConflicts => _records.values.any(
-    (record) => record.progress is ConflictedPathProgress,
-  );
+  bool get hasConflicts {
+    return _records.values.any(
+      (record) => record.progress is ConflictedPathProgress,
+    );
+  }
 
   Set<DataPath> flushCandidates(Set<DataPath>? requested) {
     final candidates = _pathsWhere(
@@ -24,9 +26,11 @@ final class EditorPathStates {
     return candidates.intersection(requested);
   }
 
-  Set<DataPath> get autoFlushCandidates => _pathsWhere(
-    (record) => record.progress is PendingPathProgress && record.gate == null,
-  );
+  Set<DataPath> get autoFlushCandidates {
+    return _pathsWhere(
+      (record) => record.progress is PendingPathProgress && record.gate == null,
+    );
+  }
 
   EditorSaveState saveState(DataPath path) {
     var best = const EditorSaveState.idle();
@@ -42,10 +46,8 @@ final class EditorPathStates {
     return best;
   }
 
-  void markEdited(DataPath path) => _setProgress(
-    path,
-    const EditorPathProgress.pending(),
-  );
+  void markEdited(DataPath path) =>
+      _setProgress(path, const EditorPathProgress.pending());
 
   void markSaving(Iterable<DataPath> paths) {
     for (final path in paths) {
@@ -78,15 +80,11 @@ final class EditorPathStates {
     }
   }
 
-  void resolveConflictLocally(DataPath path) => _setProgress(
-    path,
-    const EditorPathProgress.pending(),
-  );
+  void resolveConflictLocally(DataPath path) =>
+      _setProgress(path, const EditorPathProgress.pending());
 
-  void adoptRemote(DataPath path, EditorSavePhase phase) => _setProgress(
-    path,
-    EditorPathProgress.settled(phase),
-  );
+  void adoptRemote(DataPath path, EditorSavePhase phase) =>
+      _setProgress(path, EditorPathProgress.settled(phase));
 
   void reset(DataPath path) => _setProgress(path, null);
 
@@ -130,16 +128,15 @@ final class EditorPathStates {
     return gates;
   }
 
-  Set<DataPath> _pathsWhere(bool Function(EditorPathRecord record) predicate) =>
-      {
-        for (final entry in _records.entries)
-          if (predicate(entry.value)) entry.key,
-      };
+  Set<DataPath> _pathsWhere(bool Function(EditorPathRecord record) predicate) {
+    return {
+      for (final entry in _records.entries)
+        if (predicate(entry.value)) entry.key,
+    };
+  }
 
-  void _setProgress(DataPath path, EditorPathProgress? progress) => _transform(
-    path,
-    (record) => record.copyWith(progress: progress),
-  );
+  void _setProgress(DataPath path, EditorPathProgress? progress) =>
+      _transform(path, (record) => record.copyWith(progress: progress));
 
   void _transform(
     DataPath path,
@@ -165,37 +162,43 @@ abstract class EditorPathRecord with _$EditorPathRecord {
 
   bool get removable => progress == null && gate == null;
 
-  bool get dirty => switch (progress) {
-    PendingPathProgress() ||
-    SavingPathProgress() ||
-    FailedPathProgress() ||
-    ContendedPathProgress() ||
-    ConflictedPathProgress() => true,
-    SettledPathProgress() || null => false,
-  };
+  bool get dirty {
+    return switch (progress) {
+      PendingPathProgress() ||
+      SavingPathProgress() ||
+      FailedPathProgress() ||
+      ContendedPathProgress() ||
+      ConflictedPathProgress() => true,
+      SettledPathProgress() || null => false,
+    };
+  }
 
-  EditorSavePhase get phase => switch (progress) {
-    null => EditorSavePhase.idle,
-    PendingPathProgress() => EditorSavePhase.pending,
-    SavingPathProgress() => EditorSavePhase.saving,
-    FailedPathProgress() => EditorSavePhase.failed,
-    ContendedPathProgress() => EditorSavePhase.repeatedContention,
-    ConflictedPathProgress() => EditorSavePhase.conflict,
-    SettledPathProgress(:final phase) => phase,
-  };
+  EditorSavePhase get phase {
+    return switch (progress) {
+      null => EditorSavePhase.idle,
+      PendingPathProgress() => EditorSavePhase.pending,
+      SavingPathProgress() => EditorSavePhase.saving,
+      FailedPathProgress() => EditorSavePhase.failed,
+      ContendedPathProgress() => EditorSavePhase.repeatedContention,
+      ConflictedPathProgress() => EditorSavePhase.conflict,
+      SettledPathProgress(:final phase) => phase,
+    };
+  }
 
-  EditorSaveState saveState(DataPath path) => EditorSaveState(
-    phase: phase,
-    path: path,
-    conflict: switch (progress) {
-      ConflictedPathProgress(:final conflict) => conflict,
-      _ => null,
-    },
-    diagnostics: switch (progress) {
-      FailedPathProgress(:final diagnostics) => diagnostics,
-      _ => const [],
-    },
-  );
+  EditorSaveState saveState(DataPath path) {
+    return EditorSaveState(
+      phase: phase,
+      path: path,
+      conflict: switch (progress) {
+        ConflictedPathProgress(:final conflict) => conflict,
+        _ => null,
+      },
+      diagnostics: switch (progress) {
+        FailedPathProgress(:final diagnostics) => diagnostics,
+        _ => const [],
+      },
+    );
+  }
 }
 
 @freezed

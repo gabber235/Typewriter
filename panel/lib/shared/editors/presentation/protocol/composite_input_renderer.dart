@@ -9,33 +9,57 @@ part "renderers/input/map_entry_support.dart";
 part "renderers/input/record_input_renderer.dart";
 part "renderers/input/map_input_renderer.dart";
 
-extension CompositeInputRendering on PresentationElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) {
-    final control = switch (this) {
-      ListInputElement(:final control) ||
-      MapInputElement(:final control) ||
-      RecordInputElement(:final control) => control,
-      _ => null,
-    };
-    if (control == null) return const SizedBox.shrink();
-    final resolved = scope.resolve(control.binding);
-    if (resolved case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final binding = resolved.valueOrNull!;
-    return switch ((this, binding.type, binding.value)) {
-      (ListInputElement(), ListType(), ListValue()) =>
-        (this as ListInputElement).render(binding: binding, scope: scope),
-      (MapInputElement(), MapType(), MapValue()) =>
-        (this as MapInputElement).render(binding: binding, scope: scope),
-      (RecordInputElement(), RecordType(), RecordValue()) =>
-        (this as RecordInputElement).render(binding: binding, scope: scope),
-      _ => presentationDiagnostic(context, [
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "Composite control does not match its binding",
-        ),
-      ]),
-    };
+extension ListInputElementResolvedRendering on ListInputElement {
+  Widget renderInput(BuildContext context, PresentationRenderScope scope) {
+    return BoundControlShell(
+      control: control,
+      scope: scope,
+      labeled: false,
+      shapeMismatch: (binding) =>
+          binding.type is ListType && binding.value is ListValue
+          ? null
+          : "List control does not match its binding",
+      builder: (context, field) {
+        return render(
+          binding: field.binding,
+          scope: scope,
+          editable: field.editable,
+        );
+      },
+    );
+  }
+}
+
+extension MapInputElementResolvedRendering on MapInputElement {
+  Widget renderInput(BuildContext context, PresentationRenderScope scope) {
+    return BoundControlShell(
+      control: control,
+      scope: scope,
+      labeled: false,
+      shapeMismatch: (binding) =>
+          binding.type is MapType && binding.value is MapValue
+          ? null
+          : "Map control does not match its binding",
+      builder: (context, field) {
+        return render(binding: field.binding, scope: scope);
+      },
+    );
+  }
+}
+
+extension RecordInputElementResolvedRendering on RecordInputElement {
+  Widget renderInput(BuildContext context, PresentationRenderScope scope) {
+    return BoundControlShell(
+      control: control,
+      scope: scope,
+      labeled: false,
+      shapeMismatch: (binding) =>
+          binding.type is RecordType && binding.value is RecordValue
+          ? null
+          : "Record control does not match its binding",
+      builder: (context, field) {
+        return render(binding: field.binding, scope: scope);
+      },
+    );
   }
 }

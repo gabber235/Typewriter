@@ -45,160 +45,6 @@ sealed class _ResolvedHeaderItem with _$ResolvedHeaderItem {
 
   const _ResolvedHeaderItem._();
 
-  List<ActionShortcut> shortcuts(
-    BuildContext context,
-    PresentationRenderScope scope,
-  ) => switch (this) {
-    _ResolvedHeaderButtonItem() ||
-    _ResolvedHeaderBooleanToggleItem() => [_activationShortcut(context, scope)],
-    _ResolvedHeaderReorderHandleItem() => [
-      _reorderShortcut(scope, HeaderItemCommand.moveBefore),
-      _reorderShortcut(scope, HeaderItemCommand.moveAfter),
-      _reorderShortcut(scope, HeaderItemCommand.moveToStart),
-      _reorderShortcut(scope, HeaderItemCommand.moveToEnd),
-    ],
-  };
-
-  ActionShortcut _activationShortcut(
-    BuildContext context,
-    PresentationRenderScope scope,
-  ) {
-    final item = this;
-    final icon = switch (item) {
-      _ResolvedHeaderButtonItem(:final icon) => Icones.value(icon),
-      _ResolvedHeaderBooleanToggleItem(:final checked) => Icones(
-        checked ? Ic.baseline_check_box : Ic.baseline_check_box_outline_blank,
-      ),
-      _ => throw StateError("Only activatable header items have shortcuts"),
-    };
-    return ActionShortcut(
-      id: "${id.qualified}:${HeaderItemCommand.activate.name}",
-      label: label,
-      description: tooltip,
-      activators: scope.shortcuts(id, HeaderItemCommand.activate),
-      priority: priority,
-      icon: icon,
-      onInvoke: enabled ? (ref) => _invoke(context, scope) : null,
-    );
-  }
-
-  ActionShortcut _reorderShortcut(
-    PresentationRenderScope scope,
-    HeaderItemCommand command,
-  ) {
-    final item = this as _ResolvedHeaderReorderHandleItem;
-    final available = item.enabled && item._destination(command) != null;
-    return ActionShortcut(
-      id: "${item.id.qualified}:${command.name}",
-      label: item._commandLabel(command),
-      description: item.tooltip,
-      activators: scope.shortcuts(item.id, command),
-      priority: 0,
-      icon: const Icones(Fa6Solid.bars_staggered),
-      onInvoke: available ? (ref) => item._move(scope, command) : null,
-    );
-  }
-
-  Widget inlineWidget(BuildContext context, PresentationRenderScope scope) =>
-      switch (this) {
-        _ResolvedHeaderButtonItem(:final icon, :final tone) => IconButton(
-          tooltip: tooltip,
-          onPressed: enabled ? () => _invoke(context, scope) : null,
-          color: tone == HeaderActionTone.destructive
-              ? Theme.of(context).colorScheme.error
-              : null,
-          icon: Icones.value(icon),
-        ),
-        _ResolvedHeaderBooleanToggleItem(:final checked) => Tooltip(
-          message: tooltip,
-          child: Checkbox(
-            value: checked,
-            onChanged: enabled ? (_) => _invoke(context, scope) : null,
-            visualDensity: VisualDensity.compact,
-            semanticLabel: label,
-          ),
-        ),
-        _ResolvedHeaderReorderHandleItem(:final index) => Tooltip(
-          message: tooltip,
-          child: ReorderableDragStartListener(
-            index: index,
-            enabled: enabled,
-            child: const SizedBox.square(
-              dimension: 40,
-              child: Center(child: Icones(Fa6Solid.bars_staggered, size: 18)),
-            ),
-          ),
-        ),
-      };
-
-  MenuItem overflowItem(BuildContext context, PresentationRenderScope scope) =>
-      switch (this) {
-        _ResolvedHeaderButtonItem(:final icon, :final tone) => MenuItem(
-          label: label,
-          icon: Icones.value(icon, size: 18),
-          color: tone == HeaderActionTone.destructive
-              ? Theme.of(context).colorScheme.error
-              : null,
-          shortcuts: scope.shortcuts(id, HeaderItemCommand.activate),
-          onPressed: enabled ? () => _invoke(context, scope) : null,
-        ),
-        _ResolvedHeaderBooleanToggleItem(:final checked) => MenuItem(
-          label: label,
-          icon: Icones(
-            checked
-                ? Ic.baseline_check_box
-                : Ic.baseline_check_box_outline_blank,
-            size: 18,
-          ),
-          shortcuts: scope.shortcuts(id, HeaderItemCommand.activate),
-          onPressed: enabled ? () => _invoke(context, scope) : null,
-        ),
-        _ResolvedHeaderReorderHandleItem() => throw StateError(
-          "Reorder handles cannot overflow",
-        ),
-      };
-
-  Future<void> _invoke(
-    BuildContext context,
-    PresentationRenderScope scope,
-  ) async {
-    if (!enabled) return;
-    final action = switch (this) {
-      _ResolvedHeaderButtonItem(:final action) ||
-      _ResolvedHeaderBooleanToggleItem(:final action) => action,
-      _ResolvedHeaderReorderHandleItem() => null,
-    };
-    if (action == null) return;
-    if (!await _confirm(context)) return;
-    scope.invoke(action);
-  }
-
-  Future<bool> _confirm(BuildContext context) async {
-    final confirmation = switch (this) {
-      _ResolvedHeaderButtonItem(:final confirmation) ||
-      _ResolvedHeaderBooleanToggleItem(:final confirmation) => confirmation,
-      _ResolvedHeaderReorderHandleItem() => null,
-    };
-    if (confirmation == null) return true;
-    final tone = switch (this) {
-      _ResolvedHeaderButtonItem(:final tone) => tone,
-      _ => HeaderActionTone.neutral,
-    };
-    final colorScheme = Theme.of(context).colorScheme;
-    return showConfirmationDialogue(
-      context: context,
-      title: confirmation.title,
-      content: confirmation.message,
-      confirmText: confirmation.confirmationLabel,
-      confirmColor: tone == HeaderActionTone.destructive
-          ? colorScheme.error
-          : colorScheme.primary,
-      onConfirmColor: tone == HeaderActionTone.destructive
-          ? colorScheme.onError
-          : colorScheme.onPrimary,
-    );
-  }
-
   int get priority => switch (this) {
     _ResolvedHeaderButtonItem(:final priority) ||
     _ResolvedHeaderBooleanToggleItem(:final priority) => priority,
@@ -254,6 +100,29 @@ sealed class _ResolvedHeaderItem with _$ResolvedHeaderItem {
     _ResolvedHeaderBooleanToggleItem(:final placement) => placement,
     _ResolvedHeaderReorderHandleItem() => null,
   };
+}
+
+@freezed
+abstract class _ResolvedPresentationHeader with _$ResolvedPresentationHeader {
+  const factory _ResolvedPresentationHeader({
+    required String title,
+    required String description,
+    required List<_ResolvedHeaderItem> items,
+  }) = _ResolvedPresentationHeaderValue;
+}
+
+extension on PresentationHeader {
+  _ResolvedPresentationHeader resolve(PresentationRenderScope scope) {
+    return _ResolvedPresentationHeader(
+      title: title == null ? "" : scope.expressionText(title!),
+      description: description == null
+          ? ""
+          : scope.expressionText(description!),
+      items: [
+        for (final (index, item) in items.indexed) item.resolve(scope, index),
+      ],
+    );
+  }
 }
 
 extension on _ResolvedHeaderReorderHandleItem {

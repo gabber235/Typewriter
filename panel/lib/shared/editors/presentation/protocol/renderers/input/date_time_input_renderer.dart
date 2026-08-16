@@ -7,25 +7,23 @@ extension DateTimeInputElementRendering on DateTimeInputElement {
         "Date and time control must enable at least one part",
       );
     }
-    final result = scope.resolve(control.binding);
-    if (result case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final binding = result.valueOrNull!;
-    if (binding.type is! TimestampType || binding.value is! TimestampValue) {
-      return _inputDiagnostic("Date and time control requires a timestamp");
-    }
-    final value = (binding.value as TimestampValue).value;
-    final child = DateTimePickerField(
-      value: value,
-      includeDate: includeDate,
-      includeTime: includeTime,
-      enabled: scope.enabled && binding.writable,
-      readOnly: scope.readOnly,
-      onChanged: (next) {
-        scope.update(binding.reference, TimestampValue(next));
+    return BoundControlShell(
+      control: control,
+      scope: scope,
+      shapeMismatch: (binding) =>
+          binding.type is TimestampType && binding.value is TimestampValue
+          ? null
+          : "Date and time control requires a timestamp",
+      builder: (context, field) {
+        return DateTimePickerField(
+          value: (field.binding.value as TimestampValue).value,
+          includeDate: includeDate,
+          includeTime: includeTime,
+          enabled: field.enabled,
+          readOnly: field.readOnly,
+          onChanged: (next) => field.update(TimestampValue(next)),
+        );
       },
     );
-    return LabeledControl(control: control, scope: scope, child: child);
   }
 }

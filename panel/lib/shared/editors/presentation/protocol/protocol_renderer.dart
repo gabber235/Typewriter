@@ -62,12 +62,12 @@ class EditorProtocolRenderer extends StatefulWidget {
 }
 
 class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
-  late EditorController _controller;
+  late final TransactionalEditorSource _source;
 
   @override
   void initState() {
     super.initState();
-    _controller = _createController();
+    _source = _createSource();
   }
 
   @override
@@ -82,49 +82,57 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
         oldWidget.readOnly == widget.readOnly) {
       return;
     }
-    _controller.dispose();
-    _controller = _createController();
+    final revision = oldWidget.envelope.rootValue == widget.envelope.rootValue
+        ? _source.document.revision
+        : _source.document.revision + 1;
+    _source.refreshDocument(_createDocument(revision));
   }
 
   @override
-  Widget build(BuildContext context) => EditorSurface(
-    controller: _controller,
-    conversions: widget.conversions,
-    realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
-    headerShortcuts: {
-      ..._defaultEditorHeaderShortcuts,
-      ...widget.headerShortcuts,
-    },
-    readOnly: widget.readOnly,
-    historyNamespace: widget.historyNamespace,
-  );
+  Widget build(BuildContext context) {
+    return EditorSurface(
+      source: _source,
+      conversions: widget.conversions,
+      realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
+      headerShortcuts: {
+        ..._defaultEditorHeaderShortcuts,
+        ...widget.headerShortcuts,
+      },
+      readOnly: widget.readOnly,
+      historyNamespace: widget.historyNamespace,
+    );
+  }
 
-  EditorController _createController() {
+  TransactionalEditorSource _createSource() {
+    return TransactionalEditorSource(
+      document: _createDocument(0),
+      debounce: Duration.zero,
+      successfulSavePhase: EditorSavePhase.sessionOnly,
+      commit: (commit) async {
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
+      executeRealmAction: _executeRealm,
+    );
+  }
+
+  EditorDocument _createDocument(int revision) {
     final rootType = NamedType(widget.envelope.rootType);
     final registry = TypeRegistry(widget.typeCatalog);
     final resolved = registry.resolve(rootType);
-    final document = EditorDocument(
+    return EditorDocument(
       rootType: rootType,
       typeCatalog: widget.typeCatalog,
       confirmedValue: widget.envelope.rootValue,
-      revision: 0,
+      revision: revision,
       presentations: widget.presentations,
       collections: widget.collections,
       rootPresentation: widget.presentation,
       diagnostics: [...widget.diagnostics, ...resolved.diagnostics],
       readOnly: widget.readOnly,
     );
-    final source = TransactionalEditorSource(
-      document: document,
-      debounce: Duration.zero,
-      successfulSavePhase: EditorSavePhase.sessionOnly,
-      commit: (commit) async => TypedMutationResult.success(
-        revision: commit.expectedRevision + 1,
-        value: commit.rootValue,
-      ),
-      executeRealmAction: _executeRealm,
-    );
-    return EditorController(source: source);
   }
 
   Future<TypedMutationResult> _executeRealm(
@@ -161,12 +169,13 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _source.dispose();
     super.dispose();
   }
 }
 
-TypedMutationResult _unavailable(String message) =>
-    TypedMutationResult.unavailable([
-      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
-    ]);
+TypedMutationResult _unavailable(String message) {
+  return TypedMutationResult.unavailable([
+    TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
+  ]);
+}

@@ -48,7 +48,7 @@ class _MapInputState extends State<_MapInput> {
     for (final slot in previous) {
       if (!identical(previousStore, scope.expansionStore) ||
           !nextIdentities.contains(slot.identity)) {
-        previousStore.remove(slot.identity);
+        previousStore.remove(HeaderExpansionKey.instance(slot.identity));
       }
     }
     _slots = next;
@@ -57,7 +57,7 @@ class _MapInputState extends State<_MapInput> {
   @override
   void dispose() {
     for (final slot in _slots) {
-      scope.expansionStore.remove(slot.identity);
+      scope.expansionStore.remove(HeaderExpansionKey.instance(slot.identity));
     }
     super.dispose();
   }
@@ -174,9 +174,9 @@ class _MapInputState extends State<_MapInput> {
               );
     return PresentationHeaderChrome(
       nodeId: "${element.control.binding}.entry.${slot.identity.id}",
+      expansionKey: HeaderExpansionKey.instance(slot.identity),
       header: effectiveHeader,
       scope: scope,
-      expansionIdentity: slot.identity,
       child: content,
     );
   }
@@ -185,15 +185,17 @@ class _MapInputState extends State<_MapInput> {
     final entry = slot.entry;
     if (element.keyPresentation case final presentation?) {
       final childScope = scope.withVirtualBinding(
-        element.keyBindingId,
-        BindingSnapshot(
-          type: type.key,
-          value: entry.key,
-          revision: binding.revision,
-          writable: binding.writable,
+        VirtualBindingHost(
+          id: element.keyBindingId,
+          snapshot: BindingSnapshot(
+            type: type.key,
+            value: entry.key,
+            revision: binding.revision,
+            writable: binding.writable,
+          ),
+          onChanged: (next) => _replaceKey(map, entry.key, next),
+          interactionTarget: scope.canonical(element.control.binding),
         ),
-        (next) => _replaceKey(map, entry.key, next),
-        interactionTarget: scope.canonical(element.control.binding),
       );
       final localized = presentation.localizeFailures(
         childScope.expressions,
@@ -204,15 +206,17 @@ class _MapInputState extends State<_MapInput> {
     }
     final reference = BindingReference(bindingId: element.keyBindingId);
     final childScope = scope.withVirtualBinding(
-      element.keyBindingId,
-      BindingSnapshot(
-        type: type.key,
-        value: entry.key,
-        revision: binding.revision,
-        writable: binding.writable,
+      VirtualBindingHost(
+        id: element.keyBindingId,
+        snapshot: BindingSnapshot(
+          type: type.key,
+          value: entry.key,
+          revision: binding.revision,
+          writable: binding.writable,
+        ),
+        onChanged: (next) => _replaceKey(map, entry.key, next),
+        interactionTarget: scope.canonical(element.control.binding),
       ),
-      (next) => _replaceKey(map, entry.key, next),
-      interactionTarget: scope.canonical(element.control.binding),
     );
     return ResolvedBinding(
       reference: reference,

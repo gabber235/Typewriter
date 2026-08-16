@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  group("Graph - drag and drop", () {
+  group("Graph drag and drop", () {
     testWidgets("accepts drag and commits snapped grid delta", (tester) async {
       const cell = 50.0;
 

@@ -531,25 +531,27 @@ TransactionalEditorSource _source({
   EditorSavePhase successfulSavePhase = EditorSavePhase.saved,
   Duration debounce = const Duration(days: 1),
   void Function()? onDeleted,
-}) => TransactionalEditorSource(
-  document: EditorDocument(
-    rootType: RecordType(
-      fields: const {
-        "title": TypeField(name: "title", type: StringType()),
-        "color": TypeField(name: "color", type: StringType()),
-      },
+}) {
+  return TransactionalEditorSource(
+    document: EditorDocument(
+      rootType: RecordType(
+        fields: const {
+          "title": TypeField(name: "title", type: StringType()),
+          "color": TypeField(name: "color", type: StringType()),
+        },
+      ),
+      typeCatalog: const TypeCatalog([]),
+      confirmedValue: _value(title: "Old", color: "Red"),
+      revision: 1,
     ),
-    typeCatalog: const TypeCatalog([]),
-    confirmedValue: _value(title: "Old", color: "Red"),
-    revision: 1,
-  ),
-  debounce: debounce,
-  commit: commit,
-  scheduler: scheduler,
-  jitter: jitter,
-  successfulSavePhase: successfulSavePhase,
-  onDeleted: onDeleted,
-);
+    debounce: debounce,
+    commit: commit,
+    scheduler: scheduler,
+    jitter: jitter,
+    successfulSavePhase: successfulSavePhase,
+    onDeleted: onDeleted,
+  );
+}
 
 RecordValue _value({required String title, required String color}) =>
     RecordValue({"title": StringValue(title), "color": StringValue(color)});

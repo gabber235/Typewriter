@@ -13,8 +13,8 @@ class PresentationNodeRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (node.element is DiagnosticElement) {
-      return DataElementRendering(node.element).render(context, scope);
+    if (node.element case final DiagnosticElement element) {
+      return element.render(context);
     }
     final enabled = _condition(node.properties.enabledIf, true);
     if (enabled case TypeFailure(:final diagnostics)) {
@@ -41,6 +41,10 @@ class PresentationNodeRenderer extends StatelessWidget {
         ? child
         : PresentationHeaderChrome(
             nodeId: node.id,
+            expansionKey: HeaderExpansionKey.node(
+              nodeId: node.id,
+              binding: headerBinding,
+            ),
             header: header,
             scope: renderScope,
             child: child,
@@ -77,55 +81,57 @@ class PresentationNodeRenderer extends StatelessWidget {
 }
 
 extension on PresentationElement {
-  Widget _render(
-    BuildContext context,
-    PresentationRenderScope scope,
-  ) => switch (this) {
-    ChildrenLayoutElement() ||
-    GridElement() ||
-    StackElement() ||
-    SingleChildLayoutElement() ||
-    CollapsibleElement() ||
-    TabsElement() ||
-    DividerElement() ||
-    SpacerElement() => LayoutElementRendering(this).render(context, scope),
-    TextualContentElement() ||
-    IconElement() ||
-    ImageElement() ||
-    BadgeElement() ||
-    ChipElement() ||
-    ProgressElement() => ContentElementRendering(this).render(context, scope),
-    TypedFieldElement() ||
-    ConditionalElement() ||
-    RepeatedElement() ||
-    ScopedBindingElement() ||
-    CollectionLookupElement() ||
-    CollectionGraphElement() => DataElementRendering(
-      this,
-    ).render(context, scope),
-    TextInputElement() ||
-    NumericInputElement() ||
-    ToggleInputElement() ||
-    SelectInputElement() ||
-    SliderInputElement() ||
-    SimpleInputElement() ||
-    ListInputElement() ||
-    MapInputElement() ||
-    RecordInputElement() ||
-    PolymorphicInputElement() => InputElementRendering(
-      this,
-    ).render(context, scope),
-    SearchInputElement() => InputElementRendering(this).render(context, scope),
-    ButtonElement() ||
-    IconButtonElement() ||
-    MenuElement() ||
-    TooltipElement() => InteractionElementRendering(
-      this,
-    ).render(context, scope),
-    DiagnosticElement() => DataElementRendering(this).render(context, scope),
-    DefaultPresentationElement() => (this as DefaultPresentationElement).render(
-      context,
-      scope,
-    ),
-  };
+  Widget _render(BuildContext context, PresentationRenderScope scope) {
+    return switch (this) {
+      final DefaultPresentationElement element => element.render(
+        context,
+        scope,
+      ),
+      final TextElement element => element.render(scope),
+      final MarkdownElement element => element.render(scope),
+      final IconElement element => element.render(context, scope),
+      final ImageElement element => element.render(context, scope),
+      final BadgeElement element => element.render(context, scope),
+      final ChipElement element => element.render(context, scope),
+      final ProgressElement element => element.render(context, scope),
+      final DiagnosticElement element => element.render(context),
+      final TypedFieldElement element => element.render(scope),
+      final ConditionalElement element => element.render(context, scope),
+      final RepeatedElement element => element.render(context, scope),
+      final ScopedBindingElement element => element.render(context, scope),
+      final CollectionLookupElement element => element.render(context, scope),
+      final CollectionGraphElement element => element.render(context, scope),
+      final TextInputElement element => element.render(context, scope),
+      final SelectInputElement element => element.render(context, scope),
+      final SliderInputElement element => element.render(context, scope),
+      final NumericInputElement element => element.render(context, scope),
+      final ToggleInputElement element => element.render(context, scope),
+      final DateTimeInputElement element => element.render(context, scope),
+      final DurationInputElement element => element.render(context, scope),
+      final BytesInputElement element => element.render(context, scope),
+      final EnumInputElement element => element.render(context, scope),
+      final ColorInputElement element => element.render(context, scope),
+      final NamedInputElement element => element.render(context, scope),
+      final SearchInputElement element => element.render(context, scope),
+      final PolymorphicInputElement element => element.render(context, scope),
+      final ListInputElement element => element.renderInput(context, scope),
+      final MapInputElement element => element.renderInput(context, scope),
+      final RecordInputElement element => element.renderInput(context, scope),
+      final ButtonElement element => element.render(scope),
+      final IconButtonElement element => element.render(context, scope),
+      final MenuElement element => element.render(scope),
+      final TooltipElement element => element.render(scope),
+      final ColumnElement element => element.render(scope),
+      final RowElement element => element.render(scope),
+      final WrapElement element => element.render(scope),
+      final StackElement element => element.render(scope),
+      final GridElement element => element.render(scope),
+      final CardElement element => element.render(scope),
+      final SectionElement element => element.render(scope),
+      final CollapsibleElement element => element.render(scope),
+      final TabsElement element => element.render(scope),
+      final DividerElement element => element.render(),
+      final SpacerElement element => element.render(scope),
+    };
+  }
 }

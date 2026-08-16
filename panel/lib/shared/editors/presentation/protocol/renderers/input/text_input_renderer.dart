@@ -1,63 +1,38 @@
 part of "../../scalar_input_renderer.dart";
 
 extension TextInputElementRendering on TextInputElement {
-  Widget render(BuildContext context, PresentationRenderScope scope) =>
-      _TextInputRenderer(element: this, scope: scope);
-}
-
-class _TextInputRenderer extends HookWidget {
-  const _TextInputRenderer({required this.element, required this.scope});
-
-  final TextInputElement element;
-  final PresentationRenderScope scope;
-
-  @override
-  Widget build(BuildContext context) {
-    final focusNode = useFocusNode();
-    final resolved = scope.resolve(element.control.binding);
-    if (resolved case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final binding = resolved.valueOrNull!;
-    final interaction = useEditorFieldInteraction(scope, binding.reference);
-    final text = switch (binding.value) {
-      StringValue(:final value) => value,
-      _ => null,
-    };
-    if (text == null || binding.type is! StringType) {
-      return presentationDiagnostic(context, [
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "Text control requires a string binding",
-        ),
-      ]);
-    }
-    final prefix = renderControlPrefix(context, element.control, scope);
-    return LabeledControl(
-      control: element.control,
+  Widget render(BuildContext context, PresentationRenderScope scope) {
+    return BoundControlShell(
+      control: control,
       scope: scope,
-      child: FormattedTextField(
-        key: ValueKey(binding.reference),
-        focusNode: focusNode,
-        text: text,
-        prefix: prefix ?? const Icones(HeroiconsSolid.pencil),
-        hintText: element.placeholder == null
-            ? "Enter text"
-            : scope.expressionText(element.placeholder!),
-        singleLine: !element.multiline,
-        minLines: 1,
-        maxLines: element.multiline ? 8 : 1,
-        readOnly: !scope.enabled || scope.readOnly || !binding.writable,
-        onInputFocus: interaction.begin,
-        onDone: (_) => interaction.commit(),
-        onCancel: interaction.cancel,
-        onChanged: (next) {
-          final value = StringValue(next);
-          if (value.validateAgainst(binding.type).isEmpty) {
-            scope.update(element.control.binding, value);
-          }
-        },
-      ),
+      shapeMismatch: (binding) =>
+          binding.type is StringType && binding.value is StringValue
+          ? null
+          : "Text control requires a string binding",
+      builder: (context, field) {
+        final prefix = renderControlPrefix(context, control, scope);
+        return EditorTextField(
+          key: ValueKey(field.binding.reference),
+          text: (field.binding.value as StringValue).value,
+          prefix: prefix ?? const Icones(HeroiconsSolid.pencil),
+          hintText: placeholder == null
+              ? "Enter text"
+              : scope.expressionText(placeholder!),
+          singleLine: !multiline,
+          minLines: 1,
+          maxLines: multiline ? 8 : 1,
+          readOnly: field.locked,
+          onInputFocus: field.interaction.begin,
+          onDone: (_) => field.interaction.commit(),
+          onCancel: field.interaction.cancel,
+          onChanged: (next) {
+            final value = StringValue(next);
+            if (value.validateAgainst(field.binding.type).isEmpty) {
+              field.update(value);
+            }
+          },
+        );
+      },
     );
   }
 }

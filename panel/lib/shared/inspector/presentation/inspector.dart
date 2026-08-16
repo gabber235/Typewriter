@@ -43,7 +43,7 @@ class InspectorScaffold extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return EditorRoot(
-      create: (ref) => EditorController(source: SelectionEditorSource(ref)),
+      create: SelectionEditorSource.new,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return constraints.maxWidth < 3 * kInspectorMinSize

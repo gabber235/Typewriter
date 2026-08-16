@@ -63,8 +63,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
-import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/decorated_text_field.stories.dart'
-    as _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/editor_text_field.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/search_input/search_input.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_components_search_input_search_input_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/editor_save_status.stories.dart'
@@ -913,37 +913,37 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'components',
                 children: [
                   _widgetbook.WidgetbookComponent(
-                    name: 'DecoratedTextField',
+                    name: 'EditorTextField',
                     useCases: [
                       _widgetbook.WidgetbookUseCase(
                         name: 'Default',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories
-                                .decoratedTextFieldDefaultUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
+                                .editorTextFieldDefaultUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Error',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories
-                                .decoratedTextFieldErrorUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
+                                .editorTextFieldErrorUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'Multiline',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories
-                                .decoratedTextFieldMultilineUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
+                                .editorTextFieldMultilineUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'With Callbacks',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories
-                                .decoratedTextFieldWithCallbacksUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
+                                .editorTextFieldWithCallbacksUseCase,
                       ),
                       _widgetbook.WidgetbookUseCase(
                         name: 'With Prefix Icon',
                         builder:
-                            _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories
-                                .decoratedTextFieldWithPrefixIconUseCase,
+                            _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories
+                                .editorTextFieldWithPrefixIconUseCase,
                       ),
                     ],
                   ),

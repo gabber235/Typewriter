@@ -1,4 +1,5 @@
 export "action_canonicalization.dart";
+export "bound_control_shell.dart";
 export "bound_value_renderer.dart";
 export "composite_input_renderer.dart";
 export "content_renderer.dart";

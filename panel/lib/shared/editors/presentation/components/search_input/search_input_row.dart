@@ -144,14 +144,16 @@ class _SearchInputSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final presentation = element.summary;
     final summaryScope = scope.withVirtualBinding(
-      element.summaryBindingId,
-      BindingSnapshot(
-        type: binding.type,
-        value: binding.value,
-        revision: binding.revision,
-        writable: false,
+      VirtualBindingHost(
+        id: element.summaryBindingId,
+        snapshot: BindingSnapshot(
+          type: binding.type,
+          value: binding.value,
+          revision: binding.revision,
+          writable: false,
+        ),
+        onChanged: (_) {},
       ),
-      (_) {},
     );
     final summary = presentation == null
         ? Text(binding.value.expressionDisplayText)

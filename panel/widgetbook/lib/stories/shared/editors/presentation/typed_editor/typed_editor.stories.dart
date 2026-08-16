@@ -18,35 +18,35 @@ class EditorStories extends StatelessWidget {
   final EditorSource Function(Ref ref)? source;
 
   @override
-  Widget build(BuildContext context) => FakeApp(
-    overrides: overrides,
-    child: Consumer(
-      child: child,
-      builder: (context, ref, child) => EditorRoot(
-        create: (ref) => EditorController(
-          source: source?.call(ref) ?? SelectionEditorSource(ref),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Section(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: child,
+  Widget build(BuildContext context) {
+    return FakeApp(
+      overrides: overrides,
+      child: Consumer(
+        child: child,
+        builder: (context, ref, child) => EditorRoot(
+          create: (ref) => source?.call(ref) ?? SelectionEditorSource(ref),
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Section(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: child,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            ActionRow(),
-          ],
+              ActionRow(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class EditorStory extends StatelessWidget {

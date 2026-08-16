@@ -61,7 +61,7 @@ class _JoinOrganization extends HookConsumerWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: DecoratedTextField(
+                    child: EditorTextField(
                       controller: controller,
                       enabled: !hasReachedLimit,
                       decoration: const InputDecoration(

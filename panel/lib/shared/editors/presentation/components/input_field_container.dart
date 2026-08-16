@@ -125,47 +125,27 @@ class InputFieldContainer extends HookConsumerWidget {
     useListenable(inputFocusNode);
 
     final focusType = useState(FocusType.none);
-
     final id = useMemoized(() => uuid.v4());
-    final currentMode = ref.watch(currentInteractionModeProvider);
-
-    useEffect(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        final mode = ref.read(currentInteractionModeProvider);
-        if (mode is InsertMode && surroundingNode.hasPrimaryFocus) {
-          if (mode.id != id) {
-            ref
-                .read(currentInteractionModeProvider.notifier)
-                .setMode(InsertMode(id));
-          }
-          inputFocusNode.requestFocus();
-        }
-
-        if (mode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
-          surroundingNode.requestFocus();
-        }
-      });
-      return null;
-    }, [currentMode]);
+    final modeCoordinator = ref.read(inputFieldModeCoordinatorProvider);
 
     useEffect(() {
       void beginInteraction() {
-        surroundingNode.requestFocus();
-        ref
-            .read(currentInteractionModeProvider.notifier)
-            .setMode(InsertMode(id));
-        inputFocusNode.requestFocus();
+        modeCoordinator.begin(id);
       }
 
       void endInteraction() {
-        final mode = ref.read(currentInteractionModeProvider);
-        if (mode is! InsertMode || mode.id != id) return;
-        ref.read(currentInteractionModeProvider.notifier).normal();
+        modeCoordinator.end(id);
       }
 
+      final unregister = modeCoordinator.register(
+        id: id,
+        inputFocusNode: inputFocusNode,
+        surroundingFocusNode: surroundingNode,
+        onInputFocus: onInputFocus,
+      );
       controller._beginInteraction = beginInteraction;
       controller._endInteraction = endInteraction;
+
       return () {
         if (controller._beginInteraction == beginInteraction) {
           controller._beginInteraction = null;
@@ -173,19 +153,9 @@ class InputFieldContainer extends HookConsumerWidget {
         if (controller._endInteraction == endInteraction) {
           controller._endInteraction = null;
         }
+        unregister();
       };
-    }, [controller, id]);
-
-    useEffect(() {
-      if (inputFocusNode.hasPrimaryFocus) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted && inputFocusNode.hasPrimaryFocus) {
-            onInputFocus?.call();
-          }
-        });
-      }
-      return null;
-    }, [inputFocusNode.hasPrimaryFocus]);
+    }, [controller, id, modeCoordinator, onInputFocus]);
 
     return FocusHighlight(
       type: focusType.value,
@@ -195,9 +165,7 @@ class InputFieldContainer extends HookConsumerWidget {
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (intent) {
               if (surroundingNode.hasPrimaryFocus) {
-                ref
-                    .read(currentInteractionModeProvider.notifier)
-                    .setMode(InsertMode(id));
+                modeCoordinator.begin(id);
               }
               return null;
             },
@@ -227,24 +195,6 @@ class InputFieldContainer extends HookConsumerWidget {
             descendantsAreTraversable: false,
             onFocusChange: (_) {
               focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
-
-              // Read the mode fresh: the build-time value goes stale when
-              // focus moves between two fields in the same frame. The gaining
-              // field must take over an insert mode another field still owns,
-              // and the losing field must only clear a mode it still owns.
-              final mode = ref.read(currentInteractionModeProvider);
-              if (inputFocusNode.hasPrimaryFocus &&
-                  (mode is! InsertMode || mode.id != id)) {
-                ref
-                    .read(currentInteractionModeProvider.notifier)
-                    .setMode(InsertMode(id));
-              }
-
-              if (mode is InsertMode &&
-                  mode.id == id &&
-                  !inputFocusNode.hasFocus) {
-                ref.read(currentInteractionModeProvider.notifier).normal();
-              }
             },
             child: Actions(
               actions: {
@@ -252,18 +202,14 @@ class InputFieldContainer extends HookConsumerWidget {
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
                       onDismiss?.call();
-                      ref
-                          .read(currentInteractionModeProvider.notifier)
-                          .normal();
+                      modeCoordinator.end(id);
                       return null;
                     },
                   ),
                   CancelIntent: CallbackAction<CancelIntent>(
                     onInvoke: (intent) {
                       onCancel?.call();
-                      ref
-                          .read(currentInteractionModeProvider.notifier)
-                          .normal();
+                      modeCoordinator.end(id);
                       return null;
                     },
                   ),

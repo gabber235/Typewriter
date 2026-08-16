@@ -4,7 +4,15 @@ extension ListInputElementRendering on ListInputElement {
   Widget render({
     required ResolvedBinding binding,
     required PresentationRenderScope scope,
-  }) => _ListInputRenderer(element: this, binding: binding, scope: scope);
+    required bool editable,
+  }) {
+    return _ListInputRenderer(
+      element: this,
+      binding: binding,
+      scope: scope,
+      editable: editable,
+    );
+  }
 }
 
 class _ListInputRenderer extends StatefulWidget {
@@ -12,11 +20,13 @@ class _ListInputRenderer extends StatefulWidget {
     required this.element,
     required this.binding,
     required this.scope,
+    required this.editable,
   });
 
   final ListInputElement element;
   final ResolvedBinding binding;
   final PresentationRenderScope scope;
+  final bool editable;
 
   @override
   State<_ListInputRenderer> createState() => _ListInputRendererState();
@@ -49,7 +59,9 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
     );
     for (final identity in _identities) {
       if (!reconciled.contains(identity)) {
-        widget.scope.expansionStore.remove(identity);
+        widget.scope.expansionStore.remove(
+          HeaderExpansionKey.instance(identity),
+        );
       }
     }
     _identities = reconciled;
@@ -70,7 +82,6 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
     final type = binding.type as ListType;
     final value = binding.value as ListValue;
 
-    final locked = scope.readOnly || !scope.enabled || !binding.writable;
     final currentDepth = DepthContainer.maybeOf(context)?.depth ?? 0;
     if (value.values.isEmpty) {
       return const _CollectionEmptyState(message: "No items found");
@@ -97,7 +108,7 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
       itemCount: value.values.length,
-      onReorderItem: element.allowReorder && !locked
+      onReorderItem: element.allowReorder && widget.editable
           ? (source, destination) => itemScope.invoke(
               LocalEditorAction(
                 ReorderListItemAction(
@@ -174,7 +185,7 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
     ];
     return PresentationHeaderChrome(
       nodeId: "${widget.element.control.binding}.item.$index",
-      expansionIdentity: identity,
+      expansionKey: HeaderExpansionKey.instance(identity),
       header: PresentationHeader(
         binding: source,
         title: "Item ${index + 1}".asStringLiteral,
@@ -208,14 +219,16 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
             ),
           )
           .withVirtualBinding(
-            widget.element.indexBindingId,
-            BindingSnapshot(
-              type: const IntegerType(width: IntegerWidth.signed64),
-              value: IntegerValue(BigInt.from(index)),
-              revision: widget.binding.revision,
-              writable: false,
+            VirtualBindingHost(
+              id: widget.element.indexBindingId,
+              snapshot: BindingSnapshot(
+                type: const IntegerType(width: IntegerWidth.signed64),
+                value: IntegerValue(BigInt.from(index)),
+                revision: widget.binding.revision,
+                writable: false,
+              ),
+              onChanged: (value) {},
             ),
-            (value) {},
           );
       final localized = presentation.localizeFailures(
         childScope.expressions,
@@ -279,7 +292,7 @@ void _removeExpansionState(
   List<_ListItemIdentity> identities,
 ) {
   for (final identity in identities) {
-    store.remove(identity);
+    store.remove(HeaderExpansionKey.instance(identity));
   }
 }
 

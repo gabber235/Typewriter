@@ -308,6 +308,311 @@ $PresentationNodeCopyWith<$Res> get root {
 }
 
 /// @nodoc
+mixin _$HeaderExpansionKey {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HeaderExpansionKey);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'HeaderExpansionKey()';
+}
+
+
+}
+
+/// @nodoc
+class $HeaderExpansionKeyCopyWith<$Res>  {
+$HeaderExpansionKeyCopyWith(HeaderExpansionKey _, $Res Function(HeaderExpansionKey) __);
+}
+
+
+/// Adds pattern-matching-related methods to [HeaderExpansionKey].
+extension HeaderExpansionKeyPatterns on HeaderExpansionKey {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( NodeHeaderExpansionKey value)?  node,TResult Function( InstanceHeaderExpansionKey value)?  instance,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey() when node != null:
+return node(_that);case InstanceHeaderExpansionKey() when instance != null:
+return instance(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( NodeHeaderExpansionKey value)  node,required TResult Function( InstanceHeaderExpansionKey value)  instance,}){
+final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey():
+return node(_that);case InstanceHeaderExpansionKey():
+return instance(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( NodeHeaderExpansionKey value)?  node,TResult? Function( InstanceHeaderExpansionKey value)?  instance,}){
+final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey() when node != null:
+return node(_that);case InstanceHeaderExpansionKey() when instance != null:
+return instance(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String nodeId,  BindingReference? binding)?  node,TResult Function( Object identity)?  instance,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey() when node != null:
+return node(_that.nodeId,_that.binding);case InstanceHeaderExpansionKey() when instance != null:
+return instance(_that.identity);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String nodeId,  BindingReference? binding)  node,required TResult Function( Object identity)  instance,}) {final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey():
+return node(_that.nodeId,_that.binding);case InstanceHeaderExpansionKey():
+return instance(_that.identity);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String nodeId,  BindingReference? binding)?  node,TResult? Function( Object identity)?  instance,}) {final _that = this;
+switch (_that) {
+case NodeHeaderExpansionKey() when node != null:
+return node(_that.nodeId,_that.binding);case InstanceHeaderExpansionKey() when instance != null:
+return instance(_that.identity);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class NodeHeaderExpansionKey implements HeaderExpansionKey {
+  const NodeHeaderExpansionKey({required this.nodeId, required this.binding});
+  
+
+ final  String nodeId;
+ final  BindingReference? binding;
+
+/// Create a copy of HeaderExpansionKey
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$NodeHeaderExpansionKeyCopyWith<NodeHeaderExpansionKey> get copyWith => _$NodeHeaderExpansionKeyCopyWithImpl<NodeHeaderExpansionKey>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NodeHeaderExpansionKey&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId)&&(identical(other.binding, binding) || other.binding == binding));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nodeId,binding);
+
+@override
+String toString() {
+  return 'HeaderExpansionKey.node(nodeId: $nodeId, binding: $binding)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $NodeHeaderExpansionKeyCopyWith<$Res> implements $HeaderExpansionKeyCopyWith<$Res> {
+  factory $NodeHeaderExpansionKeyCopyWith(NodeHeaderExpansionKey value, $Res Function(NodeHeaderExpansionKey) _then) = _$NodeHeaderExpansionKeyCopyWithImpl;
+@useResult
+$Res call({
+ String nodeId, BindingReference? binding
+});
+
+
+$BindingReferenceCopyWith<$Res>? get binding;
+
+}
+/// @nodoc
+class _$NodeHeaderExpansionKeyCopyWithImpl<$Res>
+    implements $NodeHeaderExpansionKeyCopyWith<$Res> {
+  _$NodeHeaderExpansionKeyCopyWithImpl(this._self, this._then);
+
+  final NodeHeaderExpansionKey _self;
+  final $Res Function(NodeHeaderExpansionKey) _then;
+
+/// Create a copy of HeaderExpansionKey
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? binding = freezed,}) {
+  return _then(NodeHeaderExpansionKey(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,binding: freezed == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
+as BindingReference?,
+  ));
+}
+
+/// Create a copy of HeaderExpansionKey
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingReferenceCopyWith<$Res>? get binding {
+    if (_self.binding == null) {
+    return null;
+  }
+
+  return $BindingReferenceCopyWith<$Res>(_self.binding!, (value) {
+    return _then(_self.copyWith(binding: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class InstanceHeaderExpansionKey implements HeaderExpansionKey {
+  const InstanceHeaderExpansionKey(this.identity);
+  
+
+ final  Object identity;
+
+/// Create a copy of HeaderExpansionKey
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InstanceHeaderExpansionKeyCopyWith<InstanceHeaderExpansionKey> get copyWith => _$InstanceHeaderExpansionKeyCopyWithImpl<InstanceHeaderExpansionKey>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstanceHeaderExpansionKey&&const DeepCollectionEquality().equals(other.identity, identity));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(identity));
+
+@override
+String toString() {
+  return 'HeaderExpansionKey.instance(identity: $identity)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $InstanceHeaderExpansionKeyCopyWith<$Res> implements $HeaderExpansionKeyCopyWith<$Res> {
+  factory $InstanceHeaderExpansionKeyCopyWith(InstanceHeaderExpansionKey value, $Res Function(InstanceHeaderExpansionKey) _then) = _$InstanceHeaderExpansionKeyCopyWithImpl;
+@useResult
+$Res call({
+ Object identity
+});
+
+
+
+
+}
+/// @nodoc
+class _$InstanceHeaderExpansionKeyCopyWithImpl<$Res>
+    implements $InstanceHeaderExpansionKeyCopyWith<$Res> {
+  _$InstanceHeaderExpansionKeyCopyWithImpl(this._self, this._then);
+
+  final InstanceHeaderExpansionKey _self;
+  final $Res Function(InstanceHeaderExpansionKey) _then;
+
+/// Create a copy of HeaderExpansionKey
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? identity = null,}) {
+  return _then(InstanceHeaderExpansionKey(
+null == identity ? _self.identity : identity ,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PresentationRenderScope {
 
  ExpressionContext get expressions; TypeRegistry get registry; ExpressionBudget get budget; BindingSetter get setBinding; ActionExecutor get executeAction; PresentationResolver get resolvePresentation; HeaderExpansionStore get expansionStore; EditorInteractionStarter? get startInteraction; RealmPresentationSearchSourceBuilder? get realmSearchSourceBuilder; Map<PresentationCollectionSourceId, PresentationCollectionSource> get collections; Map<BindingId, BindingReference> get aliases; Map<HeaderItemCommandId, List<ShortcutActivator>> get headerShortcuts; Set<(String, BindingReference?)> get suppressedHeaders; bool get enabled; bool get readOnly; String get historyNamespace; Set<PresentationId> get activePresentations;
