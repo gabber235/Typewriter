@@ -688,18 +688,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories
                                             .tagGraphUseCase,
                                   ),
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Empty',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories
-                                            .tagGraphEmptyUseCase,
-                                  ),
-                                  _widgetbook.WidgetbookUseCase(
-                                    name: 'Loading',
-                                    builder:
-                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories
-                                            .tagGraphLoadingUseCase,
-                                  ),
                                 ],
                               ),
                               _widgetbook.WidgetbookComponent(
