@@ -122,21 +122,21 @@ void main() {
     expect(effective.sourceId, tagCollectionSourceId);
     expect(effective.relation, tagInheritsRelationId);
     expect(effective.direction, CollectionGraphDirection.forward);
-    expect(effective.rootRows!.layout, isA<PresentationWrapLayout>());
-    expect(effective.reachedRows!.layout, isA<PresentationWrapLayout>());
-    _expectTagChip(effective.rootRows!.item.element as ChipElement);
-    _expectTagChip(effective.reachedRows!.item.element as ChipElement);
-
-    final path = effective.paths!.item.element as SectionElement;
-    final pathItems = path.child.element as RepeatedElement;
-    expect(pathItems.presentation.layout, isA<PresentationWrapLayout>());
-    expect(
-      (pathItems.presentation.separator!.element as TextElement).value,
-      "›".asStringLiteral,
-    );
-    final pathLookup =
-        pathItems.presentation.item.element as CollectionLookupElement;
-    _expectTagChip(pathLookup.found.element as ChipElement);
+    expect(effective.childrenBindingId, const BindingId(45));
+    expect(effective.node.presentationSlotIds, {"book.effectiveTags.children"});
+    final branching = effective.node.element as ConditionalElement;
+    final branchSpacing = branching.whenTrue.element as PaddingElement;
+    final branch = branchSpacing.child.element as SectionElement;
+    expect(branch.border, isA<PresentationBorderSides>());
+    final branchBorder = branch.border! as PresentationBorderSides;
+    expect(branchBorder.top, isNull);
+    expect(branchBorder.start?.width, 4);
+    expect(branchBorder.end, isNull);
+    expect(branchBorder.bottom, isNull);
+    final branchTitle = branchSpacing.child.header!.title;
+    expect(branchTitle, isA<PresentationHeaderNodeTitle>());
+    final chipNode = (branchTitle! as PresentationHeaderNodeTitle).node;
+    _expectTagChip(chipNode.element as ChipElement);
   });
 
   testWidgets(

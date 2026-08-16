@@ -188,7 +188,7 @@ class _ListInputRendererState extends State<_ListInputRenderer> {
       expansionKey: HeaderExpansionKey.instance(identity),
       header: PresentationHeader(
         binding: source,
-        title: "Item ${index + 1}".asStringLiteral,
+        title: "Item ${index + 1}".asStringLiteral.asHeaderTitle,
         initiallyExpanded: false,
         items: items,
       ),

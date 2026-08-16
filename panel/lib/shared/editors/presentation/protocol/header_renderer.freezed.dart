@@ -78,7 +78,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -227,7 +227,7 @@ return reorderHandle(_that.id,_that.label,_that.tooltip,_that.source,_that.index
 
 class _ResolvedHeaderButtonItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderButtonItem({required this.id, required this.icon, required this.label, required this.tooltip, required this.action, required this.priority, required this.declarationOrder, required this.visible, required this.enabled, required this.placement, required this.tone, required this.confirmation}): super._();
-  
+
 
 @override final  HeaderItemId id;
  final  IconValue icon;
@@ -312,7 +312,7 @@ as _ResolvedConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -321,7 +321,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-  
+
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -330,7 +330,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -354,7 +354,7 @@ _$ResolvedConfirmationCopyWith<$Res>? get confirmation {
 
 class _ResolvedHeaderBooleanToggleItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderBooleanToggleItem({required this.id, required this.label, required this.tooltip, required this.checked, required this.action, required this.priority, required this.declarationOrder, required this.visible, required this.enabled, required this.placement, required this.confirmation}): super._();
-  
+
 
 @override final  HeaderItemId id;
 @override final  String label;
@@ -437,7 +437,7 @@ as _ResolvedConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -446,7 +446,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -470,7 +470,7 @@ _$ResolvedConfirmationCopyWith<$Res>? get confirmation {
 
 class _ResolvedHeaderReorderHandleItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderReorderHandleItem({required this.id, required this.label, required this.tooltip, required this.source, required this.index, required this.itemCount, required this.declarationOrder, required this.visible, required this.enabled}): super._();
-  
+
 
 @override final  HeaderItemId id;
 @override final  String label;
@@ -549,7 +549,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -558,7 +558,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -568,7 +568,7 @@ $BindingReferenceCopyWith<$Res> get source {
 /// @nodoc
 mixin _$ResolvedPresentationHeader {
 
- String get title; String get description; List<_ResolvedHeaderItem> get items;
+ PresentationHeaderTitle? get title; String get description; List<_ResolvedHeaderItem> get items;
 /// Create a copy of _ResolvedPresentationHeader
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -599,11 +599,11 @@ abstract mixin class _$ResolvedPresentationHeaderCopyWith<$Res>  {
   factory _$ResolvedPresentationHeaderCopyWith(_ResolvedPresentationHeader value, $Res Function(_ResolvedPresentationHeader) _then) = __$ResolvedPresentationHeaderCopyWithImpl;
 @useResult
 $Res call({
- String title, String description, List<_ResolvedHeaderItem> items
+ PresentationHeaderTitle? title, String description, List<_ResolvedHeaderItem> items
 });
 
 
-
+$PresentationHeaderTitleCopyWith<$Res>? get title;
 
 }
 /// @nodoc
@@ -616,15 +616,27 @@ class __$ResolvedPresentationHeaderCopyWithImpl<$Res>
 
 /// Create a copy of _ResolvedPresentationHeader
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? description = null,Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? title = freezed,Object? description = null,Object? items = null,}) {
   return _then(_self.copyWith(
-title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as PresentationHeaderTitle?,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<_ResolvedHeaderItem>,
   ));
 }
+/// Create a copy of _ResolvedPresentationHeader
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationHeaderTitleCopyWith<$Res>? get title {
+    if (_self.title == null) {
+    return null;
+  }
 
+  return $PresentationHeaderTitleCopyWith<$Res>(_self.title!, (value) {
+    return _then(_self.copyWith(title: value));
+  });
+}
 }
 
 
@@ -706,7 +718,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String title,  String description,  List<_ResolvedHeaderItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PresentationHeaderTitle? title,  String description,  List<_ResolvedHeaderItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResolvedPresentationHeaderValue() when $default != null:
 return $default(_that.title,_that.description,_that.items);case _:
@@ -727,7 +739,7 @@ return $default(_that.title,_that.description,_that.items);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String title,  String description,  List<_ResolvedHeaderItem> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PresentationHeaderTitle? title,  String description,  List<_ResolvedHeaderItem> items)  $default,) {final _that = this;
 switch (_that) {
 case _ResolvedPresentationHeaderValue():
 return $default(_that.title,_that.description,_that.items);case _:
@@ -747,7 +759,7 @@ return $default(_that.title,_that.description,_that.items);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String title,  String description,  List<_ResolvedHeaderItem> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PresentationHeaderTitle? title,  String description,  List<_ResolvedHeaderItem> items)?  $default,) {final _that = this;
 switch (_that) {
 case _ResolvedPresentationHeaderValue() when $default != null:
 return $default(_that.title,_that.description,_that.items);case _:
@@ -763,9 +775,9 @@ return $default(_that.title,_that.description,_that.items);case _:
 
 class _ResolvedPresentationHeaderValue implements _ResolvedPresentationHeader {
   const _ResolvedPresentationHeaderValue({required this.title, required this.description, required final  List<_ResolvedHeaderItem> items}): _items = items;
-  
 
-@override final  String title;
+
+@override final  PresentationHeaderTitle? title;
 @override final  String description;
  final  List<_ResolvedHeaderItem> _items;
 @override List<_ResolvedHeaderItem> get items {
@@ -805,11 +817,11 @@ abstract mixin class _$ResolvedPresentationHeaderValueCopyWith<$Res> implements 
   factory _$ResolvedPresentationHeaderValueCopyWith(_ResolvedPresentationHeaderValue value, $Res Function(_ResolvedPresentationHeaderValue) _then) = __$ResolvedPresentationHeaderValueCopyWithImpl;
 @override @useResult
 $Res call({
- String title, String description, List<_ResolvedHeaderItem> items
+ PresentationHeaderTitle? title, String description, List<_ResolvedHeaderItem> items
 });
 
 
-
+@override $PresentationHeaderTitleCopyWith<$Res>? get title;
 
 }
 /// @nodoc
@@ -822,16 +834,28 @@ class __$ResolvedPresentationHeaderValueCopyWithImpl<$Res>
 
 /// Create a copy of _ResolvedPresentationHeader
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? title = null,Object? description = null,Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? title = freezed,Object? description = null,Object? items = null,}) {
   return _then(_ResolvedPresentationHeaderValue(
-title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as PresentationHeaderTitle?,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<_ResolvedHeaderItem>,
   ));
 }
 
+/// Create a copy of _ResolvedPresentationHeader
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationHeaderTitleCopyWith<$Res>? get title {
+    if (_self.title == null) {
+    return null;
+  }
 
+  return $PresentationHeaderTitleCopyWith<$Res>(_self.title!, (value) {
+    return _then(_self.copyWith(title: value));
+  });
+}
 }
 
 /// @nodoc
@@ -1032,7 +1056,7 @@ return $default(_that.title,_that.message,_that.confirmationLabel);case _:
 
 class _ResolvedConfirmationValue implements _ResolvedConfirmation {
   const _ResolvedConfirmationValue({required this.title, required this.message, required this.confirmationLabel});
-  
+
 
 @override final  String title;
 @override final  String message;

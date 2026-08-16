@@ -5,7 +5,9 @@ extension on SkirPresentationEncoder {
     final binding = value.binding == null
         ? const TypeResult<wire_binding.BindingRef?>.success(null)
         : expressions.binding(value.binding!).mapValue((value) => value);
-    final title = _optional(value.title);
+    final title = value.title == null
+        ? const TypeResult<wire.PresentationHeaderTitle?>.success(null)
+        : _headerTitle(value.title!).mapValue((value) => value);
     final description = _optional(value.description);
     final encodedItems = <wire.HeaderItem>[];
     final diagnostics = [
@@ -30,6 +32,16 @@ extension on SkirPresentationEncoder {
           )
         : TypeResult.failure(diagnostics);
   }
+
+  TypeResult<wire.PresentationHeaderTitle> _headerTitle(
+    PresentationHeaderTitle value,
+  ) => switch (value) {
+    PresentationHeaderTextTitle(:final value) =>
+      expressions.encode(value).mapValue(wire.PresentationHeaderTitle.wrapText),
+    PresentationHeaderNodeTitle(:final node) => encodeNode(
+      node,
+    ).mapValue(wire.PresentationHeaderTitle.wrapPresentation),
+  };
 
   TypeResult<wire.HeaderItem> _headerItem(HeaderItem value) => switch (value) {
     final HeaderButtonItem item => item._encode(this),

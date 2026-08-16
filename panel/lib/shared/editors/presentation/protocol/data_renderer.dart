@@ -9,4 +9,5 @@ part "renderers/data/diagnostic_renderer.dart";
 part "renderers/data/repeated_renderer.dart";
 part "renderers/data/sequence_renderer.dart";
 part "renderers/data/scoped_binding_renderer.dart";
+part "renderers/data/slot_renderer.dart";
 part "renderers/data/typed_field_renderer.dart";

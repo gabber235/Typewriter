@@ -2155,12 +2155,172 @@ final class HeaderItem_reorderHandleWrapper extends _HeaderItem_wrapper {
 }
 
 // -----------------------------------------------------------------------------
+// enum PresentationHeaderTitle
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PresentationHeaderTitle_unknown(): { ... }
+///     case PresentationHeaderTitle_text(:var value): { ... }
+///     case PresentationHeaderTitle_presentation(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PresentationHeaderTitle {
+  /// Constant indicating an unknown `PresentationHeaderTitle`.
+  /// Default value for fields of type `PresentationHeaderTitle`.
+  static const PresentationHeaderTitle unknown = PresentationHeaderTitle_unknown._instance;
+
+  /// Create a 'text' variant wrapping around the given value.
+  factory PresentationHeaderTitle.wrapText(
+    _lib_editor_v1_expression.TypedExpression value
+  ) => PresentationHeaderTitle_textWrapper._(value);
+
+  /// Same as `wrapText(_lib_editor_v1_expression.TypedExpression(...))`.
+  factory PresentationHeaderTitle.createText({
+    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required _lib_editor_v1_expression.Expression? expression,
+  }) => PresentationHeaderTitle.wrapText(
+    _lib_editor_v1_expression.TypedExpression(
+      resultType: resultType,
+      expression: expression,
+    )
+  );
+
+  /// Create a 'presentation' variant wrapping around the given value.
+  factory PresentationHeaderTitle.wrapPresentation(
+    PresentationNode value
+  ) => PresentationHeaderTitle_presentationWrapper._(value);
+
+  /// Same as `wrapPresentation(PresentationNode(...))`.
+  factory PresentationHeaderTitle.createPresentation({
+    required _core.String nodeId,
+    required PresentationProperties_orMutable properties,
+    required PresentationElement? element,
+    required PresentationHeader_orMutable? header,
+  }) => PresentationHeaderTitle.wrapPresentation(
+    PresentationNode(
+      nodeId: nodeId,
+      properties: properties,
+      element: element,
+      header: header,
+    )
+  );
+
+  /// Returns the kind of variant held by this PresentationHeaderTitle.
+  PresentationHeaderTitle_kind get kind;
+
+  /// Serializer for `PresentationHeaderTitle` instances.
+  static _skir.EnumSerializer<PresentationHeaderTitle> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "text",
+        "wrapText",
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        PresentationHeaderTitle_textWrapper._,
+        (it) => it.value,
+        ordinal: PresentationHeaderTitle_kind.textWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "presentation",
+        "wrapPresentation",
+        PresentationNode.serializer,
+        "",
+        PresentationHeaderTitle_presentationWrapper._,
+        (it) => it.value,
+        ordinal: PresentationHeaderTitle_kind.presentationWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:PresentationHeaderTitle",
+    doc: "",
+    unknownInstance: PresentationHeaderTitle_unknown._instance,
+    enumInstance: PresentationHeaderTitle.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PresentationHeaderTitle_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `PresentationHeaderTitle`.
+enum PresentationHeaderTitle_kind {
+  unknown(0),
+  textWrapper(1),
+  presentationWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PresentationHeaderTitle_kind(this._ordinal);
+}
+
+final class PresentationHeaderTitle_unknown implements PresentationHeaderTitle {
+  static const _instance = PresentationHeaderTitle_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PresentationHeaderTitle_unknown._() : _u = null;
+  PresentationHeaderTitle_unknown._unrecognized(this._u);
+
+  @_core.override
+  PresentationHeaderTitle_kind get kind => PresentationHeaderTitle_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PresentationHeaderTitle_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
+}
+
+sealed class _PresentationHeaderTitle_wrapper implements PresentationHeaderTitle {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PresentationHeaderTitle_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PresentationHeaderTitle.serializer);
+}
+
+final class PresentationHeaderTitle_textWrapper extends _PresentationHeaderTitle_wrapper {
+  final _lib_editor_v1_expression.TypedExpression value;
+
+  PresentationHeaderTitle_textWrapper._(this.value);
+
+  @_core.override
+  PresentationHeaderTitle_kind get kind => PresentationHeaderTitle_kind.textWrapper;
+}
+
+final class PresentationHeaderTitle_presentationWrapper extends _PresentationHeaderTitle_wrapper {
+  final PresentationNode value;
+
+  PresentationHeaderTitle_presentationWrapper._(this.value);
+
+  @_core.override
+  PresentationHeaderTitle_kind get kind => PresentationHeaderTitle_kind.presentationWrapper;
+}
+
+// -----------------------------------------------------------------------------
 // struct PresentationHeader
 // -----------------------------------------------------------------------------
 
 sealed class PresentationHeader_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable? get binding;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get title;
+  PresentationHeaderTitle? get title;
   _lib_editor_v1_expression.TypedExpression_orMutable? get description;
   _core.bool? get initiallyExpanded;
   _core.Iterable<HeaderItem> get items;
@@ -2173,7 +2333,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef? binding;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? title;
+  final PresentationHeaderTitle? title;
   @_core.override
   final _lib_editor_v1_expression.TypedExpression? description;
   @_core.override
@@ -2184,13 +2344,13 @@ final class PresentationHeader implements PresentationHeader_orMutable {
 
   factory PresentationHeader({
     required _lib_editor_v1_binding.BindingRef_orMutable? binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? title,
+    required PresentationHeaderTitle? title,
     required _lib_editor_v1_expression.TypedExpression_orMutable? description,
     required _core.bool? initiallyExpanded,
     required _core.Iterable<HeaderItem> items,
   }) => PresentationHeader._(
     (binding != null) ? binding.toFrozen() : null,
-    (title != null) ? title.toFrozen() : null,
+    title,
     (description != null) ? description.toFrozen() : null,
     initiallyExpanded,
     _skir.internal__frozenCopy(items),
@@ -2277,7 +2437,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "title",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          PresentationHeaderTitle.serializer,
         ),
         "",
         (it) => it.title,
@@ -2335,7 +2495,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
 /// Mutable version of [PresentationHeader].
 final class PresentationHeader_mutable implements PresentationHeader_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable? binding;
-  _lib_editor_v1_expression.TypedExpression_orMutable? title;
+  PresentationHeaderTitle? title;
   _lib_editor_v1_expression.TypedExpression_orMutable? description;
   _core.bool? initiallyExpanded;
   _core.Iterable<HeaderItem> items;
@@ -4036,6 +4196,310 @@ final class SectionLayout_mutable implements SectionLayout_orMutable {
   SectionLayout toFrozen() => SectionLayout(
     child: this.child,
     border: this.border,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PaddingLayout
+// -----------------------------------------------------------------------------
+
+sealed class PaddingLayout_orMutable {
+  PresentationNode_orMutable get child;
+  _core.double get top;
+  _core.double get start;
+  _core.double get end;
+  _core.double get bottom;
+
+  PaddingLayout toFrozen();
+}
+
+/// Deeply immutable.
+final class PaddingLayout implements PaddingLayout_orMutable {
+  @_core.override
+  final PresentationNode child;
+  @_core.override
+  final _core.double top;
+  @_core.override
+  final _core.double start;
+  @_core.override
+  final _core.double end;
+  @_core.override
+  final _core.double bottom;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PaddingLayout({
+    required PresentationNode_orMutable child,
+    required _core.double top,
+    required _core.double start,
+    required _core.double end,
+    required _core.double bottom,
+  }) => PaddingLayout._(
+    child.toFrozen(),
+    top,
+    start,
+    end,
+    bottom,
+  );
+
+  PaddingLayout._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PaddingLayout._(
+    PresentationNode.defaultInstance,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PaddingLayout_mutable mutable() => PaddingLayout_mutable._(
+    PresentationNode.defaultInstance,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PaddingLayout toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PaddingLayout_mutable toMutable() => PaddingLayout_mutable._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PaddingLayout) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PaddingLayout` instances.
+  static _skir.StructSerializer<PaddingLayout, PaddingLayout_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "child",
+        "child",
+        0,
+        PresentationNode.serializer,
+        "",
+        (it) => it.child,
+        (it, v) => it.child = v,
+      );
+      _serializerBuilder.addField(
+        "top",
+        "top",
+        1,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.top,
+        (it, v) => it.top = v,
+      );
+      _serializerBuilder.addField(
+        "start",
+        "start",
+        2,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.start,
+        (it, v) => it.start = v,
+      );
+      _serializerBuilder.addField(
+        "end",
+        "end",
+        3,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.end,
+        (it, v) => it.end = v,
+      );
+      _serializerBuilder.addField(
+        "bottom",
+        "bottom",
+        4,
+        _skir.Serializers.float64,
+        "",
+        (it) => it.bottom,
+        (it, v) => it.bottom = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PaddingLayout",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PaddingLayout_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PaddingLayout].
+final class PaddingLayout_mutable implements PaddingLayout_orMutable {
+  PresentationNode_orMutable child;
+  _core.double top;
+  _core.double start;
+  _core.double end;
+  _core.double bottom;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PaddingLayout_mutable._(
+    this.child,
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PaddingLayout toFrozen() => PaddingLayout(
+    child: this.child,
+    top: this.top,
+    start: this.start,
+    end: this.end,
+    bottom: this.bottom,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationSlotElement
+// -----------------------------------------------------------------------------
+
+sealed class PresentationSlotElement_orMutable {
+  _core.String get slotId;
+
+  PresentationSlotElement toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationSlotElement implements PresentationSlotElement_orMutable {
+  @_core.override
+  final _core.String slotId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationSlotElement({
+    required _core.String slotId,
+  }) => PresentationSlotElement._(
+    slotId,
+  );
+
+  PresentationSlotElement._(
+    this.slotId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationSlotElement._(
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationSlotElement_mutable mutable() => PresentationSlotElement_mutable._(
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationSlotElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationSlotElement_mutable toMutable() => PresentationSlotElement_mutable._(
+    this.slotId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationSlotElement) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.slotId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationSlotElement` instances.
+  static _skir.StructSerializer<PresentationSlotElement, PresentationSlotElement_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "slot_id",
+        "slotId",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.slotId,
+        (it, v) => it.slotId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationSlotElement",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationSlotElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationSlotElement].
+final class PresentationSlotElement_mutable implements PresentationSlotElement_orMutable {
+  _core.String slotId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationSlotElement_mutable._(
+    this.slotId,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationSlotElement toFrozen() => PresentationSlotElement(
+    slotId: this.slotId,
   ).._u = this._u;
 }
 
@@ -6511,12 +6975,9 @@ sealed class CollectionGraphElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get roots;
   _core.String get relationId;
   CollectionGraphDirection get direction;
-  SequencePresentation_orMutable? get rootRows;
-  SequencePresentation_orMutable? get reachedRows;
-  SequencePresentation_orMutable? get paths;
-  _lib_editor_v1_binding.BindingId_orMutable get pathBindingId;
   _core.int? get maximumDepth;
-  _core.bool get deduplicate;
+  PresentationNode_orMutable get node;
+  _lib_editor_v1_binding.BindingId_orMutable get childrenBindingId;
 
   CollectionGraphElement toFrozen();
 }
@@ -6532,17 +6993,11 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   @_core.override
   final CollectionGraphDirection direction;
   @_core.override
-  final SequencePresentation? rootRows;
-  @_core.override
-  final SequencePresentation? reachedRows;
-  @_core.override
-  final SequencePresentation? paths;
-  @_core.override
-  final _lib_editor_v1_binding.BindingId pathBindingId;
-  @_core.override
   final _core.int? maximumDepth;
   @_core.override
-  final _core.bool deduplicate;
+  final PresentationNode node;
+  @_core.override
+  final _lib_editor_v1_binding.BindingId childrenBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CollectionGraphElement({
@@ -6550,23 +7005,17 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     required _lib_editor_v1_binding.BindingRef_orMutable roots,
     required _core.String relationId,
     required CollectionGraphDirection direction,
-    required SequencePresentation_orMutable? rootRows,
-    required SequencePresentation_orMutable? reachedRows,
-    required SequencePresentation_orMutable? paths,
-    required _lib_editor_v1_binding.BindingId_orMutable pathBindingId,
     required _core.int? maximumDepth,
-    required _core.bool deduplicate,
+    required PresentationNode_orMutable node,
+    required _lib_editor_v1_binding.BindingId_orMutable childrenBindingId,
   }) => CollectionGraphElement._(
     sourceId,
     roots.toFrozen(),
     relationId,
     direction,
-    (rootRows != null) ? rootRows.toFrozen() : null,
-    (reachedRows != null) ? reachedRows.toFrozen() : null,
-    (paths != null) ? paths.toFrozen() : null,
-    pathBindingId.toFrozen(),
     maximumDepth,
-    deduplicate,
+    node.toFrozen(),
+    childrenBindingId.toFrozen(),
   );
 
   CollectionGraphElement._(
@@ -6574,12 +7023,9 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     this.roots,
     this.relationId,
     this.direction,
-    this.rootRows,
-    this.reachedRows,
-    this.paths,
-    this.pathBindingId,
     this.maximumDepth,
-    this.deduplicate,
+    this.node,
+    this.childrenBindingId,
   );
 
   /// Default instance with all fields set to their default values.
@@ -6589,11 +7035,8 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     "",
     CollectionGraphDirection.unknown,
     null,
-    null,
-    null,
+    PresentationNode.defaultInstance,
     _lib_editor_v1_binding.BindingId.defaultInstance,
-    null,
-    false,
   );
 
   /// Returns a new mutable instance.
@@ -6604,11 +7047,8 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     "",
     CollectionGraphDirection.unknown,
     null,
-    null,
-    null,
+    PresentationNode.defaultInstance,
     _lib_editor_v1_binding.BindingId.defaultInstance,
-    null,
-    false,
   );
 
   /// Returns this instance (no-op).
@@ -6622,12 +7062,9 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     this.roots,
     this.relationId,
     this.direction,
-    this.rootRows,
-    this.reachedRows,
-    this.paths,
-    this.pathBindingId,
     this.maximumDepth,
-    this.deduplicate,
+    this.node,
+    this.childrenBindingId,
   );
 
   @_core.override
@@ -6645,12 +7082,9 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
     this.roots,
     this.relationId,
     this.direction,
-    this.rootRows,
-    this.reachedRows,
-    this.paths,
-    this.pathBindingId,
     this.maximumDepth,
-    this.deduplicate,
+    this.node,
+    this.childrenBindingId,
   ];
 
   @_core.override
@@ -6696,51 +7130,9 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         (it, v) => it.direction = v,
       );
       _serializerBuilder.addField(
-        "root_rows",
-        "rootRows",
-        4,
-        _skir.Serializers.optional(
-          SequencePresentation.serializer,
-        ),
-        "",
-        (it) => it.rootRows,
-        (it, v) => it.rootRows = v,
-      );
-      _serializerBuilder.addField(
-        "reached_rows",
-        "reachedRows",
-        5,
-        _skir.Serializers.optional(
-          SequencePresentation.serializer,
-        ),
-        "",
-        (it) => it.reachedRows,
-        (it, v) => it.reachedRows = v,
-      );
-      _serializerBuilder.addField(
-        "paths",
-        "paths",
-        6,
-        _skir.Serializers.optional(
-          SequencePresentation.serializer,
-        ),
-        "",
-        (it) => it.paths,
-        (it, v) => it.paths = v,
-      );
-      _serializerBuilder.addField(
-        "path_binding_id",
-        "pathBindingId",
-        7,
-        _lib_editor_v1_binding.BindingId.serializer,
-        "",
-        (it) => it.pathBindingId,
-        (it, v) => it.pathBindingId = v,
-      );
-      _serializerBuilder.addField(
         "maximum_depth",
         "maximumDepth",
-        8,
+        4,
         _skir.Serializers.optional(
           _skir.Serializers.int32,
         ),
@@ -6749,13 +7141,22 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         (it, v) => it.maximumDepth = v,
       );
       _serializerBuilder.addField(
-        "deduplicate",
-        "deduplicate",
-        9,
-        _skir.Serializers.bool,
+        "node",
+        "node",
+        5,
+        PresentationNode.serializer,
         "",
-        (it) => it.deduplicate,
-        (it, v) => it.deduplicate = v,
+        (it) => it.node,
+        (it, v) => it.node = v,
+      );
+      _serializerBuilder.addField(
+        "children_binding_id",
+        "childrenBindingId",
+        6,
+        _lib_editor_v1_binding.BindingId.serializer,
+        "",
+        (it) => it.childrenBindingId,
+        (it, v) => it.childrenBindingId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -6779,12 +7180,9 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
   _lib_editor_v1_binding.BindingRef_orMutable roots;
   _core.String relationId;
   CollectionGraphDirection direction;
-  SequencePresentation_orMutable? rootRows;
-  SequencePresentation_orMutable? reachedRows;
-  SequencePresentation_orMutable? paths;
-  _lib_editor_v1_binding.BindingId_orMutable pathBindingId;
   _core.int? maximumDepth;
-  _core.bool deduplicate;
+  PresentationNode_orMutable node;
+  _lib_editor_v1_binding.BindingId_orMutable childrenBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   CollectionGraphElement_mutable._(
@@ -6792,12 +7190,9 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     this.roots,
     this.relationId,
     this.direction,
-    this.rootRows,
-    this.reachedRows,
-    this.paths,
-    this.pathBindingId,
     this.maximumDepth,
-    this.deduplicate,
+    this.node,
+    this.childrenBindingId,
   );
 
   /// If the value of [roots] is already mutable, returns it as-is.
@@ -6811,14 +7206,14 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     }
   }
 
-  /// If the value of [pathBindingId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [pathBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutablePathBindingId {
-    final value = this.pathBindingId;
+  /// If the value of [childrenBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [childrenBindingId] and returns it.
+  _lib_editor_v1_binding.BindingId_mutable get mutableChildrenBindingId {
+    final value = this.childrenBindingId;
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.pathBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.childrenBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
     }
   }
 
@@ -6829,12 +7224,9 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     roots: this.roots,
     relationId: this.relationId,
     direction: this.direction,
-    rootRows: this.rootRows,
-    reachedRows: this.reachedRows,
-    paths: this.paths,
-    pathBindingId: this.pathBindingId,
     maximumDepth: this.maximumDepth,
-    deduplicate: this.deduplicate,
+    node: this.node,
+    childrenBindingId: this.childrenBindingId,
   ).._u = this._u;
 }
 
@@ -14443,6 +14835,8 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement.divider: { ... }
 ///     case PresentationElement_children(:var value): { ... }
 ///     case PresentationElement_section(:var value): { ... }
+///     case PresentationElement_padding(:var value): { ... }
+///     case PresentationElement_slot(:var value): { ... }
 ///     case PresentationElement_tabs(:var value): { ... }
 ///     case PresentationElement_spacer(:var value): { ... }
 ///     case PresentationElement_text(:var value): { ... }
@@ -14519,6 +14913,42 @@ sealed class PresentationElement {
     SectionLayout(
       child: child,
       border: border,
+    )
+  );
+
+  /// Create a 'padding' variant wrapping around the given value.
+  factory PresentationElement.wrapPadding(
+    PaddingLayout value
+  ) => PresentationElement_paddingWrapper._(value);
+
+  /// Same as `wrapPadding(PaddingLayout(...))`.
+  factory PresentationElement.createPadding({
+    required PresentationNode_orMutable child,
+    required _core.double top,
+    required _core.double start,
+    required _core.double end,
+    required _core.double bottom,
+  }) => PresentationElement.wrapPadding(
+    PaddingLayout(
+      child: child,
+      top: top,
+      start: start,
+      end: end,
+      bottom: bottom,
+    )
+  );
+
+  /// Create a 'slot' variant wrapping around the given value.
+  factory PresentationElement.wrapSlot(
+    PresentationSlotElement value
+  ) => PresentationElement_slotWrapper._(value);
+
+  /// Same as `wrapSlot(PresentationSlotElement(...))`.
+  factory PresentationElement.createSlot({
+    required _core.String slotId,
+  }) => PresentationElement.wrapSlot(
+    PresentationSlotElement(
+      slotId: slotId,
     )
   );
 
@@ -15187,24 +15617,18 @@ sealed class PresentationElement {
     required _lib_editor_v1_binding.BindingRef_orMutable roots,
     required _core.String relationId,
     required CollectionGraphDirection direction,
-    required SequencePresentation_orMutable? rootRows,
-    required SequencePresentation_orMutable? reachedRows,
-    required SequencePresentation_orMutable? paths,
-    required _lib_editor_v1_binding.BindingId_orMutable pathBindingId,
     required _core.int? maximumDepth,
-    required _core.bool deduplicate,
+    required PresentationNode_orMutable node,
+    required _lib_editor_v1_binding.BindingId_orMutable childrenBindingId,
   }) => PresentationElement.wrapCollectionGraph(
     CollectionGraphElement(
       sourceId: sourceId,
       roots: roots,
       relationId: relationId,
       direction: direction,
-      rootRows: rootRows,
-      reachedRows: reachedRows,
-      paths: paths,
-      pathBindingId: pathBindingId,
       maximumDepth: maximumDepth,
-      deduplicate: deduplicate,
+      node: node,
+      childrenBindingId: childrenBindingId,
     )
   );
 
@@ -15240,6 +15664,26 @@ sealed class PresentationElement {
         PresentationElement_sectionWrapper._,
         (it) => it.value,
         ordinal: PresentationElement_kind.sectionWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        48,
+        "padding",
+        "wrapPadding",
+        PaddingLayout.serializer,
+        "",
+        PresentationElement_paddingWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.paddingWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        49,
+        "slot",
+        "wrapSlot",
+        PresentationSlotElement.serializer,
+        "",
+        PresentationElement_slotWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.slotWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         9,
@@ -15623,42 +16067,44 @@ enum PresentationElement_kind {
   dividerConst(1),
   childrenWrapper(2),
   sectionWrapper(3),
-  tabsWrapper(4),
-  spacerWrapper(5),
-  textWrapper(6),
-  markdownWrapper(7),
-  iconWrapper(8),
-  imageWrapper(9),
-  badgeWrapper(10),
-  chipWrapper(11),
-  progressWrapper(12),
-  typedFieldWrapper(13),
-  conditionalWrapper(14),
-  repeatedWrapper(15),
-  scopedBindingWrapper(16),
-  textInputWrapper(17),
-  numericInputWrapper(18),
-  toggleInputWrapper(19),
-  selectInputWrapper(20),
-  sliderInputWrapper(21),
-  dateTimeInputWrapper(22),
-  durationInputWrapper(23),
-  colorInputWrapper(24),
-  bytesInputWrapper(25),
-  namedInputWrapper(26),
-  buttonWrapper(27),
-  iconButtonWrapper(28),
-  menuWrapper(29),
-  tooltipWrapper(30),
-  listInputWrapper(31),
-  mapInputWrapper(32),
-  recordInputWrapper(33),
-  enumInputWrapper(34),
-  polymorphicInputWrapper(35),
-  defaultPresentationWrapper(36),
-  searchInputWrapper(37),
-  collectionLookupWrapper(38),
-  collectionGraphWrapper(39);
+  paddingWrapper(4),
+  slotWrapper(5),
+  tabsWrapper(6),
+  spacerWrapper(7),
+  textWrapper(8),
+  markdownWrapper(9),
+  iconWrapper(10),
+  imageWrapper(11),
+  badgeWrapper(12),
+  chipWrapper(13),
+  progressWrapper(14),
+  typedFieldWrapper(15),
+  conditionalWrapper(16),
+  repeatedWrapper(17),
+  scopedBindingWrapper(18),
+  textInputWrapper(19),
+  numericInputWrapper(20),
+  toggleInputWrapper(21),
+  selectInputWrapper(22),
+  sliderInputWrapper(23),
+  dateTimeInputWrapper(24),
+  durationInputWrapper(25),
+  colorInputWrapper(26),
+  bytesInputWrapper(27),
+  namedInputWrapper(28),
+  buttonWrapper(29),
+  iconButtonWrapper(30),
+  menuWrapper(31),
+  tooltipWrapper(32),
+  listInputWrapper(33),
+  mapInputWrapper(34),
+  recordInputWrapper(35),
+  enumInputWrapper(36),
+  polymorphicInputWrapper(37),
+  defaultPresentationWrapper(38),
+  searchInputWrapper(39),
+  collectionLookupWrapper(40),
+  collectionGraphWrapper(41);
 
   final _core.int _ordinal;
 
@@ -15727,6 +16173,24 @@ final class PresentationElement_sectionWrapper extends _PresentationElement_wrap
 
   @_core.override
   PresentationElement_kind get kind => PresentationElement_kind.sectionWrapper;
+}
+
+final class PresentationElement_paddingWrapper extends _PresentationElement_wrapper {
+  final PaddingLayout value;
+
+  PresentationElement_paddingWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.paddingWrapper;
+}
+
+final class PresentationElement_slotWrapper extends _PresentationElement_wrapper {
+  final PresentationSlotElement value;
+
+  PresentationElement_slotWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.slotWrapper;
 }
 
 final class PresentationElement_tabsWrapper extends _PresentationElement_wrapper {

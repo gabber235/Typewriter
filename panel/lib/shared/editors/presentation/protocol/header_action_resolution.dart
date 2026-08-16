@@ -105,7 +105,7 @@ sealed class _ResolvedHeaderItem with _$ResolvedHeaderItem {
 @freezed
 abstract class _ResolvedPresentationHeader with _$ResolvedPresentationHeader {
   const factory _ResolvedPresentationHeader({
-    required String title,
+    required PresentationHeaderTitle? title,
     required String description,
     required List<_ResolvedHeaderItem> items,
   }) = _ResolvedPresentationHeaderValue;
@@ -114,7 +114,7 @@ abstract class _ResolvedPresentationHeader with _$ResolvedPresentationHeader {
 extension on PresentationHeader {
   _ResolvedPresentationHeader resolve(PresentationRenderScope scope) {
     return _ResolvedPresentationHeader(
-      title: title == null ? "" : scope.expressionText(title!),
+      title: title,
       description: description == null
           ? ""
           : scope.expressionText(description!),

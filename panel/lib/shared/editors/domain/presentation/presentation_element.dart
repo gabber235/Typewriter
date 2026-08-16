@@ -81,12 +81,9 @@ sealed class PresentationElement with _$PresentationElement {
     required BindingReference roots,
     required PresentationCollectionRelationId relation,
     required CollectionGraphDirection direction,
-    required BindingId pathBindingId,
-    SequencePresentation? rootRows,
-    SequencePresentation? reachedRows,
-    SequencePresentation? paths,
+    required PresentationNode node,
+    required BindingId childrenBindingId,
     int? maximumDepth,
-    @Default(true) bool deduplicate,
   }) = CollectionGraphElement;
 
   const factory PresentationElement.textInput({
@@ -238,6 +235,33 @@ sealed class PresentationElement with _$PresentationElement {
     required PresentationNode child,
     PresentationBorder? border,
   }) = SectionElement;
+  @Implements<SingleChildLayoutElement>()
+  @Assert(
+    "top >= 0 && top < double.infinity",
+    "Top padding must be finite and nonnegative.",
+  )
+  @Assert(
+    "start >= 0 && start < double.infinity",
+    "Start padding must be finite and nonnegative.",
+  )
+  @Assert(
+    "end >= 0 && end < double.infinity",
+    "End padding must be finite and nonnegative.",
+  )
+  @Assert(
+    "bottom >= 0 && bottom < double.infinity",
+    "Bottom padding must be finite and nonnegative.",
+  )
+  const factory PresentationElement.padding({
+    required PresentationNode child,
+    @Default(0) double top,
+    @Default(0) double start,
+    @Default(0) double end,
+    @Default(0) double bottom,
+  }) = PaddingElement;
+  @Assert("slotId != \"\"", "Presentation slot ID must not be empty.")
+  const factory PresentationElement.slot({required String slotId}) =
+      PresentationSlotElement;
   @Assert("tabs.isNotEmpty", "Tabs must not be empty.")
   factory PresentationElement.tabs({
     required List<TabItem> tabs,

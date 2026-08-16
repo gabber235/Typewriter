@@ -5,7 +5,9 @@ extension on SkirPresentationDecoder {
     final binding = value.binding == null
         ? const TypeResult<BindingReference?>.success(null)
         : expressions.binding(value.binding!).mapValue((value) => value);
-    final title = _optionalExpression(value.title);
+    final title = value.title == null
+        ? const TypeResult<PresentationHeaderTitle?>.success(null)
+        : _headerTitle(value.title!).mapValue((value) => value);
     final description = _optionalExpression(value.description);
     return PresentationHeader(
       binding: binding.valueOrNull,
@@ -15,6 +17,20 @@ extension on SkirPresentationDecoder {
       items: [for (final item in value.items) _headerItem(item)],
     );
   }
+
+  TypeResult<PresentationHeaderTitle> _headerTitle(
+    wire.PresentationHeaderTitle value,
+  ) => switch (value) {
+    wire.PresentationHeaderTitle_textWrapper(:final value) =>
+      expressions.decode(value).mapValue(PresentationHeaderTitle.text),
+    wire.PresentationHeaderTitle_presentationWrapper(:final value) =>
+      TypeResult.success(
+        PresentationHeaderTitle.presentation(decodeNode(value)),
+      ),
+    wire.PresentationHeaderTitle_unknown() => invalidWire(
+      "Unknown presentation header title",
+    ),
+  };
 
   HeaderItem _headerItem(wire.HeaderItem value) => switch (value) {
     wire.HeaderItem_buttonWrapper(:final value) => _buttonItem(value),

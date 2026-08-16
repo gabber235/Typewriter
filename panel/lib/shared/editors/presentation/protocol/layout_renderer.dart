@@ -7,6 +7,7 @@ part "renderers/layout/grid_renderer.dart";
 part "renderers/layout/layout_support.dart";
 part "renderers/layout/row_renderer.dart";
 part "renderers/layout/section_renderer.dart";
+part "renderers/layout/padding_renderer.dart";
 part "renderers/layout/spacer_renderer.dart";
 part "renderers/layout/stack_renderer.dart";
 part "renderers/layout/tabs_renderer.dart";

@@ -135,10 +135,10 @@ class _MapInputState extends State<_MapInput> {
     if (!element.allowRemove && !hasDeclaredHeader) return content;
     final standardHeader = PresentationHeader(
       binding: reference,
-      title: switch (entry.key) {
+      title: (switch (entry.key) {
         IntegerValue() => "Map entry".asStringLiteral,
         _ => entry.key.expressionDisplayText.asStringLiteral,
-      },
+      }).asHeaderTitle,
       initiallyExpanded: false,
       items: element.allowRemove
           ? [

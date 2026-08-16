@@ -2607,9 +2607,169 @@ sealed class HeaderItem private constructor() {
     }
 }
 
+/** Deeply immutable. */
+sealed class PresentationHeaderTitle private constructor() {
+    /** The kind of variant held by a `PresentationHeaderTitle`. */
+    enum class Kind {
+        UNKNOWN,
+        TEXT_WRAPPER,
+        PRESENTATION_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationHeaderTitle.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationHeaderTitle>?,
+    ) : skirout.editor.v1.presentation.PresentationHeaderTitle() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationHeaderTitle && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class TextWrapper private constructor (
+        val value: skirout.editor.v1.expression.TypedExpression,
+    ) : skirout.editor.v1.presentation.PresentationHeaderTitle() {
+        constructor(
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.TEXT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationHeaderTitle.TextWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3556653;
+        }
+    }
+
+    class PresentationWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationNode,
+    ) : skirout.editor.v1.presentation.PresentationHeaderTitle() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PRESENTATION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationHeaderTitle.PresentationWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 696975130;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationHeaderTitle>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.PresentationHeaderTitle._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationHeaderTitle].
+         * Default value for fields of type [PresentationHeaderTitle].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `TextWrapper(skirout.editor.v1.expression.TypedExpression(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createText(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resultType: skirout.editor.v1.type_catalog.TypeExpression,
+            expression: skirout.editor.v1.expression.Expression?,
+        ) = TextWrapper(
+            skirout.editor.v1.expression.TypedExpression(
+                resultType = resultType,
+                expression = expression,
+            )
+        );
+
+        /** Shortcut for `PresentationWrapper(skirout.editor.v1.presentation.PresentationNode(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPresentation(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            nodeId: kotlin.String,
+            properties: skirout.editor.v1.presentation.PresentationProperties_OrMutable,
+            element: skirout.editor.v1.presentation.PresentationElement?,
+            header: skirout.editor.v1.presentation.PresentationHeader_OrMutable?,
+        ) = PresentationWrapper(
+            skirout.editor.v1.presentation.PresentationNode(
+                nodeId = nodeId,
+                properties = properties,
+                element = element,
+                header = header,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationHeaderTitle, Unknown>(
+                recordId = "editor/v1/presentation.skir:PresentationHeaderTitle",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [PresentationHeaderTitle] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [PresentationHeaderTitle] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "text",
+                    Kind.TEXT_WRAPPER.ordinal,
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                    "",
+                    { TextWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "presentation",
+                    Kind.PRESENTATION_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.PresentationNode.serializer,
+                    "",
+                    { PresentationWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 sealed interface PresentationHeader_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable?;
-    val title: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val title: skirout.editor.v1.presentation.PresentationHeaderTitle?;
     val description: skirout.editor.v1.expression.TypedExpression_OrMutable?;
     val initiallyExpanded: kotlin.Boolean?;
     val items: kotlin.collections.List<skirout.editor.v1.presentation.HeaderItem>;
@@ -2621,7 +2781,7 @@ sealed interface PresentationHeader_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationHeader private constructor(
     override val binding: skirout.editor.v1.binding.BindingRef?,
-    override val title: skirout.editor.v1.expression.TypedExpression?,
+    override val title: skirout.editor.v1.presentation.PresentationHeaderTitle?,
     override val description: skirout.editor.v1.expression.TypedExpression?,
     override val initiallyExpanded: kotlin.Boolean?,
     override val items: kotlin.collections.List<skirout.editor.v1.presentation.HeaderItem>,
@@ -2632,7 +2792,7 @@ class PresentationHeader private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable?,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        title: skirout.editor.v1.presentation.PresentationHeaderTitle?,
         description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
         initiallyExpanded: kotlin.Boolean?,
         items: kotlin.collections.Iterable<skirout.editor.v1.presentation.HeaderItem>,
@@ -2640,7 +2800,7 @@ class PresentationHeader private constructor(
             null,
     ): this(
         if (binding != null) binding.toFrozen() else null,
-        if (title != null) title.toFrozen() else null,
+        title,
         if (description != null) description.toFrozen() else null,
         initiallyExpanded,
         build.skir.internal.toFrozenList(items),
@@ -2665,7 +2825,7 @@ class PresentationHeader private constructor(
             _MustNameArguments,
         binding: skirout.editor.v1.binding.BindingRef_OrMutable? =
             this.binding,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+        title: skirout.editor.v1.presentation.PresentationHeaderTitle? =
             this.title,
         description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             this.description,
@@ -2675,7 +2835,7 @@ class PresentationHeader private constructor(
             this.items,
     ) = skirout.editor.v1.presentation.PresentationHeader(
         if (binding != null) binding.toFrozen() else null,
-        if (title != null) title.toFrozen() else null,
+        title,
         if (description != null) description.toFrozen() else null,
         initiallyExpanded,
         build.skir.internal.toFrozenList(items),
@@ -2706,7 +2866,7 @@ class PresentationHeader private constructor(
             _MustNameArguments,
         override var binding: skirout.editor.v1.binding.BindingRef_OrMutable? =
             null,
-        override var title: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+        override var title: skirout.editor.v1.presentation.PresentationHeaderTitle? =
             null,
         override var description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             null,
@@ -2767,7 +2927,7 @@ class PresentationHeader private constructor(
                 _MustNameArguments,
             binding: skirout.editor.v1.binding.BindingRef_OrMutable? =
                 null,
-            title: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            title: skirout.editor.v1.presentation.PresentationHeaderTitle? =
                 null,
             description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
                 null,
@@ -2817,7 +2977,7 @@ class PresentationHeader private constructor(
                 "title",
                 1,
                 build.skir.Serializers.optional(
-                    skirout.editor.v1.expression.TypedExpression.serializer,
+                    skirout.editor.v1.presentation.PresentationHeaderTitle.serializer,
                 ),
                 "",
                 { it.title },
@@ -2956,7 +3116,7 @@ class PresentationNode private constructor(
             skirout.editor.v1.presentation.PresentationProperties.partial(),
         override var element: skirout.editor.v1.presentation.PresentationElement? =
             null,
-        override var header: skirout.editor.v1.presentation.PresentationHeader_OrMutable? =
+        override var header: skirout.editor.v1.presentation.PresentationHeader? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationNode>? =
             null,
@@ -4764,6 +4924,366 @@ class SectionLayout private constructor(
                 "",
                 { it.border },
                 { mut, v -> mut.border = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface PaddingLayout_OrMutable {
+    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+    val top: kotlin.Double;
+    val start: kotlin.Double;
+    val end: kotlin.Double;
+    val bottom: kotlin.Double;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PaddingLayout;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PaddingLayout private constructor(
+    override val child: skirout.editor.v1.presentation.PresentationNode,
+    override val top: kotlin.Double,
+    override val start: kotlin.Double,
+    override val end: kotlin.Double,
+    override val bottom: kotlin.Double,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PaddingLayout>? =
+        null,
+): skirout.editor.v1.presentation.PaddingLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        top: kotlin.Double,
+        start: kotlin.Double,
+        end: kotlin.Double,
+        bottom: kotlin.Double,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PaddingLayout>? =
+            null,
+    ): this(
+        child.toFrozen(),
+        top,
+        start,
+        end,
+        bottom,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        child = this.child,
+        top = this.top,
+        start = this.start,
+        end = this.end,
+        bottom = this.bottom,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+            this.child,
+        top: kotlin.Double =
+            this.top,
+        start: kotlin.Double =
+            this.start,
+        end: kotlin.Double =
+            this.end,
+        bottom: kotlin.Double =
+            this.bottom,
+    ) = skirout.editor.v1.presentation.PaddingLayout(
+        child.toFrozen(),
+        top,
+        start,
+        end,
+        bottom,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PaddingLayout && this.child == other.child && this.top == other.top && this.start == other.start && this.end == other.end && this.bottom == other.bottom);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.top, this.start, this.end, this.bottom).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.PaddingLayout.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [PaddingLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var child: skirout.editor.v1.presentation.PresentationNode =
+            skirout.editor.v1.presentation.PresentationNode.partial(),
+        override var top: kotlin.Double =
+            0.0,
+        override var start: kotlin.Double =
+            0.0,
+        override var end: kotlin.Double =
+            0.0,
+        override var bottom: kotlin.Double =
+            0.0,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PaddingLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.PaddingLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PaddingLayout(
+            child = this.child,
+            top = this.top,
+            start = this.start,
+            end = this.end,
+            bottom = this.bottom,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PaddingLayout(
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PaddingLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+            top: kotlin.Double =
+                0.0,
+            start: kotlin.Double =
+                0.0,
+            end: kotlin.Double =
+                0.0,
+            bottom: kotlin.Double =
+                0.0,
+        ) = skirout.editor.v1.presentation.PaddingLayout(
+            child = child,
+            top = top,
+            start = start,
+            end = end,
+            bottom = bottom,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:PaddingLayout",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [PaddingLayout] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [PaddingLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "child",
+                "child",
+                0,
+                skirout.editor.v1.presentation.PresentationNode.serializer,
+                "",
+                { it.child },
+                { mut, v -> mut.child = v },
+            );
+            serializerImpl.addField(
+                "top",
+                "top",
+                1,
+                build.skir.Serializers.float64,
+                "",
+                { it.top },
+                { mut, v -> mut.top = v },
+            );
+            serializerImpl.addField(
+                "start",
+                "start",
+                2,
+                build.skir.Serializers.float64,
+                "",
+                { it.start },
+                { mut, v -> mut.start = v },
+            );
+            serializerImpl.addField(
+                "end",
+                "end",
+                3,
+                build.skir.Serializers.float64,
+                "",
+                { it.end },
+                { mut, v -> mut.end = v },
+            );
+            serializerImpl.addField(
+                "bottom",
+                "bottom",
+                4,
+                build.skir.Serializers.float64,
+                "",
+                { it.bottom },
+                { mut, v -> mut.bottom = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface PresentationSlotElement_OrMutable {
+    val slotId: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationSlotElement;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationSlotElement private constructor(
+    override val slotId: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationSlotElement>? =
+        null,
+): skirout.editor.v1.presentation.PresentationSlotElement_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        slotId: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationSlotElement>? =
+            null,
+    ): this(
+        slotId,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        slotId = this.slotId,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        slotId: kotlin.String =
+            this.slotId,
+    ) = skirout.editor.v1.presentation.PresentationSlotElement(
+        slotId,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationSlotElement && this.slotId == other.slotId);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.slotId).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.PresentationSlotElement.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationSlotElement]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var slotId: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationSlotElement>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationSlotElement_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationSlotElement(
+            slotId = this.slotId,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationSlotElement(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationSlotElement].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            slotId: kotlin.String =
+                "",
+        ) = skirout.editor.v1.presentation.PresentationSlotElement(
+            slotId = slotId,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:PresentationSlotElement",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [PresentationSlotElement] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [PresentationSlotElement] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "slot_id",
+                "slotId",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.slotId },
+                { mut, v -> mut.slotId = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -7745,12 +8265,9 @@ sealed interface CollectionGraphElement_OrMutable {
     val roots: skirout.editor.v1.binding.BindingRef_OrMutable;
     val relationId: kotlin.String;
     val direction: skirout.editor.v1.presentation.CollectionGraphDirection;
-    val rootRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?;
-    val reachedRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?;
-    val paths: skirout.editor.v1.presentation.SequencePresentation_OrMutable?;
-    val pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable;
     val maximumDepth: kotlin.Int?;
-    val deduplicate: kotlin.Boolean;
+    val node: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+    val childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.CollectionGraphElement;
 }
@@ -7762,12 +8279,9 @@ class CollectionGraphElement private constructor(
     override val roots: skirout.editor.v1.binding.BindingRef,
     override val relationId: kotlin.String,
     override val direction: skirout.editor.v1.presentation.CollectionGraphDirection,
-    override val rootRows: skirout.editor.v1.presentation.SequencePresentation?,
-    override val reachedRows: skirout.editor.v1.presentation.SequencePresentation?,
-    override val paths: skirout.editor.v1.presentation.SequencePresentation?,
-    override val pathBindingId: skirout.editor.v1.binding.BindingId,
     override val maximumDepth: kotlin.Int?,
-    override val deduplicate: kotlin.Boolean,
+    override val node: skirout.editor.v1.presentation.PresentationNode,
+    override val childrenBindingId: skirout.editor.v1.binding.BindingId,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
         null,
 ): skirout.editor.v1.presentation.CollectionGraphElement_OrMutable {
@@ -7778,12 +8292,9 @@ class CollectionGraphElement private constructor(
         roots: skirout.editor.v1.binding.BindingRef_OrMutable,
         relationId: kotlin.String,
         direction: skirout.editor.v1.presentation.CollectionGraphDirection,
-        rootRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-        reachedRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-        paths: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-        pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
         maximumDepth: kotlin.Int?,
-        deduplicate: kotlin.Boolean,
+        node: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
             null,
     ): this(
@@ -7791,12 +8302,9 @@ class CollectionGraphElement private constructor(
         roots.toFrozen(),
         relationId,
         direction,
-        if (rootRows != null) rootRows.toFrozen() else null,
-        if (reachedRows != null) reachedRows.toFrozen() else null,
-        if (paths != null) paths.toFrozen() else null,
-        pathBindingId.toFrozen(),
         maximumDepth,
-        deduplicate,
+        node.toFrozen(),
+        childrenBindingId.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -7809,12 +8317,9 @@ class CollectionGraphElement private constructor(
         roots = this.roots,
         relationId = this.relationId,
         direction = this.direction,
-        rootRows = this.rootRows,
-        reachedRows = this.reachedRows,
-        paths = this.paths,
-        pathBindingId = this.pathBindingId,
         maximumDepth = this.maximumDepth,
-        deduplicate = this.deduplicate,
+        node = this.node,
+        childrenBindingId = this.childrenBindingId,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -7829,29 +8334,20 @@ class CollectionGraphElement private constructor(
             this.relationId,
         direction: skirout.editor.v1.presentation.CollectionGraphDirection =
             this.direction,
-        rootRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-            this.rootRows,
-        reachedRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-            this.reachedRows,
-        paths: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-            this.paths,
-        pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
-            this.pathBindingId,
         maximumDepth: kotlin.Int? =
             this.maximumDepth,
-        deduplicate: kotlin.Boolean =
-            this.deduplicate,
+        node: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+            this.node,
+        childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            this.childrenBindingId,
     ) = skirout.editor.v1.presentation.CollectionGraphElement(
         sourceId,
         roots.toFrozen(),
         relationId,
         direction,
-        if (rootRows != null) rootRows.toFrozen() else null,
-        if (reachedRows != null) reachedRows.toFrozen() else null,
-        if (paths != null) paths.toFrozen() else null,
-        pathBindingId.toFrozen(),
         maximumDepth,
-        deduplicate,
+        node.toFrozen(),
+        childrenBindingId.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -7859,11 +8355,11 @@ class CollectionGraphElement private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.CollectionGraphElement && this.sourceId == other.sourceId && this.roots == other.roots && this.relationId == other.relationId && this.direction == other.direction && this.rootRows == other.rootRows && this.reachedRows == other.reachedRows && this.paths == other.paths && this.pathBindingId == other.pathBindingId && this.maximumDepth == other.maximumDepth && this.deduplicate == other.deduplicate);
+        return this === other || (other is skirout.editor.v1.presentation.CollectionGraphElement && this.sourceId == other.sourceId && this.roots == other.roots && this.relationId == other.relationId && this.direction == other.direction && this.maximumDepth == other.maximumDepth && this.node == other.node && this.childrenBindingId == other.childrenBindingId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.roots, this.relationId, this.direction, this.rootRows, this.reachedRows, this.paths, this.pathBindingId, this.maximumDepth, this.deduplicate).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sourceId, this.roots, this.relationId, this.direction, this.maximumDepth, this.node, this.childrenBindingId).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -7885,18 +8381,12 @@ class CollectionGraphElement private constructor(
             "",
         override var direction: skirout.editor.v1.presentation.CollectionGraphDirection =
             skirout.editor.v1.presentation.CollectionGraphDirection.UNKNOWN,
-        override var rootRows: skirout.editor.v1.presentation.SequencePresentation? =
-            null,
-        override var reachedRows: skirout.editor.v1.presentation.SequencePresentation? =
-            null,
-        override var paths: skirout.editor.v1.presentation.SequencePresentation? =
-            null,
-        override var pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
-            skirout.editor.v1.binding.BindingId.partial(),
         override var maximumDepth: kotlin.Int? =
             null,
-        override var deduplicate: kotlin.Boolean =
-            false,
+        override var node: skirout.editor.v1.presentation.PresentationNode =
+            skirout.editor.v1.presentation.PresentationNode.partial(),
+        override var childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+            skirout.editor.v1.binding.BindingId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollectionGraphElement>? =
             null,
     ): skirout.editor.v1.presentation.CollectionGraphElement_OrMutable {
@@ -7906,12 +8396,9 @@ class CollectionGraphElement private constructor(
             roots = this.roots,
             relationId = this.relationId,
             direction = this.direction,
-            rootRows = this.rootRows,
-            reachedRows = this.reachedRows,
-            paths = this.paths,
-            pathBindingId = this.pathBindingId,
             maximumDepth = this.maximumDepth,
-            deduplicate = this.deduplicate,
+            node = this.node,
+            childrenBindingId = this.childrenBindingId,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -7932,15 +8419,15 @@ class CollectionGraphElement private constructor(
         }
 
         /**
-         * If the value of [pathBindingId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [pathBindingId] and returns it.
+         * If the value of [childrenBindingId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [childrenBindingId] and returns it.
          */
-        val mutablePathBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
-            var value = this.pathBindingId;
+        val mutableChildrenBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+            var value = this.childrenBindingId;
             return when (value) {
                 is skirout.editor.v1.binding.BindingId -> {
                     value = value.toMutable();
-                    this.pathBindingId = value;
+                    this.childrenBindingId = value;
                     return value;
                 }
                 is skirout.editor.v1.binding.BindingId.Mutable -> value;
@@ -7956,11 +8443,8 @@ class CollectionGraphElement private constructor(
                 "",
                 skirout.editor.v1.presentation.CollectionGraphDirection.UNKNOWN,
                 null,
-                null,
-                null,
+                skirout.editor.v1.presentation.PresentationNode.partial(),
                 skirout.editor.v1.binding.BindingId.partial(),
-                null,
-                false,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -7982,29 +8466,20 @@ class CollectionGraphElement private constructor(
                 "",
             direction: skirout.editor.v1.presentation.CollectionGraphDirection =
                 skirout.editor.v1.presentation.CollectionGraphDirection.UNKNOWN,
-            rootRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-                null,
-            reachedRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-                null,
-            paths: skirout.editor.v1.presentation.SequencePresentation_OrMutable? =
-                null,
-            pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
-                skirout.editor.v1.binding.BindingId.partial(),
             maximumDepth: kotlin.Int? =
                 null,
-            deduplicate: kotlin.Boolean =
-                false,
+            node: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+            childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+                skirout.editor.v1.binding.BindingId.partial(),
         ) = skirout.editor.v1.presentation.CollectionGraphElement(
             sourceId = sourceId,
             roots = roots,
             relationId = relationId,
             direction = direction,
-            rootRows = rootRows,
-            reachedRows = reachedRows,
-            paths = paths,
-            pathBindingId = pathBindingId,
             maximumDepth = maximumDepth,
-            deduplicate = deduplicate,
+            node = node,
+            childrenBindingId = childrenBindingId,
             _unrecognizedFields = null,
         );
 
@@ -8062,51 +8537,9 @@ class CollectionGraphElement private constructor(
                 { mut, v -> mut.direction = v },
             );
             serializerImpl.addField(
-                "root_rows",
-                "rootRows",
-                4,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.presentation.SequencePresentation.serializer,
-                ),
-                "",
-                { it.rootRows },
-                { mut, v -> mut.rootRows = v },
-            );
-            serializerImpl.addField(
-                "reached_rows",
-                "reachedRows",
-                5,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.presentation.SequencePresentation.serializer,
-                ),
-                "",
-                { it.reachedRows },
-                { mut, v -> mut.reachedRows = v },
-            );
-            serializerImpl.addField(
-                "paths",
-                "paths",
-                6,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.presentation.SequencePresentation.serializer,
-                ),
-                "",
-                { it.paths },
-                { mut, v -> mut.paths = v },
-            );
-            serializerImpl.addField(
-                "path_binding_id",
-                "pathBindingId",
-                7,
-                skirout.editor.v1.binding.BindingId.serializer,
-                "",
-                { it.pathBindingId },
-                { mut, v -> mut.pathBindingId = v },
-            );
-            serializerImpl.addField(
                 "maximum_depth",
                 "maximumDepth",
-                8,
+                4,
                 build.skir.Serializers.optional(
                     build.skir.Serializers.int32,
                 ),
@@ -8115,13 +8548,22 @@ class CollectionGraphElement private constructor(
                 { mut, v -> mut.maximumDepth = v },
             );
             serializerImpl.addField(
-                "deduplicate",
-                "deduplicate",
-                9,
-                build.skir.Serializers.bool,
+                "node",
+                "node",
+                5,
+                skirout.editor.v1.presentation.PresentationNode.serializer,
                 "",
-                { it.deduplicate },
-                { mut, v -> mut.deduplicate = v },
+                { it.node },
+                { mut, v -> mut.node = v },
+            );
+            serializerImpl.addField(
+                "children_binding_id",
+                "childrenBindingId",
+                6,
+                skirout.editor.v1.binding.BindingId.serializer,
+                "",
+                { it.childrenBindingId },
+                { mut, v -> mut.childrenBindingId = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -17143,6 +17585,8 @@ sealed class PresentationElement private constructor() {
         DIVIDER_CONST,
         CHILDREN_WRAPPER,
         SECTION_WRAPPER,
+        PADDING_WRAPPER,
+        SLOT_WRAPPER,
         TABS_WRAPPER,
         SPACER_WRAPPER,
         TEXT_WRAPPER,
@@ -17245,6 +17689,42 @@ sealed class PresentationElement private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1970241253;
+        }
+    }
+
+    class PaddingWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PaddingLayout,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.PaddingLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PADDING_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.PaddingWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -806339567;
+        }
+    }
+
+    class SlotWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationSlotElement,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationSlotElement_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SLOT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.SlotWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3533310;
         }
     }
 
@@ -17942,6 +18422,38 @@ sealed class PresentationElement private constructor() {
             )
         );
 
+        /** Shortcut for `PaddingWrapper(skirout.editor.v1.presentation.PaddingLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPadding(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+            top: kotlin.Double,
+            start: kotlin.Double,
+            end: kotlin.Double,
+            bottom: kotlin.Double,
+        ) = PaddingWrapper(
+            skirout.editor.v1.presentation.PaddingLayout(
+                child = child,
+                top = top,
+                start = start,
+                end = end,
+                bottom = bottom,
+            )
+        );
+
+        /** Shortcut for `SlotWrapper(skirout.editor.v1.presentation.PresentationSlotElement(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSlot(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            slotId: kotlin.String,
+        ) = SlotWrapper(
+            skirout.editor.v1.presentation.PresentationSlotElement(
+                slotId = slotId,
+            )
+        );
+
         /** Shortcut for `TabsWrapper(skirout.editor.v1.presentation.TabsLayout(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createTabs(
@@ -18535,24 +19047,18 @@ sealed class PresentationElement private constructor() {
             roots: skirout.editor.v1.binding.BindingRef_OrMutable,
             relationId: kotlin.String,
             direction: skirout.editor.v1.presentation.CollectionGraphDirection,
-            rootRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-            reachedRows: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-            paths: skirout.editor.v1.presentation.SequencePresentation_OrMutable?,
-            pathBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
             maximumDepth: kotlin.Int?,
-            deduplicate: kotlin.Boolean,
+            node: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+            childrenBindingId: skirout.editor.v1.binding.BindingId_OrMutable,
         ) = CollectionGraphWrapper(
             skirout.editor.v1.presentation.CollectionGraphElement(
                 sourceId = sourceId,
                 roots = roots,
                 relationId = relationId,
                 direction = direction,
-                rootRows = rootRows,
-                reachedRows = reachedRows,
-                paths = paths,
-                pathBindingId = pathBindingId,
                 maximumDepth = maximumDepth,
-                deduplicate = deduplicate,
+                node = node,
+                childrenBindingId = childrenBindingId,
             )
         );
 
@@ -18606,6 +19112,24 @@ sealed class PresentationElement private constructor() {
                     skirout.editor.v1.presentation.SectionLayout.serializer,
                     "",
                     { SectionWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    48,
+                    "padding",
+                    Kind.PADDING_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.PaddingLayout.serializer,
+                    "",
+                    { PaddingWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    49,
+                    "slot",
+                    Kind.SLOT_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.PresentationSlotElement.serializer,
+                    "",
+                    { SlotWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(

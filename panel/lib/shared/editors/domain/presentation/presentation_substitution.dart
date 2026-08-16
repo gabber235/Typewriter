@@ -57,6 +57,14 @@ extension on PresentationElement {
         child: value.child._substituteTypes(substitutions),
         border: value.border?._substituteTypes(substitutions),
       ),
+      PaddingElement() => PaddingElement(
+        child: value.child._substituteTypes(substitutions),
+        top: value.top,
+        start: value.start,
+        end: value.end,
+        bottom: value.bottom,
+      ),
+      PresentationSlotElement() => value,
       TabsElement() => TabsElement(
         tabs: value.tabs
             .map(
@@ -262,12 +270,6 @@ extension on SequencePresentation {
     separator: separator._substituteTypes(substitutions),
     layout: layout,
   );
-}
-
-extension on SequencePresentation? {
-  SequencePresentation? _substituteTypes(
-    Map<String, TypeExpression> substitutions,
-  ) => this?._substituteTypes(substitutions);
 }
 
 extension on Iterable<PresentationNode> {

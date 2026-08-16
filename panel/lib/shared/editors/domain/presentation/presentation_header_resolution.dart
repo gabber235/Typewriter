@@ -44,7 +44,7 @@ extension on ToggleInputElement {
     )) {
       return PresentationHeader(
         binding: control.binding,
-        title: control.label,
+        title: control.label?.asHeaderTitle,
         description: control.description,
         items: [
           HeaderBooleanToggleItem(
@@ -87,7 +87,7 @@ extension on ListInputElement {
       if (initial == null) return null;
       return PresentationHeader(
         binding: control.binding,
-        title: control.label,
+        title: control.label?.asHeaderTitle,
         description: control.description,
         initiallyExpanded: control.binding.path.segments.isEmpty,
         items: [
@@ -128,7 +128,7 @@ extension on MapInputElement {
       if (initialKey == null || initialValue == null) return null;
       return PresentationHeader(
         binding: control.binding,
-        title: control.label,
+        title: control.label?.asHeaderTitle,
         description: control.description,
         initiallyExpanded: control.binding.path.segments.isEmpty,
         items: [

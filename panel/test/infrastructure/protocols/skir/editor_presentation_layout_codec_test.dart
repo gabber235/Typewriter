@@ -68,6 +68,14 @@ void main() {
         wire.PresentationElement_kind.sectionWrapper,
       ),
       (
+        const PaddingElement(child: leaf, top: 1, start: 2, end: 3, bottom: 4),
+        wire.PresentationElement_kind.paddingWrapper,
+      ),
+      (
+        const PresentationSlotElement(slotId: "children"),
+        wire.PresentationElement_kind.slotWrapper,
+      ),
+      (
         SectionElement(
           child: leaf,
           border: PresentationBorder.all(
@@ -98,7 +106,7 @@ void main() {
   test("maps every semantic header item and its metadata", () {
     final header = PresentationHeader(
       binding: binding,
-      title: text,
+      title: const PresentationHeaderTitle.text(text),
       description: text,
       initiallyExpanded: false,
       items: [
@@ -167,6 +175,23 @@ void main() {
     expect(decoded, node);
   });
 
+  test("maps a presentation node header title", () {
+    const node = PresentationNode(
+      id: "richHeader",
+      header: PresentationHeader(
+        title: PresentationHeaderTitle.presentation(
+          PresentationNode(id: "title", element: TextElement(text)),
+        ),
+      ),
+      element: DividerElement(),
+    );
+
+    final encoded = codecs.encoder.encodeNode(node).valueOrNull!;
+    final decoded = codecs.decoder.decodeNode(encoded);
+
+    expect(decoded, node);
+  });
+
   test("rejects invalid section border widths", () {
     final decoded = codecs.decoder.decodeNode(
       wire.PresentationNode(
@@ -203,6 +228,44 @@ void main() {
             bottom: null,
           ),
         ),
+        header: null,
+      ),
+    );
+
+    expect(decoded.element, isA<DiagnosticElement>());
+  });
+
+  test("rejects invalid directional padding", () {
+    final decoded = codecs.decoder.decodeNode(
+      wire.PresentationNode(
+        nodeId: "invalid.padding",
+        properties: wire.PresentationProperties(
+          enabledIf: null,
+          readOnly: false,
+        ),
+        element: wire.PresentationElement.createPadding(
+          child: codecs.encoder.encodeNode(leaf).valueOrNull!,
+          top: 0,
+          start: -1,
+          end: 0,
+          bottom: 0,
+        ),
+        header: null,
+      ),
+    );
+
+    expect(decoded.element, isA<DiagnosticElement>());
+  });
+
+  test("rejects an empty presentation slot identifier", () {
+    final decoded = codecs.decoder.decodeNode(
+      wire.PresentationNode(
+        nodeId: "invalid.slot",
+        properties: wire.PresentationProperties(
+          enabledIf: null,
+          readOnly: false,
+        ),
+        element: wire.PresentationElement.createSlot(slotId: ""),
         header: null,
       ),
     );
@@ -333,6 +396,21 @@ void main() {
           child: leaf,
         ),
         wire.PresentationElement_kind.scopedBindingWrapper,
+      ),
+      (
+        const CollectionGraphElement(
+          sourceId: PresentationCollectionSourceId("nodes"),
+          roots: binding,
+          relation: PresentationCollectionRelationId("links"),
+          direction: CollectionGraphDirection.forward,
+          maximumDepth: 8,
+          node: PresentationNode(
+            id: "graphNode",
+            element: PresentationSlotElement(slotId: "children"),
+          ),
+          childrenBindingId: BindingId(7),
+        ),
+        wire.PresentationElement_kind.collectionGraphWrapper,
       ),
     ];
 

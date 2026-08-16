@@ -113,13 +113,13 @@ final class _DefaultPresentationGenerator {
       header: switch (type) {
         ListType() || MapType() => PresentationHeader(
           binding: binding,
-          title: control.label,
+          title: control.label?.asHeaderTitle,
           description: control.description,
           initiallyExpanded: root,
         ),
         RecordType() when !root => PresentationHeader(
           binding: binding,
-          title: control.label,
+          title: control.label?.asHeaderTitle,
           description: control.description,
           initiallyExpanded: false,
         ),

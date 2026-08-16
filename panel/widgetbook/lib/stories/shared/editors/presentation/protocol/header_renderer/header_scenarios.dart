@@ -101,7 +101,7 @@ SemanticHeaderScenario mergedHeaderScenario() {
       id: "merged.outer",
       header: PresentationHeader(
         binding: titleBinding,
-        title: "Scene title".asStringLiteral,
+        title: "Scene title".asStringLiteral.asHeaderTitle,
         initiallyExpanded: true,
       ),
       element: TypedFieldElement(

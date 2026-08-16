@@ -8,7 +8,27 @@ extension PresentationNodeValidation on PresentationNode {
   }) => [
     if (properties.enabledIf case final expression?)
       ...expression._evaluateBoolean(context, budget, registry),
+    ...?header?._validatePresentation(context, budget, registry),
     ...element._validatePresentation(context, budget, registry),
+  ];
+}
+
+extension on PresentationHeader {
+  List<TypeDiagnostic> _validatePresentation(
+    ExpressionContext context,
+    ExpressionBudget budget,
+    TypeRegistry? registry,
+  ) => [
+    if (title case PresentationHeaderTextTitle(:final value))
+      ...value
+          .evaluate(context, registry: registry, budget: budget)
+          .diagnostics,
+    if (title case PresentationHeaderNodeTitle(:final node))
+      ...node.validatePresentation(context, registry: registry, budget: budget),
+    if (description case final value?)
+      ...value
+          .evaluate(context, registry: registry, budget: budget)
+          .diagnostics,
   ];
 }
 
@@ -76,14 +96,39 @@ extension on PresentationElement {
         }
       }
     }
+    if (element case PaddingElement(
+      :final top,
+      :final start,
+      :final end,
+      :final bottom,
+    )) {
+      if ([
+        top,
+        start,
+        end,
+        bottom,
+      ].any((value) => !value.isFinite || value < 0)) {
+        diagnostics.add(_invalid("Padding must be finite and nonnegative"));
+      }
+    }
+    if (element case PresentationSlotElement(
+      :final slotId,
+    ) when slotId.isEmpty) {
+      diagnostics.add(_invalid("Presentation slot ID must not be empty"));
+    }
+    if (element case CollectionGraphElement(:final node)) {
+      final slots = node.presentationSlotIds;
+      if (slots.isEmpty) {
+        diagnostics.add(_invalid("Collection graph node must contain a slot"));
+      }
+      if (slots.length > 1) {
+        diagnostics.add(
+          _invalid("Collection graph node contains distinct slot identifiers"),
+        );
+      }
+    }
     final sequences = switch (element) {
       RepeatedElement(:final presentation) => [presentation],
-      CollectionGraphElement(
-        :final rootRows,
-        :final reachedRows,
-        :final paths,
-      ) =>
-        [rootRows, reachedRows, paths].nonNulls,
       _ => const <SequencePresentation>[],
     };
     for (final sequence in sequences) {
@@ -112,6 +157,63 @@ extension on PresentationElement {
     }
     return diagnostics;
   }
+}
+
+extension PresentationSlotDiscovery on PresentationNode {
+  Set<String> get presentationSlotIds => {
+    if (header?.title case PresentationHeaderNodeTitle(:final node))
+      ...node.presentationSlotIds,
+    ...element._presentationSlotIds,
+  };
+}
+
+extension on PresentationElement {
+  Set<String> get _presentationSlotIds => switch (this) {
+    PresentationSlotElement(:final slotId) => {slotId},
+    ChildrenLayoutElement(:final children) ||
+    GridElement(:final children) ||
+    StackElement(
+      :final children,
+    ) => {for (final child in children) ...child.presentationSlotIds},
+    SingleChildLayoutElement(:final child) => child.presentationSlotIds,
+    TypedFieldElement(:final presentation) =>
+      presentation?.presentationSlotIds ?? const {},
+    ConditionalElement(:final whenTrue, :final whenFalse) => {
+      ...whenTrue.presentationSlotIds,
+      ...?whenFalse?.presentationSlotIds,
+    },
+    RepeatedElement(:final presentation) => {
+      ...presentation.item.presentationSlotIds,
+      ...?presentation.empty?.presentationSlotIds,
+      ...?presentation.separator?.presentationSlotIds,
+    },
+    ScopedBindingElement(:final child) => child.presentationSlotIds,
+    CollectionLookupElement(:final found, :final missing, :final loading) => {
+      ...found.presentationSlotIds,
+      ...missing.presentationSlotIds,
+      ...?loading?.presentationSlotIds,
+    },
+    CollectionGraphElement() => const {},
+    SearchInputElement(:final summary) =>
+      summary?.presentationSlotIds ?? const {},
+    ListInputElement(:final itemPresentation) =>
+      itemPresentation?.presentationSlotIds ?? const {},
+    MapInputElement(:final keyPresentation, :final valuePresentation) => {
+      ...?keyPresentation?.presentationSlotIds,
+      ...?valuePresentation?.presentationSlotIds,
+    },
+    RecordInputElement(:final fieldPresentation) =>
+      fieldPresentation?.presentationSlotIds ?? const {},
+    PolymorphicInputElement(:final concreteTypes) => {
+      for (final type in concreteTypes)
+        ...?type.presentation?.presentationSlotIds,
+    },
+    TabsElement(:final tabs) => {
+      for (final tab in tabs) ...tab.child.presentationSlotIds,
+    },
+    TooltipElement(:final child) => child.presentationSlotIds,
+    _ => const {},
+  };
 }
 
 extension on PresentationElement {
@@ -204,7 +306,8 @@ extension on PresentationBorder {
       :final start,
       :final end,
       :final bottom,
-    ) => [top, start, end, bottom].nonNulls.toList(),
+    ) =>
+      [top, start, end, bottom].nonNulls.toList(),
   };
 
   List<TypedExpression> get colors => switch (this) {

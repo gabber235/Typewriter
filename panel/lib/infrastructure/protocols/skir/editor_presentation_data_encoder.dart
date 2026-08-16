@@ -135,21 +135,8 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
     CollectionGraphElement value,
   ) {
     final roots = expressions.binding(value.roots);
-    final rootRows = value.rootRows == null
-        ? const TypeResult<wire.SequencePresentation?>.success(null)
-        : _sequence(value.rootRows!).mapValue((value) => value);
-    final reachedRows = value.reachedRows == null
-        ? const TypeResult<wire.SequencePresentation?>.success(null)
-        : _sequence(value.reachedRows!).mapValue((value) => value);
-    final paths = value.paths == null
-        ? const TypeResult<wire.SequencePresentation?>.success(null)
-        : _sequence(value.paths!).mapValue((value) => value);
-    final diagnostics = [
-      ...roots.diagnostics,
-      ...rootRows.diagnostics,
-      ...reachedRows.diagnostics,
-      ...paths.diagnostics,
-    ];
+    final node = encodeNode(value.node);
+    final diagnostics = [...roots.diagnostics, ...node.diagnostics];
     return diagnostics.isEmpty
         ? TypeResult.success(
             wire.PresentationElement.createCollectionGraph(
@@ -162,14 +149,11 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
                 CollectionGraphDirection.reverse =>
                   wire.CollectionGraphDirection.reverse,
               },
-              rootRows: rootRows.valueOrNull,
-              reachedRows: reachedRows.valueOrNull,
-              paths: paths.valueOrNull,
-              pathBindingId: wire_binding.BindingId(
-                value: value.pathBindingId.value,
+              node: node.valueOrNull!,
+              childrenBindingId: wire_binding.BindingId(
+                value: value.childrenBindingId.value,
               ),
               maximumDepth: value.maximumDepth,
-              deduplicate: value.deduplicate,
             ),
           )
         : TypeResult.failure(diagnostics);

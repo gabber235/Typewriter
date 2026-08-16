@@ -112,6 +112,27 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
             SectionElement(child: decodeNode(value.child), border: border),
       );
 
+  TypeResult<PresentationElement> _padding(wire.PaddingLayout value) {
+    final values = [value.top, value.start, value.end, value.bottom];
+    if (values.any((value) => !value.isFinite || value < 0)) {
+      return invalidWire("Invalid directional padding");
+    }
+    return TypeResult.success(
+      PaddingElement(
+        child: decodeNode(value.child),
+        top: value.top,
+        start: value.start,
+        end: value.end,
+        bottom: value.bottom,
+      ),
+    );
+  }
+
+  TypeResult<PresentationElement> _slot(wire.PresentationSlotElement value) =>
+      value.slotId.isEmpty
+      ? invalidWire("Presentation slot ID is empty")
+      : TypeResult.success(PresentationSlotElement(slotId: value.slotId));
+
   TypeResult<PresentationBorder?> _border(wire.PresentationBorder? value) {
     if (value == null) return const TypeResult.success(null);
     return switch (value) {

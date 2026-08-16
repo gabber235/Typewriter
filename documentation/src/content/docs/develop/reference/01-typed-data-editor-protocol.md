@@ -151,6 +151,16 @@ Maps may provide independent presentations for keys and values. Lists, maps, rec
 
 Conditional elements own visibility. Presentation properties retain enabled and read only behavior. Expansion belongs to semantic headers. Tabs use `initiallySelectedTabId`. Spacer dimensions and slider divisions are typed expressions.
 
+`PaddingElement` applies finite directional padding around one child. Its `start` and `end` values follow text direction. `PresentationSlotElement` inserts content supplied by the renderer that owns the surrounding composition. A slot without an owning composition renders a localized diagnostic.
+
+### Collection graphs
+
+`CollectionGraphElement` renders a graph as a recursive presentation template. It resolves the configured roots and relation, derives ordered adjacency from the collection snapshot paths, and renders every root occurrence independently. Shared rows may therefore appear in several branches without sharing expansion state.
+
+For each occurrence, the renderer binds the current row through the collection schema row binding. It also binds the immediate child rows as a read only typed list through `childrenBindingId`. The list element type is the collection row type. The configured node can inspect that list with normal typed expressions.
+
+The node template owns all visible structure. Its single logical presentation slot receives the recursively rendered children. The same slot identifier may appear in several conditional branches, while distinct identifiers are invalid. The graph renderer contributes traversal, scoping, occurrence identity, and diagnostics only.
+
 ### Sections
 
 `SectionElement` is the single contained layout surface. Its child provides content, while the surrounding `PresentationNode` header optionally provides a title, description, actions, and collapse behavior. This keeps visual containment independent from semantic header behavior and removes separate card and collapsible layout variants.
@@ -159,7 +169,7 @@ A section may omit its border, apply one `PresentationBorderSide` to every side 
 
 ### Semantic headers
 
-Every `PresentationNode` may declare `PresentationHeader` chrome. A header may provide typed title and description expressions, an optional initial expansion state, and typed actions. A null expansion state means the header stays inline. A true or false value makes it collapsible and selects its initial state.
+Every `PresentationNode` may declare `PresentationHeader` chrome. A header title is either a typed text expression or a complete presentation node. Rich title nodes provide their own visible and semantic content. A header may also provide a typed description expression, an optional initial expansion state, and typed actions. A null expansion state means the header stays inline. A true or false value makes it collapsible and selects its initial state.
 
 Header identity combines the node identity with its canonical binding. Alias resolution happens before comparison. Headers reached through typed fields, scoped bindings, the selected conditional branch, repeated item scopes, and default presentation delegation therefore compose when they describe the same value. The outer title, description, and expansion setting win. Inner metadata fills missing values. An outer action replaces an inner action with the same qualified `HeaderActionId`. Headers for distinct bindings remain nested.
 
@@ -209,7 +219,7 @@ There is no capability negotiation. Skir variant evolution and unknown variant h
 
 ## Contract evolution
 
-Every Skir type, field, method, and variant has a stable numeric identifier. Additive changes use new identifiers. Removed identifiers are never reused.
+Every published Skir type, field, method, and variant has a stable numeric identifier. Additive changes use new identifiers. Removed identifiers are never reused after publication. Unpublished contracts may be rewritten before their compatibility baseline is established.
 
 The editor bounded context does not carry a separate protocol version. Skir snapshots define the compatibility baseline. Breaking changes require a new bounded context major version after the contract becomes stable.
 
