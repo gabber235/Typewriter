@@ -1,0 +1,574 @@
+// ignore_for_file: cascade_invocations
+
+import "dart:async";
+
+import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
+
+void main() {
+  final title = DataPath.root.field("title");
+  final color = DataPath.root.field("color");
+
+  test("draft changes persist only when flushed", () async {
+    final commits = <EditorCommit>[];
+    final source = _source(
+      commit: (commit) async {
+        commits.add(commit);
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    expect(commits, isEmpty);
+    expect(source.saveState(title).phase, EditorSavePhase.pending);
+    expect(source.saveState(DataPath.root).phase, EditorSavePhase.pending);
+    expect(source.saveState(DataPath.root).path, title);
+
+    await source.flush();
+    expect(commits.single.changedPaths, {title});
+    expect(source.document.revision, 2);
+    expect(source.saveState(title).phase, EditorSavePhase.saved);
+    source.dispose();
+  });
+
+  test("successful session commits retain session durability", () async {
+    final source = _source(
+      successfulSavePhase: EditorSavePhase.sessionOnly,
+      commit: (commit) async => TypedMutationResult.success(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    );
+
+    source.update(title, const StringValue("Session"));
+    await source.flush();
+
+    expect(source.saveState(title).phase, EditorSavePhase.sessionOnly);
+    source.dispose();
+  });
+
+  test(
+    "different remote fields rebase and retry with injected jitter",
+    () async {
+      final scheduler = _Scheduler();
+      final sent = <EditorCommit>[];
+      var calls = 0;
+      final source = _source(
+        scheduler: scheduler,
+        jitter: const _Jitter(Duration(milliseconds: 10)),
+        commit: (commit) async {
+          sent.add(commit);
+          if (calls++ == 0) {
+            return TypedMutationResult.conflict(
+              expectedRevision: commit.expectedRevision,
+              actualRevision: 2,
+              actualValue: _value(title: "Old", color: "Blue"),
+            );
+          }
+          return TypedMutationResult.success(
+            revision: 3,
+            value: commit.rootValue,
+          );
+        },
+      );
+
+      source.update(title, const StringValue("New"));
+      await source.flush();
+
+      expect(scheduler.delays, const [Duration(milliseconds: 60)]);
+      expect(sent.last.rootValue, _value(title: "New", color: "Blue"));
+      expect(source.document.revision, 3);
+      source.dispose();
+    },
+  );
+
+  test("same field changes pause with an inline conflict", () async {
+    var calls = 0;
+    final source = _source(
+      commit: (commit) async {
+        calls++;
+        return TypedMutationResult.conflict(
+          expectedRevision: commit.expectedRevision,
+          actualRevision: 2,
+          actualValue: _value(title: "Theirs", color: "Red"),
+        );
+      },
+    );
+
+    source.update(title, const StringValue("Yours"));
+    await source.flush();
+
+    expect(calls, 1);
+    expect(source.value(title).valueOrNull, const StringValue("Yours"));
+    expect(source.saveState(title).phase, EditorSavePhase.conflict);
+
+    source.useRemote(title);
+    expect(source.value(title).valueOrNull, const StringValue("Theirs"));
+    source.dispose();
+  });
+
+  test("conflicting paths do not pause clean rebased paths", () async {
+    final commits = <EditorCommit>[];
+    final source = _source(
+      scheduler: _Scheduler(),
+      jitter: const _Jitter(Duration.zero),
+      commit: (commit) async {
+        commits.add(commit);
+        if (commits.length == 1) {
+          return TypedMutationResult.conflict(
+            expectedRevision: commit.expectedRevision,
+            actualRevision: 2,
+            actualValue: _value(title: "Theirs", color: "Red"),
+          );
+        }
+        return TypedMutationResult.success(
+          revision: 3,
+          value: commit.rootValue,
+        );
+      },
+    );
+
+    source.update(title, const StringValue("Yours"));
+    source.update(color, const StringValue("Blue"));
+    await source.flush();
+
+    expect(commits, hasLength(2));
+    expect(commits.last.changedPaths, {color});
+    expect(commits.last.rootValue, _value(title: "Theirs", color: "Blue"));
+    expect(source.value(title).valueOrNull, const StringValue("Yours"));
+    expect(source.saveState(title).phase, EditorSavePhase.conflict);
+    expect(source.saveState(color).phase, EditorSavePhase.saved);
+    expect(
+      source.document.confirmedValue,
+      _value(title: "Theirs", color: "Blue"),
+    );
+    source.dispose();
+  });
+
+  test(
+    "stale in flight success retries without regressing remote state",
+    () async {
+      final first = Completer<TypedMutationResult>();
+      final commits = <EditorCommit>[];
+      final source = _source(
+        scheduler: _Scheduler(),
+        jitter: const _Jitter(Duration.zero),
+        commit: (commit) async {
+          commits.add(commit);
+          if (commits.length == 1) return first.future;
+          return TypedMutationResult.success(
+            revision: 4,
+            value: commit.rootValue,
+          );
+        },
+      );
+
+      source.update(title, const StringValue("New"));
+      final flush = source.flush();
+      source.acceptRemote(
+        revision: 3,
+        value: _value(title: "Old", color: "Blue"),
+      );
+      first.complete(
+        TypedMutationResult.success(
+          revision: 2,
+          value: _value(title: "New", color: "Red"),
+        ),
+      );
+      await flush;
+
+      expect(commits, hasLength(2));
+      expect(commits.last.expectedRevision, 3);
+      expect(commits.last.rootValue, _value(title: "New", color: "Blue"));
+      expect(source.document.revision, 4);
+      expect(
+        source.document.confirmedValue,
+        _value(title: "New", color: "Blue"),
+      );
+      source.dispose();
+    },
+  );
+
+  test("same revision matching success confirms the pending commit", () async {
+    final pending = Completer<TypedMutationResult>();
+    final source = _source(commit: (_) => pending.future);
+
+    source.update(title, const StringValue("New"));
+    final flush = source.flush();
+    source.acceptRemote(
+      revision: 2,
+      value: _value(title: "New", color: "Red"),
+    );
+    pending.complete(
+      TypedMutationResult.success(
+        revision: 2,
+        value: _value(title: "New", color: "Red"),
+      ),
+    );
+    await flush;
+
+    expect(source.document.revision, 2);
+    expect(source.saveState(title).phase, EditorSavePhase.saved);
+    source.dispose();
+  });
+
+  test(
+    "same revision divergent success is diagnosed without overwrite",
+    () async {
+      final pending = Completer<TypedMutationResult>();
+      final source = _source(commit: (_) => pending.future);
+
+      source.update(title, const StringValue("New"));
+      final flush = source.flush();
+      source.acceptRemote(
+        revision: 2,
+        value: _value(title: "Old", color: "Blue"),
+      );
+      pending.complete(
+        TypedMutationResult.success(
+          revision: 2,
+          value: _value(title: "New", color: "Red"),
+        ),
+      );
+      await flush;
+
+      expect(source.document.revision, 2);
+      expect(
+        source.document.confirmedValue,
+        _value(title: "Old", color: "Blue"),
+      );
+      expect(source.value(title).valueOrNull, const StringValue("New"));
+      expect(
+        source.document.diagnostics.map((diagnostic) => diagnostic.message),
+        contains("Different values share the same revision"),
+      );
+      expect(source.saveState(title).phase, EditorSavePhase.failed);
+      source.dispose();
+    },
+  );
+
+  test("a focused field does not block other fields from saving", () async {
+    final commits = <EditorCommit>[];
+    final source = _source(
+      debounce: Duration.zero,
+      commit: (commit) async {
+        commits.add(commit);
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
+    );
+
+    source.beginInteraction(title);
+    source.update(title, const StringValue("Typing"));
+    source.update(color, const StringValue("Blue"));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(commits.single.changedPaths, {color});
+    expect(source.saveState(title).phase, EditorSavePhase.pending);
+    expect(source.saveState(color).phase, EditorSavePhase.saved);
+    source.dispose();
+  });
+
+  test("editing after a failure returns the field to pending", () async {
+    var fail = true;
+    final source = _source(
+      commit: (commit) async => fail
+          ? TypedMutationResult.unavailable([
+              const TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidValue,
+                message: "Rejected",
+              ),
+            ])
+          : TypedMutationResult.success(
+              revision: commit.expectedRevision + 1,
+              value: commit.rootValue,
+            ),
+    );
+
+    source.update(title, const StringValue("First"));
+    await source.flush();
+    expect(source.saveState(title).phase, EditorSavePhase.failed);
+    expect(source.saveState(DataPath.root).phase, EditorSavePhase.failed);
+
+    fail = false;
+    source.update(title, const StringValue("Second"));
+    expect(source.saveState(title).phase, EditorSavePhase.pending);
+
+    await source.flush();
+    expect(source.saveState(title).phase, EditorSavePhase.saved);
+    expect(source.saveState(DataPath.root).phase, EditorSavePhase.saved);
+    source.dispose();
+  });
+
+  test("failed saves wait for an explicit retry", () async {
+    var calls = 0;
+    final source = _source(
+      debounce: Duration.zero,
+      commit: (commit) async {
+        calls++;
+        return TypedMutationResult.unavailable([
+          const TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Rejected",
+          ),
+        ]);
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(calls, 1);
+    expect(source.saveState(title).phase, EditorSavePhase.failed);
+
+    await source.flush(paths: {title});
+    expect(calls, 2);
+    source.dispose();
+  });
+
+  test("a committed interaction cannot be reused", () async {
+    final source = _source(
+      commit: (commit) async => TypedMutationResult.success(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    );
+
+    final interaction = source.beginInteraction(title);
+    source.update(title, const StringValue("New"));
+    await interaction.commit();
+    expect(interaction.active, isFalse);
+    expect(await interaction.commit(), isA<MutationUnavailable>());
+    source.dispose();
+  });
+
+  test(
+    "interaction cancel restores its origin and commit flushes once",
+    () async {
+      var calls = 0;
+      final source = _source(
+        commit: (commit) async {
+          calls++;
+          return TypedMutationResult.success(
+            revision: commit.expectedRevision + 1,
+            value: commit.rootValue,
+          );
+        },
+      );
+      final cancelled = source.beginInteraction(title);
+      source.update(title, const StringValue("Cancelled"));
+      cancelled.cancel();
+      expect(source.value(title).valueOrNull, const StringValue("Old"));
+      expect(calls, 0);
+
+      final committed = source.beginInteraction(title);
+      source.update(title, const StringValue("Saved"));
+      await committed.commit();
+      expect(calls, 1);
+      source.dispose();
+    },
+  );
+
+  test("repeated contention pauses after three jittered retries", () async {
+    final scheduler = _Scheduler();
+    var revision = 1;
+    final source = _source(
+      scheduler: scheduler,
+      jitter: const _Jitter(Duration.zero),
+      commit: (commit) async {
+        revision++;
+        return TypedMutationResult.conflict(
+          expectedRevision: commit.expectedRevision,
+          actualRevision: revision,
+          actualValue: _value(title: "Old", color: "Remote $revision"),
+        );
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    await source.flush();
+
+    expect(scheduler.delays, const [
+      Duration(milliseconds: 50),
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 200),
+    ]);
+    expect(source.saveState(title).phase, EditorSavePhase.repeatedContention);
+    source.dispose();
+  });
+
+  test("deletion invalidates pending request results", () async {
+    final pending = Completer<TypedMutationResult>();
+    var deleted = false;
+    final source = _source(
+      commit: (_) => pending.future,
+      onDeleted: () => deleted = true,
+    );
+    source.update(title, const StringValue("New"));
+    final flush = source.flush();
+    source.acceptRemoteDeletion();
+    pending.complete(
+      TypedMutationResult.success(
+        revision: 2,
+        value: _value(title: "New", color: "Red"),
+      ),
+    );
+
+    expect(await flush, isA<MutationUnavailable>());
+    await Future<void>.delayed(Duration.zero);
+    expect(deleted, isTrue);
+    source.dispose();
+  });
+
+  test("dispose invalidates an in flight commit completion", () async {
+    final pending = Completer<TypedMutationResult>();
+    var commits = 0;
+    var notifications = 0;
+    final source = _source(
+      commit: (_) {
+        commits++;
+        return pending.future;
+      },
+    )..addListener(() => notifications++);
+    source.update(title, const StringValue("New"));
+    final flush = source.flush();
+    final notificationsAtDispose = notifications;
+
+    source.dispose();
+    pending.complete(
+      TypedMutationResult.success(
+        revision: 2,
+        value: _value(title: "New", color: "Red"),
+      ),
+    );
+
+    expect(await flush, isA<MutationUnavailable>());
+    expect(commits, 1);
+    expect(notifications, notificationsAtDispose);
+    expect(source.document.revision, 1);
+    expect(source.document.confirmedValue, _value(title: "Old", color: "Red"));
+  });
+
+  test("clean remote deletion remains visible at the root", () {
+    final source = _source(
+      commit: (commit) async => TypedMutationResult.success(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    );
+
+    source.acceptRemoteDeletion();
+
+    expect(
+      source.saveState(DataPath.root).phase,
+      EditorSavePhase.deletedElsewhere,
+    );
+    source.dispose();
+  });
+
+  test("metadata refresh preserves a rebased local draft", () {
+    final collection = LocalPresentationCollectionSource(
+      id: const PresentationCollectionSourceId("metadata"),
+      schema: const PresentationCollectionSchema(
+        rowType: StringType(),
+        keyType: StringType(),
+        rowBindingId: BindingId(3),
+        key: TypedExpression(
+          resultType: StringType(),
+          expression: BindingExpression(
+            BindingReference(bindingId: BindingId(3)),
+          ),
+        ),
+      ),
+      rows: const [StringValue("row")],
+      registry: TypeRegistry(const TypeCatalog([])),
+    );
+    final source = _source(
+      commit: (commit) async => TypedMutationResult.success(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
+      ),
+    );
+    var notifications = 0;
+    source.addListener(() => notifications++);
+    source.update(title, const StringValue("Local"));
+    final notificationsBeforeRefresh = notifications;
+
+    final refreshed = EditorDocument(
+      rootType: source.document.rootType,
+      typeCatalog: const TypeCatalog([]),
+      confirmedValue: _value(title: "Old", color: "Remote"),
+      revision: 2,
+      collections: [collection],
+      readOnly: true,
+    );
+    source.refreshDocument(refreshed);
+
+    expect(source.value(title).valueOrNull, const StringValue("Local"));
+    expect(
+      source.value(DataPath.root.field("color")).valueOrNull,
+      const StringValue("Remote"),
+    );
+    expect(source.document.collections, [collection]);
+    expect(source.document.readOnly, isTrue);
+    expect(notifications, greaterThan(notificationsBeforeRefresh));
+
+    final notificationsAfterRefresh = notifications;
+    source.refreshDocument(refreshed);
+    expect(notifications, notificationsAfterRefresh);
+    source.dispose();
+  });
+}
+
+TransactionalEditorSource _source({
+  required EditorCommitter commit,
+  EditorDelayScheduler scheduler = const TimerEditorDelayScheduler(),
+  EditorJitterSource? jitter,
+  EditorSavePhase successfulSavePhase = EditorSavePhase.saved,
+  Duration debounce = const Duration(days: 1),
+  void Function()? onDeleted,
+}) => TransactionalEditorSource(
+  document: EditorDocument(
+    rootType: RecordType(
+      fields: const {
+        "title": TypeField(name: "title", type: StringType()),
+        "color": TypeField(name: "color", type: StringType()),
+      },
+    ),
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: _value(title: "Old", color: "Red"),
+    revision: 1,
+  ),
+  debounce: debounce,
+  commit: commit,
+  scheduler: scheduler,
+  jitter: jitter,
+  successfulSavePhase: successfulSavePhase,
+  onDeleted: onDeleted,
+);
+
+RecordValue _value({required String title, required String color}) =>
+    RecordValue({"title": StringValue(title), "color": StringValue(color)});
+
+final class _Scheduler implements EditorDelayScheduler {
+  final delays = <Duration>[];
+
+  @override
+  Future<void> wait(Duration delay) async => delays.add(delay);
+}
+
+final class _Jitter implements EditorJitterSource {
+  const _Jitter(this.value);
+
+  final Duration value;
+
+  @override
+  Duration next(Duration maximum) {
+    assert(value <= maximum, "Test jitter must not exceed its maximum.");
+    return value;
+  }
+}

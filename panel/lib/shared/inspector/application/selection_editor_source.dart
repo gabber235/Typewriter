@@ -1,31 +1,58 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
+import "package:flutter/scheduler.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class SelectionEditorSource extends ChangeNotifier implements EditorSource {
   SelectionEditorSource(this._ref) {
-    _ref.listen(inspectedSelectionProvider, (_, _) => notifyListeners());
+    _ref.listen(inspectedSelectionProvider, (_, next) {
+      final error = next.asError?.error;
+      if (error is SelectableNotFoundException) {
+        _targets[error.id]?.source.acceptRemoteDeletion();
+        return;
+      }
+      _synchronize();
+    });
+    _synchronize();
   }
 
   final Ref _ref;
+  final Map<SelectableIdentifier, _TargetEditorState> _targets = {};
+  List<InspectableSelectable> _selection = const [];
 
   @override
-  TypeExpression? get rootType => _ref.read(inspectedRootTypeProvider);
-
-  @override
-  TypeRegistry? get registry {
-    final selected = _ref.read(inspectedSelectionProvider).value;
-    if (selected == null || selected.isEmpty) return null;
-    return TypeRegistry(selected.mergedTypeCatalog);
+  EditorDocument? get document {
+    if (_selection.isEmpty) return null;
+    if (_selection.length == 1) {
+      return _targets[_selection.single.id]?.source.document;
+    }
+    final rootType = _ref.read(inspectedRootTypeProvider);
+    if (rootType == null) return null;
+    final first = _targets[_selection.first.id]!.source.document;
+    return first.copyWith(
+      rootType: rootType,
+      typeCatalog: _selection.mergedTypeCatalog,
+      clearRootPresentation: true,
+      presentations: const [],
+      collections: const [],
+      revision: _targets.values
+          .map((target) => target.source.document.revision)
+          .fold<int>(
+            0,
+            (maximum, revision) => revision > maximum ? revision : maximum,
+          ),
+    );
   }
 
   @override
   EditorValue value(DataPath path) {
     final inspected = _ref.read(inspectedSelectionProvider);
-    if (inspected.isLoading) return const EditorValue.loading();
-
-    final selection = inspected.value;
-    if (selection == null || selection.isEmpty) {
+    if (inspected.isLoading && !inspected.hasValue) {
+      return const EditorValue.loading();
+    }
+    if (_selection.isEmpty) {
       return EditorValue.invalid([
         const TypeDiagnostic(
           code: TypeDiagnosticCode.invalidValue,
@@ -33,25 +60,23 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
         ),
       ]);
     }
-
-    final values = selection
-        .map((selectable) => selectable.value(path))
+    final values = _selection
+        .map((target) => _targets[target.id]!.source.value(path))
         .toList();
     final diagnostics = values
         .whereType<InvalidEditorValue>()
-        .expand((state) => state.diagnostics)
+        .expand((value) => value.diagnostics)
         .toList();
     if (diagnostics.isNotEmpty) return EditorValue.invalid(diagnostics);
-    if (values.any((state) => state is LoadingEditorValue)) {
+    if (values.any((value) => value is LoadingEditorValue)) {
       return const EditorValue.loading();
     }
-    if (values.any((state) => state is! ReadyEditorValue)) {
+    if (values.any((value) => value is! ReadyEditorValue)) {
       return const EditorValue.conflict();
     }
-
-    final readyValues = values.cast<ReadyEditorValue>();
-    final first = readyValues.first.value;
-    if (readyValues.skip(1).any((state) => state.value != first)) {
+    final ready = values.cast<ReadyEditorValue>();
+    final first = ready.first.value;
+    if (ready.skip(1).any((value) => value.value != first)) {
       return const EditorValue.conflict();
     }
     return EditorValue.ready(first);
@@ -59,46 +84,205 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
 
   @override
   EditorMutationResult update(DataPath path, DataValue value) {
-    final selection = _ref.read(inspectedSelectionProvider).value ?? [];
-    final validation = selection
-        .map((selectable) => selectable.validateUpdate(path, value))
-        .aggregateFor(path);
+    _synchronize(notify: false);
+    final validation = _selection
+        .map((target) => target.validate(path, value))
+        .aggregateEditorMutationsFor(path);
     if (validation is! AppliedEditorMutation) return validation;
-    for (final selectable in selection) {
-      selectable.update(path, value);
+    for (final target in _selection) {
+      _targets[target.id]!.source.update(path, value);
     }
     return validation;
   }
+
+  @override
+  EditorInteractionSession beginInteraction(DataPath path) {
+    _synchronize(notify: false);
+    return _SelectionInteractionSession(
+      path,
+      _selection
+          .map((target) => _targets[target.id]!.source.beginInteraction(path))
+          .toList(),
+    );
+  }
+
+  @override
+  EditorSaveState saveState(DataPath path) {
+    final states = _selection
+        .map((target) => _targets[target.id]!.source.saveState(path))
+        .toList();
+    if (states.isEmpty) return const EditorSaveState.idle();
+    states.sort(
+      (left, right) => selectionSavePriority(
+        right.phase,
+      ).compareTo(selectionSavePriority(left.phase)),
+    );
+    return states.first;
+  }
+
+  @override
+  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async {
+    _synchronize(notify: false);
+    return aggregateSelectionResults(
+      await Future.wait(
+        _selection.map(
+          (target) => _targets[target.id]!.source.flush(paths: paths),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Future<TypedMutationResult> executeAction(
+    EditorAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) async {
+    _synchronize(notify: false);
+    final entries = _selection.map((target) => _targets[target.id]!).toList();
+    final results = await Future.wait(
+      entries.map((entry) async {
+        final result = await entry.source.executeAction(
+          action,
+          context,
+          aliases,
+        );
+        if (result case MutationConflict(
+          :final actualRevision,
+          :final actualValue,
+        )) {
+          entry.source.acceptRemote(
+            revision: actualRevision,
+            value: actualValue,
+          );
+        }
+        return result;
+      }),
+    );
+    return aggregateSelectionResults(results);
+  }
+
+  @override
+  void acceptRemote({required int revision, required DataValue value}) {
+    if (_selection.length != 1) return;
+    _targets[_selection.single.id]?.source.acceptRemote(
+      revision: revision,
+      value: value,
+    );
+  }
+
+  @override
+  void refreshDocument(EditorDocument document) {
+    if (_selection.length != 1) return;
+    _targets[_selection.single.id]?.source.refreshDocument(document);
+  }
+
+  @override
+  void acceptRemoteDeletion() {
+    if (_selection.length != 1) return;
+    _targets[_selection.single.id]?.source.acceptRemoteDeletion();
+  }
+
+  @override
+  void useRemote(DataPath path) {
+    _synchronize(notify: false);
+    for (final target in _selection) {
+      _targets[target.id]!.source.useRemote(path);
+    }
+  }
+
+  @override
+  Future<TypedMutationResult> keepLocal(DataPath path) async {
+    _synchronize(notify: false);
+    return aggregateSelectionResults(
+      await Future.wait(
+        _selection.map((target) => _targets[target.id]!.source.keepLocal(path)),
+      ),
+    );
+  }
+
+  void _synchronize({bool notify = true}) {
+    final selected = _ref.read(inspectedSelectionProvider).value;
+    if (selected == null) return;
+    final selectionChanged = !listEquals(
+      _selection.map((target) => target.id).toList(),
+      selected.map((target) => target.id).toList(),
+    );
+    final selectedIds = selected.map((target) => target.id).toSet();
+    final removed = _targets.keys
+        .where((id) => !selectedIds.contains(id))
+        .toList();
+    for (final id in removed) {
+      _targets.remove(id)?.source.dispose();
+    }
+    for (final target in selected) {
+      final existing = _targets[target.id];
+      if (existing == null) {
+        late final _TargetEditorState state;
+        final source = TransactionalEditorSource(
+          document: target.document,
+          validate: (path, value) => state.target.validate(path, value),
+          commit: (commit) => state.target.commit(commit),
+          onDeleted: () {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              _ref.read(selectionProvider.notifier).unselect(target.id);
+            });
+            SchedulerBinding.instance.ensureVisualUpdate();
+          },
+        );
+        state = _TargetEditorState(target: target, source: source);
+        source.addListener(notifyListeners);
+        _targets[target.id] = state;
+        continue;
+      }
+      existing.target = target;
+      final document = target.document;
+      if (!existing.source.document.hasSameContent(document)) {
+        existing.source.refreshDocument(document);
+      }
+    }
+    _selection = selected;
+    if (notify && selectionChanged) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    for (final target in _targets.values) {
+      target.source
+        ..removeListener(notifyListeners)
+        ..dispose();
+    }
+    _targets.clear();
+    super.dispose();
+  }
 }
 
-extension on Iterable<EditorMutationResult> {
-  EditorMutationResult aggregateFor(DataPath path) {
-    final results = toList();
-    final diagnostics = results
-        .whereType<InvalidEditorMutation>()
-        .expand((result) => result.diagnostics)
-        .toList();
-    if (diagnostics.isNotEmpty) {
-      return EditorMutationResult.invalid(diagnostics);
-    }
-    if (results.any((result) => result is ConflictingEditorMutation)) {
-      return const EditorMutationResult.conflict();
-    }
+final class _TargetEditorState {
+  _TargetEditorState({required this.target, required this.source});
 
-    final applied = results.whereType<AppliedEditorMutation>().toList();
-    if (applied.isEmpty) {
-      return EditorMutationResult.invalid([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPath,
-          message: "No inspected selection can accept the mutation",
-          path: path,
-        ),
-      ]);
+  InspectableSelectable target;
+  final TransactionalEditorSource source;
+}
+
+final class _SelectionInteractionSession implements EditorInteractionSession {
+  _SelectionInteractionSession(this.path, this.sessions);
+
+  @override
+  final DataPath path;
+  final List<EditorInteractionSession> sessions;
+
+  @override
+  bool get active => sessions.any((session) => session.active);
+
+  @override
+  Future<TypedMutationResult> commit() async => aggregateSelectionResults(
+    await Future.wait(sessions.map((session) => session.commit())),
+  );
+
+  @override
+  void cancel() {
+    for (final session in sessions) {
+      session.cancel();
     }
-    final accepted = applied.first.value;
-    if (applied.skip(1).any((result) => result.value != accepted)) {
-      return const EditorMutationResult.conflict();
-    }
-    return EditorMutationResult.applied(accepted);
   }
 }
