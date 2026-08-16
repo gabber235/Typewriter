@@ -55,14 +55,11 @@ final class SkirPresentationEncoder {
 
   TypeResult<wire.PresentationElement> _element(PresentationElement value) =>
       switch (value) {
-        ColumnElement() => _children(
-          value,
-          wire.PresentationElement.wrapColumn,
-        ),
-        RowElement() => _children(value, wire.PresentationElement.wrapRow),
-        WrapElement() => _children(value, wire.PresentationElement.wrapWrap),
-        StackElement() => _children(value, wire.PresentationElement.wrapStack),
-        GridElement() => _grid(value),
+        ColumnElement() ||
+        RowElement() ||
+        WrapElement() ||
+        StackElement() ||
+        GridElement() => _children(value),
         CardElement() => encodeNode(value.child).mapValue(
           (child) => wire.PresentationElement.createCard(
             child: child,
@@ -83,11 +80,14 @@ final class SkirPresentationEncoder {
         IconElement() => _icon(value),
         ImageElement() => _image(value),
         BadgeElement() => _badge(value),
+        ChipElement() => _chip(value),
         ProgressElement() => _progress(value),
         TypedFieldElement() => _typedField(value),
         ConditionalElement() => _conditional(value),
         RepeatedElement() => _repeated(value),
         ScopedBindingElement() => _scoped(value),
+        CollectionLookupElement() => _collectionLookup(value),
+        CollectionGraphElement() => _collectionGraph(value),
         TextInputElement() => _textInput(value),
         NumericInputElement() => _boundElement(
           value.control,

@@ -3,6 +3,8 @@ part of "editor_presentation_codec.dart";
 extension SkirPresentationSearchProviderDecoder on SkirPresentationDecoder {
   TypeResult<SearchProvider> _searchProvider(wire.SearchProvider value) =>
       switch (value) {
+        wire.SearchProvider_collectionWrapper(:final value) =>
+          _collectionSearchProvider(value),
         wire.SearchProvider_staticValuesWrapper(:final value) =>
           _staticSearchProvider(value),
         wire.SearchProvider_httpJsonWrapper(:final value) =>
@@ -61,6 +63,28 @@ extension SkirPresentationSearchProviderDecoder on SkirPresentationDecoder {
         ),
         wire.SearchProvider_unknown() => invalidWire("Unknown search provider"),
       };
+
+  TypeResult<SearchProvider> _collectionSearchProvider(
+    wire.CollectionSearchProvider value,
+  ) {
+    if (value.sourceId.isEmpty) {
+      return invalidWire("Collection source ID is empty");
+    }
+    final result = _searchResultMapping(value.result);
+    final where = _optionalExpression(value.where);
+    final selectors = _decodeSearchList(value.selectors, _searchSelector);
+    return combineThreeResults(
+      result,
+      where,
+      selectors,
+      (result, where, selectors) => SearchProvider.collection(
+        sourceId: PresentationCollectionSourceId(value.sourceId),
+        result: result,
+        where: where,
+        selectors: selectors,
+      ),
+    );
+  }
 
   TypeResult<SearchProvider> _staticSearchProvider(
     wire.StaticSearchProvider value,

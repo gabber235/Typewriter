@@ -7,6 +7,7 @@ import { RecordId } from "kernel/v1/record_id.skir";
 
 struct Book {
   book_id: RecordId;
+  revision: int64;
   title: string;
   icon: string;
   color: Color;
@@ -70,15 +71,21 @@ method CreateBook(
 method UpdateBook(
   struct {
     book_id: RecordId;
-    title: string?;
-    icon: string?;
-    color: Color?;
-    tag_ids: [RecordId]?;
+    expected_revision: int64;
+    title: string;
+    icon: string;
+    color: Color;
+    tag_ids: [RecordId];
   }
 ): enum {
   internal_error: InternalError;
 
   success: Book;
+
+  conflict_error: struct {
+    expected_revision: int64;
+    actual: Book;
+  };
 
   book_not_found_error: struct {
     book_id: RecordId;

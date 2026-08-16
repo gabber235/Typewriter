@@ -50,6 +50,12 @@ async fn heartbeat_updates_unbound_service_without_organization_event(
         .query_json("SELECT VALUE state.status AS status FROM ONLY service:demo_service")
         .await?;
     assert_jm!(state, "ONLINE");
+    assert_jm!(
+        database
+            .query_json("SELECT VALUE revision FROM ONLY service:demo_service")
+            .await?,
+        1
+    );
     Ok(())
 }
 
@@ -87,6 +93,12 @@ async fn heartbeat_publishes_bound_service_state(
         Some("ONLINE")
     );
     assert!(state.get("last_seen").is_some_and(|value| !value.is_null()));
+    assert_jm!(
+        database
+            .query_json("SELECT VALUE revision FROM ONLY service:bound_service")
+            .await?,
+        1
+    );
     Ok(())
 }
 

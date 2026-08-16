@@ -17,6 +17,16 @@ path = ""
 equals = true
 
 [[cases]]
+name = "service_revision_starts_at_one"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN array::all((SELECT VALUE revision FROM service), |$revision| $revision = 1);"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
 name = "roles_are_required"
 kind = "sql_expect"
 actor = "root"
@@ -170,6 +180,22 @@ actor = "root"
 sql = "CREATE service:realm_with_runs_in SET name = 'realm_with_runs_in', roles = [{ type: 'realm', version: '1.0.0' }], runs_in = service:realm_unbound;"
 allow = false
 error_contains = "runs-in-requires-engine-or-custom-role"
+
+[[cases]]
+name = "runs_in_rejects_self_reference"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:self_reference SET name = 'self_reference', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'realm', version: '1.0.0' }], runs_in = service:self_reference;"
+allow = false
+error_contains = "runs-in-self-reference-error"
+
+[[cases]]
+name = "runs_in_rejects_cycles"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service:cycle_a SET name = 'cycle_a', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'realm', version: '1.0.0' }]; CREATE service:cycle_b SET name = 'cycle_b', roles = [{ type: 'engine', version: '1.0.0' }, { type: 'realm', version: '1.0.0' }]; UPDATE service:cycle_a SET runs_in = service:cycle_b; UPDATE service:cycle_b SET runs_in = service:cycle_a;"
+allow = false
+error_contains = "runs-in-cycle-error"
 
 [[cases]]
 name = "runs_in_target_must_be_realm"

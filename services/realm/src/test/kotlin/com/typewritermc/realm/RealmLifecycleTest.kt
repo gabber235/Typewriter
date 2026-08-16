@@ -78,7 +78,7 @@ val RealmLifecycleTest by testSuite {
     }
 }
 
-private const val ROUTE_COUNT = 20
+private const val ROUTE_COUNT = 18
 
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,

@@ -33,6 +33,14 @@ extension SkirPresentationContentEncoder on SkirPresentationEncoder {
         ),
       );
 
+  TypeResult<wire.PresentationElement> _chip(ChipElement value) =>
+      combineResults(
+        expressions.encode(value.label),
+        _optional(value.color),
+        (label, color) =>
+            wire.PresentationElement.createChip(label: label, color: color),
+      );
+
   TypeResult<wire.PresentationElement> _progress(ProgressElement value) {
     final progress = expressions.encode(value.value);
     final maximum = expressions.encode(value.maximum);

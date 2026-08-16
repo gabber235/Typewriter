@@ -24,6 +24,13 @@ extension SkirPresentationContentDecoder on SkirPresentationDecoder {
       .decode(value.label)
       .mapValue((label) => BadgeElement(label: label, tone: value.tone));
 
+  TypeResult<PresentationElement> _chip(wire.ChipContent value) =>
+      combineResults(
+        expressions.decode(value.label),
+        _optionalExpression(value.color),
+        (label, color) => ChipElement(label: label, color: color),
+      );
+
   TypeResult<PresentationElement> _progress(wire.ProgressContent value) {
     final progress = expressions.decode(value.value);
     final maximum = expressions.decode(value.maximum);

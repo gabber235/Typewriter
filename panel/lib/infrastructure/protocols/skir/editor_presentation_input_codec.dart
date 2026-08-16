@@ -5,10 +5,12 @@ extension SkirPresentationInputDecoder on SkirPresentationDecoder {
     final binding = expressions.binding(value.binding);
     final label = _optionalExpression(value.label);
     final description = _optionalExpression(value.description);
+    final semanticLabel = _optionalExpression(value.semanticLabel);
     final diagnostics = [
       ...binding.diagnostics,
       ...label.diagnostics,
       ...description.diagnostics,
+      ...semanticLabel.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -16,6 +18,8 @@ extension SkirPresentationInputDecoder on SkirPresentationDecoder {
               binding: binding.valueOrNull!,
               label: label.valueOrNull,
               description: description.valueOrNull,
+              prefix: value.prefix == null ? null : decodeNode(value.prefix!),
+              semanticLabel: semanticLabel.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);

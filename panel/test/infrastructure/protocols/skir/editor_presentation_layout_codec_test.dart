@@ -18,6 +18,10 @@ void main() {
     resultType: const IntegerType(width: IntegerWidth.signed64),
     expression: LiteralExpression(IntegerValue(BigInt.one)),
   );
+  final color = TypedExpression(
+    resultType: NamedType(standardTypeRefs.color),
+    expression: LiteralExpression(IntegerValue(BigInt.from(0xFF967BFA))),
+  );
   const leaf = PresentationNode(id: "leaf", element: DividerElement());
 
   test("maps every layout presentation variant and its fields", () {
@@ -29,19 +33,19 @@ void main() {
           mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
           crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
         ),
-        wire.PresentationElement_kind.columnWrapper,
+        wire.PresentationElement_kind.childrenWrapper,
       ),
       (
         RowElement(children: const [leaf], spacing: 3),
-        wire.PresentationElement_kind.rowWrapper,
+        wire.PresentationElement_kind.childrenWrapper,
       ),
       (
-        WrapElement(children: const [leaf], spacing: 4),
-        wire.PresentationElement_kind.wrapWrapper,
+        WrapElement(children: const [leaf], spacing: 4, runSpacing: 6),
+        wire.PresentationElement_kind.childrenWrapper,
       ),
       (
-        StackElement(children: const [leaf], spacing: 5),
-        wire.PresentationElement_kind.stackWrapper,
+        StackElement(children: const [leaf]),
+        wire.PresentationElement_kind.childrenWrapper,
       ),
       (
         GridElement(
@@ -50,7 +54,7 @@ void main() {
           horizontalSpacing: 3,
           verticalSpacing: 4,
         ),
-        wire.PresentationElement_kind.gridWrapper,
+        wire.PresentationElement_kind.childrenWrapper,
       ),
       (
         const CardElement(leaf, initiallyExpanded: true),
@@ -211,6 +215,10 @@ void main() {
         wire.PresentationElement_kind.badgeWrapper,
       ),
       (
+        ChipElement(label: text, color: color),
+        wire.PresentationElement_kind.chipWrapper,
+      ),
+      (
         ProgressElement(value: number, maximum: number, label: text),
         wire.PresentationElement_kind.progressWrapper,
       ),
@@ -263,8 +271,15 @@ void main() {
           (source) => RepeatedElement(
             source: source,
             itemBindingId: const BindingId(2),
-            template: leaf,
-            empty: leaf,
+            presentation: const SequencePresentation(
+              item: leaf,
+              empty: leaf,
+              separator: leaf,
+              layout: PresentationChildrenLayout.wrap(
+                spacing: 4,
+                runSpacing: 6,
+              ),
+            ),
           ),
         ),
         wire.PresentationElement_kind.repeatedWrapper,

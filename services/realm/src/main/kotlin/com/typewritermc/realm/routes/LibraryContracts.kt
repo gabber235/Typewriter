@@ -46,10 +46,6 @@ import skirout.library.v1.tag.CreateTag
 import skirout.library.v1.tag.CreateTagResponse
 import skirout.library.v1.tag.DeleteTag
 import skirout.library.v1.tag.DeleteTagResponse
-import skirout.library.v1.tag.MoveTag
-import skirout.library.v1.tag.MoveTagResponse
-import skirout.library.v1.tag.ResizeTag
-import skirout.library.v1.tag.ResizeTagResponse
 import skirout.library.v1.tag.UpdateTag
 import skirout.library.v1.tag.UpdateTagResponse
 import skirout.library.v1.tag.WatchTag
@@ -144,8 +140,6 @@ internal class LibraryContracts(
     val createTag = unary(CreateTag, "tag.create", CreateTagResponse.createInternalError())
     val updateTag = unary(UpdateTag, "tag.update", UpdateTagResponse.createInternalError())
     val deleteTag = unary(DeleteTag, "tag.delete", DeleteTagResponse.createInternalError())
-    val moveTag = unary(MoveTag, "tag.move", MoveTagResponse.createInternalError())
-    val resizeTag = unary(ResizeTag, "tag.resize", ResizeTagResponse.createInternalError())
 
     private fun <Request : Any, Response : Any> unary(
         method: Method<Request, Response>,

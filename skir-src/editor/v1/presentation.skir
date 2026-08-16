@@ -111,18 +111,36 @@ struct PresentationNode(810900004) {
   header: PresentationHeader? = 3;
 }
 
-struct ChildrenLayout(810900005) {
-  children: [PresentationNode] = 0;
-  spacing: float64 = 1;
+struct AxisChildrenLayout(810900096) {
+  spacing: float64 = 0;
+  main_axis_alignment: MainAxisAlignment = 1;
+  cross_axis_alignment: CrossAxisAlignment = 2;
+}
+
+struct WrapChildrenLayout(810900097) {
+  spacing: float64 = 0;
+  run_spacing: float64 = 1;
   main_axis_alignment: MainAxisAlignment = 2;
   cross_axis_alignment: CrossAxisAlignment = 3;
 }
 
-struct GridLayout(810900007) {
+struct GridChildrenLayout(810900098) {
+  columns: int32 = 0;
+  horizontal_spacing: float64 = 1;
+  vertical_spacing: float64 = 2;
+}
+
+enum ChildrenLayout(810900005) {
+  column: AxisChildrenLayout = 1;
+  row: AxisChildrenLayout = 2;
+  wrap: WrapChildrenLayout = 3;
+  grid: GridChildrenLayout = 4;
+  stack = 5;
+}
+
+struct ChildrenElement(810900007) {
   children: [PresentationNode] = 0;
-  columns: int32 = 1;
-  horizontal_spacing: float64 = 2;
-  vertical_spacing: float64 = 3;
+  layout: ChildrenLayout = 1;
 }
 
 struct CardLayout(810900042) {
@@ -178,6 +196,11 @@ struct BadgeContent(810900015) {
   tone: string = 1;
 }
 
+struct ChipContent(810900095) {
+  label: TypedExpression = 0;
+  color: TypedExpression? = 1;
+}
+
 struct ProgressContent(810900016) {
   value: TypedExpression = 0;
   maximum: TypedExpression = 1;
@@ -196,11 +219,17 @@ struct ConditionalElement(810900018) {
   when_false: PresentationNode? = 2;
 }
 
+struct SequencePresentation(810900101) {
+  item: PresentationNode = 0;
+  empty: PresentationNode? = 1;
+  separator: PresentationNode? = 2;
+  layout: ChildrenLayout = 3;
+}
+
 struct RepeatedElement(810900019) {
   source: TypedExpression = 0;
   item_binding_id: BindingId = 1;
-  template: PresentationNode = 2;
-  empty: PresentationNode? = 3;
+  presentation: SequencePresentation = 2;
 }
 
 struct ScopedBindingElement(810900020) {
@@ -209,10 +238,38 @@ struct ScopedBindingElement(810900020) {
   child: PresentationNode = 2;
 }
 
+enum CollectionGraphDirection(810900091) {
+  forward = 1;
+  reverse = 2;
+}
+
+struct CollectionLookupElement(810900092) {
+  source_id: string = 0;
+  key: BindingRef = 1;
+  found: PresentationNode = 2;
+  missing: PresentationNode = 3;
+  loading: PresentationNode? = 4;
+}
+
+struct CollectionGraphElement(810900093) {
+  source_id: string = 0;
+  roots: BindingRef = 1;
+  relation_id: string = 2;
+  direction: CollectionGraphDirection = 3;
+  root_rows: SequencePresentation? = 4;
+  reached_rows: SequencePresentation? = 5;
+  paths: SequencePresentation? = 6;
+  path_binding_id: BindingId = 7;
+  maximum_depth: int32? = 8;
+  deduplicate: bool = 9;
+}
+
 struct BoundControl(810900021) {
   binding: BindingRef = 0;
   label: TypedExpression? = 1;
   description: TypedExpression? = 2;
+  prefix: PresentationNode? = 3;
+  semantic_label: TypedExpression? = 4;
 }
 
 struct TextControl(810900022) {
@@ -321,6 +378,7 @@ struct SearchResultMapping(810900073) {
   key: TypedExpression = 1;
   selected_value: TypedExpression = 2;
   presentation: PresentationNode = 3;
+  label: TypedExpression? = 4;
 }
 
 struct HttpQueryParameter(810900074) {
@@ -339,6 +397,13 @@ struct StaticSearchProvider(810900076) {
   values: TypedExpression = 0;
   result: SearchResultMapping = 1;
   selectors: [SearchSelectorDefinition|selector_id] = 2;
+}
+
+struct CollectionSearchProvider(810900094) {
+  source_id: string = 0;
+  result: SearchResultMapping = 1;
+  where: TypedExpression? = 2;
+  selectors: [SearchSelectorDefinition|selector_id] = 3;
 }
 
 struct HttpJsonSearchProvider(810900077) {
@@ -425,6 +490,7 @@ enum SearchProvider(810900089) {
   history: HistoricalSearchProvider = 10;
   section: SectionSearchProvider = 11;
   merge: MergedSearchProvider = 12;
+  collection: CollectionSearchProvider = 13;
 }
 
 struct SearchControl(810900090) {
@@ -472,11 +538,7 @@ struct TooltipElement(810900033) {
 }
 
 enum PresentationElement(810900034) {
-  column: ChildrenLayout = 1;
-  row: ChildrenLayout = 2;
-  wrap: ChildrenLayout = 3;
-  stack: ChildrenLayout = 4;
-  grid: GridLayout = 5;
+  children: ChildrenElement = 1;
   card: CardLayout = 7;
   section: SectionLayout = 8;
   tabs: TabsLayout = 9;
@@ -487,6 +549,7 @@ enum PresentationElement(810900034) {
   icon: IconContent = 14;
   image: ImageContent = 15;
   badge: BadgeContent = 16;
+  chip: ChipContent = 47;
   progress: ProgressContent = 17;
   typed_field: TypedFieldElement = 18;
   conditional: ConditionalElement = 19;
@@ -514,6 +577,8 @@ enum PresentationElement(810900034) {
   default_presentation: DefaultPresentationElement = 41;
   collapsible: CollapsibleLayout = 42;
   search_input: SearchControl = 44;
+  collection_lookup: CollectionLookupElement = 45;
+  collection_graph: CollectionGraphElement = 46;
 }
 
 struct PresentationDefinition(810900050) {

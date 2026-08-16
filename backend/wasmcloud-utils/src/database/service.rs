@@ -60,6 +60,7 @@ pub struct ServiceStateRecord {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServiceRecord {
     pub id: RecordId,
+    pub revision: i64,
     pub name: String,
     pub roles: Vec<ServiceRoleRecord>,
     pub created_at: Datetime,
@@ -143,6 +144,7 @@ impl TryFrom<ServiceRecord> for Service {
     fn try_from(value: ServiceRecord) -> Result<Self, Self::Error> {
         Ok(Self {
             service_id: value.id.into(),
+            revision: value.revision,
             name: value.name,
             roles: value
                 .roles

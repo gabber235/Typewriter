@@ -18,6 +18,173 @@ import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./service.dart" as _lib_service_v1_service;
 
 // -----------------------------------------------------------------------------
+// enum ServiceUpdateValidationError
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ServiceUpdateValidationError_unknown(): { ... }
+///     case ServiceUpdateValidationError.nameInvalid: { ... }
+///     case ServiceUpdateValidationError.runsInRequiresEngineOrCustomRole: { ... }
+///     case ServiceUpdateValidationError.runsInMustReferenceRealmRole: { ... }
+///     case ServiceUpdateValidationError.runsInOrganizationMismatch: { ... }
+///     case ServiceUpdateValidationError.runsInSelfReference: { ... }
+///     case ServiceUpdateValidationError.runsInCycle: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ServiceUpdateValidationError {
+  /// Constant indicating an unknown `ServiceUpdateValidationError`.
+  /// Default value for fields of type `ServiceUpdateValidationError`.
+  static const ServiceUpdateValidationError unknown =
+      ServiceUpdateValidationError_unknown._instance;
+
+  static const nameInvalid =
+      _ServiceUpdateValidationError_consts.nameInvalidConst;
+  static const runsInRequiresEngineOrCustomRole =
+      _ServiceUpdateValidationError_consts
+          .runsInRequiresEngineOrCustomRoleConst;
+  static const runsInMustReferenceRealmRole =
+      _ServiceUpdateValidationError_consts.runsInMustReferenceRealmRoleConst;
+  static const runsInOrganizationMismatch =
+      _ServiceUpdateValidationError_consts.runsInOrganizationMismatchConst;
+  static const runsInSelfReference =
+      _ServiceUpdateValidationError_consts.runsInSelfReferenceConst;
+  static const runsInCycle =
+      _ServiceUpdateValidationError_consts.runsInCycleConst;
+
+  /// Returns the kind of variant held by this ServiceUpdateValidationError.
+  ServiceUpdateValidationError_kind get kind;
+
+  /// Serializer for `ServiceUpdateValidationError` instances.
+  static _skir.EnumSerializer<ServiceUpdateValidationError> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "name_invalid",
+        "nameInvalid",
+        "",
+        nameInvalid,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "runs_in_requires_engine_or_custom_role",
+        "runsInRequiresEngineOrCustomRole",
+        "",
+        runsInRequiresEngineOrCustomRole,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "runs_in_must_reference_realm_role",
+        "runsInMustReferenceRealmRole",
+        "",
+        runsInMustReferenceRealmRole,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "runs_in_organization_mismatch",
+        "runsInOrganizationMismatch",
+        "",
+        runsInOrganizationMismatch,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
+        "runs_in_self_reference",
+        "runsInSelfReference",
+        "",
+        runsInSelfReference,
+      );
+      _serializerBuilder.addConstantVariant(
+        6,
+        "runs_in_cycle",
+        "runsInCycle",
+        "",
+        runsInCycle,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/organization.skir:ServiceUpdateValidationError",
+        doc: "",
+        unknownInstance: ServiceUpdateValidationError_unknown._instance,
+        enumInstance: ServiceUpdateValidationError.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ServiceUpdateValidationError_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `ServiceUpdateValidationError`.
+enum ServiceUpdateValidationError_kind {
+  unknown(0),
+  nameInvalidConst(1),
+  runsInRequiresEngineOrCustomRoleConst(2),
+  runsInMustReferenceRealmRoleConst(3),
+  runsInOrganizationMismatchConst(4),
+  runsInSelfReferenceConst(5),
+  runsInCycleConst(6);
+
+  final _core.int _ordinal;
+
+  const ServiceUpdateValidationError_kind(this._ordinal);
+}
+
+final class ServiceUpdateValidationError_unknown
+    implements ServiceUpdateValidationError {
+  static const _instance = ServiceUpdateValidationError_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ServiceUpdateValidationError_unknown._() : _u = null;
+  ServiceUpdateValidationError_unknown._unrecognized(this._u);
+
+  @_core.override
+  ServiceUpdateValidationError_kind get kind =>
+      ServiceUpdateValidationError_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) =>
+      other is ServiceUpdateValidationError_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
+}
+
+enum _ServiceUpdateValidationError_consts
+    implements ServiceUpdateValidationError {
+  nameInvalidConst(ServiceUpdateValidationError_kind.nameInvalidConst),
+  runsInRequiresEngineOrCustomRoleConst(
+    ServiceUpdateValidationError_kind.runsInRequiresEngineOrCustomRoleConst,
+  ),
+  runsInMustReferenceRealmRoleConst(
+    ServiceUpdateValidationError_kind.runsInMustReferenceRealmRoleConst,
+  ),
+  runsInOrganizationMismatchConst(
+    ServiceUpdateValidationError_kind.runsInOrganizationMismatchConst,
+  ),
+  runsInSelfReferenceConst(
+    ServiceUpdateValidationError_kind.runsInSelfReferenceConst,
+  ),
+  runsInCycleConst(ServiceUpdateValidationError_kind.runsInCycleConst);
+
+  @_core.override
+  final ServiceUpdateValidationError_kind kind;
+
+  const _ServiceUpdateValidationError_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
+}
+
+// -----------------------------------------------------------------------------
 // struct WatchOrganizationServicesRequest
 // -----------------------------------------------------------------------------
 
@@ -153,6 +320,7 @@ sealed class WatchOrganizationServicesResponse {
   /// Same as `wrapAdd(_lib_service_v1_service.Service(...))`.
   factory WatchOrganizationServicesResponse.createAdd({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
     required _core.String name,
     required _core.Iterable<_lib_service_v1_service.ServiceRole> roles,
     required _core.DateTime createdAt,
@@ -164,6 +332,7 @@ sealed class WatchOrganizationServicesResponse {
   }) => WatchOrganizationServicesResponse.wrapAdd(
     _lib_service_v1_service.Service(
       serviceId: serviceId,
+      revision: revision,
       name: name,
       roles: roles,
       createdAt: createdAt,
@@ -182,6 +351,7 @@ sealed class WatchOrganizationServicesResponse {
   /// Same as `wrapUpdate(_lib_service_v1_service.Service(...))`.
   factory WatchOrganizationServicesResponse.createUpdate({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
     required _core.String name,
     required _core.Iterable<_lib_service_v1_service.ServiceRole> roles,
     required _core.DateTime createdAt,
@@ -193,6 +363,7 @@ sealed class WatchOrganizationServicesResponse {
   }) => WatchOrganizationServicesResponse.wrapUpdate(
     _lib_service_v1_service.Service(
       serviceId: serviceId,
+      revision: revision,
       name: name,
       roles: roles,
       createdAt: createdAt,
@@ -413,7 +584,9 @@ final class WatchOrganizationServicesResponse_removeWrapper
 
 sealed class UpdateOrganizationServiceRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
-  _core.String? get name;
+  _core.int get expectedRevision;
+  _core.String get name;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get runsIn;
 
   UpdateOrganizationServiceRequest toFrozen();
 }
@@ -424,19 +597,37 @@ final class UpdateOrganizationServiceRequest
   @_core.override
   final _lib_kernel_v1_record_id.RecordId serviceId;
   @_core.override
-  final _core.String? name;
+  final _core.int expectedRevision;
+  @_core.override
+  final _core.String name;
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId? runsIn;
   _skir.internal__UnrecognizedFields? _u;
 
   factory UpdateOrganizationServiceRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
-    required _core.String? name,
-  }) => UpdateOrganizationServiceRequest._(serviceId.toFrozen(), name);
+    required _core.int expectedRevision,
+    required _core.String name,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? runsIn,
+  }) => UpdateOrganizationServiceRequest._(
+    serviceId.toFrozen(),
+    expectedRevision,
+    name,
+    (runsIn != null) ? runsIn.toFrozen() : null,
+  );
 
-  UpdateOrganizationServiceRequest._(this.serviceId, this.name);
+  UpdateOrganizationServiceRequest._(
+    this.serviceId,
+    this.expectedRevision,
+    this.name,
+    this.runsIn,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateOrganizationServiceRequest._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
+    "",
     null,
   );
 
@@ -445,6 +636,8 @@ final class UpdateOrganizationServiceRequest
   static UpdateOrganizationServiceRequest_mutable mutable() =>
       UpdateOrganizationServiceRequest_mutable._(
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
+        0,
+        "",
         null,
       );
 
@@ -455,7 +648,12 @@ final class UpdateOrganizationServiceRequest
 
   /// Returns a mutable shallow copy of this instance.
   UpdateOrganizationServiceRequest_mutable toMutable() =>
-      UpdateOrganizationServiceRequest_mutable._(this.serviceId, this.name);
+      UpdateOrganizationServiceRequest_mutable._(
+        this.serviceId,
+        this.expectedRevision,
+        this.name,
+        this.runsIn,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
@@ -470,7 +668,12 @@ final class UpdateOrganizationServiceRequest
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.serviceId, this.name];
+  _core.List get _equality_proxy => [
+    this.serviceId,
+    this.expectedRevision,
+    this.name,
+    this.runsIn,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -492,13 +695,33 @@ final class UpdateOrganizationServiceRequest
         (it, v) => it.serviceId = v,
       );
       _serializerBuilder.addField(
-        "name",
-        "name",
+        "expected_revision",
+        "expectedRevision",
         1,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.int64,
+        "",
+        (it) => it.expectedRevision,
+        (it, v) => it.expectedRevision = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        2,
+        _skir.Serializers.string,
         "",
         (it) => it.name,
         (it, v) => it.name = v,
+      );
+      _serializerBuilder.addField(
+        "runs_in",
+        "runsIn",
+        3,
+        _skir.Serializers.optional(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.runsIn,
+        (it, v) => it.runsIn = v,
       );
       _serializerBuilder.finalize();
     }
@@ -520,10 +743,17 @@ final class UpdateOrganizationServiceRequest
 final class UpdateOrganizationServiceRequest_mutable
     implements UpdateOrganizationServiceRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
-  _core.String? name;
+  _core.int expectedRevision;
+  _core.String name;
+  _lib_kernel_v1_record_id.RecordId_orMutable? runsIn;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateOrganizationServiceRequest_mutable._(this.serviceId, this.name);
+  UpdateOrganizationServiceRequest_mutable._(
+    this.serviceId,
+    this.expectedRevision,
+    this.name,
+    this.runsIn,
+  );
 
   /// If the value of [serviceId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
@@ -542,49 +772,76 @@ final class UpdateOrganizationServiceRequest_mutable
   UpdateOrganizationServiceRequest toFrozen() =>
       UpdateOrganizationServiceRequest(
         serviceId: this.serviceId,
+        expectedRevision: this.expectedRevision,
         name: this.name,
+        runsIn: this.runsIn,
       ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct UpdateOrganizationServiceResponse.Success
+// struct UpdateOrganizationServiceResponse.ConflictError
 // -----------------------------------------------------------------------------
 
-sealed class UpdateOrganizationServiceResponse_Success_orMutable {
-  UpdateOrganizationServiceResponse_Success toFrozen();
+sealed class UpdateOrganizationServiceResponse_ConflictError_orMutable {
+  _core.int get expectedRevision;
+  _lib_service_v1_service.Service_orMutable get actual;
+
+  UpdateOrganizationServiceResponse_ConflictError toFrozen();
 }
 
 /// Deeply immutable.
-final class UpdateOrganizationServiceResponse_Success
-    implements UpdateOrganizationServiceResponse_Success_orMutable {
+final class UpdateOrganizationServiceResponse_ConflictError
+    implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
+  @_core.override
+  final _core.int expectedRevision;
+  @_core.override
+  final _lib_service_v1_service.Service actual;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory UpdateOrganizationServiceResponse_Success() =>
-      UpdateOrganizationServiceResponse_Success._();
+  factory UpdateOrganizationServiceResponse_ConflictError({
+    required _core.int expectedRevision,
+    required _lib_service_v1_service.Service_orMutable actual,
+  }) => UpdateOrganizationServiceResponse_ConflictError._(
+    expectedRevision,
+    actual.toFrozen(),
+  );
 
-  UpdateOrganizationServiceResponse_Success._();
+  UpdateOrganizationServiceResponse_ConflictError._(
+    this.expectedRevision,
+    this.actual,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = UpdateOrganizationServiceResponse_Success._();
+  static final defaultInstance =
+      UpdateOrganizationServiceResponse_ConflictError._(
+        0,
+        _lib_service_v1_service.Service.defaultInstance,
+      );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateOrganizationServiceResponse_Success_mutable mutable() =>
-      UpdateOrganizationServiceResponse_Success_mutable._();
+  static UpdateOrganizationServiceResponse_ConflictError_mutable mutable() =>
+      UpdateOrganizationServiceResponse_ConflictError_mutable._(
+        0,
+        _lib_service_v1_service.Service.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  UpdateOrganizationServiceResponse_Success toFrozen() => this;
+  UpdateOrganizationServiceResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateOrganizationServiceResponse_Success_mutable toMutable() =>
-      UpdateOrganizationServiceResponse_Success_mutable._();
+  UpdateOrganizationServiceResponse_ConflictError_mutable toMutable() =>
+      UpdateOrganizationServiceResponse_ConflictError_mutable._(
+        this.expectedRevision,
+        this.actual,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! UpdateOrganizationServiceResponse_Success) return false;
+    if (other is! UpdateOrganizationServiceResponse_ConflictError) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -594,18 +851,36 @@ final class UpdateOrganizationServiceResponse_Success
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [];
+  _core.List get _equality_proxy => [this.expectedRevision, this.actual];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `UpdateOrganizationServiceResponse_Success` instances.
+  /// Serializer for `UpdateOrganizationServiceResponse_ConflictError` instances.
   static _skir.StructSerializer<
-    UpdateOrganizationServiceResponse_Success,
-    UpdateOrganizationServiceResponse_Success_mutable
+    UpdateOrganizationServiceResponse_ConflictError,
+    UpdateOrganizationServiceResponse_ConflictError_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "expected_revision",
+        "expectedRevision",
+        0,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.expectedRevision,
+        (it, v) => it.expectedRevision = v,
+      );
+      _serializerBuilder.addField(
+        "actual",
+        "actual",
+        1,
+        _lib_service_v1_service.Service.serializer,
+        "",
+        (it) => it.actual,
+        (it, v) => it.actual = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -613,28 +888,48 @@ final class UpdateOrganizationServiceResponse_Success
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
-        "service/v1/organization.skir:UpdateOrganizationServiceResponse.Success",
+        "service/v1/organization.skir:UpdateOrganizationServiceResponse.ConflictError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UpdateOrganizationServiceResponse_Success_mutable it) =>
+    toFrozen: (UpdateOrganizationServiceResponse_ConflictError_mutable it) =>
         it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [UpdateOrganizationServiceResponse_Success].
-final class UpdateOrganizationServiceResponse_Success_mutable
-    implements UpdateOrganizationServiceResponse_Success_orMutable {
+/// Mutable version of [UpdateOrganizationServiceResponse_ConflictError].
+final class UpdateOrganizationServiceResponse_ConflictError_mutable
+    implements UpdateOrganizationServiceResponse_ConflictError_orMutable {
+  _core.int expectedRevision;
+  _lib_service_v1_service.Service_orMutable actual;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateOrganizationServiceResponse_Success_mutable._();
+  UpdateOrganizationServiceResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
+
+  /// If the value of [actual] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
+  _lib_service_v1_service.Service_mutable get mutableActual {
+    final value = this.actual;
+    if (value is _lib_service_v1_service.Service_mutable) {
+      return value;
+    } else {
+      return this.actual = (value as _lib_service_v1_service.Service)
+          .toMutable();
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateOrganizationServiceResponse_Success toFrozen() =>
-      UpdateOrganizationServiceResponse_Success().._u = this._u;
+  UpdateOrganizationServiceResponse_ConflictError toFrozen() =>
+      UpdateOrganizationServiceResponse_ConflictError(
+        expectedRevision: this.expectedRevision,
+        actual: this.actual,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -735,6 +1030,139 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
 }
 
 // -----------------------------------------------------------------------------
+// struct UpdateOrganizationServiceResponse.RunsInNotFoundError
+// -----------------------------------------------------------------------------
+
+sealed class UpdateOrganizationServiceResponse_RunsInNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
+
+  UpdateOrganizationServiceResponse_RunsInNotFoundError toFrozen();
+}
+
+/// Deeply immutable.
+final class UpdateOrganizationServiceResponse_RunsInNotFoundError
+    implements UpdateOrganizationServiceResponse_RunsInNotFoundError_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId serviceId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory UpdateOrganizationServiceResponse_RunsInNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+  }) => UpdateOrganizationServiceResponse_RunsInNotFoundError._(
+    serviceId.toFrozen(),
+  );
+
+  UpdateOrganizationServiceResponse_RunsInNotFoundError._(this.serviceId);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance =
+      UpdateOrganizationServiceResponse_RunsInNotFoundError._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable
+  mutable() => UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  UpdateOrganizationServiceResponse_RunsInNotFoundError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable toMutable() =>
+      UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable._(
+        this.serviceId,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! UpdateOrganizationServiceResponse_RunsInNotFoundError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.serviceId];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `UpdateOrganizationServiceResponse_RunsInNotFoundError` instances.
+  static _skir.StructSerializer<
+    UpdateOrganizationServiceResponse_RunsInNotFoundError,
+    UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "service_id",
+        "serviceId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.serviceId,
+        (it, v) => it.serviceId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId:
+        "service/v1/organization.skir:UpdateOrganizationServiceResponse.RunsInNotFoundError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen:
+        (UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable it) =>
+            it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [UpdateOrganizationServiceResponse_RunsInNotFoundError].
+final class UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable
+    implements UpdateOrganizationServiceResponse_RunsInNotFoundError_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  UpdateOrganizationServiceResponse_RunsInNotFoundError_mutable._(
+    this.serviceId,
+  );
+
+  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
+    final value = this.serviceId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  UpdateOrganizationServiceResponse_RunsInNotFoundError toFrozen() =>
+      UpdateOrganizationServiceResponse_RunsInNotFoundError(
+        serviceId: this.serviceId,
+      ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // enum UpdateOrganizationServiceResponse
 // -----------------------------------------------------------------------------
 
@@ -744,7 +1172,10 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
 ///     case UpdateOrganizationServiceResponse_unknown(): { ... }
 ///     case UpdateOrganizationServiceResponse_internalError(:var value): { ... }
 ///     case UpdateOrganizationServiceResponse_success(:var value): { ... }
+///     case UpdateOrganizationServiceResponse_conflictError(:var value): { ... }
 ///     case UpdateOrganizationServiceResponse_serviceNotFoundError(:var value): { ... }
+///     case UpdateOrganizationServiceResponse_runsInNotFoundError(:var value): { ... }
+///     case UpdateOrganizationServiceResponse_validationError(:var value): { ... }
 ///     case UpdateOrganizationServiceResponse_invalidRecordIdError(:var value): { ... }
 ///   }
 ///   ```
@@ -769,14 +1200,50 @@ sealed class UpdateOrganizationServiceResponse {
 
   /// Create a 'success' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapSuccess(
-    UpdateOrganizationServiceResponse_Success value,
+    _lib_service_v1_service.Service value,
   ) => UpdateOrganizationServiceResponse_successWrapper._(value);
 
-  /// Same as `wrapSuccess(UpdateOrganizationServiceResponse_Success(...))`.
-  factory UpdateOrganizationServiceResponse.createSuccess() =>
-      UpdateOrganizationServiceResponse.wrapSuccess(
-        UpdateOrganizationServiceResponse_Success(),
-      );
+  /// Same as `wrapSuccess(_lib_service_v1_service.Service(...))`.
+  factory UpdateOrganizationServiceResponse.createSuccess({
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
+    required _core.String name,
+    required _core.Iterable<_lib_service_v1_service.ServiceRole> roles,
+    required _core.DateTime createdAt,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
+    required _lib_service_v1_service.ServiceRegistration_orMutable?
+    registration,
+    required _lib_service_v1_service.ServiceState_orMutable? state,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? runsIn,
+  }) => UpdateOrganizationServiceResponse.wrapSuccess(
+    _lib_service_v1_service.Service(
+      serviceId: serviceId,
+      revision: revision,
+      name: name,
+      roles: roles,
+      createdAt: createdAt,
+      organization: organization,
+      registration: registration,
+      state: state,
+      runsIn: runsIn,
+    ),
+  );
+
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory UpdateOrganizationServiceResponse.wrapConflictError(
+    UpdateOrganizationServiceResponse_ConflictError value,
+  ) => UpdateOrganizationServiceResponse_conflictErrorWrapper._(value);
+
+  /// Same as `wrapConflictError(UpdateOrganizationServiceResponse_ConflictError(...))`.
+  factory UpdateOrganizationServiceResponse.createConflictError({
+    required _core.int expectedRevision,
+    required _lib_service_v1_service.Service_orMutable actual,
+  }) => UpdateOrganizationServiceResponse.wrapConflictError(
+    UpdateOrganizationServiceResponse_ConflictError(
+      expectedRevision: expectedRevision,
+      actual: actual,
+    ),
+  );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
@@ -788,6 +1255,23 @@ sealed class UpdateOrganizationServiceResponse {
       UpdateOrganizationServiceResponse.wrapServiceNotFoundError(
         UpdateOrganizationServiceResponse_ServiceNotFoundError(),
       );
+
+  /// Create a 'runs_in_not_found_error' variant wrapping around the given value.
+  factory UpdateOrganizationServiceResponse.wrapRunsInNotFoundError(
+    UpdateOrganizationServiceResponse_RunsInNotFoundError value,
+  ) => UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper._(value);
+
+  /// Same as `wrapRunsInNotFoundError(UpdateOrganizationServiceResponse_RunsInNotFoundError(...))`.
+  factory UpdateOrganizationServiceResponse.createRunsInNotFoundError({
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+  }) => UpdateOrganizationServiceResponse.wrapRunsInNotFoundError(
+    UpdateOrganizationServiceResponse_RunsInNotFoundError(serviceId: serviceId),
+  );
+
+  /// Create a 'validation_error' variant wrapping around the given value.
+  factory UpdateOrganizationServiceResponse.wrapValidationError(
+    ServiceUpdateValidationError value,
+  ) => UpdateOrganizationServiceResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory UpdateOrganizationServiceResponse.wrapInvalidRecordIdError(
@@ -828,7 +1312,7 @@ sealed class UpdateOrganizationServiceResponse {
         2,
         "success",
         "wrapSuccess",
-        UpdateOrganizationServiceResponse_Success.serializer,
+        _lib_service_v1_service.Service.serializer,
         "",
         UpdateOrganizationServiceResponse_successWrapper._,
         (it) => it.value,
@@ -836,6 +1320,18 @@ sealed class UpdateOrganizationServiceResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
+        "conflict_error",
+        "wrapConflictError",
+        UpdateOrganizationServiceResponse_ConflictError.serializer,
+        "",
+        UpdateOrganizationServiceResponse_conflictErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationServiceResponse_kind
+            .conflictErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
         "service_not_found_error",
         "wrapServiceNotFoundError",
         UpdateOrganizationServiceResponse_ServiceNotFoundError.serializer,
@@ -847,7 +1343,31 @@ sealed class UpdateOrganizationServiceResponse {
             ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        4,
+        5,
+        "runs_in_not_found_error",
+        "wrapRunsInNotFoundError",
+        UpdateOrganizationServiceResponse_RunsInNotFoundError.serializer,
+        "",
+        UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationServiceResponse_kind
+            .runsInNotFoundErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "validation_error",
+        "wrapValidationError",
+        ServiceUpdateValidationError.serializer,
+        "",
+        UpdateOrganizationServiceResponse_validationErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateOrganizationServiceResponse_kind
+            .validationErrorWrapper
+            ._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
@@ -882,8 +1402,11 @@ enum UpdateOrganizationServiceResponse_kind {
   unknown(0),
   internalErrorWrapper(1),
   successWrapper(2),
-  serviceNotFoundErrorWrapper(3),
-  invalidRecordIdErrorWrapper(4);
+  conflictErrorWrapper(3),
+  serviceNotFoundErrorWrapper(4),
+  runsInNotFoundErrorWrapper(5),
+  validationErrorWrapper(6),
+  invalidRecordIdErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -947,13 +1470,24 @@ final class UpdateOrganizationServiceResponse_internalErrorWrapper
 
 final class UpdateOrganizationServiceResponse_successWrapper
     extends _UpdateOrganizationServiceResponse_wrapper {
-  final UpdateOrganizationServiceResponse_Success value;
+  final _lib_service_v1_service.Service value;
 
   UpdateOrganizationServiceResponse_successWrapper._(this.value);
 
   @_core.override
   UpdateOrganizationServiceResponse_kind get kind =>
       UpdateOrganizationServiceResponse_kind.successWrapper;
+}
+
+final class UpdateOrganizationServiceResponse_conflictErrorWrapper
+    extends _UpdateOrganizationServiceResponse_wrapper {
+  final UpdateOrganizationServiceResponse_ConflictError value;
+
+  UpdateOrganizationServiceResponse_conflictErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationServiceResponse_kind get kind =>
+      UpdateOrganizationServiceResponse_kind.conflictErrorWrapper;
 }
 
 final class UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper
@@ -965,6 +1499,28 @@ final class UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper
   @_core.override
   UpdateOrganizationServiceResponse_kind get kind =>
       UpdateOrganizationServiceResponse_kind.serviceNotFoundErrorWrapper;
+}
+
+final class UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper
+    extends _UpdateOrganizationServiceResponse_wrapper {
+  final UpdateOrganizationServiceResponse_RunsInNotFoundError value;
+
+  UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationServiceResponse_kind get kind =>
+      UpdateOrganizationServiceResponse_kind.runsInNotFoundErrorWrapper;
+}
+
+final class UpdateOrganizationServiceResponse_validationErrorWrapper
+    extends _UpdateOrganizationServiceResponse_wrapper {
+  final ServiceUpdateValidationError value;
+
+  UpdateOrganizationServiceResponse_validationErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateOrganizationServiceResponse_kind get kind =>
+      UpdateOrganizationServiceResponse_kind.validationErrorWrapper;
 }
 
 final class UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper

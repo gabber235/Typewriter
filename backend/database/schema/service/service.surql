@@ -4,6 +4,10 @@ DEFINE TABLE OVERWRITE service SCHEMAFULL
 DEFINE FIELD OVERWRITE name ON service TYPE string
     ASSERT fn::is_id($value);
 
+DEFINE FIELD OVERWRITE revision ON service TYPE int
+    DEFAULT 1
+    ASSERT $value >= 1;
+
 DEFINE FIELD OVERWRITE roles ON service TYPE array<object>
     ASSERT fn::service::valid_roles($value);
 

@@ -20,6 +20,7 @@
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Book {
     pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub revision: i64,
     pub title: String,
     pub icon: String,
     pub color: crate::skirout::base::kernel::v1::color::Color,
@@ -442,10 +443,11 @@ impl CreateBookResponse {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UpdateBookRequest {
     pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub title: Option<String>,
-    pub icon: Option<String>,
-    pub color: Option<crate::skirout::base::kernel::v1::color::Color>,
-    pub tag_ids: Option<Vec<crate::skirout::base::kernel::v1::record_id::RecordId>>,
+    pub expected_revision: i64,
+    pub title: String,
+    pub icon: String,
+    pub color: crate::skirout::base::kernel::v1::color::Color,
+    pub tag_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateBookRequest>>,
 }
@@ -474,6 +476,45 @@ impl UpdateBookRequest {
     pub fn serializer() -> crate::skir_client::Serializer<UpdateBookRequest> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(UpdateBookRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct UpdateBookResponse.ConflictError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct UpdateBookResponse_ConflictError {
+    pub expected_revision: i64,
+    pub actual: Book,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateBookResponse_ConflictError>>,
+}
+
+impl UpdateBookResponse_ConflictError {
+    pub fn default_ref() -> &'static UpdateBookResponse_ConflictError {
+        static D: std::sync::LazyLock<UpdateBookResponse_ConflictError> = std::sync::LazyLock::new(UpdateBookResponse_ConflictError::default);
+        &D
+    }
+}
+
+impl UpdateBookResponse_ConflictError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateBookResponse_ConflictError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateBookResponse_ConflictError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/book.skir",
+                    "UpdateBookResponse.ConflictError",
+                    "",
+                    |x: &UpdateBookResponse_ConflictError| &x._unrecognized,
+                    |x: &mut UpdateBookResponse_ConflictError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<UpdateBookResponse_ConflictError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_ConflictError::_adapter())
     }
 }
 
@@ -562,6 +603,7 @@ pub enum UpdateBookResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdateBookResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<Book>),
+    ConflictError(Box<UpdateBookResponse_ConflictError>),
     BookNotFoundError(Box<UpdateBookResponse_BookNotFoundError>),
     TagsNotFoundError(Box<UpdateBookResponse_TagsNotFoundError>),
     ValidationError(Box<BookValidationError>),
@@ -583,10 +625,11 @@ impl UpdateBookResponse {
                         UpdateBookResponse::Unknown(_) => 0,
                         UpdateBookResponse::InternalError(_) => 1,
                         UpdateBookResponse::Success(_) => 2,
-                        UpdateBookResponse::BookNotFoundError(_) => 3,
-                        UpdateBookResponse::TagsNotFoundError(_) => 4,
-                        UpdateBookResponse::ValidationError(_) => 5,
-                        UpdateBookResponse::InvalidRecordIdError(_) => 6,
+                        UpdateBookResponse::ConflictError(_) => 3,
+                        UpdateBookResponse::BookNotFoundError(_) => 4,
+                        UpdateBookResponse::TagsNotFoundError(_) => 5,
+                        UpdateBookResponse::ValidationError(_) => 6,
+                        UpdateBookResponse::InvalidRecordIdError(_) => 7,
                     },
                     |u| UpdateBookResponse::Unknown(Some(u)),
                     |x: &UpdateBookResponse| match x { UpdateBookResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -613,10 +656,11 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<Book> = Book::_adapter() as *const _ as *mut _;
                 (*a).add_field("book_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Book| &x.book_id, |x: &mut Book, v| x.book_id = v);
-                (*a).add_field("title", 1, crate::skir_client::Serializer::string(), "", |x: &Book| &x.title, |x: &mut Book, v| x.title = v);
-                (*a).add_field("icon", 2, crate::skir_client::Serializer::string(), "", |x: &Book| &x.icon, |x: &mut Book, v| x.icon = v);
-                (*a).add_field("color", 3, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &Book| &x.color, |x: &mut Book, v| x.color = v);
-                (*a).add_field("tag_ids", 4, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Book| &x.tag_ids, |x: &mut Book, v| x.tag_ids = v);
+                (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Book| &x.revision, |x: &mut Book, v| x.revision = v);
+                (*a).add_field("title", 2, crate::skir_client::Serializer::string(), "", |x: &Book| &x.title, |x: &mut Book, v| x.title = v);
+                (*a).add_field("icon", 3, crate::skir_client::Serializer::string(), "", |x: &Book| &x.icon, |x: &mut Book, v| x.icon = v);
+                (*a).add_field("color", 4, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &Book| &x.color, |x: &mut Book, v| x.color = v);
+                (*a).add_field("tag_ids", 5, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Book| &x.tag_ids, |x: &mut Book, v| x.tag_ids = v);
                 (*a).finalize();
             }
             unsafe {
@@ -683,10 +727,17 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<UpdateBookRequest> = UpdateBookRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("book_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &UpdateBookRequest| &x.book_id, |x: &mut UpdateBookRequest, v| x.book_id = v);
-                (*a).add_field("title", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdateBookRequest| &x.title, |x: &mut UpdateBookRequest, v| x.title = v);
-                (*a).add_field("icon", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdateBookRequest| &x.icon, |x: &mut UpdateBookRequest, v| x.icon = v);
-                (*a).add_field("color", 3, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::color::Color::serializer()), "", |x: &UpdateBookRequest| &x.color, |x: &mut UpdateBookRequest, v| x.color = v);
-                (*a).add_field("tag_ids", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer())), "", |x: &UpdateBookRequest| &x.tag_ids, |x: &mut UpdateBookRequest, v| x.tag_ids = v);
+                (*a).add_field("expected_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &UpdateBookRequest| &x.expected_revision, |x: &mut UpdateBookRequest, v| x.expected_revision = v);
+                (*a).add_field("title", 2, crate::skir_client::Serializer::string(), "", |x: &UpdateBookRequest| &x.title, |x: &mut UpdateBookRequest, v| x.title = v);
+                (*a).add_field("icon", 3, crate::skir_client::Serializer::string(), "", |x: &UpdateBookRequest| &x.icon, |x: &mut UpdateBookRequest, v| x.icon = v);
+                (*a).add_field("color", 4, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &UpdateBookRequest| &x.color, |x: &mut UpdateBookRequest, v| x.color = v);
+                (*a).add_field("tag_ids", 5, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &UpdateBookRequest| &x.tag_ids, |x: &mut UpdateBookRequest, v| x.tag_ids = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<UpdateBookResponse_ConflictError> = UpdateBookResponse_ConflictError::_adapter() as *const _ as *mut _;
+                (*a).add_field("expected_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &UpdateBookResponse_ConflictError| &x.expected_revision, |x: &mut UpdateBookResponse_ConflictError, v| x.expected_revision = v);
+                (*a).add_field("actual", 1, crate::skir_client::internal::struct_serializer_from_static(Book::_adapter()), "", |x: &UpdateBookResponse_ConflictError| &x.actual, |x: &mut UpdateBookResponse_ConflictError, v| x.actual = v);
                 (*a).finalize();
             }
             unsafe {
@@ -703,10 +754,11 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<UpdateBookResponse> = UpdateBookResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| UpdateBookResponse::InternalError(Box::new(v)), |x| match x { UpdateBookResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Book::_adapter()), "", |v| UpdateBookResponse::Success(Box::new(v)), |x| match x { UpdateBookResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("book_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_BookNotFoundError::_adapter()), "", |v| UpdateBookResponse::BookNotFoundError(Box::new(v)), |x| match x { UpdateBookResponse::BookNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tags_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_TagsNotFoundError::_adapter()), "", |v| UpdateBookResponse::TagsNotFoundError(Box::new(v)), |x| match x { UpdateBookResponse::TagsNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("validation_error", 5, 5, crate::skir_client::internal::enum_serializer_from_static(BookValidationError::_adapter()), "", |v| UpdateBookResponse::ValidationError(Box::new(v)), |x| match x { UpdateBookResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 6, 6, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateBookResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateBookResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conflict_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_ConflictError::_adapter()), "", |v| UpdateBookResponse::ConflictError(Box::new(v)), |x| match x { UpdateBookResponse::ConflictError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("book_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_BookNotFoundError::_adapter()), "", |v| UpdateBookResponse::BookNotFoundError(Box::new(v)), |x| match x { UpdateBookResponse::BookNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("tags_not_found_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(UpdateBookResponse_TagsNotFoundError::_adapter()), "", |v| UpdateBookResponse::TagsNotFoundError(Box::new(v)), |x| match x { UpdateBookResponse::TagsNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("validation_error", 6, 6, crate::skir_client::internal::enum_serializer_from_static(BookValidationError::_adapter()), "", |v| UpdateBookResponse::ValidationError(Box::new(v)), |x| match x { UpdateBookResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 7, 7, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateBookResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateBookResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

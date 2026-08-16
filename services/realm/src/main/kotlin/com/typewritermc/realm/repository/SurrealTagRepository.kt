@@ -2,6 +2,7 @@ package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
 import com.typewritermc.realm.repository.records.TagDeletionRecord
+import com.typewritermc.realm.repository.records.TagMutationRecord
 import com.typewritermc.realm.repository.records.TagRecord
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
@@ -69,6 +70,7 @@ class SurrealTagRepository(
                 };
 
                 LET $tag = CREATE ONLY tag SET
+                    revision = 1,
                     name = $name,
                     color = $color,
                     placement = { x: $x, y: $y, width: $width, height: $height };
@@ -95,8 +97,11 @@ class SurrealTagRepository(
                 ?: error("Tag creation returned no record")
         }
 
-    override suspend fun updateTag(tag: Tag): RepositoryResult<Tag> =
-        repositoryMutation(tag.parentIds) {
+    override suspend fun updateTag(
+        expectedRevision: Long,
+        tag: Tag,
+    ): RevisionedRepositoryResult<Tag> =
+        revisionedRepositoryMutation {
             val result =
                 database
                     .get()
@@ -104,37 +109,65 @@ class SurrealTagRepository(
                         $$"""
                 BEGIN TRANSACTION;
 
-                IF !record::exists($tag) {
+                LET $actual = SELECT * FROM ONLY $tag;
+                LET $result = IF $actual = NONE {
                     THROW "tag-not-found-error";
+                } ELSE IF $actual.revision != $expected_revision {
+                    { conflict: true, actual: $actual, errorSlug: "", relatedIds: [] };
+                } ELSE {
+                    LET $distinct_parent_tags = array::distinct($parent_tags);
+                    LET $missing_parents = $distinct_parent_tags.filter(|$parent| !record::exists($parent));
+
+                    IF $missing_parents != [] {
+                        {
+                            conflict: false,
+                            actual: $actual,
+                            errorSlug: "parents-not-found-error",
+                            relatedIds: $missing_parents,
+                        };
+                    } ELSE {
+                        LET $descendants = $tag.{..+collect}<-inherits<-tag;
+                        IF $distinct_parent_tags.any(|$parent| $parent = $tag OR $parent IN $descendants) {
+                            {
+                                conflict: false,
+                                actual: $actual,
+                                errorSlug: "tag-inheritance-cycle-error",
+                                relatedIds: [],
+                            };
+                        } ELSE {
+                            UPDATE ONLY $tag SET
+                                revision += 1,
+                                name = $name,
+                                color = $color,
+                                placement = { x: $x, y: $y, width: $width, height: $height };
+
+                            LET $current_parents = SELECT VALUE ->inherits->tag FROM ONLY $tag;
+
+                            FOR $parent IN array::complement($distinct_parent_tags, $current_parents) {
+                                RELATE $tag->inherits->$parent;
+                            };
+
+                            FOR $parent IN array::complement($current_parents, $distinct_parent_tags) {
+                                DELETE inherits WHERE in = $tag AND out = $parent;
+                            };
+
+                            {
+                                conflict: false,
+                                actual: (SELECT * FROM ONLY $tag),
+                                errorSlug: "",
+                                relatedIds: [],
+                            };
+                        };
+                    };
                 };
 
-                LET $distinct_parent_tags = array::distinct($parent_tags);
-
-                IF $distinct_parent_tags.any(|$tag| !record::exists($tag)) {
-                    THROW "parents-not-found-error";
-                };
-
-                UPDATE $tag SET
-                    name = $name,
-                    color = $color,
-                    placement = { x: $x, y: $y, width: $width, height: $height };
-
-                LET $current_parents = SELECT VALUE ->inherits->tag FROM ONLY $tag;
-
-                FOR $parent IN array::complement($distinct_parent_tags, $current_parents) {
-                    RELATE $tag->inherits->$parent;
-                };
-
-                FOR $parent IN array::complement($current_parents, $distinct_parent_tags) {
-                    DELETE inherits WHERE in = $tag AND out = $parent;
-                };
-
-                RETURN SELECT * FROM $tag.id;
+                RETURN $result;
 
                 COMMIT TRANSACTION;
                         """.trimIndent(),
                         mapOf(
                             "tag" to tag.tagId.surrealId("tag"),
+                            "expected_revision" to expectedRevision,
                             "name" to tag.name,
                             "color" to
                                 tag.color.argb
@@ -146,10 +179,26 @@ class SurrealTagRepository(
                             "height" to tag.placement.height,
                             "parent_tags" to tag.parentIds.surrealId("tag"),
                         ),
-                    ).takeTransaction(8)
+                    ).takeTransaction(3)
 
-            TagRecord.parseList(result).singleOrNull()?.toTag()
-                ?: error("Tag update returned no record")
+            val mutation = TagMutationRecord.parse(result)
+            val actual = mutation.actual.toTag()
+            when {
+                mutation.conflict -> {
+                    RevisionedRepositoryResult.Conflict(actual)
+                }
+
+                mutation.errorSlug.isNotEmpty() -> {
+                    RevisionedRepositoryResult.DomainFailure(
+                        mutation.errorSlug,
+                        mutation.relatedIds.map { it.toSkirRecordId() },
+                    )
+                }
+
+                else -> {
+                    RevisionedRepositoryResult.Success(actual)
+                }
+            }
         }
 
     override suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion> =
@@ -167,6 +216,8 @@ class SurrealTagRepository(
                 LET $child_tags = SELECT VALUE in FROM inherits WHERE out = $tag;
                 LET $books = SELECT VALUE in FROM bears WHERE out = $tag;
 
+                UPDATE $child_tags SET revision += 1;
+                UPDATE $books SET revision += 1;
                 DELETE inherits WHERE in = $tag OR out = $tag;
                 DELETE bears WHERE out = $tag;
                 DELETE $tag;
@@ -175,58 +226,8 @@ class SurrealTagRepository(
                 COMMIT TRANSACTION;
                         """.trimIndent(),
                         mapOf("tag" to id.surrealId("tag")),
-                    ).takeTransaction(7)
+                    ).takeTransaction(9)
 
             TagDeletionRecord.parse(result).toTagDeletion()
-        }
-
-    override suspend fun moveTag(
-        id: RecordId,
-        x: Int?,
-        y: Int?,
-    ): RepositoryResult<Tag> =
-        updatePlacement(
-            id = id,
-            assignments = $$"placement.x = $x ?? placement.x, placement.y = $y ?? placement.y",
-            bindings = mapOf("x" to x, "y" to y),
-        )
-
-    override suspend fun resizeTag(
-        id: RecordId,
-        width: Int?,
-        height: Int?,
-    ): RepositoryResult<Tag> =
-        updatePlacement(
-            id = id,
-            assignments = $$"placement.width = $width ?? placement.width, placement.height = $height ?? placement.height",
-            bindings = mapOf("width" to width, "height" to height),
-        )
-
-    private suspend fun updatePlacement(
-        id: RecordId,
-        assignments: String,
-        bindings: Map<String, Int?>,
-    ): RepositoryResult<Tag> =
-        repositoryMutation {
-            val result =
-                database
-                    .get()
-                    .query(
-                        $$"""
-                BEGIN TRANSACTION;
-
-                IF !record::exists($tag) {
-                    THROW "tag-not-found-error";
-                };
-
-                UPDATE ONLY $tag SET $$assignments RETURN AFTER;
-
-                COMMIT TRANSACTION;
-                        """.trimIndent(),
-                        mapOf("tag" to id.surrealId("tag")) + bindings,
-                    ).takeTransaction(2)
-
-            TagRecord.parseList(result).singleOrNull()?.toTag()
-                ?: error("Tag placement update returned no record")
         }
 }
