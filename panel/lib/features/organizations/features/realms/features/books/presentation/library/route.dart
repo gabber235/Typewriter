@@ -83,11 +83,12 @@ class LibraryPage extends HookConsumerWidget {
                     name: "filtered books",
                     builder: (books) {
                       if (books.isEmpty) {
-                        return Center(
-                          child: Text(
-                            "No books match your search",
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
+                        return EmptyScreen(
+                          title: searchQuery.value.isEmpty
+                              ? "Insert your favorite story here"
+                              : "No books match your search",
+                          buttonText: "Create Book",
+                          onPressed: handleCreateBook,
                         );
                       }
 

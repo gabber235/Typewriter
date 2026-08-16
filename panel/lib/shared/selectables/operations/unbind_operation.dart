@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -26,11 +25,7 @@ class UnbindOperation extends ActivatorShortcutOperation {
 
   @override
   List<ShortcutActivator> get activators => [
-    SingleActivator(
-      LogicalKeyboardKey.backspace,
-      meta: defaultTargetPlatform == TargetPlatform.macOS,
-      control: defaultTargetPlatform != TargetPlatform.macOS,
-    ),
+    AdaptiveSingleActivator(LogicalKeyboardKey.backspace, control: true),
   ];
 
   @override
@@ -95,7 +90,8 @@ class UnbindOperationButton extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = Colors.orange;
     final onColor = color.on(context);
-    return LoadingButton.filledIcon(
+    return OperationButton.filledIcon(
+      operation: operation,
       onPressed: () {
         showConfirmationDialogue(
           context: context,

@@ -215,17 +215,46 @@ class RenderGraphSurface extends RenderBox
 
   void _paintEdges(PaintingContext context, Offset offset) {
     final paint = Paint()
-      ..strokeWidth = min(graphLayout.data.cellSize / 10, 2)
+      ..strokeWidth = min(graphLayout.data.cellSize / 10, 3)
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
     for (final placed in visibleEdges) {
-      context.canvas.drawLine(
-        offset + placed.sourcePoint,
-        offset + placed.targetPoint,
-        paint..color = placed.edge.color,
+      final source = offset + placed.sourcePoint;
+      final target = offset + placed.targetPoint;
+      _paintArrow(
+        context.canvas,
+        source,
+        target,
+        paint..color = placed.edge.color.withValues(alpha: 1),
       );
     }
+  }
+
+  void _paintArrow(Canvas canvas, Offset source, Offset target, Paint paint) {
+    final edgeVector = target - source;
+    final edgeLength = edgeVector.distance;
+    if (edgeLength == 0) {
+      canvas.drawLine(source, target, paint);
+      return;
+    }
+
+    final direction = edgeVector / edgeLength;
+    final targetClearance = min(8.0, edgeLength / 4);
+    final arrowTip = target - direction * targetClearance;
+    final availableLength = edgeLength - targetClearance;
+    final arrowLength = min(
+      min(graphLayout.data.cellSize / 4, 12.0),
+      availableLength / 2,
+    );
+    final arrowWidth = arrowLength * 0.75;
+    final arrowBase = arrowTip - direction * arrowLength;
+    final perpendicular = Offset(-direction.dy, direction.dx) * arrowWidth;
+
+    canvas
+      ..drawLine(source, arrowTip, paint)
+      ..drawLine(arrowTip, arrowBase + perpendicular, paint)
+      ..drawLine(arrowTip, arrowBase - perpendicular, paint);
   }
 
   @override

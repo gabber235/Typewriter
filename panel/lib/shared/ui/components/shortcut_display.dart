@@ -5,8 +5,11 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "shortcut_display.freezed.dart";
 
 // The default spacing between the leading icon, label, trailing icon, and
 // shortcut label in a _MenuItemLabel.
@@ -16,12 +19,22 @@ const double _kLabelItemDefaultSpacing = 8;
 // shortcut label in a _MenuItemLabel.
 const double _kLabelItemMinSpacing = 4;
 
-enum KeyStyle { solid, outline }
+@freezed
+sealed class KeyStyle with _$KeyStyle {
+  const factory KeyStyle.solid({
+    Color? backgroundColor,
+    Color? foregroundColor,
+    Color? shadowColor,
+  }) = SolidKeyStyle;
 
-class LogicalKeyBoardDisplay extends HookWidget {
+  const factory KeyStyle.outline({Color? foregroundColor, Color? borderColor}) =
+      OutlineKeyStyle;
+}
+
+class LogicalKeyBoardDisplay extends StatelessWidget {
   const LogicalKeyBoardDisplay({
     required this.keyBoardKey,
-    this.style = KeyStyle.solid,
+    this.style = const KeyStyle.solid(),
     this.size = 12,
     super.key,
   });
@@ -103,7 +116,7 @@ class RotatingShortcuts extends HookWidget {
   const RotatingShortcuts({
     required this.shortcuts,
     this.size = 12.0,
-    this.style = KeyStyle.solid,
+    this.style = const KeyStyle.solid(),
     this.interval = const Duration(seconds: 5),
     super.key,
   });
@@ -149,7 +162,7 @@ class ShortcutDisplay extends StatelessWidget {
   const ShortcutDisplay({
     required this.shortcut,
     this.size = 12,
-    this.style = KeyStyle.solid,
+    this.style = const KeyStyle.solid(),
     super.key,
   });
 
@@ -196,18 +209,7 @@ class _KeyDisplay extends StatelessWidget {
       Text(:final data) => (data?.length ?? 0) <= 1,
       _ => false,
     };
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.surfaceContainerHighest;
-    final surfaceColor = switch (style) {
-      KeyStyle.solid => color,
-      KeyStyle.outline => Surface.colorOf(context),
-    };
-    final surfaceBrightness = ThemeData.estimateBrightnessForColor(
-      surfaceColor,
-    );
-    final textColor = surfaceBrightness == theme.brightness
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.surface;
+    final resolvedStyle = _resolveStyle(context);
 
     final height = size + 8;
     final width = fixedWidth ? size + 8 : null;
@@ -217,28 +219,28 @@ class _KeyDisplay extends StatelessWidget {
 
     final text = DefaultTextStyle(
       style: Theme.of(context).textTheme.labelMedium!.copyWith(
-        color: textColor,
+        color: resolvedStyle.foregroundColor,
         fontSize: size,
         fontWeight: FontWeight.w700,
         height: 1,
       ),
       child: IconTheme(
-        data: IconThemeData(color: textColor, size: size),
+        data: IconThemeData(color: resolvedStyle.foregroundColor, size: size),
         child: Center(child: child),
       ),
     );
 
     switch (style) {
-      case KeyStyle.solid:
+      case SolidKeyStyle():
         return AnimatedContainer(
           duration: 200.ms,
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: rounding,
-            color: color,
+            color: resolvedStyle.backgroundColor,
             boxShadow: [
               BoxShadow(
-                color: color.darker(context.isDarkMode ? 0.4 : 0.1),
+                color: resolvedStyle.shadowColor!,
                 blurRadius: 0,
                 offset: Offset(0, context.isDarkMode ? 3 : 2),
               ),
@@ -246,15 +248,15 @@ class _KeyDisplay extends StatelessWidget {
           ),
           height: height,
           width: width,
-          child: Surface(color: color, child: text),
+          child: Surface(color: resolvedStyle.backgroundColor!, child: text),
         );
-      case KeyStyle.outline:
+      case OutlineKeyStyle():
         return AnimatedContainer(
           duration: 200.ms,
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: rounding,
-            border: Border.all(color: textColor.withValues(alpha: 0.3)),
+            border: Border.all(color: resolvedStyle.borderColor!),
           ),
           height: height,
           width: width,
@@ -262,4 +264,67 @@ class _KeyDisplay extends StatelessWidget {
         );
     }
   }
+
+  _ResolvedKeyStyle _resolveStyle(BuildContext context) {
+    final style = this.style;
+    return switch (style) {
+      SolidKeyStyle() => _resolveSolidStyle(context, style),
+      OutlineKeyStyle() => _resolveOutlineStyle(context, style),
+    };
+  }
+
+  _ResolvedKeyStyle _resolveSolidStyle(
+    BuildContext context,
+    SolidKeyStyle style,
+  ) {
+    final backgroundColor =
+        style.backgroundColor ??
+        Theme.of(context).colorScheme.surfaceContainerHighest;
+    return _ResolvedKeyStyle(
+      backgroundColor: backgroundColor,
+      foregroundColor:
+          style.foregroundColor ??
+          _foregroundColorFor(context, backgroundColor),
+      shadowColor:
+          style.shadowColor ??
+          backgroundColor.darker(context.isDarkMode ? 0.4 : 0.1),
+    );
+  }
+
+  _ResolvedKeyStyle _resolveOutlineStyle(
+    BuildContext context,
+    OutlineKeyStyle style,
+  ) {
+    final foregroundColor =
+        style.foregroundColor ??
+        _foregroundColorFor(context, Surface.colorOf(context));
+    return _ResolvedKeyStyle(
+      foregroundColor: foregroundColor,
+      borderColor: style.borderColor ?? foregroundColor.withValues(alpha: 0.3),
+    );
+  }
+
+  Color _foregroundColorFor(BuildContext context, Color backgroundColor) {
+    final theme = Theme.of(context);
+    final backgroundBrightness = ThemeData.estimateBrightnessForColor(
+      backgroundColor,
+    );
+    return backgroundBrightness == theme.brightness
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.surface;
+  }
+}
+
+class _ResolvedKeyStyle {
+  const _ResolvedKeyStyle({
+    required this.foregroundColor,
+    this.backgroundColor,
+    this.borderColor,
+    this.shadowColor,
+  });
+
+  final Color foregroundColor;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? shadowColor;
 }
