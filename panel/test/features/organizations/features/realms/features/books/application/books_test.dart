@@ -22,6 +22,7 @@ class _MockBooks extends Books {
 Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
   return Book(
     bookId: recordId("book:$id"),
+    revision: 1,
     title: title,
     icon: "book",
     color: Colors.blue,
@@ -32,6 +33,7 @@ Book _book(String id, String title, {List<skir.RecordId> tagIds = const []}) {
 Tag _tag(String id) {
   return Tag(
     tagId: recordId("tag:$id"),
+    revision: 1,
     name: id,
     color: Colors.blue,
     parentIds: const [],

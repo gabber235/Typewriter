@@ -60,8 +60,7 @@ class MockSelectable extends InspectableSelectable<MockSelectableIdentifier> {
   final MockSelectableIdentifier id;
   final RecordValue data;
 
-  DataPath? lastSetPath;
-  DataValue? lastSetValue;
+  EditorCommit? latestCommit;
 
   @override
   String get name => "Mock ${id.id}";
@@ -81,10 +80,12 @@ class MockSelectable extends InspectableSelectable<MockSelectableIdentifier> {
   );
 
   @override
-  ResolvedTypeRef get rootType => rootDefinition.id;
-
-  @override
-  late final TypeCatalog typeCatalog = TypeCatalog([rootDefinition]);
+  late final EditorDocument document = EditorDocument(
+    rootType: NamedType(rootDefinition.id),
+    typeCatalog: TypeCatalog([rootDefinition]),
+    confirmedValue: data,
+    revision: 1,
+  );
 
   @override
   List<SelectionCapability> get capabilities => [];
@@ -93,15 +94,21 @@ class MockSelectable extends InspectableSelectable<MockSelectableIdentifier> {
   Widget? buildInspectorHeader() => null;
 
   @override
-  EditorValue value(DataPath path) => data.readEditorValue(path);
-
-  @override
-  EditorMutationResult update(DataPath path, DataValue value) {
-    final result = validateUpdate(path, value);
-    if (result is! AppliedEditorMutation) return result;
-    lastSetPath = path;
-    lastSetValue = value;
-    return result;
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    latestCommit = commit;
+    final value = commit.rootValue;
+    if (value is! RecordValue) {
+      return TypedMutationResult.invalid([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "The selectable root must remain a record",
+        ),
+      ]);
+    }
+    return TypedMutationResult.success(
+      revision: commit.expectedRevision + 1,
+      value: value,
+    );
   }
 
   @override

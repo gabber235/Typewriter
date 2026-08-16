@@ -75,23 +75,39 @@ class TagGraph extends HookConsumerWidget {
         return Graph(
           data: _graphFromTags(context, tagList),
           onElementsMoved: (changes) {
-            final moves = changes
-                .map((change) {
-                  final tagId = tagIds[change.id.id];
-                  if (tagId == null) return null;
-                  return TagMovePayload(id: tagId, x: change.x, y: change.y);
-                })
-                .nonNulls
-                .toList(growable: false);
-            ref.read(tagsProvider.notifier).moveTags(moves);
-          },
-          onElementsResized: (changes) {
+            final tagsById = {for (final tag in tagList) tag.tagId: tag};
             for (final change in changes) {
               final tagId = tagIds[change.id.id];
-              if (tagId == null) continue;
+              final tag = tagsById[tagId];
+              if (tag == null) continue;
               ref
                   .read(tagsProvider.notifier)
-                  .resizeTag(tagId, change.width, change.height);
+                  .updateTag(
+                    tag.copyWith(
+                      placement: tag.placement.copyWith(
+                        x: change.x,
+                        y: change.y,
+                      ),
+                    ),
+                  );
+            }
+          },
+          onElementsResized: (changes) {
+            final tagsById = {for (final tag in tagList) tag.tagId: tag};
+            for (final change in changes) {
+              final tagId = tagIds[change.id.id];
+              final tag = tagsById[tagId];
+              if (tag == null) continue;
+              ref
+                  .read(tagsProvider.notifier)
+                  .updateTag(
+                    tag.copyWith(
+                      placement: tag.placement.copyWith(
+                        width: change.width,
+                        height: change.height,
+                      ),
+                    ),
+                  );
             }
           },
         );

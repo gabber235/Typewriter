@@ -29,6 +29,7 @@ Book Function() generateRandomBook(List<Tag> tags) {
 
     return Book(
       bookId: recordId("book:$title"),
+      revision: 1,
       title: title,
       icon: generateRandomIconName(),
       color: safeColors.randomElement(),
@@ -59,8 +60,9 @@ class BooksMock extends Books {
       bookId: recordId(
         "book:${faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase()}",
       ),
+      revision: 1,
       title: title,
-      icon: icon ?? "book",
+      icon: icon ?? "mdi:book",
       color: color ?? safeColors.randomElement(),
       tagIds: tagIds.isEmpty ? [] : tagIds,
     );
@@ -71,8 +73,18 @@ class BooksMock extends Books {
   }
 
   @override
-  Future<void> updateBook(Book book) async {
+  Future<TypedMutationResult> updateBook(Book book) async {
     await Future.delayed(500.ms);
+    final canonical = book.copyWith(revision: book.revision + 1);
+    state = AsyncData(
+      (await future)
+          .map((value) => value.bookId == book.bookId ? canonical : value)
+          .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: canonical.revision,
+      value: bookMockInspectorValue(canonical),
+    );
   }
 
   @override
@@ -109,3 +121,10 @@ class BooksMock extends Books {
 List<Override> booksProviderOverrides({
   DisplayState state = DisplayState.loading,
 }) => [booksProvider.overrideWith(() => BooksMock(state))];
+
+RecordValue bookMockInspectorValue(Book book) => RecordValue({
+  "title": StringValue(book.title),
+  "icon": IconValue.from(book.icon).typedValue,
+  "color": book.color.integerValue,
+  "tags": ListValue(book.tagIds.map((tagId) => StringValue(tagId.id)).toList()),
+});

@@ -1,6 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "presentation_header_substitution.dart";
+part "presentation_collection_substitution.dart";
 part "presentation_search_substitution.dart";
 
 extension PresentationNodeSubstitution on PresentationNode {
@@ -39,14 +40,12 @@ extension on PresentationElement {
       WrapElement() => WrapElement(
         children: value.children._substituteTypes(substitutions),
         spacing: value.spacing,
+        runSpacing: value.runSpacing,
         mainAxisAlignment: value.mainAxisAlignment,
         crossAxisAlignment: value.crossAxisAlignment,
       ),
       StackElement() => StackElement(
         children: value.children._substituteTypes(substitutions),
-        spacing: value.spacing,
-        mainAxisAlignment: value.mainAxisAlignment,
-        crossAxisAlignment: value.crossAxisAlignment,
       ),
       GridElement() => GridElement(
         children: value.children._substituteTypes(substitutions),
@@ -102,6 +101,10 @@ extension on PresentationElement {
         label: value.label._substituteTypes(substitutions),
         tone: value.tone,
       ),
+      ChipElement() => ChipElement(
+        label: value.label._substituteTypes(substitutions),
+        color: value.color._substituteTypes(substitutions),
+      ),
       ProgressElement() => ProgressElement(
         value: value.value._substituteTypes(substitutions),
         maximum: value.maximum._substituteTypes(substitutions),
@@ -120,14 +123,15 @@ extension on PresentationElement {
       RepeatedElement() => RepeatedElement(
         source: value.source._substituteTypes(substitutions),
         itemBindingId: value.itemBindingId,
-        template: value.template._substituteTypes(substitutions),
-        empty: value.empty._substituteTypes(substitutions),
+        presentation: value.presentation._substituteTypes(substitutions),
       ),
       ScopedBindingElement() => ScopedBindingElement(
         binding: value.binding,
         scopeBindingId: value.scopeBindingId,
         child: value.child._substituteTypes(substitutions),
       ),
+      CollectionLookupElement() || CollectionGraphElement() =>
+        _substituteCollectionElement(value, substitutions),
       TextInputElement() => TextInputElement(
         control: value.control._substituteTypes(substitutions),
         multiline: value.multiline,
@@ -255,7 +259,26 @@ extension on BoundControl {
         binding: binding,
         label: label._substituteTypes(substitutions),
         description: description._substituteTypes(substitutions),
+        prefix: prefix?._substituteTypes(substitutions),
+        semanticLabel: semanticLabel._substituteTypes(substitutions),
       );
+}
+
+extension on SequencePresentation {
+  SequencePresentation _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => SequencePresentation(
+    item: item._substituteTypes(substitutions),
+    empty: empty._substituteTypes(substitutions),
+    separator: separator._substituteTypes(substitutions),
+    layout: layout,
+  );
+}
+
+extension on SequencePresentation? {
+  SequencePresentation? _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => this?._substituteTypes(substitutions);
 }
 
 extension on Iterable<PresentationNode> {

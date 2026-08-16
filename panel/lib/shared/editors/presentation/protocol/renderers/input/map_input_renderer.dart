@@ -193,6 +193,7 @@ class _MapInputState extends State<_MapInput> {
           writable: binding.writable,
         ),
         (next) => _replaceKey(map, entry.key, next),
+        interactionTarget: scope.canonical(element.control.binding),
       );
       final localized = presentation.localizeFailures(
         childScope.expressions,
@@ -211,6 +212,7 @@ class _MapInputState extends State<_MapInput> {
         writable: binding.writable,
       ),
       (next) => _replaceKey(map, entry.key, next),
+      interactionTarget: scope.canonical(element.control.binding),
     );
     return ResolvedBinding(
       reference: reference,

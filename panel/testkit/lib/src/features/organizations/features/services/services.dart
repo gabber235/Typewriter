@@ -34,6 +34,7 @@ Service generateRandomService() {
       : faker.date.dateTimeBetween(createdAt, DateTime.now().subtract(14.days));
   return Service(
     serviceId: recordId("service:${faker.guid.guid()}"),
+    revision: 1,
     name: faker.lorem
         .words(faker.randomGenerator.integer(3, min: 1))
         .join("_")
@@ -60,14 +61,19 @@ class ServicesMock extends Services {
   Future<void> bindService(String token) async =>
       Future<void>.delayed(const Duration(milliseconds: 1000));
   @override
-  Future<void> updateService(Service service) async {
+  Future<TypedMutationResult> updateService(Service service) async {
     await Future<void>.delayed(const Duration(milliseconds: 100));
+    final canonical = service.copyWith(revision: service.revision + 1);
     state = AsyncData(
       (await future)
           .map(
-            (value) => value.serviceId == service.serviceId ? service : value,
+            (value) => value.serviceId == service.serviceId ? canonical : value,
           )
           .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: canonical.revision,
+      value: StringValue(canonical.name),
     );
   }
 

@@ -19,6 +19,9 @@ typedef ActionExecutor =
       Map<BindingId, BindingReference> aliases,
     );
 
+typedef EditorInteractionStarter =
+    EditorInteractionSession? Function(BindingReference reference);
+
 @freezed
 abstract class ResolvedPresentationDefinition
     with _$ResolvedPresentationDefinition {
@@ -66,7 +69,11 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     required ActionExecutor executeAction,
     required PresentationResolver resolvePresentation,
     required HeaderExpansionStore expansionStore,
+    EditorInteractionStarter? startInteraction,
     RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder,
+    @Default({})
+    Map<PresentationCollectionSourceId, PresentationCollectionSource>
+    collections,
     @Default({}) Map<BindingId, BindingReference> aliases,
     @Default({})
     Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,
@@ -114,6 +121,9 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     executeAction(action, expressions, aliases);
   }
 
+  EditorInteractionSession? beginInteraction(BindingReference reference) =>
+      startInteraction?.call(canonical(reference));
+
   PresentationRenderScope withAlias(
     BindingId id,
     BindingReference canonical,
@@ -126,11 +136,18 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
   PresentationRenderScope withVirtualBinding(
     BindingId id,
     BindingSnapshot snapshot,
-    ValueChanged<DataValue> onChanged,
-  ) {
+    ValueChanged<DataValue> onChanged, {
+    BindingReference? interactionTarget,
+  }) {
     var currentValue = snapshot.value;
     return copyWith(
       expressions: expressions.withBinding(id, snapshot),
+      startInteraction: (reference) {
+        if (reference.bindingId == id && interactionTarget != null) {
+          return startInteraction?.call(interactionTarget.at(reference.path));
+        }
+        return startInteraction?.call(reference);
+      },
       setBinding: (reference, value, context, aliases) {
         if (reference.bindingId != id) {
           setBinding(reference, value, context, aliases);

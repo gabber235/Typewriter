@@ -51,14 +51,12 @@ extension on PresentationElement {
       WrapElement() => WrapElement(
         children: element.children._localizeFailures(context, budget, registry),
         spacing: element.spacing,
+        runSpacing: element.runSpacing,
         mainAxisAlignment: element.mainAxisAlignment,
         crossAxisAlignment: element.crossAxisAlignment,
       ),
       StackElement() => StackElement(
         children: element.children._localizeFailures(context, budget, registry),
-        spacing: element.spacing,
-        mainAxisAlignment: element.mainAxisAlignment,
-        crossAxisAlignment: element.crossAxisAlignment,
       ),
       GridElement() => GridElement(
         children: element.children._localizeFailures(context, budget, registry),
@@ -143,6 +141,8 @@ extension on PresentationElement {
       ),
       RepeatedElement() ||
       ScopedBindingElement() ||
+      CollectionLookupElement() ||
+      CollectionGraphElement() ||
       ListInputElement() ||
       MapInputElement() ||
       RecordInputElement() ||

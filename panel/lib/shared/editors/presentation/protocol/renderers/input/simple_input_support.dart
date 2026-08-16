@@ -63,6 +63,7 @@ Widget _renderNamedInput({
       writable: binding.writable,
     ),
     (next) => scope.update(binding.reference, next),
+    interactionTarget: scope.canonical(binding.reference),
   );
   final child =
       ResolvedBinding(

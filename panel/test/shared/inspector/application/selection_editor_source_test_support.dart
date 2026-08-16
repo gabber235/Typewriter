@@ -6,13 +6,6 @@ final _sourceProvider = Provider<SelectionEditorSource>((ref) {
   return source;
 });
 
-EditorValue _missingEditorValue() => EditorValue.invalid([
-  const TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidValue,
-    message: "The editor value is missing",
-  ),
-]);
-
 class _Identifier extends SelectableIdentifier {
   _Identifier({
     required this.id,
@@ -25,9 +18,12 @@ class _Identifier extends SelectableIdentifier {
   @override
   final String id;
   final TypeExpression representation;
-  final EditorValue current;
+  DataValue current;
   final EditorMutationResult mutation;
   final bool loading;
+  int revision = 1;
+  bool readOnly = false;
+  bool deleted = false;
   _Inspectable? latest;
 
   late final TypeDefinition rootDefinition = TypeDefinition(
@@ -43,6 +39,12 @@ class _Identifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable<_Identifier>> create(Ref ref) {
+    if (deleted) {
+      return AsyncValue.error(
+        SelectableNotFoundException(this),
+        StackTrace.current,
+      );
+    }
     if (loading) return const AsyncValue.loading();
     latest = _Inspectable(this);
     return AsyncValue.data(latest!);
@@ -60,8 +62,9 @@ class _Inspectable extends InspectableSelectable<_Identifier> {
 
   @override
   final _Identifier id;
-  DataPath? updatedPath;
-  DataValue? updatedValue;
+  DataPath? validatedPath;
+  DataValue? validatedValue;
+  EditorCommit? latestCommit;
 
   @override
   String get name => id.id;
@@ -70,32 +73,37 @@ class _Inspectable extends InspectableSelectable<_Identifier> {
   List<SelectionCapability> get capabilities => const [];
 
   @override
-  ResolvedTypeRef get rootType => id.rootDefinition.id;
-
-  @override
-  TypeCatalog get typeCatalog => id.typeCatalog;
+  EditorDocument get document => EditorDocument(
+    rootType: NamedType(id.rootDefinition.id),
+    typeCatalog: id.typeCatalog,
+    confirmedValue: id.current,
+    revision: id.revision,
+    readOnly: id.readOnly,
+  );
 
   @override
   Widget? buildInspectorHeader() => null;
 
   @override
-  EditorValue value(DataPath path) => id.current;
-
-  @override
-  EditorMutationResult validateUpdate(DataPath path, DataValue value) =>
-      id.mutation;
-
-  @override
-  EditorMutationResult update(DataPath path, DataValue value) {
-    updatedPath = path;
-    updatedValue = value;
+  EditorMutationResult validate(DataPath path, DataValue value) {
+    validatedPath = path;
+    validatedValue = value;
     return id.mutation;
+  }
+
+  @override
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    latestCommit = commit;
+    return TypedMutationResult.success(
+      revision: commit.expectedRevision + 1,
+      value: commit.rootValue,
+    );
   }
 }
 
 _Identifier _identifier(
   String id,
-  EditorValue value, {
+  DataValue value, {
   TypeExpression rootType = const StringType(),
   EditorMutationResult mutation = const EditorMutationResult.applied(
     StringValue("updated"),
@@ -106,15 +114,8 @@ _Identifier _identifier(
 _Identifier _loadingIdentifier(String id) => _Identifier(
   id: id,
   rootType: const StringType(),
-  current: const EditorValue.loading(),
+  current: const StringValue("loading"),
   loading: true,
-);
-
-_Identifier _invalidIdentifier(String id, String message) => _identifier(
-  id,
-  EditorValue.invalid([
-    TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
-  ]),
 );
 
 EditorMutationResult _invalidMutation(String message) =>
@@ -128,3 +129,6 @@ RecordType _recordType(List<String> names) => RecordType(
       name: TypeField(name: name, type: const StringType()),
   },
 );
+
+RecordValue _recordValue(List<String> names) =>
+    RecordValue({for (final name in names) name: const StringValue("value")});

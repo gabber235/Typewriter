@@ -123,9 +123,6 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   final TypeDefinition rootDefinition;
 
   @override
-  ResolvedTypeRef get rootType => rootDefinition.id;
-
-  @override
   final TypeCatalog typeCatalog;
 
   final RecordValue data;
@@ -133,6 +130,14 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   final Color color;
 
   final VoidCallback? onDelete;
+
+  @override
+  late final EditorDocument document = EditorDocument(
+    rootType: NamedType(rootDefinition.id),
+    typeCatalog: typeCatalog,
+    confirmedValue: data,
+    revision: 1,
+  );
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -160,31 +165,24 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   }
 
   @override
-  EditorValue value(DataPath path) => data.readEditorValue(path);
-
-  @override
   Widget? buildInspectorHeader() => TestSelectableHeader(selectable: this);
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) {
-    final validation = validateUpdate(path, value);
-    if (validation is! AppliedEditorMutation) return validation;
-    final updated = path.replace(data, value);
-    if (updated case TypeFailure(:final diagnostics)) {
-      return EditorMutationResult.invalid(diagnostics);
-    }
-    final next = updated.valueOrNull;
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    final next = commit.rootValue;
     if (next is! RecordValue) {
-      return EditorMutationResult.invalid([
-        TypeDiagnostic(
+      return TypedMutationResult.invalid([
+        const TypeDiagnostic(
           code: TypeDiagnosticCode.invalidValue,
           message: "The selectable root must remain a record",
-          path: path,
         ),
       ]);
     }
     ref.read(testSelectableDataProvider.notifier).set(id.id, next);
-    return EditorMutationResult.applied(value);
+    return TypedMutationResult.success(
+      revision: commit.expectedRevision + 1,
+      value: next,
+    );
   }
 
   @override

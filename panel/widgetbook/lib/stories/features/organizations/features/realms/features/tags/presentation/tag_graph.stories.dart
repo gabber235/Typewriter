@@ -14,7 +14,7 @@ Widget tagGraphUseCase(BuildContext context) {
 
   return FakeApp(
     overrides: [...tagsProviderOverrides(state: tagsState)],
-    child: const TagGraph(),
+    child: const InspectorScaffold(child: TagGraph()),
   );
 }
 
@@ -22,7 +22,7 @@ Widget tagGraphUseCase(BuildContext context) {
 Widget tagGraphEmptyUseCase(BuildContext context) {
   return FakeApp(
     overrides: [...tagsProviderOverrides(state: DisplayState.noItems)],
-    child: const TagGraph(),
+    child: const InspectorScaffold(child: TagGraph()),
   );
 }
 
@@ -30,6 +30,6 @@ Widget tagGraphEmptyUseCase(BuildContext context) {
 Widget tagGraphLoadingUseCase(BuildContext context) {
   return FakeApp(
     overrides: [...tagsProviderOverrides(state: DisplayState.loading)],
-    child: const TagGraph(),
+    child: const InspectorScaffold(child: TagGraph()),
   );
 }

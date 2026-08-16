@@ -74,7 +74,7 @@ Widget _colorRenderer({
         kind: NominalTypeKind.concrete,
         representation: NamedType(effectiveType),
       ),
-      if (colorDefinition != null) colorDefinition,
+      ?colorDefinition,
     ]),
     presentation: const PresentationNode(
       id: "color",

@@ -10,8 +10,8 @@ abstract class GraphDragData {
 class GraphDrag extends InheritedWidget {
   const GraphDrag({
     required this.draggingInsideGraph,
-    this.activeDragId,
     required super.child,
+    this.activeDragId,
     super.key,
   });
 

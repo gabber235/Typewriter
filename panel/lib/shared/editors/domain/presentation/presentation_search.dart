@@ -34,6 +34,7 @@ abstract class SearchResultMapping with _$SearchResultMapping {
     required TypedExpression key,
     required TypedExpression selectedValue,
     required PresentationNode presentation,
+    TypedExpression? label,
   }) = _SearchResultMapping;
 }
 
@@ -68,6 +69,13 @@ abstract class SearchRankingField with _$SearchRankingField {
 
 @freezed
 sealed class SearchProvider with _$SearchProvider {
+  const factory SearchProvider.collection({
+    required PresentationCollectionSourceId sourceId,
+    required SearchResultMapping result,
+    TypedExpression? where,
+    @Default([]) List<SearchSelectorDefinition> selectors,
+  }) = CollectionSearchProvider;
+
   const factory SearchProvider.staticValues({
     required TypedExpression values,
     required SearchResultMapping result,

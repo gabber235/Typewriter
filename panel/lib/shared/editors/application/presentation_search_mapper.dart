@@ -38,6 +38,27 @@ final class PresentationSearchMapper {
     if (selected case TypeFailure(:final diagnostics)) {
       return TypeResult.failure(diagnostics);
     }
+    final label = mapping.label?.evaluate(
+      candidate,
+      registry: registry,
+      budget: budget,
+    );
+    if (label case TypeFailure(:final diagnostics)) {
+      return TypeResult.failure(diagnostics);
+    }
+    final title = switch (label?.valueOrNull) {
+      StringValue(:final value) when value.trim().isNotEmpty => value,
+      null => "Search result",
+      _ => null,
+    };
+    if (title == null) {
+      return TypeResult.failure([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "Search result labels must be nonempty strings",
+        ),
+      ]);
+    }
     final id = key.valueOrNull!.expressionDisplayText;
     if (id.isEmpty) {
       return TypeResult.failure([
@@ -57,7 +78,7 @@ final class PresentationSearchMapper {
           expressions: candidate,
           providerKey: providerKey,
         ),
-        title: id,
+        title: title,
       ),
     );
   }

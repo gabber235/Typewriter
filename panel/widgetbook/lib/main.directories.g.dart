@@ -67,6 +67,10 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/compone
     as _widgetbook_workspace_stories_shared_editors_presentation_components_decorated_text_field_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/search_input/search_input.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_components_search_input_search_input_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/editor_save_status.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_editor_save_status_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/editor_surface.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_editor_surface_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/header_renderer/header_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_protocol_header_renderer_header_renderer_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/content/content_renderer.stories.dart'
@@ -121,8 +125,10 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/grid_selectabl
     as _widgetbook_workspace_stories_shared_ui_components_grid_selectable_card_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/labeled_divider.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_labeled_divider_stories;
-import 'package:widgetbook_workspace/stories/shared/ui/components/loading_button.stories.dart'
-    as _widgetbook_workspace_stories_shared_ui_components_loading_button_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/loading_button/loading_button.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_loading_button_loading_button_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/loading_button/loading_icon_button.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_loading_button_loading_icon_button_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/loading_indicator.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_loading_indicator_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/multiselect_dropdown.stories.dart'
@@ -829,6 +835,28 @@ final directories = <_widgetbook.WidgetbookNode>[
             name: 'presentation',
             children: [
               _widgetbook.WidgetbookComponent(
+                name: 'EditorSaveStatus',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'States',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_editor_save_status_stories
+                            .editorSaveStatusUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'EditorSurface',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Default',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_editor_surface_stories
+                            .defaultEditorSurfaceUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
                 name: 'TypedEditor',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
@@ -1006,6 +1034,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
                                         .badgeRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Chip',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .chipRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Icon',
@@ -1288,6 +1322,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
                                         .singleLineTextInputUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Text prefix without title',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_input_input_renderer_variants_stories
+                                        .textPrefixNumericInputUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Unchecked toggle',
@@ -1684,17 +1724,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
-                name: 'LoadingButton',
-                useCases: [
-                  _widgetbook.WidgetbookUseCase(
-                    name: 'Playground',
-                    builder:
-                        _widgetbook_workspace_stories_shared_ui_components_loading_button_stories
-                            .loadingButtonPlaygroundUseCase,
-                  ),
-                ],
-              ),
-              _widgetbook.WidgetbookComponent(
                 name: 'LoadingIndicator',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
@@ -1906,6 +1935,33 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_type_link_stories
                             .typeLinkDefaultUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookFolder(
+                name: 'loading_button',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'LoadingButton',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Playground',
+                        builder:
+                            _widgetbook_workspace_stories_shared_ui_components_loading_button_loading_button_stories
+                                .loadingButtonPlaygroundUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'LoadingIconButton',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Playground',
+                        builder:
+                            _widgetbook_workspace_stories_shared_ui_components_loading_button_loading_icon_button_stories
+                                .loadingIconButtonPlaygroundUseCase,
+                      ),
+                    ],
                   ),
                 ],
               ),

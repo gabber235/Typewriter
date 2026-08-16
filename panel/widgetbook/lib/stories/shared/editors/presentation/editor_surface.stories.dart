@@ -42,17 +42,11 @@ class _EditorSurfaceStory extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = useRef((outcome: outcome, latency: latency))
-      ..value = (outcome: outcome, latency: latency);
     final controller = useMemoized(
       () => EditorController(
         source: TransactionalEditorSource(
           document: _storyDocument(),
-          commit: (commit) => _commitStory(
-            commit,
-            settings.value.outcome,
-            settings.value.latency,
-          ),
+          commit: (commit) => _commitStory(commit, outcome, latency),
         ),
       ),
     );
@@ -64,10 +58,7 @@ class _EditorSurfaceStory extends HookWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: SingleChildScrollView(
-              child: EditorSurface(
-                controller: controller,
-                readOnly: readOnly,
-              ),
+              child: EditorSurface(controller: controller, readOnly: readOnly),
             ),
           ),
         ),

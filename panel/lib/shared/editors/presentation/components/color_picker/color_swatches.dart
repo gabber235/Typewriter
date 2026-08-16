@@ -137,12 +137,12 @@ class _ColorSwatchGridState extends State<ColorSwatchGrid> {
         final child = widget.onReordered == null
             ? grid(children)
             : ReorderableBuilder<int>(
-                children: children,
                 enableDraggable: widget.enabled,
                 longPressDelay: const Duration(milliseconds: 180),
                 onReorder: (reorder) =>
                     widget.onReordered!(reorder(widget.colors)),
                 builder: grid,
+                children: children,
               );
         return Semantics(
           label: widget.label,

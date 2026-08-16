@@ -97,10 +97,13 @@ class _DeleteSelectable
   final _DeleteSelectableIdentifier id;
 
   @override
-  ResolvedTypeRef get rootType => _rootDefinition.id;
-
-  @override
-  TypeCatalog get typeCatalog => _typeCatalog;
+  EditorDocument get document => EditorDocument(
+    rootType: NamedType(_rootDefinition.id),
+    typeCatalog: _typeCatalog,
+    confirmedValue: RecordValue(const {}),
+    revision: 1,
+    readOnly: true,
+  );
 
   @override
   String get name => id.id.titleCase();
@@ -116,21 +119,21 @@ class _DeleteSelectable
   Widget? buildInspectorHeader() => null;
 
   @override
-  EditorValue value(DataPath path) => EditorValue.invalid([
-    TypeDiagnostic(
-      code: TypeDiagnosticCode.invalidPath,
-      message: "The delete story has no editable fields",
-      path: path,
-    ),
-  ]);
-
-  @override
-  EditorMutationResult update(DataPath path, DataValue value) =>
+  EditorMutationResult validate(DataPath path, DataValue value) =>
       EditorMutationResult.invalid([
         TypeDiagnostic(
           code: TypeDiagnosticCode.invalidPath,
           message: "The delete story has no editable fields",
           path: path,
+        ),
+      ]);
+
+  @override
+  Future<TypedMutationResult> commit(EditorCommit commit) async =>
+      TypedMutationResult.unavailable([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "The delete story has no editable fields",
         ),
       ]);
 

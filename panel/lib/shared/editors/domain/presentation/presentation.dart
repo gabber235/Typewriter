@@ -9,6 +9,7 @@ export "expression_authoring.dart";
 export "expression_evaluator.dart";
 export "expression_operations.dart";
 export "iconify_search_presentation.dart";
+export "presentation_collection.dart";
 export "presentation_element.dart";
 export "presentation_expression_substitution.dart";
 export "presentation_header.dart";

@@ -86,6 +86,22 @@ final contentRendererScenarios = [
       ),
     ),
   ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.chip,
+    name: "Chip",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: storyNode(
+      "chip",
+      PresentationElement.chip(
+        label: "Adventure".asStringLiteral,
+        color: TypedExpression(
+          resultType: NamedType(standardTypeRefs.color),
+          expression: LiteralExpression(IntegerValue(BigInt.from(0xFF967BFA))),
+        ),
+      ),
+    ),
+  ),
 ];
 
 @widgetbook.UseCase(name: "Text", type: EditorProtocolRenderer, path: _path)
@@ -111,3 +127,7 @@ Widget badgeRendererUseCase(BuildContext context) =>
 @widgetbook.UseCase(name: "Progress", type: EditorProtocolRenderer, path: _path)
 Widget progressRendererUseCase(BuildContext context) =>
     rendererStory(context, contentRendererScenarios[5]);
+
+@widgetbook.UseCase(name: "Chip", type: EditorProtocolRenderer, path: _path)
+Widget chipRendererUseCase(BuildContext context) =>
+    rendererStory(context, contentRendererScenarios[6]);

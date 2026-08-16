@@ -53,7 +53,7 @@ class EmptyState extends HookConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Icones(
-                  icon!,
+                  icon,
                   size: 48,
                   color: textColor.withValues(alpha: 0.5),
                 ),

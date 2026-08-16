@@ -3,6 +3,7 @@ import "package:flutter_markdown_plus/flutter_markdown_plus.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "renderers/content/badge_renderer.dart";
+part "renderers/content/chip_renderer.dart";
 part "renderers/content/icon_renderer.dart";
 part "renderers/content/image_renderer.dart";
 part "renderers/content/markdown_renderer.dart";
@@ -17,6 +18,7 @@ extension ContentElementRendering on PresentationElement {
         IconElement() => (this as IconElement).render(context, scope),
         ImageElement() => (this as ImageElement).render(context, scope),
         BadgeElement() => (this as BadgeElement).render(context, scope),
+        ChipElement() => (this as ChipElement).render(context, scope),
         ProgressElement() => (this as ProgressElement).render(context, scope),
         _ => const SizedBox.shrink(),
       };

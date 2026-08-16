@@ -108,6 +108,6 @@ extension RealmEditorCatalogElementResolution
       return AsyncValue.data(create(catalog));
     },
     error: AsyncValue.error,
-    loading: AsyncValue.loading,
+    loading: () => const AsyncValue.loading(),
   );
 }

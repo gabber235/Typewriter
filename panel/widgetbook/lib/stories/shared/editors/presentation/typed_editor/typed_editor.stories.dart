@@ -116,11 +116,15 @@ class _StoryEditorSource extends ChangeNotifier implements EditorSource {
             ),
           ]);
 
-  @override
   final TypeExpression rootType;
 
   @override
-  TypeRegistry? get registry => null;
+  EditorDocument get document => EditorDocument(
+    rootType: rootType,
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: _state.valueOrNull ?? const UnitValue(),
+    revision: 0,
+  );
   final EditorValue _state;
 
   @override
@@ -129,4 +133,65 @@ class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   @override
   EditorMutationResult update(DataPath path, DataValue value) =>
       EditorMutationResult.applied(value);
+
+  @override
+  void refreshDocument(EditorDocument document) {}
+
+  @override
+  EditorInteractionSession beginInteraction(DataPath path) =>
+      _StoryInteraction(path);
+
+  @override
+  EditorSaveState saveState(DataPath path) => const EditorSaveState.idle();
+
+  @override
+  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async =>
+      TypedMutationResult.success(
+        revision: 0,
+        value: _state.valueOrNull ?? const UnitValue(),
+      );
+
+  @override
+  Future<TypedMutationResult> executeAction(
+    EditorAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) async => _unavailable();
+
+  @override
+  void acceptRemote({required int revision, required DataValue value}) {}
+
+  @override
+  void acceptRemoteDeletion() {}
+
+  @override
+  void useRemote(DataPath path) {}
+
+  @override
+  Future<TypedMutationResult> keepLocal(DataPath path) async => _unavailable();
 }
+
+final class _StoryInteraction implements EditorInteractionSession {
+  _StoryInteraction(this.path);
+
+  @override
+  final DataPath path;
+  @override
+  bool active = true;
+
+  @override
+  void cancel() => active = false;
+
+  @override
+  Future<TypedMutationResult> commit() async {
+    active = false;
+    return _unavailable();
+  }
+}
+
+TypedMutationResult _unavailable() => TypedMutationResult.unavailable([
+  const TypeDiagnostic(
+    code: TypeDiagnosticCode.invalidValue,
+    message: "Story persistence is unavailable",
+  ),
+]);

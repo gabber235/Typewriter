@@ -12,6 +12,7 @@ final class PresentationSearchSourceFactory {
     required this.queryBindingId,
     required this.selections,
     required this.historyStorage,
+    this.collections = const {},
     this.realmSourceBuilder,
   });
 
@@ -22,10 +23,13 @@ final class PresentationSearchSourceFactory {
   final BindingId queryBindingId;
   final Stream<PresentationSearchSelectionEvent> selections;
   final SearchHistoryStorage historyStorage;
+  final Map<PresentationCollectionSourceId, PresentationCollectionSource>
+  collections;
   final RealmPresentationSearchSourceBuilder? realmSourceBuilder;
 
   SearchSource build(SearchProvider provider, {String path = "root"}) =>
       switch (provider) {
+        CollectionSearchProvider() => _collection(provider, path),
         StaticSearchProvider() => _static(provider, path),
         HttpJsonSearchProvider() => _http(provider, path),
         RealmCallbackSearchProvider() => _realm(provider, path),
@@ -97,6 +101,23 @@ final class PresentationSearchSourceFactory {
               .map((entry) => build(entry.$2, path: "$path.${entry.$1}"))
               .merged(),
       };
+
+  SearchSource _collection(CollectionSearchProvider provider, String path) {
+    _register(provider.result, path);
+    final source = collections[provider.sourceId];
+    if (source == null) {
+      return UnavailableCollectionPresentationSearchSource(provider: provider);
+    }
+    return CollectionPresentationSearchSource(
+      provider: provider,
+      source: source,
+      expressions: expressions,
+      registry: registry,
+      budget: budget,
+      queryBindingId: queryBindingId,
+      providerKey: path,
+    );
+  }
 
   SearchSource _static(StaticSearchProvider provider, String path) {
     _register(provider.result, path);
@@ -213,6 +234,7 @@ const _emptyQuery = SearchQueryContext(normalizedQuery: "", selectors: []);
 
 extension SearchProviderSelectors on SearchProvider {
   List<SearchSelectorDefinition> get searchSelectors => switch (this) {
+    CollectionSearchProvider(:final selectors) ||
     StaticSearchProvider(:final selectors) ||
     HttpJsonSearchProvider(:final selectors) ||
     RealmCallbackSearchProvider(:final selectors) => selectors,

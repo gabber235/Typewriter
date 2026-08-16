@@ -13,6 +13,13 @@ Widget tagsPageUseCase(BuildContext context) {
   );
   final connectionState = context.knobs.realmConnectionState();
 
+  return tagsPageStory(tagsState: tagsState, connectionState: connectionState);
+}
+
+Widget tagsPageStory({
+  DisplayState tagsState = DisplayState.fewItems,
+  RealmConnectionState connectionState = RealmConnectionState.online,
+}) {
   return FakeApp(
     overrides: [
       realmInteractionProvider.overrideWith(
