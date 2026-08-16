@@ -76,6 +76,7 @@ extension on PresentationElement {
     final ScopedBindingElement element => element._scopedChild(scope),
     final ConditionalElement element => element._selectedChild(scope),
     final DefaultPresentationElement element => element._delegatedChild(scope),
+    SectionElement(:final child) => (child, scope),
     _ => null,
   };
 }

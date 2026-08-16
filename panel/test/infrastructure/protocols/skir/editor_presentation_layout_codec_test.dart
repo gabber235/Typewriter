@@ -57,25 +57,24 @@ void main() {
         wire.PresentationElement_kind.childrenWrapper,
       ),
       (
-        const CardElement(leaf, initiallyExpanded: true),
-        wire.PresentationElement_kind.cardWrapper,
-      ),
-      (
-        const SectionElement(
-          title: text,
-          description: text,
+        SectionElement(
           child: leaf,
-          initiallyExpanded: false,
+          border: PresentationBorder.sides(
+            top: const PresentationBorderSide(width: 1),
+            start: PresentationBorderSide(color: color, width: 4),
+            bottom: const PresentationBorderSide(width: 2),
+          ),
         ),
         wire.PresentationElement_kind.sectionWrapper,
       ),
       (
-        const CollapsibleElement(
-          title: text,
+        SectionElement(
           child: leaf,
-          initiallyExpanded: true,
+          border: PresentationBorder.all(
+            PresentationBorderSide(color: color, width: 3),
+          ),
         ),
-        wire.PresentationElement_kind.collapsibleWrapper,
+        wire.PresentationElement_kind.sectionWrapper,
       ),
       (
         TabsElement(
@@ -166,6 +165,49 @@ void main() {
     final decoded = codecs.decoder.decodeNode(encoded);
 
     expect(decoded, node);
+  });
+
+  test("rejects invalid section border widths", () {
+    final decoded = codecs.decoder.decodeNode(
+      wire.PresentationNode(
+        nodeId: "invalid.border.width",
+        properties: wire.PresentationProperties(
+          enabledIf: null,
+          readOnly: false,
+        ),
+        element: wire.PresentationElement.createSection(
+          child: codecs.encoder.encodeNode(leaf).valueOrNull!,
+          border: wire.PresentationBorder.createAll(color: null, width: 0),
+        ),
+        header: null,
+      ),
+    );
+
+    expect(decoded.element, isA<DiagnosticElement>());
+  });
+
+  test("rejects section borders without sides", () {
+    final decoded = codecs.decoder.decodeNode(
+      wire.PresentationNode(
+        nodeId: "invalid.border.sides",
+        properties: wire.PresentationProperties(
+          enabledIf: null,
+          readOnly: false,
+        ),
+        element: wire.PresentationElement.createSection(
+          child: codecs.encoder.encodeNode(leaf).valueOrNull!,
+          border: wire.PresentationBorder.createSides(
+            top: null,
+            start: null,
+            end: null,
+            bottom: null,
+          ),
+        ),
+        header: null,
+      ),
+    );
+
+    expect(decoded.element, isA<DiagnosticElement>());
   });
 
   test("localizes an unknown header item", () {

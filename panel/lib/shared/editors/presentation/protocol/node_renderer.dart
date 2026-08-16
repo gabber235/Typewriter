@@ -47,8 +47,17 @@ class PresentationNodeRenderer extends StatelessWidget {
             ),
             header: header,
             scope: renderScope,
+            contained: node.element is SectionElement,
             child: child,
           );
+    final decoratedSurface = switch (node.element) {
+      final SectionElement element => element.decorate(
+        context,
+        renderScope,
+        surface,
+      ),
+      _ => surface,
+    };
     return Semantics(
       container: true,
       enabled: nodeEnabled,
@@ -57,7 +66,7 @@ class PresentationNodeRenderer extends StatelessWidget {
         child: AnimatedOpacity(
           opacity: nodeEnabled ? 1 : 0.55,
           duration: const Duration(milliseconds: 120),
-          child: KeyedSubtree(key: ValueKey(node.id), child: surface),
+          child: KeyedSubtree(key: ValueKey(node.id), child: decoratedSurface),
         ),
       ),
     );
@@ -126,9 +135,7 @@ extension on PresentationElement {
       final WrapElement element => element.render(scope),
       final StackElement element => element.render(scope),
       final GridElement element => element.render(scope),
-      final CardElement element => element.render(scope),
       final SectionElement element => element.render(scope),
-      final CollapsibleElement element => element.render(scope),
       final TabsElement element => element.render(scope),
       final DividerElement element => element.render(),
       final SpacerElement element => element.render(scope),

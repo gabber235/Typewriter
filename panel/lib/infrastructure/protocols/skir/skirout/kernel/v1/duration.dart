@@ -30,17 +30,26 @@ final class Duration implements Duration_orMutable {
   final _core.int milliseconds;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory Duration({required _core.int milliseconds}) =>
-      Duration._(milliseconds);
+  factory Duration({
+    required _core.int milliseconds,
+  }) => Duration._(
+    milliseconds,
+  );
 
-  Duration._(this.milliseconds);
+  Duration._(
+    this.milliseconds,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = Duration._(0);
+  static final defaultInstance = Duration._(
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static Duration_mutable mutable() => Duration_mutable._(0);
+  static Duration_mutable mutable() => Duration_mutable._(
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -48,22 +57,23 @@ final class Duration implements Duration_orMutable {
   Duration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  Duration_mutable toMutable() => Duration_mutable._(this.milliseconds);
+  Duration_mutable toMutable() => Duration_mutable._(
+    this.milliseconds,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Duration) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.milliseconds];
+  _core.List get _equality_proxy => [
+    this.milliseconds,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -101,10 +111,13 @@ final class Duration_mutable implements Duration_orMutable {
   _core.int milliseconds;
   _skir.internal__UnrecognizedFields? _u;
 
-  Duration_mutable._(this.milliseconds);
+  Duration_mutable._(
+    this.milliseconds,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  Duration toFrozen() =>
-      Duration(milliseconds: this.milliseconds).._u = this._u;
+  Duration toFrozen() => Duration(
+    milliseconds: this.milliseconds,
+  ).._u = this._u;
 }

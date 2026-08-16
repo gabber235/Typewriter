@@ -60,12 +60,6 @@ final class SkirPresentationEncoder {
         WrapElement() ||
         StackElement() ||
         GridElement() => _children(value),
-        CardElement() => encodeNode(value.child).mapValue(
-          (child) => wire.PresentationElement.createCard(
-            child: child,
-            initiallyExpanded: value.initiallyExpanded,
-          ),
-        ),
         SectionElement() => _section(value),
         TabsElement() => _tabs(value),
         DividerElement() => const TypeResult.success(
@@ -127,7 +121,6 @@ final class SkirPresentationEncoder {
         MenuElement() => _menu(value),
         TooltipElement() => _tooltip(value),
         DefaultPresentationElement() => _defaultPresentation(value),
-        CollapsibleElement() => _collapsible(value),
         DiagnosticElement() => _diagnostic(value),
       };
 

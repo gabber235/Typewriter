@@ -33,18 +33,31 @@ final class RecordId implements RecordId_orMutable {
   final RecordIdKey key;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory RecordId({required _core.String table, required RecordIdKey key}) =>
-      RecordId._(table, key);
+  factory RecordId({
+    required _core.String table,
+    required RecordIdKey key,
+  }) => RecordId._(
+    table,
+    key,
+  );
 
-  RecordId._(this.table, this.key);
+  RecordId._(
+    this.table,
+    this.key,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = RecordId._("", RecordIdKey.unknown);
+  static final defaultInstance = RecordId._(
+    "",
+    RecordIdKey.unknown,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RecordId_mutable mutable() =>
-      RecordId_mutable._("", RecordIdKey.unknown);
+  static RecordId_mutable mutable() => RecordId_mutable._(
+    "",
+    RecordIdKey.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -52,22 +65,25 @@ final class RecordId implements RecordId_orMutable {
   RecordId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RecordId_mutable toMutable() => RecordId_mutable._(this.table, this.key);
+  RecordId_mutable toMutable() => RecordId_mutable._(
+    this.table,
+    this.key,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RecordId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.table, this.key];
+  _core.List get _equality_proxy => [
+    this.table,
+    this.key,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -115,12 +131,17 @@ final class RecordId_mutable implements RecordId_orMutable {
   RecordIdKey key;
   _skir.internal__UnrecognizedFields? _u;
 
-  RecordId_mutable._(this.table, this.key);
+  RecordId_mutable._(
+    this.table,
+    this.key,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RecordId toFrozen() =>
-      RecordId(table: this.table, key: this.key).._u = this._u;
+  RecordId toFrozen() => RecordId(
+    table: this.table,
+    key: this.key,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -146,24 +167,28 @@ sealed class RecordIdKey {
   static const RecordIdKey unknown = RecordIdKey_unknown._instance;
 
   /// Create a 'number' variant wrapping around the given value.
-  factory RecordIdKey.wrapNumber(_core.int value) =>
-      RecordIdKey_numberWrapper._(value);
+  factory RecordIdKey.wrapNumber(
+    _core.int value
+  ) => RecordIdKey_numberWrapper._(value);
 
   /// Create a 'string' variant wrapping around the given value.
-  factory RecordIdKey.wrapString(_core.String value) =>
-      RecordIdKey_stringWrapper._(value);
+  factory RecordIdKey.wrapString(
+    _core.String value
+  ) => RecordIdKey_stringWrapper._(value);
 
   /// Create a 'uuid' variant wrapping around the given value.
-  factory RecordIdKey.wrapUuid(_core.String value) =>
-      RecordIdKey_uuidWrapper._(value);
+  factory RecordIdKey.wrapUuid(
+    _core.String value
+  ) => RecordIdKey_uuidWrapper._(value);
 
   /// Create a 'array' variant wrapping around the given value.
-  factory RecordIdKey.wrapArray(_core.Iterable<RecordIdValue> value) =>
-      RecordIdKey_arrayWrapper._(value);
+  factory RecordIdKey.wrapArray(
+    _core.Iterable<RecordIdValue> value
+  ) => RecordIdKey_arrayWrapper._(value);
 
   /// Create a 'object' variant wrapping around the given value.
   factory RecordIdKey.wrapObject(
-    _skir.KeyedIterable<ObjectRecordIdKey, _core.String> value,
+    _skir.KeyedIterable<ObjectRecordIdKey, _core.String> value
   ) => RecordIdKey_objectWrapper._(value);
 
   /// Returns the kind of variant held by this RecordIdKey.
@@ -206,7 +231,9 @@ sealed class RecordIdKey {
         4,
         "array",
         "wrapArray",
-        _skir.Serializers.iterable(RecordIdValue.serializer),
+        _skir.Serializers.iterable(
+          RecordIdValue.serializer,
+        ),
         "",
         RecordIdKey_arrayWrapper._,
         (it) => it.value,
@@ -231,16 +258,15 @@ sealed class RecordIdKey {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "kernel/v1/record_id.skir:RecordIdKey",
-        doc: "",
-        unknownInstance: RecordIdKey_unknown._instance,
-        enumInstance: RecordIdKey.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: RecordIdKey_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "kernel/v1/record_id.skir:RecordIdKey",
+    doc: "",
+    unknownInstance: RecordIdKey_unknown._instance,
+    enumInstance: RecordIdKey.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: RecordIdKey_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `RecordIdKey`.
@@ -272,8 +298,7 @@ final class RecordIdKey_unknown implements RecordIdKey {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RecordIdKey.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RecordIdKey.serializer);
 }
 
 sealed class _RecordIdKey_wrapper implements RecordIdKey {
@@ -289,8 +314,7 @@ sealed class _RecordIdKey_wrapper implements RecordIdKey {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RecordIdKey.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RecordIdKey.serializer);
 }
 
 final class RecordIdKey_numberWrapper extends _RecordIdKey_wrapper {
@@ -360,17 +384,28 @@ final class ObjectRecordIdKey implements ObjectRecordIdKey_orMutable {
   factory ObjectRecordIdKey({
     required _core.String key,
     required RecordIdValue value,
-  }) => ObjectRecordIdKey._(key, value);
+  }) => ObjectRecordIdKey._(
+    key,
+    value,
+  );
 
-  ObjectRecordIdKey._(this.key, this.value);
+  ObjectRecordIdKey._(
+    this.key,
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ObjectRecordIdKey._("", RecordIdValue.unknown);
+  static final defaultInstance = ObjectRecordIdKey._(
+    "",
+    RecordIdValue.unknown,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ObjectRecordIdKey_mutable mutable() =>
-      ObjectRecordIdKey_mutable._("", RecordIdValue.unknown);
+  static ObjectRecordIdKey_mutable mutable() => ObjectRecordIdKey_mutable._(
+    "",
+    RecordIdValue.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -378,30 +413,31 @@ final class ObjectRecordIdKey implements ObjectRecordIdKey_orMutable {
   ObjectRecordIdKey toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ObjectRecordIdKey_mutable toMutable() =>
-      ObjectRecordIdKey_mutable._(this.key, this.value);
+  ObjectRecordIdKey_mutable toMutable() => ObjectRecordIdKey_mutable._(
+    this.key,
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ObjectRecordIdKey) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.key, this.value];
+  _core.List get _equality_proxy => [
+    this.key,
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ObjectRecordIdKey` instances.
-  static _skir.StructSerializer<ObjectRecordIdKey, ObjectRecordIdKey_mutable>
-  get serializer {
+  static _skir.StructSerializer<ObjectRecordIdKey, ObjectRecordIdKey_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -443,12 +479,17 @@ final class ObjectRecordIdKey_mutable implements ObjectRecordIdKey_orMutable {
   RecordIdValue value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ObjectRecordIdKey_mutable._(this.key, this.value);
+  ObjectRecordIdKey_mutable._(
+    this.key,
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ObjectRecordIdKey toFrozen() =>
-      ObjectRecordIdKey(key: this.key, value: this.value).._u = this._u;
+  ObjectRecordIdKey toFrozen() => ObjectRecordIdKey(
+    key: this.key,
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -478,28 +519,33 @@ sealed class RecordIdValue {
   static const null_ = _RecordIdValue_consts.nullConst;
 
   /// Create a 'boolean' variant wrapping around the given value.
-  factory RecordIdValue.wrapBoolean(_core.bool value) =>
-      RecordIdValue_booleanWrapper._(value);
+  factory RecordIdValue.wrapBoolean(
+    _core.bool value
+  ) => RecordIdValue_booleanWrapper._(value);
 
   /// Create a 'number' variant wrapping around the given value.
-  factory RecordIdValue.wrapNumber(_core.int value) =>
-      RecordIdValue_numberWrapper._(value);
+  factory RecordIdValue.wrapNumber(
+    _core.int value
+  ) => RecordIdValue_numberWrapper._(value);
 
   /// Create a 'float' variant wrapping around the given value.
-  factory RecordIdValue.wrapFloat(_core.double value) =>
-      RecordIdValue_floatWrapper._(value);
+  factory RecordIdValue.wrapFloat(
+    _core.double value
+  ) => RecordIdValue_floatWrapper._(value);
 
   /// Create a 'string' variant wrapping around the given value.
-  factory RecordIdValue.wrapString(_core.String value) =>
-      RecordIdValue_stringWrapper._(value);
+  factory RecordIdValue.wrapString(
+    _core.String value
+  ) => RecordIdValue_stringWrapper._(value);
 
   /// Create a 'array' variant wrapping around the given value.
-  factory RecordIdValue.wrapArray(_core.Iterable<RecordIdValue> value) =>
-      RecordIdValue_arrayWrapper._(value);
+  factory RecordIdValue.wrapArray(
+    _core.Iterable<RecordIdValue> value
+  ) => RecordIdValue_arrayWrapper._(value);
 
   /// Create a 'object' variant wrapping around the given value.
   factory RecordIdValue.wrapObject(
-    _skir.KeyedIterable<ObjectRecordIdValue, _core.String> value,
+    _skir.KeyedIterable<ObjectRecordIdValue, _core.String> value
   ) => RecordIdValue_objectWrapper._(value);
 
   /// Returns the kind of variant held by this RecordIdValue.
@@ -508,7 +554,13 @@ sealed class RecordIdValue {
   /// Serializer for `RecordIdValue` instances.
   static _skir.EnumSerializer<RecordIdValue> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "null", "null_", "", null_);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "null",
+        "null_",
+        "",
+        null_,
+      );
       _serializerBuilder.addWrapperVariant(
         2,
         "boolean",
@@ -553,7 +605,9 @@ sealed class RecordIdValue {
         6,
         "array",
         "wrapArray",
-        _skir.Serializers.iterable(RecordIdValue.serializer),
+        _skir.Serializers.iterable(
+          RecordIdValue.serializer,
+        ),
         "",
         RecordIdValue_arrayWrapper._,
         (it) => it.value,
@@ -578,16 +632,15 @@ sealed class RecordIdValue {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "kernel/v1/record_id.skir:RecordIdValue",
-        doc: "",
-        unknownInstance: RecordIdValue_unknown._instance,
-        enumInstance: RecordIdValue.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: RecordIdValue_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "kernel/v1/record_id.skir:RecordIdValue",
+    doc: "",
+    unknownInstance: RecordIdValue_unknown._instance,
+    enumInstance: RecordIdValue.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: RecordIdValue_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `RecordIdValue`.
@@ -621,8 +674,7 @@ final class RecordIdValue_unknown implements RecordIdValue {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RecordIdValue.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RecordIdValue.serializer);
 }
 
 enum _RecordIdValue_consts implements RecordIdValue {
@@ -634,8 +686,7 @@ enum _RecordIdValue_consts implements RecordIdValue {
   const _RecordIdValue_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RecordIdValue.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RecordIdValue.serializer);
 }
 
 sealed class _RecordIdValue_wrapper implements RecordIdValue {
@@ -651,8 +702,7 @@ sealed class _RecordIdValue_wrapper implements RecordIdValue {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RecordIdValue.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RecordIdValue.serializer);
 }
 
 final class RecordIdValue_booleanWrapper extends _RecordIdValue_wrapper {
@@ -731,9 +781,15 @@ final class ObjectRecordIdValue implements ObjectRecordIdValue_orMutable {
   factory ObjectRecordIdValue({
     required _core.String key,
     required RecordIdValue value,
-  }) => ObjectRecordIdValue._(key, value);
+  }) => ObjectRecordIdValue._(
+    key,
+    value,
+  );
 
-  ObjectRecordIdValue._(this.key, this.value);
+  ObjectRecordIdValue._(
+    this.key,
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ObjectRecordIdValue._(
@@ -743,8 +799,10 @@ final class ObjectRecordIdValue implements ObjectRecordIdValue_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ObjectRecordIdValue_mutable mutable() =>
-      ObjectRecordIdValue_mutable._("", RecordIdValue.unknown);
+  static ObjectRecordIdValue_mutable mutable() => ObjectRecordIdValue_mutable._(
+    "",
+    RecordIdValue.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -752,33 +810,31 @@ final class ObjectRecordIdValue implements ObjectRecordIdValue_orMutable {
   ObjectRecordIdValue toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ObjectRecordIdValue_mutable toMutable() =>
-      ObjectRecordIdValue_mutable._(this.key, this.value);
+  ObjectRecordIdValue_mutable toMutable() => ObjectRecordIdValue_mutable._(
+    this.key,
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ObjectRecordIdValue) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.key, this.value];
+  _core.List get _equality_proxy => [
+    this.key,
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ObjectRecordIdValue` instances.
-  static _skir.StructSerializer<
-    ObjectRecordIdValue,
-    ObjectRecordIdValue_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ObjectRecordIdValue, ObjectRecordIdValue_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -815,16 +871,20 @@ final class ObjectRecordIdValue implements ObjectRecordIdValue_orMutable {
 }
 
 /// Mutable version of [ObjectRecordIdValue].
-final class ObjectRecordIdValue_mutable
-    implements ObjectRecordIdValue_orMutable {
+final class ObjectRecordIdValue_mutable implements ObjectRecordIdValue_orMutable {
   _core.String key;
   RecordIdValue value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ObjectRecordIdValue_mutable._(this.key, this.value);
+  ObjectRecordIdValue_mutable._(
+    this.key,
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ObjectRecordIdValue toFrozen() =>
-      ObjectRecordIdValue(key: this.key, value: this.value).._u = this._u;
+  ObjectRecordIdValue toFrozen() => ObjectRecordIdValue(
+    key: this.key,
+    value: this.value,
+  ).._u = this._u;
 }

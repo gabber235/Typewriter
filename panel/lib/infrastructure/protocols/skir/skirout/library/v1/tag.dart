@@ -47,16 +47,36 @@ final class Placement implements Placement_orMutable {
     required _core.int y,
     required _core.int width,
     required _core.int height,
-  }) => Placement._(x, y, width, height);
+  }) => Placement._(
+    x,
+    y,
+    width,
+    height,
+  );
 
-  Placement._(this.x, this.y, this.width, this.height);
+  Placement._(
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = Placement._(0, 0, 0, 0);
+  static final defaultInstance = Placement._(
+    0,
+    0,
+    0,
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static Placement_mutable mutable() => Placement_mutable._(0, 0, 0, 0);
+  static Placement_mutable mutable() => Placement_mutable._(
+    0,
+    0,
+    0,
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -64,23 +84,29 @@ final class Placement implements Placement_orMutable {
   Placement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  Placement_mutable toMutable() =>
-      Placement_mutable._(this.x, this.y, this.width, this.height);
+  Placement_mutable toMutable() => Placement_mutable._(
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Placement) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.x, this.y, this.width, this.height];
+  _core.List get _equality_proxy => [
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -148,13 +174,21 @@ final class Placement_mutable implements Placement_orMutable {
   _core.int height;
   _skir.internal__UnrecognizedFields? _u;
 
-  Placement_mutable._(this.x, this.y, this.width, this.height);
+  Placement_mutable._(
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  Placement toFrozen() =>
-      Placement(x: this.x, y: this.y, width: this.width, height: this.height)
-        .._u = this._u;
+  Placement toFrozen() => Placement(
+    x: this.x,
+    y: this.y,
+    width: this.width,
+    height: this.height,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -193,8 +227,7 @@ final class Tag implements Tag_orMutable {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => Tag._(
     tagId.toFrozen(),
@@ -254,10 +287,7 @@ final class Tag implements Tag_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Tag) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -376,8 +406,7 @@ final class Tag_mutable implements Tag_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -396,10 +425,7 @@ final class Tag_mutable implements Tag_orMutable {
   /// Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableParentIds {
     final value = this.parentIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.parentIds = _skir.internal__MutableList([...value]);
@@ -448,14 +474,12 @@ final class Tag_mutable implements Tag_orMutable {
 sealed class TagValidationError {
   /// Constant indicating an unknown `TagValidationError`.
   /// Default value for fields of type `TagValidationError`.
-  static const TagValidationError unknown =
-      TagValidationError_unknown._instance;
+  static const TagValidationError unknown = TagValidationError_unknown._instance;
 
   static const nameRequired = _TagValidationError_consts.nameRequiredConst;
   static const widthInvalid = _TagValidationError_consts.widthInvalidConst;
   static const heightInvalid = _TagValidationError_consts.heightInvalidConst;
-  static const inheritanceCycle =
-      _TagValidationError_consts.inheritanceCycleConst;
+  static const inheritanceCycle = _TagValidationError_consts.inheritanceCycleConst;
 
   /// Returns the kind of variant held by this TagValidationError.
   TagValidationError_kind get kind;
@@ -496,16 +520,15 @@ sealed class TagValidationError {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:TagValidationError",
-        doc: "",
-        unknownInstance: TagValidationError_unknown._instance,
-        enumInstance: TagValidationError.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: TagValidationError_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:TagValidationError",
+    doc: "",
+    unknownInstance: TagValidationError_unknown._instance,
+    enumInstance: TagValidationError.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: TagValidationError_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `TagValidationError`.
@@ -536,8 +559,7 @@ final class TagValidationError_unknown implements TagValidationError {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TagValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, TagValidationError.serializer);
 }
 
 enum _TagValidationError_consts implements TagValidationError {
@@ -552,8 +574,7 @@ enum _TagValidationError_consts implements TagValidationError {
   const _TagValidationError_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TagValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, TagValidationError.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -591,10 +612,7 @@ final class WatchTagsRequest implements WatchTagsRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchTagsRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -606,8 +624,7 @@ final class WatchTagsRequest implements WatchTagsRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchTagsRequest` instances.
-  static _skir.StructSerializer<WatchTagsRequest, WatchTagsRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<WatchTagsRequest, WatchTagsRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -660,22 +677,23 @@ sealed class WatchTagsResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchTagsResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchTagsResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchTagsResponse.createInternalError() =>
-      WatchTagsResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory WatchTagsResponse.createInternalError() => WatchTagsResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'list' variant wrapping around the given value.
-  factory WatchTagsResponse.wrapList(_core.Iterable<Tag> value) =>
-      WatchTagsResponse_listWrapper._(value);
+  factory WatchTagsResponse.wrapList(
+    _core.Iterable<Tag> value
+  ) => WatchTagsResponse_listWrapper._(value);
 
   /// Create a 'add' variant wrapping around the given value.
-  factory WatchTagsResponse.wrapAdd(Tag value) =>
-      WatchTagsResponse_addWrapper._(value);
+  factory WatchTagsResponse.wrapAdd(
+    Tag value
+  ) => WatchTagsResponse_addWrapper._(value);
 
   /// Same as `wrapAdd(Tag(...))`.
   factory WatchTagsResponse.createAdd({
@@ -683,8 +701,7 @@ sealed class WatchTagsResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => WatchTagsResponse.wrapAdd(
     Tag(
@@ -694,12 +711,13 @@ sealed class WatchTagsResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchTagsResponse.wrapUpdate(Tag value) =>
-      WatchTagsResponse_updateWrapper._(value);
+  factory WatchTagsResponse.wrapUpdate(
+    Tag value
+  ) => WatchTagsResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Tag(...))`.
   factory WatchTagsResponse.createUpdate({
@@ -707,8 +725,7 @@ sealed class WatchTagsResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => WatchTagsResponse.wrapUpdate(
     Tag(
@@ -718,12 +735,12 @@ sealed class WatchTagsResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchTagsResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchTagsResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -731,7 +748,10 @@ sealed class WatchTagsResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchTagsResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Returns the kind of variant held by this WatchTagsResponse.
@@ -754,7 +774,9 @@ sealed class WatchTagsResponse {
         2,
         "list",
         "wrapList",
-        _skir.Serializers.iterable(Tag.serializer),
+        _skir.Serializers.iterable(
+          Tag.serializer,
+        ),
         "",
         WatchTagsResponse_listWrapper._,
         (it) => it.value,
@@ -795,16 +817,15 @@ sealed class WatchTagsResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:WatchTagsResponse",
-        doc: "",
-        unknownInstance: WatchTagsResponse_unknown._instance,
-        enumInstance: WatchTagsResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WatchTagsResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:WatchTagsResponse",
+    doc: "",
+    unknownInstance: WatchTagsResponse_unknown._instance,
+    enumInstance: WatchTagsResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchTagsResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchTagsResponse`.
@@ -836,8 +857,7 @@ final class WatchTagsResponse_unknown implements WatchTagsResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchTagsResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchTagsResponse.serializer);
 }
 
 sealed class _WatchTagsResponse_wrapper implements WatchTagsResponse {
@@ -853,19 +873,16 @@ sealed class _WatchTagsResponse_wrapper implements WatchTagsResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchTagsResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchTagsResponse.serializer);
 }
 
-final class WatchTagsResponse_internalErrorWrapper
-    extends _WatchTagsResponse_wrapper {
+final class WatchTagsResponse_internalErrorWrapper extends _WatchTagsResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchTagsResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchTagsResponse_kind get kind =>
-      WatchTagsResponse_kind.internalErrorWrapper;
+  WatchTagsResponse_kind get kind => WatchTagsResponse_kind.internalErrorWrapper;
 }
 
 final class WatchTagsResponse_listWrapper extends _WatchTagsResponse_wrapper {
@@ -922,9 +939,13 @@ final class WatchTagRequest implements WatchTagRequest_orMutable {
 
   factory WatchTagRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
-  }) => WatchTagRequest._(tagId.toFrozen());
+  }) => WatchTagRequest._(
+    tagId.toFrozen(),
+  );
 
-  WatchTagRequest._(this.tagId);
+  WatchTagRequest._(
+    this.tagId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchTagRequest._(
@@ -943,29 +964,29 @@ final class WatchTagRequest implements WatchTagRequest_orMutable {
   WatchTagRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchTagRequest_mutable toMutable() => WatchTagRequest_mutable._(this.tagId);
+  WatchTagRequest_mutable toMutable() => WatchTagRequest_mutable._(
+    this.tagId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchTagRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.tagId];
+  _core.List get _equality_proxy => [
+    this.tagId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchTagRequest` instances.
-  static _skir.StructSerializer<WatchTagRequest, WatchTagRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<WatchTagRequest, WatchTagRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -997,7 +1018,9 @@ final class WatchTagRequest_mutable implements WatchTagRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable tagId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchTagRequest_mutable._(this.tagId);
+  WatchTagRequest_mutable._(
+    this.tagId,
+  );
 
   /// If the value of [tagId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
@@ -1006,15 +1029,15 @@ final class WatchTagRequest_mutable implements WatchTagRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchTagRequest toFrozen() =>
-      WatchTagRequest(tagId: this.tagId).._u = this._u;
+  WatchTagRequest toFrozen() => WatchTagRequest(
+    tagId: this.tagId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1028,17 +1051,20 @@ sealed class WatchTagResponse_TagNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchTagResponse_TagNotFoundError
-    implements WatchTagResponse_TagNotFoundError_orMutable {
+final class WatchTagResponse_TagNotFoundError implements WatchTagResponse_TagNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId tagId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchTagResponse_TagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
-  }) => WatchTagResponse_TagNotFoundError._(tagId.toFrozen());
+  }) => WatchTagResponse_TagNotFoundError._(
+    tagId.toFrozen(),
+  );
 
-  WatchTagResponse_TagNotFoundError._(this.tagId);
+  WatchTagResponse_TagNotFoundError._(
+    this.tagId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchTagResponse_TagNotFoundError._(
@@ -1047,10 +1073,9 @@ final class WatchTagResponse_TagNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchTagResponse_TagNotFoundError_mutable mutable() =>
-      WatchTagResponse_TagNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static WatchTagResponse_TagNotFoundError_mutable mutable() => WatchTagResponse_TagNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1058,33 +1083,29 @@ final class WatchTagResponse_TagNotFoundError
   WatchTagResponse_TagNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchTagResponse_TagNotFoundError_mutable toMutable() =>
-      WatchTagResponse_TagNotFoundError_mutable._(this.tagId);
+  WatchTagResponse_TagNotFoundError_mutable toMutable() => WatchTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchTagResponse_TagNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.tagId];
+  _core.List get _equality_proxy => [
+    this.tagId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchTagResponse_TagNotFoundError` instances.
-  static _skir.StructSerializer<
-    WatchTagResponse_TagNotFoundError,
-    WatchTagResponse_TagNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WatchTagResponse_TagNotFoundError, WatchTagResponse_TagNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -1112,12 +1133,13 @@ final class WatchTagResponse_TagNotFoundError
 }
 
 /// Mutable version of [WatchTagResponse_TagNotFoundError].
-final class WatchTagResponse_TagNotFoundError_mutable
-    implements WatchTagResponse_TagNotFoundError_orMutable {
+final class WatchTagResponse_TagNotFoundError_mutable implements WatchTagResponse_TagNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable tagId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchTagResponse_TagNotFoundError_mutable._(this.tagId);
+  WatchTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   /// If the value of [tagId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
@@ -1126,15 +1148,15 @@ final class WatchTagResponse_TagNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchTagResponse_TagNotFoundError toFrozen() =>
-      WatchTagResponse_TagNotFoundError(tagId: this.tagId).._u = this._u;
+  WatchTagResponse_TagNotFoundError toFrozen() => WatchTagResponse_TagNotFoundError(
+    tagId: this.tagId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1162,16 +1184,18 @@ sealed class WatchTagResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchTagResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchTagResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchTagResponse.createInternalError() =>
-      WatchTagResponse.wrapInternalError(_lib_kernel_v1_errors.InternalError());
+  factory WatchTagResponse.createInternalError() => WatchTagResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'initial' variant wrapping around the given value.
-  factory WatchTagResponse.wrapInitial(Tag value) =>
-      WatchTagResponse_initialWrapper._(value);
+  factory WatchTagResponse.wrapInitial(
+    Tag value
+  ) => WatchTagResponse_initialWrapper._(value);
 
   /// Same as `wrapInitial(Tag(...))`.
   factory WatchTagResponse.createInitial({
@@ -1179,8 +1203,7 @@ sealed class WatchTagResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => WatchTagResponse.wrapInitial(
     Tag(
@@ -1190,12 +1213,13 @@ sealed class WatchTagResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchTagResponse.wrapUpdate(Tag value) =>
-      WatchTagResponse_updateWrapper._(value);
+  factory WatchTagResponse.wrapUpdate(
+    Tag value
+  ) => WatchTagResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Tag(...))`.
   factory WatchTagResponse.createUpdate({
@@ -1203,8 +1227,7 @@ sealed class WatchTagResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => WatchTagResponse.wrapUpdate(
     Tag(
@@ -1214,12 +1237,12 @@ sealed class WatchTagResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchTagResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchTagResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -1227,24 +1250,29 @@ sealed class WatchTagResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchTagResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Create a 'tag_not_found_error' variant wrapping around the given value.
   factory WatchTagResponse.wrapTagNotFoundError(
-    WatchTagResponse_TagNotFoundError value,
+    WatchTagResponse_TagNotFoundError value
   ) => WatchTagResponse_tagNotFoundErrorWrapper._(value);
 
   /// Same as `wrapTagNotFoundError(WatchTagResponse_TagNotFoundError(...))`.
   factory WatchTagResponse.createTagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
   }) => WatchTagResponse.wrapTagNotFoundError(
-    WatchTagResponse_TagNotFoundError(tagId: tagId),
+    WatchTagResponse_TagNotFoundError(
+      tagId: tagId,
+    )
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory WatchTagResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => WatchTagResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1255,7 +1283,7 @@ sealed class WatchTagResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this WatchTagResponse.
@@ -1329,16 +1357,15 @@ sealed class WatchTagResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:WatchTagResponse",
-        doc: "",
-        unknownInstance: WatchTagResponse_unknown._instance,
-        enumInstance: WatchTagResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WatchTagResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:WatchTagResponse",
+    doc: "",
+    unknownInstance: WatchTagResponse_unknown._instance,
+    enumInstance: WatchTagResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchTagResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchTagResponse`.
@@ -1371,8 +1398,7 @@ final class WatchTagResponse_unknown implements WatchTagResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchTagResponse.serializer);
 }
 
 sealed class _WatchTagResponse_wrapper implements WatchTagResponse {
@@ -1388,12 +1414,10 @@ sealed class _WatchTagResponse_wrapper implements WatchTagResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchTagResponse.serializer);
 }
 
-final class WatchTagResponse_internalErrorWrapper
-    extends _WatchTagResponse_wrapper {
+final class WatchTagResponse_internalErrorWrapper extends _WatchTagResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchTagResponse_internalErrorWrapper._(this.value);
@@ -1429,26 +1453,22 @@ final class WatchTagResponse_removeWrapper extends _WatchTagResponse_wrapper {
   WatchTagResponse_kind get kind => WatchTagResponse_kind.removeWrapper;
 }
 
-final class WatchTagResponse_tagNotFoundErrorWrapper
-    extends _WatchTagResponse_wrapper {
+final class WatchTagResponse_tagNotFoundErrorWrapper extends _WatchTagResponse_wrapper {
   final WatchTagResponse_TagNotFoundError value;
 
   WatchTagResponse_tagNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  WatchTagResponse_kind get kind =>
-      WatchTagResponse_kind.tagNotFoundErrorWrapper;
+  WatchTagResponse_kind get kind => WatchTagResponse_kind.tagNotFoundErrorWrapper;
 }
 
-final class WatchTagResponse_invalidRecordIdErrorWrapper
-    extends _WatchTagResponse_wrapper {
+final class WatchTagResponse_invalidRecordIdErrorWrapper extends _WatchTagResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   WatchTagResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  WatchTagResponse_kind get kind =>
-      WatchTagResponse_kind.invalidRecordIdErrorWrapper;
+  WatchTagResponse_kind get kind => WatchTagResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1479,8 +1499,7 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
   factory CreateTagRequest({
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable? color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable? placement,
   }) => CreateTagRequest._(
     name,
@@ -1489,7 +1508,12 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
     (placement != null) ? placement.toFrozen() : null,
   );
 
-  CreateTagRequest._(this.name, this.color, this.parentIds, this.placement);
+  CreateTagRequest._(
+    this.name,
+    this.color,
+    this.parentIds,
+    this.placement,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateTagRequest._(
@@ -1501,8 +1525,12 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CreateTagRequest_mutable mutable() =>
-      CreateTagRequest_mutable._("", null, _skir.KeyedIterable.empty, null);
+  static CreateTagRequest_mutable mutable() => CreateTagRequest_mutable._(
+    "",
+    null,
+    _skir.KeyedIterable.empty,
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1521,10 +1549,7 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CreateTagRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1541,8 +1566,7 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CreateTagRequest` instances.
-  static _skir.StructSerializer<CreateTagRequest, CreateTagRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<CreateTagRequest, CreateTagRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "name",
@@ -1557,7 +1581,9 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
         "color",
         "color",
         1,
-        _skir.Serializers.optional(_lib_kernel_v1_color.Color.serializer),
+        _skir.Serializers.optional(
+          _lib_kernel_v1_color.Color.serializer,
+        ),
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -1577,7 +1603,9 @@ final class CreateTagRequest implements CreateTagRequest_orMutable {
         "placement",
         "placement",
         3,
-        _skir.Serializers.optional(Placement.serializer),
+        _skir.Serializers.optional(
+          Placement.serializer,
+        ),
         "",
         (it) => it.placement,
         (it, v) => it.placement = v,
@@ -1617,10 +1645,7 @@ final class CreateTagRequest_mutable implements CreateTagRequest_orMutable {
   /// Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableParentIds {
     final value = this.parentIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.parentIds = _skir.internal__MutableList([...value]);
@@ -1648,20 +1673,20 @@ sealed class CreateTagResponse_ParentsNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class CreateTagResponse_ParentsNotFoundError
-    implements CreateTagResponse_ParentsNotFoundError_orMutable {
+final class CreateTagResponse_ParentsNotFoundError implements CreateTagResponse_ParentsNotFoundError_orMutable {
   @_core.override
   final _core.Iterable<_lib_kernel_v1_record_id.RecordId> parentIds;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CreateTagResponse_ParentsNotFoundError({
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
   }) => CreateTagResponse_ParentsNotFoundError._(
     _skir.internal__frozenMappedCopy(parentIds, (it) => it.toFrozen()),
   );
 
-  CreateTagResponse_ParentsNotFoundError._(this.parentIds);
+  CreateTagResponse_ParentsNotFoundError._(
+    this.parentIds,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CreateTagResponse_ParentsNotFoundError._(
@@ -1670,10 +1695,9 @@ final class CreateTagResponse_ParentsNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CreateTagResponse_ParentsNotFoundError_mutable mutable() =>
-      CreateTagResponse_ParentsNotFoundError_mutable._(
-        _skir.KeyedIterable.empty,
-      );
+  static CreateTagResponse_ParentsNotFoundError_mutable mutable() => CreateTagResponse_ParentsNotFoundError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1681,33 +1705,29 @@ final class CreateTagResponse_ParentsNotFoundError
   CreateTagResponse_ParentsNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CreateTagResponse_ParentsNotFoundError_mutable toMutable() =>
-      CreateTagResponse_ParentsNotFoundError_mutable._(this.parentIds);
+  CreateTagResponse_ParentsNotFoundError_mutable toMutable() => CreateTagResponse_ParentsNotFoundError_mutable._(
+    this.parentIds,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CreateTagResponse_ParentsNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.parentIds];
+  _core.List get _equality_proxy => [
+    this.parentIds,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CreateTagResponse_ParentsNotFoundError` instances.
-  static _skir.StructSerializer<
-    CreateTagResponse_ParentsNotFoundError,
-    CreateTagResponse_ParentsNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CreateTagResponse_ParentsNotFoundError, CreateTagResponse_ParentsNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "parent_ids",
@@ -1730,29 +1750,26 @@ final class CreateTagResponse_ParentsNotFoundError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CreateTagResponse_ParentsNotFoundError_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (CreateTagResponse_ParentsNotFoundError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CreateTagResponse_ParentsNotFoundError].
-final class CreateTagResponse_ParentsNotFoundError_mutable
-    implements CreateTagResponse_ParentsNotFoundError_orMutable {
+final class CreateTagResponse_ParentsNotFoundError_mutable implements CreateTagResponse_ParentsNotFoundError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  CreateTagResponse_ParentsNotFoundError_mutable._(this.parentIds);
+  CreateTagResponse_ParentsNotFoundError_mutable._(
+    this.parentIds,
+  );
 
   /// If the value of [parentIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableParentIds {
     final value = this.parentIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.parentIds = _skir.internal__MutableList([...value]);
@@ -1761,9 +1778,9 @@ final class CreateTagResponse_ParentsNotFoundError_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CreateTagResponse_ParentsNotFoundError toFrozen() =>
-      CreateTagResponse_ParentsNotFoundError(parentIds: this.parentIds)
-        .._u = this._u;
+  CreateTagResponse_ParentsNotFoundError toFrozen() => CreateTagResponse_ParentsNotFoundError(
+    parentIds: this.parentIds,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1790,18 +1807,18 @@ sealed class CreateTagResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory CreateTagResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => CreateTagResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory CreateTagResponse.createInternalError() =>
-      CreateTagResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory CreateTagResponse.createInternalError() => CreateTagResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory CreateTagResponse.wrapSuccess(Tag value) =>
-      CreateTagResponse_successWrapper._(value);
+  factory CreateTagResponse.wrapSuccess(
+    Tag value
+  ) => CreateTagResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(Tag(...))`.
   factory CreateTagResponse.createSuccess({
@@ -1809,8 +1826,7 @@ sealed class CreateTagResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => CreateTagResponse.wrapSuccess(
     Tag(
@@ -1820,29 +1836,31 @@ sealed class CreateTagResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'parents_not_found_error' variant wrapping around the given value.
   factory CreateTagResponse.wrapParentsNotFoundError(
-    CreateTagResponse_ParentsNotFoundError value,
+    CreateTagResponse_ParentsNotFoundError value
   ) => CreateTagResponse_parentsNotFoundErrorWrapper._(value);
 
   /// Same as `wrapParentsNotFoundError(CreateTagResponse_ParentsNotFoundError(...))`.
   factory CreateTagResponse.createParentsNotFoundError({
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
   }) => CreateTagResponse.wrapParentsNotFoundError(
-    CreateTagResponse_ParentsNotFoundError(parentIds: parentIds),
+    CreateTagResponse_ParentsNotFoundError(
+      parentIds: parentIds,
+    )
   );
 
   /// Create a 'validation_error' variant wrapping around the given value.
-  factory CreateTagResponse.wrapValidationError(TagValidationError value) =>
-      CreateTagResponse_validationErrorWrapper._(value);
+  factory CreateTagResponse.wrapValidationError(
+    TagValidationError value
+  ) => CreateTagResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory CreateTagResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => CreateTagResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1853,7 +1871,7 @@ sealed class CreateTagResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this CreateTagResponse.
@@ -1917,16 +1935,15 @@ sealed class CreateTagResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:CreateTagResponse",
-        doc: "",
-        unknownInstance: CreateTagResponse_unknown._instance,
-        enumInstance: CreateTagResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: CreateTagResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:CreateTagResponse",
+    doc: "",
+    unknownInstance: CreateTagResponse_unknown._instance,
+    enumInstance: CreateTagResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: CreateTagResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `CreateTagResponse`.
@@ -1958,8 +1975,7 @@ final class CreateTagResponse_unknown implements CreateTagResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CreateTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, CreateTagResponse.serializer);
 }
 
 sealed class _CreateTagResponse_wrapper implements CreateTagResponse {
@@ -1975,23 +1991,19 @@ sealed class _CreateTagResponse_wrapper implements CreateTagResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CreateTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, CreateTagResponse.serializer);
 }
 
-final class CreateTagResponse_internalErrorWrapper
-    extends _CreateTagResponse_wrapper {
+final class CreateTagResponse_internalErrorWrapper extends _CreateTagResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   CreateTagResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  CreateTagResponse_kind get kind =>
-      CreateTagResponse_kind.internalErrorWrapper;
+  CreateTagResponse_kind get kind => CreateTagResponse_kind.internalErrorWrapper;
 }
 
-final class CreateTagResponse_successWrapper
-    extends _CreateTagResponse_wrapper {
+final class CreateTagResponse_successWrapper extends _CreateTagResponse_wrapper {
   final Tag value;
 
   CreateTagResponse_successWrapper._(this.value);
@@ -2000,37 +2012,31 @@ final class CreateTagResponse_successWrapper
   CreateTagResponse_kind get kind => CreateTagResponse_kind.successWrapper;
 }
 
-final class CreateTagResponse_parentsNotFoundErrorWrapper
-    extends _CreateTagResponse_wrapper {
+final class CreateTagResponse_parentsNotFoundErrorWrapper extends _CreateTagResponse_wrapper {
   final CreateTagResponse_ParentsNotFoundError value;
 
   CreateTagResponse_parentsNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  CreateTagResponse_kind get kind =>
-      CreateTagResponse_kind.parentsNotFoundErrorWrapper;
+  CreateTagResponse_kind get kind => CreateTagResponse_kind.parentsNotFoundErrorWrapper;
 }
 
-final class CreateTagResponse_validationErrorWrapper
-    extends _CreateTagResponse_wrapper {
+final class CreateTagResponse_validationErrorWrapper extends _CreateTagResponse_wrapper {
   final TagValidationError value;
 
   CreateTagResponse_validationErrorWrapper._(this.value);
 
   @_core.override
-  CreateTagResponse_kind get kind =>
-      CreateTagResponse_kind.validationErrorWrapper;
+  CreateTagResponse_kind get kind => CreateTagResponse_kind.validationErrorWrapper;
 }
 
-final class CreateTagResponse_invalidRecordIdErrorWrapper
-    extends _CreateTagResponse_wrapper {
+final class CreateTagResponse_invalidRecordIdErrorWrapper extends _CreateTagResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   CreateTagResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  CreateTagResponse_kind get kind =>
-      CreateTagResponse_kind.invalidRecordIdErrorWrapper;
+  CreateTagResponse_kind get kind => CreateTagResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2069,8 +2075,7 @@ final class UpdateTagRequest implements UpdateTagRequest_orMutable {
     required _core.int expectedRevision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => UpdateTagRequest._(
     tagId.toFrozen(),
@@ -2130,10 +2135,7 @@ final class UpdateTagRequest implements UpdateTagRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateTagRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2152,8 +2154,7 @@ final class UpdateTagRequest implements UpdateTagRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateTagRequest` instances.
-  static _skir.StructSerializer<UpdateTagRequest, UpdateTagRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<UpdateTagRequest, UpdateTagRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -2253,8 +2254,7 @@ final class UpdateTagRequest_mutable implements UpdateTagRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -2273,10 +2273,7 @@ final class UpdateTagRequest_mutable implements UpdateTagRequest_orMutable {
   /// Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableParentIds {
     final value = this.parentIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.parentIds = _skir.internal__MutableList([...value]);
@@ -2318,8 +2315,7 @@ sealed class UpdateTagResponse_ConflictError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateTagResponse_ConflictError
-    implements UpdateTagResponse_ConflictError_orMutable {
+final class UpdateTagResponse_ConflictError implements UpdateTagResponse_ConflictError_orMutable {
   @_core.override
   final _core.int expectedRevision;
   @_core.override
@@ -2329,9 +2325,15 @@ final class UpdateTagResponse_ConflictError
   factory UpdateTagResponse_ConflictError({
     required _core.int expectedRevision,
     required Tag_orMutable actual,
-  }) => UpdateTagResponse_ConflictError._(expectedRevision, actual.toFrozen());
+  }) => UpdateTagResponse_ConflictError._(
+    expectedRevision,
+    actual.toFrozen(),
+  );
 
-  UpdateTagResponse_ConflictError._(this.expectedRevision, this.actual);
+  UpdateTagResponse_ConflictError._(
+    this.expectedRevision,
+    this.actual,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateTagResponse_ConflictError._(
@@ -2341,8 +2343,10 @@ final class UpdateTagResponse_ConflictError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateTagResponse_ConflictError_mutable mutable() =>
-      UpdateTagResponse_ConflictError_mutable._(0, Tag.defaultInstance);
+  static UpdateTagResponse_ConflictError_mutable mutable() => UpdateTagResponse_ConflictError_mutable._(
+    0,
+    Tag.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2350,36 +2354,31 @@ final class UpdateTagResponse_ConflictError
   UpdateTagResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateTagResponse_ConflictError_mutable toMutable() =>
-      UpdateTagResponse_ConflictError_mutable._(
-        this.expectedRevision,
-        this.actual,
-      );
+  UpdateTagResponse_ConflictError_mutable toMutable() => UpdateTagResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateTagResponse_ConflictError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expectedRevision, this.actual];
+  _core.List get _equality_proxy => [
+    this.expectedRevision,
+    this.actual,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateTagResponse_ConflictError` instances.
-  static _skir.StructSerializer<
-    UpdateTagResponse_ConflictError,
-    UpdateTagResponse_ConflictError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateTagResponse_ConflictError, UpdateTagResponse_ConflictError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expected_revision",
@@ -2416,13 +2415,15 @@ final class UpdateTagResponse_ConflictError
 }
 
 /// Mutable version of [UpdateTagResponse_ConflictError].
-final class UpdateTagResponse_ConflictError_mutable
-    implements UpdateTagResponse_ConflictError_orMutable {
+final class UpdateTagResponse_ConflictError_mutable implements UpdateTagResponse_ConflictError_orMutable {
   _core.int expectedRevision;
   Tag_orMutable actual;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateTagResponse_ConflictError_mutable._(this.expectedRevision, this.actual);
+  UpdateTagResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
 
   /// If the value of [actual] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
@@ -2454,17 +2455,20 @@ sealed class UpdateTagResponse_TagNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateTagResponse_TagNotFoundError
-    implements UpdateTagResponse_TagNotFoundError_orMutable {
+final class UpdateTagResponse_TagNotFoundError implements UpdateTagResponse_TagNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId tagId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory UpdateTagResponse_TagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
-  }) => UpdateTagResponse_TagNotFoundError._(tagId.toFrozen());
+  }) => UpdateTagResponse_TagNotFoundError._(
+    tagId.toFrozen(),
+  );
 
-  UpdateTagResponse_TagNotFoundError._(this.tagId);
+  UpdateTagResponse_TagNotFoundError._(
+    this.tagId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateTagResponse_TagNotFoundError._(
@@ -2473,10 +2477,9 @@ final class UpdateTagResponse_TagNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateTagResponse_TagNotFoundError_mutable mutable() =>
-      UpdateTagResponse_TagNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static UpdateTagResponse_TagNotFoundError_mutable mutable() => UpdateTagResponse_TagNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2484,33 +2487,29 @@ final class UpdateTagResponse_TagNotFoundError
   UpdateTagResponse_TagNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateTagResponse_TagNotFoundError_mutable toMutable() =>
-      UpdateTagResponse_TagNotFoundError_mutable._(this.tagId);
+  UpdateTagResponse_TagNotFoundError_mutable toMutable() => UpdateTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateTagResponse_TagNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.tagId];
+  _core.List get _equality_proxy => [
+    this.tagId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateTagResponse_TagNotFoundError` instances.
-  static _skir.StructSerializer<
-    UpdateTagResponse_TagNotFoundError,
-    UpdateTagResponse_TagNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateTagResponse_TagNotFoundError, UpdateTagResponse_TagNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -2538,12 +2537,13 @@ final class UpdateTagResponse_TagNotFoundError
 }
 
 /// Mutable version of [UpdateTagResponse_TagNotFoundError].
-final class UpdateTagResponse_TagNotFoundError_mutable
-    implements UpdateTagResponse_TagNotFoundError_orMutable {
+final class UpdateTagResponse_TagNotFoundError_mutable implements UpdateTagResponse_TagNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable tagId;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateTagResponse_TagNotFoundError_mutable._(this.tagId);
+  UpdateTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   /// If the value of [tagId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
@@ -2552,15 +2552,15 @@ final class UpdateTagResponse_TagNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateTagResponse_TagNotFoundError toFrozen() =>
-      UpdateTagResponse_TagNotFoundError(tagId: this.tagId).._u = this._u;
+  UpdateTagResponse_TagNotFoundError toFrozen() => UpdateTagResponse_TagNotFoundError(
+    tagId: this.tagId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2574,20 +2574,20 @@ sealed class UpdateTagResponse_ParentsNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class UpdateTagResponse_ParentsNotFoundError
-    implements UpdateTagResponse_ParentsNotFoundError_orMutable {
+final class UpdateTagResponse_ParentsNotFoundError implements UpdateTagResponse_ParentsNotFoundError_orMutable {
   @_core.override
   final _core.Iterable<_lib_kernel_v1_record_id.RecordId> parentIds;
   _skir.internal__UnrecognizedFields? _u;
 
   factory UpdateTagResponse_ParentsNotFoundError({
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
   }) => UpdateTagResponse_ParentsNotFoundError._(
     _skir.internal__frozenMappedCopy(parentIds, (it) => it.toFrozen()),
   );
 
-  UpdateTagResponse_ParentsNotFoundError._(this.parentIds);
+  UpdateTagResponse_ParentsNotFoundError._(
+    this.parentIds,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateTagResponse_ParentsNotFoundError._(
@@ -2596,10 +2596,9 @@ final class UpdateTagResponse_ParentsNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static UpdateTagResponse_ParentsNotFoundError_mutable mutable() =>
-      UpdateTagResponse_ParentsNotFoundError_mutable._(
-        _skir.KeyedIterable.empty,
-      );
+  static UpdateTagResponse_ParentsNotFoundError_mutable mutable() => UpdateTagResponse_ParentsNotFoundError_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2607,33 +2606,29 @@ final class UpdateTagResponse_ParentsNotFoundError
   UpdateTagResponse_ParentsNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateTagResponse_ParentsNotFoundError_mutable toMutable() =>
-      UpdateTagResponse_ParentsNotFoundError_mutable._(this.parentIds);
+  UpdateTagResponse_ParentsNotFoundError_mutable toMutable() => UpdateTagResponse_ParentsNotFoundError_mutable._(
+    this.parentIds,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateTagResponse_ParentsNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.parentIds];
+  _core.List get _equality_proxy => [
+    this.parentIds,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateTagResponse_ParentsNotFoundError` instances.
-  static _skir.StructSerializer<
-    UpdateTagResponse_ParentsNotFoundError,
-    UpdateTagResponse_ParentsNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<UpdateTagResponse_ParentsNotFoundError, UpdateTagResponse_ParentsNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "parent_ids",
@@ -2656,29 +2651,26 @@ final class UpdateTagResponse_ParentsNotFoundError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (UpdateTagResponse_ParentsNotFoundError_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (UpdateTagResponse_ParentsNotFoundError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [UpdateTagResponse_ParentsNotFoundError].
-final class UpdateTagResponse_ParentsNotFoundError_mutable
-    implements UpdateTagResponse_ParentsNotFoundError_orMutable {
+final class UpdateTagResponse_ParentsNotFoundError_mutable implements UpdateTagResponse_ParentsNotFoundError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateTagResponse_ParentsNotFoundError_mutable._(this.parentIds);
+  UpdateTagResponse_ParentsNotFoundError_mutable._(
+    this.parentIds,
+  );
 
   /// If the value of [parentIds] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableParentIds {
     final value = this.parentIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.parentIds = _skir.internal__MutableList([...value]);
@@ -2687,9 +2679,9 @@ final class UpdateTagResponse_ParentsNotFoundError_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UpdateTagResponse_ParentsNotFoundError toFrozen() =>
-      UpdateTagResponse_ParentsNotFoundError(parentIds: this.parentIds)
-        .._u = this._u;
+  UpdateTagResponse_ParentsNotFoundError toFrozen() => UpdateTagResponse_ParentsNotFoundError(
+    parentIds: this.parentIds,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2718,18 +2710,18 @@ sealed class UpdateTagResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory UpdateTagResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => UpdateTagResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory UpdateTagResponse.createInternalError() =>
-      UpdateTagResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory UpdateTagResponse.createInternalError() => UpdateTagResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory UpdateTagResponse.wrapSuccess(Tag value) =>
-      UpdateTagResponse_successWrapper._(value);
+  factory UpdateTagResponse.wrapSuccess(
+    Tag value
+  ) => UpdateTagResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(Tag(...))`.
   factory UpdateTagResponse.createSuccess({
@@ -2737,8 +2729,7 @@ sealed class UpdateTagResponse {
     required _core.int revision,
     required _core.String name,
     required _lib_kernel_v1_color.Color_orMutable color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
     required Placement_orMutable placement,
   }) => UpdateTagResponse.wrapSuccess(
     Tag(
@@ -2748,12 +2739,12 @@ sealed class UpdateTagResponse {
       color: color,
       parentIds: parentIds,
       placement: placement,
-    ),
+    )
   );
 
   /// Create a 'conflict_error' variant wrapping around the given value.
   factory UpdateTagResponse.wrapConflictError(
-    UpdateTagResponse_ConflictError value,
+    UpdateTagResponse_ConflictError value
   ) => UpdateTagResponse_conflictErrorWrapper._(value);
 
   /// Same as `wrapConflictError(UpdateTagResponse_ConflictError(...))`.
@@ -2764,41 +2755,45 @@ sealed class UpdateTagResponse {
     UpdateTagResponse_ConflictError(
       expectedRevision: expectedRevision,
       actual: actual,
-    ),
+    )
   );
 
   /// Create a 'tag_not_found_error' variant wrapping around the given value.
   factory UpdateTagResponse.wrapTagNotFoundError(
-    UpdateTagResponse_TagNotFoundError value,
+    UpdateTagResponse_TagNotFoundError value
   ) => UpdateTagResponse_tagNotFoundErrorWrapper._(value);
 
   /// Same as `wrapTagNotFoundError(UpdateTagResponse_TagNotFoundError(...))`.
   factory UpdateTagResponse.createTagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
   }) => UpdateTagResponse.wrapTagNotFoundError(
-    UpdateTagResponse_TagNotFoundError(tagId: tagId),
+    UpdateTagResponse_TagNotFoundError(
+      tagId: tagId,
+    )
   );
 
   /// Create a 'parents_not_found_error' variant wrapping around the given value.
   factory UpdateTagResponse.wrapParentsNotFoundError(
-    UpdateTagResponse_ParentsNotFoundError value,
+    UpdateTagResponse_ParentsNotFoundError value
   ) => UpdateTagResponse_parentsNotFoundErrorWrapper._(value);
 
   /// Same as `wrapParentsNotFoundError(UpdateTagResponse_ParentsNotFoundError(...))`.
   factory UpdateTagResponse.createParentsNotFoundError({
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>
-    parentIds,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> parentIds,
   }) => UpdateTagResponse.wrapParentsNotFoundError(
-    UpdateTagResponse_ParentsNotFoundError(parentIds: parentIds),
+    UpdateTagResponse_ParentsNotFoundError(
+      parentIds: parentIds,
+    )
   );
 
   /// Create a 'validation_error' variant wrapping around the given value.
-  factory UpdateTagResponse.wrapValidationError(TagValidationError value) =>
-      UpdateTagResponse_validationErrorWrapper._(value);
+  factory UpdateTagResponse.wrapValidationError(
+    TagValidationError value
+  ) => UpdateTagResponse_validationErrorWrapper._(value);
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory UpdateTagResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => UpdateTagResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -2809,7 +2804,7 @@ sealed class UpdateTagResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this UpdateTagResponse.
@@ -2893,16 +2888,15 @@ sealed class UpdateTagResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:UpdateTagResponse",
-        doc: "",
-        unknownInstance: UpdateTagResponse_unknown._instance,
-        enumInstance: UpdateTagResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: UpdateTagResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:UpdateTagResponse",
+    doc: "",
+    unknownInstance: UpdateTagResponse_unknown._instance,
+    enumInstance: UpdateTagResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: UpdateTagResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `UpdateTagResponse`.
@@ -2936,8 +2930,7 @@ final class UpdateTagResponse_unknown implements UpdateTagResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, UpdateTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, UpdateTagResponse.serializer);
 }
 
 sealed class _UpdateTagResponse_wrapper implements UpdateTagResponse {
@@ -2953,23 +2946,19 @@ sealed class _UpdateTagResponse_wrapper implements UpdateTagResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, UpdateTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, UpdateTagResponse.serializer);
 }
 
-final class UpdateTagResponse_internalErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_internalErrorWrapper extends _UpdateTagResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   UpdateTagResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.internalErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.internalErrorWrapper;
 }
 
-final class UpdateTagResponse_successWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_successWrapper extends _UpdateTagResponse_wrapper {
   final Tag value;
 
   UpdateTagResponse_successWrapper._(this.value);
@@ -2978,59 +2967,49 @@ final class UpdateTagResponse_successWrapper
   UpdateTagResponse_kind get kind => UpdateTagResponse_kind.successWrapper;
 }
 
-final class UpdateTagResponse_conflictErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_conflictErrorWrapper extends _UpdateTagResponse_wrapper {
   final UpdateTagResponse_ConflictError value;
 
   UpdateTagResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.conflictErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.conflictErrorWrapper;
 }
 
-final class UpdateTagResponse_tagNotFoundErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_tagNotFoundErrorWrapper extends _UpdateTagResponse_wrapper {
   final UpdateTagResponse_TagNotFoundError value;
 
   UpdateTagResponse_tagNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.tagNotFoundErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.tagNotFoundErrorWrapper;
 }
 
-final class UpdateTagResponse_parentsNotFoundErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_parentsNotFoundErrorWrapper extends _UpdateTagResponse_wrapper {
   final UpdateTagResponse_ParentsNotFoundError value;
 
   UpdateTagResponse_parentsNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.parentsNotFoundErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.parentsNotFoundErrorWrapper;
 }
 
-final class UpdateTagResponse_validationErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_validationErrorWrapper extends _UpdateTagResponse_wrapper {
   final TagValidationError value;
 
   UpdateTagResponse_validationErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.validationErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.validationErrorWrapper;
 }
 
-final class UpdateTagResponse_invalidRecordIdErrorWrapper
-    extends _UpdateTagResponse_wrapper {
+final class UpdateTagResponse_invalidRecordIdErrorWrapper extends _UpdateTagResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   UpdateTagResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  UpdateTagResponse_kind get kind =>
-      UpdateTagResponse_kind.invalidRecordIdErrorWrapper;
+  UpdateTagResponse_kind get kind => UpdateTagResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -3051,9 +3030,13 @@ final class DeleteTagRequest implements DeleteTagRequest_orMutable {
 
   factory DeleteTagRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
-  }) => DeleteTagRequest._(tagId.toFrozen());
+  }) => DeleteTagRequest._(
+    tagId.toFrozen(),
+  );
 
-  DeleteTagRequest._(this.tagId);
+  DeleteTagRequest._(
+    this.tagId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DeleteTagRequest._(
@@ -3072,30 +3055,29 @@ final class DeleteTagRequest implements DeleteTagRequest_orMutable {
   DeleteTagRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DeleteTagRequest_mutable toMutable() =>
-      DeleteTagRequest_mutable._(this.tagId);
+  DeleteTagRequest_mutable toMutable() => DeleteTagRequest_mutable._(
+    this.tagId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DeleteTagRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.tagId];
+  _core.List get _equality_proxy => [
+    this.tagId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DeleteTagRequest` instances.
-  static _skir.StructSerializer<DeleteTagRequest, DeleteTagRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<DeleteTagRequest, DeleteTagRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -3127,7 +3109,9 @@ final class DeleteTagRequest_mutable implements DeleteTagRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable tagId;
   _skir.internal__UnrecognizedFields? _u;
 
-  DeleteTagRequest_mutable._(this.tagId);
+  DeleteTagRequest_mutable._(
+    this.tagId,
+  );
 
   /// If the value of [tagId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
@@ -3136,15 +3120,15 @@ final class DeleteTagRequest_mutable implements DeleteTagRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DeleteTagRequest toFrozen() =>
-      DeleteTagRequest(tagId: this.tagId).._u = this._u;
+  DeleteTagRequest toFrozen() => DeleteTagRequest(
+    tagId: this.tagId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3156,8 +3140,7 @@ sealed class DeleteTagResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class DeleteTagResponse_Success
-    implements DeleteTagResponse_Success_orMutable {
+final class DeleteTagResponse_Success implements DeleteTagResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory DeleteTagResponse_Success() => DeleteTagResponse_Success._();
@@ -3169,8 +3152,7 @@ final class DeleteTagResponse_Success
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DeleteTagResponse_Success_mutable mutable() =>
-      DeleteTagResponse_Success_mutable._();
+  static DeleteTagResponse_Success_mutable mutable() => DeleteTagResponse_Success_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3178,17 +3160,13 @@ final class DeleteTagResponse_Success
   DeleteTagResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DeleteTagResponse_Success_mutable toMutable() =>
-      DeleteTagResponse_Success_mutable._();
+  DeleteTagResponse_Success_mutable toMutable() => DeleteTagResponse_Success_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DeleteTagResponse_Success) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -3200,11 +3178,7 @@ final class DeleteTagResponse_Success
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DeleteTagResponse_Success` instances.
-  static _skir.StructSerializer<
-    DeleteTagResponse_Success,
-    DeleteTagResponse_Success_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<DeleteTagResponse_Success, DeleteTagResponse_Success_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -3223,16 +3197,14 @@ final class DeleteTagResponse_Success
 }
 
 /// Mutable version of [DeleteTagResponse_Success].
-final class DeleteTagResponse_Success_mutable
-    implements DeleteTagResponse_Success_orMutable {
+final class DeleteTagResponse_Success_mutable implements DeleteTagResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   DeleteTagResponse_Success_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DeleteTagResponse_Success toFrozen() =>
-      DeleteTagResponse_Success().._u = this._u;
+  DeleteTagResponse_Success toFrozen() => DeleteTagResponse_Success().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3246,17 +3218,20 @@ sealed class DeleteTagResponse_TagNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class DeleteTagResponse_TagNotFoundError
-    implements DeleteTagResponse_TagNotFoundError_orMutable {
+final class DeleteTagResponse_TagNotFoundError implements DeleteTagResponse_TagNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId tagId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory DeleteTagResponse_TagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
-  }) => DeleteTagResponse_TagNotFoundError._(tagId.toFrozen());
+  }) => DeleteTagResponse_TagNotFoundError._(
+    tagId.toFrozen(),
+  );
 
-  DeleteTagResponse_TagNotFoundError._(this.tagId);
+  DeleteTagResponse_TagNotFoundError._(
+    this.tagId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DeleteTagResponse_TagNotFoundError._(
@@ -3265,10 +3240,9 @@ final class DeleteTagResponse_TagNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DeleteTagResponse_TagNotFoundError_mutable mutable() =>
-      DeleteTagResponse_TagNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static DeleteTagResponse_TagNotFoundError_mutable mutable() => DeleteTagResponse_TagNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3276,33 +3250,29 @@ final class DeleteTagResponse_TagNotFoundError
   DeleteTagResponse_TagNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DeleteTagResponse_TagNotFoundError_mutable toMutable() =>
-      DeleteTagResponse_TagNotFoundError_mutable._(this.tagId);
+  DeleteTagResponse_TagNotFoundError_mutable toMutable() => DeleteTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DeleteTagResponse_TagNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.tagId];
+  _core.List get _equality_proxy => [
+    this.tagId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DeleteTagResponse_TagNotFoundError` instances.
-  static _skir.StructSerializer<
-    DeleteTagResponse_TagNotFoundError,
-    DeleteTagResponse_TagNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<DeleteTagResponse_TagNotFoundError, DeleteTagResponse_TagNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "tag_id",
@@ -3330,12 +3300,13 @@ final class DeleteTagResponse_TagNotFoundError
 }
 
 /// Mutable version of [DeleteTagResponse_TagNotFoundError].
-final class DeleteTagResponse_TagNotFoundError_mutable
-    implements DeleteTagResponse_TagNotFoundError_orMutable {
+final class DeleteTagResponse_TagNotFoundError_mutable implements DeleteTagResponse_TagNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable tagId;
   _skir.internal__UnrecognizedFields? _u;
 
-  DeleteTagResponse_TagNotFoundError_mutable._(this.tagId);
+  DeleteTagResponse_TagNotFoundError_mutable._(
+    this.tagId,
+  );
 
   /// If the value of [tagId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
@@ -3344,15 +3315,15 @@ final class DeleteTagResponse_TagNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.tagId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DeleteTagResponse_TagNotFoundError toFrozen() =>
-      DeleteTagResponse_TagNotFoundError(tagId: this.tagId).._u = this._u;
+  DeleteTagResponse_TagNotFoundError toFrozen() => DeleteTagResponse_TagNotFoundError(
+    tagId: this.tagId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3378,38 +3349,41 @@ sealed class DeleteTagResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory DeleteTagResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => DeleteTagResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory DeleteTagResponse.createInternalError() =>
-      DeleteTagResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory DeleteTagResponse.createInternalError() => DeleteTagResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory DeleteTagResponse.wrapSuccess(DeleteTagResponse_Success value) =>
-      DeleteTagResponse_successWrapper._(value);
+  factory DeleteTagResponse.wrapSuccess(
+    DeleteTagResponse_Success value
+  ) => DeleteTagResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(DeleteTagResponse_Success(...))`.
-  factory DeleteTagResponse.createSuccess() =>
-      DeleteTagResponse.wrapSuccess(DeleteTagResponse_Success());
+  factory DeleteTagResponse.createSuccess() => DeleteTagResponse.wrapSuccess(
+    DeleteTagResponse_Success()
+  );
 
   /// Create a 'tag_not_found_error' variant wrapping around the given value.
   factory DeleteTagResponse.wrapTagNotFoundError(
-    DeleteTagResponse_TagNotFoundError value,
+    DeleteTagResponse_TagNotFoundError value
   ) => DeleteTagResponse_tagNotFoundErrorWrapper._(value);
 
   /// Same as `wrapTagNotFoundError(DeleteTagResponse_TagNotFoundError(...))`.
   factory DeleteTagResponse.createTagNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable tagId,
   }) => DeleteTagResponse.wrapTagNotFoundError(
-    DeleteTagResponse_TagNotFoundError(tagId: tagId),
+    DeleteTagResponse_TagNotFoundError(
+      tagId: tagId,
+    )
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory DeleteTagResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => DeleteTagResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -3420,7 +3394,7 @@ sealed class DeleteTagResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this DeleteTagResponse.
@@ -3474,16 +3448,15 @@ sealed class DeleteTagResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/tag.skir:DeleteTagResponse",
-        doc: "",
-        unknownInstance: DeleteTagResponse_unknown._instance,
-        enumInstance: DeleteTagResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: DeleteTagResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/tag.skir:DeleteTagResponse",
+    doc: "",
+    unknownInstance: DeleteTagResponse_unknown._instance,
+    enumInstance: DeleteTagResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: DeleteTagResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `DeleteTagResponse`.
@@ -3514,8 +3487,7 @@ final class DeleteTagResponse_unknown implements DeleteTagResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DeleteTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DeleteTagResponse.serializer);
 }
 
 sealed class _DeleteTagResponse_wrapper implements DeleteTagResponse {
@@ -3531,23 +3503,19 @@ sealed class _DeleteTagResponse_wrapper implements DeleteTagResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DeleteTagResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DeleteTagResponse.serializer);
 }
 
-final class DeleteTagResponse_internalErrorWrapper
-    extends _DeleteTagResponse_wrapper {
+final class DeleteTagResponse_internalErrorWrapper extends _DeleteTagResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   DeleteTagResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  DeleteTagResponse_kind get kind =>
-      DeleteTagResponse_kind.internalErrorWrapper;
+  DeleteTagResponse_kind get kind => DeleteTagResponse_kind.internalErrorWrapper;
 }
 
-final class DeleteTagResponse_successWrapper
-    extends _DeleteTagResponse_wrapper {
+final class DeleteTagResponse_successWrapper extends _DeleteTagResponse_wrapper {
   final DeleteTagResponse_Success value;
 
   DeleteTagResponse_successWrapper._(this.value);
@@ -3556,69 +3524,80 @@ final class DeleteTagResponse_successWrapper
   DeleteTagResponse_kind get kind => DeleteTagResponse_kind.successWrapper;
 }
 
-final class DeleteTagResponse_tagNotFoundErrorWrapper
-    extends _DeleteTagResponse_wrapper {
+final class DeleteTagResponse_tagNotFoundErrorWrapper extends _DeleteTagResponse_wrapper {
   final DeleteTagResponse_TagNotFoundError value;
 
   DeleteTagResponse_tagNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  DeleteTagResponse_kind get kind =>
-      DeleteTagResponse_kind.tagNotFoundErrorWrapper;
+  DeleteTagResponse_kind get kind => DeleteTagResponse_kind.tagNotFoundErrorWrapper;
 }
 
-final class DeleteTagResponse_invalidRecordIdErrorWrapper
-    extends _DeleteTagResponse_wrapper {
+final class DeleteTagResponse_invalidRecordIdErrorWrapper extends _DeleteTagResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   DeleteTagResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  DeleteTagResponse_kind get kind =>
-      DeleteTagResponse_kind.invalidRecordIdErrorWrapper;
+  DeleteTagResponse_kind get kind => DeleteTagResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-final _skir.Method<WatchTagsRequest, WatchTagsResponse> watchTagsMethod =
-    _skir.Method(
-      "WatchTags",
-      822515,
-      WatchTagsRequest.serializer,
-      WatchTagsResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  WatchTagsRequest,
+  WatchTagsResponse
+> watchTagsMethod =
+  _skir.Method(
+    "WatchTags",
+    822515,
+    WatchTagsRequest.serializer,
+    WatchTagsResponse.serializer,
+    "",
+  );
 
-final _skir.Method<WatchTagRequest, WatchTagResponse> watchTagMethod =
-    _skir.Method(
-      "WatchTag",
-      929317,
-      WatchTagRequest.serializer,
-      WatchTagResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  WatchTagRequest,
+  WatchTagResponse
+> watchTagMethod =
+  _skir.Method(
+    "WatchTag",
+    929317,
+    WatchTagRequest.serializer,
+    WatchTagResponse.serializer,
+    "",
+  );
 
-final _skir.Method<CreateTagRequest, CreateTagResponse> createTagMethod =
-    _skir.Method(
-      "CreateTag",
-      279574,
-      CreateTagRequest.serializer,
-      CreateTagResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  CreateTagRequest,
+  CreateTagResponse
+> createTagMethod =
+  _skir.Method(
+    "CreateTag",
+    279574,
+    CreateTagRequest.serializer,
+    CreateTagResponse.serializer,
+    "",
+  );
 
-final _skir.Method<UpdateTagRequest, UpdateTagResponse> updateTagMethod =
-    _skir.Method(
-      "UpdateTag",
-      970365,
-      UpdateTagRequest.serializer,
-      UpdateTagResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  UpdateTagRequest,
+  UpdateTagResponse
+> updateTagMethod =
+  _skir.Method(
+    "UpdateTag",
+    970365,
+    UpdateTagRequest.serializer,
+    UpdateTagResponse.serializer,
+    "",
+  );
 
-final _skir.Method<DeleteTagRequest, DeleteTagResponse> deleteTagMethod =
-    _skir.Method(
-      "DeleteTag",
-      852297,
-      DeleteTagRequest.serializer,
-      DeleteTagResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  DeleteTagRequest,
+  DeleteTagResponse
+> deleteTagMethod =
+  _skir.Method(
+    "DeleteTag",
+    852297,
+    DeleteTagRequest.serializer,
+    DeleteTagResponse.serializer,
+    "",
+  );

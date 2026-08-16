@@ -64,40 +64,14 @@ extension on PresentationElement {
         horizontalSpacing: element.horizontalSpacing,
         verticalSpacing: element.verticalSpacing,
       ),
-      CardElement(:final child, :final initiallyExpanded) => CardElement(
-        child.localizeFailures(context, registry: registry, budget: budget),
-        initiallyExpanded: initiallyExpanded,
+      SectionElement(:final child, :final border) => SectionElement(
+        border: border,
+        child: child.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
       ),
-      SectionElement(
-        :final title,
-        :final description,
-        :final child,
-        :final initiallyExpanded,
-      ) =>
-        SectionElement(
-          title: title,
-          description: description,
-          initiallyExpanded: initiallyExpanded,
-          child: child.localizeFailures(
-            context,
-            registry: registry,
-            budget: budget,
-          ),
-        ),
-      CollapsibleElement(
-        :final title,
-        :final child,
-        :final initiallyExpanded,
-      ) =>
-        CollapsibleElement(
-          title: title,
-          initiallyExpanded: initiallyExpanded,
-          child: child.localizeFailures(
-            context,
-            registry: registry,
-            budget: budget,
-          ),
-        ),
       TabsElement() => TabsElement(
         tabs: [
           for (final tab in element.tabs)

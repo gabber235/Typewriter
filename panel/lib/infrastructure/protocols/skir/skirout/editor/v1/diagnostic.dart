@@ -33,8 +33,7 @@ import "./path.dart" as _lib_editor_v1_path;
 sealed class DiagnosticSeverity {
   /// Constant indicating an unknown `DiagnosticSeverity`.
   /// Default value for fields of type `DiagnosticSeverity`.
-  static const DiagnosticSeverity unknown =
-      DiagnosticSeverity_unknown._instance;
+  static const DiagnosticSeverity unknown = DiagnosticSeverity_unknown._instance;
 
   static const information = _DiagnosticSeverity_consts.informationConst;
   static const warning = _DiagnosticSeverity_consts.warningConst;
@@ -60,22 +59,27 @@ sealed class DiagnosticSeverity {
         "",
         warning,
       );
-      _serializerBuilder.addConstantVariant(3, "error", "error", "", error);
+      _serializerBuilder.addConstantVariant(
+        3,
+        "error",
+        "error",
+        "",
+        error,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/diagnostic.skir:DiagnosticSeverity",
-        doc: "",
-        unknownInstance: DiagnosticSeverity_unknown._instance,
-        enumInstance: DiagnosticSeverity.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: DiagnosticSeverity_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/diagnostic.skir:DiagnosticSeverity",
+    doc: "",
+    unknownInstance: DiagnosticSeverity_unknown._instance,
+    enumInstance: DiagnosticSeverity.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: DiagnosticSeverity_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `DiagnosticSeverity`.
@@ -105,8 +109,7 @@ final class DiagnosticSeverity_unknown implements DiagnosticSeverity {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DiagnosticSeverity.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DiagnosticSeverity.serializer);
 }
 
 enum _DiagnosticSeverity_consts implements DiagnosticSeverity {
@@ -120,8 +123,7 @@ enum _DiagnosticSeverity_consts implements DiagnosticSeverity {
   const _DiagnosticSeverity_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DiagnosticSeverity.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DiagnosticSeverity.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -166,36 +168,25 @@ sealed class DiagnosticCode {
 
   static const invalidTypeId = _DiagnosticCode_consts.invalidTypeIdConst;
   static const invalidRevision = _DiagnosticCode_consts.invalidRevisionConst;
-  static const duplicateDefinition =
-      _DiagnosticCode_consts.duplicateDefinitionConst;
+  static const duplicateDefinition = _DiagnosticCode_consts.duplicateDefinitionConst;
   static const invalidArity = _DiagnosticCode_consts.invalidArityConst;
   static const unsatisfiedBound = _DiagnosticCode_consts.unsatisfiedBoundConst;
   static const invalidVariance = _DiagnosticCode_consts.invalidVarianceConst;
   static const inheritanceCycle = _DiagnosticCode_consts.inheritanceCycleConst;
-  static const inheritanceConflict =
-      _DiagnosticCode_consts.inheritanceConflictConst;
-  static const weakenedConstraint =
-      _DiagnosticCode_consts.weakenedConstraintConst;
-  static const incompatibleRepresentation =
-      _DiagnosticCode_consts.incompatibleRepresentationConst;
+  static const inheritanceConflict = _DiagnosticCode_consts.inheritanceConflictConst;
+  static const weakenedConstraint = _DiagnosticCode_consts.weakenedConstraintConst;
+  static const incompatibleRepresentation = _DiagnosticCode_consts.incompatibleRepresentationConst;
   static const invalidValue = _DiagnosticCode_consts.invalidValueConst;
-  static const missingRequiredField =
-      _DiagnosticCode_consts.missingRequiredFieldConst;
+  static const missingRequiredField = _DiagnosticCode_consts.missingRequiredFieldConst;
   static const unknownField = _DiagnosticCode_consts.unknownFieldConst;
   static const invalidPath = _DiagnosticCode_consts.invalidPathConst;
-  static const invalidConcreteType =
-      _DiagnosticCode_consts.invalidConcreteTypeConst;
-  static const conversionNotFound =
-      _DiagnosticCode_consts.conversionNotFoundConst;
-  static const conversionAmbiguous =
-      _DiagnosticCode_consts.conversionAmbiguousConst;
+  static const invalidConcreteType = _DiagnosticCode_consts.invalidConcreteTypeConst;
+  static const conversionNotFound = _DiagnosticCode_consts.conversionNotFoundConst;
+  static const conversionAmbiguous = _DiagnosticCode_consts.conversionAmbiguousConst;
   static const conversionFailed = _DiagnosticCode_consts.conversionFailedConst;
-  static const invalidExpression =
-      _DiagnosticCode_consts.invalidExpressionConst;
-  static const evaluationBudgetExceeded =
-      _DiagnosticCode_consts.evaluationBudgetExceededConst;
-  static const invalidPresentation =
-      _DiagnosticCode_consts.invalidPresentationConst;
+  static const invalidExpression = _DiagnosticCode_consts.invalidExpressionConst;
+  static const evaluationBudgetExceeded = _DiagnosticCode_consts.evaluationBudgetExceededConst;
+  static const invalidPresentation = _DiagnosticCode_consts.invalidPresentationConst;
   static const mutationConflict = _DiagnosticCode_consts.mutationConflictConst;
   static const permissionDenied = _DiagnosticCode_consts.permissionDeniedConst;
 
@@ -371,16 +362,15 @@ sealed class DiagnosticCode {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/diagnostic.skir:DiagnosticCode",
-        doc: "",
-        unknownInstance: DiagnosticCode_unknown._instance,
-        enumInstance: DiagnosticCode.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: DiagnosticCode_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/diagnostic.skir:DiagnosticCode",
+    doc: "",
+    unknownInstance: DiagnosticCode_unknown._instance,
+    enumInstance: DiagnosticCode.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: DiagnosticCode_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `DiagnosticCode`.
@@ -430,8 +420,7 @@ final class DiagnosticCode_unknown implements DiagnosticCode {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DiagnosticCode.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DiagnosticCode.serializer);
 }
 
 enum _DiagnosticCode_consts implements DiagnosticCode {
@@ -444,9 +433,7 @@ enum _DiagnosticCode_consts implements DiagnosticCode {
   inheritanceCycleConst(DiagnosticCode_kind.inheritanceCycleConst),
   inheritanceConflictConst(DiagnosticCode_kind.inheritanceConflictConst),
   weakenedConstraintConst(DiagnosticCode_kind.weakenedConstraintConst),
-  incompatibleRepresentationConst(
-    DiagnosticCode_kind.incompatibleRepresentationConst,
-  ),
+  incompatibleRepresentationConst(DiagnosticCode_kind.incompatibleRepresentationConst),
   invalidValueConst(DiagnosticCode_kind.invalidValueConst),
   missingRequiredFieldConst(DiagnosticCode_kind.missingRequiredFieldConst),
   unknownFieldConst(DiagnosticCode_kind.unknownFieldConst),
@@ -456,9 +443,7 @@ enum _DiagnosticCode_consts implements DiagnosticCode {
   conversionAmbiguousConst(DiagnosticCode_kind.conversionAmbiguousConst),
   conversionFailedConst(DiagnosticCode_kind.conversionFailedConst),
   invalidExpressionConst(DiagnosticCode_kind.invalidExpressionConst),
-  evaluationBudgetExceededConst(
-    DiagnosticCode_kind.evaluationBudgetExceededConst,
-  ),
+  evaluationBudgetExceededConst(DiagnosticCode_kind.evaluationBudgetExceededConst),
   invalidPresentationConst(DiagnosticCode_kind.invalidPresentationConst),
   mutationConflictConst(DiagnosticCode_kind.mutationConflictConst),
   permissionDeniedConst(DiagnosticCode_kind.permissionDeniedConst);
@@ -469,8 +454,7 @@ enum _DiagnosticCode_consts implements DiagnosticCode {
   const _DiagnosticCode_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DiagnosticCode.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DiagnosticCode.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -569,10 +553,7 @@ final class TypeDiagnostic implements TypeDiagnostic_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TypeDiagnostic) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -591,8 +572,7 @@ final class TypeDiagnostic implements TypeDiagnostic_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TypeDiagnostic` instances.
-  static _skir.StructSerializer<TypeDiagnostic, TypeDiagnostic_mutable>
-  get serializer {
+  static _skir.StructSerializer<TypeDiagnostic, TypeDiagnostic_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "code",
@@ -625,7 +605,9 @@ final class TypeDiagnostic implements TypeDiagnostic_orMutable {
         "path",
         "path",
         3,
-        _skir.Serializers.optional(_lib_editor_v1_path.DataPath.serializer),
+        _skir.Serializers.optional(
+          _lib_editor_v1_path.DataPath.serializer,
+        ),
         "",
         (it) => it.path,
         (it, v) => it.path = v,
@@ -634,7 +616,9 @@ final class TypeDiagnostic implements TypeDiagnostic_orMutable {
         "related_type",
         "relatedType",
         4,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.relatedType,
         (it, v) => it.relatedType = v,
@@ -643,7 +627,9 @@ final class TypeDiagnostic implements TypeDiagnostic_orMutable {
         "details",
         "details",
         5,
-        _skir.Serializers.iterable(DiagnosticDetail.serializer),
+        _skir.Serializers.iterable(
+          DiagnosticDetail.serializer,
+        ),
         "",
         (it) => it.details,
         (it, v) => it.details = v,
@@ -728,17 +714,28 @@ final class DiagnosticDetail implements DiagnosticDetail_orMutable {
   factory DiagnosticDetail({
     required _core.String key,
     required _core.String value,
-  }) => DiagnosticDetail._(key, value);
+  }) => DiagnosticDetail._(
+    key,
+    value,
+  );
 
-  DiagnosticDetail._(this.key, this.value);
+  DiagnosticDetail._(
+    this.key,
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = DiagnosticDetail._("", "");
+  static final defaultInstance = DiagnosticDetail._(
+    "",
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DiagnosticDetail_mutable mutable() =>
-      DiagnosticDetail_mutable._("", "");
+  static DiagnosticDetail_mutable mutable() => DiagnosticDetail_mutable._(
+    "",
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -746,30 +743,31 @@ final class DiagnosticDetail implements DiagnosticDetail_orMutable {
   DiagnosticDetail toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DiagnosticDetail_mutable toMutable() =>
-      DiagnosticDetail_mutable._(this.key, this.value);
+  DiagnosticDetail_mutable toMutable() => DiagnosticDetail_mutable._(
+    this.key,
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DiagnosticDetail) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.key, this.value];
+  _core.List get _equality_proxy => [
+    this.key,
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DiagnosticDetail` instances.
-  static _skir.StructSerializer<DiagnosticDetail, DiagnosticDetail_mutable>
-  get serializer {
+  static _skir.StructSerializer<DiagnosticDetail, DiagnosticDetail_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -811,10 +809,15 @@ final class DiagnosticDetail_mutable implements DiagnosticDetail_orMutable {
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  DiagnosticDetail_mutable._(this.key, this.value);
+  DiagnosticDetail_mutable._(
+    this.key,
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DiagnosticDetail toFrozen() =>
-      DiagnosticDetail(key: this.key, value: this.value).._u = this._u;
+  DiagnosticDetail toFrozen() => DiagnosticDetail(
+    key: this.key,
+    value: this.value,
+  ).._u = this._u;
 }

@@ -37,17 +37,28 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
   factory ServiceBinding_Bound({
     required _core.String organizationId,
     required _core.String? organizationName,
-  }) => ServiceBinding_Bound._(organizationId, organizationName);
+  }) => ServiceBinding_Bound._(
+    organizationId,
+    organizationName,
+  );
 
-  ServiceBinding_Bound._(this.organizationId, this.organizationName);
+  ServiceBinding_Bound._(
+    this.organizationId,
+    this.organizationName,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceBinding_Bound._("", null);
+  static final defaultInstance = ServiceBinding_Bound._(
+    "",
+    null,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceBinding_Bound_mutable mutable() =>
-      ServiceBinding_Bound_mutable._("", null);
+  static ServiceBinding_Bound_mutable mutable() => ServiceBinding_Bound_mutable._(
+    "",
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -64,10 +75,7 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceBinding_Bound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -82,11 +90,7 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceBinding_Bound` instances.
-  static _skir.StructSerializer<
-    ServiceBinding_Bound,
-    ServiceBinding_Bound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ServiceBinding_Bound, ServiceBinding_Bound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "organization_id",
@@ -101,7 +105,9 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
         "organization_name",
         "organizationName",
         1,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.organizationName,
         (it, v) => it.organizationName = v,
@@ -123,13 +129,15 @@ final class ServiceBinding_Bound implements ServiceBinding_Bound_orMutable {
 }
 
 /// Mutable version of [ServiceBinding_Bound].
-final class ServiceBinding_Bound_mutable
-    implements ServiceBinding_Bound_orMutable {
+final class ServiceBinding_Bound_mutable implements ServiceBinding_Bound_orMutable {
   _core.String organizationId;
   _core.String? organizationName;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceBinding_Bound_mutable._(this.organizationId, this.organizationName);
+  ServiceBinding_Bound_mutable._(
+    this.organizationId,
+    this.organizationName,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -155,18 +163,26 @@ final class ServiceBinding_Unbound implements ServiceBinding_Unbound_orMutable {
   final _core.String? registrationToken;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ServiceBinding_Unbound({required _core.String? registrationToken}) =>
-      ServiceBinding_Unbound._(registrationToken);
+  factory ServiceBinding_Unbound({
+    required _core.String? registrationToken,
+  }) => ServiceBinding_Unbound._(
+    registrationToken,
+  );
 
-  ServiceBinding_Unbound._(this.registrationToken);
+  ServiceBinding_Unbound._(
+    this.registrationToken,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceBinding_Unbound._(null);
+  static final defaultInstance = ServiceBinding_Unbound._(
+    null,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceBinding_Unbound_mutable mutable() =>
-      ServiceBinding_Unbound_mutable._(null);
+  static ServiceBinding_Unbound_mutable mutable() => ServiceBinding_Unbound_mutable._(
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -174,39 +190,37 @@ final class ServiceBinding_Unbound implements ServiceBinding_Unbound_orMutable {
   ServiceBinding_Unbound toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceBinding_Unbound_mutable toMutable() =>
-      ServiceBinding_Unbound_mutable._(this.registrationToken);
+  ServiceBinding_Unbound_mutable toMutable() => ServiceBinding_Unbound_mutable._(
+    this.registrationToken,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceBinding_Unbound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.registrationToken];
+  _core.List get _equality_proxy => [
+    this.registrationToken,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceBinding_Unbound` instances.
-  static _skir.StructSerializer<
-    ServiceBinding_Unbound,
-    ServiceBinding_Unbound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ServiceBinding_Unbound, ServiceBinding_Unbound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "registration_token",
         "registrationToken",
         0,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.registrationToken,
         (it, v) => it.registrationToken = v,
@@ -228,18 +242,19 @@ final class ServiceBinding_Unbound implements ServiceBinding_Unbound_orMutable {
 }
 
 /// Mutable version of [ServiceBinding_Unbound].
-final class ServiceBinding_Unbound_mutable
-    implements ServiceBinding_Unbound_orMutable {
+final class ServiceBinding_Unbound_mutable implements ServiceBinding_Unbound_orMutable {
   _core.String? registrationToken;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceBinding_Unbound_mutable._(this.registrationToken);
+  ServiceBinding_Unbound_mutable._(
+    this.registrationToken,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceBinding_Unbound toFrozen() =>
-      ServiceBinding_Unbound(registrationToken: this.registrationToken)
-        .._u = this._u;
+  ServiceBinding_Unbound toFrozen() => ServiceBinding_Unbound(
+    registrationToken: this.registrationToken,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -262,8 +277,9 @@ sealed class ServiceBinding {
   static const ServiceBinding unknown = ServiceBinding_unknown._instance;
 
   /// Create a 'bound' variant wrapping around the given value.
-  factory ServiceBinding.wrapBound(ServiceBinding_Bound value) =>
-      ServiceBinding_boundWrapper._(value);
+  factory ServiceBinding.wrapBound(
+    ServiceBinding_Bound value
+  ) => ServiceBinding_boundWrapper._(value);
 
   /// Same as `wrapBound(ServiceBinding_Bound(...))`.
   factory ServiceBinding.createBound({
@@ -273,18 +289,21 @@ sealed class ServiceBinding {
     ServiceBinding_Bound(
       organizationId: organizationId,
       organizationName: organizationName,
-    ),
+    )
   );
 
   /// Create a 'unbound' variant wrapping around the given value.
-  factory ServiceBinding.wrapUnbound(ServiceBinding_Unbound value) =>
-      ServiceBinding_unboundWrapper._(value);
+  factory ServiceBinding.wrapUnbound(
+    ServiceBinding_Unbound value
+  ) => ServiceBinding_unboundWrapper._(value);
 
   /// Same as `wrapUnbound(ServiceBinding_Unbound(...))`.
   factory ServiceBinding.createUnbound({
     required _core.String? registrationToken,
   }) => ServiceBinding.wrapUnbound(
-    ServiceBinding_Unbound(registrationToken: registrationToken),
+    ServiceBinding_Unbound(
+      registrationToken: registrationToken,
+    )
   );
 
   /// Returns the kind of variant held by this ServiceBinding.
@@ -318,16 +337,15 @@ sealed class ServiceBinding {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/status.skir:ServiceBinding",
-        doc: "",
-        unknownInstance: ServiceBinding_unknown._instance,
-        enumInstance: ServiceBinding.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ServiceBinding_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/status.skir:ServiceBinding",
+    doc: "",
+    unknownInstance: ServiceBinding_unknown._instance,
+    enumInstance: ServiceBinding.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ServiceBinding_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ServiceBinding`.
@@ -356,8 +374,7 @@ final class ServiceBinding_unknown implements ServiceBinding {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceBinding.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceBinding.serializer);
 }
 
 sealed class _ServiceBinding_wrapper implements ServiceBinding {
@@ -373,8 +390,7 @@ sealed class _ServiceBinding_wrapper implements ServiceBinding {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceBinding.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceBinding.serializer);
 }
 
 final class ServiceBinding_boundWrapper extends _ServiceBinding_wrapper {
@@ -404,8 +420,7 @@ sealed class GetServiceStatusRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class GetServiceStatusRequest
-    implements GetServiceStatusRequest_orMutable {
+final class GetServiceStatusRequest implements GetServiceStatusRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory GetServiceStatusRequest() => GetServiceStatusRequest._();
@@ -417,8 +432,7 @@ final class GetServiceStatusRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GetServiceStatusRequest_mutable mutable() =>
-      GetServiceStatusRequest_mutable._();
+  static GetServiceStatusRequest_mutable mutable() => GetServiceStatusRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -426,17 +440,13 @@ final class GetServiceStatusRequest
   GetServiceStatusRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GetServiceStatusRequest_mutable toMutable() =>
-      GetServiceStatusRequest_mutable._();
+  GetServiceStatusRequest_mutable toMutable() => GetServiceStatusRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GetServiceStatusRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -448,11 +458,7 @@ final class GetServiceStatusRequest
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GetServiceStatusRequest` instances.
-  static _skir.StructSerializer<
-    GetServiceStatusRequest,
-    GetServiceStatusRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<GetServiceStatusRequest, GetServiceStatusRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -471,8 +477,7 @@ final class GetServiceStatusRequest
 }
 
 /// Mutable version of [GetServiceStatusRequest].
-final class GetServiceStatusRequest_mutable
-    implements GetServiceStatusRequest_orMutable {
+final class GetServiceStatusRequest_mutable implements GetServiceStatusRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   GetServiceStatusRequest_mutable._();
@@ -491,23 +496,19 @@ sealed class GetServiceStatusResponse_ServiceNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class GetServiceStatusResponse_ServiceNotFoundError
-    implements GetServiceStatusResponse_ServiceNotFoundError_orMutable {
+final class GetServiceStatusResponse_ServiceNotFoundError implements GetServiceStatusResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory GetServiceStatusResponse_ServiceNotFoundError() =>
-      GetServiceStatusResponse_ServiceNotFoundError._();
+  factory GetServiceStatusResponse_ServiceNotFoundError() => GetServiceStatusResponse_ServiceNotFoundError._();
 
   GetServiceStatusResponse_ServiceNotFoundError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      GetServiceStatusResponse_ServiceNotFoundError._();
+  static final defaultInstance = GetServiceStatusResponse_ServiceNotFoundError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GetServiceStatusResponse_ServiceNotFoundError_mutable mutable() =>
-      GetServiceStatusResponse_ServiceNotFoundError_mutable._();
+  static GetServiceStatusResponse_ServiceNotFoundError_mutable mutable() => GetServiceStatusResponse_ServiceNotFoundError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -515,17 +516,13 @@ final class GetServiceStatusResponse_ServiceNotFoundError
   GetServiceStatusResponse_ServiceNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GetServiceStatusResponse_ServiceNotFoundError_mutable toMutable() =>
-      GetServiceStatusResponse_ServiceNotFoundError_mutable._();
+  GetServiceStatusResponse_ServiceNotFoundError_mutable toMutable() => GetServiceStatusResponse_ServiceNotFoundError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GetServiceStatusResponse_ServiceNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -537,11 +534,7 @@ final class GetServiceStatusResponse_ServiceNotFoundError
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GetServiceStatusResponse_ServiceNotFoundError` instances.
-  static _skir.StructSerializer<
-    GetServiceStatusResponse_ServiceNotFoundError,
-    GetServiceStatusResponse_ServiceNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<GetServiceStatusResponse_ServiceNotFoundError, GetServiceStatusResponse_ServiceNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -549,29 +542,25 @@ final class GetServiceStatusResponse_ServiceNotFoundError
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/status.skir:GetServiceStatusResponse.ServiceNotFoundError",
+    recordId: "service/v1/status.skir:GetServiceStatusResponse.ServiceNotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (GetServiceStatusResponse_ServiceNotFoundError_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (GetServiceStatusResponse_ServiceNotFoundError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [GetServiceStatusResponse_ServiceNotFoundError].
-final class GetServiceStatusResponse_ServiceNotFoundError_mutable
-    implements GetServiceStatusResponse_ServiceNotFoundError_orMutable {
+final class GetServiceStatusResponse_ServiceNotFoundError_mutable implements GetServiceStatusResponse_ServiceNotFoundError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   GetServiceStatusResponse_ServiceNotFoundError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  GetServiceStatusResponse_ServiceNotFoundError toFrozen() =>
-      GetServiceStatusResponse_ServiceNotFoundError().._u = this._u;
+  GetServiceStatusResponse_ServiceNotFoundError toFrozen() => GetServiceStatusResponse_ServiceNotFoundError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -585,16 +574,20 @@ sealed class GetServiceStatusResponse_Status_orMutable {
 }
 
 /// Deeply immutable.
-final class GetServiceStatusResponse_Status
-    implements GetServiceStatusResponse_Status_orMutable {
+final class GetServiceStatusResponse_Status implements GetServiceStatusResponse_Status_orMutable {
   @_core.override
   final ServiceBinding binding;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory GetServiceStatusResponse_Status({required ServiceBinding binding}) =>
-      GetServiceStatusResponse_Status._(binding);
+  factory GetServiceStatusResponse_Status({
+    required ServiceBinding binding,
+  }) => GetServiceStatusResponse_Status._(
+    binding,
+  );
 
-  GetServiceStatusResponse_Status._(this.binding);
+  GetServiceStatusResponse_Status._(
+    this.binding,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = GetServiceStatusResponse_Status._(
@@ -603,8 +596,9 @@ final class GetServiceStatusResponse_Status
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static GetServiceStatusResponse_Status_mutable mutable() =>
-      GetServiceStatusResponse_Status_mutable._(ServiceBinding.unknown);
+  static GetServiceStatusResponse_Status_mutable mutable() => GetServiceStatusResponse_Status_mutable._(
+    ServiceBinding.unknown,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -612,33 +606,29 @@ final class GetServiceStatusResponse_Status
   GetServiceStatusResponse_Status toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  GetServiceStatusResponse_Status_mutable toMutable() =>
-      GetServiceStatusResponse_Status_mutable._(this.binding);
+  GetServiceStatusResponse_Status_mutable toMutable() => GetServiceStatusResponse_Status_mutable._(
+    this.binding,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! GetServiceStatusResponse_Status) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.binding];
+  _core.List get _equality_proxy => [
+    this.binding,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `GetServiceStatusResponse_Status` instances.
-  static _skir.StructSerializer<
-    GetServiceStatusResponse_Status,
-    GetServiceStatusResponse_Status_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<GetServiceStatusResponse_Status, GetServiceStatusResponse_Status_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "binding",
@@ -666,17 +656,19 @@ final class GetServiceStatusResponse_Status
 }
 
 /// Mutable version of [GetServiceStatusResponse_Status].
-final class GetServiceStatusResponse_Status_mutable
-    implements GetServiceStatusResponse_Status_orMutable {
+final class GetServiceStatusResponse_Status_mutable implements GetServiceStatusResponse_Status_orMutable {
   ServiceBinding binding;
   _skir.internal__UnrecognizedFields? _u;
 
-  GetServiceStatusResponse_Status_mutable._(this.binding);
+  GetServiceStatusResponse_Status_mutable._(
+    this.binding,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  GetServiceStatusResponse_Status toFrozen() =>
-      GetServiceStatusResponse_Status(binding: this.binding).._u = this._u;
+  GetServiceStatusResponse_Status toFrozen() => GetServiceStatusResponse_Status(
+    binding: this.binding,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -697,41 +689,40 @@ final class GetServiceStatusResponse_Status_mutable
 sealed class GetServiceStatusResponse {
   /// Constant indicating an unknown `GetServiceStatusResponse`.
   /// Default value for fields of type `GetServiceStatusResponse`.
-  static const GetServiceStatusResponse unknown =
-      GetServiceStatusResponse_unknown._instance;
+  static const GetServiceStatusResponse unknown = GetServiceStatusResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory GetServiceStatusResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => GetServiceStatusResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory GetServiceStatusResponse.createInternalError() =>
-      GetServiceStatusResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory GetServiceStatusResponse.createInternalError() => GetServiceStatusResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'service_not_found_error' variant wrapping around the given value.
   factory GetServiceStatusResponse.wrapServiceNotFoundError(
-    GetServiceStatusResponse_ServiceNotFoundError value,
+    GetServiceStatusResponse_ServiceNotFoundError value
   ) => GetServiceStatusResponse_serviceNotFoundErrorWrapper._(value);
 
   /// Same as `wrapServiceNotFoundError(GetServiceStatusResponse_ServiceNotFoundError(...))`.
-  factory GetServiceStatusResponse.createServiceNotFoundError() =>
-      GetServiceStatusResponse.wrapServiceNotFoundError(
-        GetServiceStatusResponse_ServiceNotFoundError(),
-      );
+  factory GetServiceStatusResponse.createServiceNotFoundError() => GetServiceStatusResponse.wrapServiceNotFoundError(
+    GetServiceStatusResponse_ServiceNotFoundError()
+  );
 
   /// Create a 'status' variant wrapping around the given value.
   factory GetServiceStatusResponse.wrapStatus(
-    GetServiceStatusResponse_Status value,
+    GetServiceStatusResponse_Status value
   ) => GetServiceStatusResponse_statusWrapper._(value);
 
   /// Same as `wrapStatus(GetServiceStatusResponse_Status(...))`.
   factory GetServiceStatusResponse.createStatus({
     required ServiceBinding binding,
   }) => GetServiceStatusResponse.wrapStatus(
-    GetServiceStatusResponse_Status(binding: binding),
+    GetServiceStatusResponse_Status(
+      binding: binding,
+    )
   );
 
   /// Returns the kind of variant held by this GetServiceStatusResponse.
@@ -758,8 +749,7 @@ sealed class GetServiceStatusResponse {
         "",
         GetServiceStatusResponse_serviceNotFoundErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            GetServiceStatusResponse_kind.serviceNotFoundErrorWrapper._ordinal,
+        ordinal: GetServiceStatusResponse_kind.serviceNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -776,16 +766,15 @@ sealed class GetServiceStatusResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/status.skir:GetServiceStatusResponse",
-        doc: "",
-        unknownInstance: GetServiceStatusResponse_unknown._instance,
-        enumInstance: GetServiceStatusResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: GetServiceStatusResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/status.skir:GetServiceStatusResponse",
+    doc: "",
+    unknownInstance: GetServiceStatusResponse_unknown._instance,
+    enumInstance: GetServiceStatusResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: GetServiceStatusResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `GetServiceStatusResponse`.
@@ -800,8 +789,7 @@ enum GetServiceStatusResponse_kind {
   const GetServiceStatusResponse_kind(this._ordinal);
 }
 
-final class GetServiceStatusResponse_unknown
-    implements GetServiceStatusResponse {
+final class GetServiceStatusResponse_unknown implements GetServiceStatusResponse {
   static const _instance = GetServiceStatusResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -810,19 +798,16 @@ final class GetServiceStatusResponse_unknown
   GetServiceStatusResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  GetServiceStatusResponse_kind get kind =>
-      GetServiceStatusResponse_kind.unknown;
+  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is GetServiceStatusResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, GetServiceStatusResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, GetServiceStatusResponse.serializer);
 }
 
-sealed class _GetServiceStatusResponse_wrapper
-    implements GetServiceStatusResponse {
+sealed class _GetServiceStatusResponse_wrapper implements GetServiceStatusResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -835,48 +820,44 @@ sealed class _GetServiceStatusResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, GetServiceStatusResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, GetServiceStatusResponse.serializer);
 }
 
-final class GetServiceStatusResponse_internalErrorWrapper
-    extends _GetServiceStatusResponse_wrapper {
+final class GetServiceStatusResponse_internalErrorWrapper extends _GetServiceStatusResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   GetServiceStatusResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  GetServiceStatusResponse_kind get kind =>
-      GetServiceStatusResponse_kind.internalErrorWrapper;
+  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.internalErrorWrapper;
 }
 
-final class GetServiceStatusResponse_serviceNotFoundErrorWrapper
-    extends _GetServiceStatusResponse_wrapper {
+final class GetServiceStatusResponse_serviceNotFoundErrorWrapper extends _GetServiceStatusResponse_wrapper {
   final GetServiceStatusResponse_ServiceNotFoundError value;
 
   GetServiceStatusResponse_serviceNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  GetServiceStatusResponse_kind get kind =>
-      GetServiceStatusResponse_kind.serviceNotFoundErrorWrapper;
+  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.serviceNotFoundErrorWrapper;
 }
 
-final class GetServiceStatusResponse_statusWrapper
-    extends _GetServiceStatusResponse_wrapper {
+final class GetServiceStatusResponse_statusWrapper extends _GetServiceStatusResponse_wrapper {
   final GetServiceStatusResponse_Status value;
 
   GetServiceStatusResponse_statusWrapper._(this.value);
 
   @_core.override
-  GetServiceStatusResponse_kind get kind =>
-      GetServiceStatusResponse_kind.statusWrapper;
+  GetServiceStatusResponse_kind get kind => GetServiceStatusResponse_kind.statusWrapper;
 }
 
-final _skir.Method<GetServiceStatusRequest, GetServiceStatusResponse>
-getServiceStatusMethod = _skir.Method(
-  "GetServiceStatus",
-  955610,
-  GetServiceStatusRequest.serializer,
-  GetServiceStatusResponse.serializer,
-  "",
-);
+final _skir.Method<
+  GetServiceStatusRequest,
+  GetServiceStatusResponse
+> getServiceStatusMethod =
+  _skir.Method(
+    "GetServiceStatus",
+    955610,
+    GetServiceStatusRequest.serializer,
+    GetServiceStatusResponse.serializer,
+    "",
+  );

@@ -49,10 +49,7 @@ final class InternalError implements InternalError_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InternalError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -64,8 +61,7 @@ final class InternalError implements InternalError_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InternalError` instances.
-  static _skir.StructSerializer<InternalError, InternalError_mutable>
-  get serializer {
+  static _skir.StructSerializer<InternalError, InternalError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -121,7 +117,10 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
     _skir.internal__frozenCopy(givenTables),
   );
 
-  InvalidRecordIdError._(this.expectedTable, this.givenTables);
+  InvalidRecordIdError._(
+    this.expectedTable,
+    this.givenTables,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = InvalidRecordIdError._(
@@ -131,8 +130,10 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InvalidRecordIdError_mutable mutable() =>
-      InvalidRecordIdError_mutable._("", _skir.KeyedIterable.empty);
+  static InvalidRecordIdError_mutable mutable() => InvalidRecordIdError_mutable._(
+    "",
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -140,33 +141,31 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
   InvalidRecordIdError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InvalidRecordIdError_mutable toMutable() =>
-      InvalidRecordIdError_mutable._(this.expectedTable, this.givenTables);
+  InvalidRecordIdError_mutable toMutable() => InvalidRecordIdError_mutable._(
+    this.expectedTable,
+    this.givenTables,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InvalidRecordIdError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.expectedTable, this.givenTables];
+  _core.List get _equality_proxy => [
+    this.expectedTable,
+    this.givenTables,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InvalidRecordIdError` instances.
-  static _skir.StructSerializer<
-    InvalidRecordIdError,
-    InvalidRecordIdError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<InvalidRecordIdError, InvalidRecordIdError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expected_table",
@@ -181,7 +180,9 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
         "given_tables",
         "givenTables",
         1,
-        _skir.Serializers.iterable(_skir.Serializers.string),
+        _skir.Serializers.iterable(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.givenTables,
         (it, v) => it.givenTables = v,
@@ -203,13 +204,15 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
 }
 
 /// Mutable version of [InvalidRecordIdError].
-final class InvalidRecordIdError_mutable
-    implements InvalidRecordIdError_orMutable {
+final class InvalidRecordIdError_mutable implements InvalidRecordIdError_orMutable {
   _core.String expectedTable;
   _core.Iterable<_core.String> givenTables;
   _skir.internal__UnrecognizedFields? _u;
 
-  InvalidRecordIdError_mutable._(this.expectedTable, this.givenTables);
+  InvalidRecordIdError_mutable._(
+    this.expectedTable,
+    this.givenTables,
+  );
 
   /// If the value of [givenTables] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [givenTables] and returns it.

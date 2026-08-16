@@ -1,8 +1,6 @@
 import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "renderers/layout/card_renderer.dart";
-part "renderers/layout/collapsible_renderer.dart";
 part "renderers/layout/column_renderer.dart";
 part "renderers/layout/divider_renderer.dart";
 part "renderers/layout/grid_renderer.dart";

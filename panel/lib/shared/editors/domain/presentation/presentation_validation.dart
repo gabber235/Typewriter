@@ -54,6 +54,28 @@ extension on PresentationElement {
         diagnostics.add(_invalid("Chip color must declare the Color type"));
       }
     }
+    if (element case SectionElement(:final border?)) {
+      if (border.sides.isEmpty) {
+        diagnostics.add(_invalid("Section border must contain a side"));
+      }
+      for (final side in border.sides) {
+        if (!side.width.isFinite || side.width <= 0) {
+          diagnostics.add(
+            _invalid("Section border width must be finite and positive"),
+          );
+        }
+      }
+      for (final color in border.colors) {
+        if (!typeExpressionsEqual(
+          color.resultType,
+          NamedType(standardTypeRefs.color),
+        )) {
+          diagnostics.add(
+            _invalid("Section border color must declare the Color type"),
+          );
+        }
+      }
+    }
     final sequences = switch (element) {
       RepeatedElement(:final presentation) => [presentation],
       CollectionGraphElement(
@@ -109,7 +131,7 @@ extension on PresentationElement {
         maximum,
         ?label,
       ],
-      SectionElement(:final title, :final description) => [title, ?description],
+      SectionElement(:final border?) => border.colors,
       TabsElement(:final tabs) => [for (final tab in tabs) tab.label],
       ConditionalElement(:final condition) => [condition],
       RepeatedElement(:final source) => [source],
@@ -122,7 +144,6 @@ extension on PresentationElement {
         ?divisions,
       ],
       SpacerElement(:final width, :final height) => [?width, ?height],
-      CollapsibleElement(:final title) => [title],
       PolymorphicInputElement(:final concreteTypes) => [
         for (final concreteType in concreteTypes) concreteType.label,
       ],
@@ -172,6 +193,29 @@ extension on PresentationElement {
     ColorInputElement() => type is NamedType,
     SelectInputElement() => true,
     _ => true,
+  };
+}
+
+extension on PresentationBorder {
+  List<PresentationBorderSide> get sides => switch (this) {
+    PresentationBorderAll(:final side) => [side],
+    PresentationBorderSides(
+      :final top,
+      :final start,
+      :final end,
+      :final bottom,
+    ) => [top, start, end, bottom].nonNulls.toList(),
+  };
+
+  List<TypedExpression> get colors => switch (this) {
+    PresentationBorderAll(:final side) => [?side.color],
+    PresentationBorderSides(
+      :final top,
+      :final start,
+      :final end,
+      :final bottom,
+    ) =>
+      [?top?.color, ?start?.color, ?end?.color, ?bottom?.color],
   };
 }
 

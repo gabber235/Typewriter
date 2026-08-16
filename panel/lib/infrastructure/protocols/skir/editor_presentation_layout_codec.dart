@@ -106,18 +106,74 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
     );
   }
 
-  TypeResult<PresentationElement> _section(wire.SectionLayout value) {
-    final title = expressions.decode(value.title);
-    final description = _optionalExpression(value.description);
-    return combineResults(title, description, (title, description) {
-      return SectionElement(
-        title: title,
-        description: description,
-        child: decodeNode(value.child),
-        initiallyExpanded: value.initiallyExpanded,
+  TypeResult<PresentationElement> _section(wire.SectionLayout value) =>
+      _border(value.border).mapValue(
+        (border) =>
+            SectionElement(child: decodeNode(value.child), border: border),
       );
-    });
+
+  TypeResult<PresentationBorder?> _border(wire.PresentationBorder? value) {
+    if (value == null) return const TypeResult.success(null);
+    return switch (value) {
+      wire.PresentationBorder_allWrapper(:final value) => _borderSide(
+        value,
+      ).mapValue(PresentationBorder.all),
+      wire.PresentationBorder_sidesWrapper(:final value) => _borderSides(
+        value,
+      ).mapValue((value) => value),
+      wire.PresentationBorder_unknown() => invalidWire(
+        "Unknown presentation border",
+      ),
+    };
   }
+
+  TypeResult<PresentationBorderSide> _borderSide(
+    wire.PresentationBorderSide value,
+  ) {
+    if (!value.width.isFinite || value.width <= 0) {
+      return invalidWire("Invalid presentation border width");
+    }
+    return _optionalExpression(value.color).mapValue(
+      (color) => PresentationBorderSide(color: color, width: value.width),
+    );
+  }
+
+  TypeResult<PresentationBorder> _borderSides(
+    wire.DirectionalPresentationBorder value,
+  ) {
+    if (value.top == null &&
+        value.start == null &&
+        value.end == null &&
+        value.bottom == null) {
+      return invalidWire("Presentation border has no sides");
+    }
+    final top = _optionalBorderSide(value.top);
+    final start = _optionalBorderSide(value.start);
+    final end = _optionalBorderSide(value.end);
+    final bottom = _optionalBorderSide(value.bottom);
+    final diagnostics = [
+      ...top.diagnostics,
+      ...start.diagnostics,
+      ...end.diagnostics,
+      ...bottom.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            PresentationBorder.sides(
+              top: top.valueOrNull,
+              start: start.valueOrNull,
+              end: end.valueOrNull,
+              bottom: bottom.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<PresentationBorderSide?> _optionalBorderSide(
+    wire.PresentationBorderSide? value,
+  ) => value == null
+      ? const TypeResult.success(null)
+      : _borderSide(value).mapValue((value) => value);
 
   TypeResult<PresentationElement> _tabs(wire.TabsLayout value) {
     if (value.tabs.isEmpty) return invalidWire("Tabs are empty");
@@ -150,15 +206,4 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
       (width, height) => SpacerElement(width: width, height: height),
     );
   }
-
-  TypeResult<PresentationElement> _collapsible(wire.CollapsibleLayout value) =>
-      expressions
-          .decode(value.title)
-          .mapValue(
-            (title) => CollapsibleElement(
-              title: title,
-              child: decodeNode(value.child),
-              initiallyExpanded: value.initiallyExpanded,
-            ),
-          );
 }

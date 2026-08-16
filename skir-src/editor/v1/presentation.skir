@@ -143,22 +143,26 @@ struct ChildrenElement(810900007) {
   layout: ChildrenLayout = 1;
 }
 
-struct CardLayout(810900042) {
-  child: PresentationNode = 0;
-  initially_expanded: bool? = 1;
+struct PresentationBorderSide(810900102) {
+  color: TypedExpression? = 0;
+  width: float64 = 1;
+}
+
+struct DirectionalPresentationBorder(810900103) {
+  top: PresentationBorderSide? = 0;
+  start: PresentationBorderSide? = 1;
+  end: PresentationBorderSide? = 2;
+  bottom: PresentationBorderSide? = 3;
+}
+
+enum PresentationBorder(810900104) {
+  all: PresentationBorderSide = 1;
+  sides: DirectionalPresentationBorder = 2;
 }
 
 struct SectionLayout(810900008) {
-  title: TypedExpression = 0;
-  description: TypedExpression? = 1;
-  child: PresentationNode = 2;
-  initially_expanded: bool? = 3;
-}
-
-struct CollapsibleLayout(810900043) {
-  title: TypedExpression = 0;
-  child: PresentationNode = 1;
-  initially_expanded: bool = 2;
+  child: PresentationNode = 0;
+  border: PresentationBorder? = 1;
 }
 
 struct TabItem(810900009) {
@@ -539,8 +543,7 @@ struct TooltipElement(810900033) {
 
 enum PresentationElement(810900034) {
   children: ChildrenElement = 1;
-  card: CardLayout = 7;
-  section: SectionLayout = 8;
+  section: SectionLayout = 7;
   tabs: TabsLayout = 9;
   divider = 10;
   spacer: SpacerLayout = 11;
@@ -575,7 +578,6 @@ enum PresentationElement(810900034) {
   enum_input: BoundControl = 39;
   polymorphic_input: PolymorphicControl = 40;
   default_presentation: DefaultPresentationElement = 41;
-  collapsible: CollapsibleLayout = 42;
   search_input: SearchControl = 44;
   collection_lookup: CollectionLookupElement = 45;
   collection_graph: CollectionGraphElement = 46;

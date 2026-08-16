@@ -97,8 +97,8 @@ final dataRendererScenarios = [
         presentation: SequencePresentation(
           item: storyNode(
             "repeatedItem",
-            PresentationElement.card(
-              storyNode(
+            PresentationElement.section(
+              child: storyNode(
                 "repeatedText",
                 PresentationElement.text(
                   bindingExpression(_itemBinding, const StringType()),
@@ -222,7 +222,6 @@ final conditionalRendererScenario = RendererStoryScenario(
                     whenTrue: storyNode(
                       "timedDialogueEditor",
                       PresentationElement.section(
-                        title: "Timed dialogue".asStringLiteral,
                         child: storyNode(
                           "timedDialogueFields",
                           PresentationElement.column(
@@ -271,14 +270,13 @@ final conditionalRendererScenario = RendererStoryScenario(
                           ),
                         ),
                       ),
+                      header: PresentationHeader(
+                        title: "Timed dialogue".asStringLiteral,
+                      ),
                     ),
                     whenFalse: storyNode(
                       "timedDialogueHidden",
                       PresentationElement.section(
-                        title: "Timed dialogue hidden".asStringLiteral,
-                        description:
-                            "The false branch replaces the field editor while preserving its bound values."
-                                .asStringLiteral,
                         child: storyNode(
                           "timedDialogueHiddenText",
                           PresentationElement.text(
@@ -286,6 +284,12 @@ final conditionalRendererScenario = RendererStoryScenario(
                                 .asStringLiteral,
                           ),
                         ),
+                      ),
+                      header: PresentationHeader(
+                        title: "Timed dialogue hidden".asStringLiteral,
+                        description:
+                            "The false branch replaces the field editor while preserving its bound values."
+                                .asStringLiteral,
                       ),
                     ),
                   ),
@@ -374,8 +378,8 @@ RendererStoryScenario _repeatedScenario(
             presentation: SequencePresentation(
               item: storyNode(
                 "repeatedItem",
-                PresentationElement.card(
-                  storyNode(
+                PresentationElement.section(
+                  child: storyNode(
                     "repeatedText",
                     PresentationElement.text(
                       bindingExpression(_itemBinding, const StringType()),
@@ -429,10 +433,6 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
                 empty: storyNode(
                   "customEmpty",
                   PresentationElement.section(
-                    title: "No objectives yet".asStringLiteral,
-                    description:
-                        "The empty presentation replaces the objective template."
-                            .asStringLiteral,
                     child: storyNode(
                       "customEmptyText",
                       PresentationElement.text(
@@ -440,6 +440,12 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
                             .asStringLiteral,
                       ),
                     ),
+                  ),
+                  header: PresentationHeader(
+                    title: "No objectives yet".asStringLiteral,
+                    description:
+                        "The empty presentation replaces the objective template."
+                            .asStringLiteral,
                   ),
                 ),
               ),
@@ -516,8 +522,8 @@ RendererStoryScenario _scopedBindingScenario(
             scopeBindingId: const BindingId(1),
             child: storyNode(
               "scopedText",
-              PresentationElement.card(
-                storyNode(
+              PresentationElement.section(
+                child: storyNode(
                   "scopedValue",
                   PresentationElement.text(
                     bindingExpression(_itemBinding, const StringType()),

@@ -17,25 +17,74 @@ extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
   }
 
   TypeResult<wire.PresentationElement> _section(SectionElement value) {
-    final title = expressions.encode(value.title);
-    final description = _optional(value.description);
     final child = encodeNode(value.child);
-    final diagnostics = [
-      ...title.diagnostics,
-      ...description.diagnostics,
-      ...child.diagnostics,
-    ];
+    final border = _border(value.border);
+    final diagnostics = [...child.diagnostics, ...border.diagnostics];
     return diagnostics.isEmpty
         ? TypeResult.success(
             wire.PresentationElement.createSection(
-              title: title.valueOrNull!,
-              description: description.valueOrNull,
               child: child.valueOrNull!,
-              initiallyExpanded: value.initiallyExpanded,
+              border: border.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);
   }
+
+  TypeResult<wire.PresentationBorder?> _border(PresentationBorder? value) {
+    if (value == null) return const TypeResult.success(null);
+    return switch (value) {
+      PresentationBorderAll(:final side) => _borderSide(
+        side,
+      ).mapValue(wire.PresentationBorder.wrapAll),
+      PresentationBorderSides(
+        :final top,
+        :final start,
+        :final end,
+        :final bottom,
+      ) =>
+        _borderSides(top: top, start: start, end: end, bottom: bottom),
+    };
+  }
+
+  TypeResult<wire.PresentationBorderSide> _borderSide(
+    PresentationBorderSide value,
+  ) => _optional(value.color).mapValue(
+    (color) => wire.PresentationBorderSide(color: color, width: value.width),
+  );
+
+  TypeResult<wire.PresentationBorder> _borderSides({
+    PresentationBorderSide? top,
+    PresentationBorderSide? start,
+    PresentationBorderSide? end,
+    PresentationBorderSide? bottom,
+  }) {
+    final encodedTop = _optionalBorderSide(top);
+    final encodedStart = _optionalBorderSide(start);
+    final encodedEnd = _optionalBorderSide(end);
+    final encodedBottom = _optionalBorderSide(bottom);
+    final diagnostics = [
+      ...encodedTop.diagnostics,
+      ...encodedStart.diagnostics,
+      ...encodedEnd.diagnostics,
+      ...encodedBottom.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationBorder.createSides(
+              top: encodedTop.valueOrNull,
+              start: encodedStart.valueOrNull,
+              end: encodedEnd.valueOrNull,
+              bottom: encodedBottom.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.PresentationBorderSide?> _optionalBorderSide(
+    PresentationBorderSide? value,
+  ) => value == null
+      ? const TypeResult.success(null)
+      : _borderSide(value).mapValue((value) => value);
 
   TypeResult<wire.PresentationElement> _tabs(TabsElement value) {
     final tabs = <wire.TabItem>[];
@@ -74,17 +123,6 @@ extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
         _optional(value.height),
         (width, height) =>
             wire.PresentationElement.createSpacer(width: width, height: height),
-      );
-
-  TypeResult<wire.PresentationElement> _collapsible(CollapsibleElement value) =>
-      combineResults(
-        expressions.encode(value.title),
-        encodeNode(value.child),
-        (title, child) => wire.PresentationElement.createCollapsible(
-          title: title,
-          child: child,
-          initiallyExpanded: value.initiallyExpanded,
-        ),
       );
 
   TypeResult<List<wire.PresentationNode>> _nodes(

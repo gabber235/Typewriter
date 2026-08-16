@@ -138,10 +138,7 @@ final class Service implements Service_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Service) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -196,7 +193,9 @@ final class Service implements Service_orMutable {
         "roles",
         "roles",
         3,
-        _skir.Serializers.iterable(ServiceRole.serializer),
+        _skir.Serializers.iterable(
+          ServiceRole.serializer,
+        ),
         "",
         (it) => it.roles,
         (it, v) => it.roles = v,
@@ -225,7 +224,9 @@ final class Service implements Service_orMutable {
         "registration",
         "registration",
         6,
-        _skir.Serializers.optional(ServiceRegistration.serializer),
+        _skir.Serializers.optional(
+          ServiceRegistration.serializer,
+        ),
         "",
         (it) => it.registration,
         (it, v) => it.registration = v,
@@ -234,7 +235,9 @@ final class Service implements Service_orMutable {
         "state",
         "state",
         7,
-        _skir.Serializers.optional(ServiceState.serializer),
+        _skir.Serializers.optional(
+          ServiceState.serializer,
+        ),
         "",
         (it) => it.state,
         (it, v) => it.state = v,
@@ -298,8 +301,7 @@ final class Service_mutable implements Service_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -345,18 +347,26 @@ final class ServiceRole_Engine implements ServiceRole_Engine_orMutable {
   final _core.String version;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ServiceRole_Engine({required _core.String version}) =>
-      ServiceRole_Engine._(version);
+  factory ServiceRole_Engine({
+    required _core.String version,
+  }) => ServiceRole_Engine._(
+    version,
+  );
 
-  ServiceRole_Engine._(this.version);
+  ServiceRole_Engine._(
+    this.version,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceRole_Engine._("");
+  static final defaultInstance = ServiceRole_Engine._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceRole_Engine_mutable mutable() =>
-      ServiceRole_Engine_mutable._("");
+  static ServiceRole_Engine_mutable mutable() => ServiceRole_Engine_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -364,30 +374,29 @@ final class ServiceRole_Engine implements ServiceRole_Engine_orMutable {
   ServiceRole_Engine toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceRole_Engine_mutable toMutable() =>
-      ServiceRole_Engine_mutable._(this.version);
+  ServiceRole_Engine_mutable toMutable() => ServiceRole_Engine_mutable._(
+    this.version,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceRole_Engine) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.version];
+  _core.List get _equality_proxy => [
+    this.version,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceRole_Engine` instances.
-  static _skir.StructSerializer<ServiceRole_Engine, ServiceRole_Engine_mutable>
-  get serializer {
+  static _skir.StructSerializer<ServiceRole_Engine, ServiceRole_Engine_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "version",
@@ -419,12 +428,15 @@ final class ServiceRole_Engine_mutable implements ServiceRole_Engine_orMutable {
   _core.String version;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceRole_Engine_mutable._(this.version);
+  ServiceRole_Engine_mutable._(
+    this.version,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceRole_Engine toFrozen() =>
-      ServiceRole_Engine(version: this.version).._u = this._u;
+  ServiceRole_Engine toFrozen() => ServiceRole_Engine(
+    version: this.version,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -443,17 +455,26 @@ final class ServiceRole_Realm implements ServiceRole_Realm_orMutable {
   final _core.String version;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ServiceRole_Realm({required _core.String version}) =>
-      ServiceRole_Realm._(version);
+  factory ServiceRole_Realm({
+    required _core.String version,
+  }) => ServiceRole_Realm._(
+    version,
+  );
 
-  ServiceRole_Realm._(this.version);
+  ServiceRole_Realm._(
+    this.version,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceRole_Realm._("");
+  static final defaultInstance = ServiceRole_Realm._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceRole_Realm_mutable mutable() => ServiceRole_Realm_mutable._("");
+  static ServiceRole_Realm_mutable mutable() => ServiceRole_Realm_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -461,30 +482,29 @@ final class ServiceRole_Realm implements ServiceRole_Realm_orMutable {
   ServiceRole_Realm toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceRole_Realm_mutable toMutable() =>
-      ServiceRole_Realm_mutable._(this.version);
+  ServiceRole_Realm_mutable toMutable() => ServiceRole_Realm_mutable._(
+    this.version,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceRole_Realm) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.version];
+  _core.List get _equality_proxy => [
+    this.version,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceRole_Realm` instances.
-  static _skir.StructSerializer<ServiceRole_Realm, ServiceRole_Realm_mutable>
-  get serializer {
+  static _skir.StructSerializer<ServiceRole_Realm, ServiceRole_Realm_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "version",
@@ -516,12 +536,15 @@ final class ServiceRole_Realm_mutable implements ServiceRole_Realm_orMutable {
   _core.String version;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceRole_Realm_mutable._(this.version);
+  ServiceRole_Realm_mutable._(
+    this.version,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceRole_Realm toFrozen() =>
-      ServiceRole_Realm(version: this.version).._u = this._u;
+  ServiceRole_Realm toFrozen() => ServiceRole_Realm(
+    version: this.version,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -546,17 +569,28 @@ final class ServiceRole_Custom implements ServiceRole_Custom_orMutable {
   factory ServiceRole_Custom({
     required _core.String name,
     required _core.String version,
-  }) => ServiceRole_Custom._(name, version);
+  }) => ServiceRole_Custom._(
+    name,
+    version,
+  );
 
-  ServiceRole_Custom._(this.name, this.version);
+  ServiceRole_Custom._(
+    this.name,
+    this.version,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceRole_Custom._("", "");
+  static final defaultInstance = ServiceRole_Custom._(
+    "",
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceRole_Custom_mutable mutable() =>
-      ServiceRole_Custom_mutable._("", "");
+  static ServiceRole_Custom_mutable mutable() => ServiceRole_Custom_mutable._(
+    "",
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -564,30 +598,31 @@ final class ServiceRole_Custom implements ServiceRole_Custom_orMutable {
   ServiceRole_Custom toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceRole_Custom_mutable toMutable() =>
-      ServiceRole_Custom_mutable._(this.name, this.version);
+  ServiceRole_Custom_mutable toMutable() => ServiceRole_Custom_mutable._(
+    this.name,
+    this.version,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceRole_Custom) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.name, this.version];
+  _core.List get _equality_proxy => [
+    this.name,
+    this.version,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceRole_Custom` instances.
-  static _skir.StructSerializer<ServiceRole_Custom, ServiceRole_Custom_mutable>
-  get serializer {
+  static _skir.StructSerializer<ServiceRole_Custom, ServiceRole_Custom_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "name",
@@ -629,12 +664,17 @@ final class ServiceRole_Custom_mutable implements ServiceRole_Custom_orMutable {
   _core.String version;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceRole_Custom_mutable._(this.name, this.version);
+  ServiceRole_Custom_mutable._(
+    this.name,
+    this.version,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceRole_Custom toFrozen() =>
-      ServiceRole_Custom(name: this.name, version: this.version).._u = this._u;
+  ServiceRole_Custom toFrozen() => ServiceRole_Custom(
+    name: this.name,
+    version: this.version,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -658,31 +698,48 @@ sealed class ServiceRole {
   static const ServiceRole unknown = ServiceRole_unknown._instance;
 
   /// Create a 'engine' variant wrapping around the given value.
-  factory ServiceRole.wrapEngine(ServiceRole_Engine value) =>
-      ServiceRole_engineWrapper._(value);
+  factory ServiceRole.wrapEngine(
+    ServiceRole_Engine value
+  ) => ServiceRole_engineWrapper._(value);
 
   /// Same as `wrapEngine(ServiceRole_Engine(...))`.
-  factory ServiceRole.createEngine({required _core.String version}) =>
-      ServiceRole.wrapEngine(ServiceRole_Engine(version: version));
+  factory ServiceRole.createEngine({
+    required _core.String version,
+  }) => ServiceRole.wrapEngine(
+    ServiceRole_Engine(
+      version: version,
+    )
+  );
 
   /// Create a 'realm' variant wrapping around the given value.
-  factory ServiceRole.wrapRealm(ServiceRole_Realm value) =>
-      ServiceRole_realmWrapper._(value);
+  factory ServiceRole.wrapRealm(
+    ServiceRole_Realm value
+  ) => ServiceRole_realmWrapper._(value);
 
   /// Same as `wrapRealm(ServiceRole_Realm(...))`.
-  factory ServiceRole.createRealm({required _core.String version}) =>
-      ServiceRole.wrapRealm(ServiceRole_Realm(version: version));
+  factory ServiceRole.createRealm({
+    required _core.String version,
+  }) => ServiceRole.wrapRealm(
+    ServiceRole_Realm(
+      version: version,
+    )
+  );
 
   /// Create a 'custom' variant wrapping around the given value.
-  factory ServiceRole.wrapCustom(ServiceRole_Custom value) =>
-      ServiceRole_customWrapper._(value);
+  factory ServiceRole.wrapCustom(
+    ServiceRole_Custom value
+  ) => ServiceRole_customWrapper._(value);
 
   /// Same as `wrapCustom(ServiceRole_Custom(...))`.
   factory ServiceRole.createCustom({
     required _core.String name,
     required _core.String version,
-  }) =>
-      ServiceRole.wrapCustom(ServiceRole_Custom(name: name, version: version));
+  }) => ServiceRole.wrapCustom(
+    ServiceRole_Custom(
+      name: name,
+      version: version,
+    )
+  );
 
   /// Returns the kind of variant held by this ServiceRole.
   ServiceRole_kind get kind;
@@ -725,16 +782,15 @@ sealed class ServiceRole {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/service.skir:ServiceRole",
-        doc: "",
-        unknownInstance: ServiceRole_unknown._instance,
-        enumInstance: ServiceRole.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ServiceRole_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/service.skir:ServiceRole",
+    doc: "",
+    unknownInstance: ServiceRole_unknown._instance,
+    enumInstance: ServiceRole.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ServiceRole_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ServiceRole`.
@@ -764,8 +820,7 @@ final class ServiceRole_unknown implements ServiceRole {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceRole.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceRole.serializer);
 }
 
 sealed class _ServiceRole_wrapper implements ServiceRole {
@@ -781,8 +836,7 @@ sealed class _ServiceRole_wrapper implements ServiceRole {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceRole.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceRole.serializer);
 }
 
 final class ServiceRole_engineWrapper extends _ServiceRole_wrapper {
@@ -840,7 +894,13 @@ sealed class ServiceStatus {
   /// Serializer for `ServiceStatus` instances.
   static _skir.EnumSerializer<ServiceStatus> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "online", "online", "", online);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "online",
+        "online",
+        "",
+        online,
+      );
       _serializerBuilder.addConstantVariant(
         2,
         "offline",
@@ -853,16 +913,15 @@ sealed class ServiceStatus {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/service.skir:ServiceStatus",
-        doc: "",
-        unknownInstance: ServiceStatus_unknown._instance,
-        enumInstance: ServiceStatus.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ServiceStatus_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/service.skir:ServiceStatus",
+    doc: "",
+    unknownInstance: ServiceStatus_unknown._instance,
+    enumInstance: ServiceStatus.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ServiceStatus_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ServiceStatus`.
@@ -891,8 +950,7 @@ final class ServiceStatus_unknown implements ServiceStatus {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceStatus.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceStatus.serializer);
 }
 
 enum _ServiceStatus_consts implements ServiceStatus {
@@ -905,8 +963,7 @@ enum _ServiceStatus_consts implements ServiceStatus {
   const _ServiceStatus_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ServiceStatus.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ServiceStatus.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -931,9 +988,15 @@ final class ServiceState implements ServiceState_orMutable {
   factory ServiceState({
     required ServiceStatus status,
     required _core.DateTime lastSeen,
-  }) => ServiceState._(status, lastSeen.toUtc());
+  }) => ServiceState._(
+    status,
+    lastSeen.toUtc(),
+  );
 
-  ServiceState._(this.status, this.lastSeen);
+  ServiceState._(
+    this.status,
+    this.lastSeen,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ServiceState._(
@@ -943,8 +1006,10 @@ final class ServiceState implements ServiceState_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceState_mutable mutable() =>
-      ServiceState_mutable._(ServiceStatus.unknown, _skir.unixEpoch);
+  static ServiceState_mutable mutable() => ServiceState_mutable._(
+    ServiceStatus.unknown,
+    _skir.unixEpoch,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -952,30 +1017,31 @@ final class ServiceState implements ServiceState_orMutable {
   ServiceState toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceState_mutable toMutable() =>
-      ServiceState_mutable._(this.status, this.lastSeen);
+  ServiceState_mutable toMutable() => ServiceState_mutable._(
+    this.status,
+    this.lastSeen,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceState) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.status, this.lastSeen];
+  _core.List get _equality_proxy => [
+    this.status,
+    this.lastSeen,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceState` instances.
-  static _skir.StructSerializer<ServiceState, ServiceState_mutable>
-  get serializer {
+  static _skir.StructSerializer<ServiceState, ServiceState_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "status",
@@ -1017,12 +1083,17 @@ final class ServiceState_mutable implements ServiceState_orMutable {
   _core.DateTime lastSeen;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceState_mutable._(this.status, this.lastSeen);
+  ServiceState_mutable._(
+    this.status,
+    this.lastSeen,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceState toFrozen() =>
-      ServiceState(status: this.status, lastSeen: this.lastSeen).._u = this._u;
+  ServiceState toFrozen() => ServiceState(
+    status: this.status,
+    lastSeen: this.lastSeen,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1047,17 +1118,28 @@ final class ServiceRegistration implements ServiceRegistration_orMutable {
   factory ServiceRegistration({
     required _core.String token,
     required _core.DateTime expiresAt,
-  }) => ServiceRegistration._(token, expiresAt.toUtc());
+  }) => ServiceRegistration._(
+    token,
+    expiresAt.toUtc(),
+  );
 
-  ServiceRegistration._(this.token, this.expiresAt);
+  ServiceRegistration._(
+    this.token,
+    this.expiresAt,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ServiceRegistration._("", _skir.unixEpoch);
+  static final defaultInstance = ServiceRegistration._(
+    "",
+    _skir.unixEpoch,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceRegistration_mutable mutable() =>
-      ServiceRegistration_mutable._("", _skir.unixEpoch);
+  static ServiceRegistration_mutable mutable() => ServiceRegistration_mutable._(
+    "",
+    _skir.unixEpoch,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1065,33 +1147,31 @@ final class ServiceRegistration implements ServiceRegistration_orMutable {
   ServiceRegistration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceRegistration_mutable toMutable() =>
-      ServiceRegistration_mutable._(this.token, this.expiresAt);
+  ServiceRegistration_mutable toMutable() => ServiceRegistration_mutable._(
+    this.token,
+    this.expiresAt,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceRegistration) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.token, this.expiresAt];
+  _core.List get _equality_proxy => [
+    this.token,
+    this.expiresAt,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceRegistration` instances.
-  static _skir.StructSerializer<
-    ServiceRegistration,
-    ServiceRegistration_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ServiceRegistration, ServiceRegistration_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "token",
@@ -1128,17 +1208,20 @@ final class ServiceRegistration implements ServiceRegistration_orMutable {
 }
 
 /// Mutable version of [ServiceRegistration].
-final class ServiceRegistration_mutable
-    implements ServiceRegistration_orMutable {
+final class ServiceRegistration_mutable implements ServiceRegistration_orMutable {
   _core.String token;
   _core.DateTime expiresAt;
   _skir.internal__UnrecognizedFields? _u;
 
-  ServiceRegistration_mutable._(this.token, this.expiresAt);
+  ServiceRegistration_mutable._(
+    this.token,
+    this.expiresAt,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceRegistration toFrozen() =>
-      ServiceRegistration(token: this.token, expiresAt: this.expiresAt)
-        .._u = this._u;
+  ServiceRegistration toFrozen() => ServiceRegistration(
+    token: this.token,
+    expiresAt: this.expiresAt,
+  ).._u = this._u;
 }
