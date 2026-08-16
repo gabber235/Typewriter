@@ -234,23 +234,10 @@ sealed class PresentationElement with _$PresentationElement {
     @Default(0) double verticalSpacing,
   }) = GridElement;
   @Implements<SingleChildLayoutElement>()
-  const factory PresentationElement.card(
-    PresentationNode child, {
-    bool? initiallyExpanded,
-  }) = CardElement;
-  @Implements<SingleChildLayoutElement>()
   const factory PresentationElement.section({
-    required TypedExpression title,
     required PresentationNode child,
-    TypedExpression? description,
-    bool? initiallyExpanded,
+    PresentationBorder? border,
   }) = SectionElement;
-  @Implements<SingleChildLayoutElement>()
-  const factory PresentationElement.collapsible({
-    required TypedExpression title,
-    required PresentationNode child,
-    @Default(false) bool initiallyExpanded,
-  }) = CollapsibleElement;
   @Assert("tabs.isNotEmpty", "Tabs must not be empty.")
   factory PresentationElement.tabs({
     required List<TabItem> tabs,

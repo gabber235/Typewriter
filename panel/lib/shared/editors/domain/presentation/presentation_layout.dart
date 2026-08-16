@@ -23,6 +23,47 @@ abstract interface class SingleChildLayoutElement {
 }
 
 @freezed
+abstract class PresentationBorderSide with _$PresentationBorderSide {
+  @Assert("width > 0", "Border width must be positive.")
+  const factory PresentationBorderSide({
+    TypedExpression? color,
+    @Default(1) double width,
+  }) = _PresentationBorderSide;
+}
+
+@freezed
+abstract class DirectionalPresentationBorder
+    with _$DirectionalPresentationBorder {
+  @Assert(
+    "top != null || start != null || end != null || bottom != null",
+    "At least one border side must be provided.",
+  )
+  const factory DirectionalPresentationBorder({
+    PresentationBorderSide? top,
+    PresentationBorderSide? start,
+    PresentationBorderSide? end,
+    PresentationBorderSide? bottom,
+  }) = _DirectionalPresentationBorder;
+}
+
+@freezed
+sealed class PresentationBorder with _$PresentationBorder {
+  const factory PresentationBorder.all(PresentationBorderSide side) =
+      PresentationBorderAll;
+
+  @Assert(
+    "top != null || start != null || end != null || bottom != null",
+    "At least one border side must be provided.",
+  )
+  const factory PresentationBorder.sides({
+    PresentationBorderSide? top,
+    PresentationBorderSide? start,
+    PresentationBorderSide? end,
+    PresentationBorderSide? bottom,
+  }) = PresentationBorderSides;
+}
+
+@freezed
 sealed class PresentationChildrenLayout with _$PresentationChildrenLayout {
   @Assert("spacing >= 0", "Spacing must not be negative.")
   const factory PresentationChildrenLayout.column({

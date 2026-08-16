@@ -170,8 +170,8 @@ PresentationNode _serviceListRow(String id, String label, String field) =>
     PresentationNode(
       id: id,
       properties: const PresentationProperties(readOnly: true),
+      header: PresentationHeader(title: label.asStringLiteral),
       element: SectionElement(
-        title: label.asStringLiteral,
         child: PresentationNode(
           id: "$id.values",
           element: RepeatedElement(
@@ -203,8 +203,8 @@ PresentationNode _serviceTextRow(
 ) => PresentationNode(
   id: id,
   properties: const PresentationProperties(readOnly: true),
+  header: PresentationHeader(title: label.asStringLiteral),
   element: SectionElement(
-    title: label.asStringLiteral,
     child: PresentationNode(id: "$id.value", element: TextElement(value)),
   ),
 );

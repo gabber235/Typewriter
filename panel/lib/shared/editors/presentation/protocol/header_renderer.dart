@@ -19,6 +19,7 @@ class PresentationHeaderChrome extends StatefulWidget {
     required this.header,
     required this.scope,
     required this.child,
+    this.contained = false,
     super.key,
   });
 
@@ -27,6 +28,7 @@ class PresentationHeaderChrome extends StatefulWidget {
   final PresentationHeader header;
   final PresentationRenderScope scope;
   final Widget child;
+  final bool contained;
 
   @override
   State<PresentationHeaderChrome> createState() =>
@@ -156,7 +158,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
               duration: Duration(milliseconds: 240),
               curve: Curves.easeOut,
             ),
-            maintainState: false,
+            maintainState: true,
             headerBuilder: (context, animation) => headerContent,
             bodyBuilder: (context, animation) => Padding(
               padding: EdgeInsets.symmetric(
@@ -176,7 +178,9 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [headerContent, widget.child],
           );
-    return DepthBox(enabled: collapsible, child: content);
+    return widget.contained
+        ? content
+        : DepthBox(enabled: collapsible, child: content);
   }
 }
 

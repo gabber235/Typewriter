@@ -54,8 +54,11 @@ PresentationNode effectiveTagGraph({
     ).length().greaterThanOrEqual(1),
     whenTrue: PresentationNode(
       id: "$id.section",
-      element: SectionElement(
+      header: PresentationHeader(
         title: title.asStringLiteral,
+        initiallyExpanded: true,
+      ),
+      element: SectionElement(
         child: PresentationNode(
           id: "$id.graph",
           element: CollectionGraphElement(
@@ -118,8 +121,11 @@ PresentationNode _directTagSummary(String id) => PresentationNode(
 
 PresentationNode _tagPath(String id) => PresentationNode(
   id: "$id.path",
-  element: CollapsibleElement(
+  header: PresentationHeader(
     title: "Inheritance path".asStringLiteral,
+    initiallyExpanded: false,
+  ),
+  element: SectionElement(
     child: PresentationNode(
       id: "$id.path.items",
       element: RepeatedElement(

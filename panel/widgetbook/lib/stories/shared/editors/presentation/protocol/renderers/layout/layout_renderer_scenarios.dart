@@ -144,23 +144,6 @@ final layoutRendererScenarios = [
     ),
   ),
   RendererStoryScenario(
-    kind: RendererStoryKind.card,
-    name: "Card",
-    type: const UnitType(),
-    value: const UnitValue(),
-    presentation: storyNode(
-      "card",
-      PresentationElement.card(
-        storyNode(
-          "cardContent",
-          PresentationElement.text(
-            "Content inside an outlined card.".asStringLiteral,
-          ),
-        ),
-      ),
-    ),
-  ),
-  RendererStoryScenario(
     kind: RendererStoryKind.section,
     name: "Section",
     type: const UnitType(),
@@ -168,35 +151,30 @@ final layoutRendererScenarios = [
     presentation: storyNode(
       "section",
       PresentationElement.section(
-        title: "Quest conditions".asStringLiteral,
-        description: "Conditions determine when this quest becomes available."
-            .asStringLiteral,
-        initiallyExpanded: true,
         child: storyNode(
           "sectionContent",
           PresentationElement.text(
             "The player must reach level ten.".asStringLiteral,
           ),
         ),
-      ),
-    ),
-  ),
-  RendererStoryScenario(
-    kind: RendererStoryKind.collapsible,
-    name: "Collapsible",
-    type: const UnitType(),
-    value: const UnitValue(),
-    presentation: storyNode(
-      "collapsible",
-      PresentationElement.collapsible(
-        title: "Advanced settings".asStringLiteral,
-        initiallyExpanded: true,
-        child: storyNode(
-          "collapsibleContent",
-          PresentationElement.text(
-            "Optional advanced configuration.".asStringLiteral,
+        border: PresentationBorder.sides(
+          start: PresentationBorderSide(
+            color: TypedExpression(
+              resultType: NamedType(standardTypeRefs.color),
+              expression: LiteralExpression(
+                IntegerValue(BigInt.from(0xFF967BFA)),
+              ),
+            ),
+            width: 4,
           ),
+          bottom: const PresentationBorderSide(width: 1),
         ),
+      ),
+      header: PresentationHeader(
+        title: "Quest conditions".asStringLiteral,
+        description: "Conditions determine when this quest becomes available."
+            .asStringLiteral,
+        initiallyExpanded: true,
       ),
     ),
   ),

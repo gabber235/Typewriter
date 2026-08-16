@@ -37,9 +37,15 @@ final class TypedValueEnvelope implements TypedValueEnvelope_orMutable {
   factory TypedValueEnvelope({
     required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable rootType,
     required _lib_editor_v1_type_catalog.TypedValue rootValue,
-  }) => TypedValueEnvelope._(rootType.toFrozen(), rootValue);
+  }) => TypedValueEnvelope._(
+    rootType.toFrozen(),
+    rootValue,
+  );
 
-  TypedValueEnvelope._(this.rootType, this.rootValue);
+  TypedValueEnvelope._(
+    this.rootType,
+    this.rootValue,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypedValueEnvelope._(
@@ -60,30 +66,31 @@ final class TypedValueEnvelope implements TypedValueEnvelope_orMutable {
   TypedValueEnvelope toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TypedValueEnvelope_mutable toMutable() =>
-      TypedValueEnvelope_mutable._(this.rootType, this.rootValue);
+  TypedValueEnvelope_mutable toMutable() => TypedValueEnvelope_mutable._(
+    this.rootType,
+    this.rootValue,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TypedValueEnvelope) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.rootType, this.rootValue];
+  _core.List get _equality_proxy => [
+    this.rootType,
+    this.rootValue,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TypedValueEnvelope` instances.
-  static _skir.StructSerializer<TypedValueEnvelope, TypedValueEnvelope_mutable>
-  get serializer {
+  static _skir.StructSerializer<TypedValueEnvelope, TypedValueEnvelope_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "root_type",
@@ -125,7 +132,10 @@ final class TypedValueEnvelope_mutable implements TypedValueEnvelope_orMutable {
   _lib_editor_v1_type_catalog.TypedValue rootValue;
   _skir.internal__UnrecognizedFields? _u;
 
-  TypedValueEnvelope_mutable._(this.rootType, this.rootValue);
+  TypedValueEnvelope_mutable._(
+    this.rootType,
+    this.rootValue,
+  );
 
   /// If the value of [rootType] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [rootType] and returns it.
@@ -134,14 +144,14 @@ final class TypedValueEnvelope_mutable implements TypedValueEnvelope_orMutable {
     if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
       return value;
     } else {
-      return this.rootType =
-          (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.rootType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TypedValueEnvelope toFrozen() =>
-      TypedValueEnvelope(rootType: this.rootType, rootValue: this.rootValue)
-        .._u = this._u;
+  TypedValueEnvelope toFrozen() => TypedValueEnvelope(
+    rootType: this.rootType,
+    rootValue: this.rootValue,
+  ).._u = this._u;
 }

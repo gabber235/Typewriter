@@ -53,20 +53,9 @@ extension on PresentationElement {
         horizontalSpacing: value.horizontalSpacing,
         verticalSpacing: value.verticalSpacing,
       ),
-      CardElement() => CardElement(
-        value.child._substituteTypes(substitutions),
-        initiallyExpanded: value.initiallyExpanded,
-      ),
       SectionElement() => SectionElement(
-        title: value.title._substituteTypes(substitutions),
-        description: value.description._substituteTypes(substitutions),
         child: value.child._substituteTypes(substitutions),
-        initiallyExpanded: value.initiallyExpanded,
-      ),
-      CollapsibleElement() => CollapsibleElement(
-        title: value.title._substituteTypes(substitutions),
-        child: value.child._substituteTypes(substitutions),
-        initiallyExpanded: value.initiallyExpanded,
+        border: value.border?._substituteTypes(substitutions),
       ),
       TabsElement() => TabsElement(
         tabs: value.tabs
@@ -308,4 +297,35 @@ extension on TypedExpression? {
   TypedExpression? _substituteTypes(
     Map<String, TypeExpression> substitutions,
   ) => this?.substituteTypes(substitutions);
+}
+
+extension on PresentationBorder {
+  PresentationBorder _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => switch (this) {
+    PresentationBorderAll(:final side) => PresentationBorder.all(
+      side._substituteTypes(substitutions),
+    ),
+    PresentationBorderSides(
+      :final top,
+      :final start,
+      :final end,
+      :final bottom,
+    ) =>
+      PresentationBorder.sides(
+        top: top?._substituteTypes(substitutions),
+        start: start?._substituteTypes(substitutions),
+        end: end?._substituteTypes(substitutions),
+        bottom: bottom?._substituteTypes(substitutions),
+      ),
+  };
+}
+
+extension on PresentationBorderSide {
+  PresentationBorderSide _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => PresentationBorderSide(
+    color: color._substituteTypes(substitutions),
+    width: width,
+  );
 }

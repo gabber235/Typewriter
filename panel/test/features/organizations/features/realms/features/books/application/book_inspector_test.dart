@@ -127,7 +127,7 @@ void main() {
     _expectTagChip(effective.rootRows!.item.element as ChipElement);
     _expectTagChip(effective.reachedRows!.item.element as ChipElement);
 
-    final path = effective.paths!.item.element as CollapsibleElement;
+    final path = effective.paths!.item.element as SectionElement;
     final pathItems = path.child.element as RepeatedElement;
     expect(pathItems.presentation.layout, isA<PresentationWrapLayout>());
     expect(

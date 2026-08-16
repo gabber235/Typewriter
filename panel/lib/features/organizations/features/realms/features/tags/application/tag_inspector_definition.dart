@@ -105,8 +105,11 @@ final _tagInspectorPresentation = PresentationDefinition(
 
 final _tagLayoutPresentation = PresentationNode(
   id: "tag.layout",
-  element: CollapsibleElement(
+  header: PresentationHeader(
     title: "Layout".asStringLiteral,
+    initiallyExpanded: false,
+  ),
+  element: SectionElement(
     child: PresentationNode(
       id: "tag.layout.fields",
       element: GridElement(

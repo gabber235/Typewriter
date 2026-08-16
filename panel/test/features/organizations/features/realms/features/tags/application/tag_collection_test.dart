@@ -116,9 +116,10 @@ void main() {
         document.typeCatalog,
       ).resolve(document.rootType as NamedType);
       final root = document.presentations.single.root.element as ColumnElement;
-      final layout =
-          root.children.singleWhere((node) => node.id == "tag.layout").element
-              as CollapsibleElement;
+      final layoutNode = root.children.singleWhere(
+        (node) => node.id == "tag.layout",
+      );
+      final layout = layoutNode.element as SectionElement;
       final layoutGrid = layout.child.element as GridElement;
       final directParents =
           root.children
@@ -154,7 +155,7 @@ void main() {
       _expectTagChip(graph.rootRows!.item.element as ChipElement);
       _expectTagChip(graph.reachedRows!.item.element as ChipElement);
 
-      final path = graph.paths!.item.element as CollapsibleElement;
+      final path = graph.paths!.item.element as SectionElement;
       final pathItems = path.child.element as RepeatedElement;
       expect(pathItems.presentation.layout, isA<PresentationWrapLayout>());
       expect(pathItems.presentation.separator, isNotNull);
@@ -162,7 +163,7 @@ void main() {
           pathItems.presentation.item.element as CollectionLookupElement;
       _expectTagChip(pathLookup.found.element as ChipElement);
 
-      expect(layout.initiallyExpanded, isFalse);
+      expect(layoutNode.header!.initiallyExpanded, isFalse);
       expect(layoutGrid.columns, 2);
       expect(layoutGrid.horizontalSpacing, 12);
       expect(layoutGrid.verticalSpacing, 12);

@@ -38,17 +38,14 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 sealed class ComparisonOperator {
   /// Constant indicating an unknown `ComparisonOperator`.
   /// Default value for fields of type `ComparisonOperator`.
-  static const ComparisonOperator unknown =
-      ComparisonOperator_unknown._instance;
+  static const ComparisonOperator unknown = ComparisonOperator_unknown._instance;
 
   static const equal = _ComparisonOperator_consts.equalConst;
   static const notEqual = _ComparisonOperator_consts.notEqualConst;
   static const lessThan = _ComparisonOperator_consts.lessThanConst;
-  static const lessThanOrEqual =
-      _ComparisonOperator_consts.lessThanOrEqualConst;
+  static const lessThanOrEqual = _ComparisonOperator_consts.lessThanOrEqualConst;
   static const greaterThan = _ComparisonOperator_consts.greaterThanConst;
-  static const greaterThanOrEqual =
-      _ComparisonOperator_consts.greaterThanOrEqualConst;
+  static const greaterThanOrEqual = _ComparisonOperator_consts.greaterThanOrEqualConst;
 
   /// Returns the kind of variant held by this ComparisonOperator.
   ComparisonOperator_kind get kind;
@@ -56,7 +53,13 @@ sealed class ComparisonOperator {
   /// Serializer for `ComparisonOperator` instances.
   static _skir.EnumSerializer<ComparisonOperator> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "equal", "equal", "", equal);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "equal",
+        "equal",
+        "",
+        equal,
+      );
       _serializerBuilder.addConstantVariant(
         2,
         "not_equal",
@@ -97,16 +100,15 @@ sealed class ComparisonOperator {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:ComparisonOperator",
-        doc: "",
-        unknownInstance: ComparisonOperator_unknown._instance,
-        enumInstance: ComparisonOperator.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ComparisonOperator_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:ComparisonOperator",
+    doc: "",
+    unknownInstance: ComparisonOperator_unknown._instance,
+    enumInstance: ComparisonOperator.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ComparisonOperator_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ComparisonOperator`.
@@ -139,8 +141,7 @@ final class ComparisonOperator_unknown implements ComparisonOperator {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ComparisonOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ComparisonOperator.serializer);
 }
 
 enum _ComparisonOperator_consts implements ComparisonOperator {
@@ -157,8 +158,7 @@ enum _ComparisonOperator_consts implements ComparisonOperator {
   const _ComparisonOperator_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ComparisonOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ComparisonOperator.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -191,24 +191,41 @@ sealed class BooleanOperator {
   /// Serializer for `BooleanOperator` instances.
   static _skir.EnumSerializer<BooleanOperator> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "and", "and", "", and);
-      _serializerBuilder.addConstantVariant(2, "or", "or", "", or);
-      _serializerBuilder.addConstantVariant(3, "not", "not", "", not);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "and",
+        "and",
+        "",
+        and,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "or",
+        "or",
+        "",
+        or,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "not",
+        "not",
+        "",
+        not,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:BooleanOperator",
-        doc: "",
-        unknownInstance: BooleanOperator_unknown._instance,
-        enumInstance: BooleanOperator.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: BooleanOperator_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:BooleanOperator",
+    doc: "",
+    unknownInstance: BooleanOperator_unknown._instance,
+    enumInstance: BooleanOperator.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: BooleanOperator_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `BooleanOperator`.
@@ -238,8 +255,7 @@ final class BooleanOperator_unknown implements BooleanOperator {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BooleanOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BooleanOperator.serializer);
 }
 
 enum _BooleanOperator_consts implements BooleanOperator {
@@ -253,8 +269,7 @@ enum _BooleanOperator_consts implements BooleanOperator {
   const _BooleanOperator_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BooleanOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BooleanOperator.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -278,8 +293,7 @@ enum _BooleanOperator_consts implements BooleanOperator {
 sealed class ArithmeticOperator {
   /// Constant indicating an unknown `ArithmeticOperator`.
   /// Default value for fields of type `ArithmeticOperator`.
-  static const ArithmeticOperator unknown =
-      ArithmeticOperator_unknown._instance;
+  static const ArithmeticOperator unknown = ArithmeticOperator_unknown._instance;
 
   static const add = _ArithmeticOperator_consts.addConst;
   static const subtract = _ArithmeticOperator_consts.subtractConst;
@@ -294,7 +308,13 @@ sealed class ArithmeticOperator {
   /// Serializer for `ArithmeticOperator` instances.
   static _skir.EnumSerializer<ArithmeticOperator> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "add", "add", "", add);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "add",
+        "add",
+        "",
+        add,
+      );
       _serializerBuilder.addConstantVariant(
         2,
         "subtract",
@@ -309,7 +329,13 @@ sealed class ArithmeticOperator {
         "",
         multiply,
       );
-      _serializerBuilder.addConstantVariant(4, "divide", "divide", "", divide);
+      _serializerBuilder.addConstantVariant(
+        4,
+        "divide",
+        "divide",
+        "",
+        divide,
+      );
       _serializerBuilder.addConstantVariant(
         5,
         "remainder",
@@ -317,22 +343,27 @@ sealed class ArithmeticOperator {
         "",
         remainder,
       );
-      _serializerBuilder.addConstantVariant(6, "negate", "negate", "", negate);
+      _serializerBuilder.addConstantVariant(
+        6,
+        "negate",
+        "negate",
+        "",
+        negate,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:ArithmeticOperator",
-        doc: "",
-        unknownInstance: ArithmeticOperator_unknown._instance,
-        enumInstance: ArithmeticOperator.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ArithmeticOperator_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:ArithmeticOperator",
+    doc: "",
+    unknownInstance: ArithmeticOperator_unknown._instance,
+    enumInstance: ArithmeticOperator.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ArithmeticOperator_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ArithmeticOperator`.
@@ -365,8 +396,7 @@ final class ArithmeticOperator_unknown implements ArithmeticOperator {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ArithmeticOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ArithmeticOperator.serializer);
 }
 
 enum _ArithmeticOperator_consts implements ArithmeticOperator {
@@ -383,8 +413,7 @@ enum _ArithmeticOperator_consts implements ArithmeticOperator {
   const _ArithmeticOperator_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ArithmeticOperator.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ArithmeticOperator.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -409,9 +438,15 @@ final class FieldAccessExpression implements FieldAccessExpression_orMutable {
   factory FieldAccessExpression({
     required TypedExpression_orMutable target,
     required _core.String fieldName,
-  }) => FieldAccessExpression._(target.toFrozen(), fieldName);
+  }) => FieldAccessExpression._(
+    target.toFrozen(),
+    fieldName,
+  );
 
-  FieldAccessExpression._(this.target, this.fieldName);
+  FieldAccessExpression._(
+    this.target,
+    this.fieldName,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = FieldAccessExpression._(
@@ -421,8 +456,10 @@ final class FieldAccessExpression implements FieldAccessExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FieldAccessExpression_mutable mutable() =>
-      FieldAccessExpression_mutable._(TypedExpression.defaultInstance, "");
+  static FieldAccessExpression_mutable mutable() => FieldAccessExpression_mutable._(
+    TypedExpression.defaultInstance,
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -430,33 +467,31 @@ final class FieldAccessExpression implements FieldAccessExpression_orMutable {
   FieldAccessExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FieldAccessExpression_mutable toMutable() =>
-      FieldAccessExpression_mutable._(this.target, this.fieldName);
+  FieldAccessExpression_mutable toMutable() => FieldAccessExpression_mutable._(
+    this.target,
+    this.fieldName,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FieldAccessExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.target, this.fieldName];
+  _core.List get _equality_proxy => [
+    this.target,
+    this.fieldName,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FieldAccessExpression` instances.
-  static _skir.StructSerializer<
-    FieldAccessExpression,
-    FieldAccessExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FieldAccessExpression, FieldAccessExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -493,19 +528,22 @@ final class FieldAccessExpression implements FieldAccessExpression_orMutable {
 }
 
 /// Mutable version of [FieldAccessExpression].
-final class FieldAccessExpression_mutable
-    implements FieldAccessExpression_orMutable {
+final class FieldAccessExpression_mutable implements FieldAccessExpression_orMutable {
   TypedExpression_orMutable target;
   _core.String fieldName;
   _skir.internal__UnrecognizedFields? _u;
 
-  FieldAccessExpression_mutable._(this.target, this.fieldName);
+  FieldAccessExpression_mutable._(
+    this.target,
+    this.fieldName,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FieldAccessExpression toFrozen() =>
-      FieldAccessExpression(target: this.target, fieldName: this.fieldName)
-        .._u = this._u;
+  FieldAccessExpression toFrozen() => FieldAccessExpression(
+    target: this.target,
+    fieldName: this.fieldName,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -528,19 +566,24 @@ sealed class InterpolationPart {
   static const InterpolationPart unknown = InterpolationPart_unknown._instance;
 
   /// Create a 'text' variant wrapping around the given value.
-  factory InterpolationPart.wrapText(_core.String value) =>
-      InterpolationPart_textWrapper._(value);
+  factory InterpolationPart.wrapText(
+    _core.String value
+  ) => InterpolationPart_textWrapper._(value);
 
   /// Create a 'expression' variant wrapping around the given value.
-  factory InterpolationPart.wrapExpression(TypedExpression value) =>
-      InterpolationPart_expressionWrapper._(value);
+  factory InterpolationPart.wrapExpression(
+    TypedExpression value
+  ) => InterpolationPart_expressionWrapper._(value);
 
   /// Same as `wrapExpression(TypedExpression(...))`.
   factory InterpolationPart.createExpression({
     required _lib_editor_v1_type_catalog.TypeExpression resultType,
     required Expression? expression,
   }) => InterpolationPart.wrapExpression(
-    TypedExpression(resultType: resultType, expression: expression),
+    TypedExpression(
+      resultType: resultType,
+      expression: expression,
+    )
   );
 
   /// Returns the kind of variant held by this InterpolationPart.
@@ -574,16 +617,15 @@ sealed class InterpolationPart {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:InterpolationPart",
-        doc: "",
-        unknownInstance: InterpolationPart_unknown._instance,
-        enumInstance: InterpolationPart.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: InterpolationPart_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:InterpolationPart",
+    doc: "",
+    unknownInstance: InterpolationPart_unknown._instance,
+    enumInstance: InterpolationPart.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: InterpolationPart_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `InterpolationPart`.
@@ -612,8 +654,7 @@ final class InterpolationPart_unknown implements InterpolationPart {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, InterpolationPart.serializer);
+  _core.String toString() => _skir.internal__stringify(this, InterpolationPart.serializer);
 }
 
 sealed class _InterpolationPart_wrapper implements InterpolationPart {
@@ -629,8 +670,7 @@ sealed class _InterpolationPart_wrapper implements InterpolationPart {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, InterpolationPart.serializer);
+  _core.String toString() => _skir.internal__stringify(this, InterpolationPart.serializer);
 }
 
 final class InterpolationPart_textWrapper extends _InterpolationPart_wrapper {
@@ -642,8 +682,7 @@ final class InterpolationPart_textWrapper extends _InterpolationPart_wrapper {
   InterpolationPart_kind get kind => InterpolationPart_kind.textWrapper;
 }
 
-final class InterpolationPart_expressionWrapper
-    extends _InterpolationPart_wrapper {
+final class InterpolationPart_expressionWrapper extends _InterpolationPart_wrapper {
   final TypedExpression value;
 
   InterpolationPart_expressionWrapper._(this.value);
@@ -663,17 +702,20 @@ sealed class InterpolationExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class InterpolationExpression
-    implements InterpolationExpression_orMutable {
+final class InterpolationExpression implements InterpolationExpression_orMutable {
   @_core.override
   final _core.Iterable<InterpolationPart> parts;
   _skir.internal__UnrecognizedFields? _u;
 
   factory InterpolationExpression({
     required _core.Iterable<InterpolationPart> parts,
-  }) => InterpolationExpression._(_skir.internal__frozenCopy(parts));
+  }) => InterpolationExpression._(
+    _skir.internal__frozenCopy(parts),
+  );
 
-  InterpolationExpression._(this.parts);
+  InterpolationExpression._(
+    this.parts,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = InterpolationExpression._(
@@ -682,8 +724,9 @@ final class InterpolationExpression
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InterpolationExpression_mutable mutable() =>
-      InterpolationExpression_mutable._(_skir.KeyedIterable.empty);
+  static InterpolationExpression_mutable mutable() => InterpolationExpression_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -691,39 +734,37 @@ final class InterpolationExpression
   InterpolationExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InterpolationExpression_mutable toMutable() =>
-      InterpolationExpression_mutable._(this.parts);
+  InterpolationExpression_mutable toMutable() => InterpolationExpression_mutable._(
+    this.parts,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InterpolationExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.parts];
+  _core.List get _equality_proxy => [
+    this.parts,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InterpolationExpression` instances.
-  static _skir.StructSerializer<
-    InterpolationExpression,
-    InterpolationExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<InterpolationExpression, InterpolationExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "parts",
         "parts",
         0,
-        _skir.Serializers.iterable(InterpolationPart.serializer),
+        _skir.Serializers.iterable(
+          InterpolationPart.serializer,
+        ),
         "",
         (it) => it.parts,
         (it, v) => it.parts = v,
@@ -745,17 +786,19 @@ final class InterpolationExpression
 }
 
 /// Mutable version of [InterpolationExpression].
-final class InterpolationExpression_mutable
-    implements InterpolationExpression_orMutable {
+final class InterpolationExpression_mutable implements InterpolationExpression_orMutable {
   _core.Iterable<InterpolationPart> parts;
   _skir.internal__UnrecognizedFields? _u;
 
-  InterpolationExpression_mutable._(this.parts);
+  InterpolationExpression_mutable._(
+    this.parts,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  InterpolationExpression toFrozen() =>
-      InterpolationExpression(parts: this.parts).._u = this._u;
+  InterpolationExpression toFrozen() => InterpolationExpression(
+    parts: this.parts,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -784,9 +827,17 @@ final class ComparisonExpression implements ComparisonExpression_orMutable {
     required ComparisonOperator operator_,
     required TypedExpression_orMutable left,
     required TypedExpression_orMutable right,
-  }) => ComparisonExpression._(operator_, left.toFrozen(), right.toFrozen());
+  }) => ComparisonExpression._(
+    operator_,
+    left.toFrozen(),
+    right.toFrozen(),
+  );
 
-  ComparisonExpression._(this.operator_, this.left, this.right);
+  ComparisonExpression._(
+    this.operator_,
+    this.left,
+    this.right,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ComparisonExpression._(
@@ -797,12 +848,11 @@ final class ComparisonExpression implements ComparisonExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ComparisonExpression_mutable mutable() =>
-      ComparisonExpression_mutable._(
-        ComparisonOperator.unknown,
-        TypedExpression.defaultInstance,
-        TypedExpression.defaultInstance,
-      );
+  static ComparisonExpression_mutable mutable() => ComparisonExpression_mutable._(
+    ComparisonOperator.unknown,
+    TypedExpression.defaultInstance,
+    TypedExpression.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -810,33 +860,33 @@ final class ComparisonExpression implements ComparisonExpression_orMutable {
   ComparisonExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ComparisonExpression_mutable toMutable() =>
-      ComparisonExpression_mutable._(this.operator_, this.left, this.right);
+  ComparisonExpression_mutable toMutable() => ComparisonExpression_mutable._(
+    this.operator_,
+    this.left,
+    this.right,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ComparisonExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operator_, this.left, this.right];
+  _core.List get _equality_proxy => [
+    this.operator_,
+    this.left,
+    this.right,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ComparisonExpression` instances.
-  static _skir.StructSerializer<
-    ComparisonExpression,
-    ComparisonExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ComparisonExpression, ComparisonExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operator",
@@ -882,14 +932,17 @@ final class ComparisonExpression implements ComparisonExpression_orMutable {
 }
 
 /// Mutable version of [ComparisonExpression].
-final class ComparisonExpression_mutable
-    implements ComparisonExpression_orMutable {
+final class ComparisonExpression_mutable implements ComparisonExpression_orMutable {
   ComparisonOperator operator_;
   TypedExpression_orMutable left;
   TypedExpression_orMutable right;
   _skir.internal__UnrecognizedFields? _u;
 
-  ComparisonExpression_mutable._(this.operator_, this.left, this.right);
+  ComparisonExpression_mutable._(
+    this.operator_,
+    this.left,
+    this.right,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -927,7 +980,10 @@ final class BooleanExpression implements BooleanExpression_orMutable {
     _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
   );
 
-  BooleanExpression._(this.operator_, this.operands);
+  BooleanExpression._(
+    this.operator_,
+    this.operands,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BooleanExpression._(
@@ -948,30 +1004,31 @@ final class BooleanExpression implements BooleanExpression_orMutable {
   BooleanExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BooleanExpression_mutable toMutable() =>
-      BooleanExpression_mutable._(this.operator_, this.operands);
+  BooleanExpression_mutable toMutable() => BooleanExpression_mutable._(
+    this.operator_,
+    this.operands,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BooleanExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operator_, this.operands];
+  _core.List get _equality_proxy => [
+    this.operator_,
+    this.operands,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BooleanExpression` instances.
-  static _skir.StructSerializer<BooleanExpression, BooleanExpression_mutable>
-  get serializer {
+  static _skir.StructSerializer<BooleanExpression, BooleanExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operator",
@@ -986,7 +1043,9 @@ final class BooleanExpression implements BooleanExpression_orMutable {
         "operands",
         "operands",
         1,
-        _skir.Serializers.iterable(TypedExpression.serializer),
+        _skir.Serializers.iterable(
+          TypedExpression.serializer,
+        ),
         "",
         (it) => it.operands,
         (it, v) => it.operands = v,
@@ -1013,13 +1072,17 @@ final class BooleanExpression_mutable implements BooleanExpression_orMutable {
   _core.Iterable<TypedExpression_orMutable> operands;
   _skir.internal__UnrecognizedFields? _u;
 
-  BooleanExpression_mutable._(this.operator_, this.operands);
+  BooleanExpression_mutable._(
+    this.operator_,
+    this.operands,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BooleanExpression toFrozen() =>
-      BooleanExpression(operator_: this.operator_, operands: this.operands)
-        .._u = this._u;
+  BooleanExpression toFrozen() => BooleanExpression(
+    operator_: this.operator_,
+    operands: this.operands,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1049,7 +1112,10 @@ final class ArithmeticExpression implements ArithmeticExpression_orMutable {
     _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
   );
 
-  ArithmeticExpression._(this.operator_, this.operands);
+  ArithmeticExpression._(
+    this.operator_,
+    this.operands,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ArithmeticExpression._(
@@ -1059,11 +1125,10 @@ final class ArithmeticExpression implements ArithmeticExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ArithmeticExpression_mutable mutable() =>
-      ArithmeticExpression_mutable._(
-        ArithmeticOperator.unknown,
-        _skir.KeyedIterable.empty,
-      );
+  static ArithmeticExpression_mutable mutable() => ArithmeticExpression_mutable._(
+    ArithmeticOperator.unknown,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1071,33 +1136,31 @@ final class ArithmeticExpression implements ArithmeticExpression_orMutable {
   ArithmeticExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ArithmeticExpression_mutable toMutable() =>
-      ArithmeticExpression_mutable._(this.operator_, this.operands);
+  ArithmeticExpression_mutable toMutable() => ArithmeticExpression_mutable._(
+    this.operator_,
+    this.operands,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ArithmeticExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operator_, this.operands];
+  _core.List get _equality_proxy => [
+    this.operator_,
+    this.operands,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ArithmeticExpression` instances.
-  static _skir.StructSerializer<
-    ArithmeticExpression,
-    ArithmeticExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ArithmeticExpression, ArithmeticExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operator",
@@ -1112,7 +1175,9 @@ final class ArithmeticExpression implements ArithmeticExpression_orMutable {
         "operands",
         "operands",
         1,
-        _skir.Serializers.iterable(TypedExpression.serializer),
+        _skir.Serializers.iterable(
+          TypedExpression.serializer,
+        ),
         "",
         (it) => it.operands,
         (it, v) => it.operands = v,
@@ -1134,19 +1199,22 @@ final class ArithmeticExpression implements ArithmeticExpression_orMutable {
 }
 
 /// Mutable version of [ArithmeticExpression].
-final class ArithmeticExpression_mutable
-    implements ArithmeticExpression_orMutable {
+final class ArithmeticExpression_mutable implements ArithmeticExpression_orMutable {
   ArithmeticOperator operator_;
   _core.Iterable<TypedExpression_orMutable> operands;
   _skir.internal__UnrecognizedFields? _u;
 
-  ArithmeticExpression_mutable._(this.operator_, this.operands);
+  ArithmeticExpression_mutable._(
+    this.operator_,
+    this.operands,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ArithmeticExpression toFrozen() =>
-      ArithmeticExpression(operator_: this.operator_, operands: this.operands)
-        .._u = this._u;
+  ArithmeticExpression toFrozen() => ArithmeticExpression(
+    operator_: this.operator_,
+    operands: this.operands,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1181,7 +1249,11 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
     whenFalse.toFrozen(),
   );
 
-  ConditionalExpression._(this.condition, this.whenTrue, this.whenFalse);
+  ConditionalExpression._(
+    this.condition,
+    this.whenTrue,
+    this.whenFalse,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConditionalExpression._(
@@ -1192,12 +1264,11 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConditionalExpression_mutable mutable() =>
-      ConditionalExpression_mutable._(
-        TypedExpression.defaultInstance,
-        TypedExpression.defaultInstance,
-        TypedExpression.defaultInstance,
-      );
+  static ConditionalExpression_mutable mutable() => ConditionalExpression_mutable._(
+    TypedExpression.defaultInstance,
+    TypedExpression.defaultInstance,
+    TypedExpression.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1215,10 +1286,7 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConditionalExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1234,11 +1302,7 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConditionalExpression` instances.
-  static _skir.StructSerializer<
-    ConditionalExpression,
-    ConditionalExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ConditionalExpression, ConditionalExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "condition",
@@ -1284,8 +1348,7 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
 }
 
 /// Mutable version of [ConditionalExpression].
-final class ConditionalExpression_mutable
-    implements ConditionalExpression_orMutable {
+final class ConditionalExpression_mutable implements ConditionalExpression_orMutable {
   TypedExpression_orMutable condition;
   TypedExpression_orMutable whenTrue;
   TypedExpression_orMutable whenFalse;
@@ -1319,8 +1382,7 @@ sealed class CollectionProjectionExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class CollectionProjectionExpression
-    implements CollectionProjectionExpression_orMutable {
+final class CollectionProjectionExpression implements CollectionProjectionExpression_orMutable {
   @_core.override
   final TypedExpression source;
   @_core.override
@@ -1354,12 +1416,11 @@ final class CollectionProjectionExpression
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionProjectionExpression_mutable mutable() =>
-      CollectionProjectionExpression_mutable._(
-        TypedExpression.defaultInstance,
-        TypedExpression.defaultInstance,
-        _lib_editor_v1_binding.BindingId.defaultInstance,
-      );
+  static CollectionProjectionExpression_mutable mutable() => CollectionProjectionExpression_mutable._(
+    TypedExpression.defaultInstance,
+    TypedExpression.defaultInstance,
+    _lib_editor_v1_binding.BindingId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1367,21 +1428,17 @@ final class CollectionProjectionExpression
   CollectionProjectionExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionProjectionExpression_mutable toMutable() =>
-      CollectionProjectionExpression_mutable._(
-        this.source,
-        this.projection,
-        this.itemBindingId,
-      );
+  CollectionProjectionExpression_mutable toMutable() => CollectionProjectionExpression_mutable._(
+    this.source,
+    this.projection,
+    this.itemBindingId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionProjectionExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1397,11 +1454,7 @@ final class CollectionProjectionExpression
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionProjectionExpression` instances.
-  static _skir.StructSerializer<
-    CollectionProjectionExpression,
-    CollectionProjectionExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CollectionProjectionExpression, CollectionProjectionExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "source",
@@ -1447,8 +1500,7 @@ final class CollectionProjectionExpression
 }
 
 /// Mutable version of [CollectionProjectionExpression].
-final class CollectionProjectionExpression_mutable
-    implements CollectionProjectionExpression_orMutable {
+final class CollectionProjectionExpression_mutable implements CollectionProjectionExpression_orMutable {
   TypedExpression_orMutable source;
   TypedExpression_orMutable projection;
   _lib_editor_v1_binding.BindingId_orMutable itemBindingId;
@@ -1467,8 +1519,7 @@ final class CollectionProjectionExpression_mutable
     if (value is _lib_editor_v1_binding.BindingId_mutable) {
       return value;
     } else {
-      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId)
-          .toMutable();
+      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
     }
   }
 
@@ -1503,9 +1554,15 @@ final class ConversionExpression implements ConversionExpression_orMutable {
   factory ConversionExpression({
     required _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId,
     required TypedExpression_orMutable input,
-  }) => ConversionExpression._(conversionId.toFrozen(), input.toFrozen());
+  }) => ConversionExpression._(
+    conversionId.toFrozen(),
+    input.toFrozen(),
+  );
 
-  ConversionExpression._(this.conversionId, this.input);
+  ConversionExpression._(
+    this.conversionId,
+    this.input,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConversionExpression._(
@@ -1515,11 +1572,10 @@ final class ConversionExpression implements ConversionExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConversionExpression_mutable mutable() =>
-      ConversionExpression_mutable._(
-        _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
-        TypedExpression.defaultInstance,
-      );
+  static ConversionExpression_mutable mutable() => ConversionExpression_mutable._(
+    _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
+    TypedExpression.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1527,33 +1583,31 @@ final class ConversionExpression implements ConversionExpression_orMutable {
   ConversionExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConversionExpression_mutable toMutable() =>
-      ConversionExpression_mutable._(this.conversionId, this.input);
+  ConversionExpression_mutable toMutable() => ConversionExpression_mutable._(
+    this.conversionId,
+    this.input,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConversionExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.conversionId, this.input];
+  _core.List get _equality_proxy => [
+    this.conversionId,
+    this.input,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConversionExpression` instances.
-  static _skir.StructSerializer<
-    ConversionExpression,
-    ConversionExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ConversionExpression, ConversionExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "conversion_id",
@@ -1590,13 +1644,15 @@ final class ConversionExpression implements ConversionExpression_orMutable {
 }
 
 /// Mutable version of [ConversionExpression].
-final class ConversionExpression_mutable
-    implements ConversionExpression_orMutable {
+final class ConversionExpression_mutable implements ConversionExpression_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId;
   TypedExpression_orMutable input;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConversionExpression_mutable._(this.conversionId, this.input);
+  ConversionExpression_mutable._(
+    this.conversionId,
+    this.input,
+  );
 
   /// If the value of [conversionId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [conversionId] and returns it.
@@ -1605,16 +1661,16 @@ final class ConversionExpression_mutable
     if (value is _lib_editor_v1_type_catalog.ConversionId_mutable) {
       return value;
     } else {
-      return this.conversionId =
-          (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
+      return this.conversionId = (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConversionExpression toFrozen() =>
-      ConversionExpression(conversionId: this.conversionId, input: this.input)
-        .._u = this._u;
+  ConversionExpression toFrozen() => ConversionExpression(
+    conversionId: this.conversionId,
+    input: this.input,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1663,7 +1719,13 @@ sealed class StringOperation {
   /// Serializer for `StringOperation` instances.
   static _skir.EnumSerializer<StringOperation> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "trim", "trim", "", trim);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "trim",
+        "trim",
+        "",
+        trim,
+      );
       _serializerBuilder.addConstantVariant(
         2,
         "lower_case",
@@ -1692,8 +1754,20 @@ sealed class StringOperation {
         "",
         replace,
       );
-      _serializerBuilder.addConstantVariant(6, "split", "split", "", split);
-      _serializerBuilder.addConstantVariant(7, "join", "join", "", join);
+      _serializerBuilder.addConstantVariant(
+        6,
+        "split",
+        "split",
+        "",
+        split,
+      );
+      _serializerBuilder.addConstantVariant(
+        7,
+        "join",
+        "join",
+        "",
+        join,
+      );
       _serializerBuilder.addConstantVariant(
         8,
         "substring",
@@ -1727,16 +1801,15 @@ sealed class StringOperation {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:StringOperation",
-        doc: "",
-        unknownInstance: StringOperation_unknown._instance,
-        enumInstance: StringOperation.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: StringOperation_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:StringOperation",
+    doc: "",
+    unknownInstance: StringOperation_unknown._instance,
+    enumInstance: StringOperation.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: StringOperation_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `StringOperation`.
@@ -1774,8 +1847,7 @@ final class StringOperation_unknown implements StringOperation {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, StringOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, StringOperation.serializer);
 }
 
 enum _StringOperation_consts implements StringOperation {
@@ -1797,8 +1869,7 @@ enum _StringOperation_consts implements StringOperation {
   const _StringOperation_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, StringOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, StringOperation.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -1813,8 +1884,7 @@ sealed class StringOperationExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class StringOperationExpression
-    implements StringOperationExpression_orMutable {
+final class StringOperationExpression implements StringOperationExpression_orMutable {
   @_core.override
   final StringOperation operation;
   @_core.override
@@ -1829,7 +1899,10 @@ final class StringOperationExpression
     _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
   );
 
-  StringOperationExpression._(this.operation, this.operands);
+  StringOperationExpression._(
+    this.operation,
+    this.operands,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StringOperationExpression._(
@@ -1839,11 +1912,10 @@ final class StringOperationExpression
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static StringOperationExpression_mutable mutable() =>
-      StringOperationExpression_mutable._(
-        StringOperation.unknown,
-        _skir.KeyedIterable.empty,
-      );
+  static StringOperationExpression_mutable mutable() => StringOperationExpression_mutable._(
+    StringOperation.unknown,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1851,33 +1923,31 @@ final class StringOperationExpression
   StringOperationExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StringOperationExpression_mutable toMutable() =>
-      StringOperationExpression_mutable._(this.operation, this.operands);
+  StringOperationExpression_mutable toMutable() => StringOperationExpression_mutable._(
+    this.operation,
+    this.operands,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StringOperationExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operation, this.operands];
+  _core.List get _equality_proxy => [
+    this.operation,
+    this.operands,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `StringOperationExpression` instances.
-  static _skir.StructSerializer<
-    StringOperationExpression,
-    StringOperationExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<StringOperationExpression, StringOperationExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation",
@@ -1892,7 +1962,9 @@ final class StringOperationExpression
         "operands",
         "operands",
         1,
-        _skir.Serializers.iterable(TypedExpression.serializer),
+        _skir.Serializers.iterable(
+          TypedExpression.serializer,
+        ),
         "",
         (it) => it.operands,
         (it, v) => it.operands = v,
@@ -1914,13 +1986,15 @@ final class StringOperationExpression
 }
 
 /// Mutable version of [StringOperationExpression].
-final class StringOperationExpression_mutable
-    implements StringOperationExpression_orMutable {
+final class StringOperationExpression_mutable implements StringOperationExpression_orMutable {
   StringOperation operation;
   _core.Iterable<TypedExpression_orMutable> operands;
   _skir.internal__UnrecognizedFields? _u;
 
-  StringOperationExpression_mutable._(this.operation, this.operands);
+  StringOperationExpression_mutable._(
+    this.operation,
+    this.operands,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -1948,8 +2022,7 @@ final class StringOperationExpression_mutable
 sealed class CollectionOperation {
   /// Constant indicating an unknown `CollectionOperation`.
   /// Default value for fields of type `CollectionOperation`.
-  static const CollectionOperation unknown =
-      CollectionOperation_unknown._instance;
+  static const CollectionOperation unknown = CollectionOperation_unknown._instance;
 
   static const access = _CollectionOperation_consts.accessConst;
   static const length = _CollectionOperation_consts.lengthConst;
@@ -1961,8 +2034,20 @@ sealed class CollectionOperation {
   /// Serializer for `CollectionOperation` instances.
   static _skir.EnumSerializer<CollectionOperation> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "access", "access", "", access);
-      _serializerBuilder.addConstantVariant(2, "length", "length", "", length);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "access",
+        "access",
+        "",
+        access,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "length",
+        "length",
+        "",
+        length,
+      );
       _serializerBuilder.addConstantVariant(
         3,
         "contains",
@@ -1975,16 +2060,15 @@ sealed class CollectionOperation {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:CollectionOperation",
-        doc: "",
-        unknownInstance: CollectionOperation_unknown._instance,
-        enumInstance: CollectionOperation.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: CollectionOperation_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:CollectionOperation",
+    doc: "",
+    unknownInstance: CollectionOperation_unknown._instance,
+    enumInstance: CollectionOperation.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: CollectionOperation_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `CollectionOperation`.
@@ -2014,8 +2098,7 @@ final class CollectionOperation_unknown implements CollectionOperation {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CollectionOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, CollectionOperation.serializer);
 }
 
 enum _CollectionOperation_consts implements CollectionOperation {
@@ -2029,8 +2112,7 @@ enum _CollectionOperation_consts implements CollectionOperation {
   const _CollectionOperation_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, CollectionOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, CollectionOperation.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -2045,8 +2127,7 @@ sealed class CollectionOperationExpression_orMutable {
 }
 
 /// Deeply immutable.
-final class CollectionOperationExpression
-    implements CollectionOperationExpression_orMutable {
+final class CollectionOperationExpression implements CollectionOperationExpression_orMutable {
   @_core.override
   final CollectionOperation operation;
   @_core.override
@@ -2061,7 +2142,10 @@ final class CollectionOperationExpression
     _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
   );
 
-  CollectionOperationExpression._(this.operation, this.operands);
+  CollectionOperationExpression._(
+    this.operation,
+    this.operands,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CollectionOperationExpression._(
@@ -2071,11 +2155,10 @@ final class CollectionOperationExpression
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CollectionOperationExpression_mutable mutable() =>
-      CollectionOperationExpression_mutable._(
-        CollectionOperation.unknown,
-        _skir.KeyedIterable.empty,
-      );
+  static CollectionOperationExpression_mutable mutable() => CollectionOperationExpression_mutable._(
+    CollectionOperation.unknown,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2083,33 +2166,31 @@ final class CollectionOperationExpression
   CollectionOperationExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CollectionOperationExpression_mutable toMutable() =>
-      CollectionOperationExpression_mutable._(this.operation, this.operands);
+  CollectionOperationExpression_mutable toMutable() => CollectionOperationExpression_mutable._(
+    this.operation,
+    this.operands,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CollectionOperationExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operation, this.operands];
+  _core.List get _equality_proxy => [
+    this.operation,
+    this.operands,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CollectionOperationExpression` instances.
-  static _skir.StructSerializer<
-    CollectionOperationExpression,
-    CollectionOperationExpression_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CollectionOperationExpression, CollectionOperationExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation",
@@ -2124,7 +2205,9 @@ final class CollectionOperationExpression
         "operands",
         "operands",
         1,
-        _skir.Serializers.iterable(TypedExpression.serializer),
+        _skir.Serializers.iterable(
+          TypedExpression.serializer,
+        ),
         "",
         (it) => it.operands,
         (it, v) => it.operands = v,
@@ -2146,13 +2229,15 @@ final class CollectionOperationExpression
 }
 
 /// Mutable version of [CollectionOperationExpression].
-final class CollectionOperationExpression_mutable
-    implements CollectionOperationExpression_orMutable {
+final class CollectionOperationExpression_mutable implements CollectionOperationExpression_orMutable {
   CollectionOperation operation;
   _core.Iterable<TypedExpression_orMutable> operands;
   _skir.internal__UnrecognizedFields? _u;
 
-  CollectionOperationExpression_mutable._(this.operation, this.operands);
+  CollectionOperationExpression_mutable._(
+    this.operation,
+    this.operands,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -2218,16 +2303,15 @@ sealed class RegexOperation {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:RegexOperation",
-        doc: "",
-        unknownInstance: RegexOperation_unknown._instance,
-        enumInstance: RegexOperation.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: RegexOperation_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:RegexOperation",
+    doc: "",
+    unknownInstance: RegexOperation_unknown._instance,
+    enumInstance: RegexOperation.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: RegexOperation_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `RegexOperation`.
@@ -2257,8 +2341,7 @@ final class RegexOperation_unknown implements RegexOperation {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RegexOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RegexOperation.serializer);
 }
 
 enum _RegexOperation_consts implements RegexOperation {
@@ -2272,8 +2355,7 @@ enum _RegexOperation_consts implements RegexOperation {
   const _RegexOperation_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, RegexOperation.serializer);
+  _core.String toString() => _skir.internal__stringify(this, RegexOperation.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -2363,10 +2445,7 @@ final class RegexExpression implements RegexExpression_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RegexExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2384,8 +2463,7 @@ final class RegexExpression implements RegexExpression_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RegexExpression` instances.
-  static _skir.StructSerializer<RegexExpression, RegexExpression_mutable>
-  get serializer {
+  static _skir.StructSerializer<RegexExpression, RegexExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operation",
@@ -2418,7 +2496,9 @@ final class RegexExpression implements RegexExpression_orMutable {
         "group",
         "group",
         3,
-        _skir.Serializers.optional(_skir.Serializers.int32),
+        _skir.Serializers.optional(
+          _skir.Serializers.int32,
+        ),
         "",
         (it) => it.group,
         (it, v) => it.group = v,
@@ -2427,7 +2507,9 @@ final class RegexExpression implements RegexExpression_orMutable {
         "replacement",
         "replacement",
         4,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.replacement,
         (it, v) => it.replacement = v,
@@ -2498,7 +2580,9 @@ final class CoalesceExpression implements CoalesceExpression_orMutable {
     _skir.internal__frozenMappedCopy(operands, (it) => it.toFrozen()),
   );
 
-  CoalesceExpression._(this.operands);
+  CoalesceExpression._(
+    this.operands,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CoalesceExpression._(
@@ -2507,8 +2591,9 @@ final class CoalesceExpression implements CoalesceExpression_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CoalesceExpression_mutable mutable() =>
-      CoalesceExpression_mutable._(_skir.KeyedIterable.empty);
+  static CoalesceExpression_mutable mutable() => CoalesceExpression_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2516,36 +2601,37 @@ final class CoalesceExpression implements CoalesceExpression_orMutable {
   CoalesceExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CoalesceExpression_mutable toMutable() =>
-      CoalesceExpression_mutable._(this.operands);
+  CoalesceExpression_mutable toMutable() => CoalesceExpression_mutable._(
+    this.operands,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CoalesceExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.operands];
+  _core.List get _equality_proxy => [
+    this.operands,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CoalesceExpression` instances.
-  static _skir.StructSerializer<CoalesceExpression, CoalesceExpression_mutable>
-  get serializer {
+  static _skir.StructSerializer<CoalesceExpression, CoalesceExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "operands",
         "operands",
         0,
-        _skir.Serializers.iterable(TypedExpression.serializer),
+        _skir.Serializers.iterable(
+          TypedExpression.serializer,
+        ),
         "",
         (it) => it.operands,
         (it, v) => it.operands = v,
@@ -2571,12 +2657,15 @@ final class CoalesceExpression_mutable implements CoalesceExpression_orMutable {
   _core.Iterable<TypedExpression_orMutable> operands;
   _skir.internal__UnrecognizedFields? _u;
 
-  CoalesceExpression_mutable._(this.operands);
+  CoalesceExpression_mutable._(
+    this.operands,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CoalesceExpression toFrozen() =>
-      CoalesceExpression(operands: this.operands).._u = this._u;
+  CoalesceExpression toFrozen() => CoalesceExpression(
+    operands: this.operands,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2612,45 +2701,59 @@ sealed class Expression {
 
   /// Create a 'literal' variant wrapping around the given value.
   factory Expression.wrapLiteral(
-    _lib_editor_v1_type_catalog.TypedValue value,
+    _lib_editor_v1_type_catalog.TypedValue value
   ) => Expression_literalWrapper._(value);
 
   /// Create a 'binding' variant wrapping around the given value.
-  factory Expression.wrapBinding(_lib_editor_v1_binding.BindingRef value) =>
-      Expression_bindingWrapper._(value);
+  factory Expression.wrapBinding(
+    _lib_editor_v1_binding.BindingRef value
+  ) => Expression_bindingWrapper._(value);
 
   /// Same as `wrapBinding(_lib_editor_v1_binding.BindingRef(...))`.
   factory Expression.createBinding({
     required _lib_editor_v1_path.DataPath_orMutable path,
     required _lib_editor_v1_binding.BindingId_orMutable bindingId,
   }) => Expression.wrapBinding(
-    _lib_editor_v1_binding.BindingRef(path: path, bindingId: bindingId),
+    _lib_editor_v1_binding.BindingRef(
+      path: path,
+      bindingId: bindingId,
+    )
   );
 
   /// Create a 'field_access' variant wrapping around the given value.
-  factory Expression.wrapFieldAccess(FieldAccessExpression value) =>
-      Expression_fieldAccessWrapper._(value);
+  factory Expression.wrapFieldAccess(
+    FieldAccessExpression value
+  ) => Expression_fieldAccessWrapper._(value);
 
   /// Same as `wrapFieldAccess(FieldAccessExpression(...))`.
   factory Expression.createFieldAccess({
     required TypedExpression_orMutable target,
     required _core.String fieldName,
   }) => Expression.wrapFieldAccess(
-    FieldAccessExpression(target: target, fieldName: fieldName),
+    FieldAccessExpression(
+      target: target,
+      fieldName: fieldName,
+    )
   );
 
   /// Create a 'interpolation' variant wrapping around the given value.
-  factory Expression.wrapInterpolation(InterpolationExpression value) =>
-      Expression_interpolationWrapper._(value);
+  factory Expression.wrapInterpolation(
+    InterpolationExpression value
+  ) => Expression_interpolationWrapper._(value);
 
   /// Same as `wrapInterpolation(InterpolationExpression(...))`.
   factory Expression.createInterpolation({
     required _core.Iterable<InterpolationPart> parts,
-  }) => Expression.wrapInterpolation(InterpolationExpression(parts: parts));
+  }) => Expression.wrapInterpolation(
+    InterpolationExpression(
+      parts: parts,
+    )
+  );
 
   /// Create a 'comparison' variant wrapping around the given value.
-  factory Expression.wrapComparison(ComparisonExpression value) =>
-      Expression_comparisonWrapper._(value);
+  factory Expression.wrapComparison(
+    ComparisonExpression value
+  ) => Expression_comparisonWrapper._(value);
 
   /// Same as `wrapComparison(ComparisonExpression(...))`.
   factory Expression.createComparison({
@@ -2658,36 +2761,49 @@ sealed class Expression {
     required TypedExpression_orMutable left,
     required TypedExpression_orMutable right,
   }) => Expression.wrapComparison(
-    ComparisonExpression(operator_: operator_, left: left, right: right),
+    ComparisonExpression(
+      operator_: operator_,
+      left: left,
+      right: right,
+    )
   );
 
   /// Create a 'boolean_operation' variant wrapping around the given value.
-  factory Expression.wrapBooleanOperation(BooleanExpression value) =>
-      Expression_booleanOperationWrapper._(value);
+  factory Expression.wrapBooleanOperation(
+    BooleanExpression value
+  ) => Expression_booleanOperationWrapper._(value);
 
   /// Same as `wrapBooleanOperation(BooleanExpression(...))`.
   factory Expression.createBooleanOperation({
     required BooleanOperator operator_,
     required _core.Iterable<TypedExpression_orMutable> operands,
   }) => Expression.wrapBooleanOperation(
-    BooleanExpression(operator_: operator_, operands: operands),
+    BooleanExpression(
+      operator_: operator_,
+      operands: operands,
+    )
   );
 
   /// Create a 'arithmetic' variant wrapping around the given value.
-  factory Expression.wrapArithmetic(ArithmeticExpression value) =>
-      Expression_arithmeticWrapper._(value);
+  factory Expression.wrapArithmetic(
+    ArithmeticExpression value
+  ) => Expression_arithmeticWrapper._(value);
 
   /// Same as `wrapArithmetic(ArithmeticExpression(...))`.
   factory Expression.createArithmetic({
     required ArithmeticOperator operator_,
     required _core.Iterable<TypedExpression_orMutable> operands,
   }) => Expression.wrapArithmetic(
-    ArithmeticExpression(operator_: operator_, operands: operands),
+    ArithmeticExpression(
+      operator_: operator_,
+      operands: operands,
+    )
   );
 
   /// Create a 'conditional' variant wrapping around the given value.
-  factory Expression.wrapConditional(ConditionalExpression value) =>
-      Expression_conditionalWrapper._(value);
+  factory Expression.wrapConditional(
+    ConditionalExpression value
+  ) => Expression_conditionalWrapper._(value);
 
   /// Same as `wrapConditional(ConditionalExpression(...))`.
   factory Expression.createConditional({
@@ -2699,12 +2815,12 @@ sealed class Expression {
       condition: condition,
       whenTrue: whenTrue,
       whenFalse: whenFalse,
-    ),
+    )
   );
 
   /// Create a 'collection_projection' variant wrapping around the given value.
   factory Expression.wrapCollectionProjection(
-    CollectionProjectionExpression value,
+    CollectionProjectionExpression value
   ) => Expression_collectionProjectionWrapper._(value);
 
   /// Same as `wrapCollectionProjection(CollectionProjectionExpression(...))`.
@@ -2717,36 +2833,44 @@ sealed class Expression {
       source: source,
       projection: projection,
       itemBindingId: itemBindingId,
-    ),
+    )
   );
 
   /// Create a 'conversion' variant wrapping around the given value.
-  factory Expression.wrapConversion(ConversionExpression value) =>
-      Expression_conversionWrapper._(value);
+  factory Expression.wrapConversion(
+    ConversionExpression value
+  ) => Expression_conversionWrapper._(value);
 
   /// Same as `wrapConversion(ConversionExpression(...))`.
   factory Expression.createConversion({
     required _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId,
     required TypedExpression_orMutable input,
   }) => Expression.wrapConversion(
-    ConversionExpression(conversionId: conversionId, input: input),
+    ConversionExpression(
+      conversionId: conversionId,
+      input: input,
+    )
   );
 
   /// Create a 'string_operation' variant wrapping around the given value.
-  factory Expression.wrapStringOperation(StringOperationExpression value) =>
-      Expression_stringOperationWrapper._(value);
+  factory Expression.wrapStringOperation(
+    StringOperationExpression value
+  ) => Expression_stringOperationWrapper._(value);
 
   /// Same as `wrapStringOperation(StringOperationExpression(...))`.
   factory Expression.createStringOperation({
     required StringOperation operation,
     required _core.Iterable<TypedExpression_orMutable> operands,
   }) => Expression.wrapStringOperation(
-    StringOperationExpression(operation: operation, operands: operands),
+    StringOperationExpression(
+      operation: operation,
+      operands: operands,
+    )
   );
 
   /// Create a 'collection_operation' variant wrapping around the given value.
   factory Expression.wrapCollectionOperation(
-    CollectionOperationExpression value,
+    CollectionOperationExpression value
   ) => Expression_collectionOperationWrapper._(value);
 
   /// Same as `wrapCollectionOperation(CollectionOperationExpression(...))`.
@@ -2754,12 +2878,16 @@ sealed class Expression {
     required CollectionOperation operation,
     required _core.Iterable<TypedExpression_orMutable> operands,
   }) => Expression.wrapCollectionOperation(
-    CollectionOperationExpression(operation: operation, operands: operands),
+    CollectionOperationExpression(
+      operation: operation,
+      operands: operands,
+    )
   );
 
   /// Create a 'regex' variant wrapping around the given value.
-  factory Expression.wrapRegex(RegexExpression value) =>
-      Expression_regexWrapper._(value);
+  factory Expression.wrapRegex(
+    RegexExpression value
+  ) => Expression_regexWrapper._(value);
 
   /// Same as `wrapRegex(RegexExpression(...))`.
   factory Expression.createRegex({
@@ -2775,17 +2903,22 @@ sealed class Expression {
       pattern: pattern,
       group: group,
       replacement: replacement,
-    ),
+    )
   );
 
   /// Create a 'coalesce' variant wrapping around the given value.
-  factory Expression.wrapCoalesce(CoalesceExpression value) =>
-      Expression_coalesceWrapper._(value);
+  factory Expression.wrapCoalesce(
+    CoalesceExpression value
+  ) => Expression_coalesceWrapper._(value);
 
   /// Same as `wrapCoalesce(CoalesceExpression(...))`.
   factory Expression.createCoalesce({
     required _core.Iterable<TypedExpression_orMutable> operands,
-  }) => Expression.wrapCoalesce(CoalesceExpression(operands: operands));
+  }) => Expression.wrapCoalesce(
+    CoalesceExpression(
+      operands: operands,
+    )
+  );
 
   /// Returns the kind of variant held by this Expression.
   Expression_kind get kind;
@@ -2938,16 +3071,15 @@ sealed class Expression {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/expression.skir:Expression",
-        doc: "",
-        unknownInstance: Expression_unknown._instance,
-        enumInstance: Expression.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: Expression_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/expression.skir:Expression",
+    doc: "",
+    unknownInstance: Expression_unknown._instance,
+    enumInstance: Expression.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: Expression_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `Expression`.
@@ -2988,8 +3120,7 @@ final class Expression_unknown implements Expression {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, Expression.serializer);
+  _core.String toString() => _skir.internal__stringify(this, Expression.serializer);
 }
 
 sealed class _Expression_wrapper implements Expression {
@@ -3005,8 +3136,7 @@ sealed class _Expression_wrapper implements Expression {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, Expression.serializer);
+  _core.String toString() => _skir.internal__stringify(this, Expression.serializer);
 }
 
 final class Expression_literalWrapper extends _Expression_wrapper {
@@ -3157,9 +3287,15 @@ final class TypedExpression implements TypedExpression_orMutable {
   factory TypedExpression({
     required _lib_editor_v1_type_catalog.TypeExpression resultType,
     required Expression? expression,
-  }) => TypedExpression._(resultType, expression);
+  }) => TypedExpression._(
+    resultType,
+    expression,
+  );
 
-  TypedExpression._(this.resultType, this.expression);
+  TypedExpression._(
+    this.resultType,
+    this.expression,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypedExpression._(
@@ -3180,30 +3316,31 @@ final class TypedExpression implements TypedExpression_orMutable {
   TypedExpression toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TypedExpression_mutable toMutable() =>
-      TypedExpression_mutable._(this.resultType, this.expression);
+  TypedExpression_mutable toMutable() => TypedExpression_mutable._(
+    this.resultType,
+    this.expression,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! TypedExpression) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.resultType, this.expression];
+  _core.List get _equality_proxy => [
+    this.resultType,
+    this.expression,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `TypedExpression` instances.
-  static _skir.StructSerializer<TypedExpression, TypedExpression_mutable>
-  get serializer {
+  static _skir.StructSerializer<TypedExpression, TypedExpression_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "result_type",
@@ -3218,7 +3355,9 @@ final class TypedExpression implements TypedExpression_orMutable {
         "expression",
         "expression",
         1,
-        _skir.Serializers.optional(Expression.serializer),
+        _skir.Serializers.optional(
+          Expression.serializer,
+        ),
         "",
         (it) => it.expression,
         (it, v) => it.expression = v,
@@ -3245,11 +3384,15 @@ final class TypedExpression_mutable implements TypedExpression_orMutable {
   Expression? expression;
   _skir.internal__UnrecognizedFields? _u;
 
-  TypedExpression_mutable._(this.resultType, this.expression);
+  TypedExpression_mutable._(
+    this.resultType,
+    this.expression,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TypedExpression toFrozen() =>
-      TypedExpression(resultType: this.resultType, expression: this.expression)
-        .._u = this._u;
+  TypedExpression toFrozen() => TypedExpression(
+    resultType: this.resultType,
+    expression: this.expression,
+  ).._u = this._u;
 }

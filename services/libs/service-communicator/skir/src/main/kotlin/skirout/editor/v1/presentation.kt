@@ -4082,31 +4082,31 @@ class ChildrenElement private constructor(
     }
 }
 
-sealed interface CardLayout_OrMutable {
-    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
-    val initiallyExpanded: kotlin.Boolean?;
+sealed interface PresentationBorderSide_OrMutable {
+    val color: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+    val width: kotlin.Double;
 
-    fun toFrozen(): skirout.editor.v1.presentation.CardLayout;
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationBorderSide;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class CardLayout private constructor(
-    override val child: skirout.editor.v1.presentation.PresentationNode,
-    override val initiallyExpanded: kotlin.Boolean?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CardLayout>? =
+class PresentationBorderSide private constructor(
+    override val color: skirout.editor.v1.expression.TypedExpression?,
+    override val width: kotlin.Double,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBorderSide>? =
         null,
-): skirout.editor.v1.presentation.CardLayout_OrMutable {
+): skirout.editor.v1.presentation.PresentationBorderSide_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        initiallyExpanded: kotlin.Boolean?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CardLayout>? =
+        color: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        width: kotlin.Double,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBorderSide>? =
             null,
     ): this(
-        child.toFrozen(),
-        initiallyExpanded,
+        if (color != null) color.toFrozen() else null,
+        width,
         _unrecognizedFields,
     ) {}
 
@@ -4115,21 +4115,21 @@ class CardLayout private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        child = this.child,
-        initiallyExpanded = this.initiallyExpanded,
+        color = this.color,
+        width = this.width,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-            this.child,
-        initiallyExpanded: kotlin.Boolean? =
-            this.initiallyExpanded,
-    ) = skirout.editor.v1.presentation.CardLayout(
-        child.toFrozen(),
-        initiallyExpanded,
+        color: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.color,
+        width: kotlin.Double =
+            this.width,
+    ) = skirout.editor.v1.presentation.PresentationBorderSide(
+        if (color != null) color.toFrozen() else null,
+        width,
         this._unrecognizedFields,
     );
 
@@ -4137,69 +4137,69 @@ class CardLayout private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.CardLayout && this.child == other.child && this.initiallyExpanded == other.initiallyExpanded);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationBorderSide && this.color == other.color && this.width == other.width);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.initiallyExpanded).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.color, this.width).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.presentation.CardLayout.serializerImpl,
+            skirout.editor.v1.presentation.PresentationBorderSide.serializerImpl,
         )
     }
 
-    /** Mutable version of [CardLayout]. */
+    /** Mutable version of [PresentationBorderSide]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var child: skirout.editor.v1.presentation.PresentationNode =
-            skirout.editor.v1.presentation.PresentationNode.partial(),
-        override var initiallyExpanded: kotlin.Boolean? =
+        override var color: skirout.editor.v1.expression.TypedExpression_OrMutable? =
             null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CardLayout>? =
+        override var width: kotlin.Double =
+            0.0,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBorderSide>? =
             null,
-    ): skirout.editor.v1.presentation.CardLayout_OrMutable {
+    ): skirout.editor.v1.presentation.PresentationBorderSide_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.CardLayout(
-            child = this.child,
-            initiallyExpanded = this.initiallyExpanded,
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationBorderSide(
+            color = this.color,
+            width = this.width,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.presentation.CardLayout(
-                skirout.editor.v1.presentation.PresentationNode.partial(),
+            skirout.editor.v1.presentation.PresentationBorderSide(
                 null,
+                0.0,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [CardLayout].
+         * Creates a new instance of [PresentationBorderSide].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-                skirout.editor.v1.presentation.PresentationNode.partial(),
-            initiallyExpanded: kotlin.Boolean? =
+            color: skirout.editor.v1.expression.TypedExpression_OrMutable? =
                 null,
-        ) = skirout.editor.v1.presentation.CardLayout(
-            child = child,
-            initiallyExpanded = initiallyExpanded,
+            width: kotlin.Double =
+                0.0,
+        ) = skirout.editor.v1.presentation.PresentationBorderSide(
+            color = color,
+            width = width,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:CardLayout",
+            recordId = "editor/v1/presentation.skir:PresentationBorderSide",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -4208,71 +4208,71 @@ class CardLayout private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [CardLayout] instances. */
+        /** Serializer for [PresentationBorderSide] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [CardLayout] type. Provides runtime introspection capabilities. */
+        /** Describes the [PresentationBorderSide] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "child",
-                "child",
+                "color",
+                "color",
                 0,
-                skirout.editor.v1.presentation.PresentationNode.serializer,
-                "",
-                { it.child },
-                { mut, v -> mut.child = v },
-            );
-            serializerImpl.addField(
-                "initially_expanded",
-                "initiallyExpanded",
-                1,
                 build.skir.Serializers.optional(
-                    build.skir.Serializers.bool,
+                    skirout.editor.v1.expression.TypedExpression.serializer,
                 ),
                 "",
-                { it.initiallyExpanded },
-                { mut, v -> mut.initiallyExpanded = v },
+                { it.color },
+                { mut, v -> mut.color = v },
+            );
+            serializerImpl.addField(
+                "width",
+                "width",
+                1,
+                build.skir.Serializers.float64,
+                "",
+                { it.width },
+                { mut, v -> mut.width = v },
             );
             serializerImpl.finalizeStruct();
         }
     }
 }
 
-sealed interface SectionLayout_OrMutable {
-    val title: skirout.editor.v1.expression.TypedExpression_OrMutable;
-    val description: skirout.editor.v1.expression.TypedExpression_OrMutable?;
-    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
-    val initiallyExpanded: kotlin.Boolean?;
+sealed interface DirectionalPresentationBorder_OrMutable {
+    val top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?;
+    val start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?;
+    val end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?;
+    val bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?;
 
-    fun toFrozen(): skirout.editor.v1.presentation.SectionLayout;
+    fun toFrozen(): skirout.editor.v1.presentation.DirectionalPresentationBorder;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class SectionLayout private constructor(
-    override val title: skirout.editor.v1.expression.TypedExpression,
-    override val description: skirout.editor.v1.expression.TypedExpression?,
-    override val child: skirout.editor.v1.presentation.PresentationNode,
-    override val initiallyExpanded: kotlin.Boolean?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionLayout>? =
+class DirectionalPresentationBorder private constructor(
+    override val top: skirout.editor.v1.presentation.PresentationBorderSide?,
+    override val start: skirout.editor.v1.presentation.PresentationBorderSide?,
+    override val end: skirout.editor.v1.presentation.PresentationBorderSide?,
+    override val bottom: skirout.editor.v1.presentation.PresentationBorderSide?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DirectionalPresentationBorder>? =
         null,
-): skirout.editor.v1.presentation.SectionLayout_OrMutable {
+): skirout.editor.v1.presentation.DirectionalPresentationBorder_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        initiallyExpanded: kotlin.Boolean?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionLayout>? =
+        top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+        start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+        end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+        bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DirectionalPresentationBorder>? =
             null,
     ): this(
-        title.toFrozen(),
-        if (description != null) description.toFrozen() else null,
-        child.toFrozen(),
-        initiallyExpanded,
+        if (top != null) top.toFrozen() else null,
+        if (start != null) start.toFrozen() else null,
+        if (end != null) end.toFrozen() else null,
+        if (bottom != null) bottom.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -4281,29 +4281,29 @@ class SectionLayout private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        title = this.title,
-        description = this.description,
-        child = this.child,
-        initiallyExpanded = this.initiallyExpanded,
+        top = this.top,
+        start = this.start,
+        end = this.end,
+        bottom = this.bottom,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.title,
-        description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
-            this.description,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-            this.child,
-        initiallyExpanded: kotlin.Boolean? =
-            this.initiallyExpanded,
-    ) = skirout.editor.v1.presentation.SectionLayout(
-        title.toFrozen(),
-        if (description != null) description.toFrozen() else null,
-        child.toFrozen(),
-        initiallyExpanded,
+        top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            this.top,
+        start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            this.start,
+        end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            this.end,
+        bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            this.bottom,
+    ) = skirout.editor.v1.presentation.DirectionalPresentationBorder(
+        if (top != null) top.toFrozen() else null,
+        if (start != null) start.toFrozen() else null,
+        if (end != null) end.toFrozen() else null,
+        if (bottom != null) bottom.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -4311,11 +4311,367 @@ class SectionLayout private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.SectionLayout && this.title == other.title && this.description == other.description && this.child == other.child && this.initiallyExpanded == other.initiallyExpanded);
+        return this === other || (other is skirout.editor.v1.presentation.DirectionalPresentationBorder && this.top == other.top && this.start == other.start && this.end == other.end && this.bottom == other.bottom);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.title, this.description, this.child, this.initiallyExpanded).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.top, this.start, this.end, this.bottom).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DirectionalPresentationBorder.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DirectionalPresentationBorder]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            null,
+        override var start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            null,
+        override var end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            null,
+        override var bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DirectionalPresentationBorder>? =
+            null,
+    ): skirout.editor.v1.presentation.DirectionalPresentationBorder_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.DirectionalPresentationBorder(
+            top = this.top,
+            start = this.start,
+            end = this.end,
+            bottom = this.bottom,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.DirectionalPresentationBorder(
+                null,
+                null,
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DirectionalPresentationBorder].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+                null,
+            start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+                null,
+            end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+                null,
+            bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.DirectionalPresentationBorder(
+            top = top,
+            start = start,
+            end = end,
+            bottom = bottom,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:DirectionalPresentationBorder",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DirectionalPresentationBorder] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DirectionalPresentationBorder] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "top",
+                "top",
+                0,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.PresentationBorderSide.serializer,
+                ),
+                "",
+                { it.top },
+                { mut, v -> mut.top = v },
+            );
+            serializerImpl.addField(
+                "start",
+                "start",
+                1,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.PresentationBorderSide.serializer,
+                ),
+                "",
+                { it.start },
+                { mut, v -> mut.start = v },
+            );
+            serializerImpl.addField(
+                "end",
+                "end",
+                2,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.PresentationBorderSide.serializer,
+                ),
+                "",
+                { it.end },
+                { mut, v -> mut.end = v },
+            );
+            serializerImpl.addField(
+                "bottom",
+                "bottom",
+                3,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.PresentationBorderSide.serializer,
+                ),
+                "",
+                { it.bottom },
+                { mut, v -> mut.bottom = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class PresentationBorder private constructor() {
+    /** The kind of variant held by a `PresentationBorder`. */
+    enum class Kind {
+        UNKNOWN,
+        ALL_WRAPPER,
+        SIDES_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationBorder.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationBorder>?,
+    ) : skirout.editor.v1.presentation.PresentationBorder() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationBorder && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class AllWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationBorderSide,
+    ) : skirout.editor.v1.presentation.PresentationBorder() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ALL_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationBorder.AllWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 96673;
+        }
+    }
+
+    class SidesWrapper private constructor (
+        val value: skirout.editor.v1.presentation.DirectionalPresentationBorder,
+    ) : skirout.editor.v1.presentation.PresentationBorder() {
+        constructor(
+            value: skirout.editor.v1.presentation.DirectionalPresentationBorder_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SIDES_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationBorder.SidesWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 109432316;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationBorder>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.PresentationBorder._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationBorder].
+         * Default value for fields of type [PresentationBorder].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `AllWrapper(skirout.editor.v1.presentation.PresentationBorderSide(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAll(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            color: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+            width: kotlin.Double,
+        ) = AllWrapper(
+            skirout.editor.v1.presentation.PresentationBorderSide(
+                color = color,
+                width = width,
+            )
+        );
+
+        /** Shortcut for `SidesWrapper(skirout.editor.v1.presentation.DirectionalPresentationBorder(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSides(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            top: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+            start: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+            end: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+            bottom: skirout.editor.v1.presentation.PresentationBorderSide_OrMutable?,
+        ) = SidesWrapper(
+            skirout.editor.v1.presentation.DirectionalPresentationBorder(
+                top = top,
+                start = start,
+                end = end,
+                bottom = bottom,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationBorder, Unknown>(
+                recordId = "editor/v1/presentation.skir:PresentationBorder",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [PresentationBorder] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [PresentationBorder] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "all",
+                    Kind.ALL_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.PresentationBorderSide.serializer,
+                    "",
+                    { AllWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "sides",
+                    Kind.SIDES_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.DirectionalPresentationBorder.serializer,
+                    "",
+                    { SidesWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface SectionLayout_OrMutable {
+    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+    val border: skirout.editor.v1.presentation.PresentationBorder?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.SectionLayout;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class SectionLayout private constructor(
+    override val child: skirout.editor.v1.presentation.PresentationNode,
+    override val border: skirout.editor.v1.presentation.PresentationBorder?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionLayout>? =
+        null,
+): skirout.editor.v1.presentation.SectionLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        border: skirout.editor.v1.presentation.PresentationBorder?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionLayout>? =
+            null,
+    ): this(
+        child.toFrozen(),
+        border,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        child = this.child,
+        border = this.border,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+            this.child,
+        border: skirout.editor.v1.presentation.PresentationBorder? =
+            this.border,
+    ) = skirout.editor.v1.presentation.SectionLayout(
+        child.toFrozen(),
+        border,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.SectionLayout && this.child == other.child && this.border == other.border);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.border).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -4329,48 +4685,24 @@ class SectionLayout private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        override var description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
-            null,
         override var child: skirout.editor.v1.presentation.PresentationNode =
             skirout.editor.v1.presentation.PresentationNode.partial(),
-        override var initiallyExpanded: kotlin.Boolean? =
+        override var border: skirout.editor.v1.presentation.PresentationBorder? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.SectionLayout>? =
             null,
     ): skirout.editor.v1.presentation.SectionLayout_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.SectionLayout(
-            title = this.title,
-            description = this.description,
             child = this.child,
-            initiallyExpanded = this.initiallyExpanded,
+            border = this.border,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [title] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [title] and returns it.
-         */
-        val mutableTitle: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.title;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.title = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.presentation.SectionLayout(
-                skirout.editor.v1.expression.TypedExpression.partial(),
-                null,
                 skirout.editor.v1.presentation.PresentationNode.partial(),
                 null,
             );
@@ -4386,19 +4718,13 @@ class SectionLayout private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            description: skirout.editor.v1.expression.TypedExpression_OrMutable? =
-                null,
             child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
                 skirout.editor.v1.presentation.PresentationNode.partial(),
-            initiallyExpanded: kotlin.Boolean? =
+            border: skirout.editor.v1.presentation.PresentationBorder? =
                 null,
         ) = skirout.editor.v1.presentation.SectionLayout(
-            title = title,
-            description = description,
             child = child,
-            initiallyExpanded = initiallyExpanded,
+            border = border,
             _unrecognizedFields = null,
         );
 
@@ -4420,240 +4746,24 @@ class SectionLayout private constructor(
 
         init {
             serializerImpl.addField(
-                "title",
-                "title",
+                "child",
+                "child",
                 0,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.title },
-                { mut, v -> mut.title = v },
-            );
-            serializerImpl.addField(
-                "description",
-                "description",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.expression.TypedExpression.serializer,
-                ),
-                "",
-                { it.description },
-                { mut, v -> mut.description = v },
-            );
-            serializerImpl.addField(
-                "child",
-                "child",
-                2,
                 skirout.editor.v1.presentation.PresentationNode.serializer,
                 "",
                 { it.child },
                 { mut, v -> mut.child = v },
             );
             serializerImpl.addField(
-                "initially_expanded",
-                "initiallyExpanded",
-                3,
+                "border",
+                "border",
+                1,
                 build.skir.Serializers.optional(
-                    build.skir.Serializers.bool,
+                    skirout.editor.v1.presentation.PresentationBorder.serializer,
                 ),
                 "",
-                { it.initiallyExpanded },
-                { mut, v -> mut.initiallyExpanded = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface CollapsibleLayout_OrMutable {
-    val title: skirout.editor.v1.expression.TypedExpression_OrMutable;
-    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
-    val initiallyExpanded: kotlin.Boolean;
-
-    fun toFrozen(): skirout.editor.v1.presentation.CollapsibleLayout;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CollapsibleLayout private constructor(
-    override val title: skirout.editor.v1.expression.TypedExpression,
-    override val child: skirout.editor.v1.presentation.PresentationNode,
-    override val initiallyExpanded: kotlin.Boolean,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollapsibleLayout>? =
-        null,
-): skirout.editor.v1.presentation.CollapsibleLayout_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-        initiallyExpanded: kotlin.Boolean,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollapsibleLayout>? =
-            null,
-    ): this(
-        title.toFrozen(),
-        child.toFrozen(),
-        initiallyExpanded,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        title = this.title,
-        child = this.child,
-        initiallyExpanded = this.initiallyExpanded,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.title,
-        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-            this.child,
-        initiallyExpanded: kotlin.Boolean =
-            this.initiallyExpanded,
-    ) = skirout.editor.v1.presentation.CollapsibleLayout(
-        title.toFrozen(),
-        child.toFrozen(),
-        initiallyExpanded,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.CollapsibleLayout && this.title == other.title && this.child == other.child && this.initiallyExpanded == other.initiallyExpanded);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.title, this.child, this.initiallyExpanded).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.presentation.CollapsibleLayout.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [CollapsibleLayout]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        override var child: skirout.editor.v1.presentation.PresentationNode =
-            skirout.editor.v1.presentation.PresentationNode.partial(),
-        override var initiallyExpanded: kotlin.Boolean =
-            false,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.CollapsibleLayout>? =
-            null,
-    ): skirout.editor.v1.presentation.CollapsibleLayout_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.presentation.CollapsibleLayout(
-            title = this.title,
-            child = this.child,
-            initiallyExpanded = this.initiallyExpanded,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [title] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [title] and returns it.
-         */
-        val mutableTitle: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.title;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.title = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.presentation.CollapsibleLayout(
-                skirout.editor.v1.expression.TypedExpression.partial(),
-                skirout.editor.v1.presentation.PresentationNode.partial(),
-                false,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CollapsibleLayout].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            title: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
-                skirout.editor.v1.presentation.PresentationNode.partial(),
-            initiallyExpanded: kotlin.Boolean =
-                false,
-        ) = skirout.editor.v1.presentation.CollapsibleLayout(
-            title = title,
-            child = child,
-            initiallyExpanded = initiallyExpanded,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/presentation.skir:CollapsibleLayout",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [CollapsibleLayout] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [CollapsibleLayout] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "title",
-                "title",
-                0,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.title },
-                { mut, v -> mut.title = v },
-            );
-            serializerImpl.addField(
-                "child",
-                "child",
-                1,
-                skirout.editor.v1.presentation.PresentationNode.serializer,
-                "",
-                { it.child },
-                { mut, v -> mut.child = v },
-            );
-            serializerImpl.addField(
-                "initially_expanded",
-                "initiallyExpanded",
-                2,
-                build.skir.Serializers.bool,
-                "",
-                { it.initiallyExpanded },
-                { mut, v -> mut.initiallyExpanded = v },
+                { it.border },
+                { mut, v -> mut.border = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -17032,7 +17142,6 @@ sealed class PresentationElement private constructor() {
         UNKNOWN,
         DIVIDER_CONST,
         CHILDREN_WRAPPER,
-        CARD_WRAPPER,
         SECTION_WRAPPER,
         TABS_WRAPPER,
         SPACER_WRAPPER,
@@ -17067,7 +17176,6 @@ sealed class PresentationElement private constructor() {
         ENUM_INPUT_WRAPPER,
         POLYMORPHIC_INPUT_WRAPPER,
         DEFAULT_PRESENTATION_WRAPPER,
-        COLLAPSIBLE_WRAPPER,
         SEARCH_INPUT_WRAPPER,
         COLLECTION_LOOKUP_WRAPPER,
         COLLECTION_GRAPH_WRAPPER,
@@ -17119,24 +17227,6 @@ sealed class PresentationElement private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1659526655;
-        }
-    }
-
-    class CardWrapper private constructor (
-        val value: skirout.editor.v1.presentation.CardLayout,
-    ) : skirout.editor.v1.presentation.PresentationElement() {
-        constructor(
-            value: skirout.editor.v1.presentation.CardLayout_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CARD_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.CardWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3046160;
         }
     }
 
@@ -17752,24 +17842,6 @@ sealed class PresentationElement private constructor() {
         }
     }
 
-    class CollapsibleWrapper private constructor (
-        val value: skirout.editor.v1.presentation.CollapsibleLayout,
-    ) : skirout.editor.v1.presentation.PresentationElement() {
-        constructor(
-            value: skirout.editor.v1.presentation.CollapsibleLayout_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.COLLAPSIBLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationElement.CollapsibleWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1324879862;
-        }
-    }
-
     class SearchInputWrapper private constructor (
         val value: skirout.editor.v1.presentation.SearchControl,
     ) : skirout.editor.v1.presentation.PresentationElement() {
@@ -17856,35 +17928,17 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `CardWrapper(skirout.editor.v1.presentation.CardLayout(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCard(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-            initiallyExpanded: kotlin.Boolean?,
-        ) = CardWrapper(
-            skirout.editor.v1.presentation.CardLayout(
-                child = child,
-                initiallyExpanded = initiallyExpanded,
-            )
-        );
-
         /** Shortcut for `SectionWrapper(skirout.editor.v1.presentation.SectionLayout(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createSection(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            title: skirout.editor.v1.expression.TypedExpression_OrMutable,
-            description: skirout.editor.v1.expression.TypedExpression_OrMutable?,
             child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-            initiallyExpanded: kotlin.Boolean?,
+            border: skirout.editor.v1.presentation.PresentationBorder?,
         ) = SectionWrapper(
             skirout.editor.v1.presentation.SectionLayout(
-                title = title,
-                description = description,
                 child = child,
-                initiallyExpanded = initiallyExpanded,
+                border = border,
             )
         );
 
@@ -18424,22 +18478,6 @@ sealed class PresentationElement private constructor() {
             )
         );
 
-        /** Shortcut for `CollapsibleWrapper(skirout.editor.v1.presentation.CollapsibleLayout(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCollapsible(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            title: skirout.editor.v1.expression.TypedExpression_OrMutable,
-            child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
-            initiallyExpanded: kotlin.Boolean,
-        ) = CollapsibleWrapper(
-            skirout.editor.v1.presentation.CollapsibleLayout(
-                title = title,
-                child = child,
-                initiallyExpanded = initiallyExpanded,
-            )
-        );
-
         /** Shortcut for `SearchInputWrapper(skirout.editor.v1.presentation.SearchControl(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createSearchInput(
@@ -18563,15 +18601,6 @@ sealed class PresentationElement private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     7,
-                    "card",
-                    Kind.CARD_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.CardLayout.serializer,
-                    "",
-                    { CardWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
                     "section",
                     Kind.SECTION_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SectionLayout.serializer,
@@ -18874,15 +18903,6 @@ sealed class PresentationElement private constructor() {
                     skirout.editor.v1.presentation.DefaultPresentationElement.serializer,
                     "",
                     { DefaultPresentationWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    42,
-                    "collapsible",
-                    Kind.COLLAPSIBLE_WRAPPER.ordinal,
-                    skirout.editor.v1.presentation.CollapsibleLayout.serializer,
-                    "",
-                    { CollapsibleWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(

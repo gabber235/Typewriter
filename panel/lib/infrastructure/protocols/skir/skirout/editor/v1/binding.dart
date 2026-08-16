@@ -33,16 +33,26 @@ final class BindingId implements BindingId_orMutable {
   final _core.int value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BindingId({required _core.int value}) => BindingId._(value);
+  factory BindingId({
+    required _core.int value,
+  }) => BindingId._(
+    value,
+  );
 
-  BindingId._(this.value);
+  BindingId._(
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindingId._(0);
+  static final defaultInstance = BindingId._(
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BindingId_mutable mutable() => BindingId_mutable._(0);
+  static BindingId_mutable mutable() => BindingId_mutable._(
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -50,22 +60,23 @@ final class BindingId implements BindingId_orMutable {
   BindingId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindingId_mutable toMutable() => BindingId_mutable._(this.value);
+  BindingId_mutable toMutable() => BindingId_mutable._(
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindingId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.value];
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -103,11 +114,15 @@ final class BindingId_mutable implements BindingId_orMutable {
   _core.int value;
   _skir.internal__UnrecognizedFields? _u;
 
-  BindingId_mutable._(this.value);
+  BindingId_mutable._(
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindingId toFrozen() => BindingId(value: this.value).._u = this._u;
+  BindingId toFrozen() => BindingId(
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -132,9 +147,15 @@ final class BindingRef implements BindingRef_orMutable {
   factory BindingRef({
     required _lib_editor_v1_path.DataPath_orMutable path,
     required BindingId_orMutable bindingId,
-  }) => BindingRef._(path.toFrozen(), bindingId.toFrozen());
+  }) => BindingRef._(
+    path.toFrozen(),
+    bindingId.toFrozen(),
+  );
 
-  BindingRef._(this.path, this.bindingId);
+  BindingRef._(
+    this.path,
+    this.bindingId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BindingRef._(
@@ -155,23 +176,25 @@ final class BindingRef implements BindingRef_orMutable {
   BindingRef toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindingRef_mutable toMutable() =>
-      BindingRef_mutable._(this.path, this.bindingId);
+  BindingRef_mutable toMutable() => BindingRef_mutable._(
+    this.path,
+    this.bindingId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindingRef) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.path, this.bindingId];
+  _core.List get _equality_proxy => [
+    this.path,
+    this.bindingId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -219,7 +242,10 @@ final class BindingRef_mutable implements BindingRef_orMutable {
   BindingId_orMutable bindingId;
   _skir.internal__UnrecognizedFields? _u;
 
-  BindingRef_mutable._(this.path, this.bindingId);
+  BindingRef_mutable._(
+    this.path,
+    this.bindingId,
+  );
 
   /// If the value of [path] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
@@ -245,8 +271,10 @@ final class BindingRef_mutable implements BindingRef_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindingRef toFrozen() =>
-      BindingRef(path: this.path, bindingId: this.bindingId).._u = this._u;
+  BindingRef toFrozen() => BindingRef(
+    path: this.path,
+    bindingId: this.bindingId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -336,10 +364,7 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ResolvedBinding) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -357,8 +382,7 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ResolvedBinding` instances.
-  static _skir.StructSerializer<ResolvedBinding, ResolvedBinding_mutable>
-  get serializer {
+  static _skir.StructSerializer<ResolvedBinding, ResolvedBinding_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reference",
@@ -480,8 +504,9 @@ sealed class BindingResolution {
   static const BindingResolution unknown = BindingResolution_unknown._instance;
 
   /// Create a 'resolved' variant wrapping around the given value.
-  factory BindingResolution.wrapResolved(ResolvedBinding value) =>
-      BindingResolution_resolvedWrapper._(value);
+  factory BindingResolution.wrapResolved(
+    ResolvedBinding value
+  ) => BindingResolution_resolvedWrapper._(value);
 
   /// Same as `wrapResolved(ResolvedBinding(...))`.
   factory BindingResolution.createResolved({
@@ -497,12 +522,12 @@ sealed class BindingResolution {
       value: value,
       writable: writable,
       revision: revision,
-    ),
+    )
   );
 
   /// Create a 'diagnostics' variant wrapping around the given value.
   factory BindingResolution.wrapDiagnostics(
-    _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> value,
+    _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> value
   ) => BindingResolution_diagnosticsWrapper._(value);
 
   /// Returns the kind of variant held by this BindingResolution.
@@ -538,16 +563,15 @@ sealed class BindingResolution {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/binding.skir:BindingResolution",
-        doc: "",
-        unknownInstance: BindingResolution_unknown._instance,
-        enumInstance: BindingResolution.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: BindingResolution_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/binding.skir:BindingResolution",
+    doc: "",
+    unknownInstance: BindingResolution_unknown._instance,
+    enumInstance: BindingResolution.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: BindingResolution_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `BindingResolution`.
@@ -576,8 +600,7 @@ final class BindingResolution_unknown implements BindingResolution {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BindingResolution.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BindingResolution.serializer);
 }
 
 sealed class _BindingResolution_wrapper implements BindingResolution {
@@ -593,12 +616,10 @@ sealed class _BindingResolution_wrapper implements BindingResolution {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BindingResolution.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BindingResolution.serializer);
 }
 
-final class BindingResolution_resolvedWrapper
-    extends _BindingResolution_wrapper {
+final class BindingResolution_resolvedWrapper extends _BindingResolution_wrapper {
   final ResolvedBinding value;
 
   BindingResolution_resolvedWrapper._(this.value);
@@ -607,8 +628,7 @@ final class BindingResolution_resolvedWrapper
   BindingResolution_kind get kind => BindingResolution_kind.resolvedWrapper;
 }
 
-final class BindingResolution_diagnosticsWrapper
-    extends _BindingResolution_wrapper {
+final class BindingResolution_diagnosticsWrapper extends _BindingResolution_wrapper {
   final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> value;
 
   BindingResolution_diagnosticsWrapper._(this.value);

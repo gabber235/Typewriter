@@ -48,12 +48,6 @@ final class SkirPresentationDecoder {
     wire.PresentationElement value,
   ) => switch (value) {
     wire.PresentationElement_childrenWrapper(:final value) => _children(value),
-    wire.PresentationElement_cardWrapper(:final value) => TypeResult.success(
-      CardElement(
-        decodeNode(value.child),
-        initiallyExpanded: value.initiallyExpanded,
-      ),
-    ),
     wire.PresentationElement_sectionWrapper(:final value) => _section(value),
     wire.PresentationElement_tabsWrapper(:final value) => _tabs(value),
     wire.PresentationElement.divider => const TypeResult.success(
@@ -129,9 +123,6 @@ final class SkirPresentationDecoder {
     ).mapValue(NamedInputElement.new),
     wire.PresentationElement_defaultPresentationWrapper(:final value) =>
       _defaultPresentation(value),
-    wire.PresentationElement_collapsibleWrapper(:final value) => _collapsible(
-      value,
-    ),
     wire.PresentationElement_buttonWrapper(:final value) => _button(value),
     wire.PresentationElement_iconButtonWrapper(:final value) => _iconButton(
       value,
