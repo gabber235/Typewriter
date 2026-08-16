@@ -158,7 +158,13 @@ Plain strings use multiline editing by default. The builtin named single line pr
 
 Maps may provide independent presentations for keys and values. Lists, maps, records, enums, timestamps, durations, bytes, colors, icons, and polymorphic values use dedicated controls rather than a generic composite control.
 
-Conditional elements own visibility. Presentation properties retain enabled and read only behavior. Expansion belongs only to layouts and controls that can actually expand. Tabs use `initiallySelectedTabId`. Spacer dimensions and slider divisions are typed expressions.
+Conditional elements own visibility. Presentation properties retain enabled and read only behavior. Expansion belongs to semantic headers. Tabs use `initiallySelectedTabId`. Spacer dimensions and slider divisions are typed expressions.
+
+### Sections
+
+`SectionElement` is the single contained layout surface. Its child provides content, while the surrounding `PresentationNode` header optionally provides a title, description, actions, and collapse behavior. This keeps visual containment independent from semantic header behavior and removes separate card and collapsible layout variants.
+
+A section may omit its border, apply one `PresentationBorderSide` to every side with `all`, or configure `top`, `start`, `end`, and `bottom` independently with `sides`. Every present side has its own positive finite width and optional typed color expression. An omitted color uses the theme outline color. Logical `start` and `end` sides follow text direction.
 
 ### Semantic headers
 
