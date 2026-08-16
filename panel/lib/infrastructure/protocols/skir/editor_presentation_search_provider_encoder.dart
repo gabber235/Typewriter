@@ -3,6 +3,17 @@ part of "editor_presentation_encoder.dart";
 extension SkirPresentationSearchProviderEncoder on SkirPresentationEncoder {
   TypeResult<wire.SearchProvider> _searchProvider(SearchProvider value) =>
       switch (value) {
+        CollectionSearchProvider() => combineThreeResults(
+          _searchResultMapping(value.result),
+          _optional(value.where),
+          TypeResult.success(value.selectors.map(_searchSelector)),
+          (result, where, selectors) => wire.SearchProvider.createCollection(
+            sourceId: value.sourceId.value,
+            result: result,
+            where: where,
+            selectors: selectors,
+          ),
+        ),
         StaticSearchProvider() => combineResults(
           expressions.encode(value.values),
           _searchResultMapping(value.result),

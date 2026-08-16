@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.RepositoryResult
+import com.typewritermc.realm.repository.RevisionedRepositoryResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.utils.invalidRecordId
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
@@ -64,7 +65,7 @@ internal class BookRoutes(
             childSpan("db.book.create") {
                 books.createBook(
                     title = request.title,
-                    icon = request.icon?.takeIf(String::isNotBlank) ?: "book",
+                    icon = request.icon?.takeIf(String::isNotBlank) ?: "mdi:book",
                     color = request.color ?: Color(argb = 0),
                     tagIds = request.tagIds,
                 )
@@ -112,58 +113,57 @@ internal class BookRoutes(
         request.bookId.invalidRecordId("book")?.let {
             return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
         }
-        request.tagIds?.let { ids ->
-            ids.invalidRecordId("tag")?.let {
-                return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
-            }
+        request.tagIds.invalidRecordId("tag")?.let {
+            return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
         }
-        val existing =
-            childSpan("db.book.get") { books.getBook(request.bookId) }
-                ?: return UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
-        if (request.title?.isBlank() == true) {
-            return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
-        }
-        if (request.icon?.isBlank() == true) {
-            return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
-        }
-        val tagIds = request.tagIds ?: existing.tagIds
-        val missing = childSpan("db.tag.validate") { tags.findMissing(tagIds) }
-        if (missing.isNotEmpty()) return UpdateBookResponse.createTagsNotFoundError(tagIds = missing)
         val result =
             childSpan("db.book.update") {
                 books.updateBook(
+                    expectedRevision = request.expectedRevision,
                     Book(
-                        bookId = existing.bookId,
-                        title = request.title ?: existing.title,
-                        icon = request.icon ?: existing.icon,
-                        color = request.color ?: existing.color,
-                        tagIds = tagIds,
+                        bookId = request.bookId,
+                        revision = request.expectedRevision,
+                        title = request.title,
+                        icon = request.icon,
+                        color = request.color,
+                        tagIds = request.tagIds,
                     ),
                 )
             }
         val updated =
             when (result) {
-                is RepositoryResult.Success -> result.value
+                is RevisionedRepositoryResult.Success -> {
+                    result.value
+                }
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "book-not-found-error" -> {
-                        UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
-                    }
+                is RevisionedRepositoryResult.Conflict -> {
+                    return UpdateBookResponse.createConflictError(
+                        expectedRevision = request.expectedRevision,
+                        actual = result.actual,
+                    )
+                }
 
-                    "book-title-invalid-error" -> {
-                        UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
-                    }
+                is RevisionedRepositoryResult.DomainFailure -> {
+                    return when (result.slug) {
+                        "book-not-found-error" -> {
+                            UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
+                        }
 
-                    "book-icon-required-error" -> {
-                        UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
-                    }
+                        "book-title-invalid-error" -> {
+                            UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+                        }
 
-                    "tags-not-found-error" -> {
-                        UpdateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
-                    }
+                        "book-icon-required-error" -> {
+                            UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+                        }
 
-                    else -> {
-                        error("Unexpected book update domain error: ${result.slug}")
+                        "tags-not-found-error" -> {
+                            UpdateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
+                        }
+
+                        else -> {
+                            error("Unexpected book update domain error: ${result.slug}")
+                        }
                     }
                 }
             }

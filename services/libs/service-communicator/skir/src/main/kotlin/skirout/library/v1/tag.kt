@@ -226,6 +226,7 @@ class Placement private constructor(
 
 sealed interface Tag_OrMutable {
     val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val revision: kotlin.Long;
     val name: kotlin.String;
     val color: skirout.kernel.v1.color.Color_OrMutable;
     val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
@@ -238,6 +239,7 @@ sealed interface Tag_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Tag private constructor(
     override val tagId: skirout.kernel.v1.record_id.RecordId,
+    override val revision: kotlin.Long,
     override val name: kotlin.String,
     override val color: skirout.kernel.v1.color.Color,
     override val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
@@ -249,6 +251,7 @@ class Tag private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        revision: kotlin.Long,
         name: kotlin.String,
         color: skirout.kernel.v1.color.Color_OrMutable,
         parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -257,6 +260,7 @@ class Tag private constructor(
             null,
     ): this(
         tagId.toFrozen(),
+        revision,
         name,
         color.toFrozen(),
         build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }),
@@ -270,6 +274,7 @@ class Tag private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         tagId = this.tagId,
+        revision = this.revision,
         name = this.name,
         color = this.color,
         parentIds = this.parentIds,
@@ -282,6 +287,8 @@ class Tag private constructor(
             _MustNameArguments,
         tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.tagId,
+        revision: kotlin.Long =
+            this.revision,
         name: kotlin.String =
             this.name,
         color: skirout.kernel.v1.color.Color_OrMutable =
@@ -292,6 +299,7 @@ class Tag private constructor(
             this.placement,
     ) = skirout.library.v1.tag.Tag(
         tagId.toFrozen(),
+        revision,
         name,
         color.toFrozen(),
         build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }),
@@ -303,11 +311,11 @@ class Tag private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.tag.Tag && this.tagId == other.tagId && this.name == other.name && this.color == other.color && this.parentIds == other.parentIds && this.placement == other.placement);
+        return this === other || (other is skirout.library.v1.tag.Tag && this.tagId == other.tagId && this.revision == other.revision && this.name == other.name && this.color == other.color && this.parentIds == other.parentIds && this.placement == other.placement);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.name, this.color, this.parentIds, this.placement).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.revision, this.name, this.color, this.parentIds, this.placement).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -323,6 +331,8 @@ class Tag private constructor(
             _MustNameArguments,
         override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
+        override var revision: kotlin.Long =
+            0L,
         override var name: kotlin.String =
             "",
         override var color: skirout.kernel.v1.color.Color_OrMutable =
@@ -337,6 +347,7 @@ class Tag private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.tag.Tag(
             tagId = this.tagId,
+            revision = this.revision,
             name = this.name,
             color = this.color,
             parentIds = this.parentIds,
@@ -413,6 +424,7 @@ class Tag private constructor(
         private val default =
             skirout.library.v1.tag.Tag(
                 skirout.kernel.v1.record_id.RecordId.partial(),
+                0L,
                 "",
                 skirout.kernel.v1.color.Color.partial(),
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
@@ -432,6 +444,8 @@ class Tag private constructor(
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
+            revision: kotlin.Long =
+                0L,
             name: kotlin.String =
                 "",
             color: skirout.kernel.v1.color.Color_OrMutable =
@@ -442,6 +456,7 @@ class Tag private constructor(
                 skirout.library.v1.tag.Placement.partial(),
         ) = skirout.library.v1.tag.Tag(
             tagId = tagId,
+            revision = revision,
             name = name,
             color = color,
             parentIds = parentIds,
@@ -476,9 +491,18 @@ class Tag private constructor(
                 { mut, v -> mut.tagId = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
+                "revision",
+                "revision",
                 1,
+                build.skir.Serializers.int64,
+                "",
+                { it.revision },
+                { mut, v -> mut.revision = v },
+            );
+            serializerImpl.addField(
+                "name",
+                "name",
+                2,
                 build.skir.Serializers.string,
                 "",
                 { it.name },
@@ -487,7 +511,7 @@ class Tag private constructor(
             serializerImpl.addField(
                 "color",
                 "color",
-                2,
+                3,
                 skirout.kernel.v1.color.Color.serializer,
                 "",
                 { it.color },
@@ -496,7 +520,7 @@ class Tag private constructor(
             serializerImpl.addField(
                 "parent_ids",
                 "parentIds",
-                3,
+                4,
                 build.skir.Serializers.list(
                     skirout.kernel.v1.record_id.RecordId.serializer,
                 ),
@@ -507,7 +531,7 @@ class Tag private constructor(
             serializerImpl.addField(
                 "placement",
                 "placement",
-                4,
+                5,
                 skirout.library.v1.tag.Placement.serializer,
                 "",
                 { it.placement },
@@ -524,10 +548,9 @@ sealed class TagValidationError private constructor() {
     enum class Kind {
         UNKNOWN,
         NAME_REQUIRED_CONST,
-        POSITION_REQUIRED_CONST,
-        SIZE_REQUIRED_CONST,
         WIDTH_INVALID_CONST,
         HEIGHT_INVALID_CONST,
+        INHERITANCE_CYCLE_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.tag.TagValidationError.UNKNOWN")) internal constructor(
@@ -561,38 +584,6 @@ sealed class TagValidationError private constructor() {
         }
     }
 
-    object POSITION_REQUIRED : skirout.library.v1.tag.TagValidationError() {
-        override val kind get() = Kind.POSITION_REQUIRED_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.TagValidationError && other.kind == Kind.POSITION_REQUIRED_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.POSITION_REQUIRED_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    object SIZE_REQUIRED : skirout.library.v1.tag.TagValidationError() {
-        override val kind get() = Kind.SIZE_REQUIRED_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.TagValidationError && other.kind == Kind.SIZE_REQUIRED_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SIZE_REQUIRED_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
     object WIDTH_INVALID : skirout.library.v1.tag.TagValidationError() {
         override val kind get() = Kind.WIDTH_INVALID_CONST;
 
@@ -618,6 +609,22 @@ sealed class TagValidationError private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.HEIGHT_INVALID_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object INHERITANCE_CYCLE : skirout.library.v1.tag.TagValidationError() {
+        override val kind get() = Kind.INHERITANCE_CYCLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.tag.TagValidationError && other.kind == Kind.INHERITANCE_CYCLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.INHERITANCE_CYCLE_CONST.ordinal;
         }
 
         init {
@@ -662,10 +669,9 @@ sealed class TagValidationError private constructor() {
 
         init {
             NAME_REQUIRED;
-            POSITION_REQUIRED;
-            SIZE_REQUIRED;
             WIDTH_INVALID;
             HEIGHT_INVALID;
+            INHERITANCE_CYCLE;
             _maybeFinalizeSerializer();
         }
 
@@ -673,7 +679,7 @@ sealed class TagValidationError private constructor() {
 
         private fun _maybeFinalizeSerializer() {
             _finalizationCounter += 1;
-            if (_finalizationCounter == 6) {
+            if (_finalizationCounter == 5) {
                 _serializerImpl.addConstantVariant(
                     1,
                     "name_required",
@@ -683,31 +689,24 @@ sealed class TagValidationError private constructor() {
                 );
                 _serializerImpl.addConstantVariant(
                     2,
-                    "position_required",
-                    Kind.POSITION_REQUIRED_CONST.ordinal,
-                    "",
-                    POSITION_REQUIRED,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "size_required",
-                    Kind.SIZE_REQUIRED_CONST.ordinal,
-                    "",
-                    SIZE_REQUIRED,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
                     "width_invalid",
                     Kind.WIDTH_INVALID_CONST.ordinal,
                     "",
                     WIDTH_INVALID,
                 );
                 _serializerImpl.addConstantVariant(
-                    5,
+                    3,
                     "height_invalid",
                     Kind.HEIGHT_INVALID_CONST.ordinal,
                     "",
                     HEIGHT_INVALID,
+                );
+                _serializerImpl.addConstantVariant(
+                    4,
+                    "inheritance_cycle",
+                    Kind.INHERITANCE_CYCLE_CONST.ordinal,
+                    "",
+                    INHERITANCE_CYCLE,
                 );
                 _serializerImpl.finalizeEnum();
             }
@@ -959,6 +958,7 @@ sealed class WatchTagsResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -966,6 +966,7 @@ sealed class WatchTagsResponse private constructor() {
         ) = AddWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
@@ -979,6 +980,7 @@ sealed class WatchTagsResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -986,6 +988,7 @@ sealed class WatchTagsResponse private constructor() {
         ) = UpdateWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
@@ -1403,6 +1406,7 @@ sealed class WatchTagResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -1410,6 +1414,7 @@ sealed class WatchTagResponse private constructor() {
         ) = InitialWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
@@ -1423,6 +1428,7 @@ sealed class WatchTagResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -1430,6 +1436,7 @@ sealed class WatchTagResponse private constructor() {
         ) = UpdateWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
@@ -2083,6 +2090,7 @@ sealed class CreateTagResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -2090,6 +2098,7 @@ sealed class CreateTagResponse private constructor() {
         ) = SuccessWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
@@ -2352,10 +2361,11 @@ sealed class CreateTagResponse private constructor() {
 
 sealed interface UpdateTagRequest_OrMutable {
     val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val name: kotlin.String?;
-    val color: skirout.kernel.v1.color.Color_OrMutable?;
-    val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>?;
-    val placement: skirout.library.v1.tag.Placement_OrMutable?;
+    val expectedRevision: kotlin.Long;
+    val name: kotlin.String;
+    val color: skirout.kernel.v1.color.Color_OrMutable;
+    val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
+    val placement: skirout.library.v1.tag.Placement_OrMutable;
 
     fun toFrozen(): skirout.library.v1.tag.UpdateTagRequest;
 }
@@ -2364,10 +2374,11 @@ sealed interface UpdateTagRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UpdateTagRequest private constructor(
     override val tagId: skirout.kernel.v1.record_id.RecordId,
-    override val name: kotlin.String?,
-    override val color: skirout.kernel.v1.color.Color?,
-    override val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>?,
-    override val placement: skirout.library.v1.tag.Placement?,
+    override val expectedRevision: kotlin.Long,
+    override val name: kotlin.String,
+    override val color: skirout.kernel.v1.color.Color,
+    override val parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
+    override val placement: skirout.library.v1.tag.Placement,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagRequest>? =
         null,
 ): skirout.library.v1.tag.UpdateTagRequest_OrMutable {
@@ -2375,18 +2386,20 @@ class UpdateTagRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        name: kotlin.String?,
-        color: skirout.kernel.v1.color.Color_OrMutable?,
-        parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>?,
-        placement: skirout.library.v1.tag.Placement_OrMutable?,
+        expectedRevision: kotlin.Long,
+        name: kotlin.String,
+        color: skirout.kernel.v1.color.Color_OrMutable,
+        parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
+        placement: skirout.library.v1.tag.Placement_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagRequest>? =
             null,
     ): this(
         tagId.toFrozen(),
+        expectedRevision,
         name,
-        if (color != null) color.toFrozen() else null,
-        if (parentIds != null) build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }) else null,
-        if (placement != null) placement.toFrozen() else null,
+        color.toFrozen(),
+        build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }),
+        placement.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -2396,6 +2409,7 @@ class UpdateTagRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         tagId = this.tagId,
+        expectedRevision = this.expectedRevision,
         name = this.name,
         color = this.color,
         parentIds = this.parentIds,
@@ -2408,20 +2422,23 @@ class UpdateTagRequest private constructor(
             _MustNameArguments,
         tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.tagId,
-        name: kotlin.String? =
+        expectedRevision: kotlin.Long =
+            this.expectedRevision,
+        name: kotlin.String =
             this.name,
-        color: skirout.kernel.v1.color.Color_OrMutable? =
+        color: skirout.kernel.v1.color.Color_OrMutable =
             this.color,
-        parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
+        parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.parentIds,
-        placement: skirout.library.v1.tag.Placement_OrMutable? =
+        placement: skirout.library.v1.tag.Placement_OrMutable =
             this.placement,
     ) = skirout.library.v1.tag.UpdateTagRequest(
         tagId.toFrozen(),
+        expectedRevision,
         name,
-        if (color != null) color.toFrozen() else null,
-        if (parentIds != null) build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }) else null,
-        if (placement != null) placement.toFrozen() else null,
+        color.toFrozen(),
+        build.skir.internal.toFrozenList(parentIds, { it.toFrozen() }),
+        placement.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -2429,11 +2446,11 @@ class UpdateTagRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.tag.UpdateTagRequest && this.tagId == other.tagId && this.name == other.name && this.color == other.color && this.parentIds == other.parentIds && this.placement == other.placement);
+        return this === other || (other is skirout.library.v1.tag.UpdateTagRequest && this.tagId == other.tagId && this.expectedRevision == other.expectedRevision && this.name == other.name && this.color == other.color && this.parentIds == other.parentIds && this.placement == other.placement);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.name, this.color, this.parentIds, this.placement).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.expectedRevision, this.name, this.color, this.parentIds, this.placement).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2449,20 +2466,23 @@ class UpdateTagRequest private constructor(
             _MustNameArguments,
         override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
-        override var name: kotlin.String? =
-            null,
-        override var color: skirout.kernel.v1.color.Color_OrMutable? =
-            null,
-        override var parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
-            null,
-        override var placement: skirout.library.v1.tag.Placement_OrMutable? =
-            null,
+        override var expectedRevision: kotlin.Long =
+            0L,
+        override var name: kotlin.String =
+            "",
+        override var color: skirout.kernel.v1.color.Color_OrMutable =
+            skirout.kernel.v1.color.Color.partial(),
+        override var parentIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+        override var placement: skirout.library.v1.tag.Placement_OrMutable =
+            skirout.library.v1.tag.Placement.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagRequest>? =
             null,
     ): skirout.library.v1.tag.UpdateTagRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.tag.UpdateTagRequest(
             tagId = this.tagId,
+            expectedRevision = this.expectedRevision,
             name = this.name,
             color = this.color,
             parentIds = this.parentIds,
@@ -2485,16 +2505,65 @@ class UpdateTagRequest private constructor(
                 is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [color] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+         */
+        val mutableColor: skirout.kernel.v1.color.Color.Mutable get() {
+            var value = this.color;
+            return when (value) {
+                is skirout.kernel.v1.color.Color -> {
+                    value = value.toMutable();
+                    this.color = value;
+                    return value;
+                }
+                is skirout.kernel.v1.color.Color.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [parentIds] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [parentIds] and returns it.
+         */
+        val mutableParentIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
+            var value = this.parentIds;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.parentIds = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [placement] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [placement] and returns it.
+         */
+        val mutablePlacement: skirout.library.v1.tag.Placement.Mutable get() {
+            var value = this.placement;
+            return when (value) {
+                is skirout.library.v1.tag.Placement -> {
+                    value = value.toMutable();
+                    this.placement = value;
+                    return value;
+                }
+                is skirout.library.v1.tag.Placement.Mutable -> value;
+            }
+        }
     }
 
     companion object {
         private val default =
             skirout.library.v1.tag.UpdateTagRequest(
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                null,
-                null,
-                null,
-                null,
+                0L,
+                "",
+                skirout.kernel.v1.color.Color.partial(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+                skirout.library.v1.tag.Placement.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2510,16 +2579,19 @@ class UpdateTagRequest private constructor(
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
-            name: kotlin.String? =
-                null,
-            color: skirout.kernel.v1.color.Color_OrMutable? =
-                null,
-            parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
-                null,
-            placement: skirout.library.v1.tag.Placement_OrMutable? =
-                null,
+            expectedRevision: kotlin.Long =
+                0L,
+            name: kotlin.String =
+                "",
+            color: skirout.kernel.v1.color.Color_OrMutable =
+                skirout.kernel.v1.color.Color.partial(),
+            parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
+            placement: skirout.library.v1.tag.Placement_OrMutable =
+                skirout.library.v1.tag.Placement.partial(),
         ) = skirout.library.v1.tag.UpdateTagRequest(
             tagId = tagId,
+            expectedRevision = expectedRevision,
             name = name,
             color = color,
             parentIds = parentIds,
@@ -2554,12 +2626,19 @@ class UpdateTagRequest private constructor(
                 { mut, v -> mut.tagId = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
+                "expected_revision",
+                "expectedRevision",
                 1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
+                build.skir.Serializers.int64,
+                "",
+                { it.expectedRevision },
+                { mut, v -> mut.expectedRevision = v },
+            );
+            serializerImpl.addField(
+                "name",
+                "name",
+                2,
+                build.skir.Serializers.string,
                 "",
                 { it.name },
                 { mut, v -> mut.name = v },
@@ -2567,10 +2646,8 @@ class UpdateTagRequest private constructor(
             serializerImpl.addField(
                 "color",
                 "color",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.color.Color.serializer,
-                ),
+                3,
+                skirout.kernel.v1.color.Color.serializer,
                 "",
                 { it.color },
                 { mut, v -> mut.color = v },
@@ -2578,11 +2655,9 @@ class UpdateTagRequest private constructor(
             serializerImpl.addField(
                 "parent_ids",
                 "parentIds",
-                3,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
+                4,
+                build.skir.Serializers.list(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
                 ),
                 "",
                 { it.parentIds },
@@ -2591,10 +2666,8 @@ class UpdateTagRequest private constructor(
             serializerImpl.addField(
                 "placement",
                 "placement",
-                4,
-                build.skir.Serializers.optional(
-                    skirout.library.v1.tag.Placement.serializer,
-                ),
+                5,
+                skirout.library.v1.tag.Placement.serializer,
                 "",
                 { it.placement },
                 { mut, v -> mut.placement = v },
@@ -2611,6 +2684,7 @@ sealed class UpdateTagResponse private constructor() {
         UNKNOWN,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
+        CONFLICT_ERROR_WRAPPER,
         TAG_NOT_FOUND_ERROR_WRAPPER,
         PARENTS_NOT_FOUND_ERROR_WRAPPER,
         VALIDATION_ERROR_WRAPPER,
@@ -2665,6 +2739,24 @@ sealed class UpdateTagResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class ConflictErrorWrapper private constructor (
+        val value: skirout.library.v1.tag.UpdateTagResponse.ConflictError,
+    ) : skirout.library.v1.tag.UpdateTagResponse() {
+        constructor(
+            value: skirout.library.v1.tag.UpdateTagResponse.ConflictError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.tag.UpdateTagResponse.ConflictErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 274643803;
         }
     }
 
@@ -2769,6 +2861,7 @@ sealed class UpdateTagResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             name: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
             parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
@@ -2776,10 +2869,25 @@ sealed class UpdateTagResponse private constructor() {
         ) = SuccessWrapper(
             skirout.library.v1.tag.Tag(
                 tagId = tagId,
+                revision = revision,
                 name = name,
                 color = color,
                 parentIds = parentIds,
                 placement = placement,
+            )
+        );
+
+        /** Shortcut for `ConflictErrorWrapper(skirout.library.v1.tag.UpdateTagResponse.ConflictError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConflictError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.tag.Tag_OrMutable,
+        ) = ConflictErrorWrapper(
+            skirout.library.v1.tag.UpdateTagResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
             )
         );
 
@@ -2867,6 +2975,15 @@ sealed class UpdateTagResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     3,
+                    "conflict_error",
+                    Kind.CONFLICT_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.tag.UpdateTagResponse.ConflictError.serializer,
+                    "",
+                    { ConflictErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
                     "tag_not_found_error",
                     Kind.TAG_NOT_FOUND_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.tag.UpdateTagResponse.TagNotFoundError.serializer,
@@ -2875,7 +2992,7 @@ sealed class UpdateTagResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    4,
+                    5,
                     "parents_not_found_error",
                     Kind.PARENTS_NOT_FOUND_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.tag.UpdateTagResponse.ParentsNotFoundError.serializer,
@@ -2884,7 +3001,7 @@ sealed class UpdateTagResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    5,
+                    6,
                     "validation_error",
                     Kind.VALIDATION_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.tag.TagValidationError.serializer,
@@ -2893,7 +3010,7 @@ sealed class UpdateTagResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    6,
+                    7,
                     "invalid_record_id_error",
                     Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -2902,6 +3019,178 @@ sealed class UpdateTagResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface ConflictError_OrMutable {
+        val expectedRevision: kotlin.Long;
+        val actual: skirout.library.v1.tag.Tag_OrMutable;
+
+        fun toFrozen(): skirout.library.v1.tag.UpdateTagResponse.ConflictError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ConflictError private constructor(
+        override val expectedRevision: kotlin.Long,
+        override val actual: skirout.library.v1.tag.Tag,
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagResponse.ConflictError>? =
+            null,
+    ): skirout.library.v1.tag.UpdateTagResponse.ConflictError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.tag.Tag_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagResponse.ConflictError>? =
+                null,
+        ): this(
+            expectedRevision,
+            actual.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            expectedRevision = this.expectedRevision,
+            actual = this.actual,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long =
+                this.expectedRevision,
+            actual: skirout.library.v1.tag.Tag_OrMutable =
+                this.actual,
+        ) = skirout.library.v1.tag.UpdateTagResponse.ConflictError(
+            expectedRevision,
+            actual.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.tag.UpdateTagResponse.ConflictError && this.expectedRevision == other.expectedRevision && this.actual == other.actual);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.expectedRevision, this.actual).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.tag.UpdateTagResponse.ConflictError.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [ConflictError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var expectedRevision: kotlin.Long =
+                0L,
+            override var actual: skirout.library.v1.tag.Tag_OrMutable =
+                skirout.library.v1.tag.Tag.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.UpdateTagResponse.ConflictError>? =
+                null,
+        ): skirout.library.v1.tag.UpdateTagResponse.ConflictError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.tag.UpdateTagResponse.ConflictError(
+                expectedRevision = this.expectedRevision,
+                actual = this.actual,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [actual] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
+             */
+            val mutableActual: skirout.library.v1.tag.Tag.Mutable get() {
+                var value = this.actual;
+                return when (value) {
+                    is skirout.library.v1.tag.Tag -> {
+                        value = value.toMutable();
+                        this.actual = value;
+                        return value;
+                    }
+                    is skirout.library.v1.tag.Tag.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.tag.UpdateTagResponse.ConflictError(
+                    0L,
+                    skirout.library.v1.tag.Tag.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ConflictError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                expectedRevision: kotlin.Long =
+                    0L,
+                actual: skirout.library.v1.tag.Tag_OrMutable =
+                    skirout.library.v1.tag.Tag.partial(),
+            ) = skirout.library.v1.tag.UpdateTagResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/tag.skir:UpdateTagResponse.ConflictError",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [ConflictError] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.addField(
+                    "expected_revision",
+                    "expectedRevision",
+                    0,
+                    build.skir.Serializers.int64,
+                    "",
+                    { it.expectedRevision },
+                    { mut, v -> mut.expectedRevision = v },
+                );
+                serializerImpl.addField(
+                    "actual",
+                    "actual",
+                    1,
+                    skirout.library.v1.tag.Tag.serializer,
+                    "",
+                    { it.actual },
+                    { mut, v -> mut.actual = v },
+                );
+                serializerImpl.finalizeStruct();
             }
         }
     }
@@ -3823,1228 +4112,6 @@ sealed class DeleteTagResponse private constructor() {
     }
 }
 
-sealed interface MoveTagRequest_OrMutable {
-    val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val x: kotlin.Int?;
-    val y: kotlin.Int?;
-
-    fun toFrozen(): skirout.library.v1.tag.MoveTagRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class MoveTagRequest private constructor(
-    override val tagId: skirout.kernel.v1.record_id.RecordId,
-    override val x: kotlin.Int?,
-    override val y: kotlin.Int?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagRequest>? =
-        null,
-): skirout.library.v1.tag.MoveTagRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        x: kotlin.Int?,
-        y: kotlin.Int?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagRequest>? =
-            null,
-    ): this(
-        tagId.toFrozen(),
-        x,
-        y,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        tagId = this.tagId,
-        x = this.x,
-        y = this.y,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.tagId,
-        x: kotlin.Int? =
-            this.x,
-        y: kotlin.Int? =
-            this.y,
-    ) = skirout.library.v1.tag.MoveTagRequest(
-        tagId.toFrozen(),
-        x,
-        y,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.tag.MoveTagRequest && this.tagId == other.tagId && this.x == other.x && this.y == other.y);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.x, this.y).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.tag.MoveTagRequest.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [MoveTagRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var x: kotlin.Int? =
-            null,
-        override var y: kotlin.Int? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagRequest>? =
-            null,
-    ): skirout.library.v1.tag.MoveTagRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.library.v1.tag.MoveTagRequest(
-            tagId = this.tagId,
-            x = this.x,
-            y = this.y,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [tagId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
-         */
-        val mutableTagId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.tagId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.tagId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.library.v1.tag.MoveTagRequest(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-                null,
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [MoveTagRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            x: kotlin.Int? =
-                null,
-            y: kotlin.Int? =
-                null,
-        ) = skirout.library.v1.tag.MoveTagRequest(
-            tagId = tagId,
-            x = x,
-            y = y,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "library/v1/tag.skir:MoveTagRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [MoveTagRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [MoveTagRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "tag_id",
-                "tagId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.tagId },
-                { mut, v -> mut.tagId = v },
-            );
-            serializerImpl.addField(
-                "x",
-                "x",
-                1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.x },
-                { mut, v -> mut.x = v },
-            );
-            serializerImpl.addField(
-                "y",
-                "y",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.y },
-                { mut, v -> mut.y = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class MoveTagResponse private constructor() {
-    /** The kind of variant held by a `MoveTagResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        INTERNAL_ERROR_WRAPPER,
-        SUCCESS_WRAPPER,
-        TAG_NOT_FOUND_ERROR_WRAPPER,
-        VALIDATION_ERROR_WRAPPER,
-        INVALID_RECORD_ID_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.tag.MoveTagResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.tag.MoveTagResponse>?,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.library.v1.tag.Tag,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        constructor(
-            value: skirout.library.v1.tag.Tag_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class TagNotFoundErrorWrapper private constructor (
-        val value: skirout.library.v1.tag.MoveTagResponse.TagNotFoundError,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        constructor(
-            value: skirout.library.v1.tag.MoveTagResponse.TagNotFoundError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TAG_NOT_FOUND_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse.TagNotFoundErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1182902522;
-        }
-    }
-
-    class ValidationErrorWrapper(
-        val value: skirout.library.v1.tag.TagValidationError,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        override val kind get() = Kind.VALIDATION_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse.ValidationErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 2105835202;
-        }
-    }
-
-    class InvalidRecordIdErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
-    ) : skirout.library.v1.tag.MoveTagResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.MoveTagResponse.InvalidRecordIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -908768310;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.tag.MoveTagResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.tag.MoveTagResponse._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [MoveTagResponse].
-         * Default value for fields of type [MoveTagResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Shortcut for `SuccessWrapper(skirout.library.v1.tag.Tag(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            name: kotlin.String,
-            color: skirout.kernel.v1.color.Color_OrMutable,
-            parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
-            placement: skirout.library.v1.tag.Placement_OrMutable,
-        ) = SuccessWrapper(
-            skirout.library.v1.tag.Tag(
-                tagId = tagId,
-                name = name,
-                color = color,
-                parentIds = parentIds,
-                placement = placement,
-            )
-        );
-
-        /** Shortcut for `TagNotFoundErrorWrapper(skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTagNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = TagNotFoundErrorWrapper(
-            skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(
-                tagId = tagId,
-            )
-        );
-
-        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidRecordIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedTable: kotlin.String,
-            givenTables: kotlin.collections.Iterable<kotlin.String>,
-        ) = InvalidRecordIdErrorWrapper(
-            skirout.kernel.v1.errors.InvalidRecordIdError(
-                expectedTable = expectedTable,
-                givenTables = givenTables,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.library.v1.tag.MoveTagResponse, Unknown>(
-                recordId = "library/v1/tag.skir:MoveTagResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [MoveTagResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [MoveTagResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.library.v1.tag.Tag.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "tag_not_found_error",
-                    Kind.TAG_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.tag.MoveTagResponse.TagNotFoundError.serializer,
-                    "",
-                    { TagNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "validation_error",
-                    Kind.VALIDATION_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.tag.TagValidationError.serializer,
-                    "",
-                    { ValidationErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface TagNotFoundError_OrMutable {
-        val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-        fun toFrozen(): skirout.library.v1.tag.MoveTagResponse.TagNotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class TagNotFoundError private constructor(
-        override val tagId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagResponse.TagNotFoundError>? =
-            null,
-    ): skirout.library.v1.tag.MoveTagResponse.TagNotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagResponse.TagNotFoundError>? =
-                null,
-        ): this(
-            tagId.toFrozen(),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            tagId = this.tagId,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                this.tagId,
-        ) = skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(
-            tagId.toFrozen(),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.library.v1.tag.MoveTagResponse.TagNotFoundError && this.tagId == other.tagId);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.tagId).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.library.v1.tag.MoveTagResponse.TagNotFoundError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [TagNotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.MoveTagResponse.TagNotFoundError>? =
-                null,
-        ): skirout.library.v1.tag.MoveTagResponse.TagNotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(
-                tagId = this.tagId,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [tagId] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
-             */
-            val mutableTagId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-                var value = this.tagId;
-                return when (value) {
-                    is skirout.kernel.v1.record_id.RecordId -> {
-                        value = value.toMutable();
-                        this.tagId = value;
-                        return value;
-                    }
-                    is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [TagNotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-            ) = skirout.library.v1.tag.MoveTagResponse.TagNotFoundError(
-                tagId = tagId,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "library/v1/tag.skir:MoveTagResponse.TagNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [TagNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [TagNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "tag_id",
-                    "tagId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.tagId },
-                    { mut, v -> mut.tagId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-}
-
-sealed interface ResizeTagRequest_OrMutable {
-    val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val width: kotlin.Int?;
-    val height: kotlin.Int?;
-
-    fun toFrozen(): skirout.library.v1.tag.ResizeTagRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ResizeTagRequest private constructor(
-    override val tagId: skirout.kernel.v1.record_id.RecordId,
-    override val width: kotlin.Int?,
-    override val height: kotlin.Int?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagRequest>? =
-        null,
-): skirout.library.v1.tag.ResizeTagRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        width: kotlin.Int?,
-        height: kotlin.Int?,
-        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagRequest>? =
-            null,
-    ): this(
-        tagId.toFrozen(),
-        width,
-        height,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        tagId = this.tagId,
-        width = this.width,
-        height = this.height,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.tagId,
-        width: kotlin.Int? =
-            this.width,
-        height: kotlin.Int? =
-            this.height,
-    ) = skirout.library.v1.tag.ResizeTagRequest(
-        tagId.toFrozen(),
-        width,
-        height,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.tag.ResizeTagRequest && this.tagId == other.tagId && this.width == other.width && this.height == other.height);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.tagId, this.width, this.height).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.tag.ResizeTagRequest.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [ResizeTagRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        override var width: kotlin.Int? =
-            null,
-        override var height: kotlin.Int? =
-            null,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagRequest>? =
-            null,
-    ): skirout.library.v1.tag.ResizeTagRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.library.v1.tag.ResizeTagRequest(
-            tagId = this.tagId,
-            width = this.width,
-            height = this.height,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [tagId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
-         */
-        val mutableTagId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.tagId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.tagId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.library.v1.tag.ResizeTagRequest(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-                null,
-                null,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ResizeTagRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            width: kotlin.Int? =
-                null,
-            height: kotlin.Int? =
-                null,
-        ) = skirout.library.v1.tag.ResizeTagRequest(
-            tagId = tagId,
-            width = width,
-            height = height,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "library/v1/tag.skir:ResizeTagRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [ResizeTagRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [ResizeTagRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "tag_id",
-                "tagId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.tagId },
-                { mut, v -> mut.tagId = v },
-            );
-            serializerImpl.addField(
-                "width",
-                "width",
-                1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.width },
-                { mut, v -> mut.width = v },
-            );
-            serializerImpl.addField(
-                "height",
-                "height",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.height },
-                { mut, v -> mut.height = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class ResizeTagResponse private constructor() {
-    /** The kind of variant held by a `ResizeTagResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        INTERNAL_ERROR_WRAPPER,
-        SUCCESS_WRAPPER,
-        TAG_NOT_FOUND_ERROR_WRAPPER,
-        VALIDATION_ERROR_WRAPPER,
-        INVALID_RECORD_ID_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.tag.ResizeTagResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.tag.ResizeTagResponse>?,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.library.v1.tag.Tag,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        constructor(
-            value: skirout.library.v1.tag.Tag_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class TagNotFoundErrorWrapper private constructor (
-        val value: skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        constructor(
-            value: skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.TAG_NOT_FOUND_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse.TagNotFoundErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1182902522;
-        }
-    }
-
-    class ValidationErrorWrapper(
-        val value: skirout.library.v1.tag.TagValidationError,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        override val kind get() = Kind.VALIDATION_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse.ValidationErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 2105835202;
-        }
-    }
-
-    class InvalidRecordIdErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
-    ) : skirout.library.v1.tag.ResizeTagResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.tag.ResizeTagResponse.InvalidRecordIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -908768310;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.tag.ResizeTagResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.tag.ResizeTagResponse._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [ResizeTagResponse].
-         * Default value for fields of type [ResizeTagResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Shortcut for `SuccessWrapper(skirout.library.v1.tag.Tag(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            name: kotlin.String,
-            color: skirout.kernel.v1.color.Color_OrMutable,
-            parentIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
-            placement: skirout.library.v1.tag.Placement_OrMutable,
-        ) = SuccessWrapper(
-            skirout.library.v1.tag.Tag(
-                tagId = tagId,
-                name = name,
-                color = color,
-                parentIds = parentIds,
-                placement = placement,
-            )
-        );
-
-        /** Shortcut for `TagNotFoundErrorWrapper(skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createTagNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = TagNotFoundErrorWrapper(
-            skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(
-                tagId = tagId,
-            )
-        );
-
-        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidRecordIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedTable: kotlin.String,
-            givenTables: kotlin.collections.Iterable<kotlin.String>,
-        ) = InvalidRecordIdErrorWrapper(
-            skirout.kernel.v1.errors.InvalidRecordIdError(
-                expectedTable = expectedTable,
-                givenTables = givenTables,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.library.v1.tag.ResizeTagResponse, Unknown>(
-                recordId = "library/v1/tag.skir:ResizeTagResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [ResizeTagResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [ResizeTagResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.library.v1.tag.Tag.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "tag_not_found_error",
-                    Kind.TAG_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError.serializer,
-                    "",
-                    { TagNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "validation_error",
-                    Kind.VALIDATION_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.tag.TagValidationError.serializer,
-                    "",
-                    { ValidationErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface TagNotFoundError_OrMutable {
-        val tagId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-        fun toFrozen(): skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class TagNotFoundError private constructor(
-        override val tagId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError>? =
-            null,
-    ): skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError>? =
-                null,
-        ): this(
-            tagId.toFrozen(),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            tagId = this.tagId,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                this.tagId,
-        ) = skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(
-            tagId.toFrozen(),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError && this.tagId == other.tagId);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.tagId).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [TagNotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError>? =
-                null,
-        ): skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(
-                tagId = this.tagId,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [tagId] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [tagId] and returns it.
-             */
-            val mutableTagId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-                var value = this.tagId;
-                return when (value) {
-                    is skirout.kernel.v1.record_id.RecordId -> {
-                        value = value.toMutable();
-                        this.tagId = value;
-                        return value;
-                    }
-                    is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [TagNotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                tagId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-            ) = skirout.library.v1.tag.ResizeTagResponse.TagNotFoundError(
-                tagId = tagId,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "library/v1/tag.skir:ResizeTagResponse.TagNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [TagNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [TagNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "tag_id",
-                    "tagId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.tagId },
-                    { mut, v -> mut.tagId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-}
-
 val WatchTags: build.skir.service.Method<
     skirout.library.v1.tag.WatchTagsRequest,
     skirout.library.v1.tag.WatchTagsResponse,
@@ -5106,32 +4173,6 @@ val DeleteTag: build.skir.service.Method<
         852297,
         skirout.library.v1.tag.DeleteTagRequest.serializer,
         skirout.library.v1.tag.DeleteTagResponse.serializer,
-        "",
-    )
-}
-
-val MoveTag: build.skir.service.Method<
-    skirout.library.v1.tag.MoveTagRequest,
-    skirout.library.v1.tag.MoveTagResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "MoveTag",
-        428020,
-        skirout.library.v1.tag.MoveTagRequest.serializer,
-        skirout.library.v1.tag.MoveTagResponse.serializer,
-        "",
-    )
-}
-
-val ResizeTag: build.skir.service.Method<
-    skirout.library.v1.tag.ResizeTagRequest,
-    skirout.library.v1.tag.ResizeTagResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "ResizeTag",
-        356809,
-        skirout.library.v1.tag.ResizeTagRequest.serializer,
-        skirout.library.v1.tag.ResizeTagResponse.serializer,
         "",
     )
 }

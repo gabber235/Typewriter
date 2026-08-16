@@ -16,5 +16,8 @@ interface BookRepository {
         tagIds: List<RecordId>,
     ): RepositoryResult<Book>
 
-    suspend fun updateBook(book: Book): RepositoryResult<Book>
+    suspend fun updateBook(
+        expectedRevision: Long,
+        book: Book,
+    ): RevisionedRepositoryResult<Book>
 }

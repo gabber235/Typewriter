@@ -14,6 +14,56 @@
 //   cargo add skir-client
 
 // ==============================================================================
+// enum ServiceUpdateValidationError
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ServiceUpdateValidationError {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ServiceUpdateValidationError>>),
+    NameInvalid,
+    RunsInRequiresEngineOrCustomRole,
+    RunsInMustReferenceRealmRole,
+    RunsInOrganizationMismatch,
+    RunsInSelfReference,
+    RunsInCycle,
+}
+
+impl Default for ServiceUpdateValidationError {
+    fn default() -> Self {
+        ServiceUpdateValidationError::Unknown(None)
+    }
+}
+
+impl ServiceUpdateValidationError {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ServiceUpdateValidationError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ServiceUpdateValidationError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ServiceUpdateValidationError| match x {
+                        ServiceUpdateValidationError::Unknown(_) => 0,
+                        ServiceUpdateValidationError::NameInvalid => 1,
+                        ServiceUpdateValidationError::RunsInRequiresEngineOrCustomRole => 2,
+                        ServiceUpdateValidationError::RunsInMustReferenceRealmRole => 3,
+                        ServiceUpdateValidationError::RunsInOrganizationMismatch => 4,
+                        ServiceUpdateValidationError::RunsInSelfReference => 5,
+                        ServiceUpdateValidationError::RunsInCycle => 6,
+                    },
+                    |u| ServiceUpdateValidationError::Unknown(Some(u)),
+                    |x: &ServiceUpdateValidationError| match x { ServiceUpdateValidationError::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "service/v1/organization.skir",
+                    "ServiceUpdateValidationError",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ServiceUpdateValidationError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ServiceUpdateValidationError::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct WatchOrganizationServicesRequest
 // ==============================================================================
 
@@ -105,7 +155,9 @@ impl WatchOrganizationServicesResponse {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UpdateOrganizationServiceRequest {
     pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub name: Option<String>,
+    pub expected_revision: i64,
+    pub name: String,
+    pub runs_in: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateOrganizationServiceRequest>>,
 }
@@ -138,39 +190,41 @@ impl UpdateOrganizationServiceRequest {
 }
 
 // ==============================================================================
-// struct UpdateOrganizationServiceResponse.Success
+// struct UpdateOrganizationServiceResponse.ConflictError
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct UpdateOrganizationServiceResponse_Success {
+pub struct UpdateOrganizationServiceResponse_ConflictError {
+    pub expected_revision: i64,
+    pub actual: crate::skirout::base::service::v1::service::Service,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateOrganizationServiceResponse_Success>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateOrganizationServiceResponse_ConflictError>>,
 }
 
-impl UpdateOrganizationServiceResponse_Success {
-    pub fn default_ref() -> &'static UpdateOrganizationServiceResponse_Success {
-        static D: std::sync::LazyLock<UpdateOrganizationServiceResponse_Success> = std::sync::LazyLock::new(UpdateOrganizationServiceResponse_Success::default);
+impl UpdateOrganizationServiceResponse_ConflictError {
+    pub fn default_ref() -> &'static UpdateOrganizationServiceResponse_ConflictError {
+        static D: std::sync::LazyLock<UpdateOrganizationServiceResponse_ConflictError> = std::sync::LazyLock::new(UpdateOrganizationServiceResponse_ConflictError::default);
         &D
     }
 }
 
-impl UpdateOrganizationServiceResponse_Success {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_Success> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_Success>> =
+impl UpdateOrganizationServiceResponse_ConflictError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_ConflictError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_ConflictError>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "service/v1/organization.skir",
-                    "UpdateOrganizationServiceResponse.Success",
+                    "UpdateOrganizationServiceResponse.ConflictError",
                     "",
-                    |x: &UpdateOrganizationServiceResponse_Success| &x._unrecognized,
-                    |x: &mut UpdateOrganizationServiceResponse_Success, u| x._unrecognized = u,
+                    |x: &UpdateOrganizationServiceResponse_ConflictError| &x._unrecognized,
+                    |x: &mut UpdateOrganizationServiceResponse_ConflictError, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<UpdateOrganizationServiceResponse_Success> {
+    pub fn serializer() -> crate::skir_client::Serializer<UpdateOrganizationServiceResponse_ConflictError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_Success::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_ConflictError::_adapter())
     }
 }
 
@@ -212,6 +266,44 @@ impl UpdateOrganizationServiceResponse_ServiceNotFoundError {
 }
 
 // ==============================================================================
+// struct UpdateOrganizationServiceResponse.RunsInNotFoundError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct UpdateOrganizationServiceResponse_RunsInNotFoundError {
+    pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateOrganizationServiceResponse_RunsInNotFoundError>>,
+}
+
+impl UpdateOrganizationServiceResponse_RunsInNotFoundError {
+    pub fn default_ref() -> &'static UpdateOrganizationServiceResponse_RunsInNotFoundError {
+        static D: std::sync::LazyLock<UpdateOrganizationServiceResponse_RunsInNotFoundError> = std::sync::LazyLock::new(UpdateOrganizationServiceResponse_RunsInNotFoundError::default);
+        &D
+    }
+}
+
+impl UpdateOrganizationServiceResponse_RunsInNotFoundError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_RunsInNotFoundError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_RunsInNotFoundError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/organization.skir",
+                    "UpdateOrganizationServiceResponse.RunsInNotFoundError",
+                    "",
+                    |x: &UpdateOrganizationServiceResponse_RunsInNotFoundError| &x._unrecognized,
+                    |x: &mut UpdateOrganizationServiceResponse_RunsInNotFoundError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<UpdateOrganizationServiceResponse_RunsInNotFoundError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_RunsInNotFoundError::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum UpdateOrganizationServiceResponse
 // ==============================================================================
 
@@ -219,8 +311,11 @@ impl UpdateOrganizationServiceResponse_ServiceNotFoundError {
 pub enum UpdateOrganizationServiceResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdateOrganizationServiceResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-    Success(Box<UpdateOrganizationServiceResponse_Success>),
+    Success(Box<crate::skirout::base::service::v1::service::Service>),
+    ConflictError(Box<UpdateOrganizationServiceResponse_ConflictError>),
     ServiceNotFoundError(Box<UpdateOrganizationServiceResponse_ServiceNotFoundError>),
+    RunsInNotFoundError(Box<UpdateOrganizationServiceResponse_RunsInNotFoundError>),
+    ValidationError(Box<ServiceUpdateValidationError>),
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
 
@@ -239,8 +334,11 @@ impl UpdateOrganizationServiceResponse {
                         UpdateOrganizationServiceResponse::Unknown(_) => 0,
                         UpdateOrganizationServiceResponse::InternalError(_) => 1,
                         UpdateOrganizationServiceResponse::Success(_) => 2,
-                        UpdateOrganizationServiceResponse::ServiceNotFoundError(_) => 3,
-                        UpdateOrganizationServiceResponse::InvalidRecordIdError(_) => 4,
+                        UpdateOrganizationServiceResponse::ConflictError(_) => 3,
+                        UpdateOrganizationServiceResponse::ServiceNotFoundError(_) => 4,
+                        UpdateOrganizationServiceResponse::RunsInNotFoundError(_) => 5,
+                        UpdateOrganizationServiceResponse::ValidationError(_) => 6,
+                        UpdateOrganizationServiceResponse::InvalidRecordIdError(_) => 7,
                     },
                     |u| UpdateOrganizationServiceResponse::Unknown(Some(u)),
                     |x: &UpdateOrganizationServiceResponse| match x { UpdateOrganizationServiceResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -265,6 +363,16 @@ fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> =
         std::sync::LazyLock::new(|| {
             unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ServiceUpdateValidationError> = ServiceUpdateValidationError::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("name_invalid", 1, 1, "", ServiceUpdateValidationError::NameInvalid);
+                (*a).add_constant_variant("runs_in_requires_engine_or_custom_role", 2, 2, "", ServiceUpdateValidationError::RunsInRequiresEngineOrCustomRole);
+                (*a).add_constant_variant("runs_in_must_reference_realm_role", 3, 3, "", ServiceUpdateValidationError::RunsInMustReferenceRealmRole);
+                (*a).add_constant_variant("runs_in_organization_mismatch", 4, 4, "", ServiceUpdateValidationError::RunsInOrganizationMismatch);
+                (*a).add_constant_variant("runs_in_self_reference", 5, 5, "", ServiceUpdateValidationError::RunsInSelfReference);
+                (*a).add_constant_variant("runs_in_cycle", 6, 6, "", ServiceUpdateValidationError::RunsInCycle);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationServicesRequest> = WatchOrganizationServicesRequest::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -280,11 +388,15 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceRequest> = UpdateOrganizationServiceRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &UpdateOrganizationServiceRequest| &x.service_id, |x: &mut UpdateOrganizationServiceRequest, v| x.service_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdateOrganizationServiceRequest| &x.name, |x: &mut UpdateOrganizationServiceRequest, v| x.name = v);
+                (*a).add_field("expected_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &UpdateOrganizationServiceRequest| &x.expected_revision, |x: &mut UpdateOrganizationServiceRequest, v| x.expected_revision = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &UpdateOrganizationServiceRequest| &x.name, |x: &mut UpdateOrganizationServiceRequest, v| x.name = v);
+                (*a).add_field("runs_in", 3, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &UpdateOrganizationServiceRequest| &x.runs_in, |x: &mut UpdateOrganizationServiceRequest, v| x.runs_in = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_Success> = UpdateOrganizationServiceResponse_Success::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_ConflictError> = UpdateOrganizationServiceResponse_ConflictError::_adapter() as *const _ as *mut _;
+                (*a).add_field("expected_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &UpdateOrganizationServiceResponse_ConflictError| &x.expected_revision, |x: &mut UpdateOrganizationServiceResponse_ConflictError, v| x.expected_revision = v);
+                (*a).add_field("actual", 1, crate::skirout::base::service::v1::service::Service::serializer(), "", |x: &UpdateOrganizationServiceResponse_ConflictError| &x.actual, |x: &mut UpdateOrganizationServiceResponse_ConflictError, v| x.actual = v);
                 (*a).finalize();
             }
             unsafe {
@@ -292,11 +404,19 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<UpdateOrganizationServiceResponse_RunsInNotFoundError> = UpdateOrganizationServiceResponse_RunsInNotFoundError::_adapter() as *const _ as *mut _;
+                (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &UpdateOrganizationServiceResponse_RunsInNotFoundError| &x.service_id, |x: &mut UpdateOrganizationServiceResponse_RunsInNotFoundError, v| x.service_id = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<UpdateOrganizationServiceResponse> = UpdateOrganizationServiceResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| UpdateOrganizationServiceResponse::InternalError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_Success::_adapter()), "", |v| UpdateOrganizationServiceResponse::Success(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("service_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_ServiceNotFoundError::_adapter()), "", |v| UpdateOrganizationServiceResponse::ServiceNotFoundError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::ServiceNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 4, 4, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateOrganizationServiceResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("success", 2, 2, crate::skirout::base::service::v1::service::Service::serializer(), "", |v| UpdateOrganizationServiceResponse::Success(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conflict_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_ConflictError::_adapter()), "", |v| UpdateOrganizationServiceResponse::ConflictError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::ConflictError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("service_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_ServiceNotFoundError::_adapter()), "", |v| UpdateOrganizationServiceResponse::ServiceNotFoundError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::ServiceNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("runs_in_not_found_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(UpdateOrganizationServiceResponse_RunsInNotFoundError::_adapter()), "", |v| UpdateOrganizationServiceResponse::RunsInNotFoundError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::RunsInNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("validation_error", 6, 6, crate::skir_client::internal::enum_serializer_from_static(ServiceUpdateValidationError::_adapter()), "", |v| UpdateOrganizationServiceResponse::ValidationError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 7, 7, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateOrganizationServiceResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateOrganizationServiceResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

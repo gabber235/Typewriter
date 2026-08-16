@@ -5,10 +5,16 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
     final binding = expressions.binding(value.binding);
     final label = _optional(value.label);
     final description = _optional(value.description);
+    final prefix = value.prefix == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.prefix!).mapValue((value) => value);
+    final semanticLabel = _optional(value.semanticLabel);
     final diagnostics = [
       ...binding.diagnostics,
       ...label.diagnostics,
       ...description.diagnostics,
+      ...prefix.diagnostics,
+      ...semanticLabel.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -16,6 +22,8 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
               binding: binding.valueOrNull!,
               label: label.valueOrNull,
               description: description.valueOrNull,
+              prefix: prefix.valueOrNull,
+              semanticLabel: semanticLabel.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);

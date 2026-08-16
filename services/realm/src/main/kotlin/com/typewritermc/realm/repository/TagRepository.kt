@@ -19,21 +19,12 @@ interface TagRepository {
         placement: Placement,
     ): RepositoryResult<Tag>
 
-    suspend fun updateTag(tag: Tag): RepositoryResult<Tag>
+    suspend fun updateTag(
+        expectedRevision: Long,
+        tag: Tag,
+    ): RevisionedRepositoryResult<Tag>
 
     suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion>
-
-    suspend fun moveTag(
-        id: RecordId,
-        x: Int?,
-        y: Int?,
-    ): RepositoryResult<Tag>
-
-    suspend fun resizeTag(
-        id: RecordId,
-        width: Int?,
-        height: Int?,
-    ): RepositoryResult<Tag>
 }
 
 data class TagDeletion(

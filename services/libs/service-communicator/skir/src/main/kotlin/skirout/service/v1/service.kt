@@ -22,6 +22,7 @@ import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface Service_OrMutable {
     val serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val revision: kotlin.Long;
     val name: kotlin.String;
     val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>;
     val createdAt: java.time.Instant;
@@ -37,6 +38,7 @@ sealed interface Service_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Service private constructor(
     override val serviceId: skirout.kernel.v1.record_id.RecordId,
+    override val revision: kotlin.Long,
     override val name: kotlin.String,
     override val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>,
     override val createdAt: java.time.Instant,
@@ -51,6 +53,7 @@ class Service private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        revision: kotlin.Long,
         name: kotlin.String,
         roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole>,
         createdAt: java.time.Instant,
@@ -62,6 +65,7 @@ class Service private constructor(
             null,
     ): this(
         serviceId.toFrozen(),
+        revision,
         name,
         build.skir.internal.toFrozenList(roles),
         createdAt,
@@ -78,6 +82,7 @@ class Service private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         serviceId = this.serviceId,
+        revision = this.revision,
         name = this.name,
         roles = this.roles,
         createdAt = this.createdAt,
@@ -93,6 +98,8 @@ class Service private constructor(
             _MustNameArguments,
         serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.serviceId,
+        revision: kotlin.Long =
+            this.revision,
         name: kotlin.String =
             this.name,
         roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
@@ -109,6 +116,7 @@ class Service private constructor(
             this.runsIn,
     ) = skirout.service.v1.service.Service(
         serviceId.toFrozen(),
+        revision,
         name,
         build.skir.internal.toFrozenList(roles),
         createdAt,
@@ -123,11 +131,11 @@ class Service private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.name == other.name && this.roles == other.roles && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state && this.runsIn == other.runsIn);
+        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.revision == other.revision && this.name == other.name && this.roles == other.roles && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state && this.runsIn == other.runsIn);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.name, this.roles, this.createdAt, this.organization, this.registration, this.state, this.runsIn).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.revision, this.name, this.roles, this.createdAt, this.organization, this.registration, this.state, this.runsIn).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -143,6 +151,8 @@ class Service private constructor(
             _MustNameArguments,
         override var serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
+        override var revision: kotlin.Long =
+            0L,
         override var name: kotlin.String =
             "",
         override var roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole> =
@@ -163,6 +173,7 @@ class Service private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.service.Service(
             serviceId = this.serviceId,
+            revision = this.revision,
             name = this.name,
             roles = this.roles,
             createdAt = this.createdAt,
@@ -210,6 +221,7 @@ class Service private constructor(
         private val default =
             skirout.service.v1.service.Service(
                 skirout.kernel.v1.record_id.RecordId.partial(),
+                0L,
                 "",
                 build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
                 java.time.Instant.EPOCH,
@@ -232,6 +244,8 @@ class Service private constructor(
                 _MustNameArguments,
             serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
+            revision: kotlin.Long =
+                0L,
             name: kotlin.String =
                 "",
             roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
@@ -248,6 +262,7 @@ class Service private constructor(
                 null,
         ) = skirout.service.v1.service.Service(
             serviceId = serviceId,
+            revision = revision,
             name = name,
             roles = roles,
             createdAt = createdAt,
@@ -285,9 +300,18 @@ class Service private constructor(
                 { mut, v -> mut.serviceId = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
+                "revision",
+                "revision",
                 1,
+                build.skir.Serializers.int64,
+                "",
+                { it.revision },
+                { mut, v -> mut.revision = v },
+            );
+            serializerImpl.addField(
+                "name",
+                "name",
+                2,
                 build.skir.Serializers.string,
                 "",
                 { it.name },
@@ -296,7 +320,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "roles",
                 "roles",
-                2,
+                3,
                 build.skir.Serializers.list(
                     skirout.service.v1.service.ServiceRole.serializer,
                 ),
@@ -307,7 +331,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "created_at",
                 "createdAt",
-                3,
+                4,
                 build.skir.Serializers.timestamp,
                 "",
                 { it.createdAt },
@@ -316,7 +340,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "organization",
                 "organization",
-                4,
+                5,
                 build.skir.Serializers.optional(
                     skirout.kernel.v1.record_id.RecordId.serializer,
                 ),
@@ -327,7 +351,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "registration",
                 "registration",
-                5,
+                6,
                 build.skir.Serializers.optional(
                     skirout.service.v1.service.ServiceRegistration.serializer,
                 ),
@@ -338,7 +362,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "state",
                 "state",
-                6,
+                7,
                 build.skir.Serializers.optional(
                     skirout.service.v1.service.ServiceState.serializer,
                 ),
@@ -349,7 +373,7 @@ class Service private constructor(
             serializerImpl.addField(
                 "runs_in",
                 "runsIn",
-                7,
+                8,
                 build.skir.Serializers.optional(
                     skirout.kernel.v1.record_id.RecordId.serializer,
                 ),

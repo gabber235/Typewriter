@@ -72,10 +72,12 @@ extension SkirPresentationSearchEncoder on SkirPresentationEncoder {
     final key = expressions.encode(value.key);
     final selectedValue = expressions.encode(value.selectedValue);
     final presentation = encodeNode(value.presentation);
+    final label = _optional(value.label);
     final diagnostics = [
       ...key.diagnostics,
       ...selectedValue.diagnostics,
       ...presentation.diagnostics,
+      ...label.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -84,6 +86,7 @@ extension SkirPresentationSearchEncoder on SkirPresentationEncoder {
               key: key.valueOrNull!,
               selectedValue: selectedValue.valueOrNull!,
               presentation: presentation.valueOrNull!,
+              label: label.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);

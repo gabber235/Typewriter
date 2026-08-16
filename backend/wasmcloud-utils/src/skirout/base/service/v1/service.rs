@@ -20,6 +20,7 @@
 #[derive(Clone, Debug, PartialEq)]
 pub struct Service {
     pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub revision: i64,
     pub name: String,
     pub roles: Vec<ServiceRole>,
     pub created_at: std::time::SystemTime,
@@ -42,6 +43,7 @@ impl Default for Service {
     fn default() -> Self {
         Service {
             service_id: crate::skirout::base::kernel::v1::record_id::RecordId::default(),
+            revision: 0_i64,
             name: String::new(),
             roles: Vec::default(),
             created_at: ::std::time::SystemTime::UNIX_EPOCH,
@@ -383,13 +385,14 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<Service> = Service::_adapter() as *const _ as *mut _;
                 (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Service| &x.service_id, |x: &mut Service, v| x.service_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &Service| &x.name, |x: &mut Service, v| x.name = v);
-                (*a).add_field("roles", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter())), "", |x: &Service| &x.roles, |x: &mut Service, v| x.roles = v);
-                (*a).add_field("created_at", 3, crate::skir_client::Serializer::timestamp(), "", |x: &Service| &x.created_at, |x: &mut Service, v| x.created_at = v);
-                (*a).add_field("organization", 4, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.organization, |x: &mut Service, v| x.organization = v);
-                (*a).add_field("registration", 5, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceRegistration::_adapter())), "", |x: &Service| &x.registration, |x: &mut Service, v| x.registration = v);
-                (*a).add_field("state", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceState::_adapter())), "", |x: &Service| &x.state, |x: &mut Service, v| x.state = v);
-                (*a).add_field("runs_in", 7, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.runs_in, |x: &mut Service, v| x.runs_in = v);
+                (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Service| &x.revision, |x: &mut Service, v| x.revision = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &Service| &x.name, |x: &mut Service, v| x.name = v);
+                (*a).add_field("roles", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter())), "", |x: &Service| &x.roles, |x: &mut Service, v| x.roles = v);
+                (*a).add_field("created_at", 4, crate::skir_client::Serializer::timestamp(), "", |x: &Service| &x.created_at, |x: &mut Service, v| x.created_at = v);
+                (*a).add_field("organization", 5, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.organization, |x: &mut Service, v| x.organization = v);
+                (*a).add_field("registration", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceRegistration::_adapter())), "", |x: &Service| &x.registration, |x: &mut Service, v| x.registration = v);
+                (*a).add_field("state", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceState::_adapter())), "", |x: &Service| &x.state, |x: &mut Service, v| x.state = v);
+                (*a).add_field("runs_in", 8, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.runs_in, |x: &mut Service, v| x.runs_in = v);
                 (*a).finalize();
             }
             unsafe {

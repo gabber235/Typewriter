@@ -67,9 +67,17 @@ DEFINE FUNCTION OVERWRITE fn::service::has_role($service: object, $role_type: st
 DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: option<record<service>>) -> bool {
     IF $realm == NONE { RETURN true };
 
+    IF $realm = $service.id {
+        THROW "runs-in-self-reference-error"
+    };
+
     LET $can_run_in = fn::service::has_role($service, "engine") OR fn::service::has_role($service, "custom");
     IF !$can_run_in {
         THROW "runs-in-requires-engine-or-custom-role"
+    };
+
+    IF $realm.roles == NONE {
+        THROW "runs-in-service-not-found-error"
     };
 
     IF !fn::service::has_role({ roles: $realm.roles }, "realm") {
@@ -79,10 +87,15 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: o
     LET $service_org = $service.organization;
     LET $realm_org = $realm.organization;
 
-    IF $service_org == NONE AND $realm_org == NONE { RETURN true };
-    IF $service_org != NONE AND $realm_org != NONE AND $service_org = $realm_org { RETURN true };
+    IF !($service_org == NONE AND $realm_org == NONE) AND !($service_org != NONE AND $realm_org != NONE AND $service_org = $realm_org) {
+        THROW "runs-in-organization-mismatch"
+    };
 
-    THROW "runs-in-organization-mismatch";
+    IF $service.id IN $realm.{1..256+collect}.runs_in {
+        THROW "runs-in-cycle-error"
+    };
+
+    RETURN true;
 };
 
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {

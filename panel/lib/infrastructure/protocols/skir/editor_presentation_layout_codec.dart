@@ -1,10 +1,35 @@
 part of "editor_presentation_codec.dart";
 
 extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
-  TypeResult<PresentationElement> _children(
+  TypeResult<PresentationElement> _children(wire.ChildrenElement value) =>
+      _childrenLayout(value.layout).mapValue(
+        (layout) => layout.element(
+          value.children.map(decodeNode).toList(growable: false),
+        ),
+      );
+
+  TypeResult<PresentationChildrenLayout> _childrenLayout(
     wire.ChildrenLayout value,
-    PresentationElement Function({
-      required List<PresentationNode> children,
+  ) => switch (value) {
+    wire.ChildrenLayout_columnWrapper(:final value) => _axisLayout(
+      value,
+      PresentationColumnLayout.new,
+    ),
+    wire.ChildrenLayout_rowWrapper(:final value) => _axisLayout(
+      value,
+      PresentationRowLayout.new,
+    ),
+    wire.ChildrenLayout_wrapWrapper(:final value) => _wrapLayout(value),
+    wire.ChildrenLayout_gridWrapper(:final value) => _gridLayout(value),
+    wire.ChildrenLayout.stack => const TypeResult.success(
+      PresentationStackLayout(),
+    ),
+    wire.ChildrenLayout_unknown() => invalidWire("Unknown children layout"),
+  };
+
+  TypeResult<PresentationChildrenLayout> _axisLayout(
+    wire.AxisChildrenLayout value,
+    PresentationChildrenLayout Function({
       double spacing,
       PresentationMainAxisAlignment mainAxisAlignment,
       PresentationCrossAxisAlignment crossAxisAlignment,
@@ -35,7 +60,6 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
     }
     return TypeResult.success(
       create(
-        children: value.children.map(decodeNode).toList(growable: false),
         spacing: value.spacing,
         mainAxisAlignment: main,
         crossAxisAlignment: cross,
@@ -43,15 +67,38 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
     );
   }
 
-  TypeResult<PresentationElement> _grid(wire.GridLayout value) {
+  TypeResult<PresentationChildrenLayout> _wrapLayout(
+    wire.WrapChildrenLayout value,
+  ) {
+    final axis = _axisLayout(
+      wire.AxisChildrenLayout(
+        spacing: value.spacing,
+        mainAxisAlignment: value.mainAxisAlignment,
+        crossAxisAlignment: value.crossAxisAlignment,
+      ),
+      PresentationWrapLayout.new,
+    );
+    if (value.runSpacing < 0) return invalidWire("Invalid wrap run spacing");
+    return axis.mapValue(
+      (layout) => PresentationWrapLayout(
+        spacing: (layout as PresentationWrapLayout).spacing,
+        runSpacing: value.runSpacing,
+        mainAxisAlignment: layout.mainAxisAlignment,
+        crossAxisAlignment: layout.crossAxisAlignment,
+      ),
+    );
+  }
+
+  TypeResult<PresentationChildrenLayout> _gridLayout(
+    wire.GridChildrenLayout value,
+  ) {
     if (value.columns <= 0 ||
         value.horizontalSpacing < 0 ||
         value.verticalSpacing < 0) {
       return invalidWire("Invalid grid dimensions");
     }
     return TypeResult.success(
-      GridElement(
-        children: value.children.map(decodeNode).toList(growable: false),
+      PresentationGridLayout(
         columns: value.columns,
         horizontalSpacing: value.horizontalSpacing,
         verticalSpacing: value.verticalSpacing,

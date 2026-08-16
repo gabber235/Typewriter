@@ -47,23 +47,7 @@ final class SkirPresentationDecoder {
   TypeResult<PresentationElement> _element(
     wire.PresentationElement value,
   ) => switch (value) {
-    wire.PresentationElement_columnWrapper(:final value) => _children(
-      value,
-      ColumnElement.new,
-    ),
-    wire.PresentationElement_rowWrapper(:final value) => _children(
-      value,
-      RowElement.new,
-    ),
-    wire.PresentationElement_wrapWrapper(:final value) => _children(
-      value,
-      WrapElement.new,
-    ),
-    wire.PresentationElement_stackWrapper(:final value) => _children(
-      value,
-      StackElement.new,
-    ),
-    wire.PresentationElement_gridWrapper(:final value) => _grid(value),
+    wire.PresentationElement_childrenWrapper(:final value) => _children(value),
     wire.PresentationElement_cardWrapper(:final value) => TypeResult.success(
       CardElement(
         decodeNode(value.child),
@@ -87,6 +71,7 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_iconWrapper(:final value) => _icon(value),
     wire.PresentationElement_imageWrapper(:final value) => _image(value),
     wire.PresentationElement_badgeWrapper(:final value) => _badge(value),
+    wire.PresentationElement_chipWrapper(:final value) => _chip(value),
     wire.PresentationElement_progressWrapper(:final value) => _progress(value),
     wire.PresentationElement_typedFieldWrapper(:final value) => _typedField(
       value,
@@ -98,6 +83,10 @@ final class SkirPresentationDecoder {
     wire.PresentationElement_scopedBindingWrapper(:final value) => _scoped(
       value,
     ),
+    wire.PresentationElement_collectionLookupWrapper(:final value) =>
+      _collectionLookup(value),
+    wire.PresentationElement_collectionGraphWrapper(:final value) =>
+      _collectionGraph(value),
     wire.PresentationElement_textInputWrapper(:final value) => _textInput(
       value,
     ),

@@ -1,32 +1,20 @@
 part of "editor_presentation_encoder.dart";
 
 extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
-  TypeResult<wire.PresentationElement> _children(
-    ChildrenLayoutElement value,
-    wire.PresentationElement Function(wire.ChildrenLayout) wrap,
-  ) {
-    final children = _nodes(value.children);
-    return children.mapValue(
-      (children) => wrap(
-        wire.ChildrenLayout(
-          children: children,
-          spacing: value.spacing,
-          mainAxisAlignment: value.mainAxisAlignment._encodeWire,
-          crossAxisAlignment: value.crossAxisAlignment._encodeWire,
-        ),
+  TypeResult<wire.PresentationElement> _children(PresentationElement value) {
+    final children = switch (value) {
+      ChildrenLayoutElement(:final children) ||
+      GridElement(:final children) ||
+      StackElement(:final children) => children,
+      _ => throw StateError("Element does not contain children"),
+    };
+    return _nodes(children).mapValue(
+      (children) => wire.PresentationElement.createChildren(
+        children: children,
+        layout: value._childrenLayout._encodeWire,
       ),
     );
   }
-
-  TypeResult<wire.PresentationElement> _grid(GridElement value) =>
-      _nodes(value.children).mapValue(
-        (children) => wire.PresentationElement.createGrid(
-          children: children,
-          columns: value.columns,
-          horizontalSpacing: value.horizontalSpacing,
-          verticalSpacing: value.verticalSpacing,
-        ),
-      );
 
   TypeResult<wire.PresentationElement> _section(SectionElement value) {
     final title = expressions.encode(value.title);
@@ -135,5 +123,102 @@ extension on PresentationCrossAxisAlignment {
     PresentationCrossAxisAlignment.center => wire.CrossAxisAlignment.center,
     PresentationCrossAxisAlignment.end => wire.CrossAxisAlignment.end,
     PresentationCrossAxisAlignment.stretch => wire.CrossAxisAlignment.stretch,
+  };
+}
+
+extension on PresentationElement {
+  PresentationChildrenLayout get _childrenLayout => switch (this) {
+    ColumnElement(
+      :final spacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      PresentationChildrenLayout.column(
+        spacing: spacing,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: crossAxisAlignment,
+      ),
+    RowElement(
+      :final spacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      PresentationChildrenLayout.row(
+        spacing: spacing,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: crossAxisAlignment,
+      ),
+    WrapElement(
+      :final spacing,
+      :final runSpacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      PresentationChildrenLayout.wrap(
+        spacing: spacing,
+        runSpacing: runSpacing,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: crossAxisAlignment,
+      ),
+    GridElement(
+      :final columns,
+      :final horizontalSpacing,
+      :final verticalSpacing,
+    ) =>
+      PresentationChildrenLayout.grid(
+        columns: columns,
+        horizontalSpacing: horizontalSpacing,
+        verticalSpacing: verticalSpacing,
+      ),
+    StackElement() => const PresentationChildrenLayout.stack(),
+    _ => throw StateError("Element does not contain children"),
+  };
+}
+
+extension on PresentationChildrenLayout {
+  wire.ChildrenLayout get _encodeWire => switch (this) {
+    PresentationColumnLayout(
+      :final spacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      wire.ChildrenLayout.createColumn(
+        spacing: spacing,
+        mainAxisAlignment: mainAxisAlignment._encodeWire,
+        crossAxisAlignment: crossAxisAlignment._encodeWire,
+      ),
+    PresentationRowLayout(
+      :final spacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      wire.ChildrenLayout.createRow(
+        spacing: spacing,
+        mainAxisAlignment: mainAxisAlignment._encodeWire,
+        crossAxisAlignment: crossAxisAlignment._encodeWire,
+      ),
+    PresentationWrapLayout(
+      :final spacing,
+      :final runSpacing,
+      :final mainAxisAlignment,
+      :final crossAxisAlignment,
+    ) =>
+      wire.ChildrenLayout.createWrap(
+        spacing: spacing,
+        runSpacing: runSpacing,
+        mainAxisAlignment: mainAxisAlignment._encodeWire,
+        crossAxisAlignment: crossAxisAlignment._encodeWire,
+      ),
+    PresentationGridLayout(
+      :final columns,
+      :final horizontalSpacing,
+      :final verticalSpacing,
+    ) =>
+      wire.ChildrenLayout.createGrid(
+        columns: columns,
+        horizontalSpacing: horizontalSpacing,
+        verticalSpacing: verticalSpacing,
+      ),
+    PresentationStackLayout() => wire.ChildrenLayout.stack,
   };
 }

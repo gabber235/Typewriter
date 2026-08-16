@@ -126,10 +126,12 @@ extension SkirPresentationSearchDecoder on SkirPresentationDecoder {
     final bindingId = _searchBindingId(value.bindingId.value);
     final key = expressions.decode(value.key);
     final selectedValue = expressions.decode(value.selectedValue);
+    final label = _optionalExpression(value.label);
     final diagnostics = [
       ...bindingId.diagnostics,
       ...key.diagnostics,
       ...selectedValue.diagnostics,
+      ...label.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -138,6 +140,7 @@ extension SkirPresentationSearchDecoder on SkirPresentationDecoder {
               key: key.valueOrNull!,
               selectedValue: selectedValue.valueOrNull!,
               presentation: decodeNode(value.presentation),
+              label: label.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);

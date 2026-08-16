@@ -1,9 +1,11 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.repository.records.BookMutationRecord
 import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
+import com.typewritermc.realm.repository.utils.toSkirRecordId
 import com.typewritermc.services.libs.utils.DeferredProvider
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
@@ -49,6 +51,7 @@ class SurrealBookRepository(
                 };
 
                 LET $book = CREATE ONLY book SET
+                    revision = 1,
                     title = $title,
                     icon = $icon,
                     color = $color;
@@ -73,8 +76,11 @@ class SurrealBookRepository(
                 ?: error("Book creation returned no record")
         }
 
-    override suspend fun updateBook(book: Book): RepositoryResult<Book> =
-        repositoryMutation(book.tagIds) {
+    override suspend fun updateBook(
+        expectedRevision: Long,
+        book: Book,
+    ): RevisionedRepositoryResult<Book> =
+        revisionedRepositoryMutation {
             val result =
                 database
                     .get()
@@ -82,36 +88,54 @@ class SurrealBookRepository(
                         $$"""
                 BEGIN TRANSACTION;
 
-                LET $target_tags = array::distinct($tags);
-
-                IF !record::exists($book) {
+                LET $actual = SELECT * FROM ONLY $book;
+                LET $result = IF $actual = NONE {
                     THROW "book-not-found-error";
+                } ELSE IF $actual.revision != $expected_revision {
+                    { conflict: true, actual: $actual, errorSlug: "", relatedIds: [] };
+                } ELSE {
+                    LET $target_tags = array::distinct($tags);
+                    LET $missing_tags = $target_tags.filter(|$tag| !record::exists($tag));
+
+                    IF $missing_tags != [] {
+                        {
+                            conflict: false,
+                            actual: $actual,
+                            errorSlug: "tags-not-found-error",
+                            relatedIds: $missing_tags,
+                        };
+                    } ELSE {
+                        UPDATE ONLY $book SET
+                            revision += 1,
+                            title = $title,
+                            icon = $icon,
+                            color = $color;
+
+                        LET $current_tags = SELECT VALUE ->bears->tag FROM ONLY $book;
+
+                        FOR $tag IN array::complement($target_tags, $current_tags) {
+                            RELATE $book->bears->$tag;
+                        };
+
+                        FOR $tag IN array::complement($current_tags, $target_tags) {
+                            DELETE bears WHERE in = $book AND out = $tag;
+                        };
+
+                        {
+                            conflict: false,
+                            actual: (SELECT * FROM ONLY $book),
+                            errorSlug: "",
+                            relatedIds: [],
+                        };
+                    };
                 };
 
-                IF $target_tags.any(|$tag| !record::exists($tag)) {
-                    THROW "tags-not-found-error";
-                };
-
-                UPDATE $book SET
-                    title = $title,
-                    icon = $icon,
-                    color = $color;
-
-                LET $current_tags = SELECT VALUE ->bears->tag FROM ONLY $book;
-
-                FOR $tag IN array::complement($target_tags, $current_tags) {
-                    RELATE $book->bears->$tag;
-                };
-
-                FOR $tag IN array::complement($current_tags, $target_tags) {
-                    DELETE bears WHERE in = $book AND out = $tag;
-                };
-
-                RETURN SELECT * FROM $book.id;
+                RETURN $result;
                 COMMIT TRANSACTION;
                         """.trimIndent(),
                         mapOf(
                             "book" to book.bookId.surrealId("book"),
+                            "expected_revision" to expectedRevision,
                             "title" to book.title,
                             "icon" to book.icon,
                             "color" to
@@ -120,9 +144,25 @@ class SurrealBookRepository(
                                     .toLong(),
                             "tags" to book.tagIds.surrealId("tag"),
                         ),
-                    ).takeTransaction(8)
+                    ).takeTransaction(3)
 
-            BookRecord.parseList(result).singleOrNull()?.toBook()
-                ?: error("Book update returned no record")
+            val mutation = BookMutationRecord.parse(result)
+            val actual = mutation.actual.toBook()
+            when {
+                mutation.conflict -> {
+                    RevisionedRepositoryResult.Conflict(actual)
+                }
+
+                mutation.errorSlug.isNotEmpty() -> {
+                    RevisionedRepositoryResult.DomainFailure(
+                        mutation.errorSlug,
+                        mutation.relatedIds.map { it.toSkirRecordId() },
+                    )
+                }
+
+                else -> {
+                    RevisionedRepositoryResult.Success(actual)
+                }
+            }
         }
 }

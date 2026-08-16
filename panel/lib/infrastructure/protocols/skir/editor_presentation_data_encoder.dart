@@ -47,15 +47,8 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
 
   TypeResult<wire.PresentationElement> _repeated(RepeatedElement value) {
     final source = expressions.encode(value.source);
-    final template = encodeNode(value.template);
-    final empty = value.empty == null
-        ? const TypeResult<wire.PresentationNode?>.success(null)
-        : encodeNode(value.empty!).mapValue((value) => value);
-    final diagnostics = [
-      ...source.diagnostics,
-      ...template.diagnostics,
-      ...empty.diagnostics,
-    ];
+    final presentation = _sequence(value.presentation);
+    final diagnostics = [...source.diagnostics, ...presentation.diagnostics];
     return diagnostics.isEmpty
         ? TypeResult.success(
             wire.PresentationElement.createRepeated(
@@ -63,8 +56,32 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
               itemBindingId: wire_binding.BindingId(
                 value: value.itemBindingId.value,
               ),
-              template: template.valueOrNull!,
+              presentation: presentation.valueOrNull!,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.SequencePresentation> _sequence(SequencePresentation value) {
+    final item = encodeNode(value.item);
+    final empty = value.empty == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.empty!).mapValue((value) => value);
+    final separator = value.separator == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.separator!).mapValue((value) => value);
+    final diagnostics = [
+      ...item.diagnostics,
+      ...empty.diagnostics,
+      ...separator.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.SequencePresentation(
+              item: item.valueOrNull!,
               empty: empty.valueOrNull,
+              separator: separator.valueOrNull,
+              layout: value.layout._encodeWire,
             ),
           )
         : TypeResult.failure(diagnostics);
@@ -84,6 +101,78 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
         child: child,
       ),
     );
+  }
+
+  TypeResult<wire.PresentationElement> _collectionLookup(
+    CollectionLookupElement value,
+  ) {
+    final key = expressions.binding(value.key);
+    final found = encodeNode(value.found);
+    final missing = encodeNode(value.missing);
+    final loading = value.loading == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.loading!).mapValue((value) => value);
+    final diagnostics = [
+      ...key.diagnostics,
+      ...found.diagnostics,
+      ...missing.diagnostics,
+      ...loading.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createCollectionLookup(
+              sourceId: value.sourceId.value,
+              key: key.valueOrNull!,
+              found: found.valueOrNull!,
+              missing: missing.valueOrNull!,
+              loading: loading.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.PresentationElement> _collectionGraph(
+    CollectionGraphElement value,
+  ) {
+    final roots = expressions.binding(value.roots);
+    final rootRows = value.rootRows == null
+        ? const TypeResult<wire.SequencePresentation?>.success(null)
+        : _sequence(value.rootRows!).mapValue((value) => value);
+    final reachedRows = value.reachedRows == null
+        ? const TypeResult<wire.SequencePresentation?>.success(null)
+        : _sequence(value.reachedRows!).mapValue((value) => value);
+    final paths = value.paths == null
+        ? const TypeResult<wire.SequencePresentation?>.success(null)
+        : _sequence(value.paths!).mapValue((value) => value);
+    final diagnostics = [
+      ...roots.diagnostics,
+      ...rootRows.diagnostics,
+      ...reachedRows.diagnostics,
+      ...paths.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createCollectionGraph(
+              sourceId: value.sourceId.value,
+              roots: roots.valueOrNull!,
+              relationId: value.relation.value,
+              direction: switch (value.direction) {
+                CollectionGraphDirection.forward =>
+                  wire.CollectionGraphDirection.forward,
+                CollectionGraphDirection.reverse =>
+                  wire.CollectionGraphDirection.reverse,
+              },
+              rootRows: rootRows.valueOrNull,
+              reachedRows: reachedRows.valueOrNull,
+              paths: paths.valueOrNull,
+              pathBindingId: wire_binding.BindingId(
+                value: value.pathBindingId.value,
+              ),
+              maximumDepth: value.maximumDepth,
+              deduplicate: value.deduplicate,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
   }
 
   TypeResult<wire.PresentationElement> _defaultPresentation(

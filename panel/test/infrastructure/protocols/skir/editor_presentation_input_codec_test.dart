@@ -14,10 +14,13 @@ void main() {
     resultType: const IntegerType(width: IntegerWidth.signed64),
     expression: LiteralExpression(IntegerValue(BigInt.one)),
   );
+  const prefix = PresentationNode(id: "prefix", element: TextElement(text));
   const control = BoundControl(
     binding: binding,
     label: text,
     description: text,
+    prefix: prefix,
+    semanticLabel: text,
   );
   const leaf = PresentationNode(id: "leaf", element: DividerElement());
   final concreteType = ResolvedTypeRef(
