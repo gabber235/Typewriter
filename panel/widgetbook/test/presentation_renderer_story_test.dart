@@ -113,6 +113,10 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pumpAndSettle();
 
+    expect(
+      FocusManager.instance.primaryFocus?.debugLabel,
+      "Surrounding focus node",
+    );
     expect(find.text("Focus Input"), findsOneWidget);
   });
 

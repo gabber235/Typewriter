@@ -1,26 +1,49 @@
 import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+abstract interface class EditorTarget {
+  SelectableIdentifier get targetId;
+
+  EditorDocument get document;
+
+  EditorValue value(DataPath path);
+
+  EditorMutationResult validate(DataPath path, DataValue value);
+
+  Future<TypedMutationResult> commit(EditorCommit commit);
+}
+
 abstract class InspectableSelectable<I extends SelectableIdentifier>
-    extends Selectable<I> {
+    extends Selectable<I>
+    implements EditorTarget {
   const InspectableSelectable();
 
-  ResolvedTypeRef get rootType;
+  @override
+  SelectableIdentifier get targetId => id;
 
-  TypeCatalog get typeCatalog;
+  ResolvedTypeRef get rootType {
+    final type = document.rootType;
+    if (type is NamedType) return type.reference;
+    throw StateError("Inspectable root type must be nominal");
+  }
+
+  TypeCatalog get typeCatalog => document.typeCatalog;
 
   TypeRegistry get typeRegistry => TypeRegistry(typeCatalog);
 
   Widget? buildInspectorHeader();
 
-  EditorValue value(DataPath path);
+  @override
+  EditorValue value(DataPath path) =>
+      document.confirmedValue.readEditorValue(path);
+
+  @override
+  EditorMutationResult validate(DataPath path, DataValue value) => document
+      .rootType
+      .validateEditorMutation(path, value, registry: typeRegistry);
 
   EditorMutationResult validateUpdate(DataPath path, DataValue value) =>
-      NamedType(
-        rootType,
-      ).validateEditorMutation(path, value, registry: typeRegistry);
-
-  EditorMutationResult update(DataPath path, DataValue value);
+      validate(path, value);
 }
 
 extension InspectableSelectableCatalogMerge on Iterable<InspectableSelectable> {

@@ -4,8 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_renderer.freezed.dart";
 part "renderers/data/conditional_renderer.dart";
+part "renderers/data/collection_renderer.dart";
 part "renderers/data/diagnostic_renderer.dart";
 part "renderers/data/repeated_renderer.dart";
+part "renderers/data/sequence_renderer.dart";
 part "renderers/data/scoped_binding_renderer.dart";
 part "renderers/data/typed_field_renderer.dart";
 
@@ -20,6 +22,14 @@ extension DataElementRendering on PresentationElement {
         ),
         RepeatedElement() => (this as RepeatedElement).render(context, scope),
         ScopedBindingElement() => (this as ScopedBindingElement).render(
+          context,
+          scope,
+        ),
+        CollectionLookupElement() => (this as CollectionLookupElement).render(
+          context,
+          scope,
+        ),
+        CollectionGraphElement() => (this as CollectionGraphElement).render(
           context,
           scope,
         ),

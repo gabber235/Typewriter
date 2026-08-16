@@ -107,7 +107,12 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
   String get name => cue.elementDefinition.name;
 
   @override
-  ResolvedTypeRef get rootType => cue.elementDefinition.rootType;
+  EditorDocument get document => EditorDocument(
+    rootType: NamedType(cue.elementDefinition.rootType),
+    typeCatalog: typeCatalog,
+    confirmedValue: cue.data,
+    revision: 0,
+  );
 
   @override
   List<SelectionCapability> get capabilities => const [];
@@ -118,17 +123,25 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
   }
 
   @override
-  EditorValue value(DataPath path) => cue.data.readEditorValue(path);
-
-  @override
-  EditorMutationResult update(DataPath path, DataValue value) {
-    final result = validateUpdate(path, value);
-    if (result is AppliedEditorMutation) {
-      ref
-          .read(pageElementsProvider(id.pageId).notifier)
-          .updateCueFieldValue(id.id, path, value);
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    final notifier = ref.read(pageElementsProvider(id.pageId).notifier);
+    for (final path in commit.changedPaths) {
+      final value = path.read(commit.rootValue).valueOrNull;
+      if (value == null) {
+        return TypedMutationResult.invalid([
+          TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidPath,
+            message: "The Cue field could not be resolved",
+            path: path,
+          ),
+        ]);
+      }
+      await notifier.updateCueFieldValue(id.id, path, value);
     }
-    return result;
+    return TypedMutationResult.success(
+      revision: commit.localRevision,
+      value: commit.rootValue,
+    );
   }
 
   @override

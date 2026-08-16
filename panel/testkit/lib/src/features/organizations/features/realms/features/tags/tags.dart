@@ -59,6 +59,7 @@ List<Tag> _generateRawTags(int count) {
     tags.add(
       Tag(
         tagId: recordId("tag:${faker.guid.guid()}"),
+        revision: 1,
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
@@ -77,6 +78,7 @@ List<Tag> _generateRawTags(int count) {
 Tag generateRandomTag() {
   return Tag(
     tagId: recordId("tag:${faker.guid.guid()}"),
+    revision: 1,
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
@@ -120,6 +122,7 @@ class TagsMock extends Tags {
 
     final newTag = Tag(
       tagId: recordId("tag:${faker.guid.guid()}"),
+      revision: 1,
       name: name,
       color: color ?? safeColors.randomElement(),
       parentIds: parentIds,
@@ -131,49 +134,24 @@ class TagsMock extends Tags {
   }
 
   @override
-  Future<void> updateTag(Tag tag) async {
+  Future<TypedMutationResult> updateTag(Tag tag) async {
     final tags = await future;
-    state = AsyncData(tags.map((t) => t.tagId == tag.tagId ? tag : t).toList());
+    final canonical = tag.copyWith(revision: tag.revision + 1);
+    state = AsyncData(
+      tags
+          .map((value) => value.tagId == tag.tagId ? canonical : value)
+          .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: canonical.revision,
+      value: canonical.inspectorValue,
+    );
   }
 
   @override
   Future<void> deleteTag(skir.RecordId tagId) async {
     final tags = await future;
     state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
-  }
-
-  @override
-  Future<void> moveTags(List<TagMovePayload> changes) async {
-    final tags = await future;
-    final changesById = {for (final change in changes) change.id: change};
-    state = AsyncData(
-      tags.map((tag) {
-        final change = changesById[tag.tagId];
-        if (change == null) return tag;
-        return tag.copyWith(
-          placement: tag.placement.copyWith(x: change.x, y: change.y),
-        );
-      }).toList(),
-    );
-  }
-
-  @override
-  Future<void> resizeTag(skir.RecordId tagId, int width, int height) async {
-    final tags = await future;
-    state = AsyncData(
-      tags
-          .map(
-            (tag) => tag.tagId == tagId
-                ? tag.copyWith(
-                    placement: tag.placement.copyWith(
-                      width: width,
-                      height: height,
-                    ),
-                  )
-                : tag,
-          )
-          .toList(),
-    );
   }
 }
 

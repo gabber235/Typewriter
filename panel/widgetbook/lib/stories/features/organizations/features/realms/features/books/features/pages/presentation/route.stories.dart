@@ -5,10 +5,12 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
+part "route_story_fixtures.dart";
+
 Widget _buildPagePageUseCase(
   BuildContext context,
   PageType pageType, {
-  List<PageElement>? ovewriteElements,
+  List<PageElement>? overwriteElements,
 }) {
   final pagesState = context.knobs.displayState(
     label: "Pages State",
@@ -24,13 +26,46 @@ Widget _buildPagePageUseCase(
     initialOption: DisplayState.manyItems,
   );
 
+  return pagePageStory(
+    pageType: pageType,
+    pagesState: pagesState,
+    entriesState: entriesState,
+    servicesState: servicesState,
+    overwriteElements: overwriteElements,
+  );
+}
+
+Widget pagePageStory({
+  required PageType pageType,
+  DisplayState pagesState = DisplayState.fewItems,
+  DisplayState entriesState = DisplayState.fewItems,
+  DisplayState servicesState = DisplayState.fewItems,
+  List<PageElement>? overwriteElements,
+}) {
+  final storyElements = pageStoryElements(
+    pageType: pageType,
+    state: entriesState,
+    overwriteElements: overwriteElements,
+  );
   return FakeApp(
     overrides: [
+      realmInteractionProvider.overrideWith(
+        (ref) => const RealmInteractionState(
+          connectionState: RealmConnectionState.online,
+        ),
+      ),
+      realmConnectionProvider.overrideWith(
+        (ref) => Stream.value(RealmConnectionState.online),
+      ),
+      realmEditorCatalogForTypeProvider.overrideWith(
+        (ref, rootType) =>
+            Stream.value(pageStoryCatalog(rootType, storyElements ?? const [])),
+      ),
       ...entryProviderOverrides(),
       ...pageElementsProviderOverrides(
         state: entriesState,
         pageType: pageType,
-        overwriteElements: ovewriteElements,
+        overwriteElements: storyElements,
       ),
       ...bookPagesProviderOverrides(state: pagesState),
       ...pagesProviderOverrides(pageType: pageType),
@@ -58,8 +93,7 @@ Widget pagePageStaticUseCase(BuildContext context) {
   return _buildPagePageUseCase(context, PageType.static);
 }
 
-@widgetbook.UseCase(name: "Scene", type: PagePage)
-Widget pagePageSceneUseCase(BuildContext context) {
+List<PageElement> pagePageSceneElements() {
   final demoScene = sceneElements()
       .entry(
         id: "entry_npc",
@@ -226,10 +260,15 @@ Widget pagePageSceneUseCase(BuildContext context) {
       )
       .build();
 
+  return demoScene;
+}
+
+@widgetbook.UseCase(name: "Scene", type: PagePage)
+Widget pagePageSceneUseCase(BuildContext context) {
   return _buildPagePageUseCase(
     context,
     PageType.scene,
-    ovewriteElements: demoScene,
+    overwriteElements: pagePageSceneElements(),
   );
 }
 

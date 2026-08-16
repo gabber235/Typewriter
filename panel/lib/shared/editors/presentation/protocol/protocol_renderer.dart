@@ -6,6 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef RealmActionExecutor =
     FutureOr<TypedMutationResult> Function(RealmAction action);
+
 final _defaultEditorHeaderShortcuts =
     Map<HeaderItemCommandId, List<ShortcutActivator>>.unmodifiable({
       HeaderItemCommandId(
@@ -31,6 +32,7 @@ class EditorProtocolRenderer extends StatefulWidget {
     this.conversions = const [],
     this.realmActions = const [],
     this.presentations = const [],
+    this.collections = const [],
     this.presentation,
     this.diagnostics = const [],
     this.onRealmAction,
@@ -46,6 +48,7 @@ class EditorProtocolRenderer extends StatefulWidget {
   final List<ConversionDefinition> conversions;
   final List<RealmActionDefinition> realmActions;
   final List<PresentationDefinition> presentations;
+  final List<PresentationCollectionSource> collections;
   final PresentationNode? presentation;
   final List<TypeDiagnostic> diagnostics;
   final RealmActionExecutor? onRealmAction;
@@ -53,176 +56,75 @@ class EditorProtocolRenderer extends StatefulWidget {
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final bool readOnly;
   final String historyNamespace;
+
   @override
   State<EditorProtocolRenderer> createState() => _EditorProtocolRendererState();
 }
 
 class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
-  static const _budget = ExpressionBudget();
-
-  late BindingEnvironment _bindings;
-  final HeaderExpansionStore _expansionStore = HeaderExpansionStore();
-  List<TypeDiagnostic> _mutationDiagnostics = const [];
-
-  TypeRegistry get _registry => TypeRegistry(widget.typeCatalog);
+  late EditorController _controller;
 
   @override
   void initState() {
     super.initState();
-    _resetBindings();
+    _controller = _createController();
   }
 
   @override
   void didUpdateWidget(EditorProtocolRenderer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.envelope.rootType != widget.envelope.rootType) {
-      _expansionStore.clear();
+    if (oldWidget.envelope == widget.envelope &&
+        oldWidget.typeCatalog == widget.typeCatalog &&
+        oldWidget.presentations == widget.presentations &&
+        oldWidget.collections == widget.collections &&
+        oldWidget.presentation == widget.presentation &&
+        oldWidget.diagnostics == widget.diagnostics &&
+        oldWidget.readOnly == widget.readOnly) {
+      return;
     }
-    if (oldWidget.envelope != widget.envelope ||
-        oldWidget.typeCatalog != widget.typeCatalog) {
-      _resetBindings();
-    }
-  }
-
-  void _resetBindings() {
-    final registry = _registry;
-    final resolved = registry.resolve(NamedType(widget.envelope.rootType));
-    final type = resolved.valueOrNull?.representation ?? const AnyType();
-    _bindings = BindingEnvironment({
-      const BindingId(0): BindingSnapshot(
-        type: type,
-        value: widget.envelope.rootValue,
-        revision: 0,
-        writable: !widget.readOnly,
-      ),
-    });
-    _mutationDiagnostics = resolved.diagnostics;
+    _controller.dispose();
+    _controller = _createController();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final registry = _registry;
-    final root = registry.resolve(NamedType(widget.envelope.rootType));
-    if (root case TypeFailure(:final diagnostics)) {
-      return presentationDiagnostic(context, diagnostics);
-    }
-    final expressions = ExpressionContext(
-      bindings: _bindings,
-      conversions: {
-        for (final conversion in widget.conversions) conversion.id: conversion,
-      },
-    );
-    final selectedRoot = _resolvePresentation(
-      NamedType(widget.envelope.rootType),
-      null,
-    );
-    final presentation =
-        widget.presentation ??
-        selectedRoot?.root ??
-        root.valueOrNull!.representation.generateDefaultPresentation();
-    final localized = presentation.localizeFailures(
-      expressions,
-      registry: registry,
-      budget: _budget,
-    );
-    final scope = PresentationRenderScope(
-      expressions: expressions,
-      registry: registry,
-      budget: _budget,
+  Widget build(BuildContext context) => EditorSurface(
+    controller: _controller,
+    conversions: widget.conversions,
+    realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
+    headerShortcuts: {
+      ..._defaultEditorHeaderShortcuts,
+      ...widget.headerShortcuts,
+    },
+    readOnly: widget.readOnly,
+    historyNamespace: widget.historyNamespace,
+  );
+
+  EditorController _createController() {
+    final rootType = NamedType(widget.envelope.rootType);
+    final registry = TypeRegistry(widget.typeCatalog);
+    final resolved = registry.resolve(rootType);
+    final document = EditorDocument(
+      rootType: rootType,
+      typeCatalog: widget.typeCatalog,
+      confirmedValue: widget.envelope.rootValue,
+      revision: 0,
+      presentations: widget.presentations,
+      collections: widget.collections,
+      rootPresentation: widget.presentation,
+      diagnostics: [...widget.diagnostics, ...resolved.diagnostics],
       readOnly: widget.readOnly,
-      historyNamespace: widget.historyNamespace,
-      realmSearchSourceBuilder: widget.realmSearchSourceBuilder,
-      setBinding: _setBinding,
-      executeAction: _executeAction,
-      resolvePresentation: _resolvePresentation,
-      expansionStore: _expansionStore,
-      headerShortcuts: {
-        ..._defaultEditorHeaderShortcuts,
-        ...widget.headerShortcuts,
-      },
-      activePresentations: {
-        if (widget.presentation == null && selectedRoot != null)
-          selectedRoot.id,
-      },
     );
-    return PresentationSurface(
-      presentation: localized,
-      scope: scope,
-      diagnostics: [...widget.diagnostics, ..._mutationDiagnostics],
-    );
-  }
-
-  ResolvedPresentationDefinition? _resolvePresentation(
-    TypeExpression type,
-    PresentationId? requested,
-  ) {
-    final selected = requested ?? _defaultPresentationId(type);
-    if (selected == null) return null;
-    final definition = [
-      ...builtinPresentationDefinitions(),
-      ...widget.presentations,
-    ].where((candidate) => candidate.id == selected).firstOrNull;
-    if (definition == null) return null;
-    final substitutions = definition.target.inferPresentationSubstitutions(
-      type,
-    );
-    if (substitutions == null) return null;
-    return ResolvedPresentationDefinition(
-      id: selected,
-      root: definition.root.substitute(substitutions),
-    );
-  }
-
-  PresentationId? _defaultPresentationId(TypeExpression type) {
-    if (type case NamedType(:final reference)) {
-      return TypeRegistry(
-        widget.typeCatalog,
-      ).definition(reference)?.defaultPresentationId;
-    }
-    return null;
-  }
-
-  void _setBinding(
-    BindingReference reference,
-    DataValue value,
-    ExpressionContext context,
-    Map<BindingId, BindingReference> aliases,
-  ) {
-    final canonical = reference.canonicalizedWith(aliases);
-    final resolved = _bindings.resolve(canonical);
-    if (resolved case TypeFailure(:final diagnostics)) {
-      setState(() => _mutationDiagnostics = diagnostics);
-      return;
-    }
-    _executeAction(
-      EditorAction.local(
-        SetValueAction(
-          target: canonical,
-          value: TypedExpression(
-            resultType: resolved.valueOrNull!.type,
-            expression: LiteralExpression(value),
-          ),
-        ),
+    final source = TransactionalEditorSource(
+      document: document,
+      debounce: Duration.zero,
+      successfulSavePhase: EditorSavePhase.sessionOnly,
+      commit: (commit) async => TypedMutationResult.success(
+        revision: commit.expectedRevision + 1,
+        value: commit.rootValue,
       ),
-      context,
-      aliases,
+      executeRealmAction: _executeRealm,
     );
-  }
-
-  Future<void> _executeAction(
-    EditorAction action,
-    ExpressionContext context,
-    Map<BindingId, BindingReference> aliases,
-  ) async {
-    final result = switch (action) {
-      LocalEditorAction() =>
-        action
-            .canonicalizedWith(aliases)
-            .execute(context, registry: _registry, budget: _budget),
-      RealmEditorAction() => await _executeRealm(action.action, context),
-    };
-    if (!mounted) return;
-    _applyResult(result);
+    return EditorController(source: source);
   }
 
   Future<TypedMutationResult> _executeRealm(
@@ -241,58 +143,30 @@ class _EditorProtocolRendererState extends State<EditorProtocolRenderer> {
       if (definition == null) return _unavailable("Realm action is unknown");
       final evaluated = payload.evaluate(
         context,
-        registry: _registry,
-        budget: _budget,
+        registry: TypeRegistry(widget.typeCatalog),
       );
       if (evaluated case TypeFailure(:final diagnostics)) {
-        return MutationInvalid(diagnostics);
+        return TypedMutationResult.invalid(diagnostics);
       }
-      final diagnostics = (evaluated.valueOrNull!).validateAgainst(
+      final diagnostics = evaluated.valueOrNull!.validateAgainst(
         NamedType(definition.payloadType),
-        registry: _registry,
+        registry: TypeRegistry(widget.typeCatalog),
       );
-      if (diagnostics.isNotEmpty) return MutationInvalid(diagnostics);
+      if (diagnostics.isNotEmpty) {
+        return TypedMutationResult.invalid(diagnostics);
+      }
     }
     return executor(action);
   }
 
-  void _applyResult(TypedMutationResult result) {
-    switch (result) {
-      case MutationSuccess(:final revision, :final value):
-        setState(() {
-          final current = _bindings.bindings[const BindingId(0)];
-          if (current != null) {
-            _bindings = BindingEnvironment({
-              ..._bindings.bindings,
-              const BindingId(0): BindingSnapshot(
-                type: current.type,
-                value: value,
-                revision: revision,
-                writable: current.writable,
-              ),
-            });
-          }
-          _mutationDiagnostics = const [];
-        });
-      case MutationConflict(:final expectedRevision, :final actualRevision):
-        setState(() {
-          _mutationDiagnostics = [
-            _diagnostic(
-              "Edit expected revision $expectedRevision but found $actualRevision",
-            ),
-          ];
-        });
-      case MutationInvalid(:final diagnostics) ||
-          MutationUnavailable(:final diagnostics):
-        setState(() => _mutationDiagnostics = diagnostics);
-      case MutationPermissionDenied(:final message):
-        setState(() => _mutationDiagnostics = [_diagnostic(message)]);
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
 
-MutationUnavailable _unavailable(String message) =>
-    MutationUnavailable([_diagnostic(message)]);
-
-TypeDiagnostic _diagnostic(String message) =>
-    TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message);
+TypedMutationResult _unavailable(String message) =>
+    TypedMutationResult.unavailable([
+      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
+    ]);

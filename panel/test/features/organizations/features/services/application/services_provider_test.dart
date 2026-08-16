@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
@@ -11,8 +12,9 @@ const _publishSubject = "cloud.to.user.user1.organization.org1.services.watch";
 const _listenSubject = "cloud.from.organization.org1.services.watch";
 final _organizationId = recordId("organization:org1");
 
-Service _service(String id, {String? name}) => Service(
+Service _service(String id, {String? name, int revision = 1}) => Service(
   serviceId: recordId("service:$id"),
+  revision: revision,
   name: name ?? "Service $id",
   roles: [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),
@@ -63,6 +65,17 @@ class _Harness {
     );
     await _waitFor(() => !identical(value, previous));
     return value.requireValue;
+  }
+
+  Future<List<Service>> emitWithoutChange(
+    skir.WatchOrganizationServicesResponse response,
+  ) async {
+    nats.emitMessageOnSubject(
+      _listenSubject,
+      skir.WatchOrganizationServicesResponse.serializer.toBytes(response),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    return container.read(servicesProvider).requireValue;
   }
 
   Future<Object> emitError(
@@ -136,7 +149,7 @@ void main() {
         ),
         [_service("one"), _service("two")],
       );
-      final updated = _service("one", name: "Updated");
+      final updated = _service("one", name: "Updated", revision: 2);
       expect(
         await harness.emit(
           skir.WatchOrganizationServicesResponse.wrapUpdate(updated.toSkir()),
@@ -150,6 +163,49 @@ void main() {
           ),
         ),
         [updated],
+      );
+    });
+
+    test("ignores older and divergent equal revision watch updates", () async {
+      final errors = <FlutterErrorDetails>[];
+      final previousErrorHandler = FlutterError.onError;
+      FlutterError.onError = errors.add;
+      addTearDown(() => FlutterError.onError = previousErrorHandler);
+      final current = _service("one", name: "Current", revision: 3).copyWith(
+        registration: ServiceRegistration(
+          token: "sensitive-token",
+          expiresAt: DateTime.utc(2027),
+        ),
+      );
+      expect(
+        await harness.emit(
+          skir.WatchOrganizationServicesResponse.wrapList([current.toSkir()]),
+        ),
+        [current],
+      );
+
+      expect(
+        await harness.emitWithoutChange(
+          skir.WatchOrganizationServicesResponse.wrapUpdate(
+            _service("one", name: "Older", revision: 2).toSkir(),
+          ),
+        ),
+        [current],
+      );
+      expect(
+        await harness.emitWithoutChange(
+          skir.WatchOrganizationServicesResponse.wrapUpdate(
+            _service("one", name: "Divergent", revision: 3).toSkir(),
+          ),
+        ),
+        [current],
+      );
+      expect(errors, hasLength(1));
+      expect(errors.single.exceptionAsString(), contains("Service one"));
+      expect(errors.single.exceptionAsString(), contains("revision 3"));
+      expect(
+        errors.single.exceptionAsString(),
+        isNot(contains("sensitive-token")),
       );
     });
 

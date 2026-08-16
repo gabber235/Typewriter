@@ -34,13 +34,7 @@ class BookPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BookScaffold(
-      child: InspectorScaffold(
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          right: context.spacing.space2,
-        ),
-        child: AutoRouter(placeholder: (context) => EmptyBookPage()),
-      ),
+      child: AutoRouter(placeholder: (context) => EmptyBookPage()),
     );
   }
 }
@@ -93,7 +87,7 @@ class BookScaffold extends HookConsumerWidget {
 
     return SimpleScaffold(
       appBar: CustomAppBar(
-        row: [
+        leading: [
           if (organizationId != null) ...[
             const OrganizationSelector(),
             if (realmId != null) ...[
@@ -105,13 +99,13 @@ class BookScaffold extends HookConsumerWidget {
               const RealmSelector(),
             ],
           ],
-          const Spacer(),
-          if (!context.isMobile)
-            RealmSuspensionInline(
-              suspended: interaction.suspended,
-              child: const ModeDisplayWidget(),
-            ),
         ],
+        trailing: !context.isMobile
+            ? RealmSuspensionInline(
+                suspended: interaction.suspended,
+                child: const ModeDisplayWidget(),
+              )
+            : null,
         sidebar: RealmSuspensionBarrier(
           interaction: interaction,
           realm: selectedRealm,
@@ -129,7 +123,15 @@ class BookScaffold extends HookConsumerWidget {
             Expanded(
               child: Column(
                 children: [
-                  Expanded(child: child),
+                  Expanded(
+                    child: InspectorScaffold(
+                      margin: EdgeInsets.only(
+                        top: context.spacing.space2,
+                        right: context.spacing.space2,
+                      ),
+                      child: child,
+                    ),
+                  ),
                   ActionRow(),
                 ],
               ),
@@ -246,12 +248,12 @@ class LoadingPagesSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      spacing: context.spacing.space2,
-      children: [
-        for (var i = 0; i < 10; i++)
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: 10,
+      itemBuilder: (_, _) =>
           ShimmerBox.rectangle(height: 35, width: double.infinity),
-      ],
+      separatorBuilder: (_, _) => SizedBox(height: context.spacing.space2),
     );
   }
 }
@@ -1146,7 +1148,7 @@ class AddPageDialogue extends HookConsumerWidget {
                 focusNode: chapterFocus,
                 text: chapter.value,
                 hintText: "Chapter Name",
-                icon: Ph.book_bookmark_fill,
+                prefix: Icones(Ph.book_bookmark_fill),
                 inputFormatters: [
                   TextInputFormatter.withFunction(
                     (oldValue, newValue) => newValue.copyWith(
@@ -1169,7 +1171,7 @@ class AddPageDialogue extends HookConsumerWidget {
                 focusNode: priorityFocus,
                 text: priority.value.toString(),
                 hintText: "Priority",
-                icon: MaterialSymbols.priority_high_rounded,
+                prefix: Icones(MaterialSymbols.priority_high_rounded),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"^-?\d*")),
                 ],
@@ -1337,7 +1339,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
         autofocus: DecoratedTextFieldAutoFocus.textField,
         text: chapter.value,
         hintText: "Chapter Name",
-        icon: Ph.book_bookmark_fill,
+        prefix: Icones(Ph.book_bookmark_fill),
         inputFormatters: [
           TextInputFormatter.withFunction(
             (oldValue, newValue) => newValue.copyWith(
@@ -1420,7 +1422,7 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
         autofocus: DecoratedTextFieldAutoFocus.textField,
         text: priority.toString(),
         hintText: "Priority",
-        icon: MaterialSymbols.priority_high_rounded,
+        prefix: Icones(MaterialSymbols.priority_high_rounded),
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"^-?\d*"))],
         onSubmitted: (value) async => buttonController.trigger(),
       ),

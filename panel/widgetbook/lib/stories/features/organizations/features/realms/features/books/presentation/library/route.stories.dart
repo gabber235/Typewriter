@@ -10,13 +10,24 @@ Widget libraryPageUseCase(BuildContext context) {
   final displayState = context.knobs.displayState();
   final connectionState = context.knobs.realmConnectionState();
 
+  return libraryPageStory(
+    displayState: displayState,
+    connectionState: connectionState,
+  );
+}
+
+Widget libraryPageStory({
+  DisplayState displayState = DisplayState.fewItems,
+  DisplayState tagsState = DisplayState.manyItems,
+  RealmConnectionState connectionState = RealmConnectionState.online,
+}) {
   return FakeApp(
     overrides: [
       realmInteractionProvider.overrideWith(
         (ref) => RealmInteractionState(connectionState: connectionState),
       ),
       ...booksProviderOverrides(state: displayState),
-      ...tagsProviderOverrides(state: DisplayState.manyItems),
+      ...tagsProviderOverrides(state: tagsState),
       ...servicesProviderOverrides(state: DisplayState.manyItems),
       ...realmProviderOverrides(),
       ...organizationProviderOverrides(),

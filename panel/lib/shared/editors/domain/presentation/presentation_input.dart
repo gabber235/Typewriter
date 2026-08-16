@@ -6,6 +6,8 @@ abstract class BoundControl with _$BoundControl {
     required BindingReference binding,
     TypedExpression? label,
     TypedExpression? description,
+    PresentationNode? prefix,
+    TypedExpression? semanticLabel,
   }) = _BoundControl;
 }
 

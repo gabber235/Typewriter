@@ -94,20 +94,24 @@ final dataRendererScenarios = [
           const ListType(element: StringType()),
         ),
         itemBindingId: const BindingId(1),
-        template: storyNode(
-          "repeatedItem",
-          PresentationElement.card(
-            storyNode(
-              "repeatedText",
-              PresentationElement.text(
-                bindingExpression(_itemBinding, const StringType()),
+        presentation: SequencePresentation(
+          item: storyNode(
+            "repeatedItem",
+            PresentationElement.card(
+              storyNode(
+                "repeatedText",
+                PresentationElement.text(
+                  bindingExpression(_itemBinding, const StringType()),
+                ),
               ),
             ),
           ),
-        ),
-        empty: storyNode(
-          "repeatedEmpty",
-          PresentationElement.text("No objectives configured".asStringLiteral),
+          empty: storyNode(
+            "repeatedEmpty",
+            PresentationElement.text(
+              "No objectives configured".asStringLiteral,
+            ),
+          ),
         ),
       ),
     ),
@@ -367,22 +371,24 @@ RendererStoryScenario _repeatedScenario(
               const ListType(element: StringType()),
             ),
             itemBindingId: const BindingId(1),
-            template: storyNode(
-              "repeatedItem",
-              PresentationElement.card(
-                storyNode(
-                  "repeatedText",
-                  PresentationElement.text(
-                    bindingExpression(_itemBinding, const StringType()),
+            presentation: SequencePresentation(
+              item: storyNode(
+                "repeatedItem",
+                PresentationElement.card(
+                  storyNode(
+                    "repeatedText",
+                    PresentationElement.text(
+                      bindingExpression(_itemBinding, const StringType()),
+                    ),
                   ),
                 ),
               ),
-            ),
-            empty: storyNode(
-              "repeatedEmpty",
-              PresentationElement.text(
-                "No items means the empty presentation is rendered."
-                    .asStringLiteral,
+              empty: storyNode(
+                "repeatedEmpty",
+                PresentationElement.text(
+                  "No items means the empty presentation is rendered."
+                      .asStringLiteral,
+                ),
               ),
             ),
           ),
@@ -413,24 +419,26 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
                 const ListType(element: StringType()),
               ),
               itemBindingId: const BindingId(1),
-              template: storyNode(
-                "repeatedTemplate",
-                PresentationElement.text(
-                  bindingExpression(_itemBinding, const StringType()),
+              presentation: SequencePresentation(
+                item: storyNode(
+                  "repeatedTemplate",
+                  PresentationElement.text(
+                    bindingExpression(_itemBinding, const StringType()),
+                  ),
                 ),
-              ),
-              empty: storyNode(
-                "customEmpty",
-                PresentationElement.section(
-                  title: "No objectives yet".asStringLiteral,
-                  description:
-                      "The empty presentation replaces the objective template."
-                          .asStringLiteral,
-                  child: storyNode(
-                    "customEmptyText",
-                    PresentationElement.text(
-                      "Add the first objective when the quest is ready."
-                          .asStringLiteral,
+                empty: storyNode(
+                  "customEmpty",
+                  PresentationElement.section(
+                    title: "No objectives yet".asStringLiteral,
+                    description:
+                        "The empty presentation replaces the objective template."
+                            .asStringLiteral,
+                    child: storyNode(
+                      "customEmptyText",
+                      PresentationElement.text(
+                        "Add the first objective when the quest is ready."
+                            .asStringLiteral,
+                      ),
                     ),
                   ),
                 ),

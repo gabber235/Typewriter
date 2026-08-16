@@ -219,7 +219,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
         );
       }
       if (action.icon != null) {
-        return Icones(action.icon!);
+        return Icones(action.icon);
       }
       return null;
     }

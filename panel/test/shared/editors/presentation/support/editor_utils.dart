@@ -9,23 +9,38 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
     required this.rootType,
     required DataValue value,
     this.registry,
+    this.rootPresentation,
   }) : _value = value;
 
-  @override
   final TypeExpression rootType;
 
-  @override
   final TypeRegistry? registry;
+  final PresentationNode? rootPresentation;
 
   DataValue _value;
 
   DataValue get rootValue => _value;
+
+  int beginCount = 0;
+  int commitCount = 0;
+  int cancelCount = 0;
+  DataPath? lastUpdatedPath;
+
+  @override
+  EditorDocument get document => EditorDocument(
+    rootType: rootType,
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: _value,
+    revision: 0,
+    rootPresentation: rootPresentation,
+  );
 
   @override
   EditorValue value(DataPath path) => _value.readEditorValue(path);
 
   @override
   EditorMutationResult update(DataPath path, DataValue value) {
+    lastUpdatedPath = path;
     final validation = rootType.validateEditorMutation(
       path,
       value,
@@ -40,6 +55,76 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
     notifyListeners();
     return validation;
   }
+
+  @override
+  void refreshDocument(EditorDocument document) {}
+
+  @override
+  EditorInteractionSession beginInteraction(DataPath path) {
+    beginCount++;
+    return _TestInteraction(this, path, path.read(_value).valueOrNull);
+  }
+
+  @override
+  EditorSaveState saveState(DataPath path) => const EditorSaveState.idle();
+
+  @override
+  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async =>
+      TypedMutationResult.success(revision: 0, value: _value);
+
+  @override
+  Future<TypedMutationResult> executeAction(
+    EditorAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) async => switch (action) {
+    LocalEditorAction() =>
+      action.canonicalizedWith(aliases).execute(context, registry: registry),
+    RealmEditorAction() => TypedMutationResult.unavailable([
+      const TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "Realm actions are unavailable in tests",
+      ),
+    ]),
+  };
+
+  @override
+  void acceptRemote({required int revision, required DataValue value}) {}
+
+  @override
+  void acceptRemoteDeletion() {}
+
+  @override
+  void useRemote(DataPath path) {}
+
+  @override
+  Future<TypedMutationResult> keepLocal(DataPath path) => flush(paths: {path});
+}
+
+final class _TestInteraction implements EditorInteractionSession {
+  _TestInteraction(this.source, this.path, this.origin);
+
+  final TestEditorSource source;
+  @override
+  final DataPath path;
+  final DataValue? origin;
+  @override
+  bool active = true;
+
+  @override
+  Future<TypedMutationResult> commit() async {
+    if (active) source.commitCount++;
+    active = false;
+    return source.flush(paths: {path});
+  }
+
+  @override
+  void cancel() {
+    if (!active) return;
+    source.cancelCount++;
+    active = false;
+    if (origin != null) source.update(path, origin!);
+  }
 }
 
 extension TypedEditorTesterExtension on WidgetTester {
@@ -49,11 +134,13 @@ extension TypedEditorTesterExtension on WidgetTester {
     DataPath path = DataPath.root,
     bool readOnly = false,
     TypeRegistry? registry,
+    PresentationNode? presentation,
   }) async {
     final source = TestEditorSource(
       rootType: type,
       value: value,
       registry: registry,
+      rootPresentation: presentation,
     );
     await pumpTestApp(
       child: EditorRoot(
@@ -61,7 +148,11 @@ extension TypedEditorTesterExtension on WidgetTester {
         child: Material(
           child: SizedBox(
             width: 500,
-            child: TypedEditor(path: path, readOnly: readOnly),
+            child: TypedEditor(
+              path: path,
+              registry: registry,
+              readOnly: readOnly,
+            ),
           ),
         ),
       ),

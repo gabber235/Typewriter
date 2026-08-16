@@ -3,7 +3,7 @@ import "dart:io";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
-  test("organization and book shells own the inspector", () {
+  test("reusable organization and book shells own the inspector", () {
     final organization = File(
       "lib/features/organizations/presentation/organization_route.dart",
     ).readAsStringSync();
@@ -12,9 +12,17 @@ void main() {
     ).readAsStringSync();
 
     expect(organization, contains("InspectorScaffold("));
-    expect(organization, contains("child: AutoRouter()"));
+    expect("InspectorScaffold(".allMatches(organization), hasLength(1));
+    expect(organization, contains("OrganizationScaffold(child: AutoRouter())"));
+    expect(
+      organization,
+      contains("Expanded(\n                    child: InspectorScaffold("),
+    );
+    expect(organization, contains("child: child,"));
     expect(book, contains("InspectorScaffold("));
+    expect("InspectorScaffold(".allMatches(book), hasLength(1));
     expect(book, contains("child: AutoRouter("));
+    expect(book, contains("child: child,"));
   });
 
   test("selectable route pages do not own inspectors", () {

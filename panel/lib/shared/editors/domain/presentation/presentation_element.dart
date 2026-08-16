@@ -39,6 +39,10 @@ sealed class PresentationElement with _$PresentationElement {
     required TypedExpression label,
     required String tone,
   }) = BadgeElement;
+  const factory PresentationElement.chip({
+    required TypedExpression label,
+    TypedExpression? color,
+  }) = ChipElement;
   const factory PresentationElement.progress({
     required TypedExpression value,
     required TypedExpression maximum,
@@ -58,14 +62,32 @@ sealed class PresentationElement with _$PresentationElement {
   const factory PresentationElement.repeated({
     required TypedExpression source,
     required BindingId itemBindingId,
-    required PresentationNode template,
-    PresentationNode? empty,
+    required SequencePresentation presentation,
   }) = RepeatedElement;
   const factory PresentationElement.scopedBinding({
     required BindingReference binding,
     required BindingId scopeBindingId,
     required PresentationNode child,
   }) = ScopedBindingElement;
+  const factory PresentationElement.collectionLookup({
+    required PresentationCollectionSourceId sourceId,
+    required BindingReference key,
+    required PresentationNode found,
+    required PresentationNode missing,
+    PresentationNode? loading,
+  }) = CollectionLookupElement;
+  const factory PresentationElement.collectionGraph({
+    required PresentationCollectionSourceId sourceId,
+    required BindingReference roots,
+    required PresentationCollectionRelationId relation,
+    required CollectionGraphDirection direction,
+    required BindingId pathBindingId,
+    SequencePresentation? rootRows,
+    SequencePresentation? reachedRows,
+    SequencePresentation? paths,
+    int? maximumDepth,
+    @Default(true) bool deduplicate,
+  }) = CollectionGraphElement;
 
   const factory PresentationElement.textInput({
     required BoundControl control,
@@ -193,20 +215,14 @@ sealed class PresentationElement with _$PresentationElement {
   const factory PresentationElement.wrap({
     required List<PresentationNode> children,
     @Default(0) double spacing,
+    @Default(0) double runSpacing,
     @Default(PresentationMainAxisAlignment.start)
     PresentationMainAxisAlignment mainAxisAlignment,
     @Default(PresentationCrossAxisAlignment.start)
     PresentationCrossAxisAlignment crossAxisAlignment,
   }) = WrapElement;
-  @Implements<ChildrenLayoutElement>()
-  @Assert("spacing >= 0", "Spacing must not be negative.")
   const factory PresentationElement.stack({
     required List<PresentationNode> children,
-    @Default(0) double spacing,
-    @Default(PresentationMainAxisAlignment.start)
-    PresentationMainAxisAlignment mainAxisAlignment,
-    @Default(PresentationCrossAxisAlignment.center)
-    PresentationCrossAxisAlignment crossAxisAlignment,
   }) = StackElement;
   @Assert("columns > 0", "Column count must be positive.")
   @Assert("horizontalSpacing >= 0", "Horizontal spacing must not be negative.")

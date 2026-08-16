@@ -8,7 +8,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../support/test_utils.dart";
 
 void main() {
-  testWidgets("commits selected tag movement in one batch", (tester) async {
+  testWidgets("commits selected tag movement through complete updates", (
+    tester,
+  ) async {
     final firstId = recordId("tag:first");
     final secondId = recordId("tag:second");
     final tags = [
@@ -41,8 +43,7 @@ void main() {
       const GraphMoveIntent(direction: TraversalDirection.right),
     );
     await tester.pumpUntil(() {
-      expect(notifier.batchCount, 1);
-      expect(notifier.movedTagCount, 2);
+      expect(notifier.updateCount, 2);
     });
     notifier.release();
     await tester.pumpAndSettle();
@@ -59,6 +60,7 @@ void main() {
 Tag _tag(TagIdentifier identifier, String name, {required int x}) {
   return Tag(
     tagId: identifier.tagId,
+    revision: 1,
     name: name,
     color: Colors.blue,
     parentIds: const [],
@@ -71,8 +73,7 @@ class _DelayedTags extends Tags {
 
   final List<Tag> initialTags;
   final Completer<void> _gate = Completer<void>();
-  int batchCount = 0;
-  int movedTagCount = 0;
+  int updateCount = 0;
 
   @override
   Stream<List<Tag>> build() async* {
@@ -80,20 +81,15 @@ class _DelayedTags extends Tags {
   }
 
   @override
-  Future<void> moveTags(List<TagMovePayload> changes) async {
-    final snapshot = await future;
-    batchCount++;
-    movedTagCount += changes.length;
-    final changesById = {for (final change in changes) change.id: change};
+  Future<TypedMutationResult> updateTag(Tag tag) async {
+    updateCount++;
     await _gate.future;
     state = AsyncData(
-      snapshot.map((tag) {
-        final change = changesById[tag.tagId];
-        if (change == null) return tag;
-        return tag.copyWith(
-          placement: tag.placement.copyWith(x: change.x, y: change.y),
-        );
-      }).toList(),
+      state.requireValue.upsertByKey((value) => value.tagId, tag),
+    );
+    return TypedMutationResult.success(
+      revision: tag.revision,
+      value: StringValue(tag.name),
     );
   }
 

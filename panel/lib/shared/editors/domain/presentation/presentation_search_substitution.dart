@@ -19,6 +19,18 @@ extension on SearchInputElement {
 extension on SearchProvider {
   SearchProvider _substituteTypes(Map<String, TypeExpression> substitutions) =>
       switch (this) {
+        CollectionSearchProvider(
+          :final sourceId,
+          :final result,
+          :final where,
+          :final selectors,
+        ) =>
+          CollectionSearchProvider(
+            sourceId: sourceId,
+            result: result._substituteTypes(substitutions),
+            where: where._substituteTypes(substitutions),
+            selectors: selectors,
+          ),
         StaticSearchProvider(:final values, :final result, :final selectors) =>
           StaticSearchProvider(
             values: values._substituteTypes(substitutions),
@@ -141,5 +153,6 @@ extension on SearchResultMapping {
     key: key._substituteTypes(substitutions),
     selectedValue: selectedValue._substituteTypes(substitutions),
     presentation: presentation.substitute(substitutions),
+    label: label._substituteTypes(substitutions),
   );
 }

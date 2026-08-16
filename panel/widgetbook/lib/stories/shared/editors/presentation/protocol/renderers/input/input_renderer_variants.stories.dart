@@ -138,6 +138,25 @@ final inputRendererVariantScenarios = [
       PresentationElement.mapInput(control: storyControl("Translations")),
     ),
   ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.numericInput,
+    name: "Text prefix without a title",
+    type: const IntegerType(width: IntegerWidth.signed32),
+    value: IntegerValue(BigInt.from(3)),
+    presentation: storyNode(
+      "textPrefixNumericInput",
+      PresentationElement.numericInput(
+        storyControl(
+          null,
+          prefix: storyNode(
+            "textPrefixNumericInput.prefix",
+            PresentationElement.text("X".asStringLiteral),
+          ),
+          semanticLabel: "X position",
+        ),
+      ),
+    ),
+  ),
 ];
 
 @widgetbook.UseCase(
@@ -207,3 +226,11 @@ Widget lockedListActionsUseCase(BuildContext context) =>
 )
 Widget emptyMapUseCase(BuildContext context) =>
     rendererStory(context, inputRendererVariantScenarios[8]);
+
+@widgetbook.UseCase(
+  name: "Text prefix without title",
+  type: EditorProtocolRenderer,
+  path: _path,
+)
+Widget textPrefixNumericInputUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererVariantScenarios[9]);

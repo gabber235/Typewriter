@@ -83,6 +83,7 @@ extension on PresentationElement {
   ) => switch (this) {
     ChildrenLayoutElement() ||
     GridElement() ||
+    StackElement() ||
     SingleChildLayoutElement() ||
     CollapsibleElement() ||
     TabsElement() ||
@@ -92,11 +93,16 @@ extension on PresentationElement {
     IconElement() ||
     ImageElement() ||
     BadgeElement() ||
+    ChipElement() ||
     ProgressElement() => ContentElementRendering(this).render(context, scope),
     TypedFieldElement() ||
     ConditionalElement() ||
     RepeatedElement() ||
-    ScopedBindingElement() => DataElementRendering(this).render(context, scope),
+    ScopedBindingElement() ||
+    CollectionLookupElement() ||
+    CollectionGraphElement() => DataElementRendering(
+      this,
+    ).render(context, scope),
     TextInputElement() ||
     NumericInputElement() ||
     ToggleInputElement() ||

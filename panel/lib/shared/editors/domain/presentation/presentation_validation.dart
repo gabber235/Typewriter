@@ -22,7 +22,11 @@ extension on PresentationElement {
     final control = _boundControl;
     final expressions = <TypedExpression>[
       ..._presentationExpressions,
-      if (control != null) ...[?control.label, ?control.description],
+      if (control != null) ...[
+        ?control.label,
+        ?control.description,
+        ?control.semanticLabel,
+      ],
     ];
     final diagnostics = <TypeDiagnostic>[
       for (final expression in expressions)
@@ -37,6 +41,37 @@ extension on PresentationElement {
       diagnostics.add(
         _invalid("Date and time control must enable at least one part"),
       );
+    }
+    if (element case ChipElement(:final label, :final color)) {
+      if (label.resultType is! StringType) {
+        diagnostics.add(_invalid("Chip label must declare a string result"));
+      }
+      if (color != null &&
+          !typeExpressionsEqual(
+            color.resultType,
+            NamedType(standardTypeRefs.color),
+          )) {
+        diagnostics.add(_invalid("Chip color must declare the Color type"));
+      }
+    }
+    final sequences = switch (element) {
+      RepeatedElement(:final presentation) => [presentation],
+      CollectionGraphElement(
+        :final rootRows,
+        :final reachedRows,
+        :final paths,
+      ) =>
+        [rootRows, reachedRows, paths].nonNulls,
+      _ => const <SequencePresentation>[],
+    };
+    for (final sequence in sequences) {
+      if (sequence.separator != null &&
+          (sequence.layout is PresentationGridLayout ||
+              sequence.layout is PresentationStackLayout)) {
+        diagnostics.add(
+          _invalid("Grid and stack sequences do not support separators"),
+        );
+      }
     }
     if (element case TypedFieldElement(:final binding, :final expectedType)) {
       final resolved = context.bindings.resolve(binding);
@@ -68,6 +103,7 @@ extension on PresentationElement {
         ?semanticLabel,
       ],
       BadgeElement(:final label) => [label],
+      ChipElement(:final label, :final color) => [label, ?color],
       ProgressElement(:final value, :final maximum, :final label) => [
         value,
         maximum,

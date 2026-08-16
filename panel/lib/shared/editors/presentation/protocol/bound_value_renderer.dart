@@ -68,9 +68,15 @@ class LabeledControl extends StatelessWidget {
     final description = control.description == null
         ? null
         : scope.expressionText(control.description!);
+    final semanticLabel = resolveControlSemanticLabel(control, scope);
+    final semanticChild = semanticLabel == null || semanticLabel.isEmpty
+        ? child
+        : MergeSemantics(
+            child: Semantics(label: semanticLabel, child: child),
+          );
     if ((label == null || label.isEmpty) &&
         (description == null || description.isEmpty)) {
-      return child;
+      return semanticChild;
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,8 +87,42 @@ class LabeledControl extends StatelessWidget {
           labelStyle: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: 6),
-        child,
+        semanticChild,
       ],
     );
   }
+}
+
+String? resolveControlSemanticLabel(
+  BoundControl control,
+  PresentationRenderScope scope,
+) {
+  final expression = control.semanticLabel ?? control.label;
+  return expression == null ? null : scope.expressionText(expression);
+}
+
+Widget? renderControlPrefix(
+  BuildContext context,
+  BoundControl control,
+  PresentationRenderScope scope,
+) {
+  final prefix = control.prefix;
+  if (prefix == null) return null;
+  Widget child = PresentationNodeRenderer(node: prefix, scope: scope);
+  if (resolveControlSemanticLabel(control, scope) case final label?
+      when label.isNotEmpty) {
+    child = ExcludeSemantics(child: child);
+  }
+  return Padding(
+    padding: EdgeInsets.all(context.spacing.space2),
+    child: DefaultTextStyle.merge(
+      style: Theme.of(
+        context,
+      ).textTheme.labelLarge?.copyWith(color: context.colors.contentSecondary),
+      child: IconTheme.merge(
+        data: IconThemeData(color: context.colors.contentSecondary, size: 18),
+        child: child,
+      ),
+    ),
+  );
 }

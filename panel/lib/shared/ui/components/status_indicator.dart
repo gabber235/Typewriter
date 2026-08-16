@@ -51,28 +51,33 @@ class StatusIndicator extends HookWidget {
     if (lastSeen == null) return now;
 
     final difference = now.difference(lastSeen!);
-    if (difference.inMinutes < 60)
+    if (difference.inMinutes < 60) {
       return now.add(Duration(seconds: 60 - difference.inSeconds % 60));
-    if (difference.inHours < 24)
+    }
+    if (difference.inHours < 24) {
       return now.add(
         Duration(seconds: 60 * 60 - difference.inSeconds % 60 * 60),
       );
-    if (difference.inDays < 7)
+    }
+    if (difference.inDays < 7) {
       return now.add(
         Duration(seconds: 60 * 60 * 24 - difference.inSeconds % 60 * 60 * 24),
       );
-    if (difference.inDays < 30)
+    }
+    if (difference.inDays < 30) {
       return now.add(
         Duration(
           seconds: 60 * 60 * 24 * 7 - difference.inSeconds % 60 * 60 * 24 * 7,
         ),
       );
-    if (difference.inDays < 365)
+    }
+    if (difference.inDays < 365) {
       return now.add(
         Duration(
           seconds: 60 * 60 * 24 * 30 - difference.inSeconds % 60 * 60 * 24 * 30,
         ),
       );
+    }
     return now.add(
       Duration(
         seconds: 60 * 60 * 24 * 365 - difference.inSeconds % 60 * 60 * 24 * 365,

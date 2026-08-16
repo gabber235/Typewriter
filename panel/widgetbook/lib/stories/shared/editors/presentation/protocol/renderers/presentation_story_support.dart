@@ -17,14 +17,20 @@ PresentationNode storyNode(
 );
 
 BoundControl storyControl(
-  String label, {
+  String? label, {
   BindingReference binding = rootBinding,
   String? description,
+  PresentationNode? prefix,
+  String? semanticLabel,
 }) => BoundControl(
   binding: binding,
-  label: label.asStringLiteral,
-  description: (description ?? "Adjust this value to inspect its renderer.")
-      .asStringLiteral,
+  label: label?.asStringLiteral,
+  description: label == null && description == null
+      ? null
+      : (description ?? "Adjust this value to inspect its renderer.")
+            .asStringLiteral,
+  prefix: prefix,
+  semanticLabel: semanticLabel?.asStringLiteral,
 );
 
 PresentationNode storyInput(

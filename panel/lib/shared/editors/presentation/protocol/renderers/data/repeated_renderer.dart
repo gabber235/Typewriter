@@ -27,30 +27,19 @@ class _RepeatedRenderer extends StatelessWidget {
       ]);
     }
     if (items.isEmpty) {
-      return element.empty == null
-          ? const SizedBox.shrink()
-          : PresentationNodeRenderer(node: element.empty!, scope: scope);
+      return renderSequence(
+        context: context,
+        presentation: element.presentation,
+        scope: scope,
+        itemScopes: const [],
+      );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _item(item),
-          ),
-      ],
+    return renderSequence(
+      context: context,
+      presentation: element.presentation,
+      scope: scope,
+      itemScopes: [for (final item in items) _itemScope(item)],
     );
-  }
-
-  Widget _item(_RepeatedItem item) {
-    final childScope = _itemScope(item);
-    final localizedTemplate = element.template.localizeFailures(
-      childScope.expressions,
-      registry: childScope.registry,
-      budget: childScope.budget,
-    );
-    return PresentationNodeRenderer(node: localizedTemplate, scope: childScope);
   }
 
   PresentationRenderScope _itemScope(_RepeatedItem item) {

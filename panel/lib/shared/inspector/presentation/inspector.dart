@@ -44,9 +44,13 @@ class InspectorScaffold extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return EditorRoot(
       create: (ref) => EditorController(source: SelectionEditorSource(ref)),
-      child: context.smallerThan(3 * kInspectorMinSize)
-          ? MobileInspector(child: child)
-          : DesktopInspector(margin: margin, child: child),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return constraints.maxWidth < 3 * kInspectorMinSize
+              ? MobileInspector(child: child)
+              : DesktopInspector(margin: margin, child: child);
+        },
+      ),
     );
   }
 }
@@ -188,142 +192,158 @@ class DesktopInspector extends HookConsumerWidget {
     final hasSelection = ref.watch(hasInspectableSelectionProvider);
     final previousSelection = usePrevious(hasSelection);
     final size = ref.watch(inspectorSizeProvider);
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final maxSize = (screenWidth * kInspectorMaxFactor).floorToDouble() - 1.0;
-    final minSize = min(kInspectorMinSize, maxSize);
-
-    final effectiveSize = size.clamp(max<double>(0.0, minSize), maxSize);
-
     final isDragging = useState(false);
 
-    return Row(
-      children: [
-        Expanded(child: child),
-        if (hasSelection)
-          DragHandle(
-            axis: Axis.horizontal,
-            minSize: minSize,
-            maxSize: maxSize,
-            getSize: () => effectiveSize,
-            onSizeChange: (v) {
-              ref
-                  .read(inspectorSizeProvider.notifier)
-                  .size(v.clamp(minSize, maxSize));
-            },
-            sizeResolver: (s, d) => s - d,
-            onDragStart: () => isDragging.value = true,
-            onDragEnd: () => isDragging.value = false,
-            hitThickness: 8,
-          )
-        else
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(
-              begin: previousSelection != null ? 8 : 3,
-              end: 3,
-            ),
-            duration: 750.ms,
-            curve: Curves.fastEaseInToSlowEaseOut,
-            builder: (context, width, _) => SizedBox(width: width),
-          ),
-        ManagedActionSet(
-          shortcuts: [
-            ActionShortcut(
-              id: "inspector-shrink",
-              label: "Shrink Inspector",
-              description: "Shrink the inspector size",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.greater),
-                const SingleActivator(LogicalKeyboardKey.greater, shift: true),
-                const SingleActivator(LogicalKeyboardKey.period),
-                const SingleActivator(LogicalKeyboardKey.period, shift: true),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxSize = max<double>(
+          0,
+          (constraints.maxWidth * kInspectorMaxFactor).floorToDouble() - 1,
+        );
+        final minSize = min(kInspectorMinSize, maxSize);
+        final effectiveSize = size.clamp(minSize, maxSize);
+
+        return Row(
+          children: [
+            Expanded(child: child),
+            if (hasSelection)
+              DragHandle(
+                axis: Axis.horizontal,
+                minSize: minSize,
+                maxSize: maxSize,
+                getSize: () => effectiveSize,
+                onSizeChange: (v) {
+                  ref
+                      .read(inspectorSizeProvider.notifier)
+                      .size(v.clamp(minSize, maxSize));
+                },
+                sizeResolver: (s, d) => s - d,
+                onDragStart: () => isDragging.value = true,
+                onDragEnd: () => isDragging.value = false,
+                hitThickness: 8,
+              )
+            else
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  begin: previousSelection != null ? 8 : 3,
+                  end: 3,
+                ),
+                duration: 750.ms,
+                curve: Curves.fastEaseInToSlowEaseOut,
+                builder: (context, width, _) => SizedBox(width: width),
+              ),
+            ManagedActionSet(
+              shortcuts: [
+                ActionShortcut(
+                  id: "inspector-shrink",
+                  label: "Shrink Inspector",
+                  description: "Shrink the inspector size",
+                  activators: [
+                    const SingleActivator(LogicalKeyboardKey.greater),
+                    const SingleActivator(
+                      LogicalKeyboardKey.greater,
+                      shift: true,
+                    ),
+                    const SingleActivator(LogicalKeyboardKey.period),
+                    const SingleActivator(
+                      LogicalKeyboardKey.period,
+                      shift: true,
+                    ),
+                  ],
+                  priority: -1,
+                  onInvoke: (ref) {
+                    final step = HardwareKeyboard.instance.isShiftPressed
+                        ? kInspectorResizeLargeStep
+                        : kInspectorResizeSmallStep;
+                    final newSize = (effectiveSize - step).clamp(
+                      max<double>(0.0, minSize),
+                      maxSize,
+                    );
+                    ref.read(inspectorSizeProvider.notifier).size(newSize);
+                  },
+                  show: false,
+                ),
+                ActionShortcut(
+                  id: "inspector-expand",
+                  label: "Expand Inspector",
+                  description: "Expand the inspector size",
+                  activators: [
+                    const SingleActivator(LogicalKeyboardKey.less),
+                    const SingleActivator(LogicalKeyboardKey.less, shift: true),
+                    const SingleActivator(LogicalKeyboardKey.comma),
+                    const SingleActivator(
+                      LogicalKeyboardKey.comma,
+                      shift: true,
+                    ),
+                  ],
+                  priority: -1,
+                  onInvoke: (ref) {
+                    final step = HardwareKeyboard.instance.isShiftPressed
+                        ? kInspectorResizeLargeStep
+                        : kInspectorResizeSmallStep;
+                    final newSize = (effectiveSize + step).clamp(
+                      max<double>(0.0, minSize),
+                      maxSize,
+                    );
+                    ref.read(inspectorSizeProvider.notifier).size(newSize);
+                  },
+                  show: false,
+                ),
+                ActionShortcut(
+                  id: "inspector-resize",
+                  label: "Resize Inspector",
+                  description: "Resize the inspector size",
+                  activators: [
+                    const SingleActivator(LogicalKeyboardKey.period),
+                    const SingleActivator(LogicalKeyboardKey.comma),
+                    const SingleActivator(LogicalKeyboardKey.greater),
+                    const SingleActivator(LogicalKeyboardKey.less),
+                  ],
+                  priority: -1,
+                ),
               ],
-              priority: -1,
-              onInvoke: (ref) {
-                final step = HardwareKeyboard.instance.isShiftPressed
-                    ? kInspectorResizeLargeStep
-                    : kInspectorResizeSmallStep;
-                final newSize = (effectiveSize - step).clamp(
-                  max<double>(0.0, minSize),
-                  maxSize,
-                );
-                ref.read(inspectorSizeProvider.notifier).size(newSize);
-              },
-              show: false,
-            ),
-            ActionShortcut(
-              id: "inspector-expand",
-              label: "Expand Inspector",
-              description: "Expand the inspector size",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.less),
-                const SingleActivator(LogicalKeyboardKey.less, shift: true),
-                const SingleActivator(LogicalKeyboardKey.comma),
-                const SingleActivator(LogicalKeyboardKey.comma, shift: true),
-              ],
-              priority: -1,
-              onInvoke: (ref) {
-                final step = HardwareKeyboard.instance.isShiftPressed
-                    ? kInspectorResizeLargeStep
-                    : kInspectorResizeSmallStep;
-                final newSize = (effectiveSize + step).clamp(
-                  max<double>(0.0, minSize),
-                  maxSize,
-                );
-                ref.read(inspectorSizeProvider.notifier).size(newSize);
-              },
-              show: false,
-            ),
-            ActionShortcut(
-              id: "inspector-resize",
-              label: "Resize Inspector",
-              description: "Resize the inspector size",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.period),
-                const SingleActivator(LogicalKeyboardKey.comma),
-                const SingleActivator(LogicalKeyboardKey.greater),
-                const SingleActivator(LogicalKeyboardKey.less),
-              ],
-              priority: -1,
-            ),
-          ],
-          child: Padding(
-            padding: EdgeInsets.only(top: margin.top, bottom: margin.bottom),
-            child: AnimatedPadding(
-              duration: hasSelection ? 1000.ms : 750.ms,
-              curve: hasSelection
-                  ? ElasticOutCurve(0.9)
-                  : Curves.fastEaseInToSlowEaseOut,
-              padding: hasSelection
-                  ? EdgeInsets.only(left: margin.left, right: margin.right)
-                  : EdgeInsets.zero,
-              child: Pane(
-                id: "inspector",
-                borderRadius: context.shapes.largeBorderRadius,
-                enabled: hasSelection,
-                margin: null,
-                child: Section(
-                  margin: EdgeInsets.zero,
-                  child: AnimatedContainer(
-                    duration: isDragging.value
-                        ? 0.ms
-                        : hasSelection
-                        ? 1000.ms
-                        : 750.ms,
-                    curve: hasSelection
-                        ? ElasticOutCurve(0.9)
-                        : Curves.fastEaseInToSlowEaseOut,
-                    width: hasSelection ? effectiveSize : 0,
-                    height: double.infinity,
-                    child: ClipRect(
-                      child: OverflowBox(
-                        alignment: Alignment.centerLeft,
-                        minWidth: effectiveSize,
-                        maxWidth: effectiveSize,
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: EdgeInsets.all(context.spacing.space3),
-                            child: _InspectorContent(),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: margin.top,
+                  bottom: margin.bottom,
+                ),
+                child: AnimatedPadding(
+                  duration: hasSelection ? 1000.ms : 750.ms,
+                  curve: hasSelection
+                      ? ElasticOutCurve(0.9)
+                      : Curves.fastEaseInToSlowEaseOut,
+                  padding: hasSelection
+                      ? EdgeInsets.only(left: margin.left, right: margin.right)
+                      : EdgeInsets.zero,
+                  child: Pane(
+                    id: "inspector",
+                    borderRadius: context.shapes.largeBorderRadius,
+                    enabled: hasSelection,
+                    margin: null,
+                    child: Section(
+                      margin: EdgeInsets.zero,
+                      child: AnimatedContainer(
+                        duration: isDragging.value
+                            ? 0.ms
+                            : hasSelection
+                            ? 1000.ms
+                            : 750.ms,
+                        curve: hasSelection
+                            ? ElasticOutCurve(0.9)
+                            : Curves.fastEaseInToSlowEaseOut,
+                        width: hasSelection ? effectiveSize : 0,
+                        height: double.infinity,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: effectiveSize,
+                            maxWidth: effectiveSize,
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: EdgeInsets.all(context.spacing.space3),
+                                child: _InspectorContent(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -332,9 +352,9 @@ class DesktopInspector extends HookConsumerWidget {
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

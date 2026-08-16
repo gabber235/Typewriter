@@ -31,3 +31,80 @@ extension LayoutElementRendering on PresentationElement {
         _ => const SizedBox.shrink(),
       };
 }
+
+extension PresentationChildrenLayoutRendering on PresentationChildrenLayout {
+  Widget renderWidgets(BuildContext context, List<Widget> children) =>
+      switch (this) {
+        PresentationColumnLayout(
+          :final spacing,
+          :final mainAxisAlignment,
+          :final crossAxisAlignment,
+        ) =>
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: mainAxisAlignment.mainAxisAlignment,
+            crossAxisAlignment: crossAxisAlignment.crossAxisAlignment,
+            children: children.spaced(spacing, vertical: true),
+          ),
+        PresentationRowLayout(
+          :final spacing,
+          :final mainAxisAlignment,
+          :final crossAxisAlignment,
+        ) =>
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: mainAxisAlignment.mainAxisAlignment,
+            crossAxisAlignment: crossAxisAlignment.crossAxisAlignment,
+            children: children.spaced(spacing),
+          ),
+        PresentationWrapLayout(
+          :final spacing,
+          :final runSpacing,
+          :final mainAxisAlignment,
+          :final crossAxisAlignment,
+        ) =>
+          Wrap(
+            spacing: spacing,
+            runSpacing: runSpacing,
+            alignment: mainAxisAlignment.wrapAlignment,
+            crossAxisAlignment: crossAxisAlignment.wrapCrossAlignment,
+            children: children,
+          ),
+        PresentationGridLayout(
+          :final columns,
+          :final horizontalSpacing,
+          :final verticalSpacing,
+        ) =>
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final gaps = horizontalSpacing * (columns - 1);
+              final width = (constraints.maxWidth - gaps) / columns;
+              return Wrap(
+                spacing: horizontalSpacing,
+                runSpacing: verticalSpacing,
+                children: [
+                  for (final child in children)
+                    SizedBox(width: width, child: child),
+                ],
+              );
+            },
+          ),
+        PresentationStackLayout() => Stack(children: children),
+      };
+}
+
+extension on List<Widget> {
+  List<Widget> spaced(double spacing, {bool vertical = false}) {
+    if (spacing == 0 || length < 2) return this;
+    return [
+      for (final (index, child) in indexed) ...[
+        if (index > 0)
+          SizedBox(
+            width: vertical ? 0 : spacing,
+            height: vertical ? spacing : 0,
+          ),
+        child,
+      ],
+    ];
+  }
+}

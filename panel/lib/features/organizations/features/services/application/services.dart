@@ -8,219 +8,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "services.freezed.dart";
 part "services.g.dart";
+part "service_models.dart";
+part "service_collection.dart";
+part "service_inspector_presentation.dart";
 part "service_selection.dart";
-
-@freezed
-abstract class Service with _$Service {
-  @Assert("name.isNotEmpty", "Name must not be empty.")
-  @Assert("roles.isNotEmpty", "Roles must not be empty.")
-  factory Service({
-    required skir.RecordId serviceId,
-    required String name,
-    required List<ServiceRole> roles,
-    required DateTime createdAt,
-    skir.RecordId? organization,
-    ServiceRegistration? registration,
-    ServiceState? state,
-    skir.RecordId? runsIn,
-  }) = _Service;
-
-  const Service._();
-
-  factory Service.fromSkir(skir.Service service) => Service(
-    serviceId: service.serviceId,
-    name: service.name,
-    roles: service.roles.map(ServiceRole.fromSkir).toList(),
-    createdAt: service.createdAt,
-    organization: service.organization,
-    registration: service.registration != null
-        ? ServiceRegistration.fromSkir(service.registration!)
-        : null,
-    state: service.state != null ? ServiceState.fromSkir(service.state!) : null,
-    runsIn: service.runsIn,
-  );
-
-  skir.Service toSkir() => skir.Service(
-    serviceId: serviceId,
-    name: name,
-    roles: roles.map((role) => role.toSkir()).toList(),
-    createdAt: createdAt,
-    organization: organization,
-    registration: registration?.toSkir(),
-    state: state?.toSkir(),
-    runsIn: runsIn,
-  );
-
-  String get displayName =>
-      name.isNotEmpty ? name.formatted : "Unnamed Service";
-
-  Color get color => roles.map((role) => role.color).toList().mix();
-
-  bool get isOnline => state?.isOnline ?? false;
-
-  DateTime? get lastSeen => state?.lastSeen;
-  String get lastSeenLabel => state?.lastSeenLabel ?? "Never";
-
-  String get label => roles.map((role) => role.label).toList().join(" & ");
-
-  DateTime get nextTimeout => state?.nextTimeout ?? lastSeen ?? DateTime.now();
-
-  bool get isEngine => roles.any((role) => role is EngineServiceRole);
-  bool get isRealm => roles.any((role) => role is RealmServiceRole);
-  bool get isCustom => roles.any((role) => role is CustomServiceRole);
-
-  IconData get icon {
-    return switch ((isEngine, isRealm, isCustom)) {
-      (true, true, _) || (true, _, true) || (_, true, true) => Icons.dns,
-      (true, false, false) => Icons.memory,
-      (false, true, false) => Icons.cloud,
-      (false, false, true) => Icons.extension,
-      (false, false, false) => throw UnimplementedError(),
-    };
-  }
-}
-
-@freezed
-abstract class ServiceRole with _$ServiceRole {
-  @Assert("version.isNotEmpty", "Version must not be empty.")
-  factory ServiceRole.engine({required String version}) = EngineServiceRole;
-  @Assert("version.isNotEmpty", "Version must not be empty.")
-  factory ServiceRole.realm({required String version}) = RealmServiceRole;
-
-  @Assert("version.isNotEmpty", "Version must not be empty.")
-  @Assert("name.isNotEmpty", "Name must not be empty.")
-  factory ServiceRole.custom({required String version, required String name}) =
-      CustomServiceRole;
-
-  const ServiceRole._();
-
-  factory ServiceRole.fromSkir(skir.ServiceRole role) {
-    return switch (role) {
-      skir.ServiceRole_engineWrapper(value: final engine) => ServiceRole.engine(
-        version: engine.version,
-      ),
-      skir.ServiceRole_realmWrapper(value: final realm) => ServiceRole.realm(
-        version: realm.version,
-      ),
-      skir.ServiceRole_customWrapper(value: final custom) => ServiceRole.custom(
-        version: custom.version,
-        name: custom.name,
-      ),
-      skir.ServiceRole_unknown() => throw ApiException.unknown("service role"),
-    };
-  }
-
-  skir.ServiceRole toSkir() {
-    return switch (this) {
-      EngineServiceRole(version: final version) =>
-        skir.ServiceRole.createEngine(version: version),
-      RealmServiceRole(version: final version) => skir.ServiceRole.createRealm(
-        version: version,
-      ),
-      CustomServiceRole(version: final version, name: final name) =>
-        skir.ServiceRole.createCustom(version: version, name: name),
-      ServiceRole() => throw UnimplementedError(),
-    };
-  }
-
-  Color get color => switch (this) {
-    EngineServiceRole() => Colors.blueAccent,
-    RealmServiceRole() => Colors.deepOrangeAccent,
-    CustomServiceRole() => Colors.green,
-    ServiceRole() => throw UnimplementedError(),
-  };
-
-  String get label => switch (this) {
-    EngineServiceRole() => "Engine",
-    RealmServiceRole() => "Realm",
-    CustomServiceRole(:final name) => name,
-    ServiceRole() => throw UnimplementedError(),
-  };
-}
-
-@freezed
-abstract class ServiceRegistration with _$ServiceRegistration {
-  const factory ServiceRegistration({
-    required String token,
-    required DateTime expiresAt,
-  }) = _ServiceRegistration;
-
-  const ServiceRegistration._();
-
-  factory ServiceRegistration.fromSkir(skir.ServiceRegistration registration) {
-    return ServiceRegistration(
-      token: registration.token,
-      expiresAt: registration.expiresAt,
-    );
-  }
-
-  skir.ServiceRegistration toSkir() {
-    return skir.ServiceRegistration(token: token, expiresAt: expiresAt);
-  }
-}
-
-const _serviceStateTimeout = Duration(minutes: 2);
-
-@freezed
-abstract class ServiceState with _$ServiceState {
-  const factory ServiceState({
-    required ServiceStateStatus status,
-    required DateTime lastSeen,
-  }) = _ServiceState;
-
-  const ServiceState._();
-
-  factory ServiceState.fromSkir(skir.ServiceState state) {
-    return ServiceState(
-      status: ServiceStateStatus.fromSkir(state.status),
-      lastSeen: state.lastSeen,
-    );
-  }
-
-  skir.ServiceState toSkir() {
-    return skir.ServiceState(status: status.toSkir(), lastSeen: lastSeen);
-  }
-
-  bool get isOnline {
-    if (status == ServiceStateStatus.offline) return false;
-    return DateTime.now().difference(lastSeen) < _serviceStateTimeout;
-  }
-
-  DateTime get nextTimeout {
-    if (status == ServiceStateStatus.offline) return lastSeen;
-    return lastSeen.add(_serviceStateTimeout);
-  }
-
-  String get lastSeenLabel {
-    final difference = DateTime.now().difference(lastSeen);
-    if (difference.inSeconds < 60) return "Just now";
-    if (difference.inMinutes < 60) return "${difference.inMinutes}m ago";
-    if (difference.inHours < 24) return "${difference.inHours}h ago";
-    return "${difference.inDays}d ago";
-  }
-}
-
-enum ServiceStateStatus {
-  online,
-  offline;
-
-  factory ServiceStateStatus.fromSkir(skir.ServiceStatus status) {
-    return switch (status) {
-      skir.ServiceStatus.online => ServiceStateStatus.online,
-      skir.ServiceStatus.offline => ServiceStateStatus.offline,
-      skir.ServiceStatus_unknown() => throw ApiException.unknown(
-        "service status",
-      ),
-    };
-  }
-
-  skir.ServiceStatus toSkir() {
-    return switch (this) {
-      ServiceStateStatus.online => skir.ServiceStatus.online,
-      ServiceStateStatus.offline => skir.ServiceStatus.offline,
-    };
-  }
-}
 
 @riverpod
 class Services extends _$Services {
@@ -253,10 +44,7 @@ class Services extends _$Services {
         skir.WatchOrganizationServicesResponse_addWrapper(:final value) ||
         skir.WatchOrganizationServicesResponse_updateWrapper(
           :final value,
-        ) => previous.upsertByKey(
-          (service) => service.serviceId,
-          Service.fromSkir(value),
-        ),
+        ) => _upsertCanonicalService(previous, Service.fromSkir(value)).values,
         skir.WatchOrganizationServicesResponse_removeWrapper(:final value) =>
           previous?.where((service) => service.serviceId != value).toList() ??
               [],
@@ -289,24 +77,18 @@ class Services extends _$Services {
     }
   }
 
-  Future<void> updateService(Service service) async {
+  Future<TypedMutationResult> updateService(Service service) async {
     final userId = await ref.read(userIdProvider.future);
     if (userId == null) throw ApiException.notAuthenticated();
     final organizationId = ref.read(organizationIdProvider);
     if (organizationId == null) throw ApiException.noOrganization();
     state.ensureReady();
-    final previousState = state;
-    state = AsyncData(
-      state.requireValue
-          .map(
-            (value) => value.serviceId == service.serviceId ? service : value,
-          )
-          .toList(),
-    );
     try {
       final request = skir.UpdateOrganizationServiceRequest(
         serviceId: service.serviceId,
+        expectedRevision: service.revision,
         name: service.name,
+        runsIn: service.runsIn,
       );
       final response = await ref.requestSkir(
         "cloud.to.user.$userId.organization.${organizationId.id}.services.update",
@@ -315,20 +97,57 @@ class Services extends _$Services {
       );
       switch (response) {
         case skir.UpdateOrganizationServiceResponse_unknown():
-          throw ApiException.unknownResponseMessage();
+          return _serviceUpdateUnavailable(
+            "The server returned an unknown response",
+          );
         case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper(
+          return _serviceUpdateUnavailable(
+            "The server could not update the service",
+          );
+        case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
           :final value,
         ):
-          throw ApiException.invalidRecordId(value);
+          final actual = Service.fromSkir(value.actual);
+          final upsert = _upsertCanonicalService(state.requireValue, actual);
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.conflict(
+            expectedRevision: value.expectedRevision,
+            actualRevision: upsert.canonical.revision,
+            actualValue: upsert.canonical.inspectorValue,
+          );
+        case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper():
+          return _serviceUpdateInvalid(
+            "The service contains an invalid reference",
+          );
         case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
-          throw ApiException.notFound("Service");
-        case skir.UpdateOrganizationServiceResponse_successWrapper():
+          return _serviceUpdateUnavailable(
+            "The service no longer exists",
+            targetDeleted: true,
+          );
+        case skir.UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper():
+          return _serviceUpdateInvalid(
+            "The selected Realm service no longer exists",
+          );
+        case skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
+          return _serviceUpdateInvalid("The service contains invalid values");
+        case skir.UpdateOrganizationServiceResponse_successWrapper(
+          :final value,
+        ):
+          final updatedService = Service.fromSkir(value);
+          final upsert = _upsertCanonicalService(
+            state.requireValue,
+            updatedService,
+          );
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.success(
+            revision: upsert.canonical.revision,
+            value: upsert.canonical.inspectorValue,
+          );
       }
-    } catch (_) {
-      state = previousState;
-      rethrow;
+    } on Object catch (_) {
+      return _serviceUpdateUnavailable(
+        "The service update could not be completed",
+      );
     }
   }
 
@@ -371,3 +190,21 @@ class Services extends _$Services {
 Future<Service?> service(Ref ref, skir.RecordId id) async => (await ref.watch(
   servicesProvider.future,
 )).firstWhereOrNull((service) => service.serviceId == id);
+
+TypedMutationResult _serviceUpdateInvalid(String message) =>
+    TypedMutationResult.invalid([
+      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
+    ]);
+
+TypedMutationResult _serviceUpdateUnavailable(
+  String message, {
+  bool targetDeleted = false,
+}) => TypedMutationResult.unavailable([
+  TypeDiagnostic(
+    code: TypeDiagnosticCode.invalidValue,
+    message: message,
+    details: targetDeleted
+        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
+        : const [],
+  ),
+]);

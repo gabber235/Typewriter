@@ -180,6 +180,7 @@ Service _realm({
   DateTime? lastSeen,
 }) => Service(
   serviceId: recordId("service:test"),
+  revision: 1,
   name: "test_realm",
   roles: [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2026),

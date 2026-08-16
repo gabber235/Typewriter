@@ -12,6 +12,10 @@ Widget servicesPageUseCase(BuildContext context) {
     initialOption: DisplayState.fewItems,
   );
 
+  return servicesPageStory(servicesState: servicesState);
+}
+
+Widget servicesPageStory({DisplayState servicesState = DisplayState.fewItems}) {
   return FakeApp(
     overrides: [
       ...organizationProviderOverrides(),

@@ -17,15 +17,7 @@ class OrganizationPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return OrganizationScaffold(
-      child: InspectorScaffold(
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          right: context.spacing.space2,
-        ),
-        child: AutoRouter(),
-      ),
-    );
+    return OrganizationScaffold(child: AutoRouter());
   }
 }
 
@@ -45,7 +37,7 @@ class OrganizationScaffold extends HookConsumerWidget {
 
     return SimpleScaffold(
       appBar: CustomAppBar(
-        row: [
+        leading: [
           if (organizationId != null) ...[
             const OrganizationSelector(),
             if (realmId != null) ...[
@@ -57,13 +49,13 @@ class OrganizationScaffold extends HookConsumerWidget {
               const RealmSelector(),
             ],
           ],
-          const Spacer(),
-          if (!context.isMobile)
-            RealmSuspensionInline(
-              suspended: interaction.suspended,
-              child: const ModeDisplayWidget(),
-            ),
         ],
+        trailing: !context.isMobile
+            ? RealmSuspensionInline(
+                suspended: interaction.suspended,
+                child: const ModeDisplayWidget(),
+              )
+            : null,
         sidebar: OrganizationSidebarContent(suspended: interaction.suspended),
       ),
       child: Row(
@@ -81,7 +73,15 @@ class OrganizationScaffold extends HookConsumerWidget {
               onRetry: retryConnection,
               child: Column(
                 children: [
-                  Expanded(child: child),
+                  Expanded(
+                    child: InspectorScaffold(
+                      margin: EdgeInsets.only(
+                        top: context.spacing.space2,
+                        right: context.spacing.space2,
+                      ),
+                      child: child,
+                    ),
+                  ),
                   ActionRow(),
                 ],
               ),

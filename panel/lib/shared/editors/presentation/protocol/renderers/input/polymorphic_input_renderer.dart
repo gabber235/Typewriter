@@ -93,6 +93,7 @@ extension on PolymorphicValue {
         element.control.binding,
         PolymorphicValue(concreteType: concreteType, value: next),
       ),
+      interactionTarget: scope.canonical(element.control.binding),
     );
     return ResolvedBinding(
       reference: payloadReference,

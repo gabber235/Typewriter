@@ -212,7 +212,12 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   String get name => definition.name;
 
   @override
-  ResolvedTypeRef get rootType => definition.elementDefinition.rootType;
+  EditorDocument get document => EditorDocument(
+    rootType: NamedType(definition.elementDefinition.rootType),
+    typeCatalog: typeCatalog,
+    confirmedValue: definition.data,
+    revision: 0,
+  );
 
   @override
   List<SelectionCapability> get capabilities => [];
@@ -227,16 +232,14 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   }
 
   @override
-  EditorValue value(DataPath path) => definition.data.readEditorValue(path);
-
-  @override
-  EditorMutationResult update(DataPath path, DataValue value) {
-    final result = validateUpdate(path, value);
-    if (result is AppliedEditorMutation) {
-      ref.read(entryProvider(id.id).notifier).updateFieldValue(path, value);
-    }
-    return result;
-  }
+  Future<TypedMutationResult> commit(EditorCommit commit) => Future.value(
+    TypedMutationResult.unavailable([
+      const TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "Entry persistence is not available yet",
+      ),
+    ]),
+  );
 
   @override
   int get hashCode => id.hashCode;

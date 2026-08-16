@@ -141,12 +141,16 @@ class GridSelectableCard extends StatelessWidget {
               if (badgeLabel != null) const SizedBox(height: 6),
               header!,
             ],
-            const Spacer(),
-            Text(
-              title,
-              maxLines: 3,
-              overflow: .ellipsis,
-              style: resolvedTitleStyle,
+            Expanded(
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  title,
+                  maxLines: 3,
+                  overflow: .ellipsis,
+                  style: resolvedTitleStyle,
+                ),
+              ),
             ),
             if (footer != null) ...[const SizedBox(height: 6), footer!],
           ],

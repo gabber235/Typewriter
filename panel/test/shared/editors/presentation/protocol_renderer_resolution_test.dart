@@ -175,20 +175,15 @@ void main() {
     expect(find.text("rendered value"), findsOneWidget);
   });
 
-  testWidgets("uses the standard icon default presentation", (tester) async {
-    await tester.pumpTestApp(
-      child: EditorProtocolRenderer(
-        envelope: TypedValueEnvelope(
-          rootType: standardTypeRefs.iconifyIcon,
-          rootValue: const StringValue("mdi:sword"),
-        ),
-        typeCatalog: TypeCatalog(const []),
-      ),
+  test("uses the standard icon search presentation", () {
+    final definition = builtinPresentationDefinitions().singleWhere(
+      (candidate) => candidate.id == standardIconifyPresentationId,
     );
+    final element = definition.root.element;
 
-    final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.controller?.text, "mdi:sword");
-    expect(field.maxLines, 1);
+    expect(definition.target, NamedType(standardTypeRefs.iconifyIcon));
+    expect(element, isA<SearchInputElement>());
+    expect((element as SearchInputElement).placeholder, isNotNull);
   });
 }
 

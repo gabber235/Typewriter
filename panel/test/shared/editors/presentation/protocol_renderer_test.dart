@@ -39,6 +39,33 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets("renders a chip using its entity color", (tester) async {
+    const entityColor = Color(0xFF967BFA);
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "chip",
+          element: ChipElement(
+            label: "Adventure".asStringLiteral,
+            color: TypedExpression(
+              resultType: NamedType(standardTypeRefs.color),
+              expression: LiteralExpression(
+                IntegerValue(BigInt.from(0xFF967BFA)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final chip = tester.widget<Chip>(find.byType(Chip));
+    expect(find.text("Adventure"), findsOneWidget);
+    expect(chip.side, const BorderSide(color: entityColor));
+    expect(chip.backgroundColor, entityColor.withValues(alpha: 0.18));
+  });
+
   testWidgets("selecting an option updates its bound value", (tester) async {
     await tester.pumpTestApp(
       child: _renderer(
@@ -201,13 +228,15 @@ void main() {
           element: RepeatedElement(
             source: source,
             itemBindingId: const BindingId(1),
-            template: PresentationNode(
-              id: "item",
-              element: TextElement("Item".asStringLiteral),
-            ),
-            empty: PresentationNode(
-              id: "empty",
-              element: TextElement("Custom empty content".asStringLiteral),
+            presentation: SequencePresentation(
+              item: PresentationNode(
+                id: "item",
+                element: TextElement("Item".asStringLiteral),
+              ),
+              empty: PresentationNode(
+                id: "empty",
+                element: TextElement("Custom empty content".asStringLiteral),
+              ),
             ),
           ),
         ),
@@ -216,6 +245,61 @@ void main() {
 
     expect(find.text("Custom empty content"), findsOneWidget);
     expect(find.text("No items found"), findsNothing);
+  });
+
+  testWidgets("renders repeated items with declared separators", (
+    tester,
+  ) async {
+    const source = TypedExpression(
+      resultType: ListType(element: StringType()),
+      expression: BindingExpression(_rootBinding),
+    );
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const ListType(element: StringType()),
+        value: const ListValue([StringValue("One"), StringValue("Two")]),
+        presentation: const PresentationNode(
+          id: "repeated",
+          element: RepeatedElement(
+            source: source,
+            itemBindingId: BindingId(1),
+            presentation: SequencePresentation(
+              item: PresentationNode(
+                id: "item",
+                element: TextElement(
+                  TypedExpression(
+                    resultType: StringType(),
+                    expression: BindingExpression(
+                      BindingReference(bindingId: BindingId(1)),
+                    ),
+                  ),
+                ),
+              ),
+              separator: PresentationNode(
+                id: "separator",
+                element: TextElement(
+                  TypedExpression(
+                    resultType: StringType(),
+                    expression: LiteralExpression(StringValue(">")),
+                  ),
+                ),
+              ),
+              layout: PresentationChildrenLayout.wrap(
+                spacing: 4,
+                runSpacing: 8,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("One"), findsOneWidget);
+    expect(find.text("Two"), findsOneWidget);
+    expect(find.text(">"), findsOneWidget);
+    final wrap = tester.widget<Wrap>(find.byType(Wrap));
+    expect(wrap.spacing, 4);
+    expect(wrap.runSpacing, 8);
   });
 
   testWidgets("uses conditional content and read only local actions", (

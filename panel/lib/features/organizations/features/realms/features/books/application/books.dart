@@ -8,40 +8,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "books.freezed.dart";
 part "books.g.dart";
+part "book_model.dart";
 part "book_queries.dart";
 part "book_selection.dart";
 part "book_validation.dart";
-
-@freezed
-abstract class Book with _$Book {
-  @Assert("title != \"\"", "Title must not be empty.")
-  @Assert("icon != \"\"", "Icon must not be empty.")
-  const factory Book({
-    required skir.RecordId bookId,
-    required String title,
-    required String icon,
-    required Color color,
-    required List<skir.RecordId> tagIds,
-  }) = _Book;
-
-  const Book._();
-
-  factory Book.fromSkir(skir.Book book) => Book(
-    bookId: book.bookId,
-    title: book.title,
-    icon: book.icon,
-    color: book.color.toFlutterColor(),
-    tagIds: book.tagIds.toList(),
-  );
-
-  skir.Book toSkir() => skir.Book(
-    bookId: this.bookId,
-    title: title,
-    icon: icon,
-    color: color.toSkirColor(),
-    tagIds: tagIds,
-  );
-}
 
 @riverpod
 class Books extends _$Books {
@@ -71,15 +41,9 @@ class Books extends _$Books {
           case skir.WatchBooksResponse_listWrapper(:final value):
             return value.map(Book.fromSkir).toList();
           case skir.WatchBooksResponse_addWrapper(:final value):
-            return previous.upsertByKey(
-              (book) => book.bookId,
-              Book.fromSkir(value),
-            );
+            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
           case skir.WatchBooksResponse_updateWrapper(:final value):
-            return previous.upsertByKey(
-              (book) => book.bookId,
-              Book.fromSkir(value),
-            );
+            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
           case skir.WatchBooksResponse_removeWrapper(:final value):
             return previous?.where((book) => book.bookId != value).toList() ??
                 [];
@@ -127,30 +91,26 @@ class Books extends _$Books {
           throw ApiException.invalidRecordId(value);
         case skir.CreateBookResponse_successWrapper(:final value):
           final book = Book.fromSkir(value);
-          state = AsyncData(
-            state.requireValue.upsertByKey((book) => book.bookId, book),
-          );
-          return book;
+          final upsert = _upsertCanonicalBook(state.requireValue, book);
+          state = AsyncData(upsert.values);
+          return upsert.canonical;
       }
-    } catch (_) {
+    } on Object catch (_) {
       state = previousState;
       rethrow;
     }
   }
 
-  Future<void> updateBook(Book book) async {
+  Future<TypedMutationResult> updateBook(Book book) async {
     state.ensureReady();
-    final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     if (organizationId == null) throw ApiException.noOrganization();
 
-    state = AsyncData(
-      state.requireValue.upsertByKey((value) => value.bookId, book),
-    );
     final request = skir.UpdateBookRequest(
       bookId: book.bookId,
+      expectedRevision: book.revision,
       title: book.title,
       icon: book.icon,
       color: book.color.toSkirColor(),
@@ -165,26 +125,44 @@ class Books extends _$Books {
       );
       switch (response) {
         case skir.UpdateBookResponse_unknown():
-          throw ApiException.unknownResponseMessage();
+          return _bookUpdateUnavailable(
+            "The server returned an unknown response",
+          );
         case skir.UpdateBookResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
+          return _bookUpdateUnavailable("The server could not update the book");
+        case skir.UpdateBookResponse_conflictErrorWrapper(:final value):
+          final actual = Book.fromSkir(value.actual);
+          final upsert = _upsertCanonicalBook(state.requireValue, actual);
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.conflict(
+            expectedRevision: value.expectedRevision,
+            actualRevision: upsert.canonical.revision,
+            actualValue: upsert.canonical.inspectorValue,
+          );
         case skir.UpdateBookResponse_bookNotFoundErrorWrapper():
-          throw ApiException.notFound("Book");
+          return _bookUpdateUnavailable(
+            "The book no longer exists",
+            targetDeleted: true,
+          );
         case skir.UpdateBookResponse_tagsNotFoundErrorWrapper():
-          throw ApiException.notFound("Tags");
-        case skir.UpdateBookResponse_validationErrorWrapper(:final value):
-          throw value.toApiException();
-        case skir.UpdateBookResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
+          return _bookUpdateInvalid(
+            "One or more selected tags no longer exist",
+          );
+        case skir.UpdateBookResponse_validationErrorWrapper():
+          return _bookUpdateInvalid("The book contains invalid values");
+        case skir.UpdateBookResponse_invalidRecordIdErrorWrapper():
+          return _bookUpdateInvalid("The book contains an invalid reference");
         case skir.UpdateBookResponse_successWrapper(:final value):
           final updatedBook = Book.fromSkir(value);
-          state = AsyncData(
-            state.requireValue.upsertByKey((book) => book.bookId, updatedBook),
+          final upsert = _upsertCanonicalBook(state.requireValue, updatedBook);
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.success(
+            revision: upsert.canonical.revision,
+            value: upsert.canonical.inspectorValue,
           );
       }
-    } catch (_) {
-      state = previousState;
-      rethrow;
+    } on Object catch (_) {
+      return _bookUpdateUnavailable("The book update could not be completed");
     }
   }
 
@@ -291,3 +269,21 @@ class Books extends _$Books {
     }
   }
 }
+
+TypedMutationResult _bookUpdateInvalid(String message) =>
+    TypedMutationResult.invalid([
+      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
+    ]);
+
+TypedMutationResult _bookUpdateUnavailable(
+  String message, {
+  bool targetDeleted = false,
+}) => TypedMutationResult.unavailable([
+  TypeDiagnostic(
+    code: TypeDiagnosticCode.invalidValue,
+    message: message,
+    details: targetDeleted
+        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
+        : const [],
+  ),
+]);
