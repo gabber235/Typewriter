@@ -423,9 +423,19 @@ class LoadingButton extends HookWidget {
         .animate(controller: animation, autoPlay: false)
         .shakeX();
 
-    if (effectiveController.lastError == null) return animated;
+    Widget widget = animated;
 
-    return Tooltip(message: effectiveController.lastError, child: animated);
+    if (effectiveController.lastError != null) {
+      widget = Tooltip(message: effectiveController.lastError, child: widget);
+    }
+
+    final backgroundColor = mergedStyle?.backgroundColor?.resolve({});
+
+    if (backgroundColor != null) {
+      widget = Surface(color: backgroundColor, child: widget);
+    }
+
+    return widget;
   }
 }
 

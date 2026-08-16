@@ -85,41 +85,34 @@ class DeleteOperationButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final foregroundColor = scheme.onError;
+    final backgroundColor = scheme.error;
+
     return Padding(
       padding: EdgeInsets.only(bottom: context.spacing.space2),
-      child: LoadingButton.filledIcon(
+      child: OperationButton.filledIcon(
+        operation: operation,
         onPressed: () {
           showConfirmationDialogue(
             context: context,
             title: "Delete ${selection.length} item(s)?",
             content: "This action cannot be undone.",
             confirmText: "Delete",
-            confirmColor: Theme.of(context).colorScheme.error,
-            onConfirmColor: Theme.of(context).colorScheme.onError,
+            confirmColor: backgroundColor,
+            onConfirmColor: foregroundColor,
             onConfirm: () async {
               await operation.executeOn(ref);
             },
           );
         },
         style: FilledButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.onError,
-          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: foregroundColor,
+          backgroundColor: backgroundColor,
         ),
         icon: const Icon(Icons.delete_outline, size: 16),
-        label: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              selection.length > 1 ? "Delete (${selection.length})" : "Delete",
-            ),
-            if (operation.shortcut.canInvoke) ...[
-              SizedBox(width: context.spacing.space2),
-              RotatingShortcuts(
-                shortcuts: operation.shortcut.shortcuts,
-                style: KeyStyle.outline,
-              ),
-            ],
-          ],
+        label: Text(
+          selection.length > 1 ? "Delete (${selection.length})" : "Delete",
         ),
       ),
     );
