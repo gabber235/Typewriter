@@ -318,10 +318,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                 );
                 controller.preview(result);
               },
-              child: MouseRegion(
-                onEnter: (_) => controller.preview(result),
-                child: child,
-              ),
+              child: child,
             ),
           ),
         ),

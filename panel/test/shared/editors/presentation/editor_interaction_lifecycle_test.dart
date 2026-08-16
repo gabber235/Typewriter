@@ -135,7 +135,29 @@ void main() {
     expect(source.commitCount, 1);
   });
 
-  testWidgets("search Escape restores preview without a commit", (
+  testWidgets("search Escape commits the current preview", (tester) async {
+    final source = await tester.pumpTypedEditor(
+      type: const StringType(),
+      value: const StringValue("Alpha"),
+      presentation: searchTestPresentation(),
+    );
+
+    await tester.tap(find.bySemanticsLabel("Activate search input"));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "");
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(source.cancelCount, 0);
+    expect(source.commitCount, 1);
+    expect(source.rootValue, const StringValue("Beta"));
+  });
+
+  testWidgets("search Ctrl+Escape restores the interaction origin", (
     tester,
   ) async {
     final source = await tester.pumpTypedEditor(
@@ -146,9 +168,14 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel("Activate search input"));
     await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "");
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pumpAndSettle();
 
     expect(source.cancelCount, 1);
@@ -156,7 +183,9 @@ void main() {
     expect(source.rootValue, const StringValue("Alpha"));
   });
 
-  testWidgets("color picker close commits and Escape cancels", (tester) async {
+  testWidgets("color picker Escape commits and Ctrl+Escape cancels", (
+    tester,
+  ) async {
     final source = await tester.pumpTypedEditor(
       type: NamedType(standardTypeRefs.color),
       value: IntegerValue(BigInt.from(0xFF112233)),
@@ -190,7 +219,17 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
+    expect(source.cancelCount, 0);
+    expect(source.commitCount, 2);
+
+    await tester.tap(swatch);
+    await tester.pumpAndSettle();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+
     expect(source.cancelCount, 1);
-    expect(source.commitCount, 1);
+    expect(source.commitCount, 2);
   });
 }

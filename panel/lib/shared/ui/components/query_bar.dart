@@ -17,6 +17,7 @@ class QueryBar extends HookWidget {
     this.onDone,
     this.onInputFocus,
     this.onDismiss,
+    this.onCancel,
     this.textFieldActions,
     this.selectAllOnFocus = false,
     this.enabled = true,
@@ -35,6 +36,7 @@ class QueryBar extends HookWidget {
   final ValueChanged<String>? onDone;
   final VoidCallback? onInputFocus;
   final VoidCallback? onDismiss;
+  final VoidCallback? onCancel;
   final List<ActionShortcut>? textFieldActions;
   final bool selectAllOnFocus;
   final bool enabled;
@@ -300,6 +302,7 @@ class QueryBar extends HookWidget {
                 readOnly: readOnly,
                 onInputFocus: onInputFocus,
                 onDismiss: onDismiss,
+                onCancel: onCancel,
                 onChanged: (value) {
                   dismissedSignature.value = null;
                   onQueryChanged(value);

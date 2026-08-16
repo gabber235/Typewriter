@@ -248,6 +248,11 @@ class PresentationSearchInput extends HookConsumerWidget {
         onDismiss: () {
           explicitExit.value = true;
           validationMessage.value = null;
+          finish();
+        },
+        onCancel: () {
+          explicitExit.value = true;
+          validationMessage.value = null;
           finish(cancel: true);
         },
         onDone: (controller) {
@@ -265,7 +270,7 @@ class PresentationSearchInput extends HookConsumerWidget {
             return;
           }
           if (!acceptCustom(controller)) {
-            finish(cancel: true);
+            finish();
             return;
           }
           finish();
@@ -277,7 +282,7 @@ class PresentationSearchInput extends HookConsumerWidget {
             selectResult(preview, commit: true);
           } else if (element.selectionMode == SearchSelectionMode.single &&
               !acceptCustom(controller)) {
-            finish(restoreFocus: false, cancel: true);
+            finish(restoreFocus: false);
           } else {
             finish(restoreFocus: false);
           }
