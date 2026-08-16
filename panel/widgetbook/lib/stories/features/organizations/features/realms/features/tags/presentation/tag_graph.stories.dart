@@ -17,19 +17,3 @@ Widget tagGraphUseCase(BuildContext context) {
     child: const InspectorScaffold(child: TagGraph()),
   );
 }
-
-@widgetbook.UseCase(name: "Empty", type: TagGraph)
-Widget tagGraphEmptyUseCase(BuildContext context) {
-  return FakeApp(
-    overrides: [...tagsProviderOverrides(state: DisplayState.noItems)],
-    child: const InspectorScaffold(child: TagGraph()),
-  );
-}
-
-@widgetbook.UseCase(name: "Loading", type: TagGraph)
-Widget tagGraphLoadingUseCase(BuildContext context) {
-  return FakeApp(
-    overrides: [...tagsProviderOverrides(state: DisplayState.loading)],
-    child: const InspectorScaffold(child: TagGraph()),
-  );
-}
