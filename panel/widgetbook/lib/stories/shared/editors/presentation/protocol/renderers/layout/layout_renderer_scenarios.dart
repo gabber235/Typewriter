@@ -171,7 +171,7 @@ final layoutRendererScenarios = [
         ),
       ),
       header: PresentationHeader(
-        title: "Quest conditions".asStringLiteral,
+        title: "Quest conditions".asStringLiteral.asHeaderTitle,
         description: "Conditions determine when this quest becomes available."
             .asStringLiteral,
         initiallyExpanded: true,
@@ -232,7 +232,7 @@ final layoutRendererScenarios = [
       "spacer",
       PresentationElement.spacer(height: integerLiteral(32)),
       header: PresentationHeader(
-        title: "Vertical spacer".asStringLiteral,
+        title: "Vertical spacer".asStringLiteral.asHeaderTitle,
         description: "The empty area below this header is 32 pixels high."
             .asStringLiteral,
       ),

@@ -39,17 +39,113 @@ void main() {
         final box = tester.renderObject<RenderBox>(find.byWidget(chip));
         expect(box.size.width, lessThanOrEqualTo(400));
       }
-
-      await tester.tap(find.text("Inheritance path"));
-      await tester.pumpAndSettle();
-
-      expect(find.text("Inheritance path"), findsOneWidget);
-      expect(find.text(directTag.name), findsNWidgets(2));
-      expect(find.text(inheritedTag.name), findsNWidgets(2));
-      expect(find.text("›"), findsOneWidget);
-      expect(find.byType(Chip), findsNWidgets(4));
+      expect(find.text("Inheritance path"), findsNothing);
+      expect(find.text(directTag.name), findsOneWidget);
+      expect(find.text(inheritedTag.name), findsOneWidget);
     },
   );
+
+  testWidgets("branching Tags use a collapsed bordered section", (
+    tester,
+  ) async {
+    final directTag = _tag(
+      "tag:direct",
+      name: "Direct Tag",
+      parents: ["tag:first", "tag:second"],
+    );
+    final first = _tag("tag:first", name: "First parent");
+    final second = _tag("tag:second", name: "Second parent");
+
+    await tester.pumpTestApp(
+      child: Center(
+        child: SizedBox(
+          width: 400,
+          child: _renderer([directTag, first, second], [directTag.tagId.id]),
+        ),
+      ),
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text("Inheritance path"), findsNothing);
+    expect(find.text(directTag.name), findsOneWidget);
+    expect(find.text(first.name), findsNothing);
+    expect(find.text(first.name, skipOffstage: false), findsOneWidget);
+    expect(find.text(second.name, skipOffstage: false), findsOneWidget);
+
+    await tester.tap(find.text(directTag.name));
+    await tester.pumpAndSettle();
+
+    expect(find.text(first.name), findsOneWidget);
+    expect(find.text(second.name), findsOneWidget);
+  });
+
+  testWidgets("shared branching ancestors repeat with independent expansion", (
+    tester,
+  ) async {
+    final firstRoot = _tag(
+      "tag:firstRoot",
+      name: "First root",
+      parents: ["tag:shared"],
+    );
+    final secondRoot = _tag(
+      "tag:secondRoot",
+      name: "Second root",
+      parents: ["tag:shared"],
+    );
+    final shared = _tag(
+      "tag:shared",
+      name: "Shared parent",
+      parents: ["tag:firstLeaf", "tag:secondLeaf"],
+    );
+    final firstLeaf = _tag("tag:firstLeaf", name: "First leaf");
+    final secondLeaf = _tag("tag:secondLeaf", name: "Second leaf");
+    late StateSetter rebuild;
+    var revision = firstRoot.revision;
+
+    await tester.pumpTestApp(
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          rebuild = setState;
+          return Center(
+            child: SizedBox(
+              width: 400,
+              child: _renderer(
+                [
+                  firstRoot.copyWith(revision: revision),
+                  secondRoot,
+                  shared,
+                  firstLeaf,
+                  secondLeaf,
+                ],
+                [firstRoot.tagId.id, secondRoot.tagId.id],
+              ),
+            ),
+          );
+        },
+      ),
+      settle: false,
+    );
+    await tester.pump();
+
+    expect(find.text(shared.name), findsNWidgets(2));
+    expect(find.text(firstLeaf.name), findsNothing);
+    expect(find.text(firstLeaf.name, skipOffstage: false), findsNWidgets(2));
+
+    await tester.tap(find.text(shared.name).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text(firstLeaf.name), findsOneWidget);
+    expect(find.text(secondLeaf.name), findsOneWidget);
+    expect(find.text(firstLeaf.name, skipOffstage: false), findsNWidgets(2));
+
+    rebuild(() => revision++);
+    await tester.pump();
+
+    expect(find.text(firstLeaf.name), findsOneWidget);
+    expect(find.text(secondLeaf.name), findsOneWidget);
+  });
 
   testWidgets("hides Effective Tags when the Book has no direct Tags", (
     tester,

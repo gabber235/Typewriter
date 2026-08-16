@@ -170,7 +170,7 @@ PresentationNode _serviceListRow(String id, String label, String field) =>
     PresentationNode(
       id: id,
       properties: const PresentationProperties(readOnly: true),
-      header: PresentationHeader(title: label.asStringLiteral),
+      header: PresentationHeader(title: label.asStringLiteral.asHeaderTitle),
       element: SectionElement(
         child: PresentationNode(
           id: "$id.values",
@@ -203,7 +203,7 @@ PresentationNode _serviceTextRow(
 ) => PresentationNode(
   id: id,
   properties: const PresentationProperties(readOnly: true),
-  header: PresentationHeader(title: label.asStringLiteral),
+  header: PresentationHeader(title: label.asStringLiteral.asHeaderTitle),
   element: SectionElement(
     child: PresentationNode(id: "$id.value", element: TextElement(value)),
   ),

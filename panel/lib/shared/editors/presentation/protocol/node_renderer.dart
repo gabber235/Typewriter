@@ -41,10 +41,16 @@ class PresentationNodeRenderer extends StatelessWidget {
         ? child
         : PresentationHeaderChrome(
             nodeId: node.id,
-            expansionKey: HeaderExpansionKey.node(
-              nodeId: node.id,
-              binding: headerBinding,
-            ),
+            expansionKey: renderScope.expansionIdentity == null
+                ? HeaderExpansionKey.node(
+                    nodeId: node.id,
+                    binding: headerBinding,
+                  )
+                : HeaderExpansionKey.instance((
+                    renderScope.expansionIdentity,
+                    node.id,
+                    headerBinding,
+                  )),
             header: header,
             scope: renderScope,
             contained: node.element is SectionElement,
@@ -136,6 +142,8 @@ extension on PresentationElement {
       final StackElement element => element.render(scope),
       final GridElement element => element.render(scope),
       final SectionElement element => element.render(scope),
+      final PaddingElement element => element.render(scope),
+      final PresentationSlotElement element => element.render(context, scope),
       final TabsElement element => element.render(scope),
       final DividerElement element => element.render(),
       final SpacerElement element => element.render(scope),

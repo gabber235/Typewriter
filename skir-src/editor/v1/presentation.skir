@@ -96,9 +96,14 @@ enum HeaderItem(810900064) {
   reorder_handle: HeaderReorderHandleItem = 3;
 }
 
+enum PresentationHeaderTitle(810900105) {
+  text: TypedExpression = 1;
+  presentation: PresentationNode = 2;
+}
+
 struct PresentationHeader(810900065) {
   binding: BindingRef? = 0;
-  title: TypedExpression? = 1;
+  title: PresentationHeaderTitle? = 1;
   description: TypedExpression? = 2;
   initially_expanded: bool? = 3;
   items: [HeaderItem] = 4;
@@ -163,6 +168,18 @@ enum PresentationBorder(810900104) {
 struct SectionLayout(810900008) {
   child: PresentationNode = 0;
   border: PresentationBorder? = 1;
+}
+
+struct PaddingLayout(810900106) {
+  child: PresentationNode = 0;
+  top: float64 = 1;
+  start: float64 = 2;
+  end: float64 = 3;
+  bottom: float64 = 4;
+}
+
+struct PresentationSlotElement(810900107) {
+  slot_id: string = 0;
 }
 
 struct TabItem(810900009) {
@@ -260,12 +277,9 @@ struct CollectionGraphElement(810900093) {
   roots: BindingRef = 1;
   relation_id: string = 2;
   direction: CollectionGraphDirection = 3;
-  root_rows: SequencePresentation? = 4;
-  reached_rows: SequencePresentation? = 5;
-  paths: SequencePresentation? = 6;
-  path_binding_id: BindingId = 7;
-  maximum_depth: int32? = 8;
-  deduplicate: bool = 9;
+  maximum_depth: int32? = 4;
+  node: PresentationNode = 5;
+  children_binding_id: BindingId = 6;
 }
 
 struct BoundControl(810900021) {
@@ -544,6 +558,8 @@ struct TooltipElement(810900033) {
 enum PresentationElement(810900034) {
   children: ChildrenElement = 1;
   section: SectionLayout = 7;
+  padding: PaddingLayout = 48;
+  slot: PresentationSlotElement = 49;
   tabs: TabsLayout = 9;
   divider = 10;
   spacer: SpacerLayout = 11;

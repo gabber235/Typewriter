@@ -152,16 +152,21 @@ void main() {
       expect(summary.presentation.layout, isA<PresentationWrapLayout>());
       expect(summary.presentation.empty, isNotNull);
       _expectTagChip(summaryLookup.found.element as ChipElement);
-      _expectTagChip(graph.rootRows!.item.element as ChipElement);
-      _expectTagChip(graph.reachedRows!.item.element as ChipElement);
-
-      final path = graph.paths!.item.element as SectionElement;
-      final pathItems = path.child.element as RepeatedElement;
-      expect(pathItems.presentation.layout, isA<PresentationWrapLayout>());
-      expect(pathItems.presentation.separator, isNotNull);
-      final pathLookup =
-          pathItems.presentation.item.element as CollectionLookupElement;
-      _expectTagChip(pathLookup.found.element as ChipElement);
+      expect(graph.childrenBindingId, const BindingId(45));
+      expect(graph.node.presentationSlotIds, {"tag.inheritance.children"});
+      final branching = graph.node.element as ConditionalElement;
+      final branchSpacing = branching.whenTrue.element as PaddingElement;
+      final branch = branchSpacing.child.element as SectionElement;
+      expect(branch.border, isA<PresentationBorderSides>());
+      final branchBorder = branch.border! as PresentationBorderSides;
+      expect(branchBorder.top, isNull);
+      expect(branchBorder.start?.width, 4);
+      expect(branchBorder.end, isNull);
+      expect(branchBorder.bottom, isNull);
+      final branchTitle = branchSpacing.child.header!.title;
+      expect(branchTitle, isA<PresentationHeaderNodeTitle>());
+      final chipNode = (branchTitle! as PresentationHeaderNodeTitle).node;
+      _expectTagChip(chipNode.element as ChipElement);
 
       expect(layoutNode.header!.initiallyExpanded, isFalse);
       expect(layoutGrid.columns, 2);

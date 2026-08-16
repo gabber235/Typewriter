@@ -67,6 +67,20 @@ enum HeaderActionTone { neutral, destructive }
 enum HeaderActionPlacement { beforeTitle, afterTitle, end }
 
 @freezed
+sealed class PresentationHeaderTitle with _$PresentationHeaderTitle {
+  const factory PresentationHeaderTitle.text(TypedExpression value) =
+      PresentationHeaderTextTitle;
+
+  const factory PresentationHeaderTitle.presentation(PresentationNode node) =
+      PresentationHeaderNodeTitle;
+}
+
+extension PresentationHeaderTextAuthoring on TypedExpression {
+  PresentationHeaderTitle get asHeaderTitle =>
+      PresentationHeaderTitle.text(this);
+}
+
+@freezed
 abstract class HeaderActionConfirmation with _$HeaderActionConfirmation {
   const factory HeaderActionConfirmation({
     required TypedExpression title,
@@ -118,7 +132,7 @@ sealed class HeaderItem with _$HeaderItem {
 abstract class PresentationHeader with _$PresentationHeader {
   const factory PresentationHeader({
     BindingReference? binding,
-    TypedExpression? title,
+    PresentationHeaderTitle? title,
     TypedExpression? description,
     bool? initiallyExpanded,
     @Default([]) List<HeaderItem> items,

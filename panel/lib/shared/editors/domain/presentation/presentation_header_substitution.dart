@@ -12,6 +12,19 @@ extension on PresentationHeader {
   );
 }
 
+extension on PresentationHeaderTitle? {
+  PresentationHeaderTitle? _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => switch (this) {
+    PresentationHeaderTextTitle(:final value) => PresentationHeaderTitle.text(
+      value.substituteTypes(substitutions),
+    ),
+    PresentationHeaderNodeTitle(:final node) =>
+      PresentationHeaderTitle.presentation(node.substitute(substitutions)),
+    null => null,
+  };
+}
+
 extension on HeaderItem {
   HeaderItem _substituteTypes(Map<String, TypeExpression> substitutions) =>
       switch (this) {

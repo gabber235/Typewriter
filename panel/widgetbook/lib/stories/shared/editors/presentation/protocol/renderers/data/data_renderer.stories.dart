@@ -271,7 +271,7 @@ final conditionalRendererScenario = RendererStoryScenario(
                         ),
                       ),
                       header: PresentationHeader(
-                        title: "Timed dialogue".asStringLiteral,
+                        title: "Timed dialogue".asStringLiteral.asHeaderTitle,
                       ),
                     ),
                     whenFalse: storyNode(
@@ -286,7 +286,9 @@ final conditionalRendererScenario = RendererStoryScenario(
                         ),
                       ),
                       header: PresentationHeader(
-                        title: "Timed dialogue hidden".asStringLiteral,
+                        title: "Timed dialogue hidden"
+                            .asStringLiteral
+                            .asHeaderTitle,
                         description:
                             "The false branch replaces the field editor while preserving its bound values."
                                 .asStringLiteral,
@@ -442,7 +444,7 @@ final customRepeatedEmptyScenario = RendererStoryScenario(
                     ),
                   ),
                   header: PresentationHeader(
-                    title: "No objectives yet".asStringLiteral,
+                    title: "No objectives yet".asStringLiteral.asHeaderTitle,
                     description:
                         "The empty presentation replaces the objective template."
                             .asStringLiteral,

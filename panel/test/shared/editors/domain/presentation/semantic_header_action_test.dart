@@ -5,7 +5,7 @@ void main() {
   group("header composition", () {
     test("outer metadata and items override matching inner variants", () {
       final inner = PresentationHeader(
-        title: "Inner".asStringLiteral,
+        title: "Inner".asStringLiteral.asHeaderTitle,
         description: "Description".asStringLiteral,
         initiallyExpanded: false,
         items: [
@@ -21,13 +21,13 @@ void main() {
         ],
       );
       final outer = PresentationHeader(
-        title: "Outer".asStringLiteral,
+        title: "Outer".asStringLiteral.asHeaderTitle,
         items: [_action("outer", placement: HeaderActionPlacement.afterTitle)],
       );
 
       final merged = outer.mergeInner(inner);
 
-      expect(merged.title, "Outer".asStringLiteral);
+      expect(merged.title, "Outer".asStringLiteral.asHeaderTitle);
       expect(merged.description, "Description".asStringLiteral);
       expect(merged.initiallyExpanded, isFalse);
       final item = merged.items.single as HeaderButtonItem;

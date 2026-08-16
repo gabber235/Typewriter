@@ -16,7 +16,7 @@ void main() {
           id: "content",
           element: TextElement("Body".asStringLiteral),
           header: PresentationHeader(
-            title: "Details".asStringLiteral,
+            title: "Details".asStringLiteral.asHeaderTitle,
             initiallyExpanded: false,
           ),
         ),
@@ -52,13 +52,48 @@ void main() {
     expect(find.byIcon(Icons.expand_more), findsOneWidget);
   });
 
+  testWidgets("renders a presentation node as the folding header title", (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const StringType(),
+        value: const StringValue("Body"),
+        presentation: PresentationNode(
+          id: "richHeader",
+          header: PresentationHeader(
+            title: PresentationHeaderTitle.presentation(
+              PresentationNode(
+                id: "richHeader.title",
+                element: ChipElement(label: "Rich title".asStringLiteral),
+              ),
+            ),
+            initiallyExpanded: false,
+          ),
+          element: TextElement("Body".asStringLiteral),
+        ),
+      ),
+    );
+
+    expect(find.byType(Chip), findsOneWidget);
+    expect(find.bySemanticsLabel("Rich title"), findsOneWidget);
+    expect(find.text("Body"), findsNothing);
+
+    await tester.tap(find.byType(Chip));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Body"), findsOneWidget);
+    semantics.dispose();
+  });
+
   testWidgets("combines headers through a typed field binding", (tester) async {
     const list = ListType(element: StringType());
     final presentation = PresentationNode(
       id: "outer",
       header: PresentationHeader(
         binding: _root,
-        title: "Combined".asStringLiteral,
+        title: "Combined".asStringLiteral.asHeaderTitle,
       ),
       element: TypedFieldElement(
         binding: _root,
@@ -487,9 +522,11 @@ void main() {
           id: "value",
           header: PresentationHeader(
             binding: BindingReference(bindingId: BindingId(2)),
-            title: TypedExpression(
-              resultType: StringType(),
-              expression: LiteralExpression(StringValue("Value details")),
+            title: PresentationHeaderTitle.text(
+              TypedExpression(
+                resultType: StringType(),
+                expression: LiteralExpression(StringValue("Value details")),
+              ),
             ),
             initiallyExpanded: false,
           ),
@@ -560,7 +597,7 @@ void main() {
           id: "value",
           header: PresentationHeader(
             binding: const BindingReference(bindingId: BindingId(2)),
-            title: "Value details".asStringLiteral,
+            title: "Value details".asStringLiteral.asHeaderTitle,
             initiallyExpanded: false,
             items: [
               HeaderButtonItem(
@@ -609,7 +646,7 @@ void main() {
       id: "invalid.action",
       element: TextElement("Usable content".asStringLiteral),
       header: PresentationHeader(
-        title: "Header".asStringLiteral,
+        title: "Header".asStringLiteral.asHeaderTitle,
         items: [
           HeaderButtonItem(
             id: const HeaderItemId(namespace: "test", name: "invalid"),
@@ -650,7 +687,7 @@ void main() {
       id: "invalid.reorder",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Header".asStringLiteral,
+        title: "Header".asStringLiteral.asHeaderTitle,
         items: [
           HeaderReorderHandleItem(
             id: listItemReorderHeaderItemId,

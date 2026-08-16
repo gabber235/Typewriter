@@ -54,7 +54,7 @@ final inputRendererVariantScenarios = [
       PresentationElement.toggleInput(storyControl("Repeatable")),
       header: PresentationHeader(
         binding: rootBinding,
-        title: "Repeatable".asStringLiteral,
+        title: "Repeatable".asStringLiteral.asHeaderTitle,
         description: "Allow players to repeat this quest.".asStringLiteral,
       ),
     ),
@@ -72,7 +72,7 @@ final inputRendererVariantScenarios = [
       ),
       header: PresentationHeader(
         binding: rootBinding,
-        title: "Published".asStringLiteral,
+        title: "Published".asStringLiteral.asHeaderTitle,
         description: "This setting is controlled by the realm.".asStringLiteral,
       ),
     ),

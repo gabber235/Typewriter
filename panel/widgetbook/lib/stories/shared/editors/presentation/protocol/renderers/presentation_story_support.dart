@@ -46,7 +46,7 @@ PresentationNode storyInput(
   header: showHeader
       ? PresentationHeader(
           binding: binding,
-          title: label.asStringLiteral,
+          title: label.asStringLiteral.asHeaderTitle,
           description: description?.asStringLiteral,
         )
       : null,

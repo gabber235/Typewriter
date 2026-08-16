@@ -52,12 +52,6 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
         ),
       );
 
-  TypeResult<SequencePresentation?> _optionalSequence(
-    wire.SequencePresentation? value,
-  ) => value == null
-      ? const TypeResult.success(null)
-      : _sequence(value).mapValue((value) => value);
-
   TypeResult<PresentationElement> _scoped(wire.ScopedBindingElement value) {
     return expressions
         .binding(value.binding)
@@ -107,15 +101,8 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
       return invalidWire("Collection graph direction is unknown");
     }
     final roots = expressions.binding(value.roots);
-    final rootRows = _optionalSequence(value.rootRows);
-    final reachedRows = _optionalSequence(value.reachedRows);
-    final paths = _optionalSequence(value.paths);
-    final diagnostics = [
-      ...roots.diagnostics,
-      ...rootRows.diagnostics,
-      ...reachedRows.diagnostics,
-      ...paths.diagnostics,
-    ];
+    final node = decodeNode(value.node);
+    final diagnostics = [...roots.diagnostics];
     return diagnostics.isEmpty
         ? TypeResult.success(
             CollectionGraphElement(
@@ -123,12 +110,9 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
               roots: roots.valueOrNull!,
               relation: PresentationCollectionRelationId(value.relationId),
               direction: direction,
-              rootRows: rootRows.valueOrNull,
-              reachedRows: reachedRows.valueOrNull,
-              paths: paths.valueOrNull,
-              pathBindingId: BindingId(value.pathBindingId.value),
+              node: node,
+              childrenBindingId: BindingId(value.childrenBindingId.value),
               maximumDepth: value.maximumDepth,
-              deduplicate: value.deduplicate,
             ),
           )
         : TypeResult.failure(diagnostics);

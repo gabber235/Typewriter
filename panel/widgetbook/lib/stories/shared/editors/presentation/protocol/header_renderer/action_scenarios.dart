@@ -15,7 +15,7 @@ SemanticHeaderScenario actionOverflowScenario() => (
     id: "actions",
     header: PresentationHeader(
       binding: _root,
-      title: "Quest controls".asStringLiteral,
+      title: "Quest controls".asStringLiteral.asHeaderTitle,
       description:
           "Resize the canvas to see lower priority actions move into the menu."
               .asStringLiteral,
@@ -86,7 +86,7 @@ SemanticHeaderScenario actionStatesScenario() => (
     id: "states",
     header: PresentationHeader(
       binding: _root,
-      title: "Action states".asStringLiteral,
+      title: "Action states".asStringLiteral.asHeaderTitle,
       description:
           "Visible, disabled, hidden, destructive, and invalid actions are resolved independently."
               .asStringLiteral,

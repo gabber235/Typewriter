@@ -49,6 +49,8 @@ final class SkirPresentationDecoder {
   ) => switch (value) {
     wire.PresentationElement_childrenWrapper(:final value) => _children(value),
     wire.PresentationElement_sectionWrapper(:final value) => _section(value),
+    wire.PresentationElement_paddingWrapper(:final value) => _padding(value),
+    wire.PresentationElement_slotWrapper(:final value) => _slot(value),
     wire.PresentationElement_tabsWrapper(:final value) => _tabs(value),
     wire.PresentationElement.divider => const TypeResult.success(
       DividerElement(),

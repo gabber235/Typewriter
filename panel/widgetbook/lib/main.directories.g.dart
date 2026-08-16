@@ -51,6 +51,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_graph.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_inheritance_presentation.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_node.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_selector.stories.dart'
@@ -687,6 +689,42 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     builder:
                                         _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_graph_stories
                                             .tagGraphUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance branching',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceBranchingUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance keyboard interaction',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceKeyboardUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance leaf',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceLeafUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance narrow layout',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceNarrowUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance shared ancestor',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceSharedUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance unary chain',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceUnaryUseCase,
                                   ),
                                 ],
                               ),

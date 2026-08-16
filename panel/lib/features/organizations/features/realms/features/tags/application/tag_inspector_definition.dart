@@ -106,7 +106,7 @@ final _tagInspectorPresentation = PresentationDefinition(
 final _tagLayoutPresentation = PresentationNode(
   id: "tag.layout",
   header: PresentationHeader(
-    title: "Layout".asStringLiteral,
+    title: "Layout".asStringLiteral.asHeaderTitle,
     initiallyExpanded: false,
   ),
   element: SectionElement(

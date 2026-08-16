@@ -193,7 +193,7 @@ class _HeaderRow extends StatefulWidget {
     required this.expanded,
   });
 
-  final String title;
+  final PresentationHeaderTitle? title;
   final List<_ResolvedHeaderItem> items;
   final PresentationRenderScope scope;
   final bool collapsible;
@@ -229,7 +229,16 @@ class _HeaderRowState extends State<_HeaderRow> {
       onVisibleEndCountChanged: _handleVisibleEndCountChanged,
       children: [
         ...beforeTitleWidgets,
-        SectionTitle(title: widget.title),
+        switch (widget.title) {
+          PresentationHeaderTextTitle(:final value) => SectionTitle(
+            title: widget.scope.expressionText(value),
+          ),
+          PresentationHeaderNodeTitle(:final node) => PresentationNodeRenderer(
+            node: node,
+            scope: widget.scope,
+          ),
+          null => const SizedBox.shrink(),
+        },
         for (final item in afterTitle) item.inlineWidget(context, widget.scope),
         for (final item in end) item.inlineWidget(context, widget.scope),
         if (end.isNotEmpty)

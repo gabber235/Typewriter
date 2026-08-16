@@ -4,8 +4,7 @@ const _tagSearchQueryBindingId = BindingId(41);
 const _tagSearchSummaryBindingId = BindingId(42);
 const _tagSearchResultBindingId = BindingId(43);
 const _tagSummaryItemBindingId = BindingId(44);
-const _tagPathItemBindingId = BindingId(45);
-const _tagPathBindingId = BindingId(46);
+const _tagChildrenBindingId = BindingId(45);
 
 PresentationNode tagReferenceSearch({
   required String id,
@@ -55,7 +54,7 @@ PresentationNode effectiveTagGraph({
     whenTrue: PresentationNode(
       id: "$id.section",
       header: PresentationHeader(
-        title: title.asStringLiteral,
+        title: title.asStringLiteral.asHeaderTitle,
         initiallyExpanded: true,
       ),
       element: SectionElement(
@@ -66,25 +65,8 @@ PresentationNode effectiveTagGraph({
             roots: roots,
             relation: tagInheritsRelationId,
             direction: CollectionGraphDirection.forward,
-            rootRows: SequencePresentation(
-              item: _tagChip("$id.direct"),
-              layout: const PresentationChildrenLayout.wrap(
-                spacing: 8,
-                runSpacing: 8,
-              ),
-            ),
-            reachedRows: SequencePresentation(
-              item: _tagChip("$id.inherited"),
-              layout: const PresentationChildrenLayout.wrap(
-                spacing: 8,
-                runSpacing: 8,
-              ),
-            ),
-            paths: SequencePresentation(
-              item: _tagPath(id),
-              layout: const PresentationChildrenLayout.column(spacing: 8),
-            ),
-            pathBindingId: _tagPathBindingId,
+            node: _tagInheritanceNode(id),
+            childrenBindingId: _tagChildrenBindingId,
           ),
         ),
       ),
@@ -119,43 +101,91 @@ PresentationNode _directTagSummary(String id) => PresentationNode(
   ),
 );
 
-PresentationNode _tagPath(String id) => PresentationNode(
-  id: "$id.path",
-  header: PresentationHeader(
-    title: "Inheritance path".asStringLiteral,
-    initiallyExpanded: false,
-  ),
-  element: SectionElement(
-    child: PresentationNode(
-      id: "$id.path.items",
-      element: RepeatedElement(
-        source: _bindingExpression(
-          _tagPathBindingId,
-          ListType(element: tagReferenceType),
+PresentationNode _tagInheritanceNode(String id) {
+  final children = _bindingExpression(
+    _tagChildrenBindingId,
+    ListType(element: tagCollectionRowType),
+  );
+  final slotId = "$id.children";
+  return PresentationNode(
+    id: "$id.node",
+    element: ConditionalElement(
+      condition: children.length().greaterThanOrEqual(2),
+      whenTrue: _tagBranch(id, slotId),
+      whenFalse: PresentationNode(
+        id: "$id.flattened",
+        element: ConditionalElement(
+          condition: children.length().greaterThanOrEqual(1),
+          whenTrue: _tagUnaryNode(id, slotId),
+          whenFalse: _tagLeafNode(id),
         ),
-        itemBindingId: _tagPathItemBindingId,
-        presentation: SequencePresentation(
-          layout: const PresentationChildrenLayout.wrap(
-            spacing: 8,
-            runSpacing: 8,
-          ),
-          separator: PresentationNode(
-            id: "$id.path.separator",
-            element: TextElement("›".asStringLiteral),
-          ),
-          item: PresentationNode(
-            id: "$id.path.lookup",
-            element: CollectionLookupElement(
-              sourceId: tagCollectionSourceId,
-              key: const BindingReference(bindingId: _tagPathItemBindingId),
-              found: _tagChip("$id.path.tag"),
-              missing: _missingTag("$id.path.missing"),
+      ),
+    ),
+  );
+}
+
+PresentationNode _tagLeafNode(String id) => PresentationNode(
+  id: "$id.leaf",
+  element: PaddingElement(bottom: 8, child: _tagChip("$id.leaf.chip")),
+);
+
+PresentationNode _tagUnaryNode(String id, String slotId) => PresentationNode(
+  id: "$id.unary",
+  element: PaddingElement(
+    bottom: 8,
+    child: PresentationNode(
+      id: "$id.unary.content",
+      element: ColumnElement(
+        spacing: 8,
+        children: [
+          _tagChip("$id.unary.chip"),
+          PresentationNode(
+            id: "$id.unary.children.padding",
+            element: PaddingElement(
+              start: 16,
+              child: _tagChildrenSlot("$id.unary.children", slotId),
             ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+
+PresentationNode _tagBranch(String id, String slotId) => PresentationNode(
+  id: "$id.branch.spacing",
+  element: PaddingElement(
+    bottom: 8,
+    child: PresentationNode(
+      id: "$id.branch",
+      header: PresentationHeader(
+        title: PresentationHeaderTitle.presentation(
+          _tagChip("$id.branch.chip"),
+        ),
+        initiallyExpanded: false,
+      ),
+      element: SectionElement(
+        border: PresentationBorder.sides(
+          start: PresentationBorderSide(
+            color: _tagRowField("color", NamedType(standardTypeRefs.color)),
+            width: 4,
+          ),
+        ),
+        child: PresentationNode(
+          id: "$id.branch.children.padding",
+          element: PaddingElement(
+            start: 8,
+            child: _tagChildrenSlot("$id.branch.children", slotId),
           ),
         ),
       ),
     ),
   ),
+);
+
+PresentationNode _tagChildrenSlot(String id, String slotId) => PresentationNode(
+  id: id,
+  element: PresentationSlotElement(slotId: slotId),
 );
 
 PresentationNode _tagChip(String id) => PresentationNode(

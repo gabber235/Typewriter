@@ -144,6 +144,8 @@ abstract class PresentationRenderScope with _$PresentationRenderScope {
     @Default({})
     Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts,
     @Default({}) Set<(String, BindingReference?)> suppressedHeaders,
+    @Default({}) Map<String, Widget> presentationSlots,
+    Object? expansionIdentity,
     @Default(true) bool enabled,
     @Default(false) bool readOnly,
     @Default("local") String historyNamespace,

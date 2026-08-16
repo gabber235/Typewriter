@@ -61,6 +61,8 @@ final class SkirPresentationEncoder {
         StackElement() ||
         GridElement() => _children(value),
         SectionElement() => _section(value),
+        PaddingElement() => _padding(value),
+        PresentationSlotElement() => _slot(value),
         TabsElement() => _tabs(value),
         DividerElement() => const TypeResult.success(
           wire.PresentationElement.divider,

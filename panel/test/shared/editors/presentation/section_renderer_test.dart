@@ -14,7 +14,7 @@ void main() {
         PresentationNode(
           id: "section",
           header: PresentationHeader(
-            title: "Quest conditions".asStringLiteral,
+            title: "Quest conditions".asStringLiteral.asHeaderTitle,
             description: "Availability rules".asStringLiteral,
             initiallyExpanded: true,
           ),
@@ -93,6 +93,42 @@ void main() {
     expect(painter.textDirection, TextDirection.rtl);
     expect(painter.border.start.width, 3);
     expect(painter.border.end, isNull);
+  });
+
+  testWidgets("renders directional presentation padding", (tester) async {
+    await tester.pumpTestApp(
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: _renderer(
+          const PresentationNode(
+            id: "padding",
+            element: PaddingElement(
+              top: 1,
+              start: 12,
+              end: 4,
+              bottom: 2,
+              child: PresentationNode(
+                id: "padding.body",
+                element: TextElement(
+                  TypedExpression(
+                    resultType: StringType(),
+                    expression: LiteralExpression(StringValue("Padded")),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final padding = find.byWidgetPredicate(
+      (widget) =>
+          widget is Padding &&
+          widget.padding == const EdgeInsetsDirectional.fromSTEB(12, 1, 4, 2),
+    );
+    expect(padding, findsOneWidget);
+    expect(Directionality.of(tester.element(padding)), TextDirection.rtl);
   });
 }
 

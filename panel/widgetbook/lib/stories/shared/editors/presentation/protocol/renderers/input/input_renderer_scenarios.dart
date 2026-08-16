@@ -46,7 +46,7 @@ final inputRendererScenarios = [
       PresentationElement.toggleInput(storyControl("Enabled")),
       header: PresentationHeader(
         binding: rootBinding,
-        title: "Enabled".asStringLiteral,
+        title: "Enabled".asStringLiteral.asHeaderTitle,
         description:
             "Boolean controls live inside the compact header.".asStringLiteral,
       ),

@@ -15,7 +15,7 @@ void main() {
       id: "outer",
       header: PresentationHeader(
         binding: _root,
-        title: "Outer".asStringLiteral,
+        title: "Outer".asStringLiteral.asHeaderTitle,
         initiallyExpanded: true,
       ),
       element: ScopedBindingElement(
@@ -49,7 +49,7 @@ void main() {
       id: "outer",
       header: PresentationHeader(
         binding: _root,
-        title: "Record".asStringLiteral,
+        title: "Record".asStringLiteral.asHeaderTitle,
         initiallyExpanded: true,
       ),
       element: TypedFieldElement(
@@ -59,7 +59,7 @@ void main() {
           id: "field",
           header: PresentationHeader(
             binding: field,
-            title: "Field".asStringLiteral,
+            title: "Field".asStringLiteral.asHeaderTitle,
             initiallyExpanded: false,
           ),
           element: const DividerElement(),
@@ -88,7 +88,7 @@ void main() {
       id: "actions",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Actions".asStringLiteral,
+        title: "Actions".asStringLiteral.asHeaderTitle,
         items: [
           _action("hidden", 100, visible: false),
           _action("first", 10),
@@ -133,7 +133,7 @@ void main() {
       id: "responsive.actions",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Responsive".asStringLiteral,
+        title: "Responsive".asStringLiteral.asHeaderTitle,
         items: [
           _action("first", 30),
           _action("second", 20),
@@ -186,7 +186,7 @@ void main() {
       id: "placement",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Placement".asStringLiteral,
+        title: "Placement".asStringLiteral.asHeaderTitle,
         items: [
           _action("before", 1, placement: HeaderActionPlacement.beforeTitle),
           _toggle(
@@ -221,7 +221,7 @@ void main() {
         multiline: false,
       ),
       header: PresentationHeader(
-        title: "Value".asStringLiteral,
+        title: "Value".asStringLiteral.asHeaderTitle,
         items: [
           _action(
             "change",
@@ -256,7 +256,7 @@ void main() {
       id: "toggle.set",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Toggle".asStringLiteral,
+        title: "Toggle".asStringLiteral.asHeaderTitle,
         items: [
           _toggle(
             checked: const TypedExpression(
@@ -293,7 +293,7 @@ void main() {
       id: "toggle.realm",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Toggle".asStringLiteral,
+        title: "Toggle".asStringLiteral.asHeaderTitle,
         items: [
           _toggle(
             checked: _trueExpression,
@@ -343,7 +343,7 @@ void main() {
       id: "toggle.overflow",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Toggle".asStringLiteral,
+        title: "Toggle".asStringLiteral.asHeaderTitle,
         items: [
           _action("companion", 1),
           _toggle(
@@ -430,7 +430,7 @@ void main() {
       id: "toggle.disabled",
       element: const DividerElement(),
       header: PresentationHeader(
-        title: "Toggle".asStringLiteral,
+        title: "Toggle".asStringLiteral.asHeaderTitle,
         items: [
           _toggle(
             checked: checked,
@@ -464,7 +464,7 @@ void main() {
         multiline: false,
       ),
       header: PresentationHeader(
-        title: "Persistent".asStringLiteral,
+        title: "Persistent".asStringLiteral.asHeaderTitle,
         initiallyExpanded: false,
       ),
     );

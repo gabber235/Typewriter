@@ -22,10 +22,30 @@ extension PresentationNodeFailureLocalization on PresentationNode {
     return PresentationNode(
       id: id,
       properties: properties,
-      header: header,
+      header: header?._localizeFailures(context, budget, registry),
       element: element._localizeFailures(context, budget, registry),
     );
   }
+}
+
+extension on PresentationHeader {
+  PresentationHeader _localizeFailures(
+    ExpressionContext context,
+    ExpressionBudget budget,
+    TypeRegistry? registry,
+  ) => PresentationHeader(
+    binding: binding,
+    title: switch (title) {
+      PresentationHeaderNodeTitle(:final node) =>
+        PresentationHeaderTitle.presentation(
+          node.localizeFailures(context, registry: registry, budget: budget),
+        ),
+      final value => value,
+    },
+    description: description,
+    initiallyExpanded: initiallyExpanded,
+    items: items,
+  );
 }
 
 extension on PresentationElement {
@@ -72,6 +92,18 @@ extension on PresentationElement {
           budget: budget,
         ),
       ),
+      PaddingElement() => PaddingElement(
+        child: element.child.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+        top: element.top,
+        start: element.start,
+        end: element.end,
+        bottom: element.bottom,
+      ),
+      PresentationSlotElement() => element,
       TabsElement() => TabsElement(
         tabs: [
           for (final tab in element.tabs)

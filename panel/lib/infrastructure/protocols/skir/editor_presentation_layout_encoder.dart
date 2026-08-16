@@ -30,6 +30,22 @@ extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
         : TypeResult.failure(diagnostics);
   }
 
+  TypeResult<wire.PresentationElement> _padding(PaddingElement value) =>
+      encodeNode(value.child).mapValue(
+        (child) => wire.PresentationElement.createPadding(
+          child: child,
+          top: value.top,
+          start: value.start,
+          end: value.end,
+          bottom: value.bottom,
+        ),
+      );
+
+  TypeResult<wire.PresentationElement> _slot(PresentationSlotElement value) =>
+      TypeResult.success(
+        wire.PresentationElement.createSlot(slotId: value.slotId),
+      );
+
   TypeResult<wire.PresentationBorder?> _border(PresentationBorder? value) {
     if (value == null) return const TypeResult.success(null);
     return switch (value) {

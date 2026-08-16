@@ -184,6 +184,8 @@ extension RendererStoryElementKind on PresentationElement {
     StackElement() => RendererStoryKind.stack,
     GridElement() => RendererStoryKind.grid,
     SectionElement() => RendererStoryKind.section,
+    PaddingElement() => RendererStoryKind.section,
+    PresentationSlotElement() => RendererStoryKind.defaultPresentation,
     TabsElement() => RendererStoryKind.tabs,
     DividerElement() => RendererStoryKind.divider,
     SpacerElement() => RendererStoryKind.spacer,

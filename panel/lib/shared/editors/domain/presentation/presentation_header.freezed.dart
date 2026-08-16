@@ -208,7 +208,7 @@ return $default(_that.namespace,_that.name);case _:
 
 class _HeaderItemId extends HeaderItemId {
   const _HeaderItemId({required this.namespace, required this.name}): assert(namespace != "", 'Header item namespace must not be empty.'),assert(name != "", 'Header item name must not be empty.'),super._();
-  
+
 
 @override final  String namespace;
 @override final  String name;
@@ -334,7 +334,7 @@ as HeaderItemCommand,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get itemId {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
     return _then(_self.copyWith(itemId: value));
   });
@@ -477,7 +477,7 @@ return $default(_that.itemId,_that.command);case _:
 
 class _HeaderItemCommandId implements HeaderItemCommandId {
   const _HeaderItemCommandId({required this.itemId, required this.command});
-  
+
 
 @override final  HeaderItemId itemId;
 @override final  HeaderItemCommand command;
@@ -542,9 +542,319 @@ as HeaderItemCommand,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get itemId {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.itemId, (value) {
     return _then(_self.copyWith(itemId: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$PresentationHeaderTitle {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationHeaderTitle);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'PresentationHeaderTitle()';
+}
+
+
+}
+
+/// @nodoc
+class $PresentationHeaderTitleCopyWith<$Res>  {
+$PresentationHeaderTitleCopyWith(PresentationHeaderTitle _, $Res Function(PresentationHeaderTitle) __);
+}
+
+
+/// Adds pattern-matching-related methods to [PresentationHeaderTitle].
+extension PresentationHeaderTitlePatterns on PresentationHeaderTitle {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PresentationHeaderTextTitle value)?  text,TResult Function( PresentationHeaderNodeTitle value)?  presentation,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle() when text != null:
+return text(_that);case PresentationHeaderNodeTitle() when presentation != null:
+return presentation(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PresentationHeaderTextTitle value)  text,required TResult Function( PresentationHeaderNodeTitle value)  presentation,}){
+final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle():
+return text(_that);case PresentationHeaderNodeTitle():
+return presentation(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PresentationHeaderTextTitle value)?  text,TResult? Function( PresentationHeaderNodeTitle value)?  presentation,}){
+final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle() when text != null:
+return text(_that);case PresentationHeaderNodeTitle() when presentation != null:
+return presentation(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TypedExpression value)?  text,TResult Function( PresentationNode node)?  presentation,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle() when text != null:
+return text(_that.value);case PresentationHeaderNodeTitle() when presentation != null:
+return presentation(_that.node);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TypedExpression value)  text,required TResult Function( PresentationNode node)  presentation,}) {final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle():
+return text(_that.value);case PresentationHeaderNodeTitle():
+return presentation(_that.node);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TypedExpression value)?  text,TResult? Function( PresentationNode node)?  presentation,}) {final _that = this;
+switch (_that) {
+case PresentationHeaderTextTitle() when text != null:
+return text(_that.value);case PresentationHeaderNodeTitle() when presentation != null:
+return presentation(_that.node);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class PresentationHeaderTextTitle implements PresentationHeaderTitle {
+  const PresentationHeaderTextTitle(this.value);
+
+
+ final  TypedExpression value;
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PresentationHeaderTextTitleCopyWith<PresentationHeaderTextTitle> get copyWith => _$PresentationHeaderTextTitleCopyWithImpl<PresentationHeaderTextTitle>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationHeaderTextTitle&&(identical(other.value, value) || other.value == value));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,value);
+
+@override
+String toString() {
+  return 'PresentationHeaderTitle.text(value: $value)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PresentationHeaderTextTitleCopyWith<$Res> implements $PresentationHeaderTitleCopyWith<$Res> {
+  factory $PresentationHeaderTextTitleCopyWith(PresentationHeaderTextTitle value, $Res Function(PresentationHeaderTextTitle) _then) = _$PresentationHeaderTextTitleCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression value
+});
+
+
+$TypedExpressionCopyWith<$Res> get value;
+
+}
+/// @nodoc
+class _$PresentationHeaderTextTitleCopyWithImpl<$Res>
+    implements $PresentationHeaderTextTitleCopyWith<$Res> {
+  _$PresentationHeaderTextTitleCopyWithImpl(this._self, this._then);
+
+  final PresentationHeaderTextTitle _self;
+  final $Res Function(PresentationHeaderTextTitle) _then;
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
+  return _then(PresentationHeaderTextTitle(
+null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get value {
+
+  return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class PresentationHeaderNodeTitle implements PresentationHeaderTitle {
+  const PresentationHeaderNodeTitle(this.node);
+
+
+ final  PresentationNode node;
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PresentationHeaderNodeTitleCopyWith<PresentationHeaderNodeTitle> get copyWith => _$PresentationHeaderNodeTitleCopyWithImpl<PresentationHeaderNodeTitle>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationHeaderNodeTitle&&(identical(other.node, node) || other.node == node));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,node);
+
+@override
+String toString() {
+  return 'PresentationHeaderTitle.presentation(node: $node)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PresentationHeaderNodeTitleCopyWith<$Res> implements $PresentationHeaderTitleCopyWith<$Res> {
+  factory $PresentationHeaderNodeTitleCopyWith(PresentationHeaderNodeTitle value, $Res Function(PresentationHeaderNodeTitle) _then) = _$PresentationHeaderNodeTitleCopyWithImpl;
+@useResult
+$Res call({
+ PresentationNode node
+});
+
+
+$PresentationNodeCopyWith<$Res> get node;
+
+}
+/// @nodoc
+class _$PresentationHeaderNodeTitleCopyWithImpl<$Res>
+    implements $PresentationHeaderNodeTitleCopyWith<$Res> {
+  _$PresentationHeaderNodeTitleCopyWithImpl(this._self, this._then);
+
+  final PresentationHeaderNodeTitle _self;
+  final $Res Function(PresentationHeaderNodeTitle) _then;
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? node = null,}) {
+  return _then(PresentationHeaderNodeTitle(
+null == node ? _self.node : node // ignore: cast_nullable_to_non_nullable
+as PresentationNode,
+  ));
+}
+
+/// Create a copy of PresentationHeaderTitle
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PresentationNodeCopyWith<$Res> get node {
+
+  return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
+    return _then(_self.copyWith(node: value));
   });
 }
 }
@@ -613,7 +923,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get title {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.title, (value) {
     return _then(_self.copyWith(title: value));
   });
@@ -622,7 +932,7 @@ $TypedExpressionCopyWith<$Res> get title {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -631,7 +941,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get confirmationLabel {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.confirmationLabel, (value) {
     return _then(_self.copyWith(confirmationLabel: value));
   });
@@ -774,7 +1084,7 @@ return $default(_that.title,_that.message,_that.confirmationLabel);case _:
 
 class _HeaderActionConfirmation implements HeaderActionConfirmation {
   const _HeaderActionConfirmation({required this.title, required this.message, required this.confirmationLabel});
-  
+
 
 @override final  TypedExpression title;
 @override final  TypedExpression message;
@@ -841,7 +1151,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get title {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.title, (value) {
     return _then(_self.copyWith(title: value));
   });
@@ -850,7 +1160,7 @@ $TypedExpressionCopyWith<$Res> get title {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -859,7 +1169,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get confirmationLabel {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.confirmationLabel, (value) {
     return _then(_self.copyWith(confirmationLabel: value));
   });
@@ -932,7 +1242,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -941,7 +1251,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1126,7 +1436,7 @@ return reorderHandle(_that.id,_that.label,_that.source,_that.tooltip,_that.visib
 
 class HeaderButtonItem implements HeaderItem {
   const HeaderButtonItem({required this.id, required this.icon, required this.label, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.tone = HeaderActionTone.neutral, this.confirmation});
-  
+
 
 @override final  HeaderItemId id;
  final  TypedExpression icon;
@@ -1209,7 +1519,7 @@ as HeaderActionConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1218,7 +1528,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get icon {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -1227,7 +1537,7 @@ $TypedExpressionCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1236,7 +1546,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -1308,7 +1618,7 @@ $HeaderActionConfirmationCopyWith<$Res>? get confirmation {
 
 class HeaderBooleanToggleItem implements HeaderItem {
   const HeaderBooleanToggleItem({required this.id, required this.label, required this.checked, required this.action, this.tooltip, this.priority, this.visibleIf, this.enabledIf, this.placement = HeaderActionPlacement.end, this.confirmation});
-  
+
 
 @override final  HeaderItemId id;
 @override final  TypedExpression label;
@@ -1389,7 +1699,7 @@ as HeaderActionConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1398,7 +1708,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1407,7 +1717,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get checked {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.checked, (value) {
     return _then(_self.copyWith(checked: value));
   });
@@ -1416,7 +1726,7 @@ $TypedExpressionCopyWith<$Res> get checked {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -1488,7 +1798,7 @@ $HeaderActionConfirmationCopyWith<$Res>? get confirmation {
 
 class HeaderReorderHandleItem implements HeaderItem {
   const HeaderReorderHandleItem({required this.id, required this.label, required this.source, this.tooltip, this.visibleIf, this.enabledIf});
-  
+
 
 @override final  HeaderItemId id;
 @override final  TypedExpression label;
@@ -1561,7 +1871,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-  
+
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1570,7 +1880,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1579,7 +1889,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1625,7 +1935,7 @@ $TypedExpressionCopyWith<$Res>? get enabledIf {
 /// @nodoc
 mixin _$PresentationHeader {
 
- BindingReference? get binding; TypedExpression? get title; TypedExpression? get description; bool? get initiallyExpanded; List<HeaderItem> get items;
+ BindingReference? get binding; PresentationHeaderTitle? get title; TypedExpression? get description; bool? get initiallyExpanded; List<HeaderItem> get items;
 /// Create a copy of PresentationHeader
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1656,11 +1966,11 @@ abstract mixin class $PresentationHeaderCopyWith<$Res>  {
   factory $PresentationHeaderCopyWith(PresentationHeader value, $Res Function(PresentationHeader) _then) = _$PresentationHeaderCopyWithImpl;
 @useResult
 $Res call({
- BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
+ BindingReference? binding, PresentationHeaderTitle? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
 });
 
 
-$BindingReferenceCopyWith<$Res>? get binding;$TypedExpressionCopyWith<$Res>? get title;$TypedExpressionCopyWith<$Res>? get description;
+$BindingReferenceCopyWith<$Res>? get binding;$PresentationHeaderTitleCopyWith<$Res>? get title;$TypedExpressionCopyWith<$Res>? get description;
 
 }
 /// @nodoc
@@ -1677,7 +1987,7 @@ class _$PresentationHeaderCopyWithImpl<$Res>
   return _then(_self.copyWith(
 binding: freezed == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
 as BindingReference?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as TypedExpression?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as PresentationHeaderTitle?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,initiallyExpanded: freezed == initiallyExpanded ? _self.initiallyExpanded : initiallyExpanded // ignore: cast_nullable_to_non_nullable
 as bool?,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<HeaderItem>,
@@ -1699,12 +2009,12 @@ $BindingReferenceCopyWith<$Res>? get binding {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res>? get title {
+$PresentationHeaderTitleCopyWith<$Res>? get title {
     if (_self.title == null) {
     return null;
   }
 
-  return $TypedExpressionCopyWith<$Res>(_self.title!, (value) {
+  return $PresentationHeaderTitleCopyWith<$Res>(_self.title!, (value) {
     return _then(_self.copyWith(title: value));
   });
 }/// Create a copy of PresentationHeader
@@ -1801,7 +2111,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingReference? binding,  PresentationHeaderTitle? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationHeader() when $default != null:
 return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
@@ -1822,7 +2132,7 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingReference? binding,  PresentationHeaderTitle? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationHeader():
 return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
@@ -1842,7 +2152,7 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingReference? binding,  TypedExpression? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingReference? binding,  PresentationHeaderTitle? title,  TypedExpression? description,  bool? initiallyExpanded,  List<HeaderItem> items)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationHeader() when $default != null:
 return $default(_that.binding,_that.title,_that.description,_that.initiallyExpanded,_that.items);case _:
@@ -1858,10 +2168,10 @@ return $default(_that.binding,_that.title,_that.description,_that.initiallyExpan
 
 class _PresentationHeader implements PresentationHeader {
   const _PresentationHeader({this.binding, this.title, this.description, this.initiallyExpanded, final  List<HeaderItem> items = const []}): _items = items;
-  
+
 
 @override final  BindingReference? binding;
-@override final  TypedExpression? title;
+@override final  PresentationHeaderTitle? title;
 @override final  TypedExpression? description;
 @override final  bool? initiallyExpanded;
  final  List<HeaderItem> _items;
@@ -1902,11 +2212,11 @@ abstract mixin class _$PresentationHeaderCopyWith<$Res> implements $Presentation
   factory _$PresentationHeaderCopyWith(_PresentationHeader value, $Res Function(_PresentationHeader) _then) = __$PresentationHeaderCopyWithImpl;
 @override @useResult
 $Res call({
- BindingReference? binding, TypedExpression? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
+ BindingReference? binding, PresentationHeaderTitle? title, TypedExpression? description, bool? initiallyExpanded, List<HeaderItem> items
 });
 
 
-@override $BindingReferenceCopyWith<$Res>? get binding;@override $TypedExpressionCopyWith<$Res>? get title;@override $TypedExpressionCopyWith<$Res>? get description;
+@override $BindingReferenceCopyWith<$Res>? get binding;@override $PresentationHeaderTitleCopyWith<$Res>? get title;@override $TypedExpressionCopyWith<$Res>? get description;
 
 }
 /// @nodoc
@@ -1923,7 +2233,7 @@ class __$PresentationHeaderCopyWithImpl<$Res>
   return _then(_PresentationHeader(
 binding: freezed == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
 as BindingReference?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as TypedExpression?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as PresentationHeaderTitle?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as TypedExpression?,initiallyExpanded: freezed == initiallyExpanded ? _self.initiallyExpanded : initiallyExpanded // ignore: cast_nullable_to_non_nullable
 as bool?,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<HeaderItem>,
@@ -1946,12 +2256,12 @@ $BindingReferenceCopyWith<$Res>? get binding {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res>? get title {
+$PresentationHeaderTitleCopyWith<$Res>? get title {
     if (_self.title == null) {
     return null;
   }
 
-  return $TypedExpressionCopyWith<$Res>(_self.title!, (value) {
+  return $PresentationHeaderTitleCopyWith<$Res>(_self.title!, (value) {
     return _then(_self.copyWith(title: value));
   });
 }/// Create a copy of PresentationHeader
