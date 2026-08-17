@@ -122,8 +122,11 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
           onTap: collapsible ? _toggle : null,
           borderRadius: context.shapes.smallBorderRadius,
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: collapsible ? context.spacing.space1 : 0,
+            padding: widget.header.headerPadding.resolve(
+              fallback: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,6 +154,15 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
         ),
       ),
     );
+    final bodyContent = Padding(
+      padding: widget.header.contentPadding.resolve(
+        fallback: EdgeInsets.symmetric(
+          horizontal: context.spacing.space2,
+          vertical: context.spacing.space1,
+        ),
+      ),
+      child: widget.child,
+    );
     final content = collapsible
         ? Expansible(
             controller: _expansibleController,
@@ -160,13 +172,7 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
             ),
             maintainState: true,
             headerBuilder: (context, animation) => headerContent,
-            bodyBuilder: (context, animation) => Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space1,
-              ),
-              child: widget.child,
-            ),
+            bodyBuilder: (context, animation) => bodyContent,
             expansibleBuilder: (context, header, body, animation) => Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -176,11 +182,30 @@ class _PresentationHeaderChromeState extends State<PresentationHeaderChrome> {
         : Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [headerContent, widget.child],
+            children: [headerContent, bodyContent],
           );
     return widget.contained
         ? content
         : DepthBox(enabled: collapsible, child: content);
+  }
+}
+
+extension on PresentationInsets? {
+  EdgeInsetsGeometry resolve({required EdgeInsetsGeometry fallback}) {
+    final insets = this;
+    if (insets == null) return fallback;
+    return switch (insets) {
+      PresentationInsetsAll(:final value) => EdgeInsets.all(value),
+      PresentationInsetsSymmetric(:final horizontal, :final vertical) =>
+        EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical),
+      PresentationInsetsOnly(
+        :final top,
+        :final left,
+        :final right,
+        :final bottom,
+      ) =>
+        EdgeInsets.only(top: top, left: left, right: right, bottom: bottom),
+    };
   }
 }
 
@@ -233,9 +258,8 @@ class _HeaderRowState extends State<_HeaderRow> {
           PresentationHeaderTextTitle(:final value) => SectionTitle(
             title: widget.scope.expressionText(value),
           ),
-          PresentationHeaderNodeTitle(:final node) => PresentationNodeRenderer(
-            node: node,
-            scope: widget.scope,
+          PresentationHeaderNodeTitle(:final node) => IgnorePointer(
+            child: PresentationNodeRenderer(node: node, scope: widget.scope),
           ),
           null => const SizedBox.shrink(),
         },
@@ -425,7 +449,7 @@ class _RenderHeaderLayout extends RenderBox
       0.0,
     );
     title.layout(
-      childConstraints.copyWith(maxWidth: titleWidth),
+      childConstraints.copyWith(minWidth: titleWidth, maxWidth: titleWidth),
       parentUsesSize: true,
     );
     maxHeight = math.max(maxHeight, title.size.height);

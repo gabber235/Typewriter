@@ -95,6 +95,95 @@ void main() {
     expect(painter.border.end, isNull);
   });
 
+  testWidgets("uses default padding when a section header stays inline", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        PresentationNode(
+          id: "inline.section",
+          header: PresentationHeader(
+            title: "Inline section".asStringLiteral.asHeaderTitle,
+          ),
+          element: SectionElement(
+            child: PresentationNode(
+              id: "inline.section.body",
+              element: TextElement("Inline body".asStringLiteral),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final spacing = tester
+        .element(find.byType(PresentationHeaderChrome))
+        .spacing;
+    final headerPadding = EdgeInsets.symmetric(
+      horizontal: spacing.space2,
+      vertical: spacing.space1,
+    );
+    final bodyPadding = EdgeInsets.symmetric(
+      horizontal: spacing.space2,
+      vertical: spacing.space1,
+    );
+
+    expect(find.byType(Expansible), findsNothing);
+    expect(
+      find.ancestor(
+        of: find.text("Inline section"),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Padding && widget.padding == headerPadding,
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(
+        of: find.text("Inline body"),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Padding && widget.padding == bodyPadding,
+        ),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets("allows header and content padding to be removed", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        PresentationNode(
+          id: "zero.padding.section",
+          header: PresentationHeader(
+            title: "Zero padding".asStringLiteral.asHeaderTitle,
+            headerPadding: const PresentationInsets.all(0),
+            contentPadding: const PresentationInsets.all(0),
+          ),
+          element: SectionElement(
+            child: PresentationNode(
+              id: "zero.padding.section.body",
+              element: TextElement("Zero padding body".asStringLiteral),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final zeroPadding = find.byWidgetPredicate(
+      (widget) => widget is Padding && widget.padding == EdgeInsets.zero,
+    );
+
+    expect(
+      find.ancestor(of: find.text("Zero padding"), matching: zeroPadding),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(of: find.text("Zero padding body"), matching: zeroPadding),
+      findsOneWidget,
+    );
+  });
+
   testWidgets("renders directional presentation padding", (tester) async {
     await tester.pumpTestApp(
       child: Directionality(

@@ -157,10 +157,13 @@ void main() {
     expect(find.byTooltip("second").hitTestable(), findsOneWidget);
     expect(find.byTooltip("third").hitTestable(), findsOneWidget);
     expect(find.byTooltip("More actions").hitTestable(), findsNothing);
+    final headerSpacing = tester
+        .element(find.byType(PresentationHeaderChrome))
+        .spacing;
     expect(
       tester.getRect(find.byType(PresentationHeaderChrome)).right -
           tester.getRect(find.byTooltip("third")).right,
-      lessThanOrEqualTo(4),
+      lessThanOrEqualTo(headerSpacing.space2 + 4),
     );
 
     width.value = 130;
