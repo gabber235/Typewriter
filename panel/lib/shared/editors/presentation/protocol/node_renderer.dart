@@ -116,6 +116,7 @@ extension on PresentationElement {
       final ScopedBindingElement element => element.render(context, scope),
       final CollectionLookupElement element => element.render(context, scope),
       final CollectionGraphElement element => element.render(context, scope),
+      final PolymorphicMatchElement element => element.render(context, scope),
       final TextInputElement element => element.render(context, scope),
       final SelectInputElement element => element.render(context, scope),
       final SliderInputElement element => element.render(context, scope),

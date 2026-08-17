@@ -263,6 +263,15 @@ void main() {
     expect(find.text("Cat content"), findsOneWidget);
   });
 
+  testWidgets("matches a polymorphic value with its concrete representation", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(child: _polymorphicMatchRenderer());
+
+    expect(find.text("Rover"), findsOneWidget);
+    expect(find.text("Fallback"), findsNothing);
+  });
+
   testWidgets("executes local actions and refreshes bound content", (
     tester,
   ) async {
@@ -686,6 +695,79 @@ Widget _polymorphicRenderer() => EditorProtocolRenderer(
           ),
         ),
       ],
+    ),
+  ),
+);
+
+Widget _polymorphicMatchRenderer() => EditorProtocolRenderer(
+  envelope: TypedValueEnvelope(
+    rootType: _polymorphicRootType,
+    rootValue: RecordValue({
+      "choice": PolymorphicValue(
+        concreteType: _dogType,
+        value: RecordValue({"name": const StringValue("Rover")}),
+      ),
+    }),
+  ),
+  typeCatalog: const TypeCatalog([
+    TypeDefinition(
+      id: _polymorphicRootType,
+      kind: NominalTypeKind.concrete,
+      representation: RecordType(
+        fields: {
+          "choice": TypeField(name: "choice", type: NamedType(_animalType)),
+        },
+      ),
+    ),
+    TypeDefinition(
+      id: _animalType,
+      kind: NominalTypeKind.openAbstract,
+      representation: RecordType(
+        fields: {"name": TypeField(name: "name", type: StringType())},
+      ),
+    ),
+    TypeDefinition(
+      id: _dogType,
+      kind: NominalTypeKind.concrete,
+      parents: [_animalType],
+      representation: RecordType(
+        fields: {"name": TypeField(name: "name", type: StringType())},
+      ),
+    ),
+  ]),
+  presentation: PresentationNode(
+    id: "match",
+    element: PolymorphicMatchElement(
+      binding: _polymorphicBinding,
+      scopeBindingId: const BindingId(2),
+      cases: [
+        PolymorphicMatchCase(
+          type: _dogType,
+          child: PresentationNode(
+            id: "dog",
+            element: TextElement(
+              TypedExpression(
+                resultType: const StringType(),
+                expression: BindingExpression(
+                  BindingReference(
+                    bindingId: const BindingId(2),
+                    path: DataPath.root.field("name"),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+      fallback: const PresentationNode(
+        id: "fallback",
+        element: TextElement(
+          TypedExpression(
+            resultType: StringType(),
+            expression: LiteralExpression(StringValue("Fallback")),
+          ),
+        ),
+      ),
     ),
   ),
 );
