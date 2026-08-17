@@ -120,21 +120,23 @@ void main() {
         document.typeCatalog,
       ).resolve(document.rootType as NamedType);
       final root = document.presentations.single.root.element as ColumnElement;
-      final runsIn =
+      final runsInConditional =
           root.children
-                  .singleWhere((node) => node.id == "service.runsIn")
+                  .singleWhere(
+                    (node) => node.id == "service.runsIn.conditional",
+                  )
                   .element
-              as SearchInputElement;
-      final status = root.children.singleWhere(
-        (node) => node.id == "service.status",
-      );
+              as ConditionalElement;
+      final runsIn = runsInConditional.whenTrue.element as SearchInputElement;
 
       expect(document.collections.single.id, serviceCollectionSourceId);
       expect(resolved.diagnostics, isEmpty);
       expect(resolved.valueOrNull, isNotNull);
       expect(runsIn.selectionMode, SearchSelectionMode.single);
       expect(runsIn.provider, isA<CollectionSearchProvider>());
-      expect(status.properties.readOnly, isTrue);
+      final condition = _evaluateCondition(document, runsInConditional);
+      expect(condition.diagnostics, isEmpty);
+      expect(condition.valueOrNull, const BooleanValue(true));
       expect(
         root.children.map((node) => node.id),
         isNot(contains("organization")),
@@ -146,7 +148,7 @@ void main() {
     },
   );
 
-  test("Realm inspector marks Runs in as not applicable", () async {
+  test("Realm inspector hides Runs in", () async {
     final organization = recordId("organization:current");
     final realm = _service("realm", organization: organization);
     final container = ProviderContainer.test(
@@ -174,15 +176,39 @@ void main() {
 
     expect(resolved.diagnostics, isEmpty);
     expect(resolved.valueOrNull, isNotNull);
-    expect(
-      root.children.map((node) => node.id),
-      contains("service.runsIn.notApplicable"),
-    );
-    expect(
-      root.children.map((node) => node.id),
-      isNot(contains("service.runsIn")),
-    );
+    final runsInConditional =
+        root.children
+                .singleWhere((node) => node.id == "service.runsIn.conditional")
+                .element
+            as ConditionalElement;
+    expect(runsInConditional.whenFalse, isNull);
+    final condition = _evaluateCondition(document, runsInConditional);
+    expect(condition.diagnostics, isEmpty);
+    expect(condition.valueOrNull, const BooleanValue(false));
   });
+}
+
+TypeResult<DataValue> _evaluateCondition(
+  EditorDocument document,
+  ConditionalElement conditional,
+) {
+  final registry = TypeRegistry(document.typeCatalog);
+  final bindingType = switch (document.rootType) {
+    final NamedType type => registry.resolve(type).valueOrNull!.representation,
+    final type => type,
+  };
+  return conditional.condition.evaluate(
+    ExpressionContext(
+      bindings: BindingEnvironment({
+        const BindingId(0): BindingSnapshot(
+          type: bindingType,
+          value: document.confirmedValue,
+          revision: document.revision,
+        ),
+      }),
+    ),
+    registry: registry,
+  );
 }
 
 String _name(PresentationCollectionSnapshot snapshot, String id) =>
