@@ -12,6 +12,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "editor_presentation_content_encoder.dart";
+part "editor_presentation_composition_encoder.dart";
+part "editor_presentation_connection_encoder.dart";
 part "editor_presentation_data_encoder.dart";
 part "editor_presentation_header_encoder.dart";
 part "editor_presentation_input_encoder.dart";
@@ -61,6 +63,9 @@ final class SkirPresentationEncoder {
         StackElement() ||
         GridElement() => _children(value),
         SectionElement() => _section(value),
+        ContainerElement() => _container(value),
+        PresentationAnchorElement() => _anchor(value),
+        ConnectionLayerElement() => _connectionLayer(value),
         PaddingElement() => _padding(value),
         PresentationSlotElement() => _slot(value),
         TabsElement() => _tabs(value),
@@ -68,11 +73,8 @@ final class SkirPresentationEncoder {
           wire.PresentationElement.divider,
         ),
         SpacerElement() => _spacer(value),
-        TextElement() => _text(value.value, wire.PresentationElement.wrapText),
-        MarkdownElement() => _text(
-          value.value,
-          wire.PresentationElement.wrapMarkdown,
-        ),
+        TextElement() => _text(value),
+        MarkdownElement() => _markdown(value),
         IconElement() => _icon(value),
         ImageElement() => _image(value),
         BadgeElement() => _badge(value),
@@ -114,6 +116,7 @@ final class SkirPresentationEncoder {
           wire.PresentationElement.wrapEnumInput,
         ),
         PolymorphicInputElement() => _polymorphic(value),
+        PolymorphicMatchElement() => _polymorphicMatch(value),
         NamedInputElement() => _boundElement(
           value.control,
           wire.PresentationElement.wrapNamedInput,

@@ -6,7 +6,9 @@ abstract class SequencePresentation with _$SequencePresentation {
     required PresentationNode item,
     PresentationNode? empty,
     PresentationNode? separator,
-    @Default(PresentationChildrenLayout.column())
-    PresentationChildrenLayout layout,
+    @Default(
+      PresentationSequenceLayout.children(PresentationChildrenLayout.column()),
+    )
+    PresentationSequenceLayout layout,
   }) = _SequencePresentation;
 }

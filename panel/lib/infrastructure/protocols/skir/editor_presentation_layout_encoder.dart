@@ -155,6 +155,66 @@ extension SkirPresentationLayoutEncoder on SkirPresentationEncoder {
         ? TypeResult.success(nodes)
         : TypeResult.failure(diagnostics);
   }
+
+  TypeResult<wire.SequenceLayout> _sequenceLayout(
+    PresentationSequenceLayout value,
+  ) => switch (value) {
+    PresentationStandardSequenceLayout(:final layout) => TypeResult.success(
+      wire.SequenceLayout.wrapChildren(layout._encodeWire),
+    ),
+    PresentationHierarchySequenceLayout(:final layout) =>
+      _hierarchySequenceLayout(layout),
+  };
+
+  TypeResult<wire.SequenceLayout> _hierarchySequenceLayout(
+    HierarchySequenceLayout value,
+  ) {
+    final unary = _connectorStyle(value.unaryConnector);
+    final trunk = _connectorStyle(value.trunkConnector);
+    final branch = _connectorStyle(value.branchConnector);
+    final itemSpacing = expressions.encode(value.itemSpacing);
+    final indentation = expressions.encode(value.indentation);
+    final leadingSpacing = expressions.encode(value.leadingSpacing);
+    final anchor = _connectorAnchor(value.itemAnchor);
+    final flatten = expressions.encode(value.flattenSingleItem);
+    final diagnostics = [
+      ...unary.diagnostics,
+      ...trunk.diagnostics,
+      ...branch.diagnostics,
+      ...itemSpacing.diagnostics,
+      ...indentation.diagnostics,
+      ...leadingSpacing.diagnostics,
+      ...anchor.diagnostics,
+      ...flatten.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.SequenceLayout.createHierarchy(
+              unaryConnector: unary.valueOrNull!,
+              trunkConnector: trunk.valueOrNull!,
+              branchConnector: branch.valueOrNull!,
+              itemSpacing: itemSpacing.valueOrNull!,
+              indentation: indentation.valueOrNull!,
+              leadingSpacing: leadingSpacing.valueOrNull!,
+              itemAnchor: anchor.valueOrNull!,
+              flattenSingleItem: flatten.valueOrNull!,
+              crossAxisAlignment: value.crossAxisAlignment._encodeWire,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<wire.ConnectorAnchor> _connectorAnchor(ConnectorAnchor value) =>
+      switch (value) {
+        StartConnectorAnchor() => const TypeResult.success(
+          wire.ConnectorAnchor.start,
+        ),
+        CenterConnectorAnchor() => const TypeResult.success(
+          wire.ConnectorAnchor.center,
+        ),
+        OffsetConnectorAnchor(:final value) =>
+          expressions.encode(value).mapValue(wire.ConnectorAnchor.wrapOffset),
+      };
 }
 
 extension on PresentationMainAxisAlignment {

@@ -27,6 +27,76 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
     wire.ChildrenLayout_unknown() => invalidWire("Unknown children layout"),
   };
 
+  TypeResult<PresentationSequenceLayout> _sequenceLayout(
+    wire.SequenceLayout value,
+  ) => switch (value) {
+    wire.SequenceLayout_childrenWrapper(:final value) => _childrenLayout(
+      value,
+    ).mapValue(PresentationSequenceLayout.children),
+    wire.SequenceLayout_hierarchyWrapper(:final value) =>
+      _hierarchySequenceLayout(
+        value,
+      ).mapValue(PresentationSequenceLayout.hierarchy),
+    wire.SequenceLayout_unknown() => invalidWire("Unknown sequence layout"),
+  };
+
+  TypeResult<HierarchySequenceLayout> _hierarchySequenceLayout(
+    wire.HierarchySequenceLayout value,
+  ) {
+    final unary = _connectorStyle(value.unaryConnector);
+    final trunk = _connectorStyle(value.trunkConnector);
+    final branch = _connectorStyle(value.branchConnector);
+    final itemSpacing = expressions.decode(value.itemSpacing);
+    final indentation = expressions.decode(value.indentation);
+    final leadingSpacing = expressions.decode(value.leadingSpacing);
+    final anchor = _connectorAnchor(value.itemAnchor);
+    final flatten = expressions.decode(value.flattenSingleItem);
+    final alignment = value.crossAxisAlignment._decodeCrossAxisAlignment;
+    final diagnostics = [
+      ...unary.diagnostics,
+      ...trunk.diagnostics,
+      ...branch.diagnostics,
+      ...itemSpacing.diagnostics,
+      ...indentation.diagnostics,
+      ...leadingSpacing.diagnostics,
+      ...anchor.diagnostics,
+      ...flatten.diagnostics,
+    ];
+    if (alignment == null) {
+      diagnostics.add(wireDiagnostic("Unknown hierarchy cross axis alignment"));
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            HierarchySequenceLayout(
+              unaryConnector: unary.valueOrNull!,
+              trunkConnector: trunk.valueOrNull!,
+              branchConnector: branch.valueOrNull!,
+              itemSpacing: itemSpacing.valueOrNull!,
+              indentation: indentation.valueOrNull!,
+              leadingSpacing: leadingSpacing.valueOrNull!,
+              itemAnchor: anchor.valueOrNull!,
+              flattenSingleItem: flatten.valueOrNull!,
+              crossAxisAlignment: alignment!,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<ConnectorAnchor> _connectorAnchor(wire.ConnectorAnchor value) =>
+      switch (value) {
+        wire.ConnectorAnchor.start => const TypeResult.success(
+          ConnectorAnchor.start(),
+        ),
+        wire.ConnectorAnchor.center => const TypeResult.success(
+          ConnectorAnchor.center(),
+        ),
+        wire.ConnectorAnchor_offsetWrapper(:final value) =>
+          expressions.decode(value).mapValue(ConnectorAnchor.offset),
+        wire.ConnectorAnchor_unknown() => invalidWire(
+          "Unknown connector anchor",
+        ),
+      };
+
   TypeResult<PresentationChildrenLayout> _axisLayout(
     wire.AxisChildrenLayout value,
     PresentationChildrenLayout Function({
@@ -227,4 +297,16 @@ extension SkirPresentationLayoutDecoder on SkirPresentationDecoder {
       (width, height) => SpacerElement(width: width, height: height),
     );
   }
+}
+
+extension on wire.CrossAxisAlignment {
+  PresentationCrossAxisAlignment? get _decodeCrossAxisAlignment =>
+      switch (this) {
+        wire.CrossAxisAlignment.start => PresentationCrossAxisAlignment.start,
+        wire.CrossAxisAlignment.center => PresentationCrossAxisAlignment.center,
+        wire.CrossAxisAlignment.end => PresentationCrossAxisAlignment.end,
+        wire.CrossAxisAlignment.stretch =>
+          PresentationCrossAxisAlignment.stretch,
+        _ => null,
+      };
 }

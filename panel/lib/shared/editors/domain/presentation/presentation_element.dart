@@ -5,6 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "presentation_element.freezed.dart";
 part "presentation_content.dart";
+part "presentation_connection.dart";
+part "presentation_container.dart";
 part "presentation_data.dart";
 part "presentation_input.dart";
 part "presentation_interaction.dart";
@@ -22,14 +24,30 @@ sealed class PresentationElement with _$PresentationElement {
     PresentationId? presentationId,
   }) = DefaultPresentationElement;
 
-  @Implements<TextualContentElement>()
-  const factory PresentationElement.text(TypedExpression value) = TextElement;
-  @Implements<TextualContentElement>()
-  const factory PresentationElement.markdown(TypedExpression value) =
-      MarkdownElement;
+  const factory PresentationElement.text(
+    TypedExpression value, {
+    TypedExpression? color,
+    TypedExpression? fontSize,
+    TypedExpression? fontWeight,
+    TypedExpression? fontItalic,
+    TypedExpression? fontOpticalSize,
+    TypedExpression? fontSlant,
+    TypedExpression? fontWidth,
+    TypedExpression? textAlignment,
+    TypedExpression? lineHeight,
+    TypedExpression? letterSpacing,
+    TypedExpression? decoration,
+    TypedExpression? semanticLabel,
+  }) = TextElement;
+  const factory PresentationElement.markdown(
+    TypedExpression value, {
+    TypedExpression? color,
+  }) = MarkdownElement;
   const factory PresentationElement.icon({
     required TypedExpression name,
     TypedExpression? semanticLabel,
+    TypedExpression? color,
+    TypedExpression? size,
   }) = IconElement;
   const factory PresentationElement.image({
     required TypedExpression source,
@@ -79,10 +97,13 @@ sealed class PresentationElement with _$PresentationElement {
   const factory PresentationElement.collectionGraph({
     required PresentationCollectionSourceId sourceId,
     required BindingReference roots,
+    required SequencePresentation rootSequence,
     required PresentationCollectionRelationId relation,
     required CollectionGraphDirection direction,
     required PresentationNode node,
     required BindingId childrenBindingId,
+    required BindingId childBindingId,
+    required SequencePresentation children,
     int? maximumDepth,
   }) = CollectionGraphElement;
 
@@ -90,6 +111,7 @@ sealed class PresentationElement with _$PresentationElement {
     required BoundControl control,
     @Default(true) bool multiline,
     TypedExpression? placeholder,
+    @Default([]) List<TextInputFormat> inputFormatters,
   }) = TextInputElement;
   const factory PresentationElement.numericInput(BoundControl control) =
       NumericInputElement;
@@ -130,6 +152,7 @@ sealed class PresentationElement with _$PresentationElement {
     PresentationNode? summary,
     TypedExpression? placeholder,
     TypedExpression? customValue,
+    TypedExpression? initialQuery,
   }) = SearchInputElement;
   @Implements<SimpleInputElement>()
   const factory PresentationElement.bytesInput(BoundControl control) =
@@ -167,6 +190,13 @@ sealed class PresentationElement with _$PresentationElement {
     required BoundControl control,
     required List<ConcreteTypePresentation> concreteTypes,
   }) = PolymorphicInputElement;
+  @Assert("cases.isNotEmpty", "Polymorphic match cases must not be empty.")
+  factory PresentationElement.polymorphicMatch({
+    required BindingReference binding,
+    required BindingId scopeBindingId,
+    required List<PolymorphicMatchCase> cases,
+    PresentationNode? fallback,
+  }) = PolymorphicMatchElement;
 
   const factory PresentationElement.button({
     required TypedExpression label,
@@ -235,6 +265,25 @@ sealed class PresentationElement with _$PresentationElement {
     required PresentationNode child,
     PresentationBorder? border,
   }) = SectionElement;
+  @Implements<SingleChildLayoutElement>()
+  const factory PresentationElement.container({
+    required PresentationNode child,
+    PresentationBorder? border,
+    TypedExpression? backgroundColor,
+    @Default(PresentationRadius.small()) PresentationRadius radius,
+  }) = ContainerElement;
+  @Implements<SingleChildLayoutElement>()
+  @Assert("anchors.isNotEmpty", "At least one anchor must be provided.")
+  factory PresentationElement.anchor({
+    required PresentationNode child,
+    required List<PresentationAnchorPoint> anchors,
+  }) = PresentationAnchorElement;
+  @Implements<SingleChildLayoutElement>()
+  @Assert("connections.isNotEmpty", "At least one connection must be provided.")
+  factory PresentationElement.connectionLayer({
+    required PresentationNode child,
+    required List<PresentationConnection> connections,
+  }) = ConnectionLayerElement;
   @Implements<SingleChildLayoutElement>()
   @Assert(
     "top >= 0 && top < double.infinity",

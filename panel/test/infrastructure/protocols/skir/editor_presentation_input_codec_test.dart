@@ -35,6 +35,13 @@ void main() {
           control: control,
           multiline: false,
           placeholder: text,
+          inputFormatters: [
+            TextInputFormat.lowercase(),
+            TextInputFormat.uppercase(),
+            TextInputFormat.replace(pattern: r"\s+", replacement: "_"),
+            TextInputFormat.allow("[a-z_]"),
+            TextInputFormat.deny("[^a-z_]"),
+          ],
         ),
         wire.PresentationElement_kind.textInputWrapper,
       ),
@@ -98,6 +105,7 @@ void main() {
           queryBindingId: const BindingId(10),
           summaryBindingId: const BindingId(11),
           maximumExtent: 280.asFloatLiteral,
+          initialQuery: "".asStringLiteral,
           provider: SearchProvider.staticValues(
             values: const ListValue([StringValue("mdi:home")]).asLiteral(
               ListType(element: NamedType(standardTypeRefs.iconifyIcon)),
@@ -180,6 +188,38 @@ void main() {
           (element! as wire.PresentationElement_colorInputWrapper).value;
       expect(color.includeAlpha, includeAlpha);
     }
+  });
+
+  test("decodes malformed formatter patterns as diagnostics", () {
+    final encoded = codecs.encoder
+        .encodeNode(
+          const PresentationNode(
+            id: "text",
+            element: TextInputElement(control: control),
+          ),
+        )
+        .valueOrNull!;
+    final text =
+        (encoded.element! as wire.PresentationElement_textInputWrapper).value;
+    final malformed = wire.PresentationNode(
+      nodeId: "text",
+      properties: encoded.properties,
+      element: wire.PresentationElement.createTextInput(
+        control: text.control,
+        multiline: false,
+        placeholder: null,
+        inputFormatters: [wire.TextInputFormat.wrapAllow("[")],
+      ),
+      header: null,
+    );
+
+    final decoded = codecs.decoder.decodeNode(malformed);
+
+    expect(decoded.element, isA<DiagnosticElement>());
+    expect(
+      (decoded.element as DiagnosticElement).diagnostics.single.message,
+      "Text input formatter pattern is malformed",
+    );
   });
 
   test("maps every date and time visibility combination", () {

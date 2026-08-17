@@ -41,7 +41,7 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
   }
 
   TypeResult<SequencePresentation> _sequence(wire.SequencePresentation value) =>
-      _childrenLayout(value.layout).mapValue(
+      _sequenceLayout(value.layout).mapValue(
         (layout) => SequencePresentation(
           item: decodeNode(value.item),
           empty: value.empty == null ? null : decodeNode(value.empty!),
@@ -62,6 +62,41 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
             child: decodeNode(value.child),
           ),
         );
+  }
+
+  TypeResult<PresentationElement> _polymorphicMatch(
+    wire.PolymorphicMatchElement value,
+  ) {
+    final binding = expressions.binding(value.binding);
+    final cases = <PolymorphicMatchCase>[];
+    final diagnostics = <TypeDiagnostic>[...binding.diagnostics];
+    for (final item in value.cases) {
+      final type = types.decodeReference(item.concreteType);
+      diagnostics.addAll(type.diagnostics);
+      if (type.valueOrNull case final decodedType?) {
+        cases.add(
+          PolymorphicMatchCase(
+            type: decodedType,
+            child: decodeNode(item.child),
+          ),
+        );
+      }
+    }
+    if (cases.isEmpty) {
+      diagnostics.add(wireDiagnostic("Polymorphic match has no cases"));
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            PolymorphicMatchElement(
+              binding: binding.valueOrNull!,
+              scopeBindingId: BindingId(value.scopeBindingId.value),
+              cases: cases,
+              fallback: value.fallback == null
+                  ? null
+                  : decodeNode(value.fallback!),
+            ),
+          )
+        : TypeResult.failure(diagnostics);
   }
 
   TypeResult<PresentationElement> _collectionLookup(
@@ -101,17 +136,26 @@ extension SkirPresentationDataDecoder on SkirPresentationDecoder {
       return invalidWire("Collection graph direction is unknown");
     }
     final roots = expressions.binding(value.roots);
+    final rootSequence = _sequence(value.rootSequence);
     final node = decodeNode(value.node);
-    final diagnostics = [...roots.diagnostics];
+    final children = _sequence(value.children);
+    final diagnostics = [
+      ...roots.diagnostics,
+      ...rootSequence.diagnostics,
+      ...children.diagnostics,
+    ];
     return diagnostics.isEmpty
         ? TypeResult.success(
             CollectionGraphElement(
               sourceId: PresentationCollectionSourceId(value.sourceId),
               roots: roots.valueOrNull!,
+              rootSequence: rootSequence.valueOrNull!,
               relation: PresentationCollectionRelationId(value.relationId),
               direction: direction,
               node: node,
               childrenBindingId: BindingId(value.childrenBindingId.value),
+              childBindingId: BindingId(value.childBindingId.value),
+              children: children.valueOrNull!,
               maximumDepth: value.maximumDepth,
             ),
           )

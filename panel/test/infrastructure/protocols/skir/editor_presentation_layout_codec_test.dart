@@ -22,6 +22,10 @@ void main() {
     resultType: NamedType(standardTypeRefs.color),
     expression: LiteralExpression(IntegerValue(BigInt.from(0xFF967BFA))),
   );
+  final concreteType = ResolvedTypeRef(
+    id: const QualifiedTypeId(namespace: "example", name: "entry"),
+    revision: 1,
+  );
   const leaf = PresentationNode(id: "leaf", element: DividerElement());
 
   test("maps every layout presentation variant and its fields", () {
@@ -68,6 +72,63 @@ void main() {
         wire.PresentationElement_kind.sectionWrapper,
       ),
       (
+        ContainerElement(
+          child: leaf,
+          border: PresentationBorder.all(
+            PresentationBorderSide(color: color, width: 2),
+          ),
+          backgroundColor: color,
+          radius: PresentationRadius.custom(number),
+        ),
+        wire.PresentationElement_kind.containerWrapper,
+      ),
+      (
+        PresentationAnchorElement(
+          child: leaf,
+          anchors: [
+            PresentationAnchorPoint(
+              id: "origin",
+              groupIds: const ["items"],
+              alignment: PresentationAnchorAlignment.bottomStart,
+              offset: PresentationOffset(x: number, y: number),
+              visibleIf: truth,
+              exportToParent: true,
+            ),
+          ],
+        ),
+        wire.PresentationElement_kind.anchorWrapper,
+      ),
+      (
+        ConnectionLayerElement(
+          child: leaf,
+          connections: [
+            PresentationConnection.connection(
+              source: const PresentationAnchorSelector.local("origin"),
+              target: const PresentationAnchorSelector.exportedGroup("items"),
+              path: ConnectionPath.orthogonal(
+                OrthogonalConnectionPath(bendPosition: number),
+              ),
+              style: ConnectorStyle(
+                stroke: ConnectorStroke(color: color, width: number),
+                cornerRadius: number,
+                startMarker: ConnectorEndpointMarker.arrow(size: number),
+                endMarker: ConnectorEndpointMarker.circle(diameter: number),
+              ),
+              markers: [
+                ConnectionMarker(
+                  node: leaf,
+                  position: number,
+                  alignToPath: truth,
+                  scope: ConnectionExpressionScope.target,
+                ),
+              ],
+              visibleIf: truth,
+            ),
+          ],
+        ),
+        wire.PresentationElement_kind.connectionLayerWrapper,
+      ),
+      (
         const PaddingElement(child: leaf, top: 1, start: 2, end: 3, bottom: 4),
         wire.PresentationElement_kind.paddingWrapper,
       ),
@@ -109,6 +170,16 @@ void main() {
       title: const PresentationHeaderTitle.text(text),
       description: text,
       initiallyExpanded: false,
+      headerPadding: const PresentationInsets.only(
+        top: 1,
+        left: 2,
+        right: 3,
+        bottom: 4,
+      ),
+      contentPadding: const PresentationInsets.symmetric(
+        horizontal: 5,
+        vertical: 6,
+      ),
       items: [
         HeaderReorderHandleItem(
           id: listItemReorderHeaderItemId,
@@ -170,6 +241,21 @@ void main() {
       wire.HeaderItem_kind.booleanToggleWrapper,
       wire.HeaderItem_kind.buttonWrapper,
     ]);
+    expect(
+      encodedHeader.headerPadding?.kind,
+      wire.PresentationInsets_kind.onlyWrapper,
+    );
+    final encodedHeaderPadding =
+        (encodedHeader.headerPadding! as wire.PresentationInsets_onlyWrapper)
+            .value;
+    expect(encodedHeaderPadding.top, 1);
+    expect(encodedHeaderPadding.left, 2);
+    expect(encodedHeaderPadding.right, 3);
+    expect(encodedHeaderPadding.bottom, 4);
+    expect(
+      encodedHeader.contentPadding?.kind,
+      wire.PresentationInsets_kind.symmetricWrapper,
+    );
     final decoded = codecs.decoder.decodeNode(encoded);
 
     expect(decoded, node);
@@ -190,6 +276,26 @@ void main() {
     final decoded = codecs.decoder.decodeNode(encoded);
 
     expect(decoded, node);
+  });
+
+  test("maps every presentation inset shape", () {
+    const cases = [
+      PresentationInsets.all(8),
+      PresentationInsets.symmetric(horizontal: 6, vertical: 3),
+      PresentationInsets.only(top: 1, left: 2, right: 3, bottom: 4),
+    ];
+
+    for (final padding in cases) {
+      final node = PresentationNode(
+        id: "insets.${padding.runtimeType}",
+        header: PresentationHeader(headerPadding: padding),
+        element: const DividerElement(),
+      );
+      final encoded = codecs.encoder.encodeNode(node).valueOrNull!;
+      final decoded = codecs.decoder.decodeNode(encoded);
+
+      expect(decoded, node);
+    }
   });
 
   test("rejects invalid section border widths", () {
@@ -257,6 +363,30 @@ void main() {
     expect(decoded.element, isA<DiagnosticElement>());
   });
 
+  test("rejects invalid header padding", () {
+    final encoded = codecs.encoder
+        .encodeNode(
+          const PresentationNode(
+            id: "invalid.header.padding",
+            header: PresentationHeader(),
+            element: DividerElement(),
+          ),
+        )
+        .valueOrNull!;
+    final invalidHeader = encoded.header!.toMutable()
+      ..headerPadding = wire.PresentationInsets.createOnly(
+        top: 0,
+        left: -1,
+        right: 0,
+        bottom: 0,
+      );
+    final decoded = codecs.decoder.decodeNode(
+      (encoded.toMutable()..header = invalidHeader).toFrozen(),
+    );
+
+    expect(decoded.element, isA<DiagnosticElement>());
+  });
+
   test("rejects an empty presentation slot identifier", () {
     final decoded = codecs.decoder.decodeNode(
       wire.PresentationNode(
@@ -302,13 +432,35 @@ void main() {
 
   test("maps every content presentation variant and its fields", () {
     final elements = <(PresentationElement, wire.PresentationElement_kind)>[
-      (const TextElement(text), wire.PresentationElement_kind.textWrapper),
       (
-        const MarkdownElement(text),
+        TextElement(
+          text,
+          color: color,
+          fontSize: number,
+          fontWeight: number,
+          fontItalic: number,
+          fontOpticalSize: number,
+          fontSlant: number,
+          fontWidth: number,
+          textAlignment: text,
+          lineHeight: number,
+          letterSpacing: number,
+          decoration: text,
+          semanticLabel: text,
+        ),
+        wire.PresentationElement_kind.textWrapper,
+      ),
+      (
+        MarkdownElement(text, color: color),
         wire.PresentationElement_kind.markdownWrapper,
       ),
       (
-        const IconElement(name: text, semanticLabel: text),
+        IconElement(
+          name: text,
+          semanticLabel: text,
+          color: color,
+          size: number,
+        ),
         wire.PresentationElement_kind.iconWrapper,
       ),
       (
@@ -380,9 +532,45 @@ void main() {
               item: leaf,
               empty: leaf,
               separator: leaf,
-              layout: PresentationChildrenLayout.wrap(
-                spacing: 4,
-                runSpacing: 6,
+              layout: PresentationSequenceLayout.children(
+                PresentationChildrenLayout.wrap(spacing: 4, runSpacing: 6),
+              ),
+            ),
+          ),
+        ),
+        wire.PresentationElement_kind.repeatedWrapper,
+      ),
+      (
+        RepeatedElement(
+          source: TypedExpression(
+            resultType: const ListType(element: StringType()),
+            expression: LiteralExpression(ListValue(const [StringValue("a")])),
+          ),
+          itemBindingId: const BindingId(9),
+          presentation: SequencePresentation(
+            item: leaf,
+            layout: PresentationSequenceLayout.hierarchy(
+              HierarchySequenceLayout(
+                unaryConnector: ConnectorStyle(
+                  stroke: ConnectorStroke(color: color, width: number),
+                  cornerRadius: number,
+                  startMarker: ConnectorEndpointMarker.arrow(size: number),
+                ),
+                trunkConnector: ConnectorStyle(
+                  stroke: ConnectorStroke(color: color, width: number),
+                  cornerRadius: number,
+                ),
+                branchConnector: ConnectorStyle(
+                  stroke: ConnectorStroke(color: color, width: number),
+                  cornerRadius: number,
+                  endMarker: ConnectorEndpointMarker.circle(diameter: number),
+                ),
+                itemSpacing: number,
+                indentation: number,
+                leadingSpacing: number,
+                itemAnchor: ConnectorAnchor.offset(number),
+                flattenSingleItem: truth,
+                crossAxisAlignment: PresentationCrossAxisAlignment.end,
               ),
             ),
           ),
@@ -398,9 +586,24 @@ void main() {
         wire.PresentationElement_kind.scopedBindingWrapper,
       ),
       (
+        PolymorphicMatchElement(
+          binding: binding,
+          scopeBindingId: const BindingId(4),
+          cases: [PolymorphicMatchCase(type: concreteType, child: leaf)],
+          fallback: leaf,
+        ),
+        wire.PresentationElement_kind.polymorphicMatchWrapper,
+      ),
+      (
         const CollectionGraphElement(
           sourceId: PresentationCollectionSourceId("nodes"),
           roots: binding,
+          rootSequence: SequencePresentation(
+            item: PresentationNode(
+              id: "graphRoot",
+              element: PresentationSlotElement(slotId: "root"),
+            ),
+          ),
           relation: PresentationCollectionRelationId("links"),
           direction: CollectionGraphDirection.forward,
           maximumDepth: 8,
@@ -409,6 +612,13 @@ void main() {
             element: PresentationSlotElement(slotId: "children"),
           ),
           childrenBindingId: BindingId(7),
+          childBindingId: BindingId(8),
+          children: SequencePresentation(
+            item: PresentationNode(
+              id: "graphChild",
+              element: PresentationSlotElement(slotId: "children"),
+            ),
+          ),
         ),
         wire.PresentationElement_kind.collectionGraphWrapper,
       ),

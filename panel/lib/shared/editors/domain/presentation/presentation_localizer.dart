@@ -45,6 +45,8 @@ extension on PresentationHeader {
     description: description,
     initiallyExpanded: initiallyExpanded,
     items: items,
+    headerPadding: headerPadding,
+    contentPadding: contentPadding,
   );
 }
 
@@ -103,6 +105,27 @@ extension on PresentationElement {
         end: element.end,
         bottom: element.bottom,
       ),
+      ContainerElement() => element.copyWith(
+        child: element.child.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+      ),
+      PresentationAnchorElement() => element.copyWith(
+        child: element.child.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+      ),
+      ConnectionLayerElement() => element.copyWith(
+        child: element.child.localizeFailures(
+          context,
+          registry: registry,
+          budget: budget,
+        ),
+      ),
       PresentationSlotElement() => element,
       TabsElement() => TabsElement(
         tabs: [
@@ -152,7 +175,8 @@ extension on PresentationElement {
       ListInputElement() ||
       MapInputElement() ||
       RecordInputElement() ||
-      PolymorphicInputElement() => element,
+      PolymorphicInputElement() ||
+      PolymorphicMatchElement() => element,
       TooltipElement() => TooltipElement(
         message: element.message,
         child: element.child.localizeFailures(

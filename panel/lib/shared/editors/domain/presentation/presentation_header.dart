@@ -81,6 +81,51 @@ extension PresentationHeaderTextAuthoring on TypedExpression {
 }
 
 @freezed
+sealed class PresentationInsets with _$PresentationInsets {
+  @Assert(
+    "value >= 0 && value < double.infinity",
+    "Inset must be finite and nonnegative.",
+  )
+  const factory PresentationInsets.all(double value) = PresentationInsetsAll;
+
+  @Assert(
+    "horizontal >= 0 && horizontal < double.infinity",
+    "Horizontal inset must be finite and nonnegative.",
+  )
+  @Assert(
+    "vertical >= 0 && vertical < double.infinity",
+    "Vertical inset must be finite and nonnegative.",
+  )
+  const factory PresentationInsets.symmetric({
+    @Default(0) double horizontal,
+    @Default(0) double vertical,
+  }) = PresentationInsetsSymmetric;
+
+  @Assert(
+    "top >= 0 && top < double.infinity",
+    "Top inset must be finite and nonnegative.",
+  )
+  @Assert(
+    "left >= 0 && left < double.infinity",
+    "Left inset must be finite and nonnegative.",
+  )
+  @Assert(
+    "right >= 0 && right < double.infinity",
+    "Right inset must be finite and nonnegative.",
+  )
+  @Assert(
+    "bottom >= 0 && bottom < double.infinity",
+    "Bottom inset must be finite and nonnegative.",
+  )
+  const factory PresentationInsets.only({
+    @Default(0) double top,
+    @Default(0) double left,
+    @Default(0) double right,
+    @Default(0) double bottom,
+  }) = PresentationInsetsOnly;
+}
+
+@freezed
 abstract class HeaderActionConfirmation with _$HeaderActionConfirmation {
   const factory HeaderActionConfirmation({
     required TypedExpression title,
@@ -136,5 +181,7 @@ abstract class PresentationHeader with _$PresentationHeader {
     TypedExpression? description,
     bool? initiallyExpanded,
     @Default([]) List<HeaderItem> items,
+    PresentationInsets? headerPadding,
+    PresentationInsets? contentPadding,
   }) = _PresentationHeader;
 }

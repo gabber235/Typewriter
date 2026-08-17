@@ -9,6 +9,8 @@ extension on PresentationHeader {
     description: description._substituteTypes(substitutions),
     initiallyExpanded: initiallyExpanded,
     items: [for (final item in items) item._substituteTypes(substitutions)],
+    headerPadding: headerPadding,
+    contentPadding: contentPadding,
   );
 }
 

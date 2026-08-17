@@ -15,6 +15,8 @@ extension PresentationHeaderComposition on PresentationHeader {
       description: description ?? inner.description,
       initiallyExpanded: initiallyExpanded ?? inner.initiallyExpanded,
       items: merged,
+      headerPadding: headerPadding ?? inner.headerPadding,
+      contentPadding: contentPadding ?? inner.contentPadding,
     );
   }
 }
