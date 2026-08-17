@@ -5,6 +5,26 @@ const serviceInspectorTypeRef = ResolvedTypeRef(
   revision: 1,
 );
 
+const serviceRoleTypeRef = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "panel", name: "ServiceRole"),
+  revision: 1,
+);
+
+const engineRoleTypeRef = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "panel", name: "EngineRole"),
+  revision: 1,
+);
+
+const realmRoleTypeRef = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "panel", name: "RealmRole"),
+  revision: 1,
+);
+
+const customRoleTypeRef = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "panel", name: "CustomRole"),
+  revision: 1,
+);
+
 final _serviceReferenceType = NamedType(
   standardTypeRefs.refTo(NamedType(serviceInspectorTypeRef)),
 );
@@ -20,25 +40,52 @@ final _serviceInspectorType = TypeDefinition(
         name: "runsIn",
         type: NamedType(standardTypeRefs.optionOf(_serviceReferenceType)),
       ),
-      "status": TypeField(name: "status", type: StringType()),
       "roles": TypeField(
         name: "roles",
-        type: ListType(element: StringType()),
+        type: ListType(element: NamedType(serviceRoleTypeRef)),
       ),
-      "versions": TypeField(
-        name: "versions",
-        type: ListType(element: StringType()),
-      ),
-      "lastSeen": TypeField(
-        name: "lastSeen",
-        type: NamedType(standardTypeRefs.optionOf(const TimestampType())),
-      ),
-      "createdAt": TypeField(name: "createdAt", type: TimestampType()),
     },
   ),
 );
 
-final _serviceInspectorCatalog = TypeCatalog([_serviceInspectorType]);
+final serviceRoleTypes = [
+  const TypeDefinition(
+    id: serviceRoleTypeRef,
+    kind: NominalTypeKind.sealedAbstract,
+  ),
+  TypeDefinition(
+    id: engineRoleTypeRef,
+    kind: NominalTypeKind.concrete,
+    parents: [serviceRoleTypeRef],
+    representation: const RecordType(
+      fields: {"version": TypeField(name: "version", type: StringType())},
+    ),
+  ),
+  TypeDefinition(
+    id: realmRoleTypeRef,
+    kind: NominalTypeKind.concrete,
+    parents: [serviceRoleTypeRef],
+    representation: const RecordType(
+      fields: {"version": TypeField(name: "version", type: StringType())},
+    ),
+  ),
+  TypeDefinition(
+    id: customRoleTypeRef,
+    kind: NominalTypeKind.concrete,
+    parents: [serviceRoleTypeRef],
+    representation: const RecordType(
+      fields: {
+        "name": TypeField(name: "name", type: StringType()),
+        "version": TypeField(name: "version", type: StringType()),
+      },
+    ),
+  ),
+];
+
+final _serviceInspectorCatalog = TypeCatalog([
+  _serviceInspectorType,
+  ...serviceRoleTypes,
+]);
 
 class ServiceIdentifier extends SelectableIdentifier {
   ServiceIdentifier(this.serviceId);
@@ -135,13 +182,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   EditorMutationResult validate(DataPath path, DataValue value) {
-    final readOnlyFields = {
-      "status",
-      "roles",
-      "versions",
-      "lastSeen",
-      "createdAt",
-    };
+    final readOnlyFields = {"roles"};
     if (path.segments.firstOrNull case FieldPathSegment(
       :final name,
     ) when readOnlyFields.contains(name)) {
@@ -224,31 +265,42 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
     concreteType: final type,
     value: RecordValue(fields: {"value": StringValue(:final value)}),
   ) when type == standardTypeRefs.someOf(_serviceReferenceType)) {
-    return (true, recordId("service:$value"));
+    return (true, _decodeServiceReference(value));
   }
   return (false, null);
 }
 
-extension on Service {
+extension ServiceInspectorValue on Service {
   RecordValue get inspectorValue => RecordValue({
     "name": StringValue(name),
     "runsIn": _optionalValue(
       runsIn,
       _serviceReferenceType,
-      encode: (runsIn) => StringValue(runsIn.id),
+      encode: (runsIn) => StringValue(_encodeServiceReference(runsIn)),
     ),
-    "status": StringValue(isOnline ? "Online" : "Offline"),
-    "roles": ListValue(roles.map((role) => StringValue(role.label)).toList()),
-    "versions": ListValue(
-      roles.map((role) => StringValue(role.version)).toList(),
-    ),
-    "lastSeen": _optionalValue(
-      lastSeen,
-      const TimestampType(),
-      encode: TimestampValue.new,
-    ),
-    "createdAt": TimestampValue(createdAt),
+    "roles": ListValue(roles.map((role) => role.inspectorValue).toList()),
   });
+}
+
+extension on ServiceRole {
+  DataValue get inspectorValue => switch (this) {
+    EngineServiceRole(:final version) => PolymorphicValue(
+      concreteType: engineRoleTypeRef,
+      value: RecordValue({"version": StringValue(version)}),
+    ),
+    RealmServiceRole(:final version) => PolymorphicValue(
+      concreteType: realmRoleTypeRef,
+      value: RecordValue({"version": StringValue(version)}),
+    ),
+    CustomServiceRole(:final name, :final version) => PolymorphicValue(
+      concreteType: customRoleTypeRef,
+      value: RecordValue({
+        "name": StringValue(name),
+        "version": StringValue(version),
+      }),
+    ),
+    ServiceRole() => throw StateException("Unsupported role type: $this"),
+  };
 }
 
 DataValue _optionalValue<T>(

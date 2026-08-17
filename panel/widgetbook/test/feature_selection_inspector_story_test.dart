@@ -100,7 +100,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Runs in"), findsOneWidget);
+    expect(find.text("Expected a record"), findsNothing);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TypedEditor)),
+    );
+    final services = container.read(servicesProvider).requireValue;
+    final editing = services.first;
+    final realm = services.firstWhere((service) => service.isRealm);
+    await _openSearch(tester);
+    expect(find.text("No matching results"), findsNothing);
+    expect(find.text("Standalone"), findsWidgets);
+    expect(find.bySemanticsLabel(realm.displayName), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel(realm.displayName));
+    await tester.pumpAndSettle();
+    final updated = container
+        .read(servicesProvider)
+        .requireValue
+        .singleWhere((service) => service.serviceId == editing.serviceId);
     _expectNoFlutterErrors(errors);
+    expect(updated.runsIn, realm.serviceId);
+    expect(find.text("Runs in"), findsOneWidget);
+    expect(find.text("Expected a record"), findsNothing);
+    expect(find.text("Realm"), findsOneWidget);
   });
 
   testWidgets("Tags page story opens the Tag inspector", (tester) async {

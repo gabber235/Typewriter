@@ -7,6 +7,45 @@ const _serviceInspectorPresentationId = PresentationId(
 const _serviceSearchQueryBindingId = BindingId(51);
 const _serviceSearchSummaryBindingId = BindingId(52);
 const _serviceSearchResultBindingId = BindingId(53);
+const _serviceSearchRoleBindingId = BindingId(54);
+const _serviceSearchSummaryValueBindingId = BindingId(58);
+const _serviceRoleBindingId = BindingId(56);
+const _serviceRoleRepresentationBindingId = BindingId(57);
+
+final _serviceColorType = NamedType(standardTypeRefs.color);
+final _serviceCollectionRolesType = ListType(
+  element: serviceCollectionRoleType,
+);
+final _standaloneColor = standaloneServiceColor.asColorLiteral;
+final _engineRoleColor = engineServiceRoleColor.asColorLiteral;
+final _realmRoleColor = realmServiceRoleColor.asColorLiteral;
+final _customRoleColor = customServiceRoleColor.asColorLiteral;
+
+final _serviceRoles = serviceInspectorExpression(
+  "roles",
+  ListType(element: NamedType(serviceRoleTypeRef)),
+);
+
+final _serviceRole = _serviceBindingExpression(
+  _serviceRoleBindingId,
+  NamedType(serviceRoleTypeRef),
+);
+
+final _isConfigurableRole = TypedExpression(
+  resultType: const BooleanType(),
+  expression: BooleanExpression(
+    operator: BooleanOperator.or,
+    operands: [
+      _serviceRole.isType(NamedType(engineRoleTypeRef)),
+      _serviceRole.isType(NamedType(customRoleTypeRef)),
+    ],
+  ),
+);
+
+final _canConfigureRunsIn = _serviceRoles.any(
+  itemBindingId: _serviceRoleBindingId,
+  predicate: _isConfigurableRole,
+);
 
 PresentationDefinition serviceInspectorPresentation(Service service) =>
     PresentationDefinition(
@@ -29,31 +68,14 @@ PresentationDefinition serviceInspectorPresentation(Service service) =>
                 inputFormatters: identifierInputFormats,
               ),
             ),
-            if (service.isEngine || service.isCustom)
-              _serviceRunsInSearch
-            else
-              _serviceTextRow(
-                "service.runsIn.notApplicable",
-                "Runs in",
-                "Not applicable".asStringLiteral,
+            PresentationNode(
+              id: "service.runsIn.conditional",
+              element: ConditionalElement(
+                condition: _canConfigureRunsIn,
+                whenTrue: _serviceRunsInSearch,
               ),
-            _serviceTextRow(
-              "service.status",
-              "Status",
-              serviceInspectorExpression("status", const StringType()),
             ),
-            _serviceListRow("service.roles", "Roles", "roles"),
-            _serviceListRow("service.versions", "Versions", "versions"),
-            _serviceTextRow(
-              "service.lastSeen",
-              "Last seen",
-              service.lastSeenLabel.asStringLiteral,
-            ),
-            _serviceTextRow(
-              "service.createdAt",
-              "Created",
-              service.createdAt.toIso8601String().asStringLiteral,
-            ),
+            _serviceRoleListRow(),
           ],
         ),
       ),
@@ -71,6 +93,7 @@ final _serviceRunsInSearch = PresentationNode(
     summaryBindingId: _serviceSearchSummaryBindingId,
     maximumExtent: 280.asFloatLiteral,
     placeholder: "Search Realm services".asStringLiteral,
+    initialQuery: "".asStringLiteral,
     summary: _serviceRunsInSummary,
     provider: SearchProvider.collection(
       sourceId: serviceCollectionSourceId,
@@ -91,35 +114,29 @@ final _serviceRunsInSearch = PresentationNode(
 
 final _serviceRunsInSummary = PresentationNode(
   id: "service.runsIn.summary",
-  element: PolymorphicInputElement(
-    control: const BoundControl(
-      binding: BindingReference(bindingId: _serviceSearchSummaryBindingId),
-    ),
-    concreteTypes: [
-      ConcreteTypePresentation(
+  element: PolymorphicMatchElement(
+    binding: const BindingReference(bindingId: _serviceSearchSummaryBindingId),
+    scopeBindingId: _serviceSearchSummaryValueBindingId,
+    cases: [
+      PolymorphicMatchCase(
         type: standardTypeRefs.noneOf(serviceReferenceType),
-        label: "Standalone".asStringLiteral,
-        presentation: PresentationNode(
-          id: "service.runsIn.summary.none",
-          element: TextElement("Standalone".asStringLiteral),
-        ),
+        child: _standaloneServiceOption("service.runsIn.summary.none"),
       ),
-      ConcreteTypePresentation(
+      PolymorphicMatchCase(
         type: standardTypeRefs.someOf(serviceReferenceType),
-        label: "Realm".asStringLiteral,
-        presentation: PresentationNode(
+        child: PresentationNode(
           id: "service.runsIn.summary.some",
           element: CollectionLookupElement(
             sourceId: serviceCollectionSourceId,
             key: BindingReference(
-              bindingId: _serviceSearchSummaryBindingId,
+              bindingId: _serviceSearchSummaryValueBindingId,
               path: DataPath.root.field("value"),
             ),
-            found: PresentationNode(
-              id: "service.runsIn.summary.name",
-              element: TextElement(
-                _serviceRowField("name", const StringType()),
-              ),
+            found: _serviceOptionCard(
+              id: "service.runsIn.summary.service",
+              name: _serviceRowField("name", const StringType()),
+              color: _serviceRowField("color", _serviceColorType),
+              roles: _serviceRowField("roles", _serviceCollectionRolesType),
             ),
             missing: PresentationNode(
               id: "service.runsIn.summary.missing",
@@ -134,29 +151,94 @@ final _serviceRunsInSummary = PresentationNode(
 
 final _serviceResultRow = PresentationNode(
   id: "service.runsIn.result",
+  element: ConditionalElement(
+    condition: _serviceResultField("standalone", const BooleanType()),
+    whenTrue: _standaloneServiceOption("service.runsIn.result.standalone"),
+    whenFalse: _serviceOptionCard(
+      id: "service.runsIn.result.service",
+      name: _serviceResultField("name", const StringType()),
+      color: _serviceResultField("color", _serviceColorType),
+      roles: _serviceResultField("roles", _serviceCollectionRolesType),
+    ),
+  ),
+);
+
+PresentationNode _standaloneServiceOption(String id) => _serviceOptionCard(
+  id: id,
+  name: "Standalone".asStringLiteral,
+  color: _standaloneColor,
+  roles: null,
+);
+
+PresentationNode _serviceOptionCard({
+  required String id,
+  required TypedExpression name,
+  required TypedExpression color,
+  required TypedExpression? roles,
+}) => PresentationNode(
+  id: id,
   element: ColumnElement(
-    spacing: 2,
-    crossAxisAlignment: PresentationCrossAxisAlignment.start,
+    crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
     children: [
       PresentationNode(
-        id: "service.runsIn.result.name",
-        element: TextElement(_serviceResultField("name", const StringType())),
-      ),
-      PresentationNode(
-        id: "service.runsIn.result.roles",
-        element: RepeatedElement(
-          source: _serviceResultField(
-            "roles",
-            ListType(element: const StringType()),
+        id: "$id.card",
+        element: ContainerElement(
+          backgroundColor: color.withAlpha(32),
+          border: PresentationBorder.all(
+            PresentationBorderSide(color: color, width: 1.5),
           ),
-          itemBindingId: const BindingId(54),
-          presentation: SequencePresentation(
-            item: PresentationNode(
-              id: "service.runsIn.result.role",
-              element: TextElement(
-                _serviceBindingExpression(
-                  const BindingId(54),
-                  const StringType(),
+          radius: PresentationRadius.custom(8.asFloatLiteral),
+          child: PresentationNode(
+            id: "$id.padding",
+            element: PaddingElement(
+              top: 8,
+              start: 12,
+              end: 12,
+              bottom: 8,
+              child: PresentationNode(
+                id: "$id.content",
+                element: WrapElement(
+                  spacing: 12,
+                  runSpacing: 8,
+                  mainAxisAlignment: PresentationMainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: PresentationCrossAxisAlignment.center,
+                  children: [
+                    PresentationNode(
+                      id: "$id.name",
+                      element: TextElement(name, color: color),
+                    ),
+                    if (roles != null)
+                      PresentationNode(
+                        id: "$id.roles",
+                        element: RepeatedElement(
+                          source: roles,
+                          itemBindingId: _serviceSearchRoleBindingId,
+                          presentation: SequencePresentation(
+                            layout: const PresentationSequenceLayout.children(
+                              PresentationChildrenLayout.wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                              ),
+                            ),
+                            item: PresentationNode(
+                              id: "$id.role",
+                              element: ChipElement(
+                                label: _serviceBindingField(
+                                  _serviceSearchRoleBindingId,
+                                  "label",
+                                  const StringType(),
+                                ),
+                                color: _serviceBindingField(
+                                  _serviceSearchRoleBindingId,
+                                  "color",
+                                  _serviceColorType,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -167,46 +249,109 @@ final _serviceResultRow = PresentationNode(
   ),
 );
 
-PresentationNode _serviceListRow(String id, String label, String field) =>
-    PresentationNode(
-      id: id,
-      properties: const PresentationProperties(readOnly: true),
-      header: PresentationHeader(title: label.asStringLiteral.asHeaderTitle),
-      element: SectionElement(
-        child: PresentationNode(
-          id: "$id.values",
-          element: RepeatedElement(
-            source: serviceInspectorExpression(
-              field,
-              ListType(element: const StringType()),
-            ),
-            itemBindingId: const BindingId(55),
-            presentation: SequencePresentation(
-              item: PresentationNode(
-                id: "$id.value",
-                element: TextElement(
-                  _serviceBindingExpression(
-                    const BindingId(55),
-                    const StringType(),
-                  ),
-                ),
+PresentationNode _serviceRoleListRow() => PresentationNode(
+  id: "service.roles",
+  properties: const PresentationProperties(readOnly: true),
+  header: PresentationHeader(title: "Roles".asStringLiteral.asHeaderTitle),
+  element: RepeatedElement(
+    source: serviceInspectorExpression(
+      "roles",
+      ListType(element: NamedType(serviceRoleTypeRef)),
+    ),
+    itemBindingId: const BindingId(55),
+    presentation: SequencePresentation(
+      layout: PresentationSequenceLayout.children(
+        PresentationChildrenLayout.column(spacing: 8),
+      ),
+      item: PresentationNode(
+        id: "service.roles.value",
+        element: PolymorphicMatchElement(
+          binding: const BindingReference(bindingId: BindingId(55)),
+          scopeBindingId: _serviceRoleRepresentationBindingId,
+          cases: [
+            PolymorphicMatchCase(
+              type: engineRoleTypeRef,
+              child: _serviceRoleSection(
+                id: "service.roles.engine",
+                title: "Engine",
+                color: _engineRoleColor,
+                fields: const ["version"],
               ),
+            ),
+            PolymorphicMatchCase(
+              type: realmRoleTypeRef,
+              child: _serviceRoleSection(
+                id: "service.roles.realm",
+                title: "Realm",
+                color: _realmRoleColor,
+                fields: const ["version"],
+              ),
+            ),
+            PolymorphicMatchCase(
+              type: customRoleTypeRef,
+              child: _serviceRoleSection(
+                id: "service.roles.custom",
+                title: "Custom",
+                color: _customRoleColor,
+                fields: const ["name", "version"],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+);
+
+PresentationNode _serviceRoleSection({
+  required String id,
+  required String title,
+  required TypedExpression color,
+  required List<String> fields,
+}) => PresentationNode(
+  id: id,
+  properties: const PresentationProperties(readOnly: true),
+  element: ContainerElement(
+    backgroundColor: color.withAlpha(28),
+    border: PresentationBorder.all(
+      PresentationBorderSide(color: color, width: 2),
+    ),
+    radius: PresentationRadius.medium(),
+    child: PresentationNode(
+      id: "$id.fields",
+      header: PresentationHeader(
+        title: PresentationHeaderNodeTitle(
+          PresentationNode(
+            id: "$id.title",
+            element: TextElement(
+              title.asStringLiteral,
+              color: color,
+              fontWeight: 700.asIntegerLiteral,
             ),
           ),
         ),
+        headerPadding: .only(left: 12, top: 12, right: 12),
       ),
-    );
-
-PresentationNode _serviceTextRow(
-  String id,
-  String label,
-  TypedExpression value,
-) => PresentationNode(
-  id: id,
-  properties: const PresentationProperties(readOnly: true),
-  header: PresentationHeader(title: label.asStringLiteral.asHeaderTitle),
-  element: SectionElement(
-    child: PresentationNode(id: "$id.value", element: TextElement(value)),
+      element: ColumnElement(
+        spacing: 8,
+        crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+        children: [
+          for (final field in fields)
+            PresentationNode(
+              id: "$id.$field",
+              header: PresentationHeader(
+                title: field.asStringLiteral.titleCase().asHeaderTitle,
+              ),
+              element: DefaultPresentationElement(
+                binding: BindingReference(
+                  bindingId: _serviceRoleRepresentationBindingId,
+                  path: DataPath.root.field(field),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
   ),
 );
 
@@ -237,3 +382,14 @@ TypedExpression _serviceBindingExpression(BindingId id, TypeExpression type) =>
       resultType: type,
       expression: BindingExpression(BindingReference(bindingId: id)),
     );
+
+TypedExpression _serviceBindingField(
+  BindingId id,
+  String name,
+  TypeExpression type,
+) => TypedExpression(
+  resultType: type,
+  expression: BindingExpression(
+    BindingReference(bindingId: id, path: DataPath.root.field(name)),
+  ),
+);

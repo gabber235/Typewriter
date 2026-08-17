@@ -13,13 +13,21 @@ final serviceOptionReferenceType = NamedType(
   standardTypeRefs.optionOf(serviceReferenceType),
 );
 
+final serviceCollectionRoleType = RecordType(
+  fields: {
+    "label": TypeField(name: "label", type: StringType()),
+    "color": TypeField(name: "color", type: NamedType(standardTypeRefs.color)),
+  },
+);
+
 final serviceCollectionRowType = RecordType(
   fields: {
     "key": TypeField(name: "key", type: serviceReferenceType),
     "name": TypeField(name: "name", type: StringType()),
+    "color": TypeField(name: "color", type: NamedType(standardTypeRefs.color)),
     "roles": TypeField(
       name: "roles",
-      type: ListType(element: StringType()),
+      type: ListType(element: serviceCollectionRoleType),
     ),
     "selection": TypeField(name: "selection", type: serviceOptionReferenceType),
     "runsIn": TypeField(
@@ -31,6 +39,7 @@ final serviceCollectionRowType = RecordType(
       name: "unavailableReason",
       type: NamedType(standardTypeRefs.optionOf(const StringType())),
     ),
+    "standalone": TypeField(name: "standalone", type: BooleanType()),
   },
 );
 
@@ -85,28 +94,40 @@ PresentationCollectionSource servicePresentationCollection(
 final _standaloneServiceRow = RecordValue({
   "key": const StringValue("standalone"),
   "name": const StringValue("Standalone"),
+  "color": standaloneServiceColor.integerValue,
   "roles": const ListValue([]),
   "selection": _serviceOptionalReference(null),
   "runsIn": const ListValue([]),
   "selectable": const BooleanValue(true),
   "unavailableReason": _serviceOptionalText(null),
+  "standalone": const BooleanValue(true),
 });
 
 RecordValue _serviceCollectionRow(
   Service service, {
   required String? unavailableReason,
 }) => RecordValue({
-  "key": StringValue(service.serviceId.id),
+  "key": StringValue(_encodeServiceReference(service.serviceId)),
   "name": StringValue(service.displayName),
+  "color": service.color.integerValue,
   "roles": ListValue(
-    service.roles.map((role) => StringValue(role.label)).toList(),
+    service.roles
+        .map(
+          (role) => RecordValue({
+            "label": StringValue(role.label),
+            "color": role.color.integerValue,
+          }),
+        )
+        .toList(),
   ),
   "selection": _serviceOptionalReference(service.serviceId),
   "runsIn": ListValue([
-    if (service.runsIn case final runsIn?) StringValue(runsIn.id),
+    if (service.runsIn case final runsIn?)
+      StringValue(_encodeServiceReference(runsIn)),
   ]),
   "selectable": BooleanValue(unavailableReason == null),
   "unavailableReason": _serviceOptionalText(unavailableReason),
+  "standalone": const BooleanValue(false),
 });
 
 String? _serviceUnavailableReason(
@@ -137,8 +158,16 @@ String? _serviceUnavailableReason(
 DataValue _serviceOptionalReference(skir.RecordId? value) => _optionalValue(
   value,
   serviceReferenceType,
-  encode: (recordId) => StringValue(recordId.id),
+  encode: (recordId) => StringValue(_encodeServiceReference(recordId)),
 );
+
+String _encodeServiceReference(skir.RecordId value) => switch (value.key) {
+  skir.RecordIdKey_stringWrapper(:final value) => value,
+  _ => throw StateError("Service references require string record IDs"),
+};
+
+skir.RecordId _decodeServiceReference(String value) =>
+    skir.RecordId(table: "service", key: skir.RecordIdKey.wrapString(value));
 
 DataValue _serviceOptionalText(String? value) =>
     _optionalValue(value, const StringType(), encode: StringValue.new);
