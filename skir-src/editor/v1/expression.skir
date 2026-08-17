@@ -68,18 +68,122 @@ struct ConditionalExpression(810700010) {
   when_false: TypedExpression = 2;
 }
 
-struct CollectionProjectionExpression(810700011) {
+struct CollectionMapExpression(810700011) {
   source: TypedExpression = 0;
-  projection: TypedExpression = 1;
+  transform: TypedExpression = 1;
   item_binding_id: BindingId = 2;
 }
 
-struct ConversionExpression(810700012) {
+struct CollectionFilterExpression(810700012) {
+  source: TypedExpression = 0;
+  predicate: TypedExpression = 1;
+  item_binding_id: BindingId = 2;
+}
+
+enum CollectionQuantifier(810700013) {
+  any = 1;
+  all = 2;
+  none = 3;
+}
+
+struct CollectionQuantifierExpression(810700014) {
+  source: TypedExpression = 0;
+  quantifier: CollectionQuantifier = 1;
+  predicate: TypedExpression = 2;
+  item_binding_id: BindingId = 3;
+}
+
+enum CollectionSelection(810700015) {
+  first = 1;
+  last = 2;
+}
+
+struct CollectionFindExpression(810700016) {
+  source: TypedExpression = 0;
+  selection: CollectionSelection = 1;
+  predicate: TypedExpression = 2;
+  item_binding_id: BindingId = 3;
+}
+
+struct CollectionCountExpression(810700017) {
+  source: TypedExpression = 0;
+  predicate: TypedExpression = 1;
+  item_binding_id: BindingId = 2;
+}
+
+struct CollectionDistinctExpression(810700018) {
+  source: TypedExpression = 0;
+  key: TypedExpression? = 1;
+  item_binding_id: BindingId? = 2;
+}
+
+enum CollectionSortDirection(810700019) {
+  ascending = 1;
+  descending = 2;
+}
+
+struct CollectionComparator(810700020) {
+  left_binding_id: BindingId = 0;
+  right_binding_id: BindingId = 1;
+  comparison: TypedExpression = 2;
+}
+
+struct CollectionSortExpression(810700021) {
+  source: TypedExpression = 0;
+  key: TypedExpression = 1;
+  item_binding_id: BindingId = 2;
+  direction: CollectionSortDirection = 3;
+  comparator: CollectionComparator? = 4;
+}
+
+struct CollectionGroupExpression(810700022) {
+  source: TypedExpression = 0;
+  key: TypedExpression = 1;
+  item_binding_id: BindingId = 2;
+  value: TypedExpression? = 3;
+}
+
+struct CollectionReduceExpression(810700023) {
+  source: TypedExpression = 0;
+  accumulator_binding_id: BindingId = 1;
+  item_binding_id: BindingId = 2;
+  reduction: TypedExpression = 3;
+}
+
+struct CollectionFoldExpression(810700024) {
+  source: TypedExpression = 0;
+  initial: TypedExpression = 1;
+  accumulator_binding_id: BindingId = 2;
+  item_binding_id: BindingId = 3;
+  reduction: TypedExpression = 4;
+}
+
+enum CollectionTransformOperation(810700025) {
+  flat_map = 1;
+  take = 2;
+  skip = 3;
+  reverse = 4;
+}
+
+struct CollectionTransformExpression(810700026) {
+  source: TypedExpression = 0;
+  operation: CollectionTransformOperation = 1;
+  transform: TypedExpression? = 2;
+  item_binding_id: BindingId? = 3;
+  count: TypedExpression? = 4;
+}
+
+struct IsTypeExpression(810700027) {
+  source: TypedExpression = 0;
+  type: TypeExpression = 1;
+}
+
+struct ConversionExpression(810700028) {
   conversion_id: ConversionId = 0;
   input: TypedExpression = 1;
 }
 
-enum StringOperation(810700015) {
+enum StringOperation(810700029) {
   trim = 1;
   lower_case = 2;
   upper_case = 3;
@@ -93,29 +197,29 @@ enum StringOperation(810700015) {
   ends_with = 11;
 }
 
-struct StringOperationExpression(810700016) {
+struct StringOperationExpression(810700030) {
   operation: StringOperation = 0;
   operands: [TypedExpression] = 1;
 }
 
-enum CollectionOperation(810700017) {
+enum CollectionOperation(810700031) {
   access = 1;
   length = 2;
   contains = 3;
 }
 
-struct CollectionOperationExpression(810700018) {
+struct CollectionOperationExpression(810700032) {
   operation: CollectionOperation = 0;
   operands: [TypedExpression] = 1;
 }
 
-enum RegexOperation(810700019) {
+enum RegexOperation(810700033) {
   matches = 1;
   capture = 2;
   replace = 3;
 }
 
-struct RegexExpression(810700020) {
+struct RegexExpression(810700034) {
   operation: RegexOperation = 0;
   source: TypedExpression = 1;
   pattern: string = 2;
@@ -123,11 +227,21 @@ struct RegexExpression(810700020) {
   replacement: string? = 4;
 }
 
-struct CoalesceExpression(810700021) {
+struct CoalesceExpression(810700035) {
   operands: [TypedExpression] = 0;
 }
 
-enum Expression(810700013) {
+enum ColorOperation(810700036) {
+  with_alpha = 1;
+}
+
+struct ColorOperationExpression(810700037) {
+  operation: ColorOperation = 0;
+  color: TypedExpression = 1;
+  alpha: TypedExpression = 2;
+}
+
+enum Expression(810700038) {
   literal: TypedValue = 1;
   binding: BindingRef = 2;
   field_access: FieldAccessExpression = 3;
@@ -136,15 +250,27 @@ enum Expression(810700013) {
   boolean_operation: BooleanExpression = 6;
   arithmetic: ArithmeticExpression = 7;
   conditional: ConditionalExpression = 8;
-  collection_projection: CollectionProjectionExpression = 9;
-  conversion: ConversionExpression = 10;
-  string_operation: StringOperationExpression = 11;
-  collection_operation: CollectionOperationExpression = 12;
-  regex: RegexExpression = 13;
-  coalesce: CoalesceExpression = 14;
+  collection_map: CollectionMapExpression = 9;
+  collection_filter: CollectionFilterExpression = 10;
+  collection_quantifier: CollectionQuantifierExpression = 11;
+  collection_find: CollectionFindExpression = 12;
+  collection_count: CollectionCountExpression = 13;
+  collection_distinct: CollectionDistinctExpression = 14;
+  collection_sort: CollectionSortExpression = 15;
+  collection_group: CollectionGroupExpression = 16;
+  collection_reduce: CollectionReduceExpression = 17;
+  collection_fold: CollectionFoldExpression = 18;
+  collection_transform: CollectionTransformExpression = 19;
+  is_type: IsTypeExpression = 20;
+  conversion: ConversionExpression = 21;
+  string_operation: StringOperationExpression = 22;
+  collection_operation: CollectionOperationExpression = 23;
+  regex: RegexExpression = 24;
+  coalesce: CoalesceExpression = 25;
+  color_operation: ColorOperationExpression = 26;
 }
 
-struct TypedExpression(810700014) {
+struct TypedExpression(810700039) {
   result_type: TypeExpression = 0;
   expression: Expression? = 1;
 }
