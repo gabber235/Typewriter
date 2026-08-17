@@ -5,6 +5,7 @@ PresentationNode searchTestPresentation({
   bool multiple = false,
   double maximumExtent = 260,
   SearchProvider? provider,
+  TypedExpression? initialQuery,
 }) {
   const queryId = BindingId(10);
   const summaryId = BindingId(11);
@@ -36,6 +37,7 @@ PresentationNode searchTestPresentation({
       queryBindingId: queryId,
       summaryBindingId: summaryId,
       maximumExtent: maximumExtent.asFloatLiteral,
+      initialQuery: initialQuery,
       summary: PresentationNode(
         id: "summary",
         element: TextElement(summaryExpression),
