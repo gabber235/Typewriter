@@ -27,7 +27,7 @@ extension SectionElementRendering on SectionElement {
 }
 
 extension on PresentationBorder {
-  TypeResult<_ResolvedSectionBorder> _resolve(
+  TypeResult<_ResolvedPresentationBorder> _resolve(
     BuildContext context,
     PresentationRenderScope scope,
   ) {
@@ -52,7 +52,7 @@ extension on PresentationBorder {
   }
 }
 
-TypeResult<_ResolvedSectionBorder> _resolveAll(
+TypeResult<_ResolvedPresentationBorder> _resolveAll(
   PresentationBorderSide side,
   PresentationRenderScope scope,
   Color fallback,
@@ -63,11 +63,16 @@ TypeResult<_ResolvedSectionBorder> _resolveAll(
   }
   final value = resolved.valueOrNull!;
   return TypeResult.success(
-    _ResolvedSectionBorder(top: value, start: value, end: value, bottom: value),
+    _ResolvedPresentationBorder(
+      top: value,
+      start: value,
+      end: value,
+      bottom: value,
+    ),
   );
 }
 
-TypeResult<_ResolvedSectionBorder> _resolveSides(
+TypeResult<_ResolvedPresentationBorder> _resolveSides(
   PresentationRenderScope scope,
   Color fallback, {
   PresentationBorderSide? top,
@@ -87,7 +92,7 @@ TypeResult<_ResolvedSectionBorder> _resolveSides(
   ];
   return diagnostics.isEmpty
       ? TypeResult.success(
-          _ResolvedSectionBorder(
+          _ResolvedPresentationBorder(
             top: resolvedTop?.valueOrNull,
             start: resolvedStart?.valueOrNull,
             end: resolvedEnd?.valueOrNull,
@@ -115,7 +120,7 @@ extension on PresentationBorderSide {
       return TypeResult.failure([
         const TypeDiagnostic(
           code: TypeDiagnosticCode.invalidValue,
-          message: "Section border color must evaluate to a Color",
+          message: "Presentation border color must evaluate to a Color",
         ),
       ]);
     }
@@ -123,8 +128,13 @@ extension on PresentationBorderSide {
   }
 }
 
-class _ResolvedSectionBorder {
-  const _ResolvedSectionBorder({this.top, this.start, this.end, this.bottom});
+class _ResolvedPresentationBorder {
+  const _ResolvedPresentationBorder({
+    this.top,
+    this.start,
+    this.end,
+    this.bottom,
+  });
 
   final BorderSide? top;
   final BorderSide? start;
@@ -139,7 +149,7 @@ class _SectionBorderPainter extends CustomPainter {
     required this.textDirection,
   });
 
-  final _ResolvedSectionBorder border;
+  final _ResolvedPresentationBorder border;
   final Radius radius;
   final TextDirection textDirection;
 
@@ -206,7 +216,7 @@ class _SectionBorderPainter extends CustomPainter {
     RRect bounds,
     BorderSide? side,
     bool left,
-    _ResolvedSectionBorder border,
+    _ResolvedPresentationBorder border,
   ) {
     if (side == null) return;
     final inset = side.width / 2;

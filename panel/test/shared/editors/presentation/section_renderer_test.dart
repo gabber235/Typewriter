@@ -219,7 +219,56 @@ void main() {
     expect(padding, findsOneWidget);
     expect(Directionality.of(tester.element(padding)), TextDirection.rtl);
   });
+
+  testWidgets("container stretches and applies final presentation styling", (
+    tester,
+  ) async {
+    const surfaceColor = Color(0x2E967BFA);
+    const contentColor = Color(0xFF967BFA);
+    await tester.pumpTestApp(
+      child: SizedBox(
+        width: 260,
+        child: _renderer(
+          PresentationNode(
+            id: "container",
+            element: ContainerElement(
+              border: PresentationBorder.all(
+                PresentationBorderSide(color: _colorExpression(contentColor)),
+              ),
+              backgroundColor: _colorExpression(surfaceColor),
+              radius: const PresentationRadius.small(),
+              child: PresentationNode(
+                id: "container.content",
+                element: TextElement(
+                  "Contained".asStringLiteral,
+                  color: _colorExpression(contentColor),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(const ValueKey("container"))).width, 260);
+    expect(find.byType(DepthBox), findsNothing);
+    final decoration = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((widget) => widget.decoration)
+        .whereType<BoxDecoration>()
+        .singleWhere((decoration) => decoration.color == surfaceColor);
+    expect(decoration.borderRadius, BorderRadius.circular(4));
+    expect(
+      tester.widget<EditableText>(find.text("Contained")).style.color,
+      contentColor,
+    );
+  });
 }
+
+TypedExpression _colorExpression(Color color) => TypedExpression(
+  resultType: NamedType(standardTypeRefs.color),
+  expression: LiteralExpression(IntegerValue(BigInt.from(color.toARGB32()))),
+);
 
 Finder get _sectionBorderPaint => find.byWidgetPredicate(
   (widget) =>
