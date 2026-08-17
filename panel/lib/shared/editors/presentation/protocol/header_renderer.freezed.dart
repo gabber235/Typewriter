@@ -78,7 +78,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -227,7 +227,7 @@ return reorderHandle(_that.id,_that.label,_that.tooltip,_that.source,_that.index
 
 class _ResolvedHeaderButtonItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderButtonItem({required this.id, required this.icon, required this.label, required this.tooltip, required this.action, required this.priority, required this.declarationOrder, required this.visible, required this.enabled, required this.placement, required this.tone, required this.confirmation}): super._();
-
+  
 
 @override final  HeaderItemId id;
  final  IconValue icon;
@@ -312,7 +312,7 @@ as _ResolvedConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -321,7 +321,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $IconValueCopyWith<$Res> get icon {
-
+  
   return $IconValueCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -330,7 +330,7 @@ $IconValueCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -354,7 +354,7 @@ _$ResolvedConfirmationCopyWith<$Res>? get confirmation {
 
 class _ResolvedHeaderBooleanToggleItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderBooleanToggleItem({required this.id, required this.label, required this.tooltip, required this.checked, required this.action, required this.priority, required this.declarationOrder, required this.visible, required this.enabled, required this.placement, required this.confirmation}): super._();
-
+  
 
 @override final  HeaderItemId id;
 @override final  String label;
@@ -437,7 +437,7 @@ as _ResolvedConfirmation?,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -446,7 +446,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-
+  
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -470,7 +470,7 @@ _$ResolvedConfirmationCopyWith<$Res>? get confirmation {
 
 class _ResolvedHeaderReorderHandleItem extends _ResolvedHeaderItem {
   const _ResolvedHeaderReorderHandleItem({required this.id, required this.label, required this.tooltip, required this.source, required this.index, required this.itemCount, required this.declarationOrder, required this.visible, required this.enabled}): super._();
-
+  
 
 @override final  HeaderItemId id;
 @override final  String label;
@@ -549,7 +549,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $HeaderItemIdCopyWith<$Res> get id {
-
+  
   return $HeaderItemIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -558,7 +558,7 @@ $HeaderItemIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get source {
-
+  
   return $BindingReferenceCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -775,7 +775,7 @@ return $default(_that.title,_that.description,_that.items);case _:
 
 class _ResolvedPresentationHeaderValue implements _ResolvedPresentationHeader {
   const _ResolvedPresentationHeaderValue({required this.title, required this.description, required final  List<_ResolvedHeaderItem> items}): _items = items;
-
+  
 
 @override final  PresentationHeaderTitle? title;
 @override final  String description;
@@ -1056,7 +1056,7 @@ return $default(_that.title,_that.message,_that.confirmationLabel);case _:
 
 class _ResolvedConfirmationValue implements _ResolvedConfirmation {
   const _ResolvedConfirmationValue({required this.title, required this.message, required this.confirmationLabel});
-
+  
 
 @override final  String title;
 @override final  String message;
