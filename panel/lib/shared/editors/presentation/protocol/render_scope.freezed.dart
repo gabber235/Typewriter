@@ -74,7 +74,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-
+  
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -83,7 +83,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -226,7 +226,7 @@ return $default(_that.id,_that.root);case _:
 
 class _ResolvedPresentationDefinition implements ResolvedPresentationDefinition {
   const _ResolvedPresentationDefinition({required this.id, required this.root});
-
+  
 
 @override final  PresentationId id;
 @override final  PresentationNode root;
@@ -291,7 +291,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-
+  
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -300,7 +300,7 @@ $PresentationIdCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get root {
-
+  
   return $PresentationNodeCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -472,7 +472,7 @@ return instance(_that.identity);case _:
 
 class NodeHeaderExpansionKey implements HeaderExpansionKey {
   const NodeHeaderExpansionKey({required this.nodeId, required this.binding});
-
+  
 
  final  String nodeId;
  final  BindingReference? binding;
@@ -552,7 +552,7 @@ $BindingReferenceCopyWith<$Res>? get binding {
 
 class InstanceHeaderExpansionKey implements HeaderExpansionKey {
   const InstanceHeaderExpansionKey(this.identity);
-
+  
 
  final  Object identity;
 
@@ -691,7 +691,7 @@ as Set<PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-
+  
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -700,7 +700,7 @@ $ExpressionContextCopyWith<$Res> get expressions {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionBudgetCopyWith<$Res> get budget {
-
+  
   return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
     return _then(_self.copyWith(budget: value));
   });
@@ -843,7 +843,7 @@ return $default(_that.expressions,_that.registry,_that.budget,_that.setBinding,_
 
 class _PresentationRenderScope extends PresentationRenderScope {
   const _PresentationRenderScope({required this.expressions, required this.registry, required this.budget, required this.setBinding, required this.executeAction, required this.resolvePresentation, required this.expansionStore, this.startInteraction, this.realmSearchSourceBuilder, final  Map<PresentationCollectionSourceId, PresentationCollectionSource> collections = const {}, final  Map<BindingId, BindingReference> aliases = const {}, final  Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts = const {}, final  Set<(String, BindingReference?)> suppressedHeaders = const {}, final  Map<String, Widget> presentationSlots = const {}, this.expansionIdentity, this.enabled = true, this.readOnly = false, this.historyNamespace = "local", final  Set<PresentationId> activePresentations = const {}}): _collections = collections,_aliases = aliases,_headerShortcuts = headerShortcuts,_suppressedHeaders = suppressedHeaders,_presentationSlots = presentationSlots,_activePresentations = activePresentations,super._();
-
+  
 
 @override final  ExpressionContext expressions;
 @override final  TypeRegistry registry;
@@ -977,7 +977,7 @@ as Set<PresentationId>,
 @override
 @pragma('vm:prefer-inline')
 $ExpressionContextCopyWith<$Res> get expressions {
-
+  
   return $ExpressionContextCopyWith<$Res>(_self.expressions, (value) {
     return _then(_self.copyWith(expressions: value));
   });
@@ -986,7 +986,7 @@ $ExpressionContextCopyWith<$Res> get expressions {
 @override
 @pragma('vm:prefer-inline')
 $ExpressionBudgetCopyWith<$Res> get budget {
-
+  
   return $ExpressionBudgetCopyWith<$Res>(_self.budget, (value) {
     return _then(_self.copyWith(budget: value));
   });
