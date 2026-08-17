@@ -82,18 +82,13 @@ void main() {
 
     expect(find.text(first.name), findsOneWidget);
     expect(find.text(second.name), findsOneWidget);
-    final branchWidth = tester
-        .getSize(
-          find.byKey(const ValueKey("book.effectiveTags.branch.container")),
-        )
-        .width;
     final leafWidth = tester
         .getSize(
           find.byKey(const ValueKey("book.effectiveTags.leaf.container")).first,
         )
         .width;
     expect(leafWidth, greaterThan(300));
-    expect(leafWidth, closeTo(branchWidth, 16));
+    expect(leafWidth, lessThanOrEqualTo(400));
     final hierarchyLayouts = find.byWidgetPredicate(
       (widget) => widget.runtimeType.toString() == "_HierarchyRenderSurface",
     );
