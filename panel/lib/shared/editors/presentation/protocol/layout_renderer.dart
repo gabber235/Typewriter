@@ -1,7 +1,20 @@
+import "dart:math" as math;
+
+import "package:flutter/foundation.dart" show listEquals;
 import "package:flutter/material.dart";
+import "package:flutter/rendering.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "renderers/layout/column_renderer.dart";
+part "renderers/layout/connection_geometry.dart";
+part "renderers/layout/connection_layer_surface.dart";
+part "renderers/layout/connection_models.dart";
+part "renderers/layout/connection_painter.dart";
+part "renderers/layout/connection_paths.dart";
+part "renderers/layout/connection_renderer.dart";
+part "renderers/layout/connection_resolution.dart";
+part "renderers/layout/connection_surface.dart";
+part "renderers/layout/container_renderer.dart";
 part "renderers/layout/divider_renderer.dart";
 part "renderers/layout/grid_renderer.dart";
 part "renderers/layout/layout_support.dart";
