@@ -70,10 +70,12 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
     final separator = value.separator == null
         ? const TypeResult<wire.PresentationNode?>.success(null)
         : encodeNode(value.separator!).mapValue((value) => value);
+    final layout = _sequenceLayout(value.layout);
     final diagnostics = [
       ...item.diagnostics,
       ...empty.diagnostics,
       ...separator.diagnostics,
+      ...layout.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -81,7 +83,7 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
               item: item.valueOrNull!,
               empty: empty.valueOrNull,
               separator: separator.valueOrNull,
-              layout: value.layout._encodeWire,
+              layout: layout.valueOrNull!,
             ),
           )
         : TypeResult.failure(diagnostics);
@@ -101,6 +103,49 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
         child: child,
       ),
     );
+  }
+
+  TypeResult<wire.PresentationElement> _polymorphicMatch(
+    PolymorphicMatchElement value,
+  ) {
+    final binding = expressions.binding(value.binding);
+    final fallback = value.fallback == null
+        ? const TypeResult<wire.PresentationNode?>.success(null)
+        : encodeNode(value.fallback!).mapValue((value) => value);
+    final cases = <wire.PolymorphicMatchCase>[];
+    final diagnostics = <TypeDiagnostic>[
+      ...binding.diagnostics,
+      ...fallback.diagnostics,
+    ];
+    for (final item in value.cases) {
+      final type = types.encodeReference(item.type);
+      final child = encodeNode(item.child);
+      diagnostics
+        ..addAll(type.diagnostics)
+        ..addAll(child.diagnostics);
+      if (type.valueOrNull case final encodedType?) {
+        if (child.valueOrNull case final encodedChild?) {
+          cases.add(
+            wire.PolymorphicMatchCase(
+              concreteType: encodedType,
+              child: encodedChild,
+            ),
+          );
+        }
+      }
+    }
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            wire.PresentationElement.createPolymorphicMatch(
+              binding: binding.valueOrNull!,
+              scopeBindingId: wire_binding.BindingId(
+                value: value.scopeBindingId.value,
+              ),
+              cases: cases,
+              fallback: fallback.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
   }
 
   TypeResult<wire.PresentationElement> _collectionLookup(
@@ -135,13 +180,21 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
     CollectionGraphElement value,
   ) {
     final roots = expressions.binding(value.roots);
+    final rootSequence = _sequence(value.rootSequence);
     final node = encodeNode(value.node);
-    final diagnostics = [...roots.diagnostics, ...node.diagnostics];
+    final children = _sequence(value.children);
+    final diagnostics = [
+      ...roots.diagnostics,
+      ...rootSequence.diagnostics,
+      ...node.diagnostics,
+      ...children.diagnostics,
+    ];
     return diagnostics.isEmpty
         ? TypeResult.success(
             wire.PresentationElement.createCollectionGraph(
               sourceId: value.sourceId.value,
               roots: roots.valueOrNull!,
+              rootSequence: rootSequence.valueOrNull!,
               relationId: value.relation.value,
               direction: switch (value.direction) {
                 CollectionGraphDirection.forward =>
@@ -153,6 +206,10 @@ extension SkirPresentationDataEncoder on SkirPresentationEncoder {
               childrenBindingId: wire_binding.BindingId(
                 value: value.childrenBindingId.value,
               ),
+              childBindingId: wire_binding.BindingId(
+                value: value.childBindingId.value,
+              ),
+              children: children.valueOrNull!,
               maximumDepth: value.maximumDepth,
             ),
           )

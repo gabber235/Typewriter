@@ -28,13 +28,60 @@ extension SkirPresentationInputDecoder on SkirPresentationDecoder {
   TypeResult<PresentationElement> _textInput(wire.TextControl value) {
     final control = _bound(value.control);
     final placeholder = _optionalExpression(value.placeholder);
-    return combineResults(control, placeholder, (control, placeholder) {
-      return TextInputElement(
-        control: control,
+    final inputFormatters = value.inputFormatters.map(_inputFormatter).toList();
+    final diagnostics = [
+      ...control.diagnostics,
+      ...placeholder.diagnostics,
+      for (final formatter in inputFormatters) ...formatter.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
+    return TypeResult.success(
+      TextInputElement(
+        control: control.valueOrNull!,
         multiline: value.multiline ?? true,
-        placeholder: placeholder,
-      );
-    });
+        placeholder: placeholder.valueOrNull,
+        inputFormatters: [
+          for (final formatter in inputFormatters) formatter.valueOrNull!,
+        ],
+      ),
+    );
+  }
+
+  TypeResult<TextInputFormat> _inputFormatter(wire.TextInputFormat value) =>
+      switch (value) {
+        wire.TextInputFormat.lowercase => const TypeResult.success(
+          TextInputFormat.lowercase(),
+        ),
+        wire.TextInputFormat.uppercase => const TypeResult.success(
+          TextInputFormat.uppercase(),
+        ),
+        wire.TextInputFormat_replaceWrapper(:final value) =>
+          _checkedInputFormatter(
+            value.pattern,
+            TextInputFormat.replace(
+              pattern: value.pattern,
+              replacement: value.replacement,
+            ),
+          ),
+        wire.TextInputFormat_allowWrapper(:final value) =>
+          _checkedInputFormatter(value, TextInputFormat.allow(value)),
+        wire.TextInputFormat_denyWrapper(:final value) =>
+          _checkedInputFormatter(value, TextInputFormat.deny(value)),
+        wire.TextInputFormat_unknown() => invalidWire(
+          "Unknown text input formatter",
+        ),
+      };
+
+  TypeResult<TextInputFormat> _checkedInputFormatter(
+    String pattern,
+    TextInputFormat formatter,
+  ) {
+    try {
+      RegExp(pattern);
+      return TypeResult.success(formatter);
+    } on FormatException {
+      return invalidWire("Text input formatter pattern is malformed");
+    }
   }
 
   TypeResult<PresentationElement> _colorInput(wire.ColorControl value) =>

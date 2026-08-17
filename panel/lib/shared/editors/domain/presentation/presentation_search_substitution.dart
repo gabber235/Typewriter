@@ -13,6 +13,7 @@ extension on SearchInputElement {
     summary: summary._substituteTypes(substitutions),
     placeholder: placeholder._substituteTypes(substitutions),
     customValue: customValue._substituteTypes(substitutions),
+    initialQuery: initialQuery._substituteTypes(substitutions),
   );
 }
 

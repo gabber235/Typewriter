@@ -28,6 +28,8 @@ extension on SkirPresentationEncoder {
               description: description.valueOrNull,
               initiallyExpanded: value.initiallyExpanded,
               items: encodedItems,
+              headerPadding: value.headerPadding?._encode,
+              contentPadding: value.contentPadding?._encode,
             ),
           )
         : TypeResult.failure(diagnostics);
@@ -47,6 +49,31 @@ extension on SkirPresentationEncoder {
     final HeaderButtonItem item => item._encode(this),
     final HeaderBooleanToggleItem item => item._encode(this),
     final HeaderReorderHandleItem item => item._encode(this),
+  };
+}
+
+extension on PresentationInsets {
+  wire.PresentationInsets get _encode => switch (this) {
+    PresentationInsetsAll(:final value) => wire.PresentationInsets.wrapAll(
+      value,
+    ),
+    PresentationInsetsSymmetric(:final horizontal, :final vertical) =>
+      wire.PresentationInsets.createSymmetric(
+        horizontal: horizontal,
+        vertical: vertical,
+      ),
+    PresentationInsetsOnly(
+      :final top,
+      :final left,
+      :final right,
+      :final bottom,
+    ) =>
+      wire.PresentationInsets.createOnly(
+        top: top,
+        left: left,
+        right: right,
+        bottom: bottom,
+      ),
   };
 }
 

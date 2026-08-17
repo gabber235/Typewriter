@@ -30,6 +30,14 @@ abstract class ConcreteTypePresentation with _$ConcreteTypePresentation {
   }) = _ConcreteTypePresentation;
 }
 
+@freezed
+abstract class PolymorphicMatchCase with _$PolymorphicMatchCase {
+  const factory PolymorphicMatchCase({
+    required ResolvedTypeRef type,
+    required PresentationNode child,
+  }) = _PolymorphicMatchCase;
+}
+
 abstract interface class SimpleInputElement {
   BoundControl get control;
 }

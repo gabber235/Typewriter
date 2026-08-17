@@ -44,9 +44,27 @@ extension SkirPresentationInputEncoder on SkirPresentationEncoder {
         control: control,
         multiline: value.multiline,
         placeholder: placeholder,
+        inputFormatters: value.inputFormatters.map(_inputFormatter),
       ),
     );
   }
+
+  wire.TextInputFormat _inputFormatter(TextInputFormat value) =>
+      switch (value) {
+        LowercaseTextInputFormat() => wire.TextInputFormat.lowercase,
+        UppercaseTextInputFormat() => wire.TextInputFormat.uppercase,
+        ReplaceTextInputFormat(:final pattern, :final replacement) =>
+          wire.TextInputFormat.createReplace(
+            pattern: pattern,
+            replacement: replacement,
+          ),
+        AllowTextInputFormat(:final pattern) => wire.TextInputFormat.wrapAllow(
+          pattern,
+        ),
+        DenyTextInputFormat(:final pattern) => wire.TextInputFormat.wrapDeny(
+          pattern,
+        ),
+      };
 
   TypeResult<wire.PresentationElement> _colorInput(ColorInputElement value) =>
       _bound(value.control).mapValue(

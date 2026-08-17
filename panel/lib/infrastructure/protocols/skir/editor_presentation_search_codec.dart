@@ -10,6 +10,7 @@ extension SkirPresentationSearchDecoder on SkirPresentationDecoder {
     final provider = _searchProvider(value.provider);
     final placeholder = _optionalExpression(value.placeholder);
     final customValue = _optionalExpression(value.customValue);
+    final initialQuery = _optionalExpression(value.initialQuery);
     final diagnostics = [
       ...control.diagnostics,
       ...selectionMode.diagnostics,
@@ -19,6 +20,7 @@ extension SkirPresentationSearchDecoder on SkirPresentationDecoder {
       ...provider.diagnostics,
       ...placeholder.diagnostics,
       ...customValue.diagnostics,
+      ...initialQuery.diagnostics,
     ];
     return diagnostics.isEmpty
         ? TypeResult.success(
@@ -34,6 +36,7 @@ extension SkirPresentationSearchDecoder on SkirPresentationDecoder {
                   : decodeNode(value.summary!),
               placeholder: placeholder.valueOrNull,
               customValue: customValue.valueOrNull,
+              initialQuery: initialQuery.valueOrNull,
             ),
           )
         : TypeResult.failure(diagnostics);

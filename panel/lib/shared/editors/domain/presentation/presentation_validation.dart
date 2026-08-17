@@ -29,7 +29,28 @@ extension on PresentationHeader {
       ...value
           .evaluate(context, registry: registry, budget: budget)
           .diagnostics,
+    for (final padding in [headerPadding, contentPadding])
+      if (padding != null &&
+          padding.values.any((value) => !value.isFinite || value < 0))
+        _invalid("Header padding must be finite and nonnegative"),
   ];
+}
+
+extension on PresentationInsets {
+  List<double> get values => switch (this) {
+    PresentationInsetsAll(:final value) => [value],
+    PresentationInsetsSymmetric(:final horizontal, :final vertical) => [
+      horizontal,
+      vertical,
+    ],
+    PresentationInsetsOnly(
+      :final top,
+      :final left,
+      :final right,
+      :final bottom,
+    ) =>
+      [top, left, right, bottom],
+  };
 }
 
 extension on PresentationElement {
@@ -62,6 +83,19 @@ extension on PresentationElement {
         _invalid("Date and time control must enable at least one part"),
       );
     }
+    if (element case TextInputElement(:final inputFormatters)) {
+      for (final formatter in inputFormatters) {
+        if (formatter.pattern case final pattern?) {
+          try {
+            RegExp(pattern);
+          } on FormatException {
+            diagnostics.add(
+              _invalid("Text input formatter pattern is malformed"),
+            );
+          }
+        }
+      }
+    }
     if (element case ChipElement(:final label, :final color)) {
       if (label.resultType is! StringType) {
         diagnostics.add(_invalid("Chip label must declare a string result"));
@@ -74,9 +108,14 @@ extension on PresentationElement {
         diagnostics.add(_invalid("Chip color must declare the Color type"));
       }
     }
-    if (element case SectionElement(:final border?)) {
+    final border = switch (element) {
+      SectionElement(:final border) ||
+      ContainerElement(:final border) => border,
+      _ => null,
+    };
+    if (border != null) {
       if (border.sides.isEmpty) {
-        diagnostics.add(_invalid("Section border must contain a side"));
+        diagnostics.add(_invalid("Presentation border must contain a side"));
       }
       for (final side in border.sides) {
         if (!side.width.isFinite || side.width <= 0) {
@@ -116,25 +155,78 @@ extension on PresentationElement {
     ) when slotId.isEmpty) {
       diagnostics.add(_invalid("Presentation slot ID must not be empty"));
     }
-    if (element case CollectionGraphElement(:final node)) {
-      final slots = node.presentationSlotIds;
-      if (slots.isEmpty) {
-        diagnostics.add(_invalid("Collection graph node must contain a slot"));
-      }
-      if (slots.length > 1) {
+    if (element case CollectionGraphElement(
+      :final node,
+      :final rootSequence,
+      :final children,
+    )) {
+      final nodeSlots = node.presentationSlotIds;
+      final rootSlots = rootSequence.item.presentationSlotIds;
+      final childSlots = children.item.presentationSlotIds;
+      if (rootSlots.length != 1) {
         diagnostics.add(
-          _invalid("Collection graph node contains distinct slot identifiers"),
+          _invalid("Collection graph root template must contain one slot"),
         );
+      }
+      if (nodeSlots.length != 1 || childSlots.length != 1) {
+        diagnostics.add(
+          _invalid("Collection graph templates must contain one logical slot"),
+        );
+      } else if (nodeSlots.single != childSlots.single) {
+        diagnostics.add(_invalid("Collection graph child slots must match"));
+      }
+    }
+    if (element case PresentationAnchorElement(:final anchors)) {
+      final identifiers = <String>{};
+      for (final anchor in anchors) {
+        if (anchor.id.isEmpty) {
+          diagnostics.add(_invalid("Anchor identifier must not be empty"));
+        } else if (!identifiers.add(anchor.id)) {
+          diagnostics.add(
+            _invalid("Duplicate local anchor identifier: ${anchor.id}"),
+          );
+        }
+        if (anchor.groupIds.any((group) => group.isEmpty)) {
+          diagnostics.add(
+            _invalid("Anchor group identifier must not be empty"),
+          );
+        }
+      }
+    }
+    if (element case ConnectionLayerElement(:final connections)) {
+      for (final connection in connections) {
+        if (connection case AnchoredConnectionBundle(:final trunkMarkers)) {
+          if (trunkMarkers.any(
+            (marker) => marker.scope == ConnectionExpressionScope.target,
+          )) {
+            diagnostics.add(
+              _invalid("Bundle trunk markers cannot use a target scope"),
+            );
+          }
+        }
       }
     }
     final sequences = switch (element) {
       RepeatedElement(:final presentation) => [presentation],
+      CollectionGraphElement(:final rootSequence, :final children) => [
+        rootSequence,
+        children,
+      ],
       _ => const <SequencePresentation>[],
     };
     for (final sequence in sequences) {
+      final standardLayout = switch (sequence.layout) {
+        PresentationStandardSequenceLayout(:final layout) => layout,
+        PresentationHierarchySequenceLayout() => null,
+      };
       if (sequence.separator != null &&
-          (sequence.layout is PresentationGridLayout ||
-              sequence.layout is PresentationStackLayout)) {
+          sequence.layout is PresentationHierarchySequenceLayout) {
+        diagnostics.add(
+          _invalid("Hierarchy sequences do not support separators"),
+        );
+      } else if (sequence.separator != null &&
+          (standardLayout is PresentationGridLayout ||
+              standardLayout is PresentationStackLayout)) {
         diagnostics.add(
           _invalid("Grid and stack sequences do not support separators"),
         );
@@ -208,6 +300,10 @@ extension on PresentationElement {
       for (final type in concreteTypes)
         ...?type.presentation?.presentationSlotIds,
     },
+    PolymorphicMatchElement(:final cases, :final fallback) => {
+      for (final item in cases) ...item.child.presentationSlotIds,
+      ...?fallback?.presentationSlotIds,
+    },
     TabsElement(:final tabs) => {
       for (final tab in tabs) ...tab.child.presentationSlotIds,
     },
@@ -220,8 +316,44 @@ extension on PresentationElement {
   List<TypedExpression> get _presentationExpressions {
     final element = this;
     return switch (element) {
-      TextualContentElement(:final value) => [value],
-      IconElement(:final name, :final semanticLabel) => [name, ?semanticLabel],
+      TextElement(
+        :final value,
+        :final color,
+        :final fontSize,
+        :final fontWeight,
+        :final fontItalic,
+        :final fontOpticalSize,
+        :final fontSlant,
+        :final fontWidth,
+        :final textAlignment,
+        :final lineHeight,
+        :final letterSpacing,
+        :final decoration,
+        :final semanticLabel,
+      ) =>
+        [
+          value,
+          ?color,
+          ?fontSize,
+          ?fontWeight,
+          ?fontItalic,
+          ?fontOpticalSize,
+          ?fontSlant,
+          ?fontWidth,
+          ?textAlignment,
+          ?lineHeight,
+          ?letterSpacing,
+          ?decoration,
+          ?semanticLabel,
+        ],
+      MarkdownElement(:final value, :final color) => [value, ?color],
+      IconElement(
+        :final name,
+        :final semanticLabel,
+        :final color,
+        :final size,
+      ) =>
+        [name, ?semanticLabel, ?color, ?size],
       ImageElement(:final source, :final semanticLabel) => [
         source,
         ?semanticLabel,
@@ -234,6 +366,17 @@ extension on PresentationElement {
         ?label,
       ],
       SectionElement(:final border?) => border.colors,
+      ContainerElement(:final border, :final backgroundColor, :final radius) =>
+        [...?border?.colors, ?backgroundColor, ...radius.expressions],
+      PresentationAnchorElement(:final anchors) => [
+        for (final anchor in anchors) ...[
+          ?anchor.visibleIf,
+          ...?anchor.offset?.expressions,
+        ],
+      ],
+      ConnectionLayerElement(:final connections) => [
+        for (final connection in connections) ?connection.visibleIf,
+      ],
       TabsElement(:final tabs) => [for (final tab in tabs) tab.label],
       ConditionalElement(:final condition) => [condition],
       RepeatedElement(:final source) => [source],
@@ -296,6 +439,26 @@ extension on PresentationElement {
     SelectInputElement() => true,
     _ => true,
   };
+}
+
+extension on TextInputFormat {
+  String? get pattern => switch (this) {
+    ReplaceTextInputFormat(:final pattern) ||
+    AllowTextInputFormat(:final pattern) ||
+    DenyTextInputFormat(:final pattern) => pattern,
+    _ => null,
+  };
+}
+
+extension on PresentationRadius {
+  List<TypedExpression> get expressions => switch (this) {
+    CustomPresentationRadius(:final value) => [value],
+    _ => const [],
+  };
+}
+
+extension on PresentationOffset {
+  List<TypedExpression> get expressions => [x, y];
 }
 
 extension on PresentationBorder {

@@ -10,6 +10,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "editor_presentation_content_codec.dart";
+part "editor_presentation_composition_codec.dart";
+part "editor_presentation_connection_codec.dart";
 part "editor_presentation_data_codec.dart";
 part "editor_presentation_header_codec.dart";
 part "editor_presentation_input_codec.dart";
@@ -27,17 +29,24 @@ final class SkirPresentationDecoder {
 
   PresentationNode decodeNode(wire.PresentationNode value) {
     final enabled = _optionalExpression(value.properties.enabledIf);
+    final header = value.header == null
+        ? const TypeResult<PresentationHeader?>.success(null)
+        : _header(value.header!).mapValue((value) => value);
     final element = value.element == null
         ? invalidWire<PresentationElement>("Presentation element is missing")
         : _element(value.element!);
-    final diagnostics = [...enabled.diagnostics, ...element.diagnostics];
+    final diagnostics = [
+      ...enabled.diagnostics,
+      ...header.diagnostics,
+      ...element.diagnostics,
+    ];
     return PresentationNode(
       id: value.nodeId.isEmpty ? "wire.invalid" : value.nodeId,
       properties: PresentationProperties(
         enabledIf: enabled.valueOrNull,
         readOnly: value.properties.readOnly,
       ),
-      header: value.header == null ? null : _header(value.header!),
+      header: header.valueOrNull,
       element: diagnostics.isEmpty
           ? element.valueOrNull!
           : DiagnosticElement(diagnostics),
@@ -49,6 +58,12 @@ final class SkirPresentationDecoder {
   ) => switch (value) {
     wire.PresentationElement_childrenWrapper(:final value) => _children(value),
     wire.PresentationElement_sectionWrapper(:final value) => _section(value),
+    wire.PresentationElement_containerWrapper(:final value) => _container(
+      value,
+    ),
+    wire.PresentationElement_anchorWrapper(:final value) => _anchor(value),
+    wire.PresentationElement_connectionLayerWrapper(:final value) =>
+      _connectionLayer(value),
     wire.PresentationElement_paddingWrapper(:final value) => _padding(value),
     wire.PresentationElement_slotWrapper(:final value) => _slot(value),
     wire.PresentationElement_tabsWrapper(:final value) => _tabs(value),
@@ -56,14 +71,8 @@ final class SkirPresentationDecoder {
       DividerElement(),
     ),
     wire.PresentationElement_spacerWrapper(:final value) => _spacer(value),
-    wire.PresentationElement_textWrapper(:final value) => _text(
-      value,
-      TextElement.new,
-    ),
-    wire.PresentationElement_markdownWrapper(:final value) => _text(
-      value,
-      MarkdownElement.new,
-    ),
+    wire.PresentationElement_textWrapper(:final value) => _text(value),
+    wire.PresentationElement_markdownWrapper(:final value) => _markdown(value),
     wire.PresentationElement_iconWrapper(:final value) => _icon(value),
     wire.PresentationElement_imageWrapper(:final value) => _image(value),
     wire.PresentationElement_badgeWrapper(:final value) => _badge(value),
@@ -120,6 +129,8 @@ final class SkirPresentationDecoder {
     ).mapValue(EnumInputElement.new),
     wire.PresentationElement_polymorphicInputWrapper(:final value) =>
       _polymorphic(value),
+    wire.PresentationElement_polymorphicMatchWrapper(:final value) =>
+      _polymorphicMatch(value),
     wire.PresentationElement_namedInputWrapper(:final value) => _bound(
       value,
     ).mapValue(NamedInputElement.new),

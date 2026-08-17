@@ -1,7 +1,7 @@
 part of "editor_presentation_codec.dart";
 
 extension on SkirPresentationDecoder {
-  PresentationHeader _header(wire.PresentationHeader value) {
+  TypeResult<PresentationHeader> _header(wire.PresentationHeader value) {
     final binding = value.binding == null
         ? const TypeResult<BindingReference?>.success(null)
         : expressions.binding(value.binding!).mapValue((value) => value);
@@ -9,13 +9,68 @@ extension on SkirPresentationDecoder {
         ? const TypeResult<PresentationHeaderTitle?>.success(null)
         : _headerTitle(value.title!).mapValue((value) => value);
     final description = _optionalExpression(value.description);
-    return PresentationHeader(
-      binding: binding.valueOrNull,
-      title: title.valueOrNull,
-      description: description.valueOrNull,
-      initiallyExpanded: value.initiallyExpanded,
-      items: [for (final item in value.items) _headerItem(item)],
-    );
+    final headerPadding = _insets(value.headerPadding);
+    final contentPadding = _insets(value.contentPadding);
+    final diagnostics = [
+      ...binding.diagnostics,
+      ...title.diagnostics,
+      ...description.diagnostics,
+      ...headerPadding.diagnostics,
+      ...contentPadding.diagnostics,
+    ];
+    return diagnostics.isEmpty
+        ? TypeResult.success(
+            PresentationHeader(
+              binding: binding.valueOrNull,
+              title: title.valueOrNull,
+              description: description.valueOrNull,
+              initiallyExpanded: value.initiallyExpanded,
+              items: [for (final item in value.items) _headerItem(item)],
+              headerPadding: headerPadding.valueOrNull,
+              contentPadding: contentPadding.valueOrNull,
+            ),
+          )
+        : TypeResult.failure(diagnostics);
+  }
+
+  TypeResult<PresentationInsets?> _insets(wire.PresentationInsets? value) {
+    if (value == null) return const TypeResult.success(null);
+    final decoded = switch (value) {
+      wire.PresentationInsets_allWrapper(:final value) =>
+        PresentationInsets.all(value),
+      wire.PresentationInsets_symmetricWrapper(:final value) =>
+        PresentationInsets.symmetric(
+          horizontal: value.horizontal,
+          vertical: value.vertical,
+        ),
+      wire.PresentationInsets_onlyWrapper(:final value) =>
+        PresentationInsets.only(
+          top: value.top,
+          left: value.left,
+          right: value.right,
+          bottom: value.bottom,
+        ),
+      wire.PresentationInsets_unknown() => null,
+    };
+    if (decoded == null) return invalidWire("Unknown presentation insets");
+    final values = switch (decoded) {
+      PresentationInsetsAll(:final value) => [value],
+      PresentationInsetsSymmetric(:final horizontal, :final vertical) => [
+        horizontal,
+        vertical,
+      ],
+      PresentationInsetsOnly(
+        :final top,
+        :final left,
+        :final right,
+        :final bottom,
+      ) =>
+        [top, left, right, bottom],
+    };
+    if (values.any((value) => !value.isFinite || value < 0)) {
+      return invalidWire("Invalid presentation insets");
+    }
+    return TypeResult.success(decoded);
   }
 
   TypeResult<PresentationHeaderTitle> _headerTitle(

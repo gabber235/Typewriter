@@ -106,6 +106,41 @@ sealed class PresentationChildrenLayout with _$PresentationChildrenLayout {
   const factory PresentationChildrenLayout.stack() = PresentationStackLayout;
 }
 
+@freezed
+sealed class ConnectorAnchor with _$ConnectorAnchor {
+  const factory ConnectorAnchor.start() = StartConnectorAnchor;
+  const factory ConnectorAnchor.center() = CenterConnectorAnchor;
+  const factory ConnectorAnchor.offset(TypedExpression value) =
+      OffsetConnectorAnchor;
+}
+
+@freezed
+abstract class HierarchySequenceLayout with _$HierarchySequenceLayout {
+  const factory HierarchySequenceLayout({
+    required ConnectorStyle unaryConnector,
+    required ConnectorStyle trunkConnector,
+    required ConnectorStyle branchConnector,
+    required TypedExpression itemSpacing,
+    required TypedExpression indentation,
+    required TypedExpression leadingSpacing,
+    required ConnectorAnchor itemAnchor,
+    required TypedExpression flattenSingleItem,
+    @Default(PresentationCrossAxisAlignment.stretch)
+    PresentationCrossAxisAlignment crossAxisAlignment,
+  }) = _HierarchySequenceLayout;
+}
+
+@freezed
+sealed class PresentationSequenceLayout with _$PresentationSequenceLayout {
+  const factory PresentationSequenceLayout.children(
+    PresentationChildrenLayout layout,
+  ) = PresentationStandardSequenceLayout;
+
+  const factory PresentationSequenceLayout.hierarchy(
+    HierarchySequenceLayout layout,
+  ) = PresentationHierarchySequenceLayout;
+}
+
 extension PresentationChildrenLayoutElement on PresentationChildrenLayout {
   PresentationElement element(List<PresentationNode> children) =>
       switch (this) {

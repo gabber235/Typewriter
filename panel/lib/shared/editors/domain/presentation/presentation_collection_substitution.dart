@@ -14,10 +14,13 @@ PresentationElement _substituteCollectionElement(
   CollectionGraphElement() => CollectionGraphElement(
     sourceId: element.sourceId,
     roots: element.roots,
+    rootSequence: element.rootSequence._substituteTypes(substitutions),
     relation: element.relation,
     direction: element.direction,
     node: element.node._substituteTypes(substitutions),
     childrenBindingId: element.childrenBindingId,
+    childBindingId: element.childBindingId,
+    children: element.children._substituteTypes(substitutions),
     maximumDepth: element.maximumDepth,
   ),
   _ => element,

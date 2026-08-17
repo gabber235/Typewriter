@@ -2,6 +2,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "presentation_header_substitution.dart";
 part "presentation_collection_substitution.dart";
+part "presentation_connection_substitution.dart";
 part "presentation_search_substitution.dart";
 
 extension PresentationNodeSubstitution on PresentationNode {
@@ -57,6 +58,18 @@ extension on PresentationElement {
         child: value.child._substituteTypes(substitutions),
         border: value.border?._substituteTypes(substitutions),
       ),
+      ContainerElement() => ContainerElement(
+        child: value.child._substituteTypes(substitutions),
+        border: value.border?._substituteTypes(substitutions),
+        backgroundColor: value.backgroundColor._substituteTypes(substitutions),
+        radius: value.radius._substituteTypes(substitutions),
+      ),
+      PresentationAnchorElement() => value._substituteAnchorTypes(
+        substitutions,
+      ),
+      ConnectionLayerElement() => value._substituteConnectionTypes(
+        substitutions,
+      ),
       PaddingElement() => PaddingElement(
         child: value.child._substituteTypes(substitutions),
         top: value.top,
@@ -82,13 +95,30 @@ extension on PresentationElement {
         width: value.width._substituteTypes(substitutions),
         height: value.height._substituteTypes(substitutions),
       ),
-      TextElement() => TextElement(value.value._substituteTypes(substitutions)),
+      TextElement() => TextElement(
+        value.value._substituteTypes(substitutions),
+        color: value.color._substituteTypes(substitutions),
+        fontSize: value.fontSize._substituteTypes(substitutions),
+        fontWeight: value.fontWeight._substituteTypes(substitutions),
+        fontItalic: value.fontItalic._substituteTypes(substitutions),
+        fontOpticalSize: value.fontOpticalSize._substituteTypes(substitutions),
+        fontSlant: value.fontSlant._substituteTypes(substitutions),
+        fontWidth: value.fontWidth._substituteTypes(substitutions),
+        textAlignment: value.textAlignment._substituteTypes(substitutions),
+        lineHeight: value.lineHeight._substituteTypes(substitutions),
+        letterSpacing: value.letterSpacing._substituteTypes(substitutions),
+        decoration: value.decoration._substituteTypes(substitutions),
+        semanticLabel: value.semanticLabel._substituteTypes(substitutions),
+      ),
       MarkdownElement() => MarkdownElement(
         value.value._substituteTypes(substitutions),
+        color: value.color._substituteTypes(substitutions),
       ),
       IconElement() => IconElement(
         name: value.name._substituteTypes(substitutions),
         semanticLabel: value.semanticLabel._substituteTypes(substitutions),
+        color: value.color._substituteTypes(substitutions),
+        size: value.size._substituteTypes(substitutions),
       ),
       ImageElement() => ImageElement(
         source: value.source._substituteTypes(substitutions),
@@ -133,6 +163,7 @@ extension on PresentationElement {
         control: value.control._substituteTypes(substitutions),
         multiline: value.multiline,
         placeholder: value.placeholder._substituteTypes(substitutions),
+        inputFormatters: value.inputFormatters,
       ),
       NumericInputElement() => NumericInputElement(
         value.control._substituteTypes(substitutions),
@@ -221,6 +252,19 @@ extension on PresentationElement {
             )
             .toList(),
       ),
+      PolymorphicMatchElement() => PolymorphicMatchElement(
+        binding: value.binding,
+        scopeBindingId: value.scopeBindingId,
+        cases: value.cases
+            .map(
+              (item) => PolymorphicMatchCase(
+                type: item.type,
+                child: item.child.substitute(substitutions),
+              ),
+            )
+            .toList(),
+        fallback: value.fallback?.substitute(substitutions),
+      ),
       ButtonElement() => ButtonElement(
         label: value.label._substituteTypes(substitutions),
         action: value.action.substituteTypes(substitutions),
@@ -268,8 +312,47 @@ extension on SequencePresentation {
     item: item._substituteTypes(substitutions),
     empty: empty._substituteTypes(substitutions),
     separator: separator._substituteTypes(substitutions),
-    layout: layout,
+    layout: layout._substituteTypes(substitutions),
   );
+}
+
+extension on PresentationSequenceLayout {
+  PresentationSequenceLayout _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => switch (this) {
+    PresentationStandardSequenceLayout() => this,
+    PresentationHierarchySequenceLayout(:final layout) =>
+      PresentationSequenceLayout.hierarchy(
+        layout._substituteTypes(substitutions),
+      ),
+  };
+}
+
+extension on HierarchySequenceLayout {
+  HierarchySequenceLayout _substituteTypes(
+    Map<String, TypeExpression> substitutions,
+  ) => HierarchySequenceLayout(
+    unaryConnector: unaryConnector._substituteTypes(substitutions),
+    trunkConnector: trunkConnector._substituteTypes(substitutions),
+    branchConnector: branchConnector._substituteTypes(substitutions),
+    itemSpacing: itemSpacing._substituteTypes(substitutions),
+    indentation: indentation._substituteTypes(substitutions),
+    leadingSpacing: leadingSpacing._substituteTypes(substitutions),
+    itemAnchor: itemAnchor._substituteTypes(substitutions),
+    flattenSingleItem: flattenSingleItem._substituteTypes(substitutions),
+    crossAxisAlignment: crossAxisAlignment,
+  );
+}
+
+extension on ConnectorAnchor {
+  ConnectorAnchor _substituteTypes(Map<String, TypeExpression> substitutions) =>
+      switch (this) {
+        StartConnectorAnchor() => this,
+        CenterConnectorAnchor() => this,
+        OffsetConnectorAnchor(:final value) => ConnectorAnchor.offset(
+          value._substituteTypes(substitutions),
+        ),
+      };
 }
 
 extension on Iterable<PresentationNode> {
