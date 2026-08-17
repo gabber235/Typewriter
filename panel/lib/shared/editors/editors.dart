@@ -26,6 +26,7 @@ export "domain/editor_value.dart";
 export "domain/presentation/presentation.dart";
 export "domain/types/decimal_comparison.dart";
 export "domain/types/generic_inference.dart";
+export "domain/types/identifier_type.dart";
 export "domain/types/nullable_extrema.dart";
 export "domain/types/safe_refinement.dart";
 export "domain/types/standard_types.dart";

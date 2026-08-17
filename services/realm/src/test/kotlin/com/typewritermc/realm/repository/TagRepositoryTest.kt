@@ -323,7 +323,7 @@ val TagRepositoryTest by testSuite {
                             Placement(x = 0, y = 0, width = 4, height = 1),
                         ).successValue()
 
-                listOf("ab", "Upper", "has space", "has-dash", "ümlaut", "_leading", "trailing_").forEach { name ->
+                listOf("ab", "Upper", "has space", "has-dash", "has__gap", "ümlaut", "_leading", "trailing_").forEach { name ->
                     fixture.tags.updateTag(tag.copy(name = name)).failureSlug() shouldBe "tag-name-invalid-error"
                     fixture.tags.getTag(tag.tagId) shouldBe tag
                 }

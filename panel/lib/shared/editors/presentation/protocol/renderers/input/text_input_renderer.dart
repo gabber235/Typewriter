@@ -22,6 +22,7 @@ extension TextInputElementRendering on TextInputElement {
           minLines: 1,
           maxLines: multiline ? 8 : 1,
           readOnly: field.locked,
+          inputFormatters: inputFormatters.toTextInputFormatters(),
           onInputFocus: field.interaction.begin,
           onDone: (_) => field.interaction.commit(),
           onCancel: field.interaction.cancel,

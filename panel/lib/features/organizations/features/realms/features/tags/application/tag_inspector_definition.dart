@@ -16,7 +16,7 @@ final tagInspectorTypeDefinition = TypeDefinition(
   defaultPresentationId: _tagInspectorPresentationId,
   representation: RecordType(
     fields: {
-      "name": TypeField(name: "name", type: StringType(minimumLength: 1)),
+      "name": TypeField(name: "name", type: identifierStringType),
       "color": TypeField(
         name: "color",
         type: NamedType(standardTypeRefs.color),
@@ -76,6 +76,7 @@ final _tagInspectorPresentation = PresentationDefinition(
               label: "Name".asStringLiteral,
             ),
             multiline: false,
+            inputFormatters: identifierInputFormats,
           ),
         ),
         PresentationNode(

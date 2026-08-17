@@ -16,7 +16,7 @@ final _bookInspectorType = TypeDefinition(
   defaultPresentationId: _bookInspectorPresentationId,
   representation: RecordType(
     fields: {
-      "title": TypeField(name: "title", type: StringType(minimumLength: 1)),
+      "title": TypeField(name: "title", type: identifierStringType),
       "icon": TypeField(name: "icon", type: NamedType(standardTypeRefs.icon)),
       "color": TypeField(
         name: "color",
@@ -54,6 +54,7 @@ final _bookInspectorPresentation = PresentationDefinition(
               label: "Title".asStringLiteral,
             ),
             multiline: false,
+            inputFormatters: identifierInputFormats,
           ),
         ),
         PresentationNode(

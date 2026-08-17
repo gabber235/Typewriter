@@ -2,10 +2,10 @@ name = "kernel"
 tags = ["kernel", "schema"]
 
 [[cases]]
-name = "id_helper_accepts_expected_slugs"
+name = "id_helper_requires_canonical_snake_case"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN fn::is_id('acme_123') AND fn::is_id('a1b') AND !fn::is_id('Acme') AND !fn::is_id('a') AND !fn::is_id('bad-name');"
+sql = "RETURN fn::is_id('abc') AND fn::is_id('a_b') AND fn::is_id('acme_123') AND !fn::is_id('ab') AND !fn::is_id('_main') AND !fn::is_id('main_') AND !fn::is_id('main__story') AND !fn::is_id('MainStory') AND !fn::is_id('bad-name');"
 allow = true
 [[cases.assertions]]
 path = ""

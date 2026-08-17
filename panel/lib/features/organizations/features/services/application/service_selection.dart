@@ -15,7 +15,7 @@ final _serviceInspectorType = TypeDefinition(
   defaultPresentationId: _serviceInspectorPresentationId,
   representation: RecordType(
     fields: {
-      "name": TypeField(name: "name", type: StringType(minimumLength: 1)),
+      "name": TypeField(name: "name", type: identifierStringType),
       "runsIn": TypeField(
         name: "runsIn",
         type: NamedType(standardTypeRefs.optionOf(_serviceReferenceType)),
