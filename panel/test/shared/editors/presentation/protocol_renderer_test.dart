@@ -6,6 +6,137 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("renders expression backed text styling", (tester) async {
+    const textColor = Color(0xFF967BFA);
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "styledText",
+          element: TextElement(
+            "Styled text".asStringLiteral,
+            color: textColor.asColorLiteral,
+            fontSize: 22.asFloatLiteral,
+            fontWeight: 575.5.asFloatLiteral,
+            fontItalic: 0.65.asFloatLiteral,
+            fontOpticalSize: 18.asFloatLiteral,
+            fontSlant: (-8).asFloatLiteral,
+            fontWidth: 112.5.asFloatLiteral,
+            textAlignment: "center".asStringLiteral,
+            lineHeight: 1.4.asFloatLiteral,
+            letterSpacing: 1.5.asFloatLiteral,
+            decoration: "underline".asStringLiteral,
+            semanticLabel: "Styled example".asStringLiteral,
+          ),
+        ),
+      ),
+    );
+
+    final text = tester.widget<SelectableText>(find.byType(SelectableText));
+    expect(text.semanticsLabel, "Styled example");
+    expect(text.textAlign, TextAlign.center);
+    expect(text.style?.color, textColor);
+    expect(text.style?.fontSize, 22);
+    expect(text.style?.fontVariations, const [
+      FontVariation.weight(575.5),
+      FontVariation.italic(0.65),
+      FontVariation.opticalSize(18),
+      FontVariation.slant(-8),
+      FontVariation.width(112.5),
+    ]);
+    expect(text.style?.height, 1.4);
+    expect(text.style?.letterSpacing, 1.5);
+    expect(text.style?.decoration, TextDecoration.underline);
+  });
+
+  testWidgets("updates expression backed text styling", (tester) async {
+    const weightExpression = TypedExpression(
+      resultType: IntegerType(width: IntegerWidth.signed64),
+      expression: BindingExpression(_rootBinding),
+    );
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const IntegerType(width: IntegerWidth.signed64),
+        value: IntegerValue(BigInt.from(350)),
+        presentation: PresentationNode(
+          id: "dynamicText",
+          element: ColumnElement(
+            children: [
+              PresentationNode(
+                id: "text",
+                element: TextElement(
+                  "Dynamic weight".asStringLiteral,
+                  fontWeight: weightExpression,
+                ),
+              ),
+              PresentationNode(
+                id: "update",
+                element: ButtonElement(
+                  label: "Update weight".asStringLiteral,
+                  action: EditorAction.local(
+                    SetValueAction(
+                      target: _rootBinding,
+                      value: 650.asIntegerLiteral,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    SelectableText text() => tester.widget(find.byType(SelectableText));
+    expect(text().style?.fontVariations, const [FontVariation.weight(350)]);
+
+    await tester.tap(find.text("Update weight"));
+    await tester.pump();
+
+    expect(text().style?.fontVariations, const [FontVariation.weight(650)]);
+  });
+
+  testWidgets("diagnoses invalid text styling", (tester) async {
+    final cases = [
+      (
+        TextElement("Invalid".asStringLiteral, fontWeight: 0.asFloatLiteral),
+        "Font weight must be at least 1.0",
+      ),
+      (
+        TextElement("Invalid".asStringLiteral, fontItalic: 1.1.asFloatLiteral),
+        "Font italic must be at most 1.0",
+      ),
+      (
+        TextElement(
+          "Invalid".asStringLiteral,
+          fontOpticalSize: 0.asFloatLiteral,
+        ),
+        "Font optical size must be greater than 0.0",
+      ),
+      (
+        TextElement("Invalid".asStringLiteral, fontSlant: 90.asFloatLiteral),
+        "Font slant must be less than 90.0",
+      ),
+      (
+        TextElement("Invalid".asStringLiteral, fontWidth: 0.asFloatLiteral),
+        "Font width must be greater than 0.0",
+      ),
+    ];
+
+    for (final (element, message) in cases) {
+      await tester.pumpTestApp(
+        child: _renderer(
+          type: const UnitType(),
+          value: const UnitValue(),
+          presentation: PresentationNode(id: "invalidText", element: element),
+        ),
+      );
+
+      expect(find.text(message), findsOneWidget);
+    }
+  });
+
   testWidgets("renders Markdown text with selection semantics", (tester) async {
     const markdown = "# Quest notes\n\nUse **clear objectives**.";
 

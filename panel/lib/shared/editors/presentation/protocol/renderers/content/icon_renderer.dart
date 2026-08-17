@@ -29,10 +29,25 @@ extension IconElementRendering on IconElement {
     final label = semanticLabel == null
         ? null
         : scope.expressionText(semanticLabel!);
+    final resolvedColor = resolvePresentationColor(color, scope);
+    final resolvedSize = resolvePresentationSize(size, scope);
+    final diagnostics = [
+      ...resolvedColor.diagnostics,
+      ...resolvedSize.diagnostics,
+    ];
+    if (diagnostics.isNotEmpty) {
+      return presentationDiagnostic(context, diagnostics);
+    }
     return Semantics(
       label: label,
       image: true,
-      child: ExcludeSemantics(child: Icones.value(icon)),
+      child: ExcludeSemantics(
+        child: Icones.value(
+          icon,
+          color: resolvedColor.valueOrNull,
+          size: resolvedSize.valueOrNull,
+        ),
+      ),
     );
   }
 }
