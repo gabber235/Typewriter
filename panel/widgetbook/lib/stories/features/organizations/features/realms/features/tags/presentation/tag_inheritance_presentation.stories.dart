@@ -53,7 +53,7 @@ Widget tagInheritanceKeyboardUseCase(BuildContext context) => _story(
 
 @widgetbook.UseCase(name: "Inheritance narrow layout", type: TagGraph)
 Widget tagInheritanceNarrowUseCase(BuildContext context) => _story(
-  width: 300,
+  width: 400,
   tags: [
     _tag(
       "a_moderately_long_direct_tag",
@@ -68,10 +68,22 @@ Widget tagInheritanceNarrowUseCase(BuildContext context) => _story(
   roots: const ["a_moderately_long_direct_tag"],
 );
 
+@widgetbook.UseCase(name: "Inheritance right to left", type: TagGraph)
+Widget tagInheritanceRightToLeftUseCase(BuildContext context) => _story(
+  textDirection: TextDirection.rtl,
+  tags: [
+    _tag("direct", parents: const ["first", "second"]),
+    _tag("first"),
+    _tag("second"),
+  ],
+  roots: const ["direct"],
+);
+
 Widget _story({
   required List<Tag> tags,
   required List<String> roots,
   double width = 520,
+  TextDirection textDirection = TextDirection.ltr,
 }) {
   const rootBinding = BindingReference(bindingId: BindingId(0));
   const rootType = ResolvedTypeRef(
@@ -79,28 +91,31 @@ Widget _story({
     revision: 1,
   );
   return FakeApp(
-    child: Center(
-      child: SizedBox(
-        width: width,
-        child: EditorProtocolRenderer(
-          envelope: TypedValueEnvelope(
-            rootType: rootType,
-            rootValue: ListValue(
-              roots.map((id) => StringValue(_tagRecordId(id).id)).toList(),
+    child: Directionality(
+      textDirection: textDirection,
+      child: Center(
+        child: SizedBox(
+          width: width,
+          child: EditorProtocolRenderer(
+            envelope: TypedValueEnvelope(
+              rootType: rootType,
+              rootValue: ListValue(
+                roots.map((id) => StringValue(_tagRecordId(id).id)).toList(),
+              ),
             ),
-          ),
-          typeCatalog: TypeCatalog([
-            TypeDefinition(
-              id: rootType,
-              kind: NominalTypeKind.concrete,
-              representation: ListType(element: tagReferenceType),
+            typeCatalog: TypeCatalog([
+              TypeDefinition(
+                id: rootType,
+                kind: NominalTypeKind.concrete,
+                representation: ListType(element: tagReferenceType),
+              ),
+            ]),
+            collections: [tagPresentationCollection(tags)],
+            presentation: effectiveTagGraph(
+              id: "widgetbook.tagInheritance",
+              title: "Inheritance",
+              roots: rootBinding,
             ),
-          ]),
-          collections: [tagPresentationCollection(tags)],
-          presentation: effectiveTagGraph(
-            id: "widgetbook.tagInheritance",
-            title: "Inheritance",
-            roots: rootBinding,
           ),
         ),
       ),

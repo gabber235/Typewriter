@@ -41,7 +41,6 @@ extension ChipElementRendering on ChipElement {
     }
     final foreground = entityColor._readableEntityColor(context);
     return Chip(
-      visualDensity: VisualDensity.compact,
       label: Text(labelValue.value, style: TextStyle(color: foreground)),
       backgroundColor: entityColor.withValues(alpha: 0.18),
       side: BorderSide(color: entityColor),

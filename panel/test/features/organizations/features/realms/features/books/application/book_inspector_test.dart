@@ -116,27 +116,38 @@ void main() {
     });
     expect(direct.selectionMode, SearchSelectionMode.multiple);
     expect(direct.provider, isA<CollectionSearchProvider>());
-    expect(directSummary.presentation.layout, isA<PresentationWrapLayout>());
+    final summaryLayout =
+        directSummary.presentation.layout as PresentationStandardSequenceLayout;
+    expect(summaryLayout.layout, isA<PresentationWrapLayout>());
     expect(directSummary.presentation.empty, isNotNull);
     _expectTagChip(summaryChip);
     expect(effective.sourceId, tagCollectionSourceId);
     expect(effective.relation, tagInheritsRelationId);
     expect(effective.direction, CollectionGraphDirection.forward);
     expect(effective.childrenBindingId, const BindingId(45));
+    expect(effective.childBindingId, const BindingId(46));
     expect(effective.node.presentationSlotIds, {"book.effectiveTags.children"});
+    final hierarchy =
+        effective.children.layout as PresentationHierarchySequenceLayout;
+    expect(hierarchy.layout.itemAnchor, isA<CenterConnectorAnchor>());
+    expect(
+      hierarchy.layout.crossAxisAlignment,
+      PresentationCrossAxisAlignment.stretch,
+    );
     final branching = effective.node.element as ConditionalElement;
-    final branchSpacing = branching.whenTrue.element as PaddingElement;
-    final branch = branchSpacing.child.element as SectionElement;
+    final branchNode = branching.whenTrue;
+    final branch = branchNode.element as SectionElement;
     expect(branch.border, isA<PresentationBorderSides>());
     final branchBorder = branch.border! as PresentationBorderSides;
     expect(branchBorder.top, isNull);
     expect(branchBorder.start?.width, 4);
     expect(branchBorder.end, isNull);
     expect(branchBorder.bottom, isNull);
-    final branchTitle = branchSpacing.child.header!.title;
+    expect(branch.child.element, isA<PresentationSlotElement>());
+    final branchTitle = branchNode.header!.title;
     expect(branchTitle, isA<PresentationHeaderNodeTitle>());
-    final chipNode = (branchTitle! as PresentationHeaderNodeTitle).node;
-    _expectTagChip(chipNode.element as ChipElement);
+    final containerNode = (branchTitle! as PresentationHeaderNodeTitle).node;
+    expect(containerNode.element, isA<ContainerElement>());
   });
 
   testWidgets(
