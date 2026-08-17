@@ -4,6 +4,11 @@ extension TypedExpressionAuthoring on TypedExpression {
   TypedExpression withResultType(TypeExpression type) =>
       TypedExpression(resultType: type, expression: expression);
 
+  TypedExpression isType(TypeExpression type) => TypedExpression(
+    resultType: const BooleanType(),
+    expression: IsTypeExpression(source: this, type: type),
+  );
+
   TypedExpression compare(ComparisonOperator operator, TypedExpression other) =>
       TypedExpression(
         resultType: const BooleanType(),
@@ -100,6 +105,15 @@ extension TypedExpressionAuthoring on TypedExpression {
   TypedExpression coalesce(TypedExpression fallback) => TypedExpression(
     resultType: resultType,
     expression: CoalesceExpression([this, fallback]),
+  );
+
+  TypedExpression withAlpha(int alpha) => TypedExpression(
+    resultType: NamedType(standardTypeRefs.color),
+    expression: ColorOperationExpression(
+      operation: ColorOperation.withAlpha,
+      color: this,
+      alpha: alpha.asIntegerLiteral,
+    ),
   );
 
   TypedExpression _string(

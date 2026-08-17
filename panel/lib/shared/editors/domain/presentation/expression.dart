@@ -1,3 +1,4 @@
+import "package:flutter/material.dart" show Color;
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -32,7 +33,17 @@ enum StringOperation {
 
 enum CollectionOperation { access, length, contains }
 
+enum CollectionQuantifier { any, all, none }
+
+enum CollectionSelection { first, last }
+
+enum CollectionSortDirection { ascending, descending }
+
+enum CollectionTransformOperation { flatMap, take, skip, reverse }
+
 enum RegexOperation { matches, capture, replace }
+
+enum ColorOperation { withAlpha }
 
 @freezed
 abstract class TypedExpression with _$TypedExpression {
@@ -79,11 +90,86 @@ sealed class Expression with _$Expression {
     required TypedExpression whenFalse,
   }) = ConditionalExpression;
 
-  const factory Expression.collectionProjection({
+  const factory Expression.collectionMap({
     required TypedExpression source,
     required BindingId itemBindingId,
-    required TypedExpression projection,
-  }) = CollectionProjectionExpression;
+    required TypedExpression transform,
+  }) = CollectionMapExpression;
+
+  const factory Expression.collectionFilter({
+    required TypedExpression source,
+    required BindingId itemBindingId,
+    required TypedExpression predicate,
+  }) = CollectionFilterExpression;
+
+  const factory Expression.collectionQuantifier({
+    required TypedExpression source,
+    required CollectionQuantifier quantifier,
+    required BindingId itemBindingId,
+    required TypedExpression predicate,
+  }) = CollectionQuantifierExpression;
+
+  const factory Expression.collectionFind({
+    required TypedExpression source,
+    required CollectionSelection selection,
+    required BindingId itemBindingId,
+    required TypedExpression predicate,
+  }) = CollectionFindExpression;
+
+  const factory Expression.collectionCount({
+    required TypedExpression source,
+    required BindingId itemBindingId,
+    required TypedExpression predicate,
+  }) = CollectionCountExpression;
+
+  const factory Expression.collectionDistinct({
+    required TypedExpression source,
+    TypedExpression? key,
+    BindingId? itemBindingId,
+  }) = CollectionDistinctExpression;
+
+  const factory Expression.collectionSort({
+    required TypedExpression source,
+    required TypedExpression key,
+    required BindingId itemBindingId,
+    required CollectionSortDirection direction,
+    CollectionComparator? comparator,
+  }) = CollectionSortExpression;
+
+  const factory Expression.collectionGroup({
+    required TypedExpression source,
+    required TypedExpression key,
+    required BindingId itemBindingId,
+    TypedExpression? value,
+  }) = CollectionGroupExpression;
+
+  const factory Expression.collectionReduce({
+    required TypedExpression source,
+    required BindingId accumulatorBindingId,
+    required BindingId itemBindingId,
+    required TypedExpression reduction,
+  }) = CollectionReduceExpression;
+
+  const factory Expression.collectionFold({
+    required TypedExpression source,
+    required TypedExpression initial,
+    required BindingId accumulatorBindingId,
+    required BindingId itemBindingId,
+    required TypedExpression reduction,
+  }) = CollectionFoldExpression;
+
+  const factory Expression.collectionTransform({
+    required TypedExpression source,
+    required CollectionTransformOperation operation,
+    TypedExpression? transform,
+    BindingId? itemBindingId,
+    TypedExpression? count,
+  }) = CollectionTransformExpression;
+
+  const factory Expression.isType({
+    required TypedExpression source,
+    required TypeExpression type,
+  }) = IsTypeExpression;
 
   const factory Expression.conversion({
     required ConversionId conversionId,
@@ -110,6 +196,21 @@ sealed class Expression with _$Expression {
 
   const factory Expression.coalesce(List<TypedExpression> operands) =
       CoalesceExpression;
+
+  const factory Expression.colorOperation({
+    required ColorOperation operation,
+    required TypedExpression color,
+    required TypedExpression alpha,
+  }) = ColorOperationExpression;
+}
+
+@freezed
+abstract class CollectionComparator with _$CollectionComparator {
+  const factory CollectionComparator({
+    required BindingId leftBindingId,
+    required BindingId rightBindingId,
+    required TypedExpression comparison,
+  }) = _CollectionComparator;
 }
 
 @freezed
@@ -160,6 +261,12 @@ extension BooleanExpressionLiteral on bool {
 extension IconExpressionLiteral on IconValue {
   TypedExpression get asIconLiteral =>
       typedValue.asLiteral(NamedType(standardTypeRefs.icon));
+}
+
+extension ColorExpressionLiteral on Color {
+  TypedExpression get asColorLiteral => IntegerValue(
+    BigInt.from(toARGB32()),
+  ).asLiteral(NamedType(standardTypeRefs.color));
 }
 
 extension DataValueExpressionLiteral on DataValue {

@@ -36,6 +36,10 @@ void main() {
     resultType: const IntegerType(width: IntegerWidth.signed64),
     expression: LiteralExpression(IntegerValue(BigInt.one)),
   );
+  final color = TypedExpression(
+    resultType: NamedType(standardTypeRefs.color),
+    expression: LiteralExpression(IntegerValue(BigInt.from(0xFF336699))),
+  );
 
   test("maps every expression variant and its fields", () {
     final expressions = <(TypedExpression, wire_expression.Expression_kind)>[
@@ -109,7 +113,7 @@ void main() {
       (
         TypedExpression(
           resultType: const ListType(element: StringType()),
-          expression: CollectionProjectionExpression(
+          expression: CollectionMapExpression(
             source: TypedExpression(
               resultType: const ListType(element: StringType()),
               expression: LiteralExpression(
@@ -117,7 +121,7 @@ void main() {
               ),
             ),
             itemBindingId: const BindingId(9),
-            projection: const TypedExpression(
+            transform: const TypedExpression(
               resultType: StringType(),
               expression: BindingExpression(
                 BindingReference(bindingId: BindingId(9)),
@@ -125,7 +129,7 @@ void main() {
             ),
           ),
         ),
-        wire_expression.Expression_kind.collectionProjectionWrapper,
+        wire_expression.Expression_kind.collectionMapWrapper,
       ),
       (
         const TypedExpression(
@@ -175,6 +179,17 @@ void main() {
           expression: CoalesceExpression([text, text]),
         ),
         wire_expression.Expression_kind.coalesceWrapper,
+      ),
+      (
+        TypedExpression(
+          resultType: NamedType(standardTypeRefs.color),
+          expression: ColorOperationExpression(
+            operation: ColorOperation.withAlpha,
+            color: color,
+            alpha: one,
+          ),
+        ),
+        wire_expression.Expression_kind.colorOperationWrapper,
       ),
     ];
 

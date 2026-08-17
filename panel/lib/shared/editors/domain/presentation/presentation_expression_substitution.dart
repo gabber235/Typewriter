@@ -52,10 +52,78 @@ extension on Expression {
         whenTrue: value.whenTrue.substituteTypes(substitutions),
         whenFalse: value.whenFalse.substituteTypes(substitutions),
       ),
-      CollectionProjectionExpression() => CollectionProjectionExpression(
+      CollectionMapExpression() => CollectionMapExpression(
         source: value.source.substituteTypes(substitutions),
         itemBindingId: value.itemBindingId,
-        projection: value.projection.substituteTypes(substitutions),
+        transform: value.transform.substituteTypes(substitutions),
+      ),
+      CollectionFilterExpression() => CollectionFilterExpression(
+        source: value.source.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+        predicate: value.predicate.substituteTypes(substitutions),
+      ),
+      CollectionQuantifierExpression() => CollectionQuantifierExpression(
+        source: value.source.substituteTypes(substitutions),
+        quantifier: value.quantifier,
+        itemBindingId: value.itemBindingId,
+        predicate: value.predicate.substituteTypes(substitutions),
+      ),
+      CollectionFindExpression() => CollectionFindExpression(
+        source: value.source.substituteTypes(substitutions),
+        selection: value.selection,
+        itemBindingId: value.itemBindingId,
+        predicate: value.predicate.substituteTypes(substitutions),
+      ),
+      CollectionCountExpression() => CollectionCountExpression(
+        source: value.source.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+        predicate: value.predicate.substituteTypes(substitutions),
+      ),
+      CollectionDistinctExpression() => CollectionDistinctExpression(
+        source: value.source.substituteTypes(substitutions),
+        key: value.key?.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+      ),
+      CollectionSortExpression() => CollectionSortExpression(
+        source: value.source.substituteTypes(substitutions),
+        key: value.key.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+        direction: value.direction,
+        comparator: value.comparator?.copyWith(
+          comparison: value.comparator!.comparison.substituteTypes(
+            substitutions,
+          ),
+        ),
+      ),
+      CollectionGroupExpression() => CollectionGroupExpression(
+        source: value.source.substituteTypes(substitutions),
+        key: value.key.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+        value: value.value?.substituteTypes(substitutions),
+      ),
+      CollectionReduceExpression() => CollectionReduceExpression(
+        source: value.source.substituteTypes(substitutions),
+        accumulatorBindingId: value.accumulatorBindingId,
+        itemBindingId: value.itemBindingId,
+        reduction: value.reduction.substituteTypes(substitutions),
+      ),
+      CollectionFoldExpression() => CollectionFoldExpression(
+        source: value.source.substituteTypes(substitutions),
+        initial: value.initial.substituteTypes(substitutions),
+        accumulatorBindingId: value.accumulatorBindingId,
+        itemBindingId: value.itemBindingId,
+        reduction: value.reduction.substituteTypes(substitutions),
+      ),
+      CollectionTransformExpression() => CollectionTransformExpression(
+        source: value.source.substituteTypes(substitutions),
+        operation: value.operation,
+        transform: value.transform?.substituteTypes(substitutions),
+        itemBindingId: value.itemBindingId,
+        count: value.count?.substituteTypes(substitutions),
+      ),
+      IsTypeExpression() => IsTypeExpression(
+        source: value.source.substituteTypes(substitutions),
+        type: value.type.substitute(substitutions),
       ),
       ConversionExpression() => ConversionExpression(
         conversionId: value.conversionId,
@@ -84,6 +152,11 @@ extension on Expression {
         value.operands
             .map((operand) => operand.substituteTypes(substitutions))
             .toList(),
+      ),
+      ColorOperationExpression() => ColorOperationExpression(
+        operation: value.operation,
+        color: value.color.substituteTypes(substitutions),
+        alpha: value.alpha.substituteTypes(substitutions),
       ),
     };
   }

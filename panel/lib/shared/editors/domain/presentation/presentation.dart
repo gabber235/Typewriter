@@ -3,6 +3,7 @@ export "action_executor.dart";
 export "action_map_executor.dart";
 export "action_mutation.dart";
 export "binding.dart";
+export "collection_expression_authoring.dart";
 export "default_presentation.dart";
 export "expression.dart";
 export "expression_authoring.dart";

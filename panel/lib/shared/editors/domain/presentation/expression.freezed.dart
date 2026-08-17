@@ -351,7 +351,7 @@ extension ExpressionPatterns on Expression {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionProjectionExpression value)?  collectionProjection,TResult Function( ConversionExpression value)?  conversion,TResult Function( StringOperationExpression value)?  stringOperation,TResult Function( CollectionOperationExpression value)?  collectionOperation,TResult Function( RegexExpression value)?  regex,TResult Function( CoalesceExpression value)?  coalesce,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiteralExpression value)?  literal,TResult Function( BindingExpression value)?  binding,TResult Function( FieldAccessExpression value)?  fieldAccess,TResult Function( InterpolationExpression value)?  interpolation,TResult Function( ComparisonExpression value)?  comparison,TResult Function( BooleanExpression value)?  boolean,TResult Function( ArithmeticExpression value)?  arithmetic,TResult Function( ConditionalExpression value)?  conditional,TResult Function( CollectionMapExpression value)?  collectionMap,TResult Function( CollectionFilterExpression value)?  collectionFilter,TResult Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult Function( CollectionFindExpression value)?  collectionFind,TResult Function( CollectionCountExpression value)?  collectionCount,TResult Function( CollectionDistinctExpression value)?  collectionDistinct,TResult Function( CollectionSortExpression value)?  collectionSort,TResult Function( CollectionGroupExpression value)?  collectionGroup,TResult Function( CollectionReduceExpression value)?  collectionReduce,TResult Function( CollectionFoldExpression value)?  collectionFold,TResult Function( CollectionTransformExpression value)?  collectionTransform,TResult Function( IsTypeExpression value)?  isType,TResult Function( ConversionExpression value)?  conversion,TResult Function( StringOperationExpression value)?  stringOperation,TResult Function( CollectionOperationExpression value)?  collectionOperation,TResult Function( RegexExpression value)?  regex,TResult Function( CoalesceExpression value)?  coalesce,TResult Function( ColorOperationExpression value)?  colorOperation,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -362,13 +362,25 @@ return interpolation(_that);case ComparisonExpression() when comparison != null:
 return comparison(_that);case BooleanExpression() when boolean != null:
 return boolean(_that);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that);case ConditionalExpression() when conditional != null:
-return conditional(_that);case CollectionProjectionExpression() when collectionProjection != null:
-return collectionProjection(_that);case ConversionExpression() when conversion != null:
+return conditional(_that);case CollectionMapExpression() when collectionMap != null:
+return collectionMap(_that);case CollectionFilterExpression() when collectionFilter != null:
+return collectionFilter(_that);case CollectionQuantifierExpression() when collectionQuantifier != null:
+return collectionQuantifier(_that);case CollectionFindExpression() when collectionFind != null:
+return collectionFind(_that);case CollectionCountExpression() when collectionCount != null:
+return collectionCount(_that);case CollectionDistinctExpression() when collectionDistinct != null:
+return collectionDistinct(_that);case CollectionSortExpression() when collectionSort != null:
+return collectionSort(_that);case CollectionGroupExpression() when collectionGroup != null:
+return collectionGroup(_that);case CollectionReduceExpression() when collectionReduce != null:
+return collectionReduce(_that);case CollectionFoldExpression() when collectionFold != null:
+return collectionFold(_that);case CollectionTransformExpression() when collectionTransform != null:
+return collectionTransform(_that);case IsTypeExpression() when isType != null:
+return isType(_that);case ConversionExpression() when conversion != null:
 return conversion(_that);case StringOperationExpression() when stringOperation != null:
 return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that);case RegexExpression() when regex != null:
 return regex(_that);case CoalesceExpression() when coalesce != null:
-return coalesce(_that);case _:
+return coalesce(_that);case ColorOperationExpression() when colorOperation != null:
+return colorOperation(_that);case _:
   return orElse();
 
 }
@@ -386,7 +398,7 @@ return coalesce(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionProjectionExpression value)  collectionProjection,required TResult Function( ConversionExpression value)  conversion,required TResult Function( StringOperationExpression value)  stringOperation,required TResult Function( CollectionOperationExpression value)  collectionOperation,required TResult Function( RegexExpression value)  regex,required TResult Function( CoalesceExpression value)  coalesce,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiteralExpression value)  literal,required TResult Function( BindingExpression value)  binding,required TResult Function( FieldAccessExpression value)  fieldAccess,required TResult Function( InterpolationExpression value)  interpolation,required TResult Function( ComparisonExpression value)  comparison,required TResult Function( BooleanExpression value)  boolean,required TResult Function( ArithmeticExpression value)  arithmetic,required TResult Function( ConditionalExpression value)  conditional,required TResult Function( CollectionMapExpression value)  collectionMap,required TResult Function( CollectionFilterExpression value)  collectionFilter,required TResult Function( CollectionQuantifierExpression value)  collectionQuantifier,required TResult Function( CollectionFindExpression value)  collectionFind,required TResult Function( CollectionCountExpression value)  collectionCount,required TResult Function( CollectionDistinctExpression value)  collectionDistinct,required TResult Function( CollectionSortExpression value)  collectionSort,required TResult Function( CollectionGroupExpression value)  collectionGroup,required TResult Function( CollectionReduceExpression value)  collectionReduce,required TResult Function( CollectionFoldExpression value)  collectionFold,required TResult Function( CollectionTransformExpression value)  collectionTransform,required TResult Function( IsTypeExpression value)  isType,required TResult Function( ConversionExpression value)  conversion,required TResult Function( StringOperationExpression value)  stringOperation,required TResult Function( CollectionOperationExpression value)  collectionOperation,required TResult Function( RegexExpression value)  regex,required TResult Function( CoalesceExpression value)  coalesce,required TResult Function( ColorOperationExpression value)  colorOperation,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression():
@@ -397,13 +409,25 @@ return interpolation(_that);case ComparisonExpression():
 return comparison(_that);case BooleanExpression():
 return boolean(_that);case ArithmeticExpression():
 return arithmetic(_that);case ConditionalExpression():
-return conditional(_that);case CollectionProjectionExpression():
-return collectionProjection(_that);case ConversionExpression():
+return conditional(_that);case CollectionMapExpression():
+return collectionMap(_that);case CollectionFilterExpression():
+return collectionFilter(_that);case CollectionQuantifierExpression():
+return collectionQuantifier(_that);case CollectionFindExpression():
+return collectionFind(_that);case CollectionCountExpression():
+return collectionCount(_that);case CollectionDistinctExpression():
+return collectionDistinct(_that);case CollectionSortExpression():
+return collectionSort(_that);case CollectionGroupExpression():
+return collectionGroup(_that);case CollectionReduceExpression():
+return collectionReduce(_that);case CollectionFoldExpression():
+return collectionFold(_that);case CollectionTransformExpression():
+return collectionTransform(_that);case IsTypeExpression():
+return isType(_that);case ConversionExpression():
 return conversion(_that);case StringOperationExpression():
 return stringOperation(_that);case CollectionOperationExpression():
 return collectionOperation(_that);case RegexExpression():
 return regex(_that);case CoalesceExpression():
-return coalesce(_that);}
+return coalesce(_that);case ColorOperationExpression():
+return colorOperation(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -417,7 +441,7 @@ return coalesce(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionProjectionExpression value)?  collectionProjection,TResult? Function( ConversionExpression value)?  conversion,TResult? Function( StringOperationExpression value)?  stringOperation,TResult? Function( CollectionOperationExpression value)?  collectionOperation,TResult? Function( RegexExpression value)?  regex,TResult? Function( CoalesceExpression value)?  coalesce,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiteralExpression value)?  literal,TResult? Function( BindingExpression value)?  binding,TResult? Function( FieldAccessExpression value)?  fieldAccess,TResult? Function( InterpolationExpression value)?  interpolation,TResult? Function( ComparisonExpression value)?  comparison,TResult? Function( BooleanExpression value)?  boolean,TResult? Function( ArithmeticExpression value)?  arithmetic,TResult? Function( ConditionalExpression value)?  conditional,TResult? Function( CollectionMapExpression value)?  collectionMap,TResult? Function( CollectionFilterExpression value)?  collectionFilter,TResult? Function( CollectionQuantifierExpression value)?  collectionQuantifier,TResult? Function( CollectionFindExpression value)?  collectionFind,TResult? Function( CollectionCountExpression value)?  collectionCount,TResult? Function( CollectionDistinctExpression value)?  collectionDistinct,TResult? Function( CollectionSortExpression value)?  collectionSort,TResult? Function( CollectionGroupExpression value)?  collectionGroup,TResult? Function( CollectionReduceExpression value)?  collectionReduce,TResult? Function( CollectionFoldExpression value)?  collectionFold,TResult? Function( CollectionTransformExpression value)?  collectionTransform,TResult? Function( IsTypeExpression value)?  isType,TResult? Function( ConversionExpression value)?  conversion,TResult? Function( StringOperationExpression value)?  stringOperation,TResult? Function( CollectionOperationExpression value)?  collectionOperation,TResult? Function( RegexExpression value)?  regex,TResult? Function( CoalesceExpression value)?  coalesce,TResult? Function( ColorOperationExpression value)?  colorOperation,}){
 final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
@@ -428,13 +452,25 @@ return interpolation(_that);case ComparisonExpression() when comparison != null:
 return comparison(_that);case BooleanExpression() when boolean != null:
 return boolean(_that);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that);case ConditionalExpression() when conditional != null:
-return conditional(_that);case CollectionProjectionExpression() when collectionProjection != null:
-return collectionProjection(_that);case ConversionExpression() when conversion != null:
+return conditional(_that);case CollectionMapExpression() when collectionMap != null:
+return collectionMap(_that);case CollectionFilterExpression() when collectionFilter != null:
+return collectionFilter(_that);case CollectionQuantifierExpression() when collectionQuantifier != null:
+return collectionQuantifier(_that);case CollectionFindExpression() when collectionFind != null:
+return collectionFind(_that);case CollectionCountExpression() when collectionCount != null:
+return collectionCount(_that);case CollectionDistinctExpression() when collectionDistinct != null:
+return collectionDistinct(_that);case CollectionSortExpression() when collectionSort != null:
+return collectionSort(_that);case CollectionGroupExpression() when collectionGroup != null:
+return collectionGroup(_that);case CollectionReduceExpression() when collectionReduce != null:
+return collectionReduce(_that);case CollectionFoldExpression() when collectionFold != null:
+return collectionFold(_that);case CollectionTransformExpression() when collectionTransform != null:
+return collectionTransform(_that);case IsTypeExpression() when isType != null:
+return isType(_that);case ConversionExpression() when conversion != null:
 return conversion(_that);case StringOperationExpression() when stringOperation != null:
 return stringOperation(_that);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that);case RegexExpression() when regex != null:
 return regex(_that);case CoalesceExpression() when coalesce != null:
-return coalesce(_that);case _:
+return coalesce(_that);case ColorOperationExpression() when colorOperation != null:
+return colorOperation(_that);case _:
   return null;
 
 }
@@ -451,7 +487,7 @@ return coalesce(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult Function( List<TypedExpression> operands)?  coalesce,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  literal,TResult Function( BindingReference binding)?  binding,TResult Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult Function( List<InterpolationPart> parts)?  interpolation,TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult Function( TypedExpression source,  TypeExpression type)?  isType,TResult Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult Function( List<TypedExpression> operands)?  coalesce,TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -461,13 +497,25 @@ return interpolation(_that.parts);case ComparisonExpression() when comparison !=
 return comparison(_that.operator,_that.left,_that.right);case BooleanExpression() when boolean != null:
 return boolean(_that.operator,_that.operands);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression() when conditional != null:
-return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression() when collectionProjection != null:
-return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression() when conversion != null:
+return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionMapExpression() when collectionMap != null:
+return collectionMap(_that.source,_that.itemBindingId,_that.transform);case CollectionFilterExpression() when collectionFilter != null:
+return collectionFilter(_that.source,_that.itemBindingId,_that.predicate);case CollectionQuantifierExpression() when collectionQuantifier != null:
+return collectionQuantifier(_that.source,_that.quantifier,_that.itemBindingId,_that.predicate);case CollectionFindExpression() when collectionFind != null:
+return collectionFind(_that.source,_that.selection,_that.itemBindingId,_that.predicate);case CollectionCountExpression() when collectionCount != null:
+return collectionCount(_that.source,_that.itemBindingId,_that.predicate);case CollectionDistinctExpression() when collectionDistinct != null:
+return collectionDistinct(_that.source,_that.key,_that.itemBindingId);case CollectionSortExpression() when collectionSort != null:
+return collectionSort(_that.source,_that.key,_that.itemBindingId,_that.direction,_that.comparator);case CollectionGroupExpression() when collectionGroup != null:
+return collectionGroup(_that.source,_that.key,_that.itemBindingId,_that.value);case CollectionReduceExpression() when collectionReduce != null:
+return collectionReduce(_that.source,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionFoldExpression() when collectionFold != null:
+return collectionFold(_that.source,_that.initial,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionTransformExpression() when collectionTransform != null:
+return collectionTransform(_that.source,_that.operation,_that.transform,_that.itemBindingId,_that.count);case IsTypeExpression() when isType != null:
+return isType(_that.source,_that.type);case ConversionExpression() when conversion != null:
 return conversion(_that.conversionId,_that.input);case StringOperationExpression() when stringOperation != null:
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
-return coalesce(_that.operands);case _:
+return coalesce(_that.operands);case ColorOperationExpression() when colorOperation != null:
+return colorOperation(_that.operation,_that.color,_that.alpha);case _:
   return orElse();
 
 }
@@ -485,7 +533,7 @@ return coalesce(_that.operands);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)  collectionProjection,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,required TResult Function( StringOperation operation,  List<TypedExpression> operands)  stringOperation,required TResult Function( CollectionOperation operation,  List<TypedExpression> operands)  collectionOperation,required TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)  regex,required TResult Function( List<TypedExpression> operands)  coalesce,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  literal,required TResult Function( BindingReference binding)  binding,required TResult Function( TypedExpression target,  String fieldName)  fieldAccess,required TResult Function( List<InterpolationPart> parts)  interpolation,required TResult Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)  comparison,required TResult Function( BooleanOperator operator,  List<TypedExpression> operands)  boolean,required TResult Function( ArithmeticOperator operator,  List<TypedExpression> operands)  arithmetic,required TResult Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)  conditional,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)  collectionMap,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionFilter,required TResult Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)  collectionQuantifier,required TResult Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)  collectionFind,required TResult Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)  collectionCount,required TResult Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)  collectionDistinct,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)  collectionSort,required TResult Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)  collectionGroup,required TResult Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionReduce,required TResult Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)  collectionFold,required TResult Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)  collectionTransform,required TResult Function( TypedExpression source,  TypeExpression type)  isType,required TResult Function( ConversionId conversionId,  TypedExpression input)  conversion,required TResult Function( StringOperation operation,  List<TypedExpression> operands)  stringOperation,required TResult Function( CollectionOperation operation,  List<TypedExpression> operands)  collectionOperation,required TResult Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)  regex,required TResult Function( List<TypedExpression> operands)  coalesce,required TResult Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)  colorOperation,}) {final _that = this;
 switch (_that) {
 case LiteralExpression():
 return literal(_that.value);case BindingExpression():
@@ -495,13 +543,25 @@ return interpolation(_that.parts);case ComparisonExpression():
 return comparison(_that.operator,_that.left,_that.right);case BooleanExpression():
 return boolean(_that.operator,_that.operands);case ArithmeticExpression():
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression():
-return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression():
-return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression():
+return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionMapExpression():
+return collectionMap(_that.source,_that.itemBindingId,_that.transform);case CollectionFilterExpression():
+return collectionFilter(_that.source,_that.itemBindingId,_that.predicate);case CollectionQuantifierExpression():
+return collectionQuantifier(_that.source,_that.quantifier,_that.itemBindingId,_that.predicate);case CollectionFindExpression():
+return collectionFind(_that.source,_that.selection,_that.itemBindingId,_that.predicate);case CollectionCountExpression():
+return collectionCount(_that.source,_that.itemBindingId,_that.predicate);case CollectionDistinctExpression():
+return collectionDistinct(_that.source,_that.key,_that.itemBindingId);case CollectionSortExpression():
+return collectionSort(_that.source,_that.key,_that.itemBindingId,_that.direction,_that.comparator);case CollectionGroupExpression():
+return collectionGroup(_that.source,_that.key,_that.itemBindingId,_that.value);case CollectionReduceExpression():
+return collectionReduce(_that.source,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionFoldExpression():
+return collectionFold(_that.source,_that.initial,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionTransformExpression():
+return collectionTransform(_that.source,_that.operation,_that.transform,_that.itemBindingId,_that.count);case IsTypeExpression():
+return isType(_that.source,_that.type);case ConversionExpression():
 return conversion(_that.conversionId,_that.input);case StringOperationExpression():
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression():
 return collectionOperation(_that.operation,_that.operands);case RegexExpression():
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression():
-return coalesce(_that.operands);}
+return coalesce(_that.operands);case ColorOperationExpression():
+return colorOperation(_that.operation,_that.color,_that.alpha);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -515,7 +575,7 @@ return coalesce(_that.operands);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression projection)?  collectionProjection,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult? Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult? Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult? Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult? Function( List<TypedExpression> operands)?  coalesce,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  literal,TResult? Function( BindingReference binding)?  binding,TResult? Function( TypedExpression target,  String fieldName)?  fieldAccess,TResult? Function( List<InterpolationPart> parts)?  interpolation,TResult? Function( ComparisonOperator operator,  TypedExpression left,  TypedExpression right)?  comparison,TResult? Function( BooleanOperator operator,  List<TypedExpression> operands)?  boolean,TResult? Function( ArithmeticOperator operator,  List<TypedExpression> operands)?  arithmetic,TResult? Function( TypedExpression condition,  TypedExpression whenTrue,  TypedExpression whenFalse)?  conditional,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression transform)?  collectionMap,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFilter,TResult? Function( TypedExpression source,  CollectionQuantifier quantifier,  BindingId itemBindingId,  TypedExpression predicate)?  collectionQuantifier,TResult? Function( TypedExpression source,  CollectionSelection selection,  BindingId itemBindingId,  TypedExpression predicate)?  collectionFind,TResult? Function( TypedExpression source,  BindingId itemBindingId,  TypedExpression predicate)?  collectionCount,TResult? Function( TypedExpression source,  TypedExpression? key,  BindingId? itemBindingId)?  collectionDistinct,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  CollectionSortDirection direction,  CollectionComparator? comparator)?  collectionSort,TResult? Function( TypedExpression source,  TypedExpression key,  BindingId itemBindingId,  TypedExpression? value)?  collectionGroup,TResult? Function( TypedExpression source,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionReduce,TResult? Function( TypedExpression source,  TypedExpression initial,  BindingId accumulatorBindingId,  BindingId itemBindingId,  TypedExpression reduction)?  collectionFold,TResult? Function( TypedExpression source,  CollectionTransformOperation operation,  TypedExpression? transform,  BindingId? itemBindingId,  TypedExpression? count)?  collectionTransform,TResult? Function( TypedExpression source,  TypeExpression type)?  isType,TResult? Function( ConversionId conversionId,  TypedExpression input)?  conversion,TResult? Function( StringOperation operation,  List<TypedExpression> operands)?  stringOperation,TResult? Function( CollectionOperation operation,  List<TypedExpression> operands)?  collectionOperation,TResult? Function( RegexOperation operation,  TypedExpression source,  String pattern,  int? group,  String? replacement)?  regex,TResult? Function( List<TypedExpression> operands)?  coalesce,TResult? Function( ColorOperation operation,  TypedExpression color,  TypedExpression alpha)?  colorOperation,}) {final _that = this;
 switch (_that) {
 case LiteralExpression() when literal != null:
 return literal(_that.value);case BindingExpression() when binding != null:
@@ -525,13 +585,25 @@ return interpolation(_that.parts);case ComparisonExpression() when comparison !=
 return comparison(_that.operator,_that.left,_that.right);case BooleanExpression() when boolean != null:
 return boolean(_that.operator,_that.operands);case ArithmeticExpression() when arithmetic != null:
 return arithmetic(_that.operator,_that.operands);case ConditionalExpression() when conditional != null:
-return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionProjectionExpression() when collectionProjection != null:
-return collectionProjection(_that.source,_that.itemBindingId,_that.projection);case ConversionExpression() when conversion != null:
+return conditional(_that.condition,_that.whenTrue,_that.whenFalse);case CollectionMapExpression() when collectionMap != null:
+return collectionMap(_that.source,_that.itemBindingId,_that.transform);case CollectionFilterExpression() when collectionFilter != null:
+return collectionFilter(_that.source,_that.itemBindingId,_that.predicate);case CollectionQuantifierExpression() when collectionQuantifier != null:
+return collectionQuantifier(_that.source,_that.quantifier,_that.itemBindingId,_that.predicate);case CollectionFindExpression() when collectionFind != null:
+return collectionFind(_that.source,_that.selection,_that.itemBindingId,_that.predicate);case CollectionCountExpression() when collectionCount != null:
+return collectionCount(_that.source,_that.itemBindingId,_that.predicate);case CollectionDistinctExpression() when collectionDistinct != null:
+return collectionDistinct(_that.source,_that.key,_that.itemBindingId);case CollectionSortExpression() when collectionSort != null:
+return collectionSort(_that.source,_that.key,_that.itemBindingId,_that.direction,_that.comparator);case CollectionGroupExpression() when collectionGroup != null:
+return collectionGroup(_that.source,_that.key,_that.itemBindingId,_that.value);case CollectionReduceExpression() when collectionReduce != null:
+return collectionReduce(_that.source,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionFoldExpression() when collectionFold != null:
+return collectionFold(_that.source,_that.initial,_that.accumulatorBindingId,_that.itemBindingId,_that.reduction);case CollectionTransformExpression() when collectionTransform != null:
+return collectionTransform(_that.source,_that.operation,_that.transform,_that.itemBindingId,_that.count);case IsTypeExpression() when isType != null:
+return isType(_that.source,_that.type);case ConversionExpression() when conversion != null:
 return conversion(_that.conversionId,_that.input);case StringOperationExpression() when stringOperation != null:
 return stringOperation(_that.operation,_that.operands);case CollectionOperationExpression() when collectionOperation != null:
 return collectionOperation(_that.operation,_that.operands);case RegexExpression() when regex != null:
 return regex(_that.operation,_that.source,_that.pattern,_that.group,_that.replacement);case CoalesceExpression() when coalesce != null:
-return coalesce(_that.operands);case _:
+return coalesce(_that.operands);case ColorOperationExpression() when colorOperation != null:
+return colorOperation(_that.operation,_that.color,_that.alpha);case _:
   return null;
 
 }
@@ -1174,66 +1246,66 @@ $TypedExpressionCopyWith<$Res> get whenFalse {
 /// @nodoc
 
 
-class CollectionProjectionExpression implements Expression {
-  const CollectionProjectionExpression({required this.source, required this.itemBindingId, required this.projection});
+class CollectionMapExpression implements Expression {
+  const CollectionMapExpression({required this.source, required this.itemBindingId, required this.transform});
   
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
- final  TypedExpression projection;
+ final  TypedExpression transform;
 
 /// Create a copy of Expression
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$CollectionProjectionExpressionCopyWith<CollectionProjectionExpression> get copyWith => _$CollectionProjectionExpressionCopyWithImpl<CollectionProjectionExpression>(this, _$identity);
+$CollectionMapExpressionCopyWith<CollectionMapExpression> get copyWith => _$CollectionMapExpressionCopyWithImpl<CollectionMapExpression>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionProjectionExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.projection, projection) || other.projection == projection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionMapExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.transform, transform) || other.transform == transform));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,source,itemBindingId,projection);
+int get hashCode => Object.hash(runtimeType,source,itemBindingId,transform);
 
 @override
 String toString() {
-  return 'Expression.collectionProjection(source: $source, itemBindingId: $itemBindingId, projection: $projection)';
+  return 'Expression.collectionMap(source: $source, itemBindingId: $itemBindingId, transform: $transform)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $CollectionProjectionExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
-  factory $CollectionProjectionExpressionCopyWith(CollectionProjectionExpression value, $Res Function(CollectionProjectionExpression) _then) = _$CollectionProjectionExpressionCopyWithImpl;
+abstract mixin class $CollectionMapExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionMapExpressionCopyWith(CollectionMapExpression value, $Res Function(CollectionMapExpression) _then) = _$CollectionMapExpressionCopyWithImpl;
 @useResult
 $Res call({
- TypedExpression source, BindingId itemBindingId, TypedExpression projection
+ TypedExpression source, BindingId itemBindingId, TypedExpression transform
 });
 
 
-$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get projection;
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get transform;
 
 }
 /// @nodoc
-class _$CollectionProjectionExpressionCopyWithImpl<$Res>
-    implements $CollectionProjectionExpressionCopyWith<$Res> {
-  _$CollectionProjectionExpressionCopyWithImpl(this._self, this._then);
+class _$CollectionMapExpressionCopyWithImpl<$Res>
+    implements $CollectionMapExpressionCopyWith<$Res> {
+  _$CollectionMapExpressionCopyWithImpl(this._self, this._then);
 
-  final CollectionProjectionExpression _self;
-  final $Res Function(CollectionProjectionExpression) _then;
+  final CollectionMapExpression _self;
+  final $Res Function(CollectionMapExpression) _then;
 
 /// Create a copy of Expression
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? itemBindingId = null,Object? projection = null,}) {
-  return _then(CollectionProjectionExpression(
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? itemBindingId = null,Object? transform = null,}) {
+  return _then(CollectionMapExpression(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
 as TypedExpression,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
-as BindingId,projection: null == projection ? _self.projection : projection // ignore: cast_nullable_to_non_nullable
+as BindingId,transform: null == transform ? _self.transform : transform // ignore: cast_nullable_to_non_nullable
 as TypedExpression,
   ));
 }
@@ -1260,10 +1332,1161 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TypedExpressionCopyWith<$Res> get projection {
+$TypedExpressionCopyWith<$Res> get transform {
   
-  return $TypedExpressionCopyWith<$Res>(_self.projection, (value) {
-    return _then(_self.copyWith(projection: value));
+  return $TypedExpressionCopyWith<$Res>(_self.transform, (value) {
+    return _then(_self.copyWith(transform: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionFilterExpression implements Expression {
+  const CollectionFilterExpression({required this.source, required this.itemBindingId, required this.predicate});
+  
+
+ final  TypedExpression source;
+ final  BindingId itemBindingId;
+ final  TypedExpression predicate;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionFilterExpressionCopyWith<CollectionFilterExpression> get copyWith => _$CollectionFilterExpressionCopyWithImpl<CollectionFilterExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionFilterExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.predicate, predicate) || other.predicate == predicate));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,itemBindingId,predicate);
+
+@override
+String toString() {
+  return 'Expression.collectionFilter(source: $source, itemBindingId: $itemBindingId, predicate: $predicate)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionFilterExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionFilterExpressionCopyWith(CollectionFilterExpression value, $Res Function(CollectionFilterExpression) _then) = _$CollectionFilterExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, BindingId itemBindingId, TypedExpression predicate
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get predicate;
+
+}
+/// @nodoc
+class _$CollectionFilterExpressionCopyWithImpl<$Res>
+    implements $CollectionFilterExpressionCopyWith<$Res> {
+  _$CollectionFilterExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionFilterExpression _self;
+  final $Res Function(CollectionFilterExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? itemBindingId = null,Object? predicate = null,}) {
+  return _then(CollectionFilterExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,predicate: null == predicate ? _self.predicate : predicate // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get predicate {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
+    return _then(_self.copyWith(predicate: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionQuantifierExpression implements Expression {
+  const CollectionQuantifierExpression({required this.source, required this.quantifier, required this.itemBindingId, required this.predicate});
+  
+
+ final  TypedExpression source;
+ final  CollectionQuantifier quantifier;
+ final  BindingId itemBindingId;
+ final  TypedExpression predicate;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionQuantifierExpressionCopyWith<CollectionQuantifierExpression> get copyWith => _$CollectionQuantifierExpressionCopyWithImpl<CollectionQuantifierExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionQuantifierExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.quantifier, quantifier) || other.quantifier == quantifier)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.predicate, predicate) || other.predicate == predicate));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,quantifier,itemBindingId,predicate);
+
+@override
+String toString() {
+  return 'Expression.collectionQuantifier(source: $source, quantifier: $quantifier, itemBindingId: $itemBindingId, predicate: $predicate)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionQuantifierExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionQuantifierExpressionCopyWith(CollectionQuantifierExpression value, $Res Function(CollectionQuantifierExpression) _then) = _$CollectionQuantifierExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, CollectionQuantifier quantifier, BindingId itemBindingId, TypedExpression predicate
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get predicate;
+
+}
+/// @nodoc
+class _$CollectionQuantifierExpressionCopyWithImpl<$Res>
+    implements $CollectionQuantifierExpressionCopyWith<$Res> {
+  _$CollectionQuantifierExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionQuantifierExpression _self;
+  final $Res Function(CollectionQuantifierExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? quantifier = null,Object? itemBindingId = null,Object? predicate = null,}) {
+  return _then(CollectionQuantifierExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,quantifier: null == quantifier ? _self.quantifier : quantifier // ignore: cast_nullable_to_non_nullable
+as CollectionQuantifier,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,predicate: null == predicate ? _self.predicate : predicate // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get predicate {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
+    return _then(_self.copyWith(predicate: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionFindExpression implements Expression {
+  const CollectionFindExpression({required this.source, required this.selection, required this.itemBindingId, required this.predicate});
+  
+
+ final  TypedExpression source;
+ final  CollectionSelection selection;
+ final  BindingId itemBindingId;
+ final  TypedExpression predicate;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionFindExpressionCopyWith<CollectionFindExpression> get copyWith => _$CollectionFindExpressionCopyWithImpl<CollectionFindExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionFindExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.predicate, predicate) || other.predicate == predicate));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,selection,itemBindingId,predicate);
+
+@override
+String toString() {
+  return 'Expression.collectionFind(source: $source, selection: $selection, itemBindingId: $itemBindingId, predicate: $predicate)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionFindExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionFindExpressionCopyWith(CollectionFindExpression value, $Res Function(CollectionFindExpression) _then) = _$CollectionFindExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, CollectionSelection selection, BindingId itemBindingId, TypedExpression predicate
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get predicate;
+
+}
+/// @nodoc
+class _$CollectionFindExpressionCopyWithImpl<$Res>
+    implements $CollectionFindExpressionCopyWith<$Res> {
+  _$CollectionFindExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionFindExpression _self;
+  final $Res Function(CollectionFindExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? selection = null,Object? itemBindingId = null,Object? predicate = null,}) {
+  return _then(CollectionFindExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as CollectionSelection,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,predicate: null == predicate ? _self.predicate : predicate // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get predicate {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
+    return _then(_self.copyWith(predicate: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionCountExpression implements Expression {
+  const CollectionCountExpression({required this.source, required this.itemBindingId, required this.predicate});
+  
+
+ final  TypedExpression source;
+ final  BindingId itemBindingId;
+ final  TypedExpression predicate;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionCountExpressionCopyWith<CollectionCountExpression> get copyWith => _$CollectionCountExpressionCopyWithImpl<CollectionCountExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionCountExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.predicate, predicate) || other.predicate == predicate));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,itemBindingId,predicate);
+
+@override
+String toString() {
+  return 'Expression.collectionCount(source: $source, itemBindingId: $itemBindingId, predicate: $predicate)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionCountExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionCountExpressionCopyWith(CollectionCountExpression value, $Res Function(CollectionCountExpression) _then) = _$CollectionCountExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, BindingId itemBindingId, TypedExpression predicate
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get predicate;
+
+}
+/// @nodoc
+class _$CollectionCountExpressionCopyWithImpl<$Res>
+    implements $CollectionCountExpressionCopyWith<$Res> {
+  _$CollectionCountExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionCountExpression _self;
+  final $Res Function(CollectionCountExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? itemBindingId = null,Object? predicate = null,}) {
+  return _then(CollectionCountExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,predicate: null == predicate ? _self.predicate : predicate // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get predicate {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.predicate, (value) {
+    return _then(_self.copyWith(predicate: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionDistinctExpression implements Expression {
+  const CollectionDistinctExpression({required this.source, this.key, this.itemBindingId});
+  
+
+ final  TypedExpression source;
+ final  TypedExpression? key;
+ final  BindingId? itemBindingId;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionDistinctExpressionCopyWith<CollectionDistinctExpression> get copyWith => _$CollectionDistinctExpressionCopyWithImpl<CollectionDistinctExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionDistinctExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.key, key) || other.key == key)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,key,itemBindingId);
+
+@override
+String toString() {
+  return 'Expression.collectionDistinct(source: $source, key: $key, itemBindingId: $itemBindingId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionDistinctExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionDistinctExpressionCopyWith(CollectionDistinctExpression value, $Res Function(CollectionDistinctExpression) _then) = _$CollectionDistinctExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, TypedExpression? key, BindingId? itemBindingId
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypedExpressionCopyWith<$Res>? get key;$BindingIdCopyWith<$Res>? get itemBindingId;
+
+}
+/// @nodoc
+class _$CollectionDistinctExpressionCopyWithImpl<$Res>
+    implements $CollectionDistinctExpressionCopyWith<$Res> {
+  _$CollectionDistinctExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionDistinctExpression _self;
+  final $Res Function(CollectionDistinctExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? key = freezed,Object? itemBindingId = freezed,}) {
+  return _then(CollectionDistinctExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,key: freezed == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,itemBindingId: freezed == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId?,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get key {
+    if (_self.key == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.key!, (value) {
+    return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res>? get itemBindingId {
+    if (_self.itemBindingId == null) {
+    return null;
+  }
+
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId!, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionSortExpression implements Expression {
+  const CollectionSortExpression({required this.source, required this.key, required this.itemBindingId, required this.direction, this.comparator});
+  
+
+ final  TypedExpression source;
+ final  TypedExpression key;
+ final  BindingId itemBindingId;
+ final  CollectionSortDirection direction;
+ final  CollectionComparator? comparator;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionSortExpressionCopyWith<CollectionSortExpression> get copyWith => _$CollectionSortExpressionCopyWithImpl<CollectionSortExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionSortExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.key, key) || other.key == key)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.direction, direction) || other.direction == direction)&&(identical(other.comparator, comparator) || other.comparator == comparator));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,key,itemBindingId,direction,comparator);
+
+@override
+String toString() {
+  return 'Expression.collectionSort(source: $source, key: $key, itemBindingId: $itemBindingId, direction: $direction, comparator: $comparator)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionSortExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionSortExpressionCopyWith(CollectionSortExpression value, $Res Function(CollectionSortExpression) _then) = _$CollectionSortExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, TypedExpression key, BindingId itemBindingId, CollectionSortDirection direction, CollectionComparator? comparator
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypedExpressionCopyWith<$Res> get key;$BindingIdCopyWith<$Res> get itemBindingId;$CollectionComparatorCopyWith<$Res>? get comparator;
+
+}
+/// @nodoc
+class _$CollectionSortExpressionCopyWithImpl<$Res>
+    implements $CollectionSortExpressionCopyWith<$Res> {
+  _$CollectionSortExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionSortExpression _self;
+  final $Res Function(CollectionSortExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? key = null,Object? itemBindingId = null,Object? direction = null,Object? comparator = freezed,}) {
+  return _then(CollectionSortExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
+as CollectionSortDirection,comparator: freezed == comparator ? _self.comparator : comparator // ignore: cast_nullable_to_non_nullable
+as CollectionComparator?,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get key {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
+    return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CollectionComparatorCopyWith<$Res>? get comparator {
+    if (_self.comparator == null) {
+    return null;
+  }
+
+  return $CollectionComparatorCopyWith<$Res>(_self.comparator!, (value) {
+    return _then(_self.copyWith(comparator: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionGroupExpression implements Expression {
+  const CollectionGroupExpression({required this.source, required this.key, required this.itemBindingId, this.value});
+  
+
+ final  TypedExpression source;
+ final  TypedExpression key;
+ final  BindingId itemBindingId;
+ final  TypedExpression? value;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionGroupExpressionCopyWith<CollectionGroupExpression> get copyWith => _$CollectionGroupExpressionCopyWithImpl<CollectionGroupExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionGroupExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.key, key) || other.key == key)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.value, value) || other.value == value));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,key,itemBindingId,value);
+
+@override
+String toString() {
+  return 'Expression.collectionGroup(source: $source, key: $key, itemBindingId: $itemBindingId, value: $value)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionGroupExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionGroupExpressionCopyWith(CollectionGroupExpression value, $Res Function(CollectionGroupExpression) _then) = _$CollectionGroupExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, TypedExpression key, BindingId itemBindingId, TypedExpression? value
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypedExpressionCopyWith<$Res> get key;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res>? get value;
+
+}
+/// @nodoc
+class _$CollectionGroupExpressionCopyWithImpl<$Res>
+    implements $CollectionGroupExpressionCopyWith<$Res> {
+  _$CollectionGroupExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionGroupExpression _self;
+  final $Res Function(CollectionGroupExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? key = null,Object? itemBindingId = null,Object? value = freezed,}) {
+  return _then(CollectionGroupExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as TypedExpression,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get key {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
+    return _then(_self.copyWith(key: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get value {
+    if (_self.value == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.value!, (value) {
+    return _then(_self.copyWith(value: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionReduceExpression implements Expression {
+  const CollectionReduceExpression({required this.source, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
+  
+
+ final  TypedExpression source;
+ final  BindingId accumulatorBindingId;
+ final  BindingId itemBindingId;
+ final  TypedExpression reduction;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionReduceExpressionCopyWith<CollectionReduceExpression> get copyWith => _$CollectionReduceExpressionCopyWithImpl<CollectionReduceExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionReduceExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.accumulatorBindingId, accumulatorBindingId) || other.accumulatorBindingId == accumulatorBindingId)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.reduction, reduction) || other.reduction == reduction));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,accumulatorBindingId,itemBindingId,reduction);
+
+@override
+String toString() {
+  return 'Expression.collectionReduce(source: $source, accumulatorBindingId: $accumulatorBindingId, itemBindingId: $itemBindingId, reduction: $reduction)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionReduceExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionReduceExpressionCopyWith(CollectionReduceExpression value, $Res Function(CollectionReduceExpression) _then) = _$CollectionReduceExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, BindingId accumulatorBindingId, BindingId itemBindingId, TypedExpression reduction
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$BindingIdCopyWith<$Res> get accumulatorBindingId;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get reduction;
+
+}
+/// @nodoc
+class _$CollectionReduceExpressionCopyWithImpl<$Res>
+    implements $CollectionReduceExpressionCopyWith<$Res> {
+  _$CollectionReduceExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionReduceExpression _self;
+  final $Res Function(CollectionReduceExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? accumulatorBindingId = null,Object? itemBindingId = null,Object? reduction = null,}) {
+  return _then(CollectionReduceExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,accumulatorBindingId: null == accumulatorBindingId ? _self.accumulatorBindingId : accumulatorBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,reduction: null == reduction ? _self.reduction : reduction // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get accumulatorBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
+    return _then(_self.copyWith(accumulatorBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get reduction {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
+    return _then(_self.copyWith(reduction: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionFoldExpression implements Expression {
+  const CollectionFoldExpression({required this.source, required this.initial, required this.accumulatorBindingId, required this.itemBindingId, required this.reduction});
+  
+
+ final  TypedExpression source;
+ final  TypedExpression initial;
+ final  BindingId accumulatorBindingId;
+ final  BindingId itemBindingId;
+ final  TypedExpression reduction;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionFoldExpressionCopyWith<CollectionFoldExpression> get copyWith => _$CollectionFoldExpressionCopyWithImpl<CollectionFoldExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionFoldExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.accumulatorBindingId, accumulatorBindingId) || other.accumulatorBindingId == accumulatorBindingId)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.reduction, reduction) || other.reduction == reduction));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,initial,accumulatorBindingId,itemBindingId,reduction);
+
+@override
+String toString() {
+  return 'Expression.collectionFold(source: $source, initial: $initial, accumulatorBindingId: $accumulatorBindingId, itemBindingId: $itemBindingId, reduction: $reduction)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionFoldExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionFoldExpressionCopyWith(CollectionFoldExpression value, $Res Function(CollectionFoldExpression) _then) = _$CollectionFoldExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, TypedExpression initial, BindingId accumulatorBindingId, BindingId itemBindingId, TypedExpression reduction
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypedExpressionCopyWith<$Res> get initial;$BindingIdCopyWith<$Res> get accumulatorBindingId;$BindingIdCopyWith<$Res> get itemBindingId;$TypedExpressionCopyWith<$Res> get reduction;
+
+}
+/// @nodoc
+class _$CollectionFoldExpressionCopyWithImpl<$Res>
+    implements $CollectionFoldExpressionCopyWith<$Res> {
+  _$CollectionFoldExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionFoldExpression _self;
+  final $Res Function(CollectionFoldExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? initial = null,Object? accumulatorBindingId = null,Object? itemBindingId = null,Object? reduction = null,}) {
+  return _then(CollectionFoldExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,initial: null == initial ? _self.initial : initial // ignore: cast_nullable_to_non_nullable
+as TypedExpression,accumulatorBindingId: null == accumulatorBindingId ? _self.accumulatorBindingId : accumulatorBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,itemBindingId: null == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,reduction: null == reduction ? _self.reduction : reduction // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get initial {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.initial, (value) {
+    return _then(_self.copyWith(initial: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get accumulatorBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.accumulatorBindingId, (value) {
+    return _then(_self.copyWith(accumulatorBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get itemBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get reduction {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.reduction, (value) {
+    return _then(_self.copyWith(reduction: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class CollectionTransformExpression implements Expression {
+  const CollectionTransformExpression({required this.source, required this.operation, this.transform, this.itemBindingId, this.count});
+  
+
+ final  TypedExpression source;
+ final  CollectionTransformOperation operation;
+ final  TypedExpression? transform;
+ final  BindingId? itemBindingId;
+ final  TypedExpression? count;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionTransformExpressionCopyWith<CollectionTransformExpression> get copyWith => _$CollectionTransformExpressionCopyWithImpl<CollectionTransformExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionTransformExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.transform, transform) || other.transform == transform)&&(identical(other.itemBindingId, itemBindingId) || other.itemBindingId == itemBindingId)&&(identical(other.count, count) || other.count == count));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,operation,transform,itemBindingId,count);
+
+@override
+String toString() {
+  return 'Expression.collectionTransform(source: $source, operation: $operation, transform: $transform, itemBindingId: $itemBindingId, count: $count)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionTransformExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $CollectionTransformExpressionCopyWith(CollectionTransformExpression value, $Res Function(CollectionTransformExpression) _then) = _$CollectionTransformExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, CollectionTransformOperation operation, TypedExpression? transform, BindingId? itemBindingId, TypedExpression? count
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypedExpressionCopyWith<$Res>? get transform;$BindingIdCopyWith<$Res>? get itemBindingId;$TypedExpressionCopyWith<$Res>? get count;
+
+}
+/// @nodoc
+class _$CollectionTransformExpressionCopyWithImpl<$Res>
+    implements $CollectionTransformExpressionCopyWith<$Res> {
+  _$CollectionTransformExpressionCopyWithImpl(this._self, this._then);
+
+  final CollectionTransformExpression _self;
+  final $Res Function(CollectionTransformExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? operation = null,Object? transform = freezed,Object? itemBindingId = freezed,Object? count = freezed,}) {
+  return _then(CollectionTransformExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as CollectionTransformOperation,transform: freezed == transform ? _self.transform : transform // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,itemBindingId: freezed == itemBindingId ? _self.itemBindingId : itemBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId?,count: freezed == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as TypedExpression?,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get transform {
+    if (_self.transform == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.transform!, (value) {
+    return _then(_self.copyWith(transform: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res>? get itemBindingId {
+    if (_self.itemBindingId == null) {
+    return null;
+  }
+
+  return $BindingIdCopyWith<$Res>(_self.itemBindingId!, (value) {
+    return _then(_self.copyWith(itemBindingId: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res>? get count {
+    if (_self.count == null) {
+    return null;
+  }
+
+  return $TypedExpressionCopyWith<$Res>(_self.count!, (value) {
+    return _then(_self.copyWith(count: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class IsTypeExpression implements Expression {
+  const IsTypeExpression({required this.source, required this.type});
+  
+
+ final  TypedExpression source;
+ final  TypeExpression type;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$IsTypeExpressionCopyWith<IsTypeExpression> get copyWith => _$IsTypeExpressionCopyWithImpl<IsTypeExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IsTypeExpression&&(identical(other.source, source) || other.source == source)&&(identical(other.type, type) || other.type == type));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,source,type);
+
+@override
+String toString() {
+  return 'Expression.isType(source: $source, type: $type)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $IsTypeExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $IsTypeExpressionCopyWith(IsTypeExpression value, $Res Function(IsTypeExpression) _then) = _$IsTypeExpressionCopyWithImpl;
+@useResult
+$Res call({
+ TypedExpression source, TypeExpression type
+});
+
+
+$TypedExpressionCopyWith<$Res> get source;$TypeExpressionCopyWith<$Res> get type;
+
+}
+/// @nodoc
+class _$IsTypeExpressionCopyWithImpl<$Res>
+    implements $IsTypeExpressionCopyWith<$Res> {
+  _$IsTypeExpressionCopyWithImpl(this._self, this._then);
+
+  final IsTypeExpression _self;
+  final $Res Function(IsTypeExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? source = null,Object? type = null,}) {
+  return _then(IsTypeExpression(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as TypedExpression,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as TypeExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get source {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypeExpressionCopyWith<$Res> get type {
+  
+  return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
+    return _then(_self.copyWith(type: value));
   });
 }
 }
@@ -1655,6 +2878,411 @@ as List<TypedExpression>,
 }
 
 
+}
+
+/// @nodoc
+
+
+class ColorOperationExpression implements Expression {
+  const ColorOperationExpression({required this.operation, required this.color, required this.alpha});
+  
+
+ final  ColorOperation operation;
+ final  TypedExpression color;
+ final  TypedExpression alpha;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ColorOperationExpressionCopyWith<ColorOperationExpression> get copyWith => _$ColorOperationExpressionCopyWithImpl<ColorOperationExpression>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ColorOperationExpression&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.color, color) || other.color == color)&&(identical(other.alpha, alpha) || other.alpha == alpha));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,operation,color,alpha);
+
+@override
+String toString() {
+  return 'Expression.colorOperation(operation: $operation, color: $color, alpha: $alpha)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ColorOperationExpressionCopyWith<$Res> implements $ExpressionCopyWith<$Res> {
+  factory $ColorOperationExpressionCopyWith(ColorOperationExpression value, $Res Function(ColorOperationExpression) _then) = _$ColorOperationExpressionCopyWithImpl;
+@useResult
+$Res call({
+ ColorOperation operation, TypedExpression color, TypedExpression alpha
+});
+
+
+$TypedExpressionCopyWith<$Res> get color;$TypedExpressionCopyWith<$Res> get alpha;
+
+}
+/// @nodoc
+class _$ColorOperationExpressionCopyWithImpl<$Res>
+    implements $ColorOperationExpressionCopyWith<$Res> {
+  _$ColorOperationExpressionCopyWithImpl(this._self, this._then);
+
+  final ColorOperationExpression _self;
+  final $Res Function(ColorOperationExpression) _then;
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operation = null,Object? color = null,Object? alpha = null,}) {
+  return _then(ColorOperationExpression(
+operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
+as ColorOperation,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as TypedExpression,alpha: null == alpha ? _self.alpha : alpha // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get color {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
+    return _then(_self.copyWith(color: value));
+  });
+}/// Create a copy of Expression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get alpha {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.alpha, (value) {
+    return _then(_self.copyWith(alpha: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$CollectionComparator {
+
+ BindingId get leftBindingId; BindingId get rightBindingId; TypedExpression get comparison;
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CollectionComparatorCopyWith<CollectionComparator> get copyWith => _$CollectionComparatorCopyWithImpl<CollectionComparator>(this as CollectionComparator, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CollectionComparator&&(identical(other.leftBindingId, leftBindingId) || other.leftBindingId == leftBindingId)&&(identical(other.rightBindingId, rightBindingId) || other.rightBindingId == rightBindingId)&&(identical(other.comparison, comparison) || other.comparison == comparison));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,leftBindingId,rightBindingId,comparison);
+
+@override
+String toString() {
+  return 'CollectionComparator(leftBindingId: $leftBindingId, rightBindingId: $rightBindingId, comparison: $comparison)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CollectionComparatorCopyWith<$Res>  {
+  factory $CollectionComparatorCopyWith(CollectionComparator value, $Res Function(CollectionComparator) _then) = _$CollectionComparatorCopyWithImpl;
+@useResult
+$Res call({
+ BindingId leftBindingId, BindingId rightBindingId, TypedExpression comparison
+});
+
+
+$BindingIdCopyWith<$Res> get leftBindingId;$BindingIdCopyWith<$Res> get rightBindingId;$TypedExpressionCopyWith<$Res> get comparison;
+
+}
+/// @nodoc
+class _$CollectionComparatorCopyWithImpl<$Res>
+    implements $CollectionComparatorCopyWith<$Res> {
+  _$CollectionComparatorCopyWithImpl(this._self, this._then);
+
+  final CollectionComparator _self;
+  final $Res Function(CollectionComparator) _then;
+
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? leftBindingId = null,Object? rightBindingId = null,Object? comparison = null,}) {
+  return _then(_self.copyWith(
+leftBindingId: null == leftBindingId ? _self.leftBindingId : leftBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,rightBindingId: null == rightBindingId ? _self.rightBindingId : rightBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,comparison: null == comparison ? _self.comparison : comparison // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get leftBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
+    return _then(_self.copyWith(leftBindingId: value));
+  });
+}/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get rightBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
+    return _then(_self.copyWith(rightBindingId: value));
+  });
+}/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get comparison {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
+    return _then(_self.copyWith(comparison: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [CollectionComparator].
+extension CollectionComparatorPatterns on CollectionComparator {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CollectionComparator value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CollectionComparator() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CollectionComparator value)  $default,){
+final _that = this;
+switch (_that) {
+case _CollectionComparator():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CollectionComparator value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CollectionComparator() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BindingId leftBindingId,  BindingId rightBindingId,  TypedExpression comparison)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CollectionComparator() when $default != null:
+return $default(_that.leftBindingId,_that.rightBindingId,_that.comparison);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BindingId leftBindingId,  BindingId rightBindingId,  TypedExpression comparison)  $default,) {final _that = this;
+switch (_that) {
+case _CollectionComparator():
+return $default(_that.leftBindingId,_that.rightBindingId,_that.comparison);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BindingId leftBindingId,  BindingId rightBindingId,  TypedExpression comparison)?  $default,) {final _that = this;
+switch (_that) {
+case _CollectionComparator() when $default != null:
+return $default(_that.leftBindingId,_that.rightBindingId,_that.comparison);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _CollectionComparator implements CollectionComparator {
+  const _CollectionComparator({required this.leftBindingId, required this.rightBindingId, required this.comparison});
+  
+
+@override final  BindingId leftBindingId;
+@override final  BindingId rightBindingId;
+@override final  TypedExpression comparison;
+
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionComparatorCopyWith<_CollectionComparator> get copyWith => __$CollectionComparatorCopyWithImpl<_CollectionComparator>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionComparator&&(identical(other.leftBindingId, leftBindingId) || other.leftBindingId == leftBindingId)&&(identical(other.rightBindingId, rightBindingId) || other.rightBindingId == rightBindingId)&&(identical(other.comparison, comparison) || other.comparison == comparison));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,leftBindingId,rightBindingId,comparison);
+
+@override
+String toString() {
+  return 'CollectionComparator(leftBindingId: $leftBindingId, rightBindingId: $rightBindingId, comparison: $comparison)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionComparatorCopyWith<$Res> implements $CollectionComparatorCopyWith<$Res> {
+  factory _$CollectionComparatorCopyWith(_CollectionComparator value, $Res Function(_CollectionComparator) _then) = __$CollectionComparatorCopyWithImpl;
+@override @useResult
+$Res call({
+ BindingId leftBindingId, BindingId rightBindingId, TypedExpression comparison
+});
+
+
+@override $BindingIdCopyWith<$Res> get leftBindingId;@override $BindingIdCopyWith<$Res> get rightBindingId;@override $TypedExpressionCopyWith<$Res> get comparison;
+
+}
+/// @nodoc
+class __$CollectionComparatorCopyWithImpl<$Res>
+    implements _$CollectionComparatorCopyWith<$Res> {
+  __$CollectionComparatorCopyWithImpl(this._self, this._then);
+
+  final _CollectionComparator _self;
+  final $Res Function(_CollectionComparator) _then;
+
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? leftBindingId = null,Object? rightBindingId = null,Object? comparison = null,}) {
+  return _then(_CollectionComparator(
+leftBindingId: null == leftBindingId ? _self.leftBindingId : leftBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,rightBindingId: null == rightBindingId ? _self.rightBindingId : rightBindingId // ignore: cast_nullable_to_non_nullable
+as BindingId,comparison: null == comparison ? _self.comparison : comparison // ignore: cast_nullable_to_non_nullable
+as TypedExpression,
+  ));
+}
+
+/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get leftBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.leftBindingId, (value) {
+    return _then(_self.copyWith(leftBindingId: value));
+  });
+}/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BindingIdCopyWith<$Res> get rightBindingId {
+  
+  return $BindingIdCopyWith<$Res>(_self.rightBindingId, (value) {
+    return _then(_self.copyWith(rightBindingId: value));
+  });
+}/// Create a copy of CollectionComparator
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedExpressionCopyWith<$Res> get comparison {
+  
+  return $TypedExpressionCopyWith<$Res>(_self.comparison, (value) {
+    return _then(_self.copyWith(comparison: value));
+  });
+}
 }
 
 /// @nodoc
