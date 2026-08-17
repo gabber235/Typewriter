@@ -1,5 +1,10 @@
 part of "services.dart";
 
+const engineServiceRoleColor = Colors.blueAccent;
+const realmServiceRoleColor = Colors.deepOrangeAccent;
+const customServiceRoleColor = Colors.green;
+const standaloneServiceColor = Colors.blueGrey;
+
 @freezed
 abstract class Service with _$Service {
   @Assert("name.isNotEmpty", "Name must not be empty.")
@@ -117,9 +122,9 @@ abstract class ServiceRole with _$ServiceRole {
   }
 
   Color get color => switch (this) {
-    EngineServiceRole() => Colors.blueAccent,
-    RealmServiceRole() => Colors.deepOrangeAccent,
-    CustomServiceRole() => Colors.green,
+    EngineServiceRole() => engineServiceRoleColor,
+    RealmServiceRole() => realmServiceRoleColor,
+    CustomServiceRole() => customServiceRoleColor,
     ServiceRole() => throw UnimplementedError(),
   };
 
