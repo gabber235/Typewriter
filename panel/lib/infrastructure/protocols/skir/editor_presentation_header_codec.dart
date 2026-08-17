@@ -35,6 +35,24 @@ extension on SkirPresentationDecoder {
 
   TypeResult<PresentationInsets?> _insets(wire.PresentationInsets? value) {
     if (value == null) return const TypeResult.success(null);
+    final values = switch (value) {
+      wire.PresentationInsets_allWrapper(:final value) => [value],
+      wire.PresentationInsets_symmetricWrapper(:final value) => [
+        value.horizontal,
+        value.vertical,
+      ],
+      wire.PresentationInsets_onlyWrapper(:final value) => [
+        value.top,
+        value.left,
+        value.right,
+        value.bottom,
+      ],
+      wire.PresentationInsets_unknown() => null,
+    };
+    if (values == null) return invalidWire("Unknown presentation insets");
+    if (values.any((value) => !value.isFinite || value < 0)) {
+      return invalidWire("Invalid presentation insets");
+    }
     final decoded = switch (value) {
       wire.PresentationInsets_allWrapper(:final value) =>
         PresentationInsets.all(value),
@@ -50,26 +68,10 @@ extension on SkirPresentationDecoder {
           right: value.right,
           bottom: value.bottom,
         ),
-      wire.PresentationInsets_unknown() => null,
+      wire.PresentationInsets_unknown() => throw StateError(
+        "Unknown presentation insets passed validation",
+      ),
     };
-    if (decoded == null) return invalidWire("Unknown presentation insets");
-    final values = switch (decoded) {
-      PresentationInsetsAll(:final value) => [value],
-      PresentationInsetsSymmetric(:final horizontal, :final vertical) => [
-        horizontal,
-        vertical,
-      ],
-      PresentationInsetsOnly(
-        :final top,
-        :final left,
-        :final right,
-        :final bottom,
-      ) =>
-        [top, left, right, bottom],
-    };
-    if (values.any((value) => !value.isFinite || value < 0)) {
-      return invalidWire("Invalid presentation insets");
-    }
     return TypeResult.success(decoded);
   }
 

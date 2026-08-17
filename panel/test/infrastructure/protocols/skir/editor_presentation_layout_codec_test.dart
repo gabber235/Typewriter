@@ -363,29 +363,51 @@ void main() {
     expect(decoded.element, isA<DiagnosticElement>());
   });
 
-  test("rejects invalid header padding", () {
-    final encoded = codecs.encoder
-        .encodeNode(
-          const PresentationNode(
-            id: "invalid.header.padding",
-            header: PresentationHeader(),
-            element: DividerElement(),
-          ),
-        )
-        .valueOrNull!;
-    final invalidHeader = encoded.header!.toMutable()
-      ..headerPadding = wire.PresentationInsets.createOnly(
-        top: 0,
-        left: -1,
-        right: 0,
-        bottom: 0,
-      );
-    final decoded = codecs.decoder.decodeNode(
-      (encoded.toMutable()..header = invalidHeader).toFrozen(),
-    );
+  final invalidHeaderInsets = {
+    "negative all": wire.PresentationInsets.wrapAll(-1),
+    "nonfinite all": wire.PresentationInsets.wrapAll(double.nan),
+    "negative symmetric": wire.PresentationInsets.createSymmetric(
+      horizontal: -1,
+      vertical: 0,
+    ),
+    "nonfinite symmetric": wire.PresentationInsets.createSymmetric(
+      horizontal: 0,
+      vertical: double.infinity,
+    ),
+    "negative only": wire.PresentationInsets.createOnly(
+      top: 0,
+      left: -1,
+      right: 0,
+      bottom: 0,
+    ),
+    "nonfinite only": wire.PresentationInsets.createOnly(
+      top: 0,
+      left: 0,
+      right: double.negativeInfinity,
+      bottom: 0,
+    ),
+  };
 
-    expect(decoded.element, isA<DiagnosticElement>());
-  });
+  for (final invalidInsets in invalidHeaderInsets.entries) {
+    test("rejects ${invalidInsets.key} header padding", () {
+      final encoded = codecs.encoder
+          .encodeNode(
+            const PresentationNode(
+              id: "invalid.header.padding",
+              header: PresentationHeader(),
+              element: DividerElement(),
+            ),
+          )
+          .valueOrNull!;
+      final invalidHeader = encoded.header!.toMutable()
+        ..headerPadding = invalidInsets.value;
+      final decoded = codecs.decoder.decodeNode(
+        (encoded.toMutable()..header = invalidHeader).toFrozen(),
+      );
+
+      expect(decoded.element, isA<DiagnosticElement>());
+    });
+  }
 
   test("rejects an empty presentation slot identifier", () {
     final decoded = codecs.decoder.decodeNode(
