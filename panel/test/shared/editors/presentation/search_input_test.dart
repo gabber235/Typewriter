@@ -62,6 +62,30 @@ void main() {
     expect(find.text("Beta"), findsOneWidget);
   });
 
+  testWidgets("explicit initial query overrides the selected value", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: searchTestRenderer(
+        type: const StringType(),
+        value: const StringValue("Alpha"),
+        presentation: searchTestPresentation(initialQuery: "".asStringLiteral),
+      ),
+    );
+
+    await tester.tap(find.bySemanticsLabel("Activate search input"));
+    await tester.pumpAndSettle();
+
+    final textField = tester.widget<TextFormField>(
+      find.descendant(
+        of: find.byType(QueryBar),
+        matching: find.byType(TextFormField),
+      ),
+    );
+    expect(textField.controller!.text, isEmpty);
+    expect(find.text("Beta"), findsOneWidget);
+  });
+
   testWidgets("dismiss keeps the current preview", (tester) async {
     await tester.pumpTestApp(
       child: searchTestRenderer(

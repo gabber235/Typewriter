@@ -169,6 +169,17 @@ class PresentationSearchInput extends HookConsumerWidget {
       return accepted;
     }
 
+    String initialQuery() {
+      final expression = element.initialQuery;
+      if (expression == null) return binding.value.expressionDisplayText;
+      final result = scope.evaluate(expression);
+      if (result.valueOrNull case StringValue(:final value)) return value;
+      validationMessage.value =
+          result.diagnostics.firstOrNull?.message ??
+          "Search initial query must evaluate to text";
+      return "";
+    }
+
     final buildSource = sourceBuilder;
     return SearchRoot(
       create: (searchRef) {
@@ -206,7 +217,7 @@ class PresentationSearchInput extends HookConsumerWidget {
           explicitExit.value = false;
           validationMessage.value = null;
           if (element.selectionMode == SearchSelectionMode.single) {
-            controller.updateQuery(binding.value.expressionDisplayText);
+            controller.updateQuery(initialQuery());
           }
           inputController.inputFocusNode.unfocus();
           editing.value = true;
