@@ -32,13 +32,16 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text(directTag.name), findsOneWidget);
       expect(find.text(inheritedTag.name), findsOneWidget);
-      expect(find.byType(Chip), findsNWidgets(2));
-      for (final chip in tester.widgetList<Chip>(find.byType(Chip))) {
-        expect(chip.side, isA<BorderSide>());
-        expect(chip.side!.color.toARGB32(), Colors.blue.toARGB32());
-        final box = tester.renderObject<RenderBox>(find.byWidget(chip));
-        expect(box.size.width, lessThanOrEqualTo(400));
-      }
+      expect(find.byType(Chip), findsNothing);
+      final directContainer = tester.getSize(
+        find.byKey(const ValueKey("book.effectiveTags.unary.container")),
+      );
+      final inheritedContainer = tester.getSize(
+        find.byKey(const ValueKey("book.effectiveTags.leaf.container")),
+      );
+      expect(directContainer.width, greaterThan(300));
+      expect(inheritedContainer.width, directContainer.width);
+      expect(directContainer.width, lessThanOrEqualTo(400));
       expect(find.text("Inheritance path"), findsNothing);
       expect(find.text(directTag.name), findsOneWidget);
       expect(find.text(inheritedTag.name), findsOneWidget);
@@ -74,11 +77,31 @@ void main() {
     expect(find.text(first.name, skipOffstage: false), findsOneWidget);
     expect(find.text(second.name, skipOffstage: false), findsOneWidget);
 
-    await tester.tap(find.text(directTag.name));
+    await tester.tapAt(tester.getCenter(find.text(directTag.name)));
     await tester.pumpAndSettle();
 
     expect(find.text(first.name), findsOneWidget);
     expect(find.text(second.name), findsOneWidget);
+    final branchWidth = tester
+        .getSize(
+          find.byKey(const ValueKey("book.effectiveTags.branch.container")),
+        )
+        .width;
+    final leafWidth = tester
+        .getSize(
+          find.byKey(const ValueKey("book.effectiveTags.leaf.container")).first,
+        )
+        .width;
+    expect(leafWidth, greaterThan(300));
+    expect(leafWidth, closeTo(branchWidth, 16));
+    final hierarchyLayouts = find.byWidgetPredicate(
+      (widget) => widget.runtimeType.toString() == "_HierarchyRenderSurface",
+    );
+    final strokes = [
+      for (final element in hierarchyLayouts.evaluate())
+        (element.renderObject as dynamic).debugStrokes,
+    ];
+    expect(strokes.any((paths) => paths.length == 3), isTrue);
   });
 
   testWidgets("shared branching ancestors repeat with independent expansion", (
@@ -133,7 +156,7 @@ void main() {
     expect(find.text(firstLeaf.name), findsNothing);
     expect(find.text(firstLeaf.name, skipOffstage: false), findsNWidgets(2));
 
-    await tester.tap(find.text(shared.name).first);
+    await tester.tapAt(tester.getCenter(find.text(shared.name).first));
     await tester.pumpAndSettle();
 
     expect(find.text(firstLeaf.name), findsOneWidget);

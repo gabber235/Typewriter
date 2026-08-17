@@ -149,24 +149,39 @@ void main() {
         root.children.map((node) => node.id),
         contains("tag.inheritance.visibility"),
       );
-      expect(summary.presentation.layout, isA<PresentationWrapLayout>());
+      final summaryLayout =
+          summary.presentation.layout as PresentationStandardSequenceLayout;
+      expect(summaryLayout.layout, isA<PresentationWrapLayout>());
       expect(summary.presentation.empty, isNotNull);
       _expectTagChip(summaryLookup.found.element as ChipElement);
       expect(graph.childrenBindingId, const BindingId(45));
+      expect(graph.childBindingId, const BindingId(46));
+      final rootSequence =
+          graph.rootSequence.layout as PresentationStandardSequenceLayout;
+      final rootColumn = rootSequence.layout as PresentationColumnLayout;
+      expect(rootColumn.spacing, 12);
       expect(graph.node.presentationSlotIds, {"tag.inheritance.children"});
+      final hierarchy =
+          graph.children.layout as PresentationHierarchySequenceLayout;
+      expect(hierarchy.layout.itemAnchor, isA<CenterConnectorAnchor>());
+      expect(
+        hierarchy.layout.crossAxisAlignment,
+        PresentationCrossAxisAlignment.stretch,
+      );
       final branching = graph.node.element as ConditionalElement;
-      final branchSpacing = branching.whenTrue.element as PaddingElement;
-      final branch = branchSpacing.child.element as SectionElement;
+      final branchNode = branching.whenTrue;
+      final branch = branchNode.element as SectionElement;
       expect(branch.border, isA<PresentationBorderSides>());
       final branchBorder = branch.border! as PresentationBorderSides;
       expect(branchBorder.top, isNull);
       expect(branchBorder.start?.width, 4);
       expect(branchBorder.end, isNull);
       expect(branchBorder.bottom, isNull);
-      final branchTitle = branchSpacing.child.header!.title;
+      expect(branch.child.element, isA<PresentationSlotElement>());
+      final branchTitle = branchNode.header!.title;
       expect(branchTitle, isA<PresentationHeaderNodeTitle>());
-      final chipNode = (branchTitle! as PresentationHeaderNodeTitle).node;
-      _expectTagChip(chipNode.element as ChipElement);
+      final containerNode = (branchTitle! as PresentationHeaderNodeTitle).node;
+      expect(containerNode.element, isA<ContainerElement>());
 
       expect(layoutNode.header!.initiallyExpanded, isFalse);
       expect(layoutGrid.columns, 2);

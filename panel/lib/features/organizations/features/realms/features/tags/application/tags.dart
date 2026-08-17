@@ -11,6 +11,7 @@ part "tags.g.dart";
 part "tag_model.dart";
 part "tag_collection.dart";
 part "tag_inspector_presentation.dart";
+part "tag_inheritance_presentation.dart";
 
 @riverpod
 class Tags extends _$Tags {

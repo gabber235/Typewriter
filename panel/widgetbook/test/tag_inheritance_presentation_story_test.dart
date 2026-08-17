@@ -10,6 +10,7 @@ void main() {
     "shared ancestor": tagInheritanceSharedUseCase,
     "keyboard interaction": tagInheritanceKeyboardUseCase,
     "narrow layout": tagInheritanceNarrowUseCase,
+    "right to left": tagInheritanceRightToLeftUseCase,
   };
 
   for (final MapEntry(key: name, value: story) in stories.entries) {
