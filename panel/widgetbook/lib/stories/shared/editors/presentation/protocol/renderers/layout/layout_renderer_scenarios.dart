@@ -238,4 +238,150 @@ final layoutRendererScenarios = [
       ),
     ),
   ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.container,
+    name: "Container",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: storyNode(
+      "container",
+      PresentationElement.container(
+        border: PresentationBorder.all(
+          PresentationBorderSide(color: _storyColor),
+        ),
+        backgroundColor: _storyColor.withAlpha(46),
+        radius: const PresentationRadius.small(),
+        child: storyNode(
+          "container.padding",
+          PresentationElement.padding(
+            top: 12,
+            start: 16,
+            end: 16,
+            bottom: 12,
+            child: storyNode(
+              "container.label",
+              PresentationElement.text(
+                "Stretchable presentation container".asStringLiteral,
+                color: _storyColor,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.anchor,
+    name: "Anchor",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: _anchorStoryNode(
+      "anchor",
+      "Named anchor",
+      PresentationAnchorAlignment.center,
+    ),
+  ),
+  RendererStoryScenario(
+    kind: RendererStoryKind.connectionLayer,
+    name: "Connection layer",
+    type: const UnitType(),
+    value: const UnitValue(),
+    presentation: storyNode(
+      "connectionLayer",
+      PresentationElement.connectionLayer(
+        connections: [
+          PresentationConnection.connection(
+            source: const PresentationAnchorSelector.local("source"),
+            target: const PresentationAnchorSelector.local("target"),
+            path: ConnectionPath.orthogonal(
+              OrthogonalConnectionPath(bendPosition: 0.5.asFloatLiteral),
+            ),
+            style: ConnectorStyle(
+              stroke: ConnectorStroke(
+                color: _storyColor,
+                width: 2.asFloatLiteral,
+              ),
+              cornerRadius: 8.asFloatLiteral,
+              startMarker: ConnectorEndpointMarker.arrow(
+                size: 8.asFloatLiteral,
+              ),
+              endMarker: ConnectorEndpointMarker.circle(
+                diameter: 6.asFloatLiteral,
+              ),
+            ),
+            markers: [
+              ConnectionMarker(
+                node: storyNode(
+                  "connection.marker",
+                  PresentationElement.icon(
+                    name: "lucide:arrow-up".asIconLiteral,
+                    color: _storyColor,
+                    size: 16.asFloatLiteral,
+                  ),
+                ),
+                position: 0.5.asFloatLiteral,
+                alignToPath: false.asBooleanLiteral,
+              ),
+            ],
+          ),
+        ],
+        child: storyNode(
+          "connection.items",
+          PresentationElement.column(
+            spacing: 72,
+            children: [
+              _anchorStoryNode(
+                "source",
+                "Source",
+                PresentationAnchorAlignment.bottomCenter,
+              ),
+              _anchorStoryNode(
+                "target",
+                "Target",
+                PresentationAnchorAlignment.topCenter,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ),
 ];
+
+final _storyColor = TypedExpression(
+  resultType: NamedType(standardTypeRefs.color),
+  expression: LiteralExpression(IntegerValue(BigInt.from(0xFF967BFA))),
+);
+
+PresentationNode _anchorStoryNode(
+  String id,
+  String label,
+  PresentationAnchorAlignment alignment,
+) => storyNode(
+  "$id.anchor",
+  PresentationElement.anchor(
+    anchors: [PresentationAnchorPoint(id: id, alignment: alignment)],
+    child: storyNode(
+      "$id.container",
+      PresentationElement.container(
+        border: PresentationBorder.all(
+          PresentationBorderSide(color: _storyColor),
+        ),
+        radius: const PresentationRadius.small(),
+        child: storyNode(
+          "$id.padding",
+          PresentationElement.padding(
+            top: 10,
+            start: 14,
+            end: 14,
+            bottom: 10,
+            child: storyNode(
+              "$id.label",
+              PresentationElement.text(label.asStringLiteral),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+);

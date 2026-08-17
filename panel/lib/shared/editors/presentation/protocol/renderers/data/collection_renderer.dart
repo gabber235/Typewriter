@@ -46,24 +46,40 @@ extension CollectionGraphRendering on CollectionGraphElement {
         _collectionDiagnostic("Collection source is unavailable"),
       ]);
     }
-    if (childrenBindingId == source.schema.rowBindingId) {
+    final bindingIds = {
+      source.schema.rowBindingId,
+      childrenBindingId,
+      childBindingId,
+    };
+    if (bindingIds.length != 3) {
+      return presentationDiagnostic(context, [
+        _collectionDiagnostic("Collection graph bindings must be distinct"),
+      ]);
+    }
+    final rootSlots = rootSequence.item.presentationSlotIds;
+    if (rootSlots.length != 1) {
       return presentationDiagnostic(context, [
         _collectionDiagnostic(
-          "Collection children binding collides with the row binding",
+          "Collection graph root template must contain one slot",
         ),
       ]);
     }
-    final slotIds = node.presentationSlotIds;
-    if (slotIds.length != 1) {
+    final nodeSlots = node.presentationSlotIds;
+    final childSlots = children.item.presentationSlotIds;
+    if (nodeSlots.length != 1 || childSlots.length != 1) {
       return presentationDiagnostic(context, [
         _collectionDiagnostic(
-          slotIds.isEmpty
-              ? "Collection graph node does not contain a child slot"
-              : "Collection graph node contains distinct child slots",
+          "Collection graph templates must contain one logical child slot",
         ),
       ]);
     }
-    final slotId = slotIds.single;
+    if (nodeSlots.single != childSlots.single) {
+      return presentationDiagnostic(context, [
+        _collectionDiagnostic("Collection graph child slots do not match"),
+      ]);
+    }
+    final rootSlotId = rootSlots.single;
+    final slotId = nodeSlots.single;
     final resolved = scope.resolve(roots);
     if (resolved case TypeFailure(:final diagnostics)) {
       return presentationDiagnostic(context, diagnostics);
@@ -87,26 +103,41 @@ extension CollectionGraphRendering on CollectionGraphElement {
           return const LinearProgressIndicator();
         }
         final data = snapshot.data!;
-        final adjacency = _orderedAdjacency(data.paths);
-        final children = <Widget>[
+        final occurrenceChildren = _orderedOccurrenceChildren(data.paths);
+        final rootItemScopes = <PresentationRenderScope>[
           for (final row in data.rootRows)
-            _renderGraphOccurrence(
-              context: context,
-              scope: scope,
-              schema: source.schema,
-              row: row,
-              adjacency: adjacency,
-              snapshot: data,
-              path: [row.key],
-              slotId: slotId,
+            _rowScope(scope, source.schema, row.value).copyWith(
+              expansionIdentity: _GraphOccurrenceIdentity(
+                sourceId: sourceId,
+                relation: relation,
+                path: [row.key],
+              ),
+              presentationSlots: {
+                ...scope.presentationSlots,
+                rootSlotId: _renderGraphOccurrence(
+                  context: context,
+                  scope: scope,
+                  schema: source.schema,
+                  row: row,
+                  occurrenceChildren: occurrenceChildren,
+                  snapshot: data,
+                  path: [row.key],
+                  slotId: slotId,
+                ),
+              },
             ),
-          if (data.diagnostics.isNotEmpty)
-            presentationDiagnostic(context, data.diagnostics),
         ];
+        final roots = renderSequence(
+          context: context,
+          presentation: rootSequence,
+          scope: scope,
+          itemScopes: rootItemScopes,
+        );
+        if (data.diagnostics.isEmpty) return roots;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
+          children: [roots, presentationDiagnostic(context, data.diagnostics)],
         );
       },
     );
@@ -117,33 +148,17 @@ extension CollectionGraphRendering on CollectionGraphElement {
     required PresentationRenderScope scope,
     required PresentationCollectionSchema schema,
     required PresentationCollectionRow row,
-    required Map<DataValue, List<DataValue>> adjacency,
+    required Map<_GraphOccurrencePath, List<DataValue>> occurrenceChildren,
     required PresentationCollectionSnapshot snapshot,
     required List<DataValue> path,
     required String slotId,
   }) {
     final childRows = [
-      for (final key in adjacency[row.key] ?? const <DataValue>[])
+      for (final key
+          in occurrenceChildren[_GraphOccurrencePath(path)] ??
+              const <DataValue>[])
         ?snapshot.row(key),
     ];
-    final childWidgets = [
-      for (final child in childRows)
-        _renderGraphOccurrence(
-          context: context,
-          scope: scope,
-          schema: schema,
-          row: child,
-          adjacency: adjacency,
-          snapshot: snapshot,
-          path: [...path, child.key],
-          slotId: slotId,
-        ),
-    ];
-    final childContent = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: childWidgets,
-    );
     final rowScope = _rowScope(scope, schema, row.value);
     final identity = _GraphOccurrenceIdentity(
       sourceId: sourceId,
@@ -160,54 +175,78 @@ extension CollectionGraphRendering on CollectionGraphElement {
           writable: false,
         ),
       ),
-      presentationSlots: {...scope.presentationSlots, slotId: childContent},
       expansionIdentity: identity,
     );
-    return _renderCollectionNode(node, occurrenceScope);
+    final childPaths = [
+      for (final child in childRows) [...path, child.key],
+    ];
+    final itemScopes = [
+      for (final (index, child) in childRows.indexed)
+        occurrenceScope.copyWith(
+          expressions: occurrenceScope.expressions.withBinding(
+            childBindingId,
+            BindingSnapshot(
+              type: schema.rowType,
+              value: child.value,
+              revision: 0,
+              writable: false,
+            ),
+          ),
+          expansionIdentity: _GraphOccurrenceIdentity(
+            sourceId: sourceId,
+            relation: relation,
+            path: childPaths[index],
+          ),
+          presentationSlots: {
+            ...occurrenceScope.presentationSlots,
+            slotId: _renderGraphOccurrence(
+              context: context,
+              scope: scope,
+              schema: schema,
+              row: child,
+              occurrenceChildren: occurrenceChildren,
+              snapshot: snapshot,
+              path: childPaths[index],
+              slotId: slotId,
+            ),
+          },
+        ),
+    ];
+    return Builder(
+      builder: (context) {
+        final childContent = renderSequence(
+          context: context,
+          presentation: children,
+          scope: occurrenceScope,
+          itemScopes: itemScopes,
+        );
+        return _renderCollectionNode(
+          node,
+          occurrenceScope.copyWith(
+            presentationSlots: {
+              ...occurrenceScope.presentationSlots,
+              slotId: childContent,
+            },
+          ),
+        );
+      },
+    );
   }
 }
 
-Map<DataValue, List<DataValue>> _orderedAdjacency(
+Map<_GraphOccurrencePath, List<DataValue>> _orderedOccurrenceChildren(
   Iterable<PresentationCollectionPath> paths,
 ) {
-  final adjacency = <DataValue, List<DataValue>>{};
+  final childrenByOccurrence = <_GraphOccurrencePath, List<DataValue>>{};
   for (final path in paths) {
     for (var index = 0; index + 1 < path.keys.length; index++) {
-      final children = adjacency.putIfAbsent(path.keys[index], () => []);
+      final occurrence = _GraphOccurrencePath(path.keys.take(index + 1));
+      final children = childrenByOccurrence.putIfAbsent(occurrence, () => []);
       final child = path.keys[index + 1];
       if (!children.contains(child)) children.add(child);
     }
   }
-  return adjacency;
-}
-
-final class _GraphOccurrenceIdentity {
-  _GraphOccurrenceIdentity({
-    required this.sourceId,
-    required this.relation,
-    required List<DataValue> path,
-  }) : path = List.unmodifiable(path);
-
-  final PresentationCollectionSourceId sourceId;
-  final PresentationCollectionRelationId relation;
-  final List<DataValue> path;
-
-  @override
-  bool operator ==(Object other) {
-    if (other is! _GraphOccurrenceIdentity ||
-        other.sourceId != sourceId ||
-        other.relation != relation ||
-        other.path.length != path.length) {
-      return false;
-    }
-    for (var index = 0; index < path.length; index++) {
-      if (other.path[index] != path[index]) return false;
-    }
-    return true;
-  }
-
-  @override
-  int get hashCode => Object.hash(sourceId, relation, Object.hashAll(path));
+  return childrenByOccurrence;
 }
 
 PresentationRenderScope _rowScope(

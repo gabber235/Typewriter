@@ -13,8 +13,9 @@ Widget renderSequence({
   }
   final children = <Widget>[];
   final separator = presentation.separator;
+  final hierarchy = presentation.layout is PresentationHierarchySequenceLayout;
   for (final (index, itemScope) in itemScopes.indexed) {
-    if (index > 0 && separator != null) {
+    if (index > 0 && separator != null && !hierarchy) {
       children.add(
         KeyedSubtree(
           key: ValueKey("separator.$index"),
@@ -29,7 +30,26 @@ Widget renderSequence({
       ),
     );
   }
-  return presentation.layout.renderWidgets(context, children);
+  final sequence = presentation.layout.renderSequence(
+    context,
+    children: children,
+    scope: scope,
+    itemScopes: itemScopes,
+  );
+  if (!hierarchy || separator == null) return sequence;
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      presentationDiagnostic(context, [
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidPresentation,
+          message: "Hierarchy sequences do not support separators",
+        ),
+      ]),
+      sequence,
+    ],
+  );
 }
 
 Widget _renderSequenceNode(

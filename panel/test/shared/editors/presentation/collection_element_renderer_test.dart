@@ -60,9 +60,12 @@ void main() {
             element: CollectionGraphElement(
               sourceId: fixture.source.id,
               roots: const BindingReference(bindingId: BindingId(0)),
+              rootSequence: _graphRoots("root"),
               relation: fixture.relation,
               direction: CollectionGraphDirection.forward,
               childrenBindingId: childrenBindingId,
+              childBindingId: const BindingId(9),
+              children: _graphChildren("children"),
               node: PresentationNode(
                 id: "occurrence",
                 element: ColumnElement(
@@ -108,9 +111,12 @@ void main() {
           element: CollectionGraphElement(
             sourceId: fixture.source.id,
             roots: const BindingReference(bindingId: BindingId(0)),
+            rootSequence: _graphRoots("root"),
             relation: fixture.relation,
             direction: CollectionGraphDirection.forward,
             childrenBindingId: fixture.source.schema.rowBindingId,
+            childBindingId: const BindingId(9),
+            children: _graphChildren("children"),
             node: const PresentationNode(
               id: "occurrence",
               element: PresentationSlotElement(slotId: "children"),
@@ -123,7 +129,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text("Collection children binding collides with the row binding"),
+      find.text("Collection graph bindings must be distinct"),
       findsOneWidget,
     );
   });
@@ -148,9 +154,12 @@ void main() {
           element: CollectionGraphElement(
             sourceId: fixture.source.id,
             roots: const BindingReference(bindingId: BindingId(0)),
+            rootSequence: _graphRoots("root"),
             relation: fixture.relation,
             direction: CollectionGraphDirection.forward,
             childrenBindingId: const BindingId(7),
+            childBindingId: const BindingId(9),
+            children: _graphChildren("children"),
             node: PresentationNode(
               id: "occurrence",
               element: ColumnElement(
@@ -212,9 +221,12 @@ void main() {
           element: CollectionGraphElement(
             sourceId: fixture.source.id,
             roots: const BindingReference(bindingId: BindingId(0)),
+            rootSequence: _graphRoots("root"),
             relation: fixture.relation,
             direction: CollectionGraphDirection.forward,
             childrenBindingId: const BindingId(7),
+            childBindingId: const BindingId(9),
+            children: _graphChildren("first"),
             node: const PresentationNode(
               id: "occurrence",
               element: ColumnElement(
@@ -238,11 +250,25 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text("Collection graph node contains distinct slot identifiers"),
+      find.text("Collection graph templates must contain one logical slot"),
       findsOneWidget,
     );
   });
 }
+
+SequencePresentation _graphChildren(String slotId) => SequencePresentation(
+  item: PresentationNode(
+    id: "child.$slotId",
+    element: PresentationSlotElement(slotId: slotId),
+  ),
+);
+
+SequencePresentation _graphRoots(String slotId) => SequencePresentation(
+  item: PresentationNode(
+    id: "root.$slotId",
+    element: PresentationSlotElement(slotId: slotId),
+  ),
+);
 
 EditorProtocolRenderer _renderer(
   _CollectionFixture fixture, {

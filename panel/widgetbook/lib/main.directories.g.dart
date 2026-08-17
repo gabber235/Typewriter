@@ -715,6 +715,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                                             .tagInheritanceNarrowUseCase,
                                   ),
                                   _widgetbook.WidgetbookUseCase(
+                                    name: 'Inheritance right to left',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
+                                            .tagInheritanceRightToLeftUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
                                     name: 'Inheritance shared ancestor',
                                     builder:
                                         _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories
@@ -1428,22 +1434,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                             name: 'EditorProtocolRenderer',
                             useCases: [
                               _widgetbook.WidgetbookUseCase(
-                                name: 'Card',
+                                name: 'Anchor',
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
-                                        .cardRendererUseCase,
-                              ),
-                              _widgetbook.WidgetbookUseCase(
-                                name: 'Collapsible',
-                                builder:
-                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
-                                        .collapsibleRendererUseCase,
+                                        .anchorRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Column',
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
                                         .columnRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Connection layer',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                        .connectionLayerRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Container',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                        .containerRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Divider',
@@ -1456,6 +1468,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
                                         .gridRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Hierarchy sequence',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_layout_layout_renderer_stories
+                                        .hierarchySequenceRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Row',

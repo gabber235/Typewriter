@@ -424,9 +424,8 @@ void main() {
                   ),
                 ),
               ),
-              layout: PresentationChildrenLayout.wrap(
-                spacing: 4,
-                runSpacing: 8,
+              layout: PresentationSequenceLayout.children(
+                PresentationChildrenLayout.wrap(spacing: 4, runSpacing: 8),
               ),
             ),
           ),
