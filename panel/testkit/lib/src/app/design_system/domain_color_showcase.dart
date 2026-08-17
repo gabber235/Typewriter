@@ -10,7 +10,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// This showcase renders a representative set of arbitrary colors using
 /// [ColorExtension.on] to calculate a readable foreground. It is shared by
-/// Widgetbook and the committed design-system golden tests, helping catch theme
+/// Widgetbook and the deterministic design system contract tests, helping catch
 /// changes that would make data-colored UI inconsistent or illegible.
 ///
 /// This is test infrastructure only; production features continue to render

@@ -1,7 +1,5 @@
 part of "../../content_renderer.dart";
 
-const _imageBorderRadius = BorderRadius.all(Radius.circular(8));
-
 extension ImageElementRendering on ImageElement {
   Widget render(BuildContext context, PresentationRenderScope scope) {
     final resolvedSource = scope.expressionText(source);
@@ -18,14 +16,16 @@ extension ImageElementRendering on ImageElement {
         ? null
         : scope.expressionText(semanticLabel!);
     return ClipRRect(
-      borderRadius: _imageBorderRadius,
+      borderRadius: context.shapes.mediumBorderRadius,
       child: Image.network(
         resolvedSource,
         semanticLabel: label,
         frameBuilder: (_, child, frame, _) {
           if (frame != null) return child;
 
-          return ShimmerBox.rectangle(borderRadius: _imageBorderRadius);
+          return ShimmerBox.rectangle(
+            borderRadius: context.shapes.mediumBorderRadius,
+          );
         },
         errorBuilder: (context, error, stackTrace) =>
             presentationDiagnostic(context, [
