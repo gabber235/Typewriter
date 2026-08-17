@@ -1,8 +1,6 @@
 import "package:flutter/widgets.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/shared/interaction_mode/application/current_interaction_mode.dart";
-import "package:typewriter_panel/shared/interaction_mode/application/interaction_mode.dart";
-import "package:typewriter_panel/shared/interaction_mode/application/modes/insert_mode.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final inputFieldModeCoordinatorProvider = Provider<InputFieldModeCoordinator>((
   ref,
@@ -23,6 +21,7 @@ class InputFieldModeCoordinator {
   final Ref _ref;
   final Map<String, _InputFieldRegistration> _registrations = {};
   String? _focusedInputId;
+  bool _disposed = false;
 
   VoidCallback register({
     required String id,
@@ -48,7 +47,14 @@ class InputFieldModeCoordinator {
 
       final mode = _ref.read(currentInteractionModeProvider);
       if (mode is InsertMode && mode.id == id) {
-        _ref.read(currentInteractionModeProvider.notifier).normal();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_disposed || _registrations.containsKey(id)) return;
+
+          final currentMode = _ref.read(currentInteractionModeProvider);
+          if (currentMode is InsertMode && currentMode.id == id) {
+            _ref.read(currentInteractionModeProvider.notifier).normal();
+          }
+        });
       }
     };
   }
@@ -67,6 +73,7 @@ class InputFieldModeCoordinator {
   }
 
   void dispose() {
+    _disposed = true;
     FocusManager.instance.removeListener(_handleFocusChanged);
     _registrations.clear();
   }

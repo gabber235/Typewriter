@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/widgets.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -35,6 +36,12 @@ EditorFieldInteraction useEditorFieldInteraction(
 ) {
   final interaction = useMemoized(EditorFieldInteraction.new)
     .._start = () => scope.beginInteraction(reference);
-  useEffect(() => interaction.commit, [reference]);
+  useEffect(() {
+    return () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        interaction.commit();
+      });
+    };
+  }, [reference]);
   return interaction;
 }

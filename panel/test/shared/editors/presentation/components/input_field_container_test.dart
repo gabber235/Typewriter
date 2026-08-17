@@ -114,4 +114,113 @@ void main() {
       isA<NormalMode>(),
     );
   });
+
+  testWidgets("conditional removal restores normal mode after teardown", (
+    tester,
+  ) async {
+    final controller = InputFieldController();
+    addTearDown(controller.dispose);
+    late StateSetter setState;
+    var visible = true;
+
+    await tester.pumpTestApp(
+      child: StatefulBuilder(
+        builder: (context, update) {
+          setState = update;
+          if (!visible) return const SizedBox.shrink();
+          return InputFieldContainer(
+            controller: controller,
+            child: Focus(
+              focusNode: controller.inputFocusNode,
+              child: const SizedBox.shrink(),
+            ),
+          );
+        },
+      ),
+    );
+
+    controller.requestInputFocus();
+    await tester.pump();
+    expect(
+      tester.container().read(currentInteractionModeProvider),
+      isA<InsertMode>(),
+    );
+
+    setState(() => visible = false);
+    await tester.pump();
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.container().read(currentInteractionModeProvider),
+      isA<NormalMode>(),
+    );
+  });
+
+  testWidgets("stale unregister preserves a replacement registration", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(child: const SizedBox.shrink());
+    final coordinator = tester.container().read(
+      inputFieldModeCoordinatorProvider,
+    );
+    final staleInput = FocusNode();
+    final staleSurrounding = FocusNode();
+    final currentInput = FocusNode();
+    final currentSurrounding = FocusNode();
+    addTearDown(staleInput.dispose);
+    addTearDown(staleSurrounding.dispose);
+    addTearDown(currentInput.dispose);
+    addTearDown(currentSurrounding.dispose);
+
+    final unregisterStale = coordinator.register(
+      id: "shared",
+      inputFocusNode: staleInput,
+      surroundingFocusNode: staleSurrounding,
+    );
+    final unregisterCurrent = coordinator.register(
+      id: "shared",
+      inputFocusNode: currentInput,
+      surroundingFocusNode: currentSurrounding,
+    );
+    coordinator.begin("shared");
+
+    unregisterStale();
+    await tester.pump();
+    expect(
+      tester.container().read(currentInteractionModeProvider),
+      isA<InsertMode>(),
+    );
+
+    unregisterCurrent();
+    await tester.pump();
+    expect(
+      tester.container().read(currentInteractionModeProvider),
+      isA<NormalMode>(),
+    );
+  });
+
+  testWidgets("deferred unregister is safe after provider disposal", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(child: const SizedBox.shrink());
+    final coordinator = tester.container().read(
+      inputFieldModeCoordinatorProvider,
+    );
+    final input = FocusNode();
+    final surrounding = FocusNode();
+    addTearDown(input.dispose);
+    addTearDown(surrounding.dispose);
+    final unregister = coordinator.register(
+      id: "disposed",
+      inputFocusNode: input,
+      surroundingFocusNode: surrounding,
+    );
+    coordinator.begin("disposed");
+
+    unregister();
+    await tester.pumpWidget(const SizedBox.shrink());
+
+    expect(tester.takeException(), isNull);
+  });
 }
