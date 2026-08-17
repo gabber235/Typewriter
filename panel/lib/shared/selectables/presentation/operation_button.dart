@@ -68,9 +68,16 @@ class _OperationButtonLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        child,
+        Flexible(
+          child: DefaultTextStyle.merge(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+            child: child,
+          ),
+        ),
         if (shortcuts.isNotEmpty) ...[
           SizedBox(width: context.spacing.space2),
           Builder(
