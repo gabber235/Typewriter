@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "expression_evaluator.freezed.dart";
 part "expression_advanced_evaluator.dart";
 part "expression_collection_operations.dart";
+part "expression_collection_evaluator.dart";
 
 @freezed
 abstract class ExpressionContext with _$ExpressionContext {
@@ -61,26 +62,37 @@ final class _ExpressionEvaluator {
     return diagnostics.isEmpty ? result : TypeResult.failure(diagnostics);
   }
 
-  TypeResult<DataValue> _evaluate(Expression expression, int depth) =>
-      switch (expression) {
-        LiteralExpression(:final value) => TypeResult.success(value),
-        BindingExpression(:final binding) => _binding(binding),
-        FieldAccessExpression() => _field(expression, depth),
-        InterpolationExpression() => _interpolate(expression, depth),
-        ComparisonExpression() => _compare(expression, depth),
-        BooleanExpression() => _boolean(expression, depth),
-        ArithmeticExpression() => _arithmetic(expression, depth),
-        ConditionalExpression() => _conditional(expression, depth),
-        CollectionProjectionExpression() => _project(expression, depth),
-        ConversionExpression() => _convert(expression, depth),
-        StringOperationExpression() => _stringOperation(expression, depth),
-        CollectionOperationExpression() => _collectionOperation(
-          expression,
-          depth,
-        ),
-        RegexExpression() => _regex(expression, depth),
-        CoalesceExpression() => _coalesce(expression, depth),
-      };
+  TypeResult<DataValue> _evaluate(
+    Expression expression,
+    int depth,
+  ) => switch (expression) {
+    LiteralExpression(:final value) => TypeResult.success(value),
+    BindingExpression(:final binding) => _binding(binding),
+    FieldAccessExpression() => _field(expression, depth),
+    InterpolationExpression() => _interpolate(expression, depth),
+    ComparisonExpression() => _compare(expression, depth),
+    BooleanExpression() => _boolean(expression, depth),
+    ArithmeticExpression() => _arithmetic(expression, depth),
+    ConditionalExpression() => _conditional(expression, depth),
+    CollectionMapExpression() => _map(expression, depth),
+    CollectionFilterExpression() => _filter(expression, depth),
+    CollectionQuantifierExpression() => _quantify(expression, depth),
+    CollectionFindExpression() => _find(expression, depth),
+    CollectionCountExpression() => _count(expression, depth),
+    CollectionDistinctExpression() => _distinct(expression, depth),
+    CollectionSortExpression() => _sort(expression, depth),
+    CollectionGroupExpression() => _group(expression, depth),
+    CollectionReduceExpression() => _reduce(expression, depth),
+    CollectionFoldExpression() => _fold(expression, depth),
+    CollectionTransformExpression() => _transformCollection(expression, depth),
+    IsTypeExpression() => _isType(expression, depth),
+    ConversionExpression() => _convert(expression, depth),
+    StringOperationExpression() => _stringOperation(expression, depth),
+    CollectionOperationExpression() => _collectionOperation(expression, depth),
+    RegexExpression() => _regex(expression, depth),
+    CoalesceExpression() => _coalesce(expression, depth),
+    ColorOperationExpression() => _colorOperation(expression, depth),
+  };
 
   TypeResult<DataValue> _binding(BindingReference reference) {
     final binding = context.bindings.resolve(reference);
@@ -204,10 +216,7 @@ final class _ExpressionEvaluator {
     );
   }
 
-  TypeResult<DataValue> _project(
-    CollectionProjectionExpression expression,
-    int depth,
-  ) {
+  TypeResult<DataValue> _map(CollectionMapExpression expression, int depth) {
     final source = evaluate(expression.source, depth + 1);
     if (source case TypeFailure()) return source;
     final value = source.valueOrNull!;
@@ -251,13 +260,50 @@ final class _ExpressionEvaluator {
         ),
         registry,
       );
-      final result = child.evaluate(expression.projection, depth + 1);
+      final result = child.evaluate(expression.transform, depth + 1);
       nodes += child.nodes;
       evaluations += child.evaluations;
       if (result case TypeFailure()) return result;
       projected.add(result.valueOrNull!);
     }
     return TypeResult.success(ListValue(projected));
+  }
+
+  TypeResult<DataValue> _isType(IsTypeExpression expression, int depth) {
+    final source = evaluate(expression.source, depth + 1);
+    if (source case TypeFailure()) return source;
+
+    final value = source.valueOrNull!;
+    final actualType = value is PolymorphicValue
+        ? NamedType(value.concreteType)
+        : expression.source.resultType;
+    final matches =
+        registry != null &&
+        actualType.isStructurallyAssignableTo(expression.type, registry!);
+
+    return TypeResult.success(BooleanValue(matches));
+  }
+
+  TypeResult<DataValue> _colorOperation(
+    ColorOperationExpression expression,
+    int depth,
+  ) {
+    final color = evaluate(expression.color, depth + 1);
+    if (color case TypeFailure()) return color;
+    final alpha = evaluate(expression.alpha, depth + 1);
+    if (alpha case TypeFailure()) return alpha;
+    final colorValue = color.valueOrNull;
+    final alphaValue = alpha.valueOrNull;
+    if (colorValue is! IntegerValue || colorValue.colorOrNull == null) {
+      return _failure("Color operation requires a Color");
+    }
+    if (alphaValue is! IntegerValue ||
+        alphaValue.value < BigInt.zero ||
+        alphaValue.value > BigInt.from(255)) {
+      return _failure("Color alpha must be between 0 and 255");
+    }
+    final value = colorValue.colorOrNull!.withAlpha(alphaValue.value.toInt());
+    return TypeResult.success(IntegerValue(BigInt.from(value.toARGB32())));
   }
 
   TypeResult<DataValue> _convert(ConversionExpression expression, int depth) {

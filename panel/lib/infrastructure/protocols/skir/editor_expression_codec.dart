@@ -55,9 +55,22 @@ final class SkirExpressionDecoder {
     wire.Expression_booleanOperationWrapper(:final value) => _boolean(value),
     wire.Expression_arithmeticWrapper(:final value) => _arithmetic(value),
     wire.Expression_conditionalWrapper(:final value) => _conditional(value),
-    wire.Expression_collectionProjectionWrapper(:final value) => _projection(
+    wire.Expression_collectionMapWrapper(:final value) => _map(value),
+    wire.Expression_collectionFilterWrapper(:final value) => _filter(value),
+    wire.Expression_collectionQuantifierWrapper(:final value) => _quantifier(
       value,
     ),
+    wire.Expression_collectionFindWrapper(:final value) => _find(value),
+    wire.Expression_collectionCountWrapper(:final value) => _count(value),
+    wire.Expression_collectionDistinctWrapper(:final value) => _distinct(value),
+    wire.Expression_collectionSortWrapper(:final value) => _sort(value),
+    wire.Expression_collectionGroupWrapper(:final value) => _group(value),
+    wire.Expression_collectionReduceWrapper(:final value) => _reduce(value),
+    wire.Expression_collectionFoldWrapper(:final value) => _fold(value),
+    wire.Expression_collectionTransformWrapper(:final value) => _transform(
+      value,
+    ),
+    wire.Expression_isTypeWrapper(:final value) => _isType(value),
     wire.Expression_conversionWrapper(:final value) =>
       value.conversionId._decodeDomain == null
           ? invalidWire("Conversion id is empty")
@@ -76,8 +89,28 @@ final class SkirExpressionDecoder {
       value.operands,
       CoalesceExpression.new,
     ),
+    wire.Expression_colorOperationWrapper(:final value) => _colorOperation(
+      value,
+    ),
     wire.Expression_unknown() => invalidWire("Unknown expression variant"),
   };
+
+  TypeResult<Expression> _colorOperation(wire.ColorOperationExpression value) {
+    final operation = switch (value.operation) {
+      wire.ColorOperation.withAlpha => ColorOperation.withAlpha,
+      _ => null,
+    };
+    if (operation == null) return invalidWire("Unknown color operation");
+    return combineResults(
+      decode(value.color),
+      decode(value.alpha),
+      (color, alpha) => ColorOperationExpression(
+        operation: operation,
+        color: color,
+        alpha: alpha,
+      ),
+    );
+  }
 
   TypeResult<Expression> _interpolation(
     Iterable<wire.InterpolationPart> parts,
@@ -261,19 +294,212 @@ final class SkirExpressionDecoder {
         : TypeResult.failure(diagnostics);
   }
 
-  TypeResult<Expression> _projection(
-    wire.CollectionProjectionExpression value,
-  ) {
+  TypeResult<Expression> _map(wire.CollectionMapExpression value) {
     return combineResults(
       decode(value.source),
-      decode(value.projection),
-      (source, projection) => CollectionProjectionExpression(
+      decode(value.transform),
+      (source, transform) => CollectionMapExpression(
         source: source,
         itemBindingId: BindingId(value.itemBindingId.value),
-        projection: projection,
+        transform: transform,
       ),
     );
   }
+
+  TypeResult<Expression> _filter(wire.CollectionFilterExpression value) =>
+      combineResults(
+        decode(value.source),
+        decode(value.predicate),
+        (source, predicate) => CollectionFilterExpression(
+          source: source,
+          itemBindingId: BindingId(value.itemBindingId.value),
+          predicate: predicate,
+        ),
+      );
+
+  TypeResult<Expression> _quantifier(
+    wire.CollectionQuantifierExpression value,
+  ) {
+    final quantifier = switch (value.quantifier) {
+      wire.CollectionQuantifier.any => CollectionQuantifier.any,
+      wire.CollectionQuantifier.all => CollectionQuantifier.all,
+      wire.CollectionQuantifier.none => CollectionQuantifier.none,
+      _ => null,
+    };
+    if (quantifier == null) return invalidWire("Unknown collection quantifier");
+    return combineResults(
+      decode(value.source),
+      decode(value.predicate),
+      (source, predicate) => CollectionQuantifierExpression(
+        source: source,
+        quantifier: quantifier,
+        itemBindingId: BindingId(value.itemBindingId.value),
+        predicate: predicate,
+      ),
+    );
+  }
+
+  TypeResult<Expression> _find(wire.CollectionFindExpression value) {
+    final selection = switch (value.selection) {
+      wire.CollectionSelection.first => CollectionSelection.first,
+      wire.CollectionSelection.last => CollectionSelection.last,
+      _ => null,
+    };
+    if (selection == null) return invalidWire("Unknown collection selection");
+    return combineResults(
+      decode(value.source),
+      decode(value.predicate),
+      (source, predicate) => CollectionFindExpression(
+        source: source,
+        selection: selection,
+        itemBindingId: BindingId(value.itemBindingId.value),
+        predicate: predicate,
+      ),
+    );
+  }
+
+  TypeResult<Expression> _count(wire.CollectionCountExpression value) =>
+      combineResults(
+        decode(value.source),
+        decode(value.predicate),
+        (source, predicate) => CollectionCountExpression(
+          source: source,
+          itemBindingId: BindingId(value.itemBindingId.value),
+          predicate: predicate,
+        ),
+      );
+
+  TypeResult<Expression> _distinct(wire.CollectionDistinctExpression value) =>
+      combineResults(
+        decode(value.source),
+        _optional(value.key),
+        (source, key) => CollectionDistinctExpression(
+          source: source,
+          key: key,
+          itemBindingId: value.itemBindingId == null
+              ? null
+              : BindingId(value.itemBindingId!.value),
+        ),
+      );
+
+  TypeResult<Expression> _sort(wire.CollectionSortExpression value) {
+    final direction = switch (value.direction) {
+      wire.CollectionSortDirection.ascending =>
+        CollectionSortDirection.ascending,
+      wire.CollectionSortDirection.descending =>
+        CollectionSortDirection.descending,
+      _ => null,
+    };
+    if (direction == null) {
+      return invalidWire("Unknown collection sort direction");
+    }
+    return combineThreeResults(
+      decode(value.source),
+      decode(value.key),
+      _comparator(value.comparator),
+      (source, key, comparator) => CollectionSortExpression(
+        source: source,
+        key: key,
+        itemBindingId: BindingId(value.itemBindingId.value),
+        direction: direction,
+        comparator: comparator,
+      ),
+    );
+  }
+
+  TypeResult<Expression> _group(wire.CollectionGroupExpression value) =>
+      combineThreeResults(
+        decode(value.source),
+        decode(value.key),
+        _optional(value.value),
+        (source, key, groupedValue) => CollectionGroupExpression(
+          source: source,
+          key: key,
+          itemBindingId: BindingId(value.itemBindingId.value),
+          value: groupedValue,
+        ),
+      );
+
+  TypeResult<Expression> _reduce(wire.CollectionReduceExpression value) =>
+      combineResults(
+        decode(value.source),
+        decode(value.reduction),
+        (source, reduction) => CollectionReduceExpression(
+          source: source,
+          accumulatorBindingId: BindingId(value.accumulatorBindingId.value),
+          itemBindingId: BindingId(value.itemBindingId.value),
+          reduction: reduction,
+        ),
+      );
+
+  TypeResult<Expression> _fold(wire.CollectionFoldExpression value) =>
+      combineThreeResults(
+        decode(value.source),
+        decode(value.initial),
+        decode(value.reduction),
+        (source, initial, reduction) => CollectionFoldExpression(
+          source: source,
+          initial: initial,
+          accumulatorBindingId: BindingId(value.accumulatorBindingId.value),
+          itemBindingId: BindingId(value.itemBindingId.value),
+          reduction: reduction,
+        ),
+      );
+
+  TypeResult<Expression> _transform(wire.CollectionTransformExpression value) {
+    final operation = switch (value.operation) {
+      wire.CollectionTransformOperation.flatMap =>
+        CollectionTransformOperation.flatMap,
+      wire.CollectionTransformOperation.take =>
+        CollectionTransformOperation.take,
+      wire.CollectionTransformOperation.skip =>
+        CollectionTransformOperation.skip,
+      wire.CollectionTransformOperation.reverse =>
+        CollectionTransformOperation.reverse,
+      _ => null,
+    };
+    if (operation == null) {
+      return invalidWire("Unknown collection transform operation");
+    }
+    return combineThreeResults(
+      decode(value.source),
+      _optional(value.transform),
+      _optional(value.count),
+      (source, transform, count) => CollectionTransformExpression(
+        source: source,
+        operation: operation,
+        transform: transform,
+        itemBindingId: value.itemBindingId == null
+            ? null
+            : BindingId(value.itemBindingId!.value),
+        count: count,
+      ),
+    );
+  }
+
+  TypeResult<CollectionComparator?> _comparator(
+    wire.CollectionComparator? value,
+  ) {
+    if (value == null) return TypeResult.success(null);
+    return decode(value.comparison).mapValue(
+      (comparison) => CollectionComparator(
+        leftBindingId: BindingId(value.leftBindingId.value),
+        rightBindingId: BindingId(value.rightBindingId.value),
+        comparison: comparison,
+      ),
+    );
+  }
+
+  TypeResult<TypedExpression?> _optional(wire.TypedExpression? value) =>
+      value == null
+      ? TypeResult.success(null)
+      : decode(value).mapValue((value) => value);
+
+  TypeResult<Expression> _isType(wire.IsTypeExpression value) => combineResults(
+    decode(value.source),
+    typeCodec.decodeExpression(value.type),
+    (source, type) => IsTypeExpression(source: source, type: type),
+  );
 }
 
 extension on wire_type.ConversionId {
