@@ -65,6 +65,32 @@ void main() {
 
     expect(find.byType(ShortcutDisplay), findsNothing);
   });
+
+  testWidgets("narrow button keeps its shortcut without overflowing", (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpTestApp(
+      child: SizedBox(
+        width: 150,
+        child: OperationButton.filledIcon(
+          operation: const _TestOperation(),
+          icon: const Icon(Icons.bolt),
+          label: const Text("Run this operation with a long label"),
+          onPressed: () {},
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(ShortcutDisplay), findsOneWidget);
+    expect(find.text("Run this operation with a long label"), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp("^Run this operation with a long label")),
+      findsOneWidget,
+    );
+    semantics.dispose();
+  });
 }
 
 Color? _shortcutForegroundColor(WidgetTester tester) {
