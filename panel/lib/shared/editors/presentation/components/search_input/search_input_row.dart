@@ -125,7 +125,7 @@ class _PresentationSearchResultRow extends HookWidget {
   }
 }
 
-class _SearchInputSummary extends StatelessWidget {
+class _SearchInputSummary extends HookWidget {
   const _SearchInputSummary({
     required this.element,
     required this.binding,
@@ -158,6 +158,14 @@ class _SearchInputSummary extends StatelessWidget {
     final summary = presentation == null
         ? Text(binding.value.expressionDisplayText)
         : PresentationNodeRenderer(node: presentation, scope: summaryScope);
+
+    final themedPadding =
+        InputDecorationTheme.of(context).contentPadding ?? EdgeInsets.zero;
+
+    final contentPadding = themedPadding.add(
+      EdgeInsets.symmetric(vertical: context.spacing.space3),
+    );
+
     return InputFieldContainer(
       controller: inputController,
       onInputFocus: onStartEditing,
@@ -175,8 +183,14 @@ class _SearchInputSummary extends StatelessWidget {
               child: InputDecorator(
                 isEmpty: false,
                 isFocused: inputController.surroundingFocusNode.hasFocus,
-                decoration: const InputDecoration(),
-                child: IgnorePointer(child: summary),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  visualDensity: .comfortable,
+                ),
+                child: Padding(
+                  padding: contentPadding,
+                  child: IgnorePointer(child: summary),
+                ),
               ),
             ),
           ),
