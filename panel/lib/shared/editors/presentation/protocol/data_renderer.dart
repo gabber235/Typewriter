@@ -4,8 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "data_renderer.freezed.dart";
 part "renderers/data/conditional_renderer.dart";
+part "renderers/data/collection_graph_models.dart";
 part "renderers/data/collection_renderer.dart";
 part "renderers/data/diagnostic_renderer.dart";
+part "renderers/data/polymorphic_match_renderer.dart";
 part "renderers/data/repeated_renderer.dart";
 part "renderers/data/sequence_renderer.dart";
 part "renderers/data/scoped_binding_renderer.dart";
