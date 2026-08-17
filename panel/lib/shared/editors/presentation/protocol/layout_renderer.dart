@@ -17,6 +17,10 @@ part "renderers/layout/connection_surface.dart";
 part "renderers/layout/container_renderer.dart";
 part "renderers/layout/divider_renderer.dart";
 part "renderers/layout/grid_renderer.dart";
+part "renderers/layout/hierarchy_geometry.dart";
+part "renderers/layout/hierarchy_models.dart";
+part "renderers/layout/hierarchy_renderer.dart";
+part "renderers/layout/hierarchy_surface.dart";
 part "renderers/layout/layout_support.dart";
 part "renderers/layout/row_renderer.dart";
 part "renderers/layout/section_renderer.dart";
@@ -85,6 +89,27 @@ extension PresentationChildrenLayoutRendering on PresentationChildrenLayout {
           ),
         PresentationStackLayout() => Stack(children: children),
       };
+}
+
+extension PresentationSequenceLayoutRendering on PresentationSequenceLayout {
+  Widget renderSequence(
+    BuildContext context, {
+    required List<Widget> children,
+    required PresentationRenderScope scope,
+    required List<PresentationRenderScope> itemScopes,
+  }) => switch (this) {
+    PresentationStandardSequenceLayout(:final layout) => layout.renderWidgets(
+      context,
+      children,
+    ),
+    PresentationHierarchySequenceLayout(:final layout) =>
+      _HierarchySequenceRenderer(
+        layout: layout,
+        scope: scope,
+        itemScopes: itemScopes,
+        children: children,
+      ),
+  };
 }
 
 extension on List<Widget> {

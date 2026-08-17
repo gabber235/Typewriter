@@ -162,7 +162,12 @@ Iterable<PresentationNode> _presentationChildren(PresentationElement element) {
         missing,
         ?loading,
       ],
-      CollectionGraphElement(:final node) => [node],
+      CollectionGraphElement(
+        :final node,
+        :final rootSequence,
+        :final children,
+      ) =>
+        [node, ...rootSequence.nodes, ...children.nodes],
       SearchInputElement(:final summary) => [?summary],
       ListInputElement(:final itemPresentation) => [?itemPresentation],
       MapInputElement(:final keyPresentation, :final valuePresentation) => [
