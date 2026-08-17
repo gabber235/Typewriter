@@ -8,6 +8,7 @@ void main() {
         title: "Inner".asStringLiteral.asHeaderTitle,
         description: "Description".asStringLiteral,
         initiallyExpanded: false,
+        contentPadding: const PresentationInsets.only(left: 6),
         items: [
           HeaderBooleanToggleItem(
             id: listAddHeaderItemId,
@@ -22,6 +23,7 @@ void main() {
       );
       final outer = PresentationHeader(
         title: "Outer".asStringLiteral.asHeaderTitle,
+        headerPadding: const PresentationInsets.only(top: 3),
         items: [_action("outer", placement: HeaderActionPlacement.afterTitle)],
       );
 
@@ -30,6 +32,8 @@ void main() {
       expect(merged.title, "Outer".asStringLiteral.asHeaderTitle);
       expect(merged.description, "Description".asStringLiteral);
       expect(merged.initiallyExpanded, isFalse);
+      expect(merged.headerPadding, const PresentationInsets.only(top: 3));
+      expect(merged.contentPadding, const PresentationInsets.only(left: 6));
       final item = merged.items.single as HeaderButtonItem;
       expect(item.label, "outer".asStringLiteral);
       expect(item.placement, HeaderActionPlacement.afterTitle);
