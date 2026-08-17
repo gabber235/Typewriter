@@ -1112,9 +1112,8 @@ class AddPageDialogue extends HookConsumerWidget {
               return validation;
             },
             inputFormatters: [
-              SnakeCaseInputFormatter(),
+              ...identifierInputFormats.toTextInputFormatters(),
               FilteringTextInputFormatter.singleLineFormatter,
-              FilteringTextInputFormatter.allow(RegExp("[a-z0-9_]")),
             ],
             onChanged: (value) => name.value = value,
             onSubmitted: (_) => Actions.maybeInvoke(context, NextFocusIntent()),
@@ -1263,9 +1262,8 @@ class RenamePageDialogue extends HookConsumerWidget {
           return validation;
         },
         inputFormatters: [
-          SnakeCaseInputFormatter(),
+          ...identifierInputFormats.toTextInputFormatters(),
           FilteringTextInputFormatter.singleLineFormatter,
-          FilteringTextInputFormatter.allow(RegExp("[a-z0-9_]")),
         ],
         onChanged: (value) => name.value = value,
         onSubmitted: (_) => buttonController.trigger(),

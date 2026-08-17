@@ -267,7 +267,7 @@ val BookRepositoryTest by testSuite {
     test("book creation rejects invalid title variants without persisting records") {
         runTest {
             RepositoryFixture().use { fixture ->
-                listOf("ab", "Upper", "has space", "has-dash", "ümlaut", "_leading", "trailing_").forEach { title ->
+                listOf("ab", "Upper", "has space", "has-dash", "has__gap", "ümlaut", "_leading", "trailing_").forEach { title ->
                     fixture.books.createBook(title, "book", Color(argb = 0), emptyList()).failureSlug() shouldBe
                         "book-title-invalid-error"
                 }

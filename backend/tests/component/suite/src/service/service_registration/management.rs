@@ -297,3 +297,44 @@ async fn update_rejects_runs_in_cycle(
     );
     Ok(())
 }
+
+#[component_test(ServiceRegistration)]
+async fn update_rejects_noncanonical_snake_case_name(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    let database = database(context)?;
+    database
+        .seed(
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'managed', roles = [{ type: 'engine', version: '1' }], organization = organization:test_org",
+        )
+        .execute()
+        .await?;
+
+    let response: UpdateOrganizationServiceResponse = request(
+        context,
+        "typewriter.from.user.actor.organization.test_org.services.update",
+        &UpdateOrganizationServiceRequest {
+            service_id: service_id("managed"),
+            expected_revision: 1,
+            name: "invalid__name".into(),
+            runs_in: None,
+            _unrecognized: None,
+        },
+        UpdateOrganizationServiceRequest::serializer(),
+        UpdateOrganizationServiceResponse::serializer(),
+    )
+    .await?;
+
+    assert!(matches!(
+        response,
+        UpdateOrganizationServiceResponse::ValidationError(error)
+            if *error == ServiceUpdateValidationError::NameInvalid
+    ));
+    assert_jm!(
+        database
+            .query_json("SELECT VALUE [revision, name] FROM ONLY service:managed")
+            .await?,
+        [1, "managed"]
+    );
+    Ok(())
+}

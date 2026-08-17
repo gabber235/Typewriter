@@ -17,3 +17,4 @@ export "render_scope.dart";
 export "renderers/input/polymorphic_input_renderer.dart";
 export "scalar_input_renderer.dart";
 export "simple_input_renderer.dart";
+export "text_input_formatters.dart";

@@ -21,7 +21,7 @@ export "riverpod.dart";
 export "shortcut.dart";
 export "size.dart";
 export "snackbar.dart";
-export "snake_case_input_formatter.dart";
+export "identifier_input_formatter.dart";
 export "spring_value.dart";
 export "string.dart";
 export "test_environment.dart";

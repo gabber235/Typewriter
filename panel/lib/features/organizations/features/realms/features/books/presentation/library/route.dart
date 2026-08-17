@@ -148,7 +148,7 @@ class LibraryPage extends HookConsumerWidget {
             final controller = useTextEditingController();
             final isValid = useListenableSelector(
               controller,
-              () => controller.text.isNotEmpty,
+              () => controller.text.isValidIdentifier,
             );
             final focusNode = useFocusNode();
 
@@ -159,7 +159,7 @@ class LibraryPage extends HookConsumerWidget {
                 focusNode: focusNode,
                 autofocus: EditorTextFieldAutoFocus.textField,
                 decoration: const InputDecoration(hintText: "Enter book title"),
-                inputFormatters: [SnakeCaseInputFormatter()],
+                inputFormatters: identifierInputFormats.toTextInputFormatters(),
                 onSubmitted: (value) {
                   if (!isValid) return;
                   Navigator.of(context).pop(value);

@@ -30,7 +30,7 @@ class _CreateOrganization extends HookConsumerWidget {
             StaggerEntrance(
               child: EditorTextField(
                 controller: nameController,
-                inputFormatters: [SnakeCaseInputFormatter()],
+                inputFormatters: identifierInputFormats.toTextInputFormatters(),
                 decoration: const InputDecoration(
                   hintText: "Enter organization name",
                 ),

@@ -42,6 +42,37 @@ void main() {
     expect(find.textContaining("Line two"), findsOneWidget);
   });
 
+  testWidgets("applies declared text input formatters before validation", (
+    tester,
+  ) async {
+    final source = await tester.pumpTypedEditor(
+      type: identifierStringType,
+      value: const StringValue("before"),
+      presentation: const PresentationNode(
+        id: "identifier",
+        element: TextInputElement(
+          control: BoundControl(
+            binding: BindingReference(bindingId: BindingId(0)),
+          ),
+          multiline: false,
+          inputFormatters: identifierInputFormats,
+        ),
+      ),
+    );
+
+    final field = find.byType(TextFormField);
+    await tester.enterText(field, "My Book!");
+    await tester.pump();
+
+    expect(source.rootValue, const StringValue("my_book"));
+
+    await tester.enterText(field, "a_");
+    await tester.pump();
+
+    expect(tester.widget<TextFormField>(field).controller?.text, "a_");
+    expect(source.rootValue, const StringValue("my_book"));
+  });
+
   testWidgets("renders a literal without an editable field", (tester) async {
     await tester.pumpTypedEditor(
       type: EnumType(

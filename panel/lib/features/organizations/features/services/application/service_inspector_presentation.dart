@@ -26,6 +26,7 @@ PresentationDefinition serviceInspectorPresentation(Service service) =>
                   label: "Name".asStringLiteral,
                 ),
                 multiline: false,
+                inputFormatters: identifierInputFormats,
               ),
             ),
             if (service.isEngine || service.isCustom)
