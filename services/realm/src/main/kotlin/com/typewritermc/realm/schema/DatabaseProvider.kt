@@ -17,6 +17,10 @@ private val DATABASE_CONNECT_FAILURE = ErrorSlug.of("realm-database-connect-fail
 interface RealmDatabaseProvider {
     context(_: MainSpanScope)
     fun connect(): Surreal
+
+    fun close(database: Surreal) {
+        database.close()
+    }
 }
 
 class DatabaseProvider(

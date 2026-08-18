@@ -6,23 +6,21 @@ import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.records.BookUpdateOutputRecord
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
-import com.typewritermc.services.libs.utils.DeferredProvider
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
 import skirout.library.v1.book.Book
 
 class SurrealBookRepository(
-    private val database: DeferredProvider<Surreal>,
+    private val database: Surreal,
 ) : BookRepository {
     override suspend fun listBooks(): List<Book> {
-        val result = database.get().query("SELECT * FROM book ORDER BY title, id").take(0)
+        val result = database.query("SELECT * FROM book ORDER BY title, id").take(0)
         return BookRecord.parseList(result).map(BookRecord::toBook)
     }
 
     override suspend fun getBook(id: RecordId): Book? {
         val result =
             database
-                .get()
                 .query(
                     $$"SELECT * FROM type::record('book', $id)",
                     mapOf("id" to id.surrealId("book")),
@@ -38,7 +36,6 @@ class SurrealBookRepository(
     ): BookCreateResult {
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;
@@ -90,7 +87,6 @@ class SurrealBookRepository(
     ): BookUpdateResult {
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;

@@ -4,10 +4,11 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
-import com.surrealdb.Surreal
-import com.typewritermc.realm.RealmQualifier.DATABASE
 import com.typewritermc.realm.registrar.RealmCredentialStorage
-import com.typewritermc.realm.routes.REALM_ROUTES_MODULE
+import com.typewritermc.realm.routes.RealmEditorCatalogSource
+import com.typewritermc.realm.routes.RealmPresentationSearchSource
+import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
+import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.schema.databaseConfiguration
@@ -33,7 +34,6 @@ import com.typewritermc.services.libs.telemetry.console.installOpenTelemetryLogb
 import com.typewritermc.services.libs.telemetry.console.installOpenTelemetrySdkDiagnostics
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.utils.DeferredProvider
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -50,7 +50,6 @@ import kotlinx.serialization.StringFormat
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
@@ -78,7 +77,9 @@ fun main() {
 
             single { databaseConfiguration }
             single<RealmDatabaseProvider> { DatabaseProvider(get()) }
-            single { Realm(get(named(DATABASE)), get(), get(), get(), get()) }
+            single<RealmEditorCatalogSource> { UnavailableRealmEditorCatalogSource() }
+            single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
+            single { Realm(get(), get(), get(), get(), get()) }
             single {
                 Cbor {
                     ignoreUnknownKeys = true
@@ -99,10 +100,6 @@ fun main() {
                 )
             } bind CredentialStorage::class
 
-            single(named(DATABASE)) {
-                DeferredProvider<Surreal>()
-            } onClose { it?.getOrNull()?.close() }
-
             single<BindingTokenOutput> { MordantBindingTokenOutput() }
             single { RegistrarConsoleObserver(get()) }
             single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
@@ -116,7 +113,6 @@ fun main() {
                 module,
                 serviceTelemetryModule("com.typewritermc.realm", REALM_VERSION),
                 registrarModule(registrarConfiguration, applicationScope),
-                REALM_ROUTES_MODULE,
             )
         }
     val registrar = application.koin.get<ServiceRegistrar>()
