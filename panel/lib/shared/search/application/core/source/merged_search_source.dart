@@ -36,12 +36,15 @@ final class MergedSearchSource implements SearchSource {
 
     for (var index = 0; index < sources.length; index++) {
       final source = sources[index];
-      _subscriptions.add(
-        source.snapshots.listen((snapshot) => _onSnapshot(index, snapshot)),
-      );
-      _subscriptions.add(
-        source.selectors.listen((selectors) => _onSelectors(index, selectors)),
-      );
+      _subscriptions
+        ..add(
+          source.snapshots.listen((snapshot) => _onSnapshot(index, snapshot)),
+        )
+        ..add(
+          source.selectors.listen(
+            (selectors) => _onSelectors(index, selectors),
+          ),
+        );
       source.initialize();
     }
   }
