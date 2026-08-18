@@ -121,7 +121,7 @@ val TagRepositoryTest by testSuite {
                             parentIds = tag.parentIds,
                             placement = Placement(x = 0, y = 0, width = 0, height = 1),
                         ),
-                    ).failureSlug() shouldBe "tag-width-invalid-error"
+                    ) shouldBe TagUpdateResult.WidthInvalid
             }
         }
     }
@@ -138,6 +138,7 @@ val TagRepositoryTest by testSuite {
                             Placement(x = 0, y = 0, width = 4, height = 1),
                         ).successValue()
 
+                val missingId = recordId("tag", "missing")
                 fixture.tags
                     .updateTag(
                         Tag(
@@ -145,10 +146,10 @@ val TagRepositoryTest by testSuite {
                             revision = tag.revision,
                             name = "uncommitted_tag",
                             color = tag.color,
-                            parentIds = listOf(recordId("tag", "missing")),
+                            parentIds = listOf(missingId),
                             placement = tag.placement,
                         ),
-                    ).failureSlug() shouldBe "parents-not-found-error"
+                    ) shouldBe TagUpdateResult.ParentsNotFound(listOf(missingId))
 
                 fixture.tags.getTag(tag.tagId) shouldBe tag
             }
@@ -231,13 +232,14 @@ val TagRepositoryTest by testSuite {
     test("tag creation with missing parents rolls back the record") {
         runTest {
             RepositoryFixture().use { fixture ->
+                val missingId = recordId("tag", "missing")
                 fixture.tags
                     .createTag(
                         "uncommitted_tag",
                         Color(argb = 1),
-                        listOf(recordId("tag", "missing")),
+                        listOf(missingId),
                         Placement(x = 0, y = 0, width = 4, height = 1),
-                    ).failureSlug() shouldBe "parents-not-found-error"
+                    ) shouldBe TagCreateResult.ParentsNotFound(listOf(missingId))
 
                 fixture.tags.listTags() shouldBe emptyList()
             }
@@ -306,7 +308,7 @@ val TagRepositoryTest by testSuite {
                             parentIds = emptyList(),
                             placement = Placement(x = 0, y = 0, width = 4, height = 1),
                         ),
-                    ).failureSlug() shouldBe "tag-not-found-error"
+                    ) shouldBe TagUpdateResult.NotFound
             }
         }
     }
@@ -324,7 +326,7 @@ val TagRepositoryTest by testSuite {
                         ).successValue()
 
                 listOf("ab", "Upper", "has space", "has-dash", "has__gap", "ümlaut", "_leading", "trailing_").forEach { name ->
-                    fixture.tags.updateTag(tag.copy(name = name)).failureSlug() shouldBe "tag-name-invalid-error"
+                    fixture.tags.updateTag(tag.copy(name = name)) shouldBe TagUpdateResult.NameInvalid
                     fixture.tags.getTag(tag.tagId) shouldBe tag
                 }
             }
@@ -344,8 +346,8 @@ val TagRepositoryTest by testSuite {
                         ).successValue()
 
                 listOf(0, -1).forEach { height ->
-                    fixture.tags.updateTag(tag.copy(placement = tag.placement.copy(height = height))).failureSlug() shouldBe
-                        "tag-height-invalid-error"
+                    fixture.tags.updateTag(tag.copy(placement = tag.placement.copy(height = height))) shouldBe
+                        TagUpdateResult.HeightInvalid
                     fixture.tags.getTag(tag.tagId) shouldBe tag
                 }
             }
@@ -355,7 +357,33 @@ val TagRepositoryTest by testSuite {
     test("tag deletion reports a missing tag") {
         runTest {
             RepositoryFixture().use { fixture ->
-                fixture.tags.deleteTag(recordId("tag", "missing")).failureSlug() shouldBe "tag-not-found-error"
+                fixture.tags.deleteTag(recordId("tag", "missing")) shouldBe TagDeleteResult.NotFound
+            }
+        }
+    }
+
+    test("tag creation returns typed validation outcomes without persisting records") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                fixture.tags.createTag(
+                    "invalid name",
+                    Color(argb = 1),
+                    emptyList(),
+                    Placement(x = 0, y = 0, width = 4, height = 1),
+                ) shouldBe TagCreateResult.NameInvalid
+                fixture.tags.createTag(
+                    "valid_tag",
+                    Color(argb = 1),
+                    emptyList(),
+                    Placement(x = 0, y = 0, width = 0, height = 1),
+                ) shouldBe TagCreateResult.WidthInvalid
+                fixture.tags.createTag(
+                    "valid_tag",
+                    Color(argb = 1),
+                    emptyList(),
+                    Placement(x = 0, y = 0, width = 4, height = 0),
+                ) shouldBe TagCreateResult.HeightInvalid
+                fixture.tags.listTags() shouldBe emptyList()
             }
         }
     }

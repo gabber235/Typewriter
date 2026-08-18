@@ -91,8 +91,7 @@ val BookRepositoryTest by testSuite {
     test("book creation rejects blank titles") {
         runTest {
             RepositoryFixture().use { fixture ->
-                fixture.books.createBook(" ", "book", Color(argb = 0), emptyList()).failureSlug() shouldBe
-                    "book-title-invalid-error"
+                fixture.books.createBook(" ", "book", Color(argb = 0), emptyList()) shouldBe BookCreateResult.TitleInvalid
             }
         }
     }
@@ -100,13 +99,14 @@ val BookRepositoryTest by testSuite {
     test("book creation with missing tags rolls back the record") {
         runTest {
             RepositoryFixture().use { fixture ->
+                val missingId = recordId("tag", "missing")
                 fixture.books
                     .createBook(
                         "uncommitted_book",
                         "book",
                         Color(argb = 0),
-                        listOf(recordId("tag", "missing")),
-                    ).failureSlug() shouldBe "tags-not-found-error"
+                        listOf(missingId),
+                    ) shouldBe BookCreateResult.TagsNotFound(listOf(missingId))
 
                 fixture.books.listBooks() shouldBe emptyList()
             }
@@ -202,7 +202,7 @@ val BookRepositoryTest by testSuite {
                             color = Color(argb = 0),
                             tagIds = emptyList(),
                         ),
-                    ).failureSlug() shouldBe "book-not-found-error"
+                    ) shouldBe BookUpdateResult.NotFound
             }
         }
     }
@@ -227,15 +227,16 @@ val BookRepositoryTest by testSuite {
                             listOf(tag.tagId),
                         ).successValue()
 
+                val missingId = recordId("tag", "missing")
                 fixture.books
                     .updateBook(
                         book.copy(
                             title = "changed_book",
                             icon = "diamond",
                             color = Color(argb = 3),
-                            tagIds = listOf(recordId("tag", "missing")),
+                            tagIds = listOf(missingId),
                         ),
-                    ).failureSlug() shouldBe "tags-not-found-error"
+                    ) shouldBe BookUpdateResult.TagsNotFound(listOf(missingId))
 
                 fixture.books.getBook(book.bookId) shouldBe book
             }
@@ -268,8 +269,8 @@ val BookRepositoryTest by testSuite {
         runTest {
             RepositoryFixture().use { fixture ->
                 listOf("ab", "Upper", "has space", "has-dash", "has__gap", "ümlaut", "_leading", "trailing_").forEach { title ->
-                    fixture.books.createBook(title, "book", Color(argb = 0), emptyList()).failureSlug() shouldBe
-                        "book-title-invalid-error"
+                    fixture.books.createBook(title, "book", Color(argb = 0), emptyList()) shouldBe
+                        BookCreateResult.TitleInvalid
                 }
 
                 fixture.books.listBooks() shouldBe emptyList()
@@ -281,11 +282,26 @@ val BookRepositoryTest by testSuite {
         runTest {
             RepositoryFixture().use { fixture ->
                 listOf("", " ").forEach { icon ->
-                    fixture.books.createBook("valid_book", icon, Color(argb = 0), emptyList()).failureSlug() shouldBe
-                        "book-icon-required-error"
+                    fixture.books.createBook("valid_book", icon, Color(argb = 0), emptyList()) shouldBe
+                        BookCreateResult.IconRequired
                 }
 
                 fixture.books.listBooks() shouldBe emptyList()
+            }
+        }
+    }
+
+    test("book update returns typed validation outcomes without mutation") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                val book =
+                    fixture.books
+                        .createBook("stable_book", "book", Color(argb = 0), emptyList())
+                        .successValue()
+
+                fixture.books.updateBook(book.copy(title = "invalid title")) shouldBe BookUpdateResult.TitleInvalid
+                fixture.books.updateBook(book.copy(icon = " ")) shouldBe BookUpdateResult.IconRequired
+                fixture.books.getBook(book.bookId) shouldBe book
             }
         }
     }
