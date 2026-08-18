@@ -239,6 +239,7 @@ pub(crate) async fn start<F: FixtureDeclaration>(
             },
             pool_size: 1,
             max_invocations: -1,
+            max_concurrency: 1,
         });
     }
     let workload = Workload {
