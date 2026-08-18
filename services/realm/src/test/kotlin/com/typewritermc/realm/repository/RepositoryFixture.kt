@@ -5,7 +5,6 @@ import com.typewritermc.realm.schema.SchemaMigrator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.services.libs.utils.asDeferredProvider
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 
@@ -16,11 +15,9 @@ internal class RepositoryFixture : AutoCloseable {
             connect("memory")
             useNs("realm_repository_test").useDb("realm_repository_test")
         }
-    private val provider = database.asDeferredProvider()
-
-    val books = SurrealBookRepository(provider)
-    val pages = SurrealPageRepository(provider)
-    val tags = SurrealTagRepository(provider)
+    val books = SurrealBookRepository(database)
+    val pages = SurrealPageRepository(database)
+    val tags = SurrealTagRepository(database)
 
     init {
         telemetry.telemetry.mainSpanBlocking(

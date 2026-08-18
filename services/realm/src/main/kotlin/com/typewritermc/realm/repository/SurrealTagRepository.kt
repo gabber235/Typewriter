@@ -8,17 +8,16 @@ import com.typewritermc.realm.repository.records.TagUpdateOutputRecord
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import com.typewritermc.realm.repository.utils.toSkirRecordId
-import com.typewritermc.services.libs.utils.DeferredProvider
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
 import skirout.library.v1.tag.Placement
 import skirout.library.v1.tag.Tag
 
 class SurrealTagRepository(
-    private val database: DeferredProvider<Surreal>,
+    private val database: Surreal,
 ) : TagRepository {
     override suspend fun listTags(): List<Tag> {
-        val result = database.get().query("SELECT * FROM tag ORDER BY name, id").take(0)
+        val result = database.query("SELECT * FROM tag ORDER BY name, id").take(0)
 
         return TagRecord.parseList(result).map(TagRecord::toTag)
     }
@@ -26,7 +25,6 @@ class SurrealTagRepository(
     override suspend fun getTag(id: RecordId): Tag? {
         val result =
             database
-                .get()
                 .query(
                     $$"SELECT * FROM $tag",
                     mapOf("tag" to id.surrealId("tag")),
@@ -40,7 +38,6 @@ class SurrealTagRepository(
 
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 $tags.filter(|$tag| !record::exists($tag))
@@ -58,7 +55,6 @@ class SurrealTagRepository(
     ): TagCreateResult {
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;
@@ -114,7 +110,6 @@ class SurrealTagRepository(
     ): TagUpdateResult {
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;
@@ -192,7 +187,6 @@ class SurrealTagRepository(
     override suspend fun deleteTag(id: RecordId): TagDeleteResult {
         val result =
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;

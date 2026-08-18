@@ -1,10 +1,6 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
-import com.typewritermc.realm.repository.SurrealBookRepository
-import com.typewritermc.realm.repository.SurrealPageRepository
-import com.typewritermc.realm.repository.SurrealTagRepository
-import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
@@ -23,13 +19,13 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.services.libs.utils.DeferredProvider
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
@@ -69,7 +65,8 @@ val RealmLifecycleTest by testSuite {
 
                 first.transport.activeSubscriptionCount shouldBe 0
                 second.transport.activeSubscriptionCount shouldBe 0
-                advanceTimeBy(1_000)
+                fixture.retryDelay.awaitRequest()
+                fixture.retryDelay.resume()
                 runCurrent()
 
                 second.transport.activeSubscriptionCount shouldBe ROUTE_COUNT
@@ -85,25 +82,25 @@ private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
 ) : AutoCloseable {
     private val communicators = mutableMapOf<Long, Communicator>()
+    private val transports = mutableListOf<FakeMessageTransport>()
     private val telemetry = TelemetryTestHarness.create()
-    private val database = DeferredProvider<Surreal>()
-    private val tags = SurrealTagRepository(database)
-    private val books = SurrealBookRepository(database)
-    private val pages = SurrealPageRepository(database)
+    private val lifecycleEvents = mutableListOf<String>()
+    val retryDelay = FakeRealmRouteRetryDelay()
     val realm =
         Realm(
-            database = database,
-            databaseProvider = TestDatabaseProvider(),
-            routeFactory =
-                RealmRouteFactory(
-                    books,
-                    pages,
-                    tags,
-                    UnavailableRealmEditorCatalogSource(),
-                    UnavailableRealmPresentationSearchSource(),
+            databaseProvider =
+                TestDatabaseProvider(
+                    onConnect = { lifecycleEvents += "database.connect" },
+                    onClose = {
+                        check(transports.all { it.activeSubscriptionCount == 0 })
+                        lifecycleEvents += "database.close"
+                    },
                 ),
+            editorCatalog = UnavailableRealmEditorCatalogSource(),
+            presentationSearch = UnavailableRealmPresentationSearchSource(),
             scope = scope,
             telemetry = telemetry.telemetry,
+            retryDelay = retryDelay,
         )
 
     fun ready(
@@ -111,6 +108,7 @@ private class RealmLifecycleFixture(
         generation: Long,
     ): ReadyState {
         val transport = FakeMessageTransport()
+        transports += transport
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
         val identity = ServiceIdentity("realm", "Realm", "realm", listOf(ServiceRole.Realm("1.0.0")))
         communicators[generation] = communicator
@@ -126,13 +124,21 @@ private class RealmLifecycleFixture(
             name = "test.realm.start",
             unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
         ) {
-            realm.start(states) { generation -> RegistrarResult.Success(communicators.getValue(generation)) }
+            realm.start(states) { generation ->
+                lifecycleEvents += "communicator"
+                RegistrarResult.Success(communicators.getValue(generation))
+            }
         }
+        lifecycleEvents.take(2) shouldBe listOf("database.connect", "communicator")
     }
 
     override fun close() {
-        database.getOrNull()?.close()
-        telemetry.close()
+        try {
+            runBlocking { realm.shutdown() }
+            lifecycleEvents.lastOrNull() shouldBe "database.close"
+        } finally {
+            telemetry.close()
+        }
     }
 }
 
@@ -141,12 +147,43 @@ private data class ReadyState(
     val transport: FakeMessageTransport,
 )
 
-private class TestDatabaseProvider : RealmDatabaseProvider {
+private class TestDatabaseProvider(
+    private val onConnect: () -> Unit,
+    private val onClose: () -> Unit,
+) : RealmDatabaseProvider {
     context(_: MainSpanScope)
-    override fun connect(): Surreal =
-        Surreal().apply {
+    override fun connect(): Surreal {
+        onConnect()
+        return Surreal().apply {
             connect("memory")
             useNs("realm_lifecycle_test").useDb("realm_lifecycle_test")
             SchemaMigrator(this).migrate()
         }
+    }
+
+    override fun close(database: Surreal) {
+        try {
+            onClose()
+        } finally {
+            database.close()
+        }
+    }
+}
+
+private class FakeRealmRouteRetryDelay : RealmRouteRetryDelay {
+    private val requested = Channel<Unit>(Channel.UNLIMITED)
+    private val resumed = Channel<Unit>(Channel.UNLIMITED)
+
+    override suspend fun awaitRetry() {
+        requested.send(Unit)
+        resumed.receive()
+    }
+
+    suspend fun awaitRequest() {
+        requested.receive()
+    }
+
+    fun resume() {
+        check(resumed.trySend(Unit).isSuccess)
+    }
 }

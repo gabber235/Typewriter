@@ -79,7 +79,7 @@ internal class RouteFixture(
                 }
                 error("Reply wait ended unexpectedly")
             }
-        return responseSerializer.fromBytes(publication.message.payload)
+        return responseSerializer.fromBytes(publication.message.payload.toByteArray())
     }
 
     fun publishedTo(suffix: String) =
@@ -95,7 +95,7 @@ internal class RouteFixture(
     fun <Response : Any> publishedTo(
         suffix: String,
         serializer: Serializer<Response>,
-    ): List<Response> = publishedTo(suffix).map { publication -> serializer.fromBytes(publication.message.payload) }
+    ): List<Response> = publishedTo(suffix).map { serializer.fromBytes(it.message.payload.toByteArray()) }
 
     override fun close() {
         try {

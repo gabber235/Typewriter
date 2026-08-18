@@ -5,13 +5,12 @@ import com.typewritermc.realm.repository.records.PageRecord
 import com.typewritermc.realm.repository.utils.databaseValue
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
-import com.typewritermc.services.libs.utils.DeferredProvider
 import skirout.kernel.v1.record_id.RecordId
 import skirout.library.v1.page.Page
 import skirout.library.v1.page.PageType
 
 class SurrealPageRepository(
-    private val database: DeferredProvider<Surreal>,
+    private val database: Surreal,
 ) : PageRepository {
     override suspend fun searchPages(
         bookId: RecordId,
@@ -29,14 +28,13 @@ class SurrealPageRepository(
                 put("book", bookId.surrealId("book"))
                 if (search != null) put("search", search.lowercase())
             }
-        val result = database.get().query(query, bindings).take(0)
+        val result = database.query(query, bindings).take(0)
         return PageRecord.parseList(result).map(PageRecord::toPage)
     }
 
     override suspend fun getPage(id: RecordId): Page? {
         val result =
             database
-                .get()
                 .query(
                     $$"SELECT * FROM $page",
                     mapOf("page" to id.surrealId("page")),
@@ -55,7 +53,6 @@ class SurrealPageRepository(
         repositoryMutation(listOf(bookId)) {
             val result =
                 database
-                    .get()
                     .query(
                         $$"""
                 CREATE ONLY page SET
@@ -82,7 +79,6 @@ class SurrealPageRepository(
         repositoryMutation {
             val result =
                 database
-                    .get()
                     .query(
                         $$"""
                 BEGIN TRANSACTION;
@@ -114,7 +110,6 @@ class SurrealPageRepository(
     override suspend fun deletePage(id: RecordId): RepositoryResult<Unit> =
         repositoryMutation {
             database
-                .get()
                 .query(
                     $$"""
                 BEGIN TRANSACTION;
@@ -141,7 +136,6 @@ class SurrealPageRepository(
         return repositoryMutation(listOf(bookId)) {
             val result =
                 database
-                    .get()
                     .query(
                         $$"""
                     BEGIN TRANSACTION;
