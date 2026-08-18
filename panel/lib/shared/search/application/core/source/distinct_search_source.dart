@@ -1,51 +1,11 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final class DistinctSearchSource implements SearchSource {
-  DistinctSearchSource({required this.source}) {
-    _snapshotSubscription = source.snapshots.listen(_onSnapshot);
-  }
-
-  final SearchSource source;
-
-  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
-    sync: true,
-  );
-  StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
-  bool _disposed = false;
+final class DistinctSearchSource extends DelegatingSearchSource {
+  DistinctSearchSource({required super.source});
 
   @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
-
-  @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
-
-  @override
-  void initialize() => source.initialize();
-
-  @override
-  void search(SearchQueryContext context) => source.search(context);
-
-  @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    return source.preview(request);
-  }
-
-  @override
-  void dispose() {
-    if (_disposed) return;
-    _disposed = true;
-    unawaited(_snapshotSubscription?.cancel());
-    _snapshotSubscription = null;
-    unawaited(_snapshots.close());
-    source.dispose();
-  }
-
-  void _onSnapshot(SearchSourceSnapshot snapshot) {
-    _snapshots.add(
-      snapshot.copyWith(nodes: _distinct(snapshot.nodes, <String>{})),
-    );
+  void onSnapshot(SearchSourceSnapshot snapshot) {
+    emit(snapshot.copyWith(nodes: _distinct(snapshot.nodes, <String>{})));
   }
 
   List<SearchNode> _distinct(List<SearchNode> nodes, Set<String> seen) {

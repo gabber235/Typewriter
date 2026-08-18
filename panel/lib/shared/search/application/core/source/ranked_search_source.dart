@@ -1,4 +1,3 @@
-import "dart:async";
 import "dart:math";
 
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -13,30 +12,13 @@ final class SearchRankField {
   final int weight;
 }
 
-final class RankedSearchSource implements SearchSource {
-  RankedSearchSource({required this.source, required this.fields})
-    : assert(fields.isNotEmpty) {
-    _snapshotSubscription = source.snapshots.listen(_onSnapshot);
-  }
+final class RankedSearchSource extends DelegatingSearchSource {
+  RankedSearchSource({required super.source, required this.fields})
+    : assert(fields.isNotEmpty);
 
-  final SearchSource source;
   final List<SearchRankField> fields;
 
-  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
-    sync: true,
-  );
-  StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
   String _query = "";
-  bool _disposed = false;
-
-  @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
-
-  @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
-
-  @override
-  void initialize() => source.initialize();
 
   @override
   void search(SearchQueryContext context) {
@@ -45,27 +27,13 @@ final class RankedSearchSource implements SearchSource {
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    return source.preview(request);
-  }
-
-  @override
-  void dispose() {
-    if (_disposed) return;
-    _disposed = true;
-    unawaited(_snapshotSubscription?.cancel());
-    _snapshotSubscription = null;
-    unawaited(_snapshots.close());
-    source.dispose();
-  }
-
-  void _onSnapshot(SearchSourceSnapshot snapshot) {
+  void onSnapshot(SearchSourceSnapshot snapshot) {
     if (_query.isEmpty) {
-      _snapshots.add(snapshot);
+      emit(snapshot);
       return;
     }
 
-    _snapshots.add(snapshot.copyWith(nodes: _rankTree(snapshot.nodes).nodes));
+    emit(snapshot.copyWith(nodes: _rankTree(snapshot.nodes).nodes));
   }
 
   ({List<SearchNode> nodes, int? highestScore}) _rankTree(

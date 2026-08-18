@@ -1,5 +1,6 @@
 export "cached_search_source.dart";
 export "debounced_search_source.dart";
+export "delegating_search_source.dart";
 export "distinct_search_source.dart";
 export "gated_search_source.dart";
 export "historical_search_source.dart";
