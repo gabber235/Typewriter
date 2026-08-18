@@ -7,54 +7,54 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 
-struct SetValueAction(810800001) {
+struct SetValueAction(810700001) {
   target: BindingRef = 0;
   value: TypedExpression = 1;
 }
 
-struct InsertListItemAction(810800002) {
+struct InsertListItemAction(810700002) {
   target: BindingRef = 0;
   index: TypedExpression = 1;
   value: TypedExpression = 2;
 }
 
-struct RemoveListItemAction(810800003) {
+struct RemoveListItemAction(810700003) {
   target: BindingRef = 0;
   index: TypedExpression = 1;
 }
 
-struct AppendListItemAction(810800019) {
+struct AppendListItemAction(810700004) {
   target: BindingRef = 0;
   value: TypedExpression = 1;
 }
 
-struct DuplicateListItemAction(810800020) {
+struct DuplicateListItemAction(810700005) {
   source: BindingRef = 0;
 }
 
-struct ReorderListItemAction(810800021) {
+struct ReorderListItemAction(810700006) {
   source: BindingRef = 0;
   new_index: TypedExpression = 1;
 }
 
-struct PutMapEntryAction(810800004) {
+struct PutMapEntryAction(810700007) {
   target: BindingRef = 0;
   key: TypedExpression = 1;
   value: TypedExpression = 2;
 }
 
-struct RemoveMapEntryAction(810800005) {
+struct RemoveMapEntryAction(810700008) {
   target: BindingRef = 0;
   key: TypedExpression = 1;
 }
 
-struct ReplaceConcreteNominalTypeAction(810800013) {
+struct ReplaceConcreteNominalTypeAction(810700009) {
   target: BindingRef = 0;
   concrete_type: ResolvedTypeRef = 1;
   value: TypedExpression = 2;
 }
 
-enum LocalEditorAction(810800014) {
+enum LocalEditorAction(810700010) {
   set_value: SetValueAction = 1;
   insert_list_item: InsertListItemAction = 2;
   remove_list_item: RemoveListItemAction = 3;
@@ -66,39 +66,39 @@ enum LocalEditorAction(810800014) {
   replace_concrete_nominal_type: ReplaceConcreteNominalTypeAction = 9;
 }
 
-struct ReloadRealmAction(810800015) {}
+struct ReloadRealmAction(810700011) {}
 
-struct RealmCallbackAction(810800016) {
+struct RealmCallbackAction(810700012) {
   realm_action_id: RealmActionId = 0;
   payload: TypedExpression = 1;
 }
 
-enum RealmEditorAction(810800017) {
+enum RealmEditorAction(810700013) {
   reload: ReloadRealmAction = 1;
   callback: RealmCallbackAction = 2;
 }
 
-enum EditorAction(810800009) {
+enum EditorAction(810700014) {
   local: LocalEditorAction = 1;
   realm: RealmEditorAction = 2;
 }
 
-struct MutationSuccess(810800010) {
+struct MutationSuccess(810700015) {
   revision: int64 = 0;
   value: TypedValue = 1;
 }
 
-struct MutationConflict(810800011) {
+struct MutationConflict(810700016) {
   expected_revision: int64 = 0;
   actual_revision: int64 = 1;
   actual_value: TypedValue = 2;
 }
 
-struct PermissionDenied(810800018) {
+struct PermissionDenied(810700017) {
   message: string = 0;
 }
 
-enum TypedMutationResult(810800012) {
+enum TypedMutationResult(810700018) {
   success: MutationSuccess = 1;
   conflict: MutationConflict = 2;
   invalid: [TypeDiagnostic] = 3;

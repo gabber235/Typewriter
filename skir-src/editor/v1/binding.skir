@@ -5,7 +5,7 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 
-struct BindingId(810400012) {
+struct BindingId(810400006) {
   value: int64 = 0;
 }
 
@@ -22,7 +22,7 @@ struct ResolvedBinding(810400008) {
   revision: int64 = 4;
 }
 
-enum BindingResolution(810400011) {
+enum BindingResolution(810400009) {
   resolved: ResolvedBinding = 1;
   diagnostics: [TypeDiagnostic] = 2;
 }

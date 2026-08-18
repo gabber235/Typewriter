@@ -98,9 +98,9 @@ Portable rules include scalar conversion, record projection, record construction
 
 ## Structured paths and bindings
 
-`DataPath` contains sealed field, index, map key, and concrete type segments. Field names and map keys are never parsed from dotted strings.
+`DataPath` contains sealed field, index, and map key segments. Field names and map keys are never parsed from dotted strings. Paths traverse polymorphic wrappers transparently while retaining the concrete type.
 
-Path resolution returns a typed binding or structured diagnostics. Invalid paths, missing complete record fields, out of bounds indexes, inactive concrete types, and incompatible map keys remain distinct failures.
+Path resolution returns a typed binding or structured diagnostics. Invalid paths, missing complete record fields, out of bounds indexes, and incompatible map keys remain distinct failures.
 
 `BindingId` wraps a nonnegative integer. It cannot be confused with a revision, field index, or arbitrary string.
 

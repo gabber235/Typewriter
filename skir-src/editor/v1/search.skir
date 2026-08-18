@@ -5,40 +5,40 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 
-struct RealmSearchSelector(811200001) {
+struct RealmSearchSelector(811000001) {
   selector_id: string = 0;
   key: string = 1;
   value: string? = 2;
 }
 
-enum RealmSearchSelectorOperator(811200002) {
+enum RealmSearchSelectorOperator(811000002) {
   and = 1;
   or = 2;
 }
 
-struct RealmSearchSelectorBinaryExpression(811200003) {
+struct RealmSearchSelectorBinaryExpression(811000003) {
   operator: RealmSearchSelectorOperator = 0;
   left: RealmSearchSelectorExpression = 1;
   right: RealmSearchSelectorExpression = 2;
 }
 
-struct RealmSearchSelectorNotExpression(811200004) {
+struct RealmSearchSelectorNotExpression(811000004) {
   expression: RealmSearchSelectorExpression = 0;
 }
 
-enum RealmSearchSelectorExpression(811200005) {
+enum RealmSearchSelectorExpression(811000005) {
   selector: RealmSearchSelector = 1;
   binary: RealmSearchSelectorBinaryExpression = 2;
   not: RealmSearchSelectorNotExpression = 3;
 }
 
-struct RealmSearchQuery(811200006) {
+struct RealmSearchQuery(811000006) {
   normalized_query: string = 0;
   selectors: [RealmSearchSelector] = 1;
   selector_expression: RealmSearchSelectorExpression? = 2;
 }
 
-struct RealmPresentationSearchRequest(811200007) {
+struct RealmPresentationSearchRequest(811000007) {
   subscription_id: string = 0;
   realm_action_id: RealmActionId = 1;
   payload: TypedValue = 2;
@@ -46,13 +46,13 @@ struct RealmPresentationSearchRequest(811200007) {
   query: RealmSearchQuery = 4;
 }
 
-enum RealmPresentationSearchStatus(811200008) {
+enum RealmPresentationSearchStatus(811000008) {
   loading = 1;
   ready = 2;
   error = 3;
 }
 
-struct RealmPresentationSearchSnapshot(811200009) {
+struct RealmPresentationSearchSnapshot(811000009) {
   subscription_id: string = 0;
   status: RealmPresentationSearchStatus = 1;
   values: [TypedValue] = 2;
@@ -60,12 +60,12 @@ struct RealmPresentationSearchSnapshot(811200009) {
   diagnostics: [TypeDiagnostic] = 4;
 }
 
-struct RealmPresentationSearchUnavailable(811200010) {
+struct RealmPresentationSearchUnavailable(811000010) {
   subscription_id: string = 0;
   diagnostics: [TypeDiagnostic] = 1;
 }
 
-enum RealmPresentationSearchUpdate(811200011) {
+enum RealmPresentationSearchUpdate(811000011) {
   snapshot: RealmPresentationSearchSnapshot = 1;
   unavailable: RealmPresentationSearchUnavailable = 2;
 }

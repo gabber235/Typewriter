@@ -26568,7 +26568,7 @@ sealed class PresentationElement private constructor() {
             _finalizationCounter += 1;
             if (_finalizationCounter == 2) {
                 _serializerImpl.addConstantVariant(
-                    10,
+                    6,
                     "divider",
                     Kind.DIVIDER_CONST.ordinal,
                     "",
@@ -26584,7 +26584,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    7,
+                    2,
                     "section",
                     Kind.SECTION_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SectionLayout.serializer,
@@ -26593,7 +26593,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    48,
+                    3,
                     "padding",
                     Kind.PADDING_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PaddingLayout.serializer,
@@ -26602,7 +26602,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    49,
+                    4,
                     "slot",
                     Kind.SLOT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PresentationSlotElement.serializer,
@@ -26611,7 +26611,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    9,
+                    5,
                     "tabs",
                     Kind.TABS_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TabsLayout.serializer,
@@ -26620,7 +26620,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    11,
+                    7,
                     "spacer",
                     Kind.SPACER_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SpacerLayout.serializer,
@@ -26629,7 +26629,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    12,
+                    8,
                     "text",
                     Kind.TEXT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextContent.serializer,
@@ -26638,7 +26638,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    13,
+                    9,
                     "markdown",
                     Kind.MARKDOWN_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextContent.serializer,
@@ -26647,7 +26647,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    14,
+                    10,
                     "icon",
                     Kind.ICON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.IconContent.serializer,
@@ -26656,7 +26656,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    15,
+                    11,
                     "image",
                     Kind.IMAGE_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ImageContent.serializer,
@@ -26665,7 +26665,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    16,
+                    12,
                     "badge",
                     Kind.BADGE_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BadgeContent.serializer,
@@ -26674,7 +26674,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    47,
+                    13,
                     "chip",
                     Kind.CHIP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ChipContent.serializer,
@@ -26683,7 +26683,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    17,
+                    14,
                     "progress",
                     Kind.PROGRESS_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ProgressContent.serializer,
@@ -26692,7 +26692,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    18,
+                    15,
                     "typed_field",
                     Kind.TYPED_FIELD_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TypedFieldElement.serializer,
@@ -26701,7 +26701,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    19,
+                    16,
                     "conditional",
                     Kind.CONDITIONAL_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ConditionalElement.serializer,
@@ -26710,7 +26710,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    20,
+                    17,
                     "repeated",
                     Kind.REPEATED_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RepeatedElement.serializer,
@@ -26719,7 +26719,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    21,
+                    18,
                     "scoped_binding",
                     Kind.SCOPED_BINDING_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ScopedBindingElement.serializer,
@@ -26728,7 +26728,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    22,
+                    19,
                     "text_input",
                     Kind.TEXT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextControl.serializer,
@@ -26737,7 +26737,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    23,
+                    20,
                     "numeric_input",
                     Kind.NUMERIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26746,7 +26746,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    24,
+                    21,
                     "toggle_input",
                     Kind.TOGGLE_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26755,7 +26755,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    25,
+                    22,
                     "select_input",
                     Kind.SELECT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SelectControl.serializer,
@@ -26764,7 +26764,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    26,
+                    23,
                     "slider_input",
                     Kind.SLIDER_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SliderControl.serializer,
@@ -26773,7 +26773,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    27,
+                    24,
                     "date_time_input",
                     Kind.DATE_TIME_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.DateTimeControl.serializer,
@@ -26782,7 +26782,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    28,
+                    25,
                     "duration_input",
                     Kind.DURATION_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26791,7 +26791,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    29,
+                    26,
                     "color_input",
                     Kind.COLOR_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ColorControl.serializer,
@@ -26800,7 +26800,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    30,
+                    27,
                     "bytes_input",
                     Kind.BYTES_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26809,7 +26809,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    31,
+                    28,
                     "named_input",
                     Kind.NAMED_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26818,7 +26818,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    32,
+                    29,
                     "button",
                     Kind.BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ButtonElement.serializer,
@@ -26827,7 +26827,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    33,
+                    30,
                     "icon_button",
                     Kind.ICON_BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.IconButtonElement.serializer,
@@ -26836,7 +26836,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    34,
+                    31,
                     "menu",
                     Kind.MENU_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MenuElement.serializer,
@@ -26845,7 +26845,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    35,
+                    32,
                     "tooltip",
                     Kind.TOOLTIP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TooltipElement.serializer,
@@ -26854,7 +26854,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    36,
+                    33,
                     "list_input",
                     Kind.LIST_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ListControl.serializer,
@@ -26863,7 +26863,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    37,
+                    34,
                     "map_input",
                     Kind.MAP_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MapControl.serializer,
@@ -26872,7 +26872,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    38,
+                    35,
                     "record_input",
                     Kind.RECORD_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RecordControl.serializer,
@@ -26881,7 +26881,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    39,
+                    36,
                     "enum_input",
                     Kind.ENUM_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26890,7 +26890,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    40,
+                    37,
                     "polymorphic_input",
                     Kind.POLYMORPHIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PolymorphicControl.serializer,
@@ -26899,7 +26899,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    41,
+                    38,
                     "default_presentation",
                     Kind.DEFAULT_PRESENTATION_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.DefaultPresentationElement.serializer,
@@ -26908,7 +26908,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    44,
+                    39,
                     "search_input",
                     Kind.SEARCH_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SearchControl.serializer,
@@ -26917,7 +26917,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    45,
+                    40,
                     "collection_lookup",
                     Kind.COLLECTION_LOOKUP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.CollectionLookupElement.serializer,
@@ -26926,7 +26926,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    46,
+                    41,
                     "collection_graph",
                     Kind.COLLECTION_GRAPH_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.CollectionGraphElement.serializer,
@@ -26935,7 +26935,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    50,
+                    42,
                     "container",
                     Kind.CONTAINER_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ContainerLayout.serializer,
@@ -26944,7 +26944,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    51,
+                    43,
                     "anchor",
                     Kind.ANCHOR_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PresentationAnchorLayout.serializer,
@@ -26953,7 +26953,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    52,
+                    44,
                     "connection_layer",
                     Kind.CONNECTION_LAYER_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ConnectionLayerLayout.serializer,
@@ -26962,7 +26962,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    53,
+                    45,
                     "polymorphic_match",
                     Kind.POLYMORPHIC_MATCH_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PolymorphicMatchElement.serializer,

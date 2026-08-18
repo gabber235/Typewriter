@@ -12,12 +12,12 @@ struct MapKeyPathSegment(810400003) {
   key: TypedValue = 0;
 }
 
-enum DataPathSegment(810400005) {
+enum DataPathSegment(810400004) {
   field: FieldPathSegment = 1;
   index: IndexPathSegment = 2;
   map_key: MapKeyPathSegment = 3;
 }
 
-struct DataPath(810400006) {
+struct DataPath(810400005) {
   segments: [DataPathSegment] = 0;
 }
