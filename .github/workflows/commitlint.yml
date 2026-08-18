@@ -28,6 +28,9 @@ jobs:
             bunx --no-install commitlint --config commitlint.config.cjs --last --verbose
             exit 0
           fi
+          if ! git cat-file -e "${FROM_SHA}^{commit}"; then
+            git fetch --no-tags origin "$FROM_SHA"
+          fi
           bunx --no-install commitlint --config commitlint.config.cjs \
             --from "$FROM_SHA" \
             --to "${{ github.sha }}" --verbose
