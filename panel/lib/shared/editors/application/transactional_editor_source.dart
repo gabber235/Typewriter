@@ -45,7 +45,8 @@ final class TransactionalEditorSource extends ChangeNotifier
   final VoidCallback? onDeleted;
   final EditorReconciler _reconciler = const EditorReconciler();
   final EditorPathStates _states = EditorPathStates();
-  Timer? _debounceTimer;
+  EditorScheduledTask? _debounceTask;
+  EditorScheduledTask? _retryTask;
   Future<TypedMutationResult>? _activeCommit;
   bool _deleted = false;
   bool _disposed = false;
@@ -260,8 +261,14 @@ final class TransactionalEditorSource extends ChangeNotifier
     final jitter = _jitter.next(
       Duration(microseconds: base.inMicroseconds ~/ 2),
     );
-    await _scheduler.wait(base + jitter);
-    return true;
+    final task = _scheduler.schedule(base + jitter);
+    _retryTask?.cancel();
+    _retryTask = task;
+    final completion = await task.completed;
+    if (identical(_retryTask, task)) _retryTask = null;
+    return completion == EditorTaskCompletion.executed &&
+        !_disposed &&
+        !_deleted;
   }
 
   DataValue _commitValue(Set<DataPath> paths) {
@@ -390,7 +397,7 @@ final class TransactionalEditorSource extends ChangeNotifier
     if (_disposed || _deleted) return;
     _deleted = true;
     _generation++;
-    _debounceTimer?.cancel();
+    _cancelScheduledTasks();
     _closeGates();
     _notify();
     onDeleted?.call();
@@ -398,12 +405,33 @@ final class TransactionalEditorSource extends ChangeNotifier
 
   void _scheduleAutoFlush() {
     if (_disposed || _deleted) return;
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(debounce, () {
-      final candidates = _states.autoFlushCandidates;
-      if (candidates.isEmpty) return;
-      unawaited(flush(paths: candidates));
-    });
+    _cancelDebounce();
+    final task = _scheduler.schedule(debounce);
+    _debounceTask = task;
+    unawaited(_autoFlushAfter(task));
+  }
+
+  Future<void> _autoFlushAfter(EditorScheduledTask task) async {
+    final completion = await task.completed;
+    if (!identical(_debounceTask, task)) return;
+    _debounceTask = null;
+    if (completion == EditorTaskCompletion.cancelled || _disposed || _deleted) {
+      return;
+    }
+    final candidates = _states.autoFlushCandidates;
+    if (candidates.isEmpty) return;
+    await flush(paths: candidates);
+  }
+
+  void _cancelDebounce() {
+    _debounceTask?.cancel();
+    _debounceTask = null;
+  }
+
+  void _cancelScheduledTasks() {
+    _cancelDebounce();
+    _retryTask?.cancel();
+    _retryTask = null;
   }
 
   void _notify() {
@@ -446,7 +474,7 @@ final class TransactionalEditorSource extends ChangeNotifier
     if (_disposed) return;
     _disposed = true;
     _generation++;
-    _debounceTimer?.cancel();
+    _cancelScheduledTasks();
     _closeGates();
     super.dispose();
   }
