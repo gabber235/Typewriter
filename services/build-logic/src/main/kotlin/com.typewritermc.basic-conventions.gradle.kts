@@ -32,7 +32,6 @@ ktlint {
 kotlin {
     jvmToolchain(21)
     compilerOptions {
-        freeCompilerArgs.add("-Xcontext-parameters")
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
@@ -43,15 +42,4 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-fun String.runCommand(): String? = try {
-    ProcessBuilder(*split(" ").toTypedArray())
-        .redirectOutput(ProcessBuilder.Redirect.PIPE)
-        .redirectError(ProcessBuilder.Redirect.PIPE)
-        .start()
-        .apply { waitFor(10, TimeUnit.SECONDS) }
-        .inputStream.bufferedReader().readText().trim()
-} catch (_: Exception) {
-    null
 }

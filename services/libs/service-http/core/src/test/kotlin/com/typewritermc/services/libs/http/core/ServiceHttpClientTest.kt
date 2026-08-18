@@ -49,8 +49,8 @@ val ServiceHttpClientTest by testSuite {
             val traceparent = seen!!.headers.first("traceparent")!!
             traceparent.matches(Regex("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}")) shouldBe true
             traceparent.contains("00000000000000000000000000000001") shouldBe false
-            seen!!.headers.first("tracestate") shouldBe null
-            seen!!.headers.first("baggage") shouldBe "tenant=active"
+            seen.headers.first("tracestate") shouldBe null
+            seen.headers.first("baggage") shouldBe "tenant=active"
             harness.assertNoActiveSpans()
         }
     }

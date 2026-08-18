@@ -498,7 +498,8 @@ class Communicator(
             block()
         } catch (failure: Throwable) {
             rethrowExceptional(failure)
-            throw SluggedException.wrap(error(failure).slug, Classified(error(failure)))
+            val communicationError = error(failure)
+            throw SluggedException.wrap(communicationError.slug, Classified(communicationError))
         }
 
     private fun <Value> classifyTransport(

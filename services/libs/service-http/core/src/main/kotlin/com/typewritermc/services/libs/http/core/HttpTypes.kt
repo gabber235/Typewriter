@@ -2,13 +2,14 @@ package com.typewritermc.services.libs.http.core
 
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import java.net.URI
+import java.util.Collections
 import kotlin.time.Duration
 
 /** Immutable case-insensitive HTTP header collection preserving all values. */
 class HttpHeaders private constructor(
     private val entries: List<Pair<String, String>>,
 ) : Iterable<Pair<String, String>> {
-    override fun iterator(): Iterator<Pair<String, String>> = entries.toList().iterator()
+    override fun iterator(): Iterator<Pair<String, String>> = entries.iterator()
 
     fun values(name: String): List<String> = entries.filter { it.first.equals(name, true) }.map { it.second }
 
@@ -40,7 +41,7 @@ class HttpHeaders private constructor(
         fun of(vararg entries: Pair<String, String>): HttpHeaders = of(entries.asList())
 
         fun of(entries: Iterable<Pair<String, String>>): HttpHeaders {
-            val copy = entries.toList()
+            val copy = Collections.unmodifiableList(entries.toMutableList())
             copy.forEach { (name, value) ->
                 require(
                     name.isNotEmpty() && name.all { it.code in 33..126 && it !in "():<>@,;\\\"/[]?={} \t" },
