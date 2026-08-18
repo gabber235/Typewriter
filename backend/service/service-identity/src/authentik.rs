@@ -297,10 +297,10 @@ fn complete_response(
     body: Result<Vec<u8>, ProviderError>,
     classification: Result<(), ProviderError>,
 ) -> Result<Vec<u8>, ProviderError> {
-    if classification.is_err() {
-        if let Ok(response_body) = body.as_deref() {
-            record_rejection(response_body);
-        }
+    if classification.is_err()
+        && let Ok(response_body) = body.as_deref()
+    {
+        record_rejection(response_body);
     }
     classification?;
     body

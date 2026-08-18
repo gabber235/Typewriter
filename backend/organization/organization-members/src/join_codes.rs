@@ -99,7 +99,7 @@ pub async fn handle_generate(
         .into_surreal_record_ids();
 
     let validation = validate_roles(
-        &org_id,
+        org_id,
         &role_ids,
         &[],
         "join-code-generate-role-validation-query-failed",
@@ -179,7 +179,7 @@ pub async fn handle_generate(
     );
 
     let code: JoinCode = row.into();
-    wasmcloud_utils::skir_subjects::organization_join_codes(&org_id)
+    wasmcloud_utils::skir_subjects::organization_join_codes(org_id)
         .publish(WatchOrganizationJoinCodesResponse::Add(Box::new(
             code.clone(),
         )))
@@ -244,7 +244,7 @@ pub async fn handle_revoke(
         ));
     }
 
-    wasmcloud_utils::skir_subjects::organization_join_codes(&org_id)
+    wasmcloud_utils::skir_subjects::organization_join_codes(org_id)
         .publish(WatchOrganizationJoinCodesResponse::Remove(Box::new(code)))
         .await?;
 

@@ -206,7 +206,7 @@ pub async fn handle_update(
 
     let member: OrganizationMember = member.into();
 
-    wasmcloud_utils::skir_subjects::organization_members(&org_id)
+    wasmcloud_utils::skir_subjects::organization_members(org_id)
         .publish(WatchOrganizationMembersResponse::Update(Box::new(
             member.clone(),
         )))
@@ -282,7 +282,7 @@ pub async fn handle_remove(
         "founder-cannot-be-removed-error" => { user_id: user_id.clone() }
     );
 
-    wasmcloud_utils::skir_subjects::organization_members(&org_id)
+    wasmcloud_utils::skir_subjects::organization_members(org_id)
         .publish(WatchOrganizationMembersResponse::Remove(Box::new(
             user_id.clone(),
         )))

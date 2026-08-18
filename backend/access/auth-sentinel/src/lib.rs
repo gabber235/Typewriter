@@ -135,16 +135,13 @@ fn response(
 ) -> Result<Response, ErrorCode> {
     let headers = Fields::new();
     headers
-        .set(
-            &"content-type".to_string(),
-            &[content_type.as_bytes().to_vec()],
-        )
+        .set("content-type", &[content_type.as_bytes().to_vec()])
         .map_err(|_| internal_error("failed to set content-type header"))?;
 
     if let Some(typewriter_format) = typewriter_format {
         headers
             .set(
-                &"x-typewriter-format".to_string(),
+                "x-typewriter-format",
                 &[typewriter_format.as_bytes().to_vec()],
             )
             .map_err(|_| internal_error("failed to set x-typewriter-format header"))?;
