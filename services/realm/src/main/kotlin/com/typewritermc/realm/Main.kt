@@ -221,7 +221,7 @@ private suspend fun startRealm(
     ) {
         attribute("workflow.stage", "database")
     }
-    realm.start(registrar.states)
+    realm.start(registrar.states, registrar::communicatorFor)
     main.annotate { stage("database") { outcome("ready") } }
     main.event(
         name = "workflow.stage.completed",

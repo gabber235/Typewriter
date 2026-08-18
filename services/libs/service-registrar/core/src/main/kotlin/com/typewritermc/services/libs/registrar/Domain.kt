@@ -1,7 +1,5 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.communicator.client.Communicator
-
 /** A role advertised by a service identity. */
 sealed interface ServiceRole {
     val version: String
@@ -81,7 +79,6 @@ data class OrganizationBinding(
 data class ReadySession(
     val identity: ServiceIdentity,
     val binding: OrganizationBinding,
-    val communicator: Communicator,
 )
 
 /** A value whose disclosure must be explicit. */

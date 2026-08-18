@@ -72,7 +72,14 @@ private fun RegistrarState.projection(): EventProjection =
             EventProjection.log(LogSeverity.INFO, "Service registration is ready")
         }
 
-        is RegistrarState.Degraded -> {
+        is RegistrarState.DegradedBeforeReady -> {
+            EventProjection.log(
+                LogSeverity.WARN,
+                "Service registration is unavailable. Retrying in ${retry.delay}.",
+            )
+        }
+
+        is RegistrarState.DegradedAfterReady -> {
             EventProjection.log(
                 LogSeverity.WARN,
                 "Service registration is unavailable. Retrying in ${retry.delay}.",
@@ -81,6 +88,10 @@ private fun RegistrarState.projection(): EventProjection =
 
         is RegistrarState.Failed -> {
             EventProjection.log(LogSeverity.ERROR, "Service registration failed")
+        }
+
+        is RegistrarState.IdentityOutcomeUnknown -> {
+            EventProjection.log(LogSeverity.ERROR, "Service identity issuance outcome is unknown")
         }
 
         RegistrarState.Stopping -> {
@@ -131,16 +142,26 @@ private fun RegistrarState.attributes(attributes: TelemetryEventAttributes) {
             attributes.attribute("operation.outcome", "ready")
         }
 
-        is RegistrarState.Degraded -> {
-            attributes.attribute("workflow.stage", stage.wireValue())
-            attributes.attribute("retry.attempt", retry.attempt)
-            attributes.attribute("retry.delay_ms", retry.delay.inWholeMilliseconds)
-            attributes.failure(failure)
+        is RegistrarState.DegradedBeforeReady -> {
+            attributes.degraded(stage, retry, failure)
+            attributes.attribute("registrar.previously_ready", false)
+        }
+
+        is RegistrarState.DegradedAfterReady -> {
+            attributes.degraded(stage, retry, failure)
+            attributes.attribute("registrar.previously_ready", true)
+            attributes.attribute("service.id", session.identity.serviceId)
+            attributes.attribute("user.org.id", session.binding.organizationId)
         }
 
         is RegistrarState.Failed -> {
             attributes.attribute("operation.outcome", "failed")
-            attributes.attribute("identity.outcome_may_be_ambiguous", identityOutcomeMayBeAmbiguous)
+            attributes.failure(failure)
+        }
+
+        is RegistrarState.IdentityOutcomeUnknown -> {
+            attributes.attribute("operation.outcome", "unknown")
+            attributes.attribute("identity.outcome_may_be_ambiguous", true)
             attributes.failure(failure)
         }
 
@@ -195,8 +216,10 @@ private fun RegistrarState.wireValue(): String =
         is RegistrarState.AwaitingBinding -> "awaiting_binding"
         is RegistrarState.Reauthorizing -> "reauthorizing"
         is RegistrarState.Ready -> "ready"
-        is RegistrarState.Degraded -> "degraded"
+        is RegistrarState.DegradedBeforeReady -> "degraded_before_ready"
+        is RegistrarState.DegradedAfterReady -> "degraded_after_ready"
         is RegistrarState.Failed -> "failed"
+        is RegistrarState.IdentityOutcomeUnknown -> "identity_outcome_unknown"
         RegistrarState.Stopping -> "stopping"
         is RegistrarState.Stopped -> "stopped"
     }
@@ -211,6 +234,17 @@ private fun RegistrarStage.wireValue(): String =
         RegistrarStage.REAUTHORIZING -> "reauthorizing"
         RegistrarStage.HEARTBEAT -> "heartbeat"
     }
+
+private fun TelemetryEventAttributes.degraded(
+    stage: RegistrarStage,
+    retry: RetrySchedule,
+    failure: RegistrarFailure,
+) {
+    attribute("workflow.stage", stage.wireValue())
+    attribute("retry.attempt", retry.attempt)
+    attribute("retry.delay_ms", retry.delay.inWholeMilliseconds)
+    failure(failure)
+}
 
 private fun RegistrarFailure.wireType(): String =
     when (this) {

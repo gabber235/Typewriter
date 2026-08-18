@@ -14,6 +14,7 @@ import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.registrar.OrganizationBinding
 import com.typewritermc.services.libs.registrar.ReadySession
+import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.ServiceIdentity
@@ -83,6 +84,7 @@ private const val ROUTE_COUNT = 18
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
 ) : AutoCloseable {
+    private val communicators = mutableMapOf<Long, Communicator>()
     private val telemetry = TelemetryTestHarness.create()
     private val database = DeferredProvider<Surreal>()
     private val tags = SurrealTagRepository(database)
@@ -111,7 +113,8 @@ private class RealmLifecycleFixture(
         val transport = FakeMessageTransport()
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
         val identity = ServiceIdentity("realm", "Realm", "realm", listOf(ServiceRole.Realm("1.0.0")))
-        val session = ReadySession(identity, OrganizationBinding("organization", "Organization"), communicator)
+        communicators[generation] = communicator
+        val session = ReadySession(identity, OrganizationBinding("organization", "Organization"))
         return ReadyState(
             RegistrarSnapshot(attempt, attempt, RegistrarState.Ready(session, generation)),
             transport,
@@ -123,7 +126,7 @@ private class RealmLifecycleFixture(
             name = "test.realm.start",
             unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
         ) {
-            realm.start(states)
+            realm.start(states) { generation -> RegistrarResult.Success(communicators.getValue(generation)) }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar
 
+import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -7,10 +8,12 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.findExceptionalThrowable
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -25,8 +28,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
@@ -43,7 +44,7 @@ class ServiceRegistrar(
     private val retryRandom: RetryRandom = RetryRandom { Random.nextDouble() },
     private val registrarDelay: RegistrarDelay = RegistrarDelay { delay(it) },
 ) {
-    private val lifecycle = Mutex()
+    private val commands = Channel<RegistrarCommand>(Channel.UNLIMITED)
     private val mutableStates = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
     private var coordinator: Job? = null
     private var runtime: RegistrarRuntime? = null
@@ -51,111 +52,160 @@ class ServiceRegistrar(
     private var activeCredentials: IdentityCredentials? = null
     private var stopResult: RegistrarStopResult? = null
 
-    @Volatile private var lifecycleState = LifecycleState.IDLE
+    private var lifecycleState = LifecycleState.IDLE
     private var attempt = 0L
+
+    init {
+        scope.launch { commandLoop() }
+    }
 
     val states: StateFlow<RegistrarSnapshot> = mutableStates
 
-    suspend fun start(): RegistrarResult<Unit> =
-        lifecycle.withLock {
-            when (lifecycleState) {
-                LifecycleState.IDLE -> {
-                    lifecycleState = LifecycleState.ACTIVE
-                    val parent = Context.current()
-                    coordinator = scope.launch { coordinate(parent) }
-                    RegistrarResult.Success(Unit)
-                }
+    suspend fun start(): RegistrarResult<Unit> = request { RegistrarCommand.Start(Context.current(), it) }
 
-                LifecycleState.STOPPED -> {
-                    RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
-                }
-
-                LifecycleState.ACTIVE, LifecycleState.RETRY_RESERVED -> {
-                    RegistrarResult.Success(Unit)
-                }
-            }
-        }
-
-    suspend fun retry(): RegistrarResult<Unit> {
-        val previous =
-            lifecycle.withLock {
-                if (lifecycleState == LifecycleState.STOPPED) {
-                    return RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
-                }
-                if (lifecycleState != LifecycleState.ACTIVE || mutableStates.value.state !is RegistrarState.Failed) {
-                    return RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
-                }
-                lifecycleState = LifecycleState.RETRY_RESERVED
-                coordinator
-            }
-        previous?.join()
-        return lifecycle.withLock {
-            if (lifecycleState == LifecycleState.STOPPED) {
-                return@withLock RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
-            }
-            if (lifecycleState != LifecycleState.RETRY_RESERVED || mutableStates.value.state !is RegistrarState.Failed) {
-                return@withLock RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
-            }
-            lifecycleState = LifecycleState.ACTIVE
-            attempt = saturatingIncrement(attempt)
-            val parent = Context.current()
-            coordinator = scope.launch { coordinate(parent) }
-            RegistrarResult.Success(Unit)
-        }
-    }
+    suspend fun retry(): RegistrarResult<Unit> = request { RegistrarCommand.Retry(Context.current(), it) }
 
     suspend fun awaitReady(): RegistrarResult<ReadySession> {
         val terminal =
             states
                 .first {
-                    it.state is RegistrarState.Ready || it.state is RegistrarState.Failed || it.state is RegistrarState.Stopped
+                    it.state is RegistrarState.Ready || it.state.isExplicitFailure() || it.state is RegistrarState.Stopped
                 }.state
         return when (terminal) {
             is RegistrarState.Ready -> RegistrarResult.Success(terminal.session)
             is RegistrarState.Failed -> RegistrarResult.Failure(terminal.failure)
+            is RegistrarState.IdentityOutcomeUnknown -> RegistrarResult.Failure(terminal.failure)
             is RegistrarState.Stopped -> RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
             else -> error("terminal predicate violated")
         }
     }
 
-    suspend fun stop(): RegistrarStopResult =
+    suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
+        request { RegistrarCommand.CommunicatorFor(connectionGeneration, it) }
+
+    suspend fun stop(): RegistrarStopResult = request { RegistrarCommand.Stop(it) }
+
+    private suspend fun commandLoop() {
+        for (command in commands) {
+            when (command) {
+                is RegistrarCommand.Start -> {
+                    command.response.complete(startOwned(command.parent))
+                }
+
+                is RegistrarCommand.Retry -> {
+                    command.response.complete(retryOwned(command.parent))
+                }
+
+                is RegistrarCommand.Stop -> {
+                    command.response.complete(stopOwned())
+                }
+
+                is RegistrarCommand.CommunicatorFor -> {
+                    command.response.complete(communicatorForOwned(command.connectionGeneration))
+                }
+
+                is RegistrarCommand.Transition -> {
+                    transitionOwned(command.state, command.events)
+                    command.response?.complete(Unit)
+                }
+
+                is RegistrarCommand.NextAttempt -> {
+                    attempt = saturatingIncrement(attempt)
+                    command.response.complete(attempt)
+                }
+
+                is RegistrarCommand.CurrentAttempt -> {
+                    command.response.complete(attempt)
+                }
+            }
+        }
+    }
+
+    private fun startOwned(parent: Context): RegistrarResult<Unit> =
+        when (lifecycleState) {
+            LifecycleState.IDLE -> {
+                lifecycleState = LifecycleState.ACTIVE
+                coordinator = scope.launch { coordinate(parent) }
+                RegistrarResult.Success(Unit)
+            }
+
+            LifecycleState.STOPPED -> {
+                RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
+            }
+
+            LifecycleState.ACTIVE -> {
+                RegistrarResult.Success(Unit)
+            }
+        }
+
+    private suspend fun retryOwned(parent: Context): RegistrarResult<Unit> {
+        if (lifecycleState == LifecycleState.STOPPED) {
+            return RegistrarResult.Failure(RegistrarFailure.Internal("registrar_stopped"))
+        }
+        if (lifecycleState != LifecycleState.ACTIVE || !mutableStates.value.state.isExplicitFailure()) {
+            return RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
+        }
+        coordinator?.join()
+        if (lifecycleState == LifecycleState.STOPPED || !mutableStates.value.state.isExplicitFailure()) {
+            return RegistrarResult.Failure(RegistrarFailure.Internal("retry_not_failed"))
+        }
+        attempt = saturatingIncrement(attempt)
+        coordinator = scope.launch { coordinate(parent) }
+        return RegistrarResult.Success(Unit)
+    }
+
+    private fun communicatorForOwned(connectionGeneration: Long): RegistrarResult<Communicator> {
+        val ready = mutableStates.value.state as? RegistrarState.Ready
+        if (ready?.connectionGeneration != connectionGeneration) {
+            return RegistrarResult.Failure(RegistrarFailure.Internal("ready_generation_changed"))
+        }
+        val communicator =
+            runtime?.communicator
+                ?: return RegistrarResult.Failure(RegistrarFailure.Internal("ready_runtime_unavailable"))
+        return RegistrarResult.Success(communicator)
+    }
+
+    private suspend fun stopOwned(): RegistrarStopResult =
         telemetry.mainSpan(
             "registrar.stop",
             ErrorSlug.of("registrar-stop-failed"),
             parent = Context.root(),
         ) { main ->
-            lifecycle.withLock {
-                stopResult?.let { return@withLock it }
-                lifecycleState = LifecycleState.STOPPED
-                coordinator?.cancel()
-                withContext(NonCancellable) {
-                    transition(RegistrarState.Stopping, main)
-                    val deadline = TimeSource.Monotonic.markNow() + configuration.shutdownTimeout
-                    val failures = mutableListOf<RegistrarStopFailure>()
-                    if (!withinBudget(deadline) { coordinator?.join() }) {
-                        failures +=
-                            RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
-                    }
-                    coordinator = null
-                    try {
-                        failures += cleanup(runtime, sendShutdown = true, deadline = deadline)
-                    } finally {
-                        runtime = null
-                        retainedIssuedCredentials = null
-                        activeCredentials = null
-                    }
-                    val result = failures.toStopResult()
-                    stopResult = result
-                    transition(RegistrarState.Stopped(result), main)
-                    result
+            stopResult?.let { return@mainSpan it }
+            lifecycleState = LifecycleState.STOPPED
+            coordinator?.cancel()
+            withContext(NonCancellable) {
+                transitionOwned(RegistrarState.Stopping, main)
+                val deadline = TimeSource.Monotonic.markNow() + configuration.shutdownTimeout
+                val failures = mutableListOf<RegistrarStopFailure>()
+                if (!withinBudget(deadline) { coordinator?.join() }) {
+                    failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
                 }
+                coordinator = null
+                try {
+                    failures += cleanup(runtime, sendShutdown = true, deadline = deadline)
+                } finally {
+                    runtime = null
+                    retainedIssuedCredentials = null
+                    activeCredentials = null
+                }
+                val result = failures.toStopResult()
+                stopResult = result
+                transitionOwned(RegistrarState.Stopped(result), main)
+                result
             }
         }
+
+    private suspend fun <Value> request(command: (CompletableDeferred<Value>) -> RegistrarCommand): Value {
+        val response = CompletableDeferred<Value>()
+        commands.send(command(response))
+        return response.await()
+    }
 
     private suspend fun coordinate(parent: Context) {
         try {
             runAttempt(parent)
-            if (mutableStates.value.state is RegistrarState.Failed) {
+            if (mutableStates.value.state.isExplicitFailure()) {
                 withContext(NonCancellable) { cleanupCurrentAttempt() }
             }
         } catch (failure: Throwable) {
@@ -175,16 +225,14 @@ class ServiceRegistrar(
             val originalExceptional = findExceptionalThrowable(failure)
             if (originalExceptional != null && lifecycleState != LifecycleState.STOPPED) {
                 withContext(NonCancellable) {
-                    lifecycle.withLock {
-                        lifecycleState = LifecycleState.STOPPED
-                        coordinator = null
-                        runtime = null
-                        retainedIssuedCredentials = null
-                        activeCredentials = null
-                        val result = RegistrarStopResult.Success
-                        stopResult = result
-                        transition(RegistrarState.Stopped(result))
-                    }
+                    lifecycleState = LifecycleState.STOPPED
+                    coordinator = null
+                    runtime = null
+                    retainedIssuedCredentials = null
+                    activeCredentials = null
+                    val result = RegistrarStopResult.Success
+                    stopResult = result
+                    transition(RegistrarState.Stopped(result))
                 }
             }
             val cleanupExceptional = cleanupFailure?.let(::findExceptionalThrowable)
@@ -198,12 +246,13 @@ class ServiceRegistrar(
     }
 
     private suspend fun runAttempt(parent: Context) {
+        val currentAttempt = currentAttempt()
         val ready =
             telemetry.mainSpan(
                 "registrar.attempt",
                 ErrorSlug.of("registrar-attempt-failed"),
                 parent = parent,
-                attributes = Attributes.builder().put("registrar.attempt", attempt).build(),
+                attributes = Attributes.builder().put("registrar.attempt", currentAttempt).build(),
             ) { main ->
                 val result = establishReady(main)
                 main.annotate {
@@ -258,7 +307,7 @@ class ServiceRegistrar(
         binding: OrganizationBinding,
         events: MainSpanScope,
     ): ReadySupervision? {
-        val session = ReadySession(identity, binding, active.communicator)
+        val session = ReadySession(identity, binding)
         val generation =
             when (restoreHeartbeat(active, session, events)) {
                 HeartbeatResult.TERMINAL -> return null
@@ -276,16 +325,16 @@ class ServiceRegistrar(
         when (progress) {
             RuntimeSetupProgress.ACQUIRING_ACCESS_TOKEN -> {
                 activeCredentials?.identity?.let {
-                    transition(RegistrarState.AcquiringAccessToken(it), events)
+                    queueTransition(RegistrarState.AcquiringAccessToken(it), events)
                 }
             }
 
             RuntimeSetupProgress.ACQUIRING_SENTINEL_CREDENTIALS -> {
-                transition(RegistrarState.AcquiringSentinelCredentials, events)
+                queueTransition(RegistrarState.AcquiringSentinelCredentials, events)
             }
 
             RuntimeSetupProgress.CONNECTING -> {
-                transition(RegistrarState.Connecting(attempt), events)
+                queueTransition(RegistrarState.Connecting(mutableStates.value.attempt), events)
             }
         }
     }
@@ -326,10 +375,14 @@ class ServiceRegistrar(
         transition(RegistrarState.IssuingIdentity, events)
         return when (val issued = identityIssuer.issue(configuration.roles)) {
             is IdentityIssueResult.Failure -> {
-                transition(
-                    RegistrarState.Failed(RegistrarFailure.IdentityIssuance(issued.error), issued.error.outcomeMayBeAmbiguous),
-                    events,
-                )
+                val failure = RegistrarFailure.IdentityIssuance(issued.error)
+                val state =
+                    if (issued.error.outcomeMayBeAmbiguous) {
+                        RegistrarState.IdentityOutcomeUnknown(failure)
+                    } else {
+                        RegistrarState.Failed(failure)
+                    }
+                transition(state, events)
                 null
             }
 
@@ -708,9 +761,16 @@ class ServiceRegistrar(
         backoffIndex: Long,
         events: MainSpanScope,
     ) {
-        attempt = saturatingIncrement(attempt)
+        val retryAttempt = nextAttempt()
         val duration = configuration.retryPolicy.delayFor(backoffIndex, retryRandom.normalizedSample())
-        transition(RegistrarState.Degraded(session, stage, failure, RetrySchedule(attempt, duration)), events)
+        val retry = RetrySchedule(retryAttempt, duration)
+        val state =
+            if (session == null) {
+                RegistrarState.DegradedBeforeReady(stage, failure, retry)
+            } else {
+                RegistrarState.DegradedAfterReady(session, stage, failure, retry)
+            }
+        transition(state, events)
         registrarDelay.delay(duration)
     }
 
@@ -777,12 +837,24 @@ class ServiceRegistrar(
         return failures
     }
 
-    private fun terminal(
+    private suspend fun terminal(
         failure: RegistrarFailure,
         events: MainSpanScope? = null,
-    ) = transition(RegistrarState.Failed(failure, false), events)
+    ) = transition(RegistrarState.Failed(failure), events)
 
-    private fun transition(
+    private suspend fun transition(
+        state: RegistrarState,
+        events: MainSpanScope? = null,
+    ) = request<Unit> { RegistrarCommand.Transition(state, events, it) }
+
+    private fun queueTransition(
+        state: RegistrarState,
+        events: MainSpanScope,
+    ) {
+        check(commands.trySend(RegistrarCommand.Transition(state, events, null)).isSuccess)
+    }
+
+    private fun transitionOwned(
         state: RegistrarState,
         events: MainSpanScope? = null,
     ) {
@@ -794,9 +866,48 @@ class ServiceRegistrar(
         }
         events?.recordRegistrarStateChanged(checkNotNull(previousState), checkNotNull(currentSnapshot))
     }
+
+    private suspend fun nextAttempt(): Long = request { RegistrarCommand.NextAttempt(it) }
+
+    private suspend fun currentAttempt(): Long = request { RegistrarCommand.CurrentAttempt(it) }
 }
 
-private enum class LifecycleState { IDLE, ACTIVE, RETRY_RESERVED, STOPPED }
+private enum class LifecycleState { IDLE, ACTIVE, STOPPED }
+
+private sealed interface RegistrarCommand {
+    data class Start(
+        val parent: Context,
+        val response: CompletableDeferred<RegistrarResult<Unit>>,
+    ) : RegistrarCommand
+
+    data class Retry(
+        val parent: Context,
+        val response: CompletableDeferred<RegistrarResult<Unit>>,
+    ) : RegistrarCommand
+
+    data class Stop(
+        val response: CompletableDeferred<RegistrarStopResult>,
+    ) : RegistrarCommand
+
+    data class CommunicatorFor(
+        val connectionGeneration: Long,
+        val response: CompletableDeferred<RegistrarResult<Communicator>>,
+    ) : RegistrarCommand
+
+    data class Transition(
+        val state: RegistrarState,
+        val events: MainSpanScope?,
+        val response: CompletableDeferred<Unit>?,
+    ) : RegistrarCommand
+
+    data class NextAttempt(
+        val response: CompletableDeferred<Long>,
+    ) : RegistrarCommand
+
+    data class CurrentAttempt(
+        val response: CompletableDeferred<Long>,
+    ) : RegistrarCommand
+}
 
 private data class ReadySupervision(
     val runtime: RegistrarRuntime,
@@ -807,9 +918,12 @@ private data class ReadySupervision(
 private fun RegistrarState.attemptOutcome(): String =
     when (this) {
         is RegistrarState.Failed -> "failed"
+        is RegistrarState.IdentityOutcomeUnknown -> "identity_outcome_unknown"
         is RegistrarState.Stopped -> "stopped"
         else -> "incomplete"
     }
+
+private fun RegistrarState.isExplicitFailure(): Boolean = this is RegistrarState.Failed || this is RegistrarState.IdentityOutcomeUnknown
 
 private fun readyAttributes(
     session: ReadySession,
