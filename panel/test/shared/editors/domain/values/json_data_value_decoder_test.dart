@@ -61,6 +61,65 @@ void main() {
       }
     });
 
+    test("reports invalid base64 and timestamps at the exact JSON path", () {
+      final cases = <(Object?, TypeExpression, String)>[
+        (
+          "invalid bytes!",
+          const BytesType(),
+          r"Expected a valid base64 encoded string at $, got a string",
+        ),
+        (
+          {"createdAt": "invalid date"},
+          const RecordType(
+            fields: {
+              "createdAt": TypeField(name: "createdAt", type: TimestampType()),
+            },
+          ),
+          r"Expected an ISO 8601 timestamp string at $.createdAt, got a string",
+        ),
+      ];
+
+      for (final (source, type, message) in cases) {
+        expectDecodeFailure(source, type, registry, message);
+      }
+    });
+
+    test("reports malformed nested list and map values at the exact path", () {
+      final type = RecordType(
+        fields: const {
+          "groups": TypeField(
+            name: "groups",
+            type: ListType(
+              element: MapType(key: StringType(), value: StringType()),
+            ),
+          ),
+        },
+      );
+
+      expectDecodeFailure(
+        {
+          "groups": [
+            {"first": "valid"},
+            {"second": null},
+          ],
+        },
+        type,
+        registry,
+        r"Expected a string at $.groups[1].second, got null",
+      );
+
+      expectDecodeFailure(
+        {
+          "groups": [
+            ["not an object"],
+          ],
+        },
+        type,
+        registry,
+        r"Expected an object with string keys at $.groups[0], got a list",
+      );
+    });
+
     test("decodes nested lists, maps, and closed records", () {
       final type = RecordType(
         closed: true,
@@ -132,8 +191,14 @@ void main() {
         (withDefault.valueOrNull! as RecordValue).fields["enabled"],
         const BooleanValue(true),
       );
-      expect(missing.diagnostics.single.message, "Missing field name");
-      expect(unknown.diagnostics.single.message, "Unknown field extra");
+      expect(
+        missing.diagnostics.single.message,
+        r"Expected a required record field at $.name, got missing",
+      );
+      expect(
+        unknown.diagnostics.single.message,
+        r"Expected a declared record field at $.extra, got an unknown field",
+      );
     });
 
     test("resolves nominal and enum types before decoding", () {
@@ -188,4 +253,16 @@ void main() {
       );
     });
   });
+}
+
+void expectDecodeFailure(
+  Object? source,
+  TypeExpression type,
+  TypeRegistry registry,
+  String message,
+) {
+  final result = decodeJsonDataValue(source, type, registry: registry);
+
+  expect(result, isA<TypeFailure<DataValue>>());
+  expect(result.diagnostics.single.message, message);
 }

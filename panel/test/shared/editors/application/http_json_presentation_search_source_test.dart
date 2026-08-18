@@ -124,7 +124,10 @@ void main() {
       SearchErrorSeverity.warning,
     );
     expect(snapshot.errorSummaries.single.sourceLabel, "http.test");
-    expect(snapshot.errorSummaries.single.message, "Expected a string value");
+    expect(
+      snapshot.errorSummaries.single.message,
+      r"Expected a string at $, got an integer",
+    );
   });
 
   test("rejects a non HTTPS provider before issuing a request", () async {
