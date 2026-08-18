@@ -4,22 +4,22 @@ import {
   ResolvedTypeRef,
 } from "editor/v1/type_catalog.skir";
 
-enum ConversionSafety(810500002) {
+enum ConversionSafety(810500001) {
   lossless = 1;
   lossy = 2;
 }
 
-enum ConversionFallibility(810500003) {
+enum ConversionFallibility(810500002) {
   infallible = 1;
   fallible = 2;
 }
 
-enum ConversionLocality(810500004) {
+enum ConversionLocality(810500003) {
   local = 1;
   realm = 2;
 }
 
-enum ScalarCastKind(810500005) {
+enum ScalarCastKind(810500004) {
   signed_widen = 1;
   signed_narrow = 2;
   unsigned_widen = 3;
@@ -34,37 +34,37 @@ enum ScalarCastKind(810500005) {
   string_to_duration = 12;
 }
 
-struct RecordProjectionField(810500006) {
+struct RecordProjectionField(810500005) {
   source: DataPath = 0;
   target: DataPath = 1;
   conversion_id: ConversionId? = 2;
 }
 
-struct RecordProjectionRule(810500007) {
+struct RecordProjectionRule(810500006) {
   fields: [RecordProjectionField] = 0;
 }
 
-struct RecordConstructionField(810500008) {
+struct RecordConstructionField(810500007) {
   target_field: string = 0;
   source: DataPath = 1;
   conversion_id: ConversionId? = 2;
 }
 
-struct RecordConstructionRule(810500009) {
+struct RecordConstructionRule(810500008) {
   fields: [RecordConstructionField|target_field] = 0;
 }
 
-struct CollectionMappingRule(810500010) {
+struct CollectionMappingRule(810500009) {
   element_conversion_id: ConversionId = 0;
 }
 
-struct ConversionCompositionRule(810500013) {
+struct ConversionCompositionRule(810500010) {
   steps: [ConversionId] = 0;
 }
 
-struct RealmConversionRule(810500014) {}
+struct RealmConversionRule(810500011) {}
 
-enum ConversionRule(810500015) {
+enum ConversionRule(810500012) {
   identity = 1;
   inheritance_upcast = 2;
   validated_downcast = 3;
@@ -76,7 +76,7 @@ enum ConversionRule(810500015) {
   realm: RealmConversionRule = 9;
 }
 
-struct ConversionDefinition(810500016) {
+struct ConversionDefinition(810500013) {
   conversion_id: ConversionId = 0;
   source: ResolvedTypeRef = 1;
   target: ResolvedTypeRef = 2;

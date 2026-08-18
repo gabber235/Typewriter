@@ -8,7 +8,7 @@ import {
   TypedValue,
 } from "editor/v1/type_catalog.skir";
 
-enum ComparisonOperator(810700001) {
+enum ComparisonOperator(810600001) {
   equal = 1;
   not_equal = 2;
   less_than = 3;
@@ -17,13 +17,13 @@ enum ComparisonOperator(810700001) {
   greater_than_or_equal = 6;
 }
 
-enum BooleanOperator(810700002) {
+enum BooleanOperator(810600002) {
   and = 1;
   or = 2;
   not = 3;
 }
 
-enum ArithmeticOperator(810700003) {
+enum ArithmeticOperator(810600003) {
   add = 1;
   subtract = 2;
   multiply = 3;
@@ -32,103 +32,103 @@ enum ArithmeticOperator(810700003) {
   negate = 6;
 }
 
-struct FieldAccessExpression(810700004) {
+struct FieldAccessExpression(810600004) {
   target: TypedExpression = 0;
   field_name: string = 1;
 }
 
-enum InterpolationPart(810700005) {
+enum InterpolationPart(810600005) {
   text: string = 1;
   expression: TypedExpression = 2;
 }
 
-struct InterpolationExpression(810700006) {
+struct InterpolationExpression(810600006) {
   parts: [InterpolationPart] = 0;
 }
 
-struct ComparisonExpression(810700007) {
+struct ComparisonExpression(810600007) {
   operator: ComparisonOperator = 0;
   left: TypedExpression = 1;
   right: TypedExpression = 2;
 }
 
-struct BooleanExpression(810700008) {
+struct BooleanExpression(810600008) {
   operator: BooleanOperator = 0;
   operands: [TypedExpression] = 1;
 }
 
-struct ArithmeticExpression(810700009) {
+struct ArithmeticExpression(810600009) {
   operator: ArithmeticOperator = 0;
   operands: [TypedExpression] = 1;
 }
 
-struct ConditionalExpression(810700010) {
+struct ConditionalExpression(810600010) {
   condition: TypedExpression = 0;
   when_true: TypedExpression = 1;
   when_false: TypedExpression = 2;
 }
 
-struct CollectionMapExpression(810700011) {
+struct CollectionMapExpression(810600011) {
   source: TypedExpression = 0;
   transform: TypedExpression = 1;
   item_binding_id: BindingId = 2;
 }
 
-struct CollectionFilterExpression(810700012) {
+struct CollectionFilterExpression(810600012) {
   source: TypedExpression = 0;
   predicate: TypedExpression = 1;
   item_binding_id: BindingId = 2;
 }
 
-enum CollectionQuantifier(810700013) {
+enum CollectionQuantifier(810600013) {
   any = 1;
   all = 2;
   none = 3;
 }
 
-struct CollectionQuantifierExpression(810700014) {
+struct CollectionQuantifierExpression(810600014) {
   source: TypedExpression = 0;
   quantifier: CollectionQuantifier = 1;
   predicate: TypedExpression = 2;
   item_binding_id: BindingId = 3;
 }
 
-enum CollectionSelection(810700015) {
+enum CollectionSelection(810600015) {
   first = 1;
   last = 2;
 }
 
-struct CollectionFindExpression(810700016) {
+struct CollectionFindExpression(810600016) {
   source: TypedExpression = 0;
   selection: CollectionSelection = 1;
   predicate: TypedExpression = 2;
   item_binding_id: BindingId = 3;
 }
 
-struct CollectionCountExpression(810700017) {
+struct CollectionCountExpression(810600017) {
   source: TypedExpression = 0;
   predicate: TypedExpression = 1;
   item_binding_id: BindingId = 2;
 }
 
-struct CollectionDistinctExpression(810700018) {
+struct CollectionDistinctExpression(810600018) {
   source: TypedExpression = 0;
   key: TypedExpression? = 1;
   item_binding_id: BindingId? = 2;
 }
 
-enum CollectionSortDirection(810700019) {
+enum CollectionSortDirection(810600019) {
   ascending = 1;
   descending = 2;
 }
 
-struct CollectionComparator(810700020) {
+struct CollectionComparator(810600020) {
   left_binding_id: BindingId = 0;
   right_binding_id: BindingId = 1;
   comparison: TypedExpression = 2;
 }
 
-struct CollectionSortExpression(810700021) {
+struct CollectionSortExpression(810600021) {
   source: TypedExpression = 0;
   key: TypedExpression = 1;
   item_binding_id: BindingId = 2;
@@ -136,21 +136,21 @@ struct CollectionSortExpression(810700021) {
   comparator: CollectionComparator? = 4;
 }
 
-struct CollectionGroupExpression(810700022) {
+struct CollectionGroupExpression(810600022) {
   source: TypedExpression = 0;
   key: TypedExpression = 1;
   item_binding_id: BindingId = 2;
   value: TypedExpression? = 3;
 }
 
-struct CollectionReduceExpression(810700023) {
+struct CollectionReduceExpression(810600023) {
   source: TypedExpression = 0;
   accumulator_binding_id: BindingId = 1;
   item_binding_id: BindingId = 2;
   reduction: TypedExpression = 3;
 }
 
-struct CollectionFoldExpression(810700024) {
+struct CollectionFoldExpression(810600024) {
   source: TypedExpression = 0;
   initial: TypedExpression = 1;
   accumulator_binding_id: BindingId = 2;
@@ -158,14 +158,14 @@ struct CollectionFoldExpression(810700024) {
   reduction: TypedExpression = 4;
 }
 
-enum CollectionTransformOperation(810700025) {
+enum CollectionTransformOperation(810600025) {
   flat_map = 1;
   take = 2;
   skip = 3;
   reverse = 4;
 }
 
-struct CollectionTransformExpression(810700026) {
+struct CollectionTransformExpression(810600026) {
   source: TypedExpression = 0;
   operation: CollectionTransformOperation = 1;
   transform: TypedExpression? = 2;
@@ -173,17 +173,17 @@ struct CollectionTransformExpression(810700026) {
   count: TypedExpression? = 4;
 }
 
-struct IsTypeExpression(810700027) {
+struct IsTypeExpression(810600027) {
   source: TypedExpression = 0;
   type: TypeExpression = 1;
 }
 
-struct ConversionExpression(810700028) {
+struct ConversionExpression(810600028) {
   conversion_id: ConversionId = 0;
   input: TypedExpression = 1;
 }
 
-enum StringOperation(810700029) {
+enum StringOperation(810600029) {
   trim = 1;
   lower_case = 2;
   upper_case = 3;
@@ -197,29 +197,29 @@ enum StringOperation(810700029) {
   ends_with = 11;
 }
 
-struct StringOperationExpression(810700030) {
+struct StringOperationExpression(810600030) {
   operation: StringOperation = 0;
   operands: [TypedExpression] = 1;
 }
 
-enum CollectionOperation(810700031) {
+enum CollectionOperation(810600031) {
   access = 1;
   length = 2;
   contains = 3;
 }
 
-struct CollectionOperationExpression(810700032) {
+struct CollectionOperationExpression(810600032) {
   operation: CollectionOperation = 0;
   operands: [TypedExpression] = 1;
 }
 
-enum RegexOperation(810700033) {
+enum RegexOperation(810600033) {
   matches = 1;
   capture = 2;
   replace = 3;
 }
 
-struct RegexExpression(810700034) {
+struct RegexExpression(810600034) {
   operation: RegexOperation = 0;
   source: TypedExpression = 1;
   pattern: string = 2;
@@ -227,21 +227,21 @@ struct RegexExpression(810700034) {
   replacement: string? = 4;
 }
 
-struct CoalesceExpression(810700035) {
+struct CoalesceExpression(810600035) {
   operands: [TypedExpression] = 0;
 }
 
-enum ColorOperation(810700036) {
+enum ColorOperation(810600036) {
   with_alpha = 1;
 }
 
-struct ColorOperationExpression(810700037) {
+struct ColorOperationExpression(810600037) {
   operation: ColorOperation = 0;
   color: TypedExpression = 1;
   alpha: TypedExpression = 2;
 }
 
-enum Expression(810700038) {
+enum Expression(810600038) {
   literal: TypedValue = 1;
   binding: BindingRef = 2;
   field_access: FieldAccessExpression = 3;
@@ -270,7 +270,7 @@ enum Expression(810700038) {
   color_operation: ColorOperationExpression = 26;
 }
 
-struct TypedExpression(810700039) {
+struct TypedExpression(810600039) {
   result_type: TypeExpression = 0;
   expression: Expression? = 1;
 }

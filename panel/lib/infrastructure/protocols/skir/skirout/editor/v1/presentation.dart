@@ -22043,7 +22043,7 @@ sealed class PresentationElement {
   static _skir.EnumSerializer<PresentationElement> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
-        10,
+        6,
         "divider",
         "divider",
         "",
@@ -22060,7 +22060,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.childrenWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        7,
+        2,
         "section",
         "wrapSection",
         SectionLayout.serializer,
@@ -22070,7 +22070,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.sectionWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        48,
+        3,
         "padding",
         "wrapPadding",
         PaddingLayout.serializer,
@@ -22080,7 +22080,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.paddingWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        49,
+        4,
         "slot",
         "wrapSlot",
         PresentationSlotElement.serializer,
@@ -22090,7 +22090,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.slotWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        9,
+        5,
         "tabs",
         "wrapTabs",
         TabsLayout.serializer,
@@ -22100,7 +22100,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.tabsWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        11,
+        7,
         "spacer",
         "wrapSpacer",
         SpacerLayout.serializer,
@@ -22110,7 +22110,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.spacerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        12,
+        8,
         "text",
         "wrapText",
         TextContent.serializer,
@@ -22120,7 +22120,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.textWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        13,
+        9,
         "markdown",
         "wrapMarkdown",
         TextContent.serializer,
@@ -22130,7 +22130,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.markdownWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        14,
+        10,
         "icon",
         "wrapIcon",
         IconContent.serializer,
@@ -22140,7 +22140,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.iconWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        15,
+        11,
         "image",
         "wrapImage",
         ImageContent.serializer,
@@ -22150,7 +22150,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.imageWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        16,
+        12,
         "badge",
         "wrapBadge",
         BadgeContent.serializer,
@@ -22160,7 +22160,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.badgeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        47,
+        13,
         "chip",
         "wrapChip",
         ChipContent.serializer,
@@ -22170,7 +22170,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.chipWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        17,
+        14,
         "progress",
         "wrapProgress",
         ProgressContent.serializer,
@@ -22180,7 +22180,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.progressWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        18,
+        15,
         "typed_field",
         "wrapTypedField",
         TypedFieldElement.serializer,
@@ -22190,7 +22190,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.typedFieldWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        19,
+        16,
         "conditional",
         "wrapConditional",
         ConditionalElement.serializer,
@@ -22200,7 +22200,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.conditionalWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        20,
+        17,
         "repeated",
         "wrapRepeated",
         RepeatedElement.serializer,
@@ -22210,7 +22210,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.repeatedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        21,
+        18,
         "scoped_binding",
         "wrapScopedBinding",
         ScopedBindingElement.serializer,
@@ -22220,7 +22220,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.scopedBindingWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        22,
+        19,
         "text_input",
         "wrapTextInput",
         TextControl.serializer,
@@ -22230,7 +22230,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.textInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        23,
+        20,
         "numeric_input",
         "wrapNumericInput",
         BoundControl.serializer,
@@ -22240,7 +22240,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.numericInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        24,
+        21,
         "toggle_input",
         "wrapToggleInput",
         BoundControl.serializer,
@@ -22250,7 +22250,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.toggleInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        25,
+        22,
         "select_input",
         "wrapSelectInput",
         SelectControl.serializer,
@@ -22260,7 +22260,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.selectInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        26,
+        23,
         "slider_input",
         "wrapSliderInput",
         SliderControl.serializer,
@@ -22270,7 +22270,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.sliderInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        27,
+        24,
         "date_time_input",
         "wrapDateTimeInput",
         DateTimeControl.serializer,
@@ -22280,7 +22280,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.dateTimeInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        28,
+        25,
         "duration_input",
         "wrapDurationInput",
         BoundControl.serializer,
@@ -22290,7 +22290,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.durationInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        29,
+        26,
         "color_input",
         "wrapColorInput",
         ColorControl.serializer,
@@ -22300,7 +22300,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.colorInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        30,
+        27,
         "bytes_input",
         "wrapBytesInput",
         BoundControl.serializer,
@@ -22310,7 +22310,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.bytesInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        31,
+        28,
         "named_input",
         "wrapNamedInput",
         BoundControl.serializer,
@@ -22320,7 +22320,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.namedInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        32,
+        29,
         "button",
         "wrapButton",
         ButtonElement.serializer,
@@ -22330,7 +22330,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.buttonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        33,
+        30,
         "icon_button",
         "wrapIconButton",
         IconButtonElement.serializer,
@@ -22340,7 +22340,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.iconButtonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        34,
+        31,
         "menu",
         "wrapMenu",
         MenuElement.serializer,
@@ -22350,7 +22350,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.menuWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        35,
+        32,
         "tooltip",
         "wrapTooltip",
         TooltipElement.serializer,
@@ -22360,7 +22360,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.tooltipWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        36,
+        33,
         "list_input",
         "wrapListInput",
         ListControl.serializer,
@@ -22370,7 +22370,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.listInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        37,
+        34,
         "map_input",
         "wrapMapInput",
         MapControl.serializer,
@@ -22380,7 +22380,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.mapInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        38,
+        35,
         "record_input",
         "wrapRecordInput",
         RecordControl.serializer,
@@ -22390,7 +22390,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.recordInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        39,
+        36,
         "enum_input",
         "wrapEnumInput",
         BoundControl.serializer,
@@ -22400,7 +22400,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.enumInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        40,
+        37,
         "polymorphic_input",
         "wrapPolymorphicInput",
         PolymorphicControl.serializer,
@@ -22410,7 +22410,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.polymorphicInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        41,
+        38,
         "default_presentation",
         "wrapDefaultPresentation",
         DefaultPresentationElement.serializer,
@@ -22420,7 +22420,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.defaultPresentationWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        44,
+        39,
         "search_input",
         "wrapSearchInput",
         SearchControl.serializer,
@@ -22430,7 +22430,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.searchInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        45,
+        40,
         "collection_lookup",
         "wrapCollectionLookup",
         CollectionLookupElement.serializer,
@@ -22440,7 +22440,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collectionLookupWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        46,
+        41,
         "collection_graph",
         "wrapCollectionGraph",
         CollectionGraphElement.serializer,
@@ -22450,7 +22450,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collectionGraphWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        50,
+        42,
         "container",
         "wrapContainer",
         ContainerLayout.serializer,
@@ -22460,7 +22460,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.containerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        51,
+        43,
         "anchor",
         "wrapAnchor",
         PresentationAnchorLayout.serializer,
@@ -22470,7 +22470,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.anchorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        52,
+        44,
         "connection_layer",
         "wrapConnectionLayer",
         ConnectionLayerLayout.serializer,
@@ -22480,7 +22480,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.connectionLayerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        53,
+        45,
         "polymorphic_match",
         "wrapPolymorphicMatch",
         PolymorphicMatchElement.serializer,
