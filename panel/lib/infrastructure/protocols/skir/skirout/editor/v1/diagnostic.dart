@@ -13,6 +13,7 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
+
 import "./path.dart" as _lib_editor_v1_path;
 
 // -----------------------------------------------------------------------------

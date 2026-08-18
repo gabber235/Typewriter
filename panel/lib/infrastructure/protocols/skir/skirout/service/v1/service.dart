@@ -13,6 +13,7 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
+
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 // -----------------------------------------------------------------------------
