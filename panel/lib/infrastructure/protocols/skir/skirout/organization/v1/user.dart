@@ -17,6 +17,7 @@ import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./join_request.dart" as _lib_organization_v1_join_request;
 import "./organization.dart" as _lib_organization_v1_organization;
+import "./role.dart" as _lib_organization_v1_role;
 
 // -----------------------------------------------------------------------------
 // struct WatchUserOrganizationsRequest
