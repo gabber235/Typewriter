@@ -126,27 +126,11 @@ bool? _isAncestor(
 ({List<Tag> values, Tag canonical}) _upsertCanonicalTag(
   List<Tag>? values,
   Tag incoming,
-) {
-  final current = values ?? const <Tag>[];
-  final existing = current.firstWhereOrNull(
-    (tag) => tag.tagId == incoming.tagId,
-  );
-  if (existing != null && existing.revision >= incoming.revision) {
-    if (existing.revision == incoming.revision && existing != incoming) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: StateError(
-            "Tag ${incoming.tagId.id} has different values at revision ${incoming.revision}",
-          ),
-          library: "typewriter_panel",
-          context: ErrorDescription("while reconciling a canonical Tag"),
-        ),
-      );
-    }
-    return (values: current, canonical: existing);
-  }
-  return (
-    values: current.upsertByKey((tag) => tag.tagId, incoming),
-    canonical: incoming,
-  );
-}
+) => reconcileCanonicalRevision(
+  values: values,
+  incoming: incoming,
+  keyOf: (tag) => tag.tagId,
+  revisionOf: (tag) => tag.revision,
+  identityOf: (tag) => "Tag ${tag.tagId.id}",
+  entityName: "Tag",
+);

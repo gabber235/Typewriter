@@ -4,6 +4,7 @@ export "adaptive_single_activator.dart";
 export "animation.dart";
 export "app_config.dart";
 export "async.dart";
+export "canonical_reconciliation.dart";
 export "collection.dart";
 export "color.dart";
 export "color_converter.dart";

@@ -97,13 +97,9 @@ class Services extends _$Services {
       );
       switch (response) {
         case skir.UpdateOrganizationServiceResponse_unknown():
-          return _serviceUpdateUnavailable(
-            "The server returned an unknown response",
-          );
+          return unavailableMutation("The server returned an unknown response");
         case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
-          return _serviceUpdateUnavailable(
-            "The server could not update the service",
-          );
+          return unavailableMutation("The server could not update the service");
         case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
           :final value,
         ):
@@ -116,20 +112,16 @@ class Services extends _$Services {
             actualValue: upsert.canonical.inspectorValue,
           );
         case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper():
-          return _serviceUpdateInvalid(
-            "The service contains an invalid reference",
-          );
+          return invalidMutation("The service contains an invalid reference");
         case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
-          return _serviceUpdateUnavailable(
+          return unavailableMutation(
             "The service no longer exists",
             targetDeleted: true,
           );
         case skir.UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper():
-          return _serviceUpdateInvalid(
-            "The selected Realm service no longer exists",
-          );
+          return invalidMutation("The selected Realm service no longer exists");
         case skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
-          return _serviceUpdateInvalid("The service contains invalid values");
+          return invalidMutation("The service contains invalid values");
         case skir.UpdateOrganizationServiceResponse_successWrapper(
           :final value,
         ):
@@ -145,9 +137,7 @@ class Services extends _$Services {
           );
       }
     } on Object catch (_) {
-      return _serviceUpdateUnavailable(
-        "The service update could not be completed",
-      );
+      return unavailableMutation("The service update could not be completed");
     }
   }
 
@@ -190,21 +180,3 @@ class Services extends _$Services {
 Future<Service?> service(Ref ref, skir.RecordId id) async => (await ref.watch(
   servicesProvider.future,
 )).firstWhereOrNull((service) => service.serviceId == id);
-
-TypedMutationResult _serviceUpdateInvalid(String message) =>
-    TypedMutationResult.invalid([
-      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
-    ]);
-
-TypedMutationResult _serviceUpdateUnavailable(
-  String message, {
-  bool targetDeleted = false,
-}) => TypedMutationResult.unavailable([
-  TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidValue,
-    message: message,
-    details: targetDeleted
-        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
-        : const [],
-  ),
-]);

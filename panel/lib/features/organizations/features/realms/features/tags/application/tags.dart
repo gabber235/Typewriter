@@ -129,11 +129,9 @@ class Tags extends _$Tags {
 
       switch (response) {
         case skir.UpdateTagResponse_unknown():
-          return _tagUpdateUnavailable(
-            "The server returned an unknown response",
-          );
+          return unavailableMutation("The server returned an unknown response");
         case skir.UpdateTagResponse_internalErrorWrapper():
-          return _tagUpdateUnavailable("The server could not update the tag");
+          return unavailableMutation("The server could not update the tag");
         case skir.UpdateTagResponse_conflictErrorWrapper(:final value):
           final actual = Tag.fromSkir(value.actual);
           final upsert = _upsertCanonicalTag(state.requireValue, actual);
@@ -144,16 +142,16 @@ class Tags extends _$Tags {
             actualValue: upsert.canonical.inspectorValue,
           );
         case skir.UpdateTagResponse_tagNotFoundErrorWrapper():
-          return _tagUpdateUnavailable(
+          return unavailableMutation(
             "The tag no longer exists",
             targetDeleted: true,
           );
         case skir.UpdateTagResponse_parentsNotFoundErrorWrapper():
-          return _tagUpdateInvalid("One or more parent tags no longer exist");
+          return invalidMutation("One or more parent tags no longer exist");
         case skir.UpdateTagResponse_validationErrorWrapper(:final value):
-          return _tagUpdateInvalid(_tagValidationMessage(value));
+          return invalidMutation(_tagValidationMessage(value));
         case skir.UpdateTagResponse_invalidRecordIdErrorWrapper():
-          return _tagUpdateInvalid("The tag contains an invalid reference");
+          return invalidMutation("The tag contains an invalid reference");
         case skir.UpdateTagResponse_successWrapper(:final value):
           final updatedTag = Tag.fromSkir(value);
           final upsert = _upsertCanonicalTag(state.requireValue, updatedTag);
@@ -164,7 +162,7 @@ class Tags extends _$Tags {
           );
       }
     } on Object catch (_) {
-      return _tagUpdateUnavailable("The tag update could not be completed");
+      return unavailableMutation("The tag update could not be completed");
     }
   }
 
@@ -251,21 +249,3 @@ String _tagValidationMessage(skir.TagValidationError error) {
       "Tag parents cannot create an inheritance cycle",
   };
 }
-
-TypedMutationResult _tagUpdateInvalid(String message) =>
-    TypedMutationResult.invalid([
-      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
-    ]);
-
-TypedMutationResult _tagUpdateUnavailable(
-  String message, {
-  bool targetDeleted = false,
-}) => TypedMutationResult.unavailable([
-  TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidValue,
-    message: message,
-    details: targetDeleted
-        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
-        : const [],
-  ),
-]);

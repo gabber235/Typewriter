@@ -223,27 +223,11 @@ enum ServiceStateStatus {
 ({List<Service> values, Service canonical}) _upsertCanonicalService(
   List<Service>? values,
   Service incoming,
-) {
-  final current = values ?? const <Service>[];
-  final existing = current.firstWhereOrNull(
-    (service) => service.serviceId == incoming.serviceId,
-  );
-  if (existing != null && existing.revision >= incoming.revision) {
-    if (existing.revision == incoming.revision && existing != incoming) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: StateError(
-            "Service ${incoming.serviceId.id} has different values at revision ${incoming.revision}",
-          ),
-          library: "typewriter_panel",
-          context: ErrorDescription("while reconciling a canonical Service"),
-        ),
-      );
-    }
-    return (values: current, canonical: existing);
-  }
-  return (
-    values: current.upsertByKey((service) => service.serviceId, incoming),
-    canonical: incoming,
-  );
-}
+) => reconcileCanonicalRevision(
+  values: values,
+  incoming: incoming,
+  keyOf: (service) => service.serviceId,
+  revisionOf: (service) => service.revision,
+  identityOf: (service) => "Service ${service.serviceId.id}",
+  entityName: "Service",
+);
