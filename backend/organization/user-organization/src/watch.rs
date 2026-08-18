@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::{RecordId, read_query},
     decode_skir, extract_param,
     skir::base::organization::v1::{
         organization::Organization,
@@ -22,18 +22,18 @@ pub async fn handle_watch(
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let _request = decode_skir!(WatchUserOrganizationsRequest, &msg.body)?;
 
-    let organizations = query(
-        "SELECT VALUE ->member_of->organization.* AS orgs FROM ONLY type::record('user', $user_id)",
-    )
-    .bind("user_id", user_id)
-    .execute()
-    .await
-    .error_with_slug("organization-watch-query-failed")?
-    .take::<Vec<OrganizationRecord>>(0)
-    .error_with_slug("organization-watch-result-parse-failed")?
-    .into_iter()
-    .map(Organization::from)
-    .collect::<Vec<_>>();
+    let user_id = RecordId::new("user", user_id);
+    let organizations =
+        read_query!("SELECT VALUE ->member_of->organization.* AS orgs FROM ONLY $user_id")
+            .bind("user_id", user_id)
+            .execute()
+            .await
+            .error_with_slug("organization-watch-query-failed")?
+            .take::<Vec<OrganizationRecord>>()
+            .error_with_slug("organization-watch-result-parse-failed")?
+            .into_iter()
+            .map(Organization::from)
+            .collect::<Vec<_>>();
 
     otel_wasi::main_attribute!(
         "organization.result_count" = organizations.len() as i64,

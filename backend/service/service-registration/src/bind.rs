@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, transaction_query},
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::WatchOrganizationServicesResponse,
@@ -35,8 +35,10 @@ pub async fn handle_bind(
         "organization.id" = org_id.to_string()
     );
     let request = decode_skir!(BindServiceRequest, &msg.body)?;
+    let organization_id = RecordId::new("organization", org_id);
 
-    let response = retrying_transaction(
+    let response = transaction_query!(
+        BindResult,
         r#"
         BEGIN TRANSACTION;
 
@@ -48,7 +50,7 @@ pub async fn handle_bind(
             THROW 'invalid-registration-token-error'
         };
 
-        LET $organizations = SELECT id, name FROM type::record('organization', $org_id);
+        LET $organizations = SELECT id, name FROM $organization_id;
         IF array::is_empty($organizations) {
             THROW 'organization-not-found-error'
         };
@@ -68,7 +70,7 @@ pub async fn handle_bind(
         "#,
     )
     .bind("registration_token", request.registration_token)
-    .bind("org_id", org_id)
+    .bind("organization_id", organization_id)
     .execute()
     .await
     .error_with_slug("service-bind-query-failed")?;
@@ -77,7 +79,7 @@ pub async fn handle_bind(
         "db.query.retries" = response.attempts().get().saturating_sub(1) as i64,
     );
     let result = response
-        .transaction::<BindResult>(7)
+        .decode()
         .error_with_slug("service-bind-result-parse-failed")?;
     let result = skir_domain_result!(BindServiceResponse, result);
 

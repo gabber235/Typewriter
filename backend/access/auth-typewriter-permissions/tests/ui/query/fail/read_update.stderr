@@ -1,0 +1,5 @@
+error: read_query! does not allow the mutation token UPDATE
+ --> tests/ui/query/fail/read_update.rs:4:30
+  |
+4 |     let _query = read_query!("UPDATE user:test SET active = true;");
+  |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::{RecordId, read_query},
     decode_skir, extract_params, otel_wasi,
     skir::base::organization::v1::role::{
         WatchOrganizationRolesRequest, WatchOrganizationRolesResponse,
@@ -24,18 +24,19 @@ pub async fn handle_watch(
     );
     let _ = decode_skir!(WatchOrganizationRolesRequest, &msg.body)?;
 
-    let roles = query(
+    let organization_id = RecordId::new("organization", org_id);
+    let roles = read_query!(
         r#"
         SELECT * FROM organization_role
-        WHERE organization = type::record('organization', $org_id)
+        WHERE organization = $org_id
         ORDER BY priority DESC
         "#,
     )
-    .bind("org_id", org_id)
+    .bind("org_id", organization_id)
     .execute()
     .await
     .error_with_slug("role-watch-query-failed")?
-    .take::<Vec<OrganizationRoleRecord>>(0)
+    .take::<Vec<OrganizationRoleRecord>>()
     .error_with_slug("role-watch-result-parse-failed")?
     .into_iter()
     .map(Into::into)

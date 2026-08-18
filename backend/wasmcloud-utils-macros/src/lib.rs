@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use syn::parse_macro_input;
 
+mod database_query;
 mod dispatch_actions;
 mod paths;
 mod skir_domain_result;
@@ -19,6 +20,24 @@ pub fn dispatch_actions(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as dispatch_actions::DispatchInput);
 
     match dispatch_actions::expand(input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+#[proc_macro]
+pub fn read_query(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as database_query::ReadQueryInput);
+    match database_query::expand_read(input) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+#[proc_macro]
+pub fn transaction_query(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as database_query::TransactionQueryInput);
+    match database_query::expand_transaction(input) {
         Ok(tokens) => tokens.into(),
         Err(error) => error.to_compile_error().into(),
     }

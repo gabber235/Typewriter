@@ -1,0 +1,7 @@
+error[E0432]: unresolved import `surrealdb_component_sdk`
+ --> tests/ui/query/fail/raw_sdk_import.rs:1:5
+  |
+1 | use surrealdb_component_sdk::query;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `surrealdb_component_sdk`
+  |
+  = help: if you wanted to use a crate named `surrealdb_component_sdk`, use `cargo add surrealdb_component_sdk` to add it to your `Cargo.toml`

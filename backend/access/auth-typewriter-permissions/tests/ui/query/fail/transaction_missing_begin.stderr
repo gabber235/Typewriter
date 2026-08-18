@@ -1,0 +1,5 @@
+error: transaction_query! requires BEGIN TRANSACTION as its first statement
+  --> tests/ui/query/fail/transaction_missing_begin.rs:10:9
+   |
+10 |         "UPDATE user:test SET active = true; RETURN true; COMMIT TRANSACTION;",
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

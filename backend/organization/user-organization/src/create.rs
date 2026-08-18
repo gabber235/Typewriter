@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, transaction_query},
     decode_skir, extract_param,
     skir::base::organization::v1::{organization::*, user::*},
+    skir_domain_result,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -17,20 +18,25 @@ pub async fn handle_create(
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
+    let user_key = user_id;
+    let user_id = RecordId::new("user", user_id);
     let request = decode_skir!(CreateOrganizationRequest, &msg.body)?;
 
     let name = request.name;
     let logo_url = request.logo_url;
 
-    let organization: Organization = retrying_transaction(
+    let organization = transaction_query!(
+        OrganizationRecord,
         r#"
         BEGIN TRANSACTION;
 
-        CREATE ONLY organization SET
+        LET $organization = CREATE ONLY organization SET
             name = $name,
             logo_url = $logo_url,
-            founder = type::record('user', $user_id)
+            founder = $user_id
             ;
+
+        RETURN $organization;
 
         COMMIT TRANSACTION;
         "#,
@@ -41,12 +47,13 @@ pub async fn handle_create(
     .execute()
     .await
     .error_with_slug("organization-create-query-failed")?
-    .parse::<OrganizationRecord>(1)
-    .error_with_slug("organization-create-result-parse-failed")?
-    .into();
+    .decode()
+    .error_with_slug("organization-create-result-parse-failed")?;
+    let organization: Organization =
+        skir_domain_result!(CreateOrganizationResponse, organization).into();
 
     otel_wasi::main_attribute!("organization.id" = organization.organization_id.to_string());
-    wasmcloud_utils::skir_subjects::user_organizations(user_id)
+    wasmcloud_utils::skir_subjects::user_organizations(user_key)
         .publish(WatchUserOrganizationsResponse::Add(Box::new(
             organization.clone(),
         )))

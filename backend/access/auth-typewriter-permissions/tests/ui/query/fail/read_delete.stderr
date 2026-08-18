@@ -1,0 +1,5 @@
+error: read_query! does not allow the mutation token DELETE
+ --> tests/ui/query/fail/read_delete.rs:4:30
+  |
+4 |     let _query = read_query!("DELETE user:test;");
+  |                              ^^^^^^^^^^^^^^^^^^^
