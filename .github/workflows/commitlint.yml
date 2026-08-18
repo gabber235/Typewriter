@@ -6,6 +6,7 @@ on:
 
 jobs:
   commitlint:
+    name: ${{ github.event_name == 'pull_request' && 'commitlint-pr-range' || 'commitlint-push-range' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +25,8 @@ jobs:
         run: |
           FROM_SHA="${{ github.event.before }}"
           if [ "$FROM_SHA" = "0000000000000000000000000000000000000000" ]; then
-            FROM_SHA="$(git rev-list --max-parents=0 HEAD)"
+            bunx --no-install commitlint --config commitlint.config.cjs --last --verbose
+            exit 0
           fi
           bunx --no-install commitlint --config commitlint.config.cjs \
             --from "$FROM_SHA" \

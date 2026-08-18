@@ -125,8 +125,8 @@ Examples:
 - `fix(services/realm): handle empty title`
 - `docs: update setup steps`
 
-Install local commit message checks:
+Local commit message checks are installed automatically by `bun install`. To reinstall them manually:
 
 ```bash
-npx --yes lefthook install
+bunx --no-install lefthook install
 ```
