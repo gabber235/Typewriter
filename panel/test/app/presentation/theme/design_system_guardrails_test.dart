@@ -24,7 +24,7 @@ final exemptions = <Exemption>[
     "persisted page-type identity colors",
   ),
   Exemption(
-    "lib/features/organizations/features/services/application/services.dart",
+    "lib/features/organizations/features/services/application/service_models.dart",
     RegExp(r"Colors\.(?:blue|deepPurple|deepOrangeAccent|green)"),
     "service-role identity colors",
   ),
@@ -42,11 +42,6 @@ final exemptions = <Exemption>[
     "lib/shared/selectables/operations/unbind_operation.dart",
     RegExp(r"Colors\."),
     "editor operation identity color",
-  ),
-  Exemption(
-    "lib/shared/editors/presentation/headers/list_header.dart",
-    RegExp(r"Colors\.green"),
-    "list validity indicator",
   ),
   for (final path in [
     "lib/shared/editors/presentation/protocol/renderers/content/badge_renderer.dart",
