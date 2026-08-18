@@ -13,9 +13,10 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
+
 import "./binding.dart" as _lib_editor_v1_binding;
-import "./path.dart" as _lib_editor_v1_path;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "./path.dart" as _lib_editor_v1_path;
 
 // -----------------------------------------------------------------------------
 // enum ComparisonOperator

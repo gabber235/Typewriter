@@ -8,8 +8,7 @@
     "lefthook": "2.1.10"
   },
   "dependencies": {
-    "skir": "1.2.20",
-    "skir-dart-gen": "github:gabber235/skir-dart-gen#78c2d2d",
+    "skir": "1.2.21",
     "skir-kotlin-gen": "1.0.11",
     "skir-rust-gen": "0.1.5"
   },
