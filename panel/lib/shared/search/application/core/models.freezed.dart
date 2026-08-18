@@ -215,7 +215,7 @@ return $default(_that.selectorId,_that.key,_that.value);case _:
 
 class _SearchParsedSelector with DiagnosticableTreeMixin implements SearchParsedSelector {
   const _SearchParsedSelector({required this.selectorId, required this.key, this.value}): assert(selectorId != "", 'Selector ID must not be empty.'),assert(key != "", 'Key must not be empty.');
-  
+
 
 @override final  String selectorId;
 @override final  String key;
@@ -287,6 +287,434 @@ as String?,
 }
 
 /// @nodoc
+mixin _$SearchSelectorExpression implements DiagnosticableTreeMixin {
+
+
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression'))
+    ;
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorExpression);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'SearchSelectorExpression()';
+}
+
+
+}
+
+/// @nodoc
+class $SearchSelectorExpressionCopyWith<$Res>  {
+$SearchSelectorExpressionCopyWith(SearchSelectorExpression _, $Res Function(SearchSelectorExpression) __);
+}
+
+
+/// Adds pattern-matching-related methods to [SearchSelectorExpression].
+extension SearchSelectorExpressionPatterns on SearchSelectorExpression {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SearchSelectorLeafExpression value)?  leaf,TResult Function( SearchSelectorBinaryExpression value)?  binary,TResult Function( SearchSelectorNotExpression value)?  not,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression() when leaf != null:
+return leaf(_that);case SearchSelectorBinaryExpression() when binary != null:
+return binary(_that);case SearchSelectorNotExpression() when not != null:
+return not(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SearchSelectorLeafExpression value)  leaf,required TResult Function( SearchSelectorBinaryExpression value)  binary,required TResult Function( SearchSelectorNotExpression value)  not,}){
+final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression():
+return leaf(_that);case SearchSelectorBinaryExpression():
+return binary(_that);case SearchSelectorNotExpression():
+return not(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SearchSelectorLeafExpression value)?  leaf,TResult? Function( SearchSelectorBinaryExpression value)?  binary,TResult? Function( SearchSelectorNotExpression value)?  not,}){
+final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression() when leaf != null:
+return leaf(_that);case SearchSelectorBinaryExpression() when binary != null:
+return binary(_that);case SearchSelectorNotExpression() when not != null:
+return not(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( SearchParsedSelector selector)?  leaf,TResult Function( SearchSelectorOperator operator,  SearchSelectorExpression left,  SearchSelectorExpression right)?  binary,TResult Function( SearchSelectorExpression expression)?  not,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression() when leaf != null:
+return leaf(_that.selector);case SearchSelectorBinaryExpression() when binary != null:
+return binary(_that.operator,_that.left,_that.right);case SearchSelectorNotExpression() when not != null:
+return not(_that.expression);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( SearchParsedSelector selector)  leaf,required TResult Function( SearchSelectorOperator operator,  SearchSelectorExpression left,  SearchSelectorExpression right)  binary,required TResult Function( SearchSelectorExpression expression)  not,}) {final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression():
+return leaf(_that.selector);case SearchSelectorBinaryExpression():
+return binary(_that.operator,_that.left,_that.right);case SearchSelectorNotExpression():
+return not(_that.expression);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( SearchParsedSelector selector)?  leaf,TResult? Function( SearchSelectorOperator operator,  SearchSelectorExpression left,  SearchSelectorExpression right)?  binary,TResult? Function( SearchSelectorExpression expression)?  not,}) {final _that = this;
+switch (_that) {
+case SearchSelectorLeafExpression() when leaf != null:
+return leaf(_that.selector);case SearchSelectorBinaryExpression() when binary != null:
+return binary(_that.operator,_that.left,_that.right);case SearchSelectorNotExpression() when not != null:
+return not(_that.expression);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class SearchSelectorLeafExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+  const SearchSelectorLeafExpression(this.selector);
+
+
+ final  SearchParsedSelector selector;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchSelectorLeafExpressionCopyWith<SearchSelectorLeafExpression> get copyWith => _$SearchSelectorLeafExpressionCopyWithImpl<SearchSelectorLeafExpression>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.leaf'))
+    ..add(DiagnosticsProperty('selector', selector));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorLeafExpression&&(identical(other.selector, selector) || other.selector == selector));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,selector);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'SearchSelectorExpression.leaf(selector: $selector)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchSelectorLeafExpressionCopyWith<$Res> implements $SearchSelectorExpressionCopyWith<$Res> {
+  factory $SearchSelectorLeafExpressionCopyWith(SearchSelectorLeafExpression value, $Res Function(SearchSelectorLeafExpression) _then) = _$SearchSelectorLeafExpressionCopyWithImpl;
+@useResult
+$Res call({
+ SearchParsedSelector selector
+});
+
+
+$SearchParsedSelectorCopyWith<$Res> get selector;
+
+}
+/// @nodoc
+class _$SearchSelectorLeafExpressionCopyWithImpl<$Res>
+    implements $SearchSelectorLeafExpressionCopyWith<$Res> {
+  _$SearchSelectorLeafExpressionCopyWithImpl(this._self, this._then);
+
+  final SearchSelectorLeafExpression _self;
+  final $Res Function(SearchSelectorLeafExpression) _then;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? selector = null,}) {
+  return _then(SearchSelectorLeafExpression(
+null == selector ? _self.selector : selector // ignore: cast_nullable_to_non_nullable
+as SearchParsedSelector,
+  ));
+}
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchParsedSelectorCopyWith<$Res> get selector {
+
+  return $SearchParsedSelectorCopyWith<$Res>(_self.selector, (value) {
+    return _then(_self.copyWith(selector: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class SearchSelectorBinaryExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+  const SearchSelectorBinaryExpression({required this.operator, required this.left, required this.right});
+
+
+ final  SearchSelectorOperator operator;
+ final  SearchSelectorExpression left;
+ final  SearchSelectorExpression right;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchSelectorBinaryExpressionCopyWith<SearchSelectorBinaryExpression> get copyWith => _$SearchSelectorBinaryExpressionCopyWithImpl<SearchSelectorBinaryExpression>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.binary'))
+    ..add(DiagnosticsProperty('operator', operator))..add(DiagnosticsProperty('left', left))..add(DiagnosticsProperty('right', right));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorBinaryExpression&&(identical(other.operator, operator) || other.operator == operator)&&(identical(other.left, left) || other.left == left)&&(identical(other.right, right) || other.right == right));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,operator,left,right);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'SearchSelectorExpression.binary(operator: $operator, left: $left, right: $right)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchSelectorBinaryExpressionCopyWith<$Res> implements $SearchSelectorExpressionCopyWith<$Res> {
+  factory $SearchSelectorBinaryExpressionCopyWith(SearchSelectorBinaryExpression value, $Res Function(SearchSelectorBinaryExpression) _then) = _$SearchSelectorBinaryExpressionCopyWithImpl;
+@useResult
+$Res call({
+ SearchSelectorOperator operator, SearchSelectorExpression left, SearchSelectorExpression right
+});
+
+
+$SearchSelectorExpressionCopyWith<$Res> get left;$SearchSelectorExpressionCopyWith<$Res> get right;
+
+}
+/// @nodoc
+class _$SearchSelectorBinaryExpressionCopyWithImpl<$Res>
+    implements $SearchSelectorBinaryExpressionCopyWith<$Res> {
+  _$SearchSelectorBinaryExpressionCopyWithImpl(this._self, this._then);
+
+  final SearchSelectorBinaryExpression _self;
+  final $Res Function(SearchSelectorBinaryExpression) _then;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? operator = null,Object? left = null,Object? right = null,}) {
+  return _then(SearchSelectorBinaryExpression(
+operator: null == operator ? _self.operator : operator // ignore: cast_nullable_to_non_nullable
+as SearchSelectorOperator,left: null == left ? _self.left : left // ignore: cast_nullable_to_non_nullable
+as SearchSelectorExpression,right: null == right ? _self.right : right // ignore: cast_nullable_to_non_nullable
+as SearchSelectorExpression,
+  ));
+}
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorExpressionCopyWith<$Res> get left {
+
+  return $SearchSelectorExpressionCopyWith<$Res>(_self.left, (value) {
+    return _then(_self.copyWith(left: value));
+  });
+}/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorExpressionCopyWith<$Res> get right {
+
+  return $SearchSelectorExpressionCopyWith<$Res>(_self.right, (value) {
+    return _then(_self.copyWith(right: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class SearchSelectorNotExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+  const SearchSelectorNotExpression(this.expression);
+
+
+ final  SearchSelectorExpression expression;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchSelectorNotExpressionCopyWith<SearchSelectorNotExpression> get copyWith => _$SearchSelectorNotExpressionCopyWithImpl<SearchSelectorNotExpression>(this, _$identity);
+
+
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.not'))
+    ..add(DiagnosticsProperty('expression', expression));
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchSelectorNotExpression&&(identical(other.expression, expression) || other.expression == expression));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,expression);
+
+@override
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  return 'SearchSelectorExpression.not(expression: $expression)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchSelectorNotExpressionCopyWith<$Res> implements $SearchSelectorExpressionCopyWith<$Res> {
+  factory $SearchSelectorNotExpressionCopyWith(SearchSelectorNotExpression value, $Res Function(SearchSelectorNotExpression) _then) = _$SearchSelectorNotExpressionCopyWithImpl;
+@useResult
+$Res call({
+ SearchSelectorExpression expression
+});
+
+
+$SearchSelectorExpressionCopyWith<$Res> get expression;
+
+}
+/// @nodoc
+class _$SearchSelectorNotExpressionCopyWithImpl<$Res>
+    implements $SearchSelectorNotExpressionCopyWith<$Res> {
+  _$SearchSelectorNotExpressionCopyWithImpl(this._self, this._then);
+
+  final SearchSelectorNotExpression _self;
+  final $Res Function(SearchSelectorNotExpression) _then;
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? expression = null,}) {
+  return _then(SearchSelectorNotExpression(
+null == expression ? _self.expression : expression // ignore: cast_nullable_to_non_nullable
+as SearchSelectorExpression,
+  ));
+}
+
+/// Create a copy of SearchSelectorExpression
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorExpressionCopyWith<$Res> get expression {
+
+  return $SearchSelectorExpressionCopyWith<$Res>(_self.expression, (value) {
+    return _then(_self.copyWith(expression: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$SearchQueryContext implements DiagnosticableTreeMixin {
 
  String get normalizedQuery; List<SearchParsedSelector> get selectors; SearchSelectorExpression? get selectorExpression;
@@ -330,7 +758,7 @@ $Res call({
 });
 
 
-
+$SearchSelectorExpressionCopyWith<$Res>? get selectorExpression;
 
 }
 /// @nodoc
@@ -351,7 +779,19 @@ as List<SearchParsedSelector>,selectorExpression: freezed == selectorExpression 
 as SearchSelectorExpression?,
   ));
 }
+/// Create a copy of SearchQueryContext
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
+    if (_self.selectorExpression == null) {
+    return null;
+  }
 
+  return $SearchSelectorExpressionCopyWith<$Res>(_self.selectorExpression!, (value) {
+    return _then(_self.copyWith(selectorExpression: value));
+  });
+}
 }
 
 
@@ -490,7 +930,7 @@ return $default(_that.normalizedQuery,_that.selectors,_that.selectorExpression);
 
 class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryContext {
   const _SearchQueryContext({required this.normalizedQuery, required final  List<SearchParsedSelector> selectors, this.selectorExpression}): _selectors = selectors;
-  
+
 
 @override final  String normalizedQuery;
  final  List<SearchParsedSelector> _selectors;
@@ -542,7 +982,7 @@ $Res call({
 });
 
 
-
+@override $SearchSelectorExpressionCopyWith<$Res>? get selectorExpression;
 
 }
 /// @nodoc
@@ -564,7 +1004,19 @@ as SearchSelectorExpression?,
   ));
 }
 
+/// Create a copy of SearchQueryContext
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
+    if (_self.selectorExpression == null) {
+    return null;
+  }
 
+  return $SearchSelectorExpressionCopyWith<$Res>(_self.selectorExpression!, (value) {
+    return _then(_self.copyWith(selectorExpression: value));
+  });
+}
 }
 
 /// @nodoc
@@ -773,7 +1225,7 @@ return $default(_that.id,_that.title,_that.description,_that.visibility,_that.pr
 
 class _SearchGuidance with DiagnosticableTreeMixin implements SearchGuidance {
   const _SearchGuidance({required this.id, required this.title, this.description, this.visibility = SearchGuidanceVisibility.emptyOnly, this.priority = 0}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.');
-  
+
 
 @override final  String id;
 @override final  String title;
@@ -1053,7 +1505,7 @@ return $default(_that.id,_that.message,_that.severity,_that.sourceLabel);case _:
 
 class _SearchErrorSummary with DiagnosticableTreeMixin implements SearchErrorSummary {
   const _SearchErrorSummary({required this.id, required this.message, required this.severity, this.sourceLabel}): assert(id != "", 'ID must not be empty.'),assert(message != "", 'Message must not be empty.');
-  
+
 
 @override final  String id;
 @override final  String message;
@@ -1332,7 +1784,7 @@ return $default(_that.status,_that.nodes,_that.actions,_that.guidance,_that.erro
 
 class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSourceSnapshot {
   const _SearchSourceSnapshot({required this.status, required final  List<SearchNode> nodes, final  Map<Type, SearchAction> actions = const {}, final  List<SearchGuidance> guidance = const <SearchGuidance>[], final  List<SearchErrorSummary> errorSummaries = const <SearchErrorSummary>[]}): _nodes = nodes,_actions = actions,_guidance = guidance,_errorSummaries = errorSummaries;
-  
+
 
 @override final  SearchSourceStatus status;
  final  List<SearchNode> _nodes;
@@ -1602,7 +2054,7 @@ return result(_that.result);case _:
 
 class SearchSectionNode with DiagnosticableTreeMixin implements SearchNode {
   const SearchSectionNode({required this.id, required this.title, this.subtitle, final  List<SearchNode> children = const <SearchNode>[]}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.'),_children = children;
-  
+
 
  final  String id;
  final  String title;
@@ -1686,7 +2138,7 @@ as List<SearchNode>,
 
 class SearchResultNode with DiagnosticableTreeMixin implements SearchNode {
   const SearchResultNode({required this.result});
-  
+
 
  final  SearchResult result;
 
@@ -1755,7 +2207,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -1967,7 +2419,7 @@ return $default(_that.id,_that.rowRendererId,_that.previewRendererId,_that.label
 
 class _SearchResultType with DiagnosticableTreeMixin implements SearchResultType {
   const _SearchResultType({required this.id, required this.rowRendererId, this.previewRendererId, this.label}): assert(id != "", 'ID must not be empty.'),assert(rowRendererId != "", 'Row renderer ID must not be empty.'),assert(previewRendererId == null || previewRendererId != "", 'Preview renderer ID must be null or nonempty.');
-  
+
 
 @override final  String id;
 @override final  String rowRendererId;
@@ -2113,7 +2565,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-  
+
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2256,7 +2708,7 @@ return $default(_that.id,_that.type,_that.payload,_that.actions,_that.title,_tha
 
 class _SearchResult with DiagnosticableTreeMixin implements SearchResult {
   const _SearchResult({required this.id, required this.type, required this.payload, final  List<Type> actions = const [], this.title, this.subtitle, this.isStale = false}): assert(id != "", 'ID must not be empty.'),_actions = actions;
-  
+
 
 @override final  String id;
 @override final  SearchResultType type;
@@ -2342,7 +2794,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-  
+
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2417,7 +2869,7 @@ as SearchActionEffect,
 @override
 @pragma('vm:prefer-inline')
 $SearchActionEffectCopyWith<$Res> get effect {
-  
+
   return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
     return _then(_self.copyWith(effect: value));
   });
@@ -2566,7 +3018,7 @@ return failed(_that.message,_that.effect);case _:
 
 class SearchActionResultCompleted with DiagnosticableTreeMixin implements SearchActionResult {
   const SearchActionResultCompleted({this.effect = const SearchActionEffect.close()});
-  
+
 
 @override@JsonKey() final  SearchActionEffect effect;
 
@@ -2635,7 +3087,7 @@ as SearchActionEffect,
 @override
 @pragma('vm:prefer-inline')
 $SearchActionEffectCopyWith<$Res> get effect {
-  
+
   return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
     return _then(_self.copyWith(effect: value));
   });
@@ -2647,7 +3099,7 @@ $SearchActionEffectCopyWith<$Res> get effect {
 
 class SearchActionResultFailed with DiagnosticableTreeMixin implements SearchActionResult {
   const SearchActionResultFailed({required this.message, this.effect = const SearchActionEffect.refresh()}): assert(message != "", 'Message must not be empty.');
-  
+
 
  final  String message;
 @override@JsonKey() final  SearchActionEffect effect;
@@ -2718,7 +3170,7 @@ as SearchActionEffect,
 @override
 @pragma('vm:prefer-inline')
 $SearchActionEffectCopyWith<$Res> get effect {
-  
+
   return $SearchActionEffectCopyWith<$Res>(_self.effect, (value) {
     return _then(_self.copyWith(effect: value));
   });
@@ -2908,7 +3360,7 @@ return close();case _:
 
 class SearchActionUpdateQuery with DiagnosticableTreeMixin implements SearchActionEffect {
   const SearchActionUpdateQuery({required this.updateQuery});
-  
+
 
  final  String updateQuery;
 
@@ -2980,7 +3432,7 @@ as String,
 
 class SearchActionRefresh with DiagnosticableTreeMixin implements SearchActionEffect {
   const SearchActionRefresh();
-  
+
 
 
 
@@ -3018,7 +3470,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class SearchActionClose with DiagnosticableTreeMixin implements SearchActionEffect {
   const SearchActionClose();
-  
+
 
 
 
@@ -3234,7 +3686,7 @@ return failed(_that.action,_that.resultIds,_that.message);case _:
 
 class SearchActionIdle with DiagnosticableTreeMixin implements SearchActionState {
   const SearchActionIdle();
-  
+
 
 
 
@@ -3272,7 +3724,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 class SearchActionRunning with DiagnosticableTreeMixin implements SearchActionState {
   const SearchActionRunning({required this.action, required final  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
-  
+
 
  final  Type action;
  final  Set<String> _resultIds;
@@ -3352,7 +3804,7 @@ as Set<String>,
 
 class SearchActionCompleted with DiagnosticableTreeMixin implements SearchActionState {
   const SearchActionCompleted({required this.action, required final  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
-  
+
 
  final  Type action;
  final  Set<String> _resultIds;
@@ -3432,7 +3884,7 @@ as Set<String>,
 
 class SearchActionFailed with DiagnosticableTreeMixin implements SearchActionState {
   const SearchActionFailed({required this.action, required final  Set<String> resultIds, required this.message}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),assert(message != "", 'Message must not be empty.'),_resultIds = resultIds;
-  
+
 
  final  Type action;
  final  Set<String> _resultIds;
@@ -3724,7 +4176,7 @@ return $default(_that.resultId,_that.queryContext);case _:
 
 class _SearchPreviewRequest with DiagnosticableTreeMixin implements SearchPreviewRequest {
   const _SearchPreviewRequest({required this.resultId, this.queryContext}): assert(resultId != "", 'Result ID must not be empty.');
-  
+
 
 @override final  String resultId;
 @override final  SearchQueryContext? queryContext;
@@ -3982,7 +4434,7 @@ return error(_that.message);case _:
 
 class SearchPreviewRequestResultData with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultData({required this.data});
-  
+
 
  final  Object data;
 
@@ -4053,7 +4505,7 @@ data: null == data ? _self.data : data ,
 
 class SearchPreviewRequestResultError with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultError({required this.message}): assert(message != "", 'Message must not be empty.');
-  
+
 
  final  String message;
 
