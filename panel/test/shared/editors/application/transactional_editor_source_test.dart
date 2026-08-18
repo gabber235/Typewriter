@@ -9,6 +9,16 @@ void main() {
   final title = DataPath.root.field("title");
   final color = DataPath.root.field("color");
 
+  test("timer scheduler cancellation settles without executing", () async {
+    final task = const TimerEditorDelayScheduler().schedule(
+      const Duration(milliseconds: 250),
+    );
+
+    task.cancel();
+
+    expect(await task.completed, EditorTaskCompletion.cancelled);
+  });
+
   test("draft changes persist only when flushed", () async {
     final commits = <EditorCommit>[];
     final source = _source(
@@ -78,7 +88,10 @@ void main() {
       source.update(title, const StringValue("New"));
       await source.flush();
 
-      expect(scheduler.delays, const [Duration(milliseconds: 60)]);
+      expect(scheduler.delays, const [
+        Duration(milliseconds: 250),
+        Duration(milliseconds: 60),
+      ]);
       expect(sent.last.rootValue, _value(title: "New", color: "Blue"));
       expect(source.document.revision, 3);
       source.dispose();
@@ -251,11 +264,14 @@ void main() {
   );
 
   test("a focused field does not block other fields from saving", () async {
+    final scheduler = _ControlledScheduler();
+    final committed = Completer<void>();
     final commits = <EditorCommit>[];
     final source = _source(
-      debounce: Duration.zero,
+      scheduler: scheduler,
       commit: (commit) async {
         commits.add(commit);
+        if (!committed.isCompleted) committed.complete();
         return TypedMutationResult.success(
           revision: commit.expectedRevision + 1,
           value: commit.rootValue,
@@ -266,7 +282,9 @@ void main() {
     source.beginInteraction(title);
     source.update(title, const StringValue("Typing"));
     source.update(color, const StringValue("Blue"));
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    scheduler.tasks.last.execute();
+    await committed.future;
+    await source.flush(paths: {color});
 
     expect(commits.single.changedPaths, {color});
     expect(source.saveState(title).phase, EditorSavePhase.pending);
@@ -306,11 +324,14 @@ void main() {
   });
 
   test("failed saves wait for an explicit retry", () async {
+    final scheduler = _ControlledScheduler();
+    final firstCommit = Completer<void>();
     var calls = 0;
     final source = _source(
-      debounce: Duration.zero,
+      scheduler: scheduler,
       commit: (commit) async {
         calls++;
+        if (!firstCommit.isCompleted) firstCommit.complete();
         return TypedMutationResult.unavailable([
           const TypeDiagnostic(
             code: TypeDiagnosticCode.invalidValue,
@@ -321,12 +342,123 @@ void main() {
     );
 
     source.update(title, const StringValue("New"));
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    scheduler.tasks.single.execute();
+    await firstCommit.future;
+    await source.flush(paths: {color});
     expect(calls, 1);
     expect(source.saveState(title).phase, EditorSavePhase.failed);
 
     await source.flush(paths: {title});
     expect(calls, 2);
+    source.dispose();
+  });
+
+  test("debounce rescheduling cancels and coalesces pending commits", () async {
+    final scheduler = _ControlledScheduler();
+    final committed = Completer<void>();
+    final commits = <EditorCommit>[];
+    final source = _source(
+      scheduler: scheduler,
+      commit: (commit) async {
+        commits.add(commit);
+        committed.complete();
+        return TypedMutationResult.success(
+          revision: commit.expectedRevision + 1,
+          value: commit.rootValue,
+        );
+      },
+    );
+
+    source.update(title, const StringValue("First"));
+    final firstTask = scheduler.tasks.single;
+    source.update(title, const StringValue("Second"));
+
+    expect(firstTask.cancelled, isTrue);
+    expect(scheduler.delays, const [
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 250),
+    ]);
+
+    scheduler.tasks.last.execute();
+    await committed.future;
+    await source.flush();
+
+    expect(commits, hasLength(1));
+    expect(commits.single.rootValue, _value(title: "Second", color: "Red"));
+    source.dispose();
+  });
+
+  test("deletion cancels debounce and prevents its commit", () async {
+    final scheduler = _ControlledScheduler();
+    var commits = 0;
+    final source = _source(
+      scheduler: scheduler,
+      commit: (_) async {
+        commits++;
+        return TypedMutationResult.success(
+          revision: 2,
+          value: _value(title: "New", color: "Red"),
+        );
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    final task = scheduler.tasks.single;
+    source.acceptRemoteDeletion();
+
+    expect(task.cancelled, isTrue);
+    expect(await task.completed, EditorTaskCompletion.cancelled);
+    expect(commits, 0);
+    source.dispose();
+  });
+
+  test("dispose cancels debounce and prevents its commit", () async {
+    final scheduler = _ControlledScheduler();
+    var commits = 0;
+    final source = _source(
+      scheduler: scheduler,
+      commit: (_) async {
+        commits++;
+        return TypedMutationResult.success(
+          revision: 2,
+          value: _value(title: "New", color: "Red"),
+        );
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    final task = scheduler.tasks.single;
+    source.dispose();
+
+    expect(task.cancelled, isTrue);
+    expect(await task.completed, EditorTaskCompletion.cancelled);
+    expect(commits, 0);
+  });
+
+  test("deletion cancels a retry without another commit", () async {
+    final scheduler = _ControlledScheduler();
+    var calls = 0;
+    final source = _source(
+      scheduler: scheduler,
+      jitter: const _Jitter(Duration.zero),
+      commit: (commit) async {
+        calls++;
+        return TypedMutationResult.conflict(
+          expectedRevision: commit.expectedRevision,
+          actualRevision: 2,
+          actualValue: _value(title: "Old", color: "Blue"),
+        );
+      },
+    );
+
+    source.update(title, const StringValue("New"));
+    final flush = source.flush();
+    final retry = await scheduler.scheduledAt(1);
+    source.acceptRemoteDeletion();
+
+    expect(retry.cancelled, isTrue);
+    expect(await flush, isA<MutationConflict>());
+    expect(calls, 1);
     source.dispose();
   });
 
@@ -393,6 +525,7 @@ void main() {
     await source.flush();
 
     expect(scheduler.delays, const [
+      Duration(milliseconds: 250),
       Duration(milliseconds: 50),
       Duration(milliseconds: 100),
       Duration(milliseconds: 200),
@@ -526,10 +659,10 @@ void main() {
 
 TransactionalEditorSource _source({
   required EditorCommitter commit,
-  EditorDelayScheduler scheduler = const TimerEditorDelayScheduler(),
+  EditorDelayScheduler? scheduler,
   EditorJitterSource? jitter,
   EditorSavePhase successfulSavePhase = EditorSavePhase.saved,
-  Duration debounce = const Duration(days: 1),
+  Duration debounce = const Duration(milliseconds: 250),
   void Function()? onDeleted,
 }) {
   return TransactionalEditorSource(
@@ -546,7 +679,7 @@ TransactionalEditorSource _source({
     ),
     debounce: debounce,
     commit: commit,
-    scheduler: scheduler,
+    scheduler: scheduler ?? _ControlledScheduler(),
     jitter: jitter,
     successfulSavePhase: successfulSavePhase,
     onDeleted: onDeleted,
@@ -560,7 +693,67 @@ final class _Scheduler implements EditorDelayScheduler {
   final delays = <Duration>[];
 
   @override
-  Future<void> wait(Duration delay) async => delays.add(delay);
+  EditorScheduledTask schedule(Duration delay) {
+    delays.add(delay);
+    if (delay == const Duration(milliseconds: 250)) {
+      return _ControlledScheduledTask();
+    }
+    return const _CompletedScheduledTask();
+  }
+}
+
+final class _CompletedScheduledTask implements EditorScheduledTask {
+  const _CompletedScheduledTask();
+
+  @override
+  Future<EditorTaskCompletion> get completed =>
+      Future<EditorTaskCompletion>.value(EditorTaskCompletion.executed);
+
+  @override
+  void cancel() {}
+}
+
+final class _ControlledScheduler implements EditorDelayScheduler {
+  final delays = <Duration>[];
+  final tasks = <_ControlledScheduledTask>[];
+  final _waiters = <int, Completer<_ControlledScheduledTask>>{};
+
+  @override
+  EditorScheduledTask schedule(Duration delay) {
+    delays.add(delay);
+    final task = _ControlledScheduledTask();
+    tasks.add(task);
+    _waiters.remove(tasks.length - 1)?.complete(task);
+    return task;
+  }
+
+  Future<_ControlledScheduledTask> scheduledAt(int index) {
+    if (tasks.length > index) return Future.value(tasks[index]);
+    return _waiters
+        .putIfAbsent(index, Completer<_ControlledScheduledTask>.new)
+        .future;
+  }
+}
+
+final class _ControlledScheduledTask implements EditorScheduledTask {
+  final Completer<EditorTaskCompletion> _completion =
+      Completer<EditorTaskCompletion>();
+  bool cancelled = false;
+
+  @override
+  Future<EditorTaskCompletion> get completed => _completion.future;
+
+  void execute() {
+    if (_completion.isCompleted) return;
+    _completion.complete(EditorTaskCompletion.executed);
+  }
+
+  @override
+  void cancel() {
+    if (_completion.isCompleted) return;
+    cancelled = true;
+    _completion.complete(EditorTaskCompletion.cancelled);
+  }
 }
 
 final class _Jitter implements EditorJitterSource {
