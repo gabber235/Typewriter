@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.contract
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -65,9 +66,9 @@ class ResponsePolicy<Response : Any>(
 
 /** Binary payload encoder and decoder. */
 interface PayloadCodec<Value : Any> {
-    fun encode(value: Value): ByteArray
+    fun encode(value: Value): Payload
 
-    fun decode(payload: ByteArray): Value
+    fun decode(payload: Payload): Value
 }
 
 /** Typed unary request/reply operation contract. */

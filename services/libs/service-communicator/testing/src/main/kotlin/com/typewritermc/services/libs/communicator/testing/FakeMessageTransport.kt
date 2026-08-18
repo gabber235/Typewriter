@@ -213,4 +213,4 @@ class FakeMessageTransport(
     }
 }
 
-private fun OutboundMessage.snapshot() = copy(payload = payload.copyOf())
+private fun OutboundMessage.snapshot() = copy()

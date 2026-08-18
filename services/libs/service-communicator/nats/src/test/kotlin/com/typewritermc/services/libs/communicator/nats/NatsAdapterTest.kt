@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
@@ -212,12 +213,20 @@ val NatsAdapterTest by testSuite {
             )
         transport.publish(outbound) shouldBe TransportResult.Success(Unit)
         val result = transport.request(outbound.copy(replyTo = null), 1250.milliseconds) as TransportResult.Success
-        result.value.payload shouldBe byteArrayOf()
+        result.value.payload shouldBe Payload.Empty
         result.value.headers["x"] shouldBe listOf("a", "b")
         result.value.replyTo shouldBe MessageAddress.of("return")
         client.requestTimeouts shouldContainExactly listOf(1250L)
         client.publishCalls shouldBe 1
         client.requestCalls shouldBe 1
+        client.publishedMessages
+            .single()
+            .payload
+            ?.toByteArray() shouldBe byteArrayOf(1)
+        client.requestedMessages
+            .single()
+            .payload
+            ?.toByteArray() shouldBe byteArrayOf(1)
     }
 
     test("request maps statuses and generic failures") {
@@ -248,7 +257,7 @@ val NatsAdapterTest by testSuite {
                 flowOf(
                     NatsClientMessage(
                         "jobs.one",
-                        byteArrayOf(2),
+                        Payload.copyOf(byteArrayOf(2)),
                         mapOf("X" to listOf("v")),
                         null,
                         null,
@@ -332,7 +341,7 @@ private class FakeFactory(
 
 private class FakeClient(
     private val connectResult: Result<Unit> = Result.success(Unit),
-    private val requestResponse: NatsClientMessage = NatsClientMessage("reply", byteArrayOf(), null, null, null, null),
+    private val requestResponse: NatsClientMessage = NatsClientMessage("reply", Payload.Empty, null, null, null, null),
     private val requestFailure: Throwable? = null,
     private val subscription: FakeSubscription = FakeSubscription(flowOf()),
     private val flushFailure: Throwable? = null,
@@ -344,6 +353,8 @@ private class FakeClient(
     val requestTimeouts = mutableListOf<Long>()
     var publishCalls = 0
     var requestCalls = 0
+    val publishedMessages = mutableListOf<NatsClientMessage>()
+    val requestedMessages = mutableListOf<NatsClientMessage>()
     var onConnect: suspend () -> Unit = {}
 
     override suspend fun connect(): Result<Unit> {
@@ -369,6 +380,7 @@ private class FakeClient(
 
     override suspend fun publish(message: NatsClientMessage) {
         publishCalls++
+        publishedMessages += message
     }
 
     override suspend fun request(
@@ -376,6 +388,7 @@ private class FakeClient(
         timeoutMs: Long,
     ): NatsClientMessage {
         requestCalls++
+        requestedMessages += message
         requestTimeouts += timeoutMs
         requestFailure?.let { throw it }
         return requestResponse

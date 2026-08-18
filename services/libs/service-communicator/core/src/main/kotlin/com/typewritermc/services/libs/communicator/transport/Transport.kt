@@ -81,44 +81,59 @@ class MessageHeaders private constructor(
     )
 }
 
-/** Outbound envelope. The payload and headers are owned by the caller and compared by content. */
-data class OutboundMessage(
-    val address: MessageAddress,
-    val payload: ByteArray,
-    val replyTo: MessageAddress? = null,
-    val headers: MessageHeaders = MessageHeaders.Empty,
+/** Immutable binary content with defensive input and output copies. */
+class Payload private constructor(
+    source: ByteArray,
 ) {
-    override fun equals(other: Any?): Boolean =
-        other is OutboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo &&
-            headers == other.headers
+    private val content = source.copyOf()
 
-    override fun hashCode(): Int {
-        var result = address.hashCode()
-        result = 31 * result + payload.contentHashCode()
-        result = 31 * result + (replyTo?.hashCode() ?: 0)
-        result = 31 * result + headers.hashCode()
-        return result
+    val size: Int get() = content.size
+
+    fun isEmpty(): Boolean = content.isEmpty()
+
+    fun toByteArray(): ByteArray = content.copyOf()
+
+    override fun equals(other: Any?): Boolean = other is Payload && content.contentEquals(other.content)
+
+    override fun hashCode(): Int = content.contentHashCode()
+
+    override fun toString(): String = "Payload(size=$size)"
+
+    companion object {
+        val Empty = Payload(byteArrayOf())
+
+        fun copyOf(source: ByteArray): Payload = Payload(source)
     }
 }
 
-/** Inbound envelope. The payload and headers are owned by the transport and compared by content. */
-data class InboundMessage(
+/** Outbound envelope with immutable payload and headers. */
+data class OutboundMessage(
     val address: MessageAddress,
-    val payload: ByteArray,
+    val payload: Payload,
     val replyTo: MessageAddress? = null,
     val headers: MessageHeaders = MessageHeaders.Empty,
 ) {
-    override fun equals(other: Any?): Boolean =
-        other is InboundMessage && address == other.address && payload.contentEquals(other.payload) && replyTo == other.replyTo &&
-            headers == other.headers
+    constructor(
+        address: MessageAddress,
+        payload: ByteArray,
+        replyTo: MessageAddress? = null,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ) : this(address, Payload.copyOf(payload), replyTo, headers)
+}
 
-    override fun hashCode(): Int {
-        var result = address.hashCode()
-        result = 31 * result + payload.contentHashCode()
-        result = 31 * result + (replyTo?.hashCode() ?: 0)
-        result = 31 * result + headers.hashCode()
-        return result
-    }
+/** Inbound envelope with immutable payload and headers. */
+data class InboundMessage(
+    val address: MessageAddress,
+    val payload: Payload,
+    val replyTo: MessageAddress? = null,
+    val headers: MessageHeaders = MessageHeaders.Empty,
+) {
+    constructor(
+        address: MessageAddress,
+        payload: ByteArray,
+        replyTo: MessageAddress? = null,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ) : this(address, Payload.copyOf(payload), replyTo, headers)
 }
 
 /** Stable identifier for a messaging transport. */
