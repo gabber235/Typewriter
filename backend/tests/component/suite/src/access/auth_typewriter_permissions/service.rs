@@ -80,6 +80,9 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
     }
 
     let subscribe = &response.permissions.subscribe.allow;
+    assert!(
+        subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into())
+    );
     for suffix in ["configuration", "command"] {
         assert!(subscribe.contains(&format!(
             "cloud.from.service.engine_one.organization.writers.{suffix}"
