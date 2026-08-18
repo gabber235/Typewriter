@@ -451,10 +451,7 @@ switch (_that) {
 case EngineServiceRole():
 return engine(_that);case RealmServiceRole():
 return realm(_that);case CustomServiceRole():
-return custom(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return custom(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -519,10 +516,7 @@ switch (_that) {
 case EngineServiceRole():
 return engine(_that.version);case RealmServiceRole():
 return realm(_that.version);case CustomServiceRole():
-return custom(_that.version,_that.name);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return custom(_that.version,_that.name);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

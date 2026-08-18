@@ -79,7 +79,7 @@ abstract class Service with _$Service {
 }
 
 @freezed
-abstract class ServiceRole with _$ServiceRole {
+sealed class ServiceRole with _$ServiceRole {
   @Assert("version.isNotEmpty", "Version must not be empty.")
   factory ServiceRole.engine({required String version}) = EngineServiceRole;
   @Assert("version.isNotEmpty", "Version must not be empty.")
@@ -117,7 +117,6 @@ abstract class ServiceRole with _$ServiceRole {
       ),
       CustomServiceRole(version: final version, name: final name) =>
         skir.ServiceRole.createCustom(version: version, name: name),
-      ServiceRole() => throw UnimplementedError(),
     };
   }
 
@@ -125,14 +124,12 @@ abstract class ServiceRole with _$ServiceRole {
     EngineServiceRole() => engineServiceRoleColor,
     RealmServiceRole() => realmServiceRoleColor,
     CustomServiceRole() => customServiceRoleColor,
-    ServiceRole() => throw UnimplementedError(),
   };
 
   String get label => switch (this) {
     EngineServiceRole() => "Engine",
     RealmServiceRole() => "Realm",
     CustomServiceRole(:final name) => name,
-    ServiceRole() => throw UnimplementedError(),
   };
 }
 

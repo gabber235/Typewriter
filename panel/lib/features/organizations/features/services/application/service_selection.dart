@@ -299,7 +299,6 @@ extension on ServiceRole {
         "version": StringValue(version),
       }),
     ),
-    ServiceRole() => throw StateException("Unsupported role type: $this"),
   };
 }
 
