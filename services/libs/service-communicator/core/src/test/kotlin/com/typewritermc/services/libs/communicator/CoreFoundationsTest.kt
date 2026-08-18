@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
@@ -30,12 +31,34 @@ private val template =
 
 private val codec =
     object : PayloadCodec<String> {
-        override fun encode(value: String): ByteArray = value.encodeToByteArray()
+        override fun encode(value: String): Payload = Payload.copyOf(value.encodeToByteArray())
 
-        override fun decode(payload: ByteArray): String = payload.decodeToString()
+        override fun decode(payload: Payload): String = payload.toByteArray().decodeToString()
     }
 
 val CoreFoundationsTest by testSuite {
+    test("payload copies source and returned bytes") {
+        val source = byteArrayOf(1, 2, 3)
+        val payload = Payload.copyOf(source)
+        val initialHash = payload.hashCode()
+        val returned = payload.toByteArray()
+
+        source[0] = 9
+        returned[1] = 8
+
+        payload.toByteArray() shouldBe byteArrayOf(1, 2, 3)
+        payload.hashCode() shouldBe initialHash
+    }
+
+    test("payload equality and hashing use content") {
+        val first = Payload.copyOf(byteArrayOf(1, 2, 3))
+        val second = Payload.copyOf(byteArrayOf(1, 2, 3))
+
+        first shouldBe second
+        first.hashCode() shouldBe second.hashCode()
+        mapOf(first to "value")[second] shouldBe "value"
+    }
+
     test("addresses render and structurally match") {
         val value = ExampleAddress("engine", "org-1")
         template.render(value).value shouldBe "realm.engine.organization.org-1"

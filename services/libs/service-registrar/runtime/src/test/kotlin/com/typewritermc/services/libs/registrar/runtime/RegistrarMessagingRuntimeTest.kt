@@ -300,7 +300,7 @@ val RegistrarMessagingRuntimeTest by testSuite {
                     .single()
             published.message.address.value shouldBe "cloud.to.service.service-id.heartbeat"
             ServiceHeartbeatNotification.serializer
-                .fromBytes(published.message.payload)
+                .fromBytes(published.message.payload.toByteArray())
                 .shouldBe(ServiceHeartbeatNotification())
         } finally {
             fixture.close()
@@ -317,7 +317,7 @@ val RegistrarMessagingRuntimeTest by testSuite {
                     .single()
             published.message.address.value shouldBe "cloud.to.service.service-id.shutdown"
             ServiceShutdownNotification.serializer
-                .fromBytes(published.message.payload)
+                .fromBytes(published.message.payload.toByteArray())
                 .shouldBe(ServiceShutdownNotification())
             fixture.transport.failNextPublish(TransportError.Unavailable())
             val failed = fixture.runtime.sendShutdown() as RuntimeResult.Failure

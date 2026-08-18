@@ -49,7 +49,12 @@ val FakeMessageTransportTest by testSuite {
             val received = async { subscription.deliveries.first() }
             fake.deliver(TransportDelivery.Message(InboundMessage(MessageAddress.of("other.one"), byteArrayOf())))
             fake.deliver(TransportDelivery.Message(InboundMessage(MessageAddress.of("book.one"), byteArrayOf(7))))
-            ((received.await() as TransportDelivery.Message).message.payload.single()) shouldBe 7
+            (
+                (received.await() as TransportDelivery.Message)
+                    .message.payload
+                    .toByteArray()
+                    .single()
+            ) shouldBe 7
         }
     }
 
@@ -76,7 +81,12 @@ val FakeMessageTransportTest by testSuite {
             val payload = byteArrayOf(1, 2)
             fake.publish(OutboundMessage(MessageAddress.of("book.one"), payload))
             payload[0] = 9
-            ((fake.actions.single() as FakeMessageTransport.Action.Publish).message.payload.toList()) shouldBe
+            (
+                (fake.actions.single() as FakeMessageTransport.Action.Publish)
+                    .message.payload
+                    .toByteArray()
+                    .toList()
+            ) shouldBe
                 listOf<Byte>(
                     1,
                     2,

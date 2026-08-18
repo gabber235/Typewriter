@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
@@ -133,7 +134,7 @@ private fun OutboundMessage.toNatsMessage() =
 private fun NatsClientMessage.toInboundMessage() =
     InboundMessage(
         address = MessageAddress.of(subject),
-        payload = payload ?: byteArrayOf(),
+        payload = payload ?: Payload.Empty,
         replyTo = replyTo?.let(MessageAddress::of),
         headers =
             headers.orEmpty().entries.fold(MessageHeaders.Empty) { result, (name, values) ->

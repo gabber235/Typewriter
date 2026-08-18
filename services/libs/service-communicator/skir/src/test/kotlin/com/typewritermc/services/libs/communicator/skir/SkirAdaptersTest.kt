@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.communicator.contract.ResponseClassificati
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -69,7 +70,7 @@ val SkirAdaptersTest by testSuite {
 
     test("payload codec rejects malformed binary input") {
         shouldThrow<IllegalArgumentException> {
-            Color.serializer.asPayloadCodec().decode(byteArrayOf(1, 2, 3))
+            Color.serializer.asPayloadCodec().decode(Payload.copyOf(byteArrayOf(1, 2, 3)))
         }
     }
 

@@ -24,6 +24,7 @@ import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -49,9 +50,9 @@ private val routerAddress =
     addressTemplate("router.{id}.get", { addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) })
 private val routerCodec =
     object : PayloadCodec<String> {
-        override fun encode(value: String) = value.encodeToByteArray()
+        override fun encode(value: String) = Payload.copyOf(value.encodeToByteArray())
 
-        override fun decode(payload: ByteArray) = payload.decodeToString()
+        override fun decode(payload: Payload) = payload.toByteArray().decodeToString()
     }
 private val routerPolicy =
     ResponsePolicy("internal") {

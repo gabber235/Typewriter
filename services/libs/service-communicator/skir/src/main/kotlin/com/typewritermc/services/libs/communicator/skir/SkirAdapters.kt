@@ -10,6 +10,7 @@ import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -19,9 +20,9 @@ fun <Value : Any> Serializer<Value>.asPayloadCodec(
     unrecognizedValues: UnrecognizedValuesPolicy = UnrecognizedValuesPolicy.DROP,
 ): PayloadCodec<Value> =
     object : PayloadCodec<Value> {
-        override fun encode(value: Value): ByteArray = toBytes(value).toByteArray()
+        override fun encode(value: Value): Payload = Payload.copyOf(toBytes(value).toByteArray())
 
-        override fun decode(payload: ByteArray): Value = fromBytes(payload, unrecognizedValues)
+        override fun decode(payload: Payload): Value = fromBytes(payload.toByteArray(), unrecognizedValues)
     }
 
 /** Creates a validated unary contract while keeping address and failure semantics explicit. */

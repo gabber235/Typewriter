@@ -25,6 +25,7 @@ import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
@@ -70,9 +71,9 @@ private val updateAddress =
     addressTemplate("service.{id}.updates", { addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
 private val strings =
     object : PayloadCodec<String> {
-        override fun encode(value: String) = value.encodeToByteArray()
+        override fun encode(value: String) = Payload.copyOf(value.encodeToByteArray())
 
-        override fun decode(payload: ByteArray) = payload.decodeToString().also { if (it == "bad") error("decode") }
+        override fun decode(payload: Payload) = payload.toByteArray().decodeToString().also { if (it == "bad") error("decode") }
     }
 private val successPolicy =
     ResponsePolicy(
@@ -643,7 +644,7 @@ private fun throwingWatchFixture(
 
 private fun throwingCodec(encode: Boolean) =
     object : PayloadCodec<String> {
-        override fun encode(value: String): ByteArray = if (encode) error("encode") else value.encodeToByteArray()
+        override fun encode(value: String): Payload = if (encode) error("encode") else Payload.copyOf(value.encodeToByteArray())
 
-        override fun decode(payload: ByteArray): String = if (!encode) error("decode") else payload.decodeToString()
+        override fun decode(payload: Payload): String = if (!encode) error("decode") else payload.toByteArray().decodeToString()
     }

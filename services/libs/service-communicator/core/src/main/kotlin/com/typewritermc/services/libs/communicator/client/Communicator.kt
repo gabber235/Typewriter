@@ -19,6 +19,7 @@ import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.communicator.transport.TransportResult
@@ -465,7 +466,7 @@ class Communicator(
 
     private fun outbound(
         address: com.typewritermc.services.libs.communicator.address.MessageAddress,
-        payload: ByteArray,
+        payload: Payload,
         headers: MessageHeaders,
         replyTo: com.typewritermc.services.libs.communicator.address.MessageAddress? = null,
     ): OutboundMessage {
