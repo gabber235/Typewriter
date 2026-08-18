@@ -294,6 +294,9 @@ fn add_organization_realm_permissions(
     allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
 
     for suffix in [
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "book.create",
@@ -315,6 +318,8 @@ fn add_organization_realm_permissions(
         allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
     }
     for suffix in [
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "page.watch",

@@ -68,6 +68,8 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
         )));
     }
     for suffix in [
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "page.watch",
@@ -89,6 +91,9 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
         )));
     }
     for suffix in [
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "book.create",
