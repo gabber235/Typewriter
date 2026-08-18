@@ -162,8 +162,8 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
   Widget _buildMonths() => DateTimeCalendarSelectionGrid(
     label: "Choose month",
     items: [
-      for (var index = 0; index < DateTimeCalendarHeader.months.length; index++)
-        (value: index + 1, label: DateTimeCalendarHeader.months[index]),
+      for (var index = 0; index < calendarMonthNames.length; index++)
+        (value: index + 1, label: calendarMonthNames[index]),
     ],
     selectedValue: _visibleMonth.month,
     columns: 3,

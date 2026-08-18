@@ -15,21 +15,6 @@ class DateTimeCalendarHeader extends StatelessWidget {
     super.key,
   });
 
-  static const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
   final DateTime visibleMonth;
   final DateTimeCalendarView view;
   final VoidCallback onPrevious;
@@ -68,7 +53,7 @@ class DateTimeCalendarHeader extends StatelessWidget {
               Flexible(
                 child: _PickerButton(
                   key: const ValueKey("date_time_month_picker"),
-                  label: months[visibleMonth.month - 1],
+                  label: calendarMonthNames[visibleMonth.month - 1],
                   selected: view == DateTimeCalendarView.months,
                   onPressed: onMonthPickerRequested,
                 ),
