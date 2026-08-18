@@ -131,6 +131,10 @@ val CoreFoundationsTest by testSuite {
         MessageHeaders.of("X-Test" to "tab\tallowed")["x-test"] shouldBe listOf("tab\tallowed")
     }
 
+    test("header diagnostics expose only the header count") {
+        MessageHeaders.of("Authorization" to "secret", "X-Test" to "value").toString() shouldBe "MessageHeaders(size=2)"
+    }
+
     test("inbound and outbound envelopes use content equality and complete hashes") {
         val headers = MessageHeaders.of("X-Test" to "one")
         val address = MessageAddress.of("book.get")

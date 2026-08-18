@@ -25,7 +25,7 @@ val HttpTypesTest by testSuite {
         val headers = HttpHeaders.of("X-First" to "one", "X-Second" to "two")
         val iterator = headers.iterator() as MutableIterator<Pair<String, String>>
         iterator.next()
-        iterator.remove()
+        shouldThrow<UnsupportedOperationException> { iterator.remove() }
         headers.toList().shouldContainExactly("X-First" to "one", "X-Second" to "two")
     }
     test("requests reject restricted headers case insensitively") {

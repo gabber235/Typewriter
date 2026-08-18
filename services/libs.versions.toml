@@ -51,7 +51,7 @@ koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin-bom" }
 
 test-balloon = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "test-balloon" }
 test-balloon-gradle-plugin = { module = "de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref = "test-balloon" }
-test-balllon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
+test-balloon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "test-balloon"}
 test-balloon-data-test = { module = "at.asitplus.testballoon:datatest", version.ref = "test-balloon-addons"}
 test-balloon-property-test = { module = "at.asitplus.testballoon:property", version.ref = "test-balloon-addons"}
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
@@ -92,4 +92,4 @@ test-balloon-plugin = { id = "de.infix.testBalloon", version.ref = "test-balloon
 
 
 [bundles]
-basic-test = ["test-balloon", "test-balllon-kotest-assertions", "kotest-assertions"]
+basic-test = ["test-balloon", "test-balloon-kotest-assertions", "kotest-assertions"]

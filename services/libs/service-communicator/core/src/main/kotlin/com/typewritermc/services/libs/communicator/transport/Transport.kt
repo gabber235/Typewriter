@@ -63,11 +63,7 @@ class MessageHeaders private constructor(
 
     override fun hashCode(): Int = canonicalValues().hashCode()
 
-    override fun toString(): String =
-        entries.values.joinToString(
-            prefix = "MessageHeaders(",
-            postfix = ")",
-        ) { "${it.displayName}=${it.values}" }
+    override fun toString(): String = "MessageHeaders(size=${entries.size})"
 
     private fun canonicalValues(): Map<String, List<String>> = entries.mapValues { it.value.values }
 
