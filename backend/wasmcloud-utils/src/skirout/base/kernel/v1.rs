@@ -14,5 +14,5 @@
 //   cargo add skir-client
 pub mod errors;
 pub mod record_id;
-pub mod duration;
 pub mod color;
+pub mod duration;
