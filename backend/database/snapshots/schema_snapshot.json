@@ -7,7 +7,7 @@
     },
     {
       "path": "database/schema/kernel/id.surql",
-      "hash": "0d7e4c45257c221ee9e84117335177f3a19b7fdbbe1c05e79702db9968cd4405"
+      "hash": "2cf9e8be4f3022be693f20a513b1bcf3ed37f0ba4210d2ac38c1b097ada82245"
     },
     {
       "path": "database/schema/kernel/url.surql",
@@ -19,7 +19,7 @@
     },
     {
       "path": "database/schema/organization/member_of.surql",
-      "hash": "39f9a0b29293698286b7d58b6132813c88a84de28ca49a3cbd89d758f4b7f3ee"
+      "hash": "da60062d13763458ae46d4abaa6d6fda826fb08b9da6ae0cc75afb9f2cc4b49c"
     },
     {
       "path": "database/schema/organization/organization.surql",
@@ -27,7 +27,7 @@
     },
     {
       "path": "database/schema/organization/organization_join_code.surql",
-      "hash": "044b5fe53d7d054b5db1bd9d92b2251c3274451e6d70ec3ea70632512ea20ad4"
+      "hash": "340162e498f403eeca3527c3a2239eacc028ddd373ce5bd6592b7598dbbda574"
     },
     {
       "path": "database/schema/organization/organization_role.surql",
@@ -39,15 +39,15 @@
     },
     {
       "path": "database/schema/service/functions.surql",
-      "hash": "6e79010fc9e6d4846744da623efc9c1af761bede447d0760af2b659c4e10c1a0"
+      "hash": "0df9e5466c3431e721083f3fb07708d7538139e4597b8241f493699162002705"
     },
     {
       "path": "database/schema/service/service.surql",
-      "hash": "91af834daa49c529d332d8aace98871d09bf8a69dacbb7f9df24bd4e70778771"
+      "hash": "32f79b6d1f30dfe32d38ab8fd004ce80de7fc31227dc8e8925365ac0e9baea72"
     },
     {
       "path": "database/schema/user.surql",
-      "hash": "d7e9699f51d435ef5eb0ad6029ef9cb35f56f0085f72475a04120825cf190844"
+      "hash": "e0067381972ab70db40326a86c610812b183e21720b45b2cb03f4e86915c9c17"
     }
   ]
 }
