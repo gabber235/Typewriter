@@ -2,6 +2,10 @@
   "name": "typewriter-build-tools",
   "private": true,
   "type": "module",
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "conventional-changelog-conventionalcommits": "^9.1.0"
+  },
   "dependencies": {
     "skir": "1.2.20",
     "skir-dart-gen": "github:gabber235/skir-dart-gen#78c2d2d",
