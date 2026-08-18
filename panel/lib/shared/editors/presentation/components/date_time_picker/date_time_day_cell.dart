@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class DateTimeDayCell extends StatelessWidget {
   const DateTimeDayCell({
@@ -67,31 +68,5 @@ bool sameCalendarDate(DateTime left, DateTime right) =>
     left.day == right.day;
 
 String semanticCalendarDate(DateTime value) =>
-    "${_DateNames.weekdays[value.weekday - 1]}, "
-    "${_DateNames.months[value.month - 1]} ${value.day}, ${value.year}";
-
-abstract final class _DateNames {
-  static const weekdays = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-  static const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-}
+    "${calendarWeekdayNames[value.weekday - 1]}, "
+    "${calendarMonthNames[value.month - 1]} ${value.day}, ${value.year}";
