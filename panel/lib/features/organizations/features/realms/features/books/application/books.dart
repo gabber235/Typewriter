@@ -125,11 +125,9 @@ class Books extends _$Books {
       );
       switch (response) {
         case skir.UpdateBookResponse_unknown():
-          return _bookUpdateUnavailable(
-            "The server returned an unknown response",
-          );
+          return unavailableMutation("The server returned an unknown response");
         case skir.UpdateBookResponse_internalErrorWrapper():
-          return _bookUpdateUnavailable("The server could not update the book");
+          return unavailableMutation("The server could not update the book");
         case skir.UpdateBookResponse_conflictErrorWrapper(:final value):
           final actual = Book.fromSkir(value.actual);
           final upsert = _upsertCanonicalBook(state.requireValue, actual);
@@ -140,18 +138,16 @@ class Books extends _$Books {
             actualValue: upsert.canonical.inspectorValue,
           );
         case skir.UpdateBookResponse_bookNotFoundErrorWrapper():
-          return _bookUpdateUnavailable(
+          return unavailableMutation(
             "The book no longer exists",
             targetDeleted: true,
           );
         case skir.UpdateBookResponse_tagsNotFoundErrorWrapper():
-          return _bookUpdateInvalid(
-            "One or more selected tags no longer exist",
-          );
+          return invalidMutation("One or more selected tags no longer exist");
         case skir.UpdateBookResponse_validationErrorWrapper():
-          return _bookUpdateInvalid("The book contains invalid values");
+          return invalidMutation("The book contains invalid values");
         case skir.UpdateBookResponse_invalidRecordIdErrorWrapper():
-          return _bookUpdateInvalid("The book contains an invalid reference");
+          return invalidMutation("The book contains an invalid reference");
         case skir.UpdateBookResponse_successWrapper(:final value):
           final updatedBook = Book.fromSkir(value);
           final upsert = _upsertCanonicalBook(state.requireValue, updatedBook);
@@ -162,7 +158,7 @@ class Books extends _$Books {
           );
       }
     } on Object catch (_) {
-      return _bookUpdateUnavailable("The book update could not be completed");
+      return unavailableMutation("The book update could not be completed");
     }
   }
 
@@ -269,21 +265,3 @@ class Books extends _$Books {
     }
   }
 }
-
-TypedMutationResult _bookUpdateInvalid(String message) =>
-    TypedMutationResult.invalid([
-      TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
-    ]);
-
-TypedMutationResult _bookUpdateUnavailable(
-  String message, {
-  bool targetDeleted = false,
-}) => TypedMutationResult.unavailable([
-  TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidValue,
-    message: message,
-    details: targetDeleted
-        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
-        : const [],
-  ),
-]);

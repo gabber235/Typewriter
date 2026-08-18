@@ -37,27 +37,11 @@ abstract class Book with _$Book {
 ({List<Book> values, Book canonical}) _upsertCanonicalBook(
   List<Book>? values,
   Book incoming,
-) {
-  final current = values ?? const <Book>[];
-  final existing = current.firstWhereOrNull(
-    (book) => book.bookId == incoming.bookId,
-  );
-  if (existing != null && existing.revision >= incoming.revision) {
-    if (existing.revision == incoming.revision && existing != incoming) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: StateError(
-            "Book ${incoming.bookId.id} has different values at revision ${incoming.revision}",
-          ),
-          library: "typewriter_panel",
-          context: ErrorDescription("while reconciling a canonical Book"),
-        ),
-      );
-    }
-    return (values: current, canonical: existing);
-  }
-  return (
-    values: current.upsertByKey((book) => book.bookId, incoming),
-    canonical: incoming,
-  );
-}
+) => reconcileCanonicalRevision(
+  values: values,
+  incoming: incoming,
+  keyOf: (book) => book.bookId,
+  revisionOf: (book) => book.revision,
+  identityOf: (book) => "Book ${book.bookId.id}",
+  entityName: "Book",
+);

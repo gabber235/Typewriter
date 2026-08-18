@@ -22,3 +22,16 @@ extension BindingReferenceMutation on BindingReference {
 MutationInvalid invalidMutation(String message) => MutationInvalid([
   TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
 ]);
+
+MutationUnavailable unavailableMutation(
+  String message, {
+  bool targetDeleted = false,
+}) => MutationUnavailable([
+  TypeDiagnostic(
+    code: TypeDiagnosticCode.invalidValue,
+    message: message,
+    details: targetDeleted
+        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
+        : const [],
+  ),
+]);
