@@ -181,9 +181,7 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
           ),
           for (final action
               in callableShortcuts.whereType<IntentActionShortcut>())
-            action.intent: CallbackAction(
-              onInvoke: (intent) => action.onInvoke!.call(ref),
-            ),
+            action.intent: action.createCallbackAction(ref),
         },
         child: child,
       ),
@@ -194,6 +192,36 @@ class RegisteredActionShortcuts extends HookConsumerWidget {
 class _ActionIntent extends Intent {
   const _ActionIntent(this.action);
   final ActionShortcut action;
+}
+
+typedef _IntentActionFactory =
+    Action<Intent> Function(ActionInvoke onInvoke, WidgetRef ref);
+
+final _intentActionFactories = <Type, _IntentActionFactory>{
+  ActivateIntent: (onInvoke, ref) =>
+      CallbackAction<ActivateIntent>(onInvoke: (_) => onInvoke(ref)),
+  ActivateAllIntent: (onInvoke, ref) =>
+      CallbackAction<ActivateAllIntent>(onInvoke: (_) => onInvoke(ref)),
+  CancelIntent: (onInvoke, ref) =>
+      CallbackAction<CancelIntent>(onInvoke: (_) => onInvoke(ref)),
+  DeleteIntent: (onInvoke, ref) =>
+      CallbackAction<DeleteIntent>(onInvoke: (_) => onInvoke(ref)),
+  DismissIntent: (onInvoke, ref) =>
+      CallbackAction<DismissIntent>(onInvoke: (_) => onInvoke(ref)),
+  FirstItemIntent: (onInvoke, ref) =>
+      CallbackAction<FirstItemIntent>(onInvoke: (_) => onInvoke(ref)),
+  LastItemIntent: (onInvoke, ref) =>
+      CallbackAction<LastItemIntent>(onInvoke: (_) => onInvoke(ref)),
+};
+
+extension on IntentActionShortcut {
+  Action<Intent> createCallbackAction(WidgetRef ref) {
+    final factory = _intentActionFactories[intent];
+    if (factory == null) {
+      throw UnsupportedError("No callback action factory for $intent.");
+    }
+    return factory(onInvoke!, ref);
+  }
 }
 
 class ActionSet extends HookConsumerWidget {
