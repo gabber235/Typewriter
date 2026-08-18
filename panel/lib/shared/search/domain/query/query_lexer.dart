@@ -1,6 +1,9 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:petitparser/debug.dart";
 import "package:petitparser/petitparser.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "query_lexer.freezed.dart";
 
 final _andOperatorParser = [
   string("AND", ignoreCase: true),
@@ -177,96 +180,47 @@ class QueryLexerResult {
   final QueryLexerToken? expression;
 }
 
-sealed class QueryLexerToken {
-  const QueryLexerToken({
-    required this.raw,
-    required this.range,
-    this.issues = const <QueryParseIssue>[],
-  });
-  final String raw;
-  final QueryRange range;
-  final List<QueryParseIssue> issues;
+abstract interface class QueryLexerSelectorToken {
+  String get selectorId;
+  String get raw;
+  QueryRange get range;
+  List<QueryParseIssue> get issues;
 }
 
-class QueryLexerSelectorToken extends QueryLexerToken {
-  const QueryLexerSelectorToken({
-    required this.selectorId,
-    required super.raw,
-    required super.range,
-    super.issues,
-  });
+@freezed
+sealed class QueryLexerToken with _$QueryLexerToken {
+  @Implements<QueryLexerSelectorToken>()
+  @Assert(
+    "value != null || issues.length > 0",
+    "When no value is provided, an issue must be present",
+  )
+  const factory QueryLexerToken.keyValueSelector({
+    required String selectorId,
+    required QueryRange keyRange,
+    required String raw,
+    required QueryRange range,
+    String? value,
+    QueryRange? valueRange,
+    @Default(<QueryParseIssue>[]) List<QueryParseIssue> issues,
+  }) = QueryLexerKeyValueSelectorToken;
 
-  final String selectorId;
+  const factory QueryLexerToken.operator({
+    required QueryLexerOperatorType type,
+    required String raw,
+    required QueryRange range,
+    required QueryLexerToken left,
+    required QueryLexerToken right,
+    required QueryRange? operatorRange,
+    @Default(<QueryParseIssue>[]) List<QueryParseIssue> issues,
+  }) = QueryLexerOperatorToken;
 
-  @override
-  String toString() {
-    return "QueryLexerSelectorToken(selectorId: '$selectorId', raw: '$raw', range: ${this.range}, issues: $issues)";
-  }
-}
-
-class QueryLexerKeyValueSelectorToken extends QueryLexerSelectorToken {
-  const QueryLexerKeyValueSelectorToken({
-    required super.selectorId,
-    required this.keyRange,
-    required super.raw,
-    required super.range,
-    this.value,
-    this.valueRange,
-    super.issues,
-  }) : assert(
-         value != null || issues.length > 0,
-         "When no value is provided, an issue must be present",
-       );
-
-  final QueryRange keyRange;
-  final String? value;
-  final QueryRange? valueRange;
-
-  @override
-  String toString() {
-    return "QueryLexerKeyValueSelectorToken(selectorId: '$selectorId', keyRange: $keyRange, value: '$value', valueRange: $valueRange, raw: '$raw', range: ${this.range}, issues: $issues)";
-  }
-}
-
-class QueryLexerOperatorToken extends QueryLexerToken {
-  const QueryLexerOperatorToken({
-    required this.type,
-    required super.raw,
-    required super.range,
-    required this.left,
-    required this.right,
-    required this.operatorRange,
-    super.issues,
-  });
-
-  final QueryLexerOperatorType type;
-  final QueryLexerToken left;
-  final QueryLexerToken right;
-
-  final QueryRange? operatorRange;
-
-  @override
-  String toString() {
-    return "QueryLexerOperatorToken(type: $type, left: $left, right: $right, operatorRange: $operatorRange, raw: '$raw', range: ${this.range}, issues: $issues)";
-  }
-}
-
-class QueryLexerNegationToken extends QueryLexerToken {
-  const QueryLexerNegationToken({
-    required this.token,
-    required super.raw,
-    required super.range,
-    required this.operatorRange,
-    super.issues,
-  });
-
-  final QueryLexerToken token;
-  final QueryRange operatorRange;
-
-  @override
-  String toString() {
-    return "QueryLexerNegationToken(token: $token, operatorRange: $operatorRange, raw: '$raw', range: ${this.range}, issues: $issues)";
-  }
+  const factory QueryLexerToken.negation({
+    required QueryLexerToken token,
+    required String raw,
+    required QueryRange range,
+    required QueryRange operatorRange,
+    @Default(<QueryParseIssue>[]) List<QueryParseIssue> issues,
+  }) = QueryLexerNegationToken;
 }
 
 enum QueryLexerOperatorType { and, or }
@@ -280,7 +234,7 @@ extension QueryLexerTokenX on QueryLexerToken {
 
   void _flatten(QueryLexerToken token, List<QueryLexerToken> result) {
     switch (token) {
-      case QueryLexerSelectorToken():
+      case QueryLexerKeyValueSelectorToken():
         result.add(token);
       case QueryLexerOperatorToken():
         _flatten(token.left, result);

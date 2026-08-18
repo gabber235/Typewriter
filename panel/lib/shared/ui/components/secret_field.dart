@@ -9,49 +9,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-sealed class SecretFieldState {
-  const SecretFieldState();
-}
-
-class SecretFieldIdle extends SecretFieldState {
-  const SecretFieldIdle();
-}
-
-class SecretFieldLoading extends SecretFieldState {
-  const SecretFieldLoading();
-}
-
-class SecretFieldRevealed extends SecretFieldState {
-  const SecretFieldRevealed({required this.value, this.expiresAt});
-
-  final String value;
-  final DateTime? expiresAt;
-
-  Duration? get remainingDuration {
-    if (expiresAt == null) return null;
-    final remaining = expiresAt!.difference(DateTime.now());
-    return remaining.isNegative ? Duration.zero : remaining;
-  }
-
-  bool get isExpired {
-    if (expiresAt == null) return false;
-    return remainingDuration == Duration.zero;
-  }
-
-  bool get neverExpires => expiresAt == null;
-}
-
-class SecretFieldExpired extends SecretFieldState {
-  const SecretFieldExpired({required this.value});
-
-  final String value;
-}
-
-class SecretFieldError extends SecretFieldState {
-  const SecretFieldError({required this.message});
-
-  final String message;
-}
+export "package:typewriter_panel/shared/ui/components/secret_field_state.dart";
 
 class SecretField extends HookWidget {
   const SecretField({
@@ -94,7 +52,7 @@ class SecretField extends HookWidget {
       if (currentState is! SecretFieldRevealed) return;
       if (currentState.neverExpires) return;
 
-      final remaining = currentState.remainingDuration;
+      final remaining = currentState.remainingDurationAt(DateTime.now());
 
       if (remaining == Duration.zero) {
         state.value = SecretFieldExpired(value: currentState.value);
@@ -121,7 +79,7 @@ class SecretField extends HookWidget {
       state.value = const SecretFieldLoading();
       try {
         final result = await onGenerate();
-        state.value = result.isExpired
+        state.value = result.isExpiredAt(DateTime.now())
             ? SecretFieldExpired(value: result.value)
             : result;
         if (copyOnGenerate) {

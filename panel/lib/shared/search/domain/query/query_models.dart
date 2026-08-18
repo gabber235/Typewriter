@@ -1,4 +1,7 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "query_models.freezed.dart";
 
 enum QueryOperatorType { prefix, group, postfix }
 
@@ -55,123 +58,59 @@ class QueryParseIssue {
   final QueryRange? range;
 }
 
-sealed class QueryCursorContext {
-  const QueryCursorContext({
-    required this.cursorOffset,
-    required this.activeRange,
-  });
-  final int cursorOffset;
-  final QueryRange activeRange;
-}
+@freezed
+sealed class QueryCursorContext with _$QueryCursorContext {
+  const factory QueryCursorContext.selectorKey({
+    required int cursorOffset,
+    required QueryRange activeRange,
+    required String partialKey,
+  }) = SelectorKeyCursorContext;
 
-final class SelectorKeyCursorContext extends QueryCursorContext {
-  const SelectorKeyCursorContext({
-    required super.cursorOffset,
-    required super.activeRange,
-    required this.partialKey,
-  });
+  const factory QueryCursorContext.selectorValue({
+    required int cursorOffset,
+    required QueryRange activeRange,
+    required String selectorId,
+    required String partialValue,
+    required QueryRange keyRange,
+    required QueryRange? valueRange,
+  }) = SelectorValueCursorContext;
 
-  final String partialKey;
-}
+  const factory QueryCursorContext.operator({
+    required int cursorOffset,
+    required QueryRange activeRange,
+    required String partialOperator,
+  }) = OperatorCursorContext;
 
-final class SelectorValueCursorContext extends QueryCursorContext {
-  const SelectorValueCursorContext({
-    required super.cursorOffset,
-    required super.activeRange,
-    required this.selectorId,
-    required this.partialValue,
-    required this.keyRange,
-    required this.valueRange,
-  });
-
-  final String selectorId;
-  final String partialValue;
-  final QueryRange keyRange;
-  final QueryRange? valueRange;
-}
-
-final class OperatorCursorContext extends QueryCursorContext {
-  const OperatorCursorContext({
-    required super.cursorOffset,
-    required super.activeRange,
-    required this.partialOperator,
-  });
-
-  final String partialOperator;
-}
-
-final class UnknownCursorContext extends QueryCursorContext {
-  const UnknownCursorContext({
-    required super.cursorOffset,
-    required super.activeRange,
-    required this.partial,
-    required this.side,
-  });
-
-  final String partial;
-
-  final QuerySide side;
+  const factory QueryCursorContext.unknown({
+    required int cursorOffset,
+    required QueryRange activeRange,
+    required String partial,
+    required QuerySide side,
+  }) = UnknownCursorContext;
 }
 
 enum QuerySide { before, expression, after }
 
-sealed class QuerySuggestion {
-  const QuerySuggestion({required this.label, required this.replaceRange});
+@freezed
+sealed class QuerySuggestion with _$QuerySuggestion {
+  const factory QuerySuggestion.selectorKey({
+    required String label,
+    required QueryRange replaceRange,
+    required String selectorId,
+  }) = SelectorKeySuggestion;
 
-  final String label;
-  final QueryRange replaceRange;
+  const factory QuerySuggestion.selectorValue({
+    required String label,
+    required QueryRange replaceRange,
+    required String selectorId,
+    required String value,
+  }) = SelectorValueSuggestion;
 
-  @override
-  String toString() {
-    return "QuerySuggestion(label: '$label', replaceRange: $replaceRange)";
-  }
-}
-
-final class SelectorKeySuggestion extends QuerySuggestion {
-  const SelectorKeySuggestion({
-    required super.label,
-    required super.replaceRange,
-    required this.selectorId,
-  });
-
-  final String selectorId;
-
-  @override
-  String toString() {
-    return "SelectorKeySuggestion(label: '$label', replaceRange: $replaceRange, selectorId: '$selectorId')";
-  }
-}
-
-final class SelectorValueSuggestion extends QuerySuggestion {
-  const SelectorValueSuggestion({
-    required super.label,
-    required super.replaceRange,
-    required this.selectorId,
-    required this.value,
-  });
-
-  final String selectorId;
-  final String value;
-
-  @override
-  String toString() {
-    return "SelectorValueSuggestion(label: '$label', replaceRange: $replaceRange, selectorId: '$selectorId', value: '$value')";
-  }
-}
-
-final class OperatorSuggestion extends QuerySuggestion {
-  const OperatorSuggestion({
-    required super.label,
-    required super.replaceRange,
-    required this.operatorToken,
-  });
-
-  final String operatorToken;
-
-  @override
-  String toString() {
-    return "OperatorSuggestion(label: '$label', replaceRange: $replaceRange, operatorToken: '$operatorToken')";
-  }
+  const factory QuerySuggestion.operator({
+    required String label,
+    required QueryRange replaceRange,
+    required String operatorToken,
+  }) = OperatorSuggestion;
 }
 
 extension QuerySuggestionListX on List<QuerySuggestion> {

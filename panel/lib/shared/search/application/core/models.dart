@@ -1,4 +1,5 @@
 import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/widgets.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
@@ -18,60 +19,20 @@ abstract class SearchParsedSelector with _$SearchParsedSelector {
 
 enum SearchSelectorOperator { and, or }
 
-sealed class SearchSelectorExpression {
-  const SearchSelectorExpression();
-}
+@freezed
+sealed class SearchSelectorExpression with _$SearchSelectorExpression {
+  const factory SearchSelectorExpression.leaf(SearchParsedSelector selector) =
+      SearchSelectorLeafExpression;
 
-final class SearchSelectorLeafExpression extends SearchSelectorExpression {
-  const SearchSelectorLeafExpression(this.selector);
+  const factory SearchSelectorExpression.binary({
+    required SearchSelectorOperator operator,
+    required SearchSelectorExpression left,
+    required SearchSelectorExpression right,
+  }) = SearchSelectorBinaryExpression;
 
-  final SearchParsedSelector selector;
-
-  @override
-  bool operator ==(Object other) {
-    return other is SearchSelectorLeafExpression && other.selector == selector;
-  }
-
-  @override
-  int get hashCode => selector.hashCode;
-}
-
-final class SearchSelectorBinaryExpression extends SearchSelectorExpression {
-  const SearchSelectorBinaryExpression({
-    required this.operator,
-    required this.left,
-    required this.right,
-  });
-
-  final SearchSelectorOperator operator;
-  final SearchSelectorExpression left;
-  final SearchSelectorExpression right;
-
-  @override
-  bool operator ==(Object other) {
-    return other is SearchSelectorBinaryExpression &&
-        other.operator == operator &&
-        other.left == left &&
-        other.right == right;
-  }
-
-  @override
-  int get hashCode => Object.hash(operator, left, right);
-}
-
-final class SearchSelectorNotExpression extends SearchSelectorExpression {
-  const SearchSelectorNotExpression(this.expression);
-
-  final SearchSelectorExpression expression;
-
-  @override
-  bool operator ==(Object other) {
-    return other is SearchSelectorNotExpression &&
-        other.expression == expression;
-  }
-
-  @override
-  int get hashCode => expression.hashCode;
+  const factory SearchSelectorExpression.not(
+    SearchSelectorExpression expression,
+  ) = SearchSelectorNotExpression;
 }
 
 @freezed

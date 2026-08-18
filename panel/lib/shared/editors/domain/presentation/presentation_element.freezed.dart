@@ -464,7 +464,7 @@ return spacer(_that.width,_that.height);case _:
 
 class DiagnosticElement implements PresentationElement {
    DiagnosticElement(final  List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -536,7 +536,7 @@ as List<TypeDiagnostic>,
 
 class DefaultPresentationElement implements PresentationElement {
   const DefaultPresentationElement({required this.binding, this.presentationId});
-  
+
 
  final  BindingReference binding;
  final  PresentationId? presentationId;
@@ -601,7 +601,7 @@ as PresentationId?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -625,7 +625,7 @@ $PresentationIdCopyWith<$Res>? get presentationId {
 
 class TextElement implements PresentationElement {
   const TextElement(this.value, {this.color, this.fontSize, this.fontWeight, this.fontItalic, this.fontOpticalSize, this.fontSlant, this.fontWidth, this.textAlignment, this.lineHeight, this.letterSpacing, this.decoration, this.semanticLabel});
-  
+
 
  final  TypedExpression value;
  final  TypedExpression? color;
@@ -712,7 +712,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -868,7 +868,7 @@ $TypedExpressionCopyWith<$Res>? get semanticLabel {
 
 class MarkdownElement implements PresentationElement {
   const MarkdownElement(this.value, {this.color});
-  
+
 
  final  TypedExpression value;
  final  TypedExpression? color;
@@ -933,7 +933,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -957,7 +957,7 @@ $TypedExpressionCopyWith<$Res>? get color {
 
 class IconElement implements PresentationElement {
   const IconElement({required this.name, this.semanticLabel, this.color, this.size});
-  
+
 
  final  TypedExpression name;
  final  TypedExpression? semanticLabel;
@@ -1026,7 +1026,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get name {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.name, (value) {
     return _then(_self.copyWith(name: value));
   });
@@ -1074,7 +1074,7 @@ $TypedExpressionCopyWith<$Res>? get size {
 
 class ImageElement implements PresentationElement {
   const ImageElement({required this.source, this.semanticLabel});
-  
+
 
  final  TypedExpression source;
  final  TypedExpression? semanticLabel;
@@ -1139,7 +1139,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1163,7 +1163,7 @@ $TypedExpressionCopyWith<$Res>? get semanticLabel {
 
 class BadgeElement implements PresentationElement {
   const BadgeElement({required this.label, required this.tone});
-  
+
 
  final  TypedExpression label;
  final  String tone;
@@ -1228,7 +1228,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1240,7 +1240,7 @@ $TypedExpressionCopyWith<$Res> get label {
 
 class ChipElement implements PresentationElement {
   const ChipElement({required this.label, this.color});
-  
+
 
  final  TypedExpression label;
  final  TypedExpression? color;
@@ -1305,7 +1305,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -1329,7 +1329,7 @@ $TypedExpressionCopyWith<$Res>? get color {
 
 class ProgressElement implements PresentationElement {
   const ProgressElement({required this.value, required this.maximum, this.label});
-  
+
 
  final  TypedExpression value;
  final  TypedExpression maximum;
@@ -1396,7 +1396,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -1405,7 +1405,7 @@ $TypedExpressionCopyWith<$Res> get value {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -1429,7 +1429,7 @@ $TypedExpressionCopyWith<$Res>? get label {
 
 class TypedFieldElement implements PresentationElement {
   const TypedFieldElement({required this.binding, required this.expectedType, this.presentation});
-  
+
 
  final  BindingReference binding;
  final  TypeExpression expectedType;
@@ -1496,7 +1496,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -1505,7 +1505,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get expectedType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.expectedType, (value) {
     return _then(_self.copyWith(expectedType: value));
   });
@@ -1529,7 +1529,7 @@ $PresentationNodeCopyWith<$Res>? get presentation {
 
 class ConditionalElement implements PresentationElement {
   const ConditionalElement({required this.condition, required this.whenTrue, this.whenFalse});
-  
+
 
  final  TypedExpression condition;
  final  PresentationNode whenTrue;
@@ -1596,7 +1596,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -1605,7 +1605,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get whenTrue {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.whenTrue, (value) {
     return _then(_self.copyWith(whenTrue: value));
   });
@@ -1629,7 +1629,7 @@ $PresentationNodeCopyWith<$Res>? get whenFalse {
 
 class RepeatedElement implements PresentationElement {
   const RepeatedElement({required this.source, required this.itemBindingId, required this.presentation});
-  
+
 
  final  TypedExpression source;
  final  BindingId itemBindingId;
@@ -1696,7 +1696,7 @@ as SequencePresentation,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get source {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -1705,7 +1705,7 @@ $TypedExpressionCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -1714,7 +1714,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get presentation {
-  
+
   return $SequencePresentationCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -1726,7 +1726,7 @@ $SequencePresentationCopyWith<$Res> get presentation {
 
 class ScopedBindingElement implements PresentationElement {
   const ScopedBindingElement({required this.binding, required this.scopeBindingId, required this.child});
-  
+
 
  final  BindingReference binding;
  final  BindingId scopeBindingId;
@@ -1793,7 +1793,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -1802,7 +1802,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get scopeBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.scopeBindingId, (value) {
     return _then(_self.copyWith(scopeBindingId: value));
   });
@@ -1811,7 +1811,7 @@ $BindingIdCopyWith<$Res> get scopeBindingId {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -1823,7 +1823,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class CollectionLookupElement implements PresentationElement {
   const CollectionLookupElement({required this.sourceId, required this.key, required this.found, required this.missing, this.loading});
-  
+
 
  final  PresentationCollectionSourceId sourceId;
  final  BindingReference key;
@@ -1865,7 +1865,7 @@ $Res call({
 });
 
 
-$BindingReferenceCopyWith<$Res> get key;$PresentationNodeCopyWith<$Res> get found;$PresentationNodeCopyWith<$Res> get missing;$PresentationNodeCopyWith<$Res>? get loading;
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId;$BindingReferenceCopyWith<$Res> get key;$PresentationNodeCopyWith<$Res> get found;$PresentationNodeCopyWith<$Res> get missing;$PresentationNodeCopyWith<$Res>? get loading;
 
 }
 /// @nodoc
@@ -1893,8 +1893,17 @@ as PresentationNode?,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
+
+  return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
+    return _then(_self.copyWith(sourceId: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get key {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -1903,7 +1912,7 @@ $BindingReferenceCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get found {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.found, (value) {
     return _then(_self.copyWith(found: value));
   });
@@ -1912,7 +1921,7 @@ $PresentationNodeCopyWith<$Res> get found {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get missing {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.missing, (value) {
     return _then(_self.copyWith(missing: value));
   });
@@ -1936,7 +1945,7 @@ $PresentationNodeCopyWith<$Res>? get loading {
 
 class CollectionGraphElement implements PresentationElement {
   const CollectionGraphElement({required this.sourceId, required this.roots, required this.rootSequence, required this.relation, required this.direction, required this.node, required this.childrenBindingId, required this.childBindingId, required this.children, this.maximumDepth});
-  
+
 
  final  PresentationCollectionSourceId sourceId;
  final  BindingReference roots;
@@ -1983,7 +1992,7 @@ $Res call({
 });
 
 
-$BindingReferenceCopyWith<$Res> get roots;$SequencePresentationCopyWith<$Res> get rootSequence;$PresentationNodeCopyWith<$Res> get node;$BindingIdCopyWith<$Res> get childrenBindingId;$BindingIdCopyWith<$Res> get childBindingId;$SequencePresentationCopyWith<$Res> get children;
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId;$BindingReferenceCopyWith<$Res> get roots;$SequencePresentationCopyWith<$Res> get rootSequence;$PresentationCollectionRelationIdCopyWith<$Res> get relation;$PresentationNodeCopyWith<$Res> get node;$BindingIdCopyWith<$Res> get childrenBindingId;$BindingIdCopyWith<$Res> get childBindingId;$SequencePresentationCopyWith<$Res> get children;
 
 }
 /// @nodoc
@@ -2016,8 +2025,17 @@ as int?,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
+
+  return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
+    return _then(_self.copyWith(sourceId: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get roots {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.roots, (value) {
     return _then(_self.copyWith(roots: value));
   });
@@ -2026,7 +2044,7 @@ $BindingReferenceCopyWith<$Res> get roots {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get rootSequence {
-  
+
   return $SequencePresentationCopyWith<$Res>(_self.rootSequence, (value) {
     return _then(_self.copyWith(rootSequence: value));
   });
@@ -2034,8 +2052,17 @@ $SequencePresentationCopyWith<$Res> get rootSequence {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
+$PresentationCollectionRelationIdCopyWith<$Res> get relation {
+
+  return $PresentationCollectionRelationIdCopyWith<$Res>(_self.relation, (value) {
+    return _then(_self.copyWith(relation: value));
+  });
+}/// Create a copy of PresentationElement
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -2044,7 +2071,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get childrenBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.childrenBindingId, (value) {
     return _then(_self.copyWith(childrenBindingId: value));
   });
@@ -2053,7 +2080,7 @@ $BindingIdCopyWith<$Res> get childrenBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get childBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.childBindingId, (value) {
     return _then(_self.copyWith(childBindingId: value));
   });
@@ -2062,7 +2089,7 @@ $BindingIdCopyWith<$Res> get childBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SequencePresentationCopyWith<$Res> get children {
-  
+
   return $SequencePresentationCopyWith<$Res>(_self.children, (value) {
     return _then(_self.copyWith(children: value));
   });
@@ -2074,7 +2101,7 @@ $SequencePresentationCopyWith<$Res> get children {
 
 class TextInputElement implements PresentationElement {
   const TextInputElement({required this.control, this.multiline = true, this.placeholder, final  List<TextInputFormat> inputFormatters = const []}): _inputFormatters = inputFormatters;
-  
+
 
  final  BoundControl control;
 @JsonKey() final  bool multiline;
@@ -2149,7 +2176,7 @@ as List<TextInputFormat>,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2173,7 +2200,7 @@ $TypedExpressionCopyWith<$Res>? get placeholder {
 
 class NumericInputElement implements PresentationElement {
   const NumericInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -2236,7 +2263,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2248,7 +2275,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ToggleInputElement implements PresentationElement {
   const ToggleInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -2311,7 +2338,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2323,7 +2350,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SelectInputElement implements PresentationElement {
   const SelectInputElement({required this.control, required final  List<SelectOption> options, this.allowCustomValue = false}): _options = options;
-  
+
 
  final  BoundControl control;
  final  List<SelectOption> _options;
@@ -2396,7 +2423,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2408,7 +2435,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SliderInputElement implements PresentationElement {
   const SliderInputElement({required this.control, required this.minimum, required this.maximum, this.divisions});
-  
+
 
  final  BoundControl control;
  final  TypedExpression minimum;
@@ -2477,7 +2504,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2486,7 +2513,7 @@ $BoundControlCopyWith<$Res> get control {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get minimum {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.minimum, (value) {
     return _then(_self.copyWith(minimum: value));
   });
@@ -2495,7 +2522,7 @@ $TypedExpressionCopyWith<$Res> get minimum {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -2519,7 +2546,7 @@ $TypedExpressionCopyWith<$Res>? get divisions {
 
 class DateTimeInputElement implements PresentationElement, SimpleInputElement {
   const DateTimeInputElement({required this.control, this.includeDate = true, this.includeTime = true});
-  
+
 
  final  BoundControl control;
 @JsonKey() final  bool includeDate;
@@ -2586,7 +2613,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2598,7 +2625,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class DurationInputElement implements PresentationElement, SimpleInputElement {
   const DurationInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -2661,7 +2688,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2673,7 +2700,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ColorInputElement implements PresentationElement, SimpleInputElement {
   const ColorInputElement({required this.control, this.includeAlpha = false});
-  
+
 
  final  BoundControl control;
 @JsonKey() final  bool includeAlpha;
@@ -2738,7 +2765,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2750,7 +2777,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class SearchInputElement implements PresentationElement {
   const SearchInputElement({required this.control, required this.selectionMode, required this.queryBindingId, required this.summaryBindingId, required this.maximumExtent, required this.provider, this.summary, this.placeholder, this.customValue, this.initialQuery});
-  
+
 
  final  BoundControl control;
  final  SearchSelectionMode selectionMode;
@@ -2831,7 +2858,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -2840,7 +2867,7 @@ $BoundControlCopyWith<$Res> get control {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get queryBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.queryBindingId, (value) {
     return _then(_self.copyWith(queryBindingId: value));
   });
@@ -2849,7 +2876,7 @@ $BindingIdCopyWith<$Res> get queryBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get summaryBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.summaryBindingId, (value) {
     return _then(_self.copyWith(summaryBindingId: value));
   });
@@ -2858,7 +2885,7 @@ $BindingIdCopyWith<$Res> get summaryBindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximumExtent {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.maximumExtent, (value) {
     return _then(_self.copyWith(maximumExtent: value));
   });
@@ -2867,7 +2894,7 @@ $TypedExpressionCopyWith<$Res> get maximumExtent {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get provider {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.provider, (value) {
     return _then(_self.copyWith(provider: value));
   });
@@ -2927,7 +2954,7 @@ $TypedExpressionCopyWith<$Res>? get initialQuery {
 
 class BytesInputElement implements PresentationElement, SimpleInputElement {
   const BytesInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -2990,7 +3017,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3002,7 +3029,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class EnumInputElement implements PresentationElement, SimpleInputElement {
   const EnumInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -3065,7 +3092,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3077,7 +3104,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class NamedInputElement implements PresentationElement, SimpleInputElement {
   const NamedInputElement(this.control);
-  
+
 
  final  BoundControl control;
 
@@ -3140,7 +3167,7 @@ as BoundControl,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3152,7 +3179,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class ListInputElement implements PresentationElement {
   const ListInputElement({required this.control, this.itemPresentation, this.allowAdd = true, this.allowRemove = true, this.allowReorder = true, this.itemBindingId = const BindingId(1), this.indexBindingId = const BindingId(2)});
-  
+
 
  final  BoundControl control;
  final  PresentationNode? itemPresentation;
@@ -3227,7 +3254,7 @@ as BindingId,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3248,7 +3275,7 @@ $PresentationNodeCopyWith<$Res>? get itemPresentation {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get itemBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.itemBindingId, (value) {
     return _then(_self.copyWith(itemBindingId: value));
   });
@@ -3257,7 +3284,7 @@ $BindingIdCopyWith<$Res> get itemBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get indexBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.indexBindingId, (value) {
     return _then(_self.copyWith(indexBindingId: value));
   });
@@ -3269,7 +3296,7 @@ $BindingIdCopyWith<$Res> get indexBindingId {
 
 class MapInputElement implements PresentationElement {
   const MapInputElement({required this.control, this.keyPresentation, this.valuePresentation, this.allowAdd = true, this.allowRemove = true, this.keyBindingId = const BindingId(1), this.valueBindingId = const BindingId(2)});
-  
+
 
  final  BoundControl control;
  final  PresentationNode? keyPresentation;
@@ -3344,7 +3371,7 @@ as BindingId,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3377,7 +3404,7 @@ $PresentationNodeCopyWith<$Res>? get valuePresentation {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get keyBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.keyBindingId, (value) {
     return _then(_self.copyWith(keyBindingId: value));
   });
@@ -3386,7 +3413,7 @@ $BindingIdCopyWith<$Res> get keyBindingId {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -3398,7 +3425,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 
 class RecordInputElement implements PresentationElement {
   const RecordInputElement({required this.control, this.fieldPresentation});
-  
+
 
  final  BoundControl control;
  final  PresentationNode? fieldPresentation;
@@ -3463,7 +3490,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3487,7 +3514,7 @@ $PresentationNodeCopyWith<$Res>? get fieldPresentation {
 
 class PolymorphicInputElement implements PresentationElement {
    PolymorphicInputElement({required this.control, required final  List<ConcreteTypePresentation> concreteTypes}): assert(concreteTypes.isNotEmpty, 'Concrete types must not be empty.'),_concreteTypes = concreteTypes;
-  
+
 
  final  BoundControl control;
  final  List<ConcreteTypePresentation> _concreteTypes;
@@ -3558,7 +3585,7 @@ as List<ConcreteTypePresentation>,
 @override
 @pragma('vm:prefer-inline')
 $BoundControlCopyWith<$Res> get control {
-  
+
   return $BoundControlCopyWith<$Res>(_self.control, (value) {
     return _then(_self.copyWith(control: value));
   });
@@ -3570,7 +3597,7 @@ $BoundControlCopyWith<$Res> get control {
 
 class PolymorphicMatchElement implements PresentationElement {
    PolymorphicMatchElement({required this.binding, required this.scopeBindingId, required final  List<PolymorphicMatchCase> cases, this.fallback}): assert(cases.isNotEmpty, 'Polymorphic match cases must not be empty.'),_cases = cases;
-  
+
 
  final  BindingReference binding;
  final  BindingId scopeBindingId;
@@ -3645,7 +3672,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -3654,7 +3681,7 @@ $BindingReferenceCopyWith<$Res> get binding {
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get scopeBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.scopeBindingId, (value) {
     return _then(_self.copyWith(scopeBindingId: value));
   });
@@ -3678,7 +3705,7 @@ $PresentationNodeCopyWith<$Res>? get fallback {
 
 class ButtonElement implements PresentationElement {
   const ButtonElement({required this.label, required this.action});
-  
+
 
  final  TypedExpression label;
  final  EditorAction action;
@@ -3743,7 +3770,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -3752,7 +3779,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -3764,7 +3791,7 @@ $EditorActionCopyWith<$Res> get action {
 
 class IconButtonElement implements PresentationElement {
   const IconButtonElement({required this.icon, required this.semanticLabel, required this.action});
-  
+
 
  final  TypedExpression icon;
  final  TypedExpression semanticLabel;
@@ -3831,7 +3858,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get icon {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.icon, (value) {
     return _then(_self.copyWith(icon: value));
   });
@@ -3840,7 +3867,7 @@ $TypedExpressionCopyWith<$Res> get icon {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get semanticLabel {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.semanticLabel, (value) {
     return _then(_self.copyWith(semanticLabel: value));
   });
@@ -3849,7 +3876,7 @@ $TypedExpressionCopyWith<$Res> get semanticLabel {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -3861,7 +3888,7 @@ $EditorActionCopyWith<$Res> get action {
 
 class MenuElement implements PresentationElement {
    MenuElement({required final  List<PresentationMenuItem> items, this.label}): assert(items.isNotEmpty, 'Menu items must not be empty.'),_items = items;
-  
+
 
  final  List<PresentationMenuItem> _items;
  List<PresentationMenuItem> get items {
@@ -3947,7 +3974,7 @@ $TypedExpressionCopyWith<$Res>? get label {
 
 class TooltipElement implements PresentationElement {
   const TooltipElement({required this.message, required this.child});
-  
+
 
  final  TypedExpression message;
  final  PresentationNode child;
@@ -4012,7 +4039,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get message {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.message, (value) {
     return _then(_self.copyWith(message: value));
   });
@@ -4021,7 +4048,7 @@ $TypedExpressionCopyWith<$Res> get message {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4033,7 +4060,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class ColumnElement implements PresentationElement, ChildrenLayoutElement {
   const ColumnElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-  
+
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4111,7 +4138,7 @@ as PresentationCrossAxisAlignment,
 
 class RowElement implements PresentationElement, ChildrenLayoutElement {
   const RowElement({required final  List<PresentationNode> children, this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-  
+
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4189,7 +4216,7 @@ as PresentationCrossAxisAlignment,
 
 class WrapElement implements PresentationElement, ChildrenLayoutElement {
   const WrapElement({required final  List<PresentationNode> children, this.spacing = 0, this.runSpacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),_children = children;
-  
+
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4269,7 +4296,7 @@ as PresentationCrossAxisAlignment,
 
 class StackElement implements PresentationElement {
   const StackElement({required final  List<PresentationNode> children}): _children = children;
-  
+
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4341,7 +4368,7 @@ as List<PresentationNode>,
 
 class GridElement implements PresentationElement {
   const GridElement({required final  List<PresentationNode> children, required this.columns, this.horizontalSpacing = 0, this.verticalSpacing = 0}): assert(columns > 0, 'Column count must be positive.'),assert(horizontalSpacing >= 0, 'Horizontal spacing must not be negative.'),assert(verticalSpacing >= 0, 'Vertical spacing must not be negative.'),_children = children;
-  
+
 
  final  List<PresentationNode> _children;
  List<PresentationNode> get children {
@@ -4419,7 +4446,7 @@ as double,
 
 class SectionElement implements PresentationElement, SingleChildLayoutElement {
   const SectionElement({required this.child, this.border});
-  
+
 
  final  PresentationNode child;
  final  PresentationBorder? border;
@@ -4484,7 +4511,7 @@ as PresentationBorder?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4508,7 +4535,7 @@ $PresentationBorderCopyWith<$Res>? get border {
 
 class ContainerElement implements PresentationElement, SingleChildLayoutElement {
   const ContainerElement({required this.child, this.border, this.backgroundColor, this.radius = const PresentationRadius.small()});
-  
+
 
  final  PresentationNode child;
  final  PresentationBorder? border;
@@ -4577,7 +4604,7 @@ as PresentationRadius,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4610,7 +4637,7 @@ $TypedExpressionCopyWith<$Res>? get backgroundColor {
 @override
 @pragma('vm:prefer-inline')
 $PresentationRadiusCopyWith<$Res> get radius {
-  
+
   return $PresentationRadiusCopyWith<$Res>(_self.radius, (value) {
     return _then(_self.copyWith(radius: value));
   });
@@ -4622,7 +4649,7 @@ $PresentationRadiusCopyWith<$Res> get radius {
 
 class PresentationAnchorElement implements PresentationElement, SingleChildLayoutElement {
    PresentationAnchorElement({required this.child, required final  List<PresentationAnchorPoint> anchors}): assert(anchors.isNotEmpty, 'At least one anchor must be provided.'),_anchors = anchors;
-  
+
 
  final  PresentationNode child;
  final  List<PresentationAnchorPoint> _anchors;
@@ -4693,7 +4720,7 @@ as List<PresentationAnchorPoint>,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4705,7 +4732,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class ConnectionLayerElement implements PresentationElement, SingleChildLayoutElement {
    ConnectionLayerElement({required this.child, required final  List<PresentationConnection> connections}): assert(connections.isNotEmpty, 'At least one connection must be provided.'),_connections = connections;
-  
+
 
  final  PresentationNode child;
  final  List<PresentationConnection> _connections;
@@ -4776,7 +4803,7 @@ as List<PresentationConnection>,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4788,7 +4815,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class PaddingElement implements PresentationElement, SingleChildLayoutElement {
   const PaddingElement({required this.child, this.top = 0, this.start = 0, this.end = 0, this.bottom = 0}): assert(top >= 0 && top < double.infinity, 'Top padding must be finite and nonnegative.'),assert(start >= 0 && start < double.infinity, 'Start padding must be finite and nonnegative.'),assert(end >= 0 && end < double.infinity, 'End padding must be finite and nonnegative.'),assert(bottom >= 0 && bottom < double.infinity, 'Bottom padding must be finite and nonnegative.');
-  
+
 
  final  PresentationNode child;
 @JsonKey() final  double top;
@@ -4859,7 +4886,7 @@ as double,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -4871,7 +4898,7 @@ $PresentationNodeCopyWith<$Res> get child {
 
 class PresentationSlotElement implements PresentationElement {
   const PresentationSlotElement({required this.slotId}): assert(slotId != "", 'Presentation slot ID must not be empty.');
-  
+
 
  final  String slotId;
 
@@ -4937,7 +4964,7 @@ as String,
 
 class TabsElement implements PresentationElement {
    TabsElement({required final  List<TabItem> tabs, this.initiallySelectedTabId}): assert(tabs.isNotEmpty, 'Tabs must not be empty.'),_tabs = tabs;
-  
+
 
  final  List<TabItem> _tabs;
  List<TabItem> get tabs {
@@ -5011,7 +5038,7 @@ as String?,
 
 class DividerElement implements PresentationElement {
   const DividerElement();
-  
+
 
 
 
@@ -5043,7 +5070,7 @@ String toString() {
 
 class SpacerElement implements PresentationElement {
   const SpacerElement({this.width, this.height});
-  
+
 
  final  TypedExpression? width;
  final  TypedExpression? height;
@@ -5193,7 +5220,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get x {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.x, (value) {
     return _then(_self.copyWith(x: value));
   });
@@ -5202,7 +5229,7 @@ $TypedExpressionCopyWith<$Res> get x {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get y {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.y, (value) {
     return _then(_self.copyWith(y: value));
   });
@@ -5345,7 +5372,7 @@ return $default(_that.x,_that.y);case _:
 
 class _PresentationOffset implements PresentationOffset {
   const _PresentationOffset({required this.x, required this.y});
-  
+
 
 @override final  TypedExpression x;
 @override final  TypedExpression y;
@@ -5410,7 +5437,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get x {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.x, (value) {
     return _then(_self.copyWith(x: value));
   });
@@ -5419,7 +5446,7 @@ $TypedExpressionCopyWith<$Res> get x {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get y {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.y, (value) {
     return _then(_self.copyWith(y: value));
   });
@@ -5651,7 +5678,7 @@ return $default(_that.id,_that.groupIds,_that.alignment,_that.offset,_that.visib
 
 class _PresentationAnchorPoint implements PresentationAnchorPoint {
   const _PresentationAnchorPoint({required this.id, final  List<String> groupIds = const [], this.alignment = PresentationAnchorAlignment.center, this.offset, this.visibleIf, this.exportToParent = false}): assert(id != "", 'Anchor ID must not be empty.'),_groupIds = groupIds;
-  
+
 
 @override final  String id;
  final  List<String> _groupIds;
@@ -5917,7 +5944,7 @@ return exportedGroup(_that.groupId);case _:
 
 class LocalAnchor implements PresentationAnchorSelector {
   const LocalAnchor(this.id): assert(id != "", 'Anchor ID must not be empty.');
-  
+
 
  final  String id;
 
@@ -5983,7 +6010,7 @@ as String,
 
 class ExportedAnchorGroup implements PresentationAnchorSelector {
   const ExportedAnchorGroup(this.groupId): assert(groupId != "", 'Anchor group ID must not be empty.');
-  
+
 
  final  String groupId;
 
@@ -6107,7 +6134,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -6116,7 +6143,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get width {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.width, (value) {
     return _then(_self.copyWith(width: value));
   });
@@ -6259,7 +6286,7 @@ return $default(_that.color,_that.width);case _:
 
 class _ConnectorStroke implements ConnectorStroke {
   const _ConnectorStroke({required this.color, required this.width});
-  
+
 
 @override final  TypedExpression color;
 @override final  TypedExpression width;
@@ -6324,7 +6351,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get color {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.color, (value) {
     return _then(_self.copyWith(color: value));
   });
@@ -6333,7 +6360,7 @@ $TypedExpressionCopyWith<$Res> get color {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get width {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.width, (value) {
     return _then(_self.copyWith(width: value));
   });
@@ -6505,7 +6532,7 @@ return circle(_that.diameter);case _:
 
 class ArrowConnectorMarker implements ConnectorEndpointMarker {
   const ArrowConnectorMarker({required this.size});
-  
+
 
  final  TypedExpression size;
 
@@ -6568,7 +6595,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get size {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.size, (value) {
     return _then(_self.copyWith(size: value));
   });
@@ -6580,7 +6607,7 @@ $TypedExpressionCopyWith<$Res> get size {
 
 class CircleConnectorMarker implements ConnectorEndpointMarker {
   const CircleConnectorMarker({required this.diameter});
-  
+
 
  final  TypedExpression diameter;
 
@@ -6643,7 +6670,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get diameter {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.diameter, (value) {
     return _then(_self.copyWith(diameter: value));
   });
@@ -6715,7 +6742,7 @@ as ConnectorEndpointMarker?,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStrokeCopyWith<$Res> get stroke {
-  
+
   return $ConnectorStrokeCopyWith<$Res>(_self.stroke, (value) {
     return _then(_self.copyWith(stroke: value));
   });
@@ -6724,7 +6751,7 @@ $ConnectorStrokeCopyWith<$Res> get stroke {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get cornerRadius {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.cornerRadius, (value) {
     return _then(_self.copyWith(cornerRadius: value));
   });
@@ -6891,7 +6918,7 @@ return $default(_that.stroke,_that.cornerRadius,_that.startMarker,_that.endMarke
 
 class _ConnectorStyle implements ConnectorStyle {
   const _ConnectorStyle({required this.stroke, required this.cornerRadius, this.startMarker, this.endMarker});
-  
+
 
 @override final  ConnectorStroke stroke;
 @override final  TypedExpression cornerRadius;
@@ -6960,7 +6987,7 @@ as ConnectorEndpointMarker?,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStrokeCopyWith<$Res> get stroke {
-  
+
   return $ConnectorStrokeCopyWith<$Res>(_self.stroke, (value) {
     return _then(_self.copyWith(stroke: value));
   });
@@ -6969,7 +6996,7 @@ $ConnectorStrokeCopyWith<$Res> get stroke {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get cornerRadius {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.cornerRadius, (value) {
     return _then(_self.copyWith(cornerRadius: value));
   });
@@ -7065,7 +7092,7 @@ as ConnectionExpressionScope,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -7074,7 +7101,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get position {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.position, (value) {
     return _then(_self.copyWith(position: value));
   });
@@ -7083,7 +7110,7 @@ $TypedExpressionCopyWith<$Res> get position {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alignToPath {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.alignToPath, (value) {
     return _then(_self.copyWith(alignToPath: value));
   });
@@ -7226,7 +7253,7 @@ return $default(_that.node,_that.position,_that.alignToPath,_that.scope);case _:
 
 class _ConnectionMarker implements ConnectionMarker {
   const _ConnectionMarker({required this.node, required this.position, required this.alignToPath, this.scope = ConnectionExpressionScope.layer});
-  
+
 
 @override final  PresentationNode node;
 @override final  TypedExpression position;
@@ -7295,7 +7322,7 @@ as ConnectionExpressionScope,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get node {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.node, (value) {
     return _then(_self.copyWith(node: value));
   });
@@ -7304,7 +7331,7 @@ $PresentationNodeCopyWith<$Res> get node {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get position {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.position, (value) {
     return _then(_self.copyWith(position: value));
   });
@@ -7313,7 +7340,7 @@ $TypedExpressionCopyWith<$Res> get position {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get alignToPath {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.alignToPath, (value) {
     return _then(_self.copyWith(alignToPath: value));
   });
@@ -7382,7 +7409,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -7525,7 +7552,7 @@ return $default(_that.bendPosition);case _:
 
 class _OrthogonalConnectionPath implements OrthogonalConnectionPath {
   const _OrthogonalConnectionPath({required this.bendPosition});
-  
+
 
 @override final  TypedExpression bendPosition;
 
@@ -7588,7 +7615,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -7658,7 +7685,7 @@ as PresentationOffset,
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
-  
+
   return $PresentationOffsetCopyWith<$Res>(_self.sourceControlOffset, (value) {
     return _then(_self.copyWith(sourceControlOffset: value));
   });
@@ -7667,7 +7694,7 @@ $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get targetControlOffset {
-  
+
   return $PresentationOffsetCopyWith<$Res>(_self.targetControlOffset, (value) {
     return _then(_self.copyWith(targetControlOffset: value));
   });
@@ -7810,7 +7837,7 @@ return $default(_that.sourceControlOffset,_that.targetControlOffset);case _:
 
 class _CurvedConnectionPath implements CurvedConnectionPath {
   const _CurvedConnectionPath({required this.sourceControlOffset, required this.targetControlOffset});
-  
+
 
 @override final  PresentationOffset sourceControlOffset;
 @override final  PresentationOffset targetControlOffset;
@@ -7875,7 +7902,7 @@ as PresentationOffset,
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
-  
+
   return $PresentationOffsetCopyWith<$Res>(_self.sourceControlOffset, (value) {
     return _then(_self.copyWith(sourceControlOffset: value));
   });
@@ -7884,7 +7911,7 @@ $PresentationOffsetCopyWith<$Res> get sourceControlOffset {
 @override
 @pragma('vm:prefer-inline')
 $PresentationOffsetCopyWith<$Res> get targetControlOffset {
-  
+
   return $PresentationOffsetCopyWith<$Res>(_self.targetControlOffset, (value) {
     return _then(_self.copyWith(targetControlOffset: value));
   });
@@ -8062,7 +8089,7 @@ return curved(_that.path);case _:
 
 class StraightConnectionPath implements ConnectionPath {
   const StraightConnectionPath();
-  
+
 
 
 
@@ -8094,7 +8121,7 @@ String toString() {
 
 class OrthogonalPath implements ConnectionPath {
   const OrthogonalPath(this.path);
-  
+
 
  final  OrthogonalConnectionPath path;
 
@@ -8157,7 +8184,7 @@ as OrthogonalConnectionPath,
 @override
 @pragma('vm:prefer-inline')
 $OrthogonalConnectionPathCopyWith<$Res> get path {
-  
+
   return $OrthogonalConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8169,7 +8196,7 @@ $OrthogonalConnectionPathCopyWith<$Res> get path {
 
 class CurvedPath implements ConnectionPath {
   const CurvedPath(this.path);
-  
+
 
  final  CurvedConnectionPath path;
 
@@ -8232,7 +8259,7 @@ as CurvedConnectionPath,
 @override
 @pragma('vm:prefer-inline')
 $CurvedConnectionPathCopyWith<$Res> get path {
-  
+
   return $CurvedConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8302,7 +8329,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -8445,7 +8472,7 @@ return $default(_that.axis,_that.bendPosition);case _:
 
 class _OrthogonalConnectionBundlePath implements OrthogonalConnectionBundlePath {
   const _OrthogonalConnectionBundlePath({required this.axis, required this.bendPosition});
-  
+
 
 @override final  ConnectionAxis axis;
 @override final  TypedExpression bendPosition;
@@ -8510,7 +8537,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get bendPosition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.bendPosition, (value) {
     return _then(_self.copyWith(bendPosition: value));
   });
@@ -8682,7 +8709,7 @@ return fan();case _:
 
 class OrthogonalBundlePath implements ConnectionBundlePath {
   const OrthogonalBundlePath(this.path);
-  
+
 
  final  OrthogonalConnectionBundlePath path;
 
@@ -8745,7 +8772,7 @@ as OrthogonalConnectionBundlePath,
 @override
 @pragma('vm:prefer-inline')
 $OrthogonalConnectionBundlePathCopyWith<$Res> get path {
-  
+
   return $OrthogonalConnectionBundlePathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -8757,7 +8784,7 @@ $OrthogonalConnectionBundlePathCopyWith<$Res> get path {
 
 class FanBundlePath implements ConnectionBundlePath {
   const FanBundlePath();
-  
+
 
 
 
@@ -8847,7 +8874,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-  
+
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9002,7 +9029,7 @@ return bundle(_that.source,_that.targets,_that.path,_that.trunkStyle,_that.branc
 
 class AnchoredConnection implements PresentationConnection {
   const AnchoredConnection({required this.source, required this.target, required this.path, required this.style, final  List<ConnectionMarker> markers = const [], this.visibleIf}): _markers = markers;
-  
+
 
 @override final  PresentationAnchorSelector source;
  final  PresentationAnchorSelector target;
@@ -9081,7 +9108,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-  
+
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9090,7 +9117,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get target {
-  
+
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -9099,7 +9126,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $ConnectionPathCopyWith<$Res> get path {
-  
+
   return $ConnectionPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -9108,7 +9135,7 @@ $ConnectionPathCopyWith<$Res> get path {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get style {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.style, (value) {
     return _then(_self.copyWith(style: value));
   });
@@ -9132,7 +9159,7 @@ $TypedExpressionCopyWith<$Res>? get visibleIf {
 
 class AnchoredConnectionBundle implements PresentationConnection {
   const AnchoredConnectionBundle({required this.source, required this.targets, required this.path, required this.trunkStyle, required this.branchStyle, final  List<ConnectionMarker> trunkMarkers = const [], final  List<ConnectionMarker> branchMarkers = const [], this.visibleIf}): _trunkMarkers = trunkMarkers,_branchMarkers = branchMarkers;
-  
+
 
 @override final  PresentationAnchorSelector source;
  final  PresentationAnchorSelector targets;
@@ -9221,7 +9248,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get source {
-  
+
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
@@ -9230,7 +9257,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get source {
 @override
 @pragma('vm:prefer-inline')
 $PresentationAnchorSelectorCopyWith<$Res> get targets {
-  
+
   return $PresentationAnchorSelectorCopyWith<$Res>(_self.targets, (value) {
     return _then(_self.copyWith(targets: value));
   });
@@ -9239,7 +9266,7 @@ $PresentationAnchorSelectorCopyWith<$Res> get targets {
 @override
 @pragma('vm:prefer-inline')
 $ConnectionBundlePathCopyWith<$Res> get path {
-  
+
   return $ConnectionBundlePathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -9248,7 +9275,7 @@ $ConnectionBundlePathCopyWith<$Res> get path {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkStyle {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.trunkStyle, (value) {
     return _then(_self.copyWith(trunkStyle: value));
   });
@@ -9257,7 +9284,7 @@ $ConnectorStyleCopyWith<$Res> get trunkStyle {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchStyle {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.branchStyle, (value) {
     return _then(_self.copyWith(branchStyle: value));
   });
@@ -9459,7 +9486,7 @@ return custom(_that.value);case _:
 
 class NoPresentationRadius implements PresentationRadius {
   const NoPresentationRadius();
-  
+
 
 
 
@@ -9491,7 +9518,7 @@ String toString() {
 
 class SmallPresentationRadius implements PresentationRadius {
   const SmallPresentationRadius();
-  
+
 
 
 
@@ -9523,7 +9550,7 @@ String toString() {
 
 class MediumPresentationRadius implements PresentationRadius {
   const MediumPresentationRadius();
-  
+
 
 
 
@@ -9555,7 +9582,7 @@ String toString() {
 
 class LargePresentationRadius implements PresentationRadius {
   const LargePresentationRadius();
-  
+
 
 
 
@@ -9587,7 +9614,7 @@ String toString() {
 
 class CustomPresentationRadius implements PresentationRadius {
   const CustomPresentationRadius(this.value);
-  
+
 
  final  TypedExpression value;
 
@@ -9650,7 +9677,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -9722,7 +9749,7 @@ as PresentationSequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get item {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.item, (value) {
     return _then(_self.copyWith(item: value));
   });
@@ -9755,7 +9782,7 @@ $PresentationNodeCopyWith<$Res>? get separator {
 @override
 @pragma('vm:prefer-inline')
 $PresentationSequenceLayoutCopyWith<$Res> get layout {
-  
+
   return $PresentationSequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -9898,7 +9925,7 @@ return $default(_that.item,_that.empty,_that.separator,_that.layout);case _:
 
 class _SequencePresentation implements SequencePresentation {
   const _SequencePresentation({required this.item, this.empty, this.separator, this.layout = const PresentationSequenceLayout.children(PresentationChildrenLayout.column())});
-  
+
 
 @override final  PresentationNode item;
 @override final  PresentationNode? empty;
@@ -9967,7 +9994,7 @@ as PresentationSequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get item {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.item, (value) {
     return _then(_self.copyWith(item: value));
   });
@@ -10000,7 +10027,7 @@ $PresentationNodeCopyWith<$Res>? get separator {
 @override
 @pragma('vm:prefer-inline')
 $PresentationSequenceLayoutCopyWith<$Res> get layout {
-  
+
   return $PresentationSequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -10073,7 +10100,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -10264,7 +10291,7 @@ return $default(_that.binding,_that.label,_that.description,_that.prefix,_that.s
 
 class _BoundControl implements BoundControl {
   const _BoundControl({required this.binding, this.label, this.description, this.prefix, this.semanticLabel});
-  
+
 
 @override final  BindingReference binding;
 @override final  TypedExpression? label;
@@ -10335,7 +10362,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingReferenceCopyWith<$Res> get binding {
-  
+
   return $BindingReferenceCopyWith<$Res>(_self.binding, (value) {
     return _then(_self.copyWith(binding: value));
   });
@@ -10454,7 +10481,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10463,7 +10490,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -10606,7 +10633,7 @@ return $default(_that.id,_that.label,_that.value);case _:
 
 class _SelectOption implements SelectOption {
   const _SelectOption({required this.id, required this.label, required this.value}): assert(id != "", 'Select option ID must not be empty.');
-  
+
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -10673,7 +10700,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10682,7 +10709,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -10753,7 +10780,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -10762,7 +10789,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -10917,7 +10944,7 @@ return $default(_that.type,_that.label,_that.presentation);case _:
 
 class _ConcreteTypePresentation implements ConcreteTypePresentation {
   const _ConcreteTypePresentation({required this.type, required this.label, this.presentation});
-  
+
 
 @override final  ResolvedTypeRef type;
 @override final  TypedExpression label;
@@ -10984,7 +11011,7 @@ as PresentationNode?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -10993,7 +11020,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11075,7 +11102,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -11084,7 +11111,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -11227,7 +11254,7 @@ return $default(_that.type,_that.child);case _:
 
 class _PolymorphicMatchCase implements PolymorphicMatchCase {
   const _PolymorphicMatchCase({required this.type, required this.child});
-  
+
 
 @override final  ResolvedTypeRef type;
 @override final  PresentationNode child;
@@ -11292,7 +11319,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get type {
-  
+
   return $ResolvedTypeRefCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -11301,7 +11328,7 @@ $ResolvedTypeRefCopyWith<$Res> get type {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -11372,7 +11399,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11381,7 +11408,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -11524,7 +11551,7 @@ return $default(_that.id,_that.label,_that.action);case _:
 
 class _PresentationMenuItem implements PresentationMenuItem {
   const _PresentationMenuItem({required this.id, required this.label, required this.action}): assert(id != "", 'Menu item ID must not be empty.');
-  
+
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -11591,7 +11618,7 @@ as EditorAction,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -11600,7 +11627,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $EditorActionCopyWith<$Res> get action {
-  
+
   return $EditorActionCopyWith<$Res>(_self.action, (value) {
     return _then(_self.copyWith(action: value));
   });
@@ -11816,7 +11843,7 @@ return $default(_that.color,_that.width);case _:
 
 class _PresentationBorderSide implements PresentationBorderSide {
   const _PresentationBorderSide({this.color, this.width = 1}): assert(width > 0, 'Border width must be positive.');
-  
+
 
 @override final  TypedExpression? color;
 @override@JsonKey() final  double width;
@@ -12138,7 +12165,7 @@ return $default(_that.top,_that.start,_that.end,_that.bottom);case _:
 
 class _DirectionalPresentationBorder implements DirectionalPresentationBorder {
   const _DirectionalPresentationBorder({this.top, this.start, this.end, this.bottom}): assert(top != null || start != null || end != null || bottom != null, 'At least one border side must be provided.');
-  
+
 
 @override final  PresentationBorderSide? top;
 @override final  PresentationBorderSide? start;
@@ -12418,7 +12445,7 @@ return sides(_that.top,_that.start,_that.end,_that.bottom);case _:
 
 class PresentationBorderAll implements PresentationBorder {
   const PresentationBorderAll(this.side);
-  
+
 
  final  PresentationBorderSide side;
 
@@ -12481,7 +12508,7 @@ as PresentationBorderSide,
 @override
 @pragma('vm:prefer-inline')
 $PresentationBorderSideCopyWith<$Res> get side {
-  
+
   return $PresentationBorderSideCopyWith<$Res>(_self.side, (value) {
     return _then(_self.copyWith(side: value));
   });
@@ -12493,7 +12520,7 @@ $PresentationBorderSideCopyWith<$Res> get side {
 
 class PresentationBorderSides implements PresentationBorder {
   const PresentationBorderSides({this.top, this.start, this.end, this.bottom}): assert(top != null || start != null || end != null || bottom != null, 'At least one border side must be provided.');
-  
+
 
  final  PresentationBorderSide? top;
  final  PresentationBorderSide? start;
@@ -12791,7 +12818,7 @@ return stack();case _:
 
 class PresentationColumnLayout implements PresentationChildrenLayout {
   const PresentationColumnLayout({this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.stretch}): assert(spacing >= 0, 'Spacing must not be negative.');
-  
+
 
 @JsonKey() final  double spacing;
 @JsonKey() final  PresentationMainAxisAlignment mainAxisAlignment;
@@ -12861,7 +12888,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationRowLayout implements PresentationChildrenLayout {
   const PresentationRowLayout({this.spacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.center}): assert(spacing >= 0, 'Spacing must not be negative.');
-  
+
 
 @JsonKey() final  double spacing;
 @JsonKey() final  PresentationMainAxisAlignment mainAxisAlignment;
@@ -12931,7 +12958,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationWrapLayout implements PresentationChildrenLayout {
   const PresentationWrapLayout({this.spacing = 0, this.runSpacing = 0, this.mainAxisAlignment = PresentationMainAxisAlignment.start, this.crossAxisAlignment = PresentationCrossAxisAlignment.start}): assert(spacing >= 0, 'Spacing must not be negative.'),assert(runSpacing >= 0, 'Run spacing must not be negative.');
-  
+
 
 @JsonKey() final  double spacing;
 @JsonKey() final  double runSpacing;
@@ -13003,7 +13030,7 @@ as PresentationCrossAxisAlignment,
 
 class PresentationGridLayout implements PresentationChildrenLayout {
   const PresentationGridLayout({required this.columns, this.horizontalSpacing = 0, this.verticalSpacing = 0}): assert(columns > 0, 'Column count must be positive.'),assert(horizontalSpacing >= 0, 'Horizontal spacing must not be negative.'),assert(verticalSpacing >= 0, 'Vertical spacing must not be negative.');
-  
+
 
  final  int columns;
 @JsonKey() final  double horizontalSpacing;
@@ -13073,7 +13100,7 @@ as double,
 
 class PresentationStackLayout implements PresentationChildrenLayout {
   const PresentationStackLayout();
-  
+
 
 
 
@@ -13271,7 +13298,7 @@ return offset(_that.value);case _:
 
 class StartConnectorAnchor implements ConnectorAnchor {
   const StartConnectorAnchor();
-  
+
 
 
 
@@ -13303,7 +13330,7 @@ String toString() {
 
 class CenterConnectorAnchor implements ConnectorAnchor {
   const CenterConnectorAnchor();
-  
+
 
 
 
@@ -13335,7 +13362,7 @@ String toString() {
 
 class OffsetConnectorAnchor implements ConnectorAnchor {
   const OffsetConnectorAnchor(this.value);
-  
+
 
  final  TypedExpression value;
 
@@ -13398,7 +13425,7 @@ as TypedExpression,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -13475,7 +13502,7 @@ as PresentationCrossAxisAlignment,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get unaryConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.unaryConnector, (value) {
     return _then(_self.copyWith(unaryConnector: value));
   });
@@ -13484,7 +13511,7 @@ $ConnectorStyleCopyWith<$Res> get unaryConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.trunkConnector, (value) {
     return _then(_self.copyWith(trunkConnector: value));
   });
@@ -13493,7 +13520,7 @@ $ConnectorStyleCopyWith<$Res> get trunkConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.branchConnector, (value) {
     return _then(_self.copyWith(branchConnector: value));
   });
@@ -13502,7 +13529,7 @@ $ConnectorStyleCopyWith<$Res> get branchConnector {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get itemSpacing {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.itemSpacing, (value) {
     return _then(_self.copyWith(itemSpacing: value));
   });
@@ -13511,7 +13538,7 @@ $TypedExpressionCopyWith<$Res> get itemSpacing {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get indentation {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.indentation, (value) {
     return _then(_self.copyWith(indentation: value));
   });
@@ -13520,7 +13547,7 @@ $TypedExpressionCopyWith<$Res> get indentation {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get leadingSpacing {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.leadingSpacing, (value) {
     return _then(_self.copyWith(leadingSpacing: value));
   });
@@ -13529,7 +13556,7 @@ $TypedExpressionCopyWith<$Res> get leadingSpacing {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorAnchorCopyWith<$Res> get itemAnchor {
-  
+
   return $ConnectorAnchorCopyWith<$Res>(_self.itemAnchor, (value) {
     return _then(_self.copyWith(itemAnchor: value));
   });
@@ -13538,7 +13565,7 @@ $ConnectorAnchorCopyWith<$Res> get itemAnchor {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get flattenSingleItem {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.flattenSingleItem, (value) {
     return _then(_self.copyWith(flattenSingleItem: value));
   });
@@ -13681,7 +13708,7 @@ return $default(_that.unaryConnector,_that.trunkConnector,_that.branchConnector,
 
 class _HierarchySequenceLayout implements HierarchySequenceLayout {
   const _HierarchySequenceLayout({required this.unaryConnector, required this.trunkConnector, required this.branchConnector, required this.itemSpacing, required this.indentation, required this.leadingSpacing, required this.itemAnchor, required this.flattenSingleItem, this.crossAxisAlignment = PresentationCrossAxisAlignment.stretch});
-  
+
 
 @override final  ConnectorStyle unaryConnector;
 @override final  ConnectorStyle trunkConnector;
@@ -13760,7 +13787,7 @@ as PresentationCrossAxisAlignment,
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get unaryConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.unaryConnector, (value) {
     return _then(_self.copyWith(unaryConnector: value));
   });
@@ -13769,7 +13796,7 @@ $ConnectorStyleCopyWith<$Res> get unaryConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get trunkConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.trunkConnector, (value) {
     return _then(_self.copyWith(trunkConnector: value));
   });
@@ -13778,7 +13805,7 @@ $ConnectorStyleCopyWith<$Res> get trunkConnector {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorStyleCopyWith<$Res> get branchConnector {
-  
+
   return $ConnectorStyleCopyWith<$Res>(_self.branchConnector, (value) {
     return _then(_self.copyWith(branchConnector: value));
   });
@@ -13787,7 +13814,7 @@ $ConnectorStyleCopyWith<$Res> get branchConnector {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get itemSpacing {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.itemSpacing, (value) {
     return _then(_self.copyWith(itemSpacing: value));
   });
@@ -13796,7 +13823,7 @@ $TypedExpressionCopyWith<$Res> get itemSpacing {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get indentation {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.indentation, (value) {
     return _then(_self.copyWith(indentation: value));
   });
@@ -13805,7 +13832,7 @@ $TypedExpressionCopyWith<$Res> get indentation {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get leadingSpacing {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.leadingSpacing, (value) {
     return _then(_self.copyWith(leadingSpacing: value));
   });
@@ -13814,7 +13841,7 @@ $TypedExpressionCopyWith<$Res> get leadingSpacing {
 @override
 @pragma('vm:prefer-inline')
 $ConnectorAnchorCopyWith<$Res> get itemAnchor {
-  
+
   return $ConnectorAnchorCopyWith<$Res>(_self.itemAnchor, (value) {
     return _then(_self.copyWith(itemAnchor: value));
   });
@@ -13823,7 +13850,7 @@ $ConnectorAnchorCopyWith<$Res> get itemAnchor {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get flattenSingleItem {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.flattenSingleItem, (value) {
     return _then(_self.copyWith(flattenSingleItem: value));
   });
@@ -13995,7 +14022,7 @@ return hierarchy(_that.layout);case _:
 
 class PresentationStandardSequenceLayout implements PresentationSequenceLayout {
   const PresentationStandardSequenceLayout(this.layout);
-  
+
 
 @override final  PresentationChildrenLayout layout;
 
@@ -14058,7 +14085,7 @@ as PresentationChildrenLayout,
 @override
 @pragma('vm:prefer-inline')
 $PresentationChildrenLayoutCopyWith<$Res> get layout {
-  
+
   return $PresentationChildrenLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -14070,7 +14097,7 @@ $PresentationChildrenLayoutCopyWith<$Res> get layout {
 
 class PresentationHierarchySequenceLayout implements PresentationSequenceLayout {
   const PresentationHierarchySequenceLayout(this.layout);
-  
+
 
 @override final  HierarchySequenceLayout layout;
 
@@ -14133,7 +14160,7 @@ as HierarchySequenceLayout,
 @override
 @pragma('vm:prefer-inline')
 $HierarchySequenceLayoutCopyWith<$Res> get layout {
-  
+
   return $HierarchySequenceLayoutCopyWith<$Res>(_self.layout, (value) {
     return _then(_self.copyWith(layout: value));
   });
@@ -14204,7 +14231,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -14213,7 +14240,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -14356,7 +14383,7 @@ return $default(_that.id,_that.label,_that.child);case _:
 
 class _TabItem implements TabItem {
   const _TabItem({required this.id, required this.label, required this.child}): assert(id != "", 'Tab ID must not be empty.');
-  
+
 
 @override final  String id;
 @override final  TypedExpression label;
@@ -14423,7 +14450,7 @@ as PresentationNode,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -14432,7 +14459,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get child {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -14604,7 +14631,7 @@ return enumeration(_that.values);case _:
 
 class FreeTextSearchSelectorValues implements SearchSelectorValues {
   const FreeTextSearchSelectorValues();
-  
+
 
 
 
@@ -14636,7 +14663,7 @@ String toString() {
 
 class EnumeratedSearchSelectorValues implements SearchSelectorValues {
    EnumeratedSearchSelectorValues(final  List<String> values): assert(values.isNotEmpty, 'Selector values must not be empty.'),_values = values;
-  
+
 
  final  List<String> _values;
  List<String> get values {
@@ -14771,7 +14798,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -14780,7 +14807,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorValuesCopyWith<$Res> get values {
-  
+
   return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -14923,7 +14950,7 @@ return keyValue(_that.id,_that.key,_that.valueBindingId,_that.values,_that.caseS
 
 class KeyValueSearchSelectorDefinition implements SearchSelectorDefinition {
   const KeyValueSearchSelectorDefinition({required this.id, required this.key, required this.valueBindingId, required this.values, this.caseSensitive = false, this.multiplicity = SearchSelectorMultiplicity.single, this.colorValue}): assert(id != "", 'Selector ID must not be empty.'),assert(key != "", 'Selector key must not be empty.');
-  
+
 
 @override final  String id;
 @override final  String key;
@@ -14998,7 +15025,7 @@ as int?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get valueBindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.valueBindingId, (value) {
     return _then(_self.copyWith(valueBindingId: value));
   });
@@ -15007,7 +15034,7 @@ $BindingIdCopyWith<$Res> get valueBindingId {
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorValuesCopyWith<$Res> get values {
-  
+
   return $SearchSelectorValuesCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -15080,7 +15107,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15089,7 +15116,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -15098,7 +15125,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get selectedValue {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -15107,7 +15134,7 @@ $TypedExpressionCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -15262,7 +15289,7 @@ return $default(_that.bindingId,_that.key,_that.selectedValue,_that.presentation
 
 class _SearchResultMapping implements SearchResultMapping {
   const _SearchResultMapping({required this.bindingId, required this.key, required this.selectedValue, required this.presentation, this.label});
-  
+
 
 @override final  BindingId bindingId;
 @override final  TypedExpression key;
@@ -15333,7 +15360,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15342,7 +15369,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get key {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.key, (value) {
     return _then(_self.copyWith(key: value));
   });
@@ -15351,7 +15378,7 @@ $TypedExpressionCopyWith<$Res> get key {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get selectedValue {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.selectedValue, (value) {
     return _then(_self.copyWith(selectedValue: value));
   });
@@ -15360,7 +15387,7 @@ $TypedExpressionCopyWith<$Res> get selectedValue {
 @override
 @pragma('vm:prefer-inline')
 $PresentationNodeCopyWith<$Res> get presentation {
-  
+
   return $PresentationNodeCopyWith<$Res>(_self.presentation, (value) {
     return _then(_self.copyWith(presentation: value));
   });
@@ -15443,7 +15470,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -15586,7 +15613,7 @@ return $default(_that.name,_that.value,_that.omitIfEmpty);case _:
 
 class _HttpQueryParameter implements HttpQueryParameter {
   const _HttpQueryParameter({required this.name, required this.value, this.omitIfEmpty = false}): assert(name != "", 'Query parameter name must not be empty.');
-  
+
 
 @override final  String name;
 @override final  TypedExpression value;
@@ -15653,7 +15680,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get value {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.value, (value) {
     return _then(_self.copyWith(value: value));
   });
@@ -15724,7 +15751,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15733,7 +15760,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -15876,7 +15903,7 @@ return $default(_that.bindingId,_that.path,_that.type);case _:
 
 class _HttpJsonContextBinding implements HttpJsonContextBinding {
   const _HttpJsonContextBinding({required this.bindingId, required this.path, required this.type}): assert(path != "", 'Context binding path must not be empty.');
-  
+
 
 @override final  BindingId bindingId;
 @override final  String path;
@@ -15943,7 +15970,7 @@ as TypeExpression,
 @override
 @pragma('vm:prefer-inline')
 $BindingIdCopyWith<$Res> get bindingId {
-  
+
   return $BindingIdCopyWith<$Res>(_self.bindingId, (value) {
     return _then(_self.copyWith(bindingId: value));
   });
@@ -15952,7 +15979,7 @@ $BindingIdCopyWith<$Res> get bindingId {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get type {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -16022,7 +16049,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get expression {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -16165,7 +16192,7 @@ return $default(_that.expression,_that.weight);case _:
 
 class _SearchRankingField implements SearchRankingField {
   const _SearchRankingField({required this.expression, required this.weight}): assert(weight > 0, 'Ranking weight must be positive.');
-  
+
 
 @override final  TypedExpression expression;
 @override final  int weight;
@@ -16230,7 +16257,7 @@ as int,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get expression {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -16468,7 +16495,7 @@ return merge(_that.children);case _:
 
 class CollectionSearchProvider implements SearchProvider {
   const CollectionSearchProvider({required this.sourceId, required this.result, this.where, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
-  
+
 
  final  PresentationCollectionSourceId sourceId;
  final  SearchResultMapping result;
@@ -16515,7 +16542,7 @@ $Res call({
 });
 
 
-$SearchResultMappingCopyWith<$Res> get result;$TypedExpressionCopyWith<$Res>? get where;
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId;$SearchResultMappingCopyWith<$Res> get result;$TypedExpressionCopyWith<$Res>? get where;
 
 }
 /// @nodoc
@@ -16542,8 +16569,17 @@ as List<SearchSelectorDefinition>,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
+$PresentationCollectionSourceIdCopyWith<$Res> get sourceId {
+
+  return $PresentationCollectionSourceIdCopyWith<$Res>(_self.sourceId, (value) {
+    return _then(_self.copyWith(sourceId: value));
+  });
+}/// Create a copy of SearchProvider
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-  
+
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16567,7 +16603,7 @@ $TypedExpressionCopyWith<$Res>? get where {
 
 class StaticSearchProvider implements SearchProvider {
   const StaticSearchProvider({required this.values, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
-  
+
 
  final  TypedExpression values;
  final  SearchResultMapping result;
@@ -16640,7 +16676,7 @@ as List<SearchSelectorDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get values {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.values, (value) {
     return _then(_self.copyWith(values: value));
   });
@@ -16649,7 +16685,7 @@ $TypedExpressionCopyWith<$Res> get values {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-  
+
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16661,7 +16697,7 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 class HttpJsonSearchProvider implements SearchProvider {
   const HttpJsonSearchProvider({required this.uri, required final  List<HttpQueryParameter> parameters, required this.resultPath, required this.resultType, required this.result, final  List<HttpJsonContextBinding> contextBindings = const [], final  List<SearchSelectorDefinition> selectors = const [], this.timeout = const Duration(seconds: 5)}): assert(resultPath != "", 'Result path must not be empty.'),_parameters = parameters,_contextBindings = contextBindings,_selectors = selectors;
-  
+
 
  final  TypedExpression uri;
  final  List<HttpQueryParameter> _parameters;
@@ -16756,7 +16792,7 @@ as Duration,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get uri {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.uri, (value) {
     return _then(_self.copyWith(uri: value));
   });
@@ -16765,7 +16801,7 @@ $TypedExpressionCopyWith<$Res> get uri {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get resultType {
-  
+
   return $TypeExpressionCopyWith<$Res>(_self.resultType, (value) {
     return _then(_self.copyWith(resultType: value));
   });
@@ -16774,7 +16810,7 @@ $TypeExpressionCopyWith<$Res> get resultType {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-  
+
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16786,7 +16822,7 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 class RealmCallbackSearchProvider implements SearchProvider {
   const RealmCallbackSearchProvider({required this.actionId, required this.payload, required this.result, final  List<SearchSelectorDefinition> selectors = const []}): _selectors = selectors;
-  
+
 
  final  RealmActionId actionId;
  final  TypedExpression payload;
@@ -16861,7 +16897,7 @@ as List<SearchSelectorDefinition>,
 @override
 @pragma('vm:prefer-inline')
 $RealmActionIdCopyWith<$Res> get actionId {
-  
+
   return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
     return _then(_self.copyWith(actionId: value));
   });
@@ -16870,7 +16906,7 @@ $RealmActionIdCopyWith<$Res> get actionId {
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get payload {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.payload, (value) {
     return _then(_self.copyWith(payload: value));
   });
@@ -16879,7 +16915,7 @@ $TypedExpressionCopyWith<$Res> get payload {
 @override
 @pragma('vm:prefer-inline')
 $SearchResultMappingCopyWith<$Res> get result {
-  
+
   return $SearchResultMappingCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -16891,7 +16927,7 @@ $SearchResultMappingCopyWith<$Res> get result {
 
 class GatedSearchProvider implements SearchProvider {
   const GatedSearchProvider({required this.condition, required this.child, this.guidance});
-  
+
 
  final  TypedExpression condition;
  final  SearchProvider child;
@@ -16958,7 +16994,7 @@ as TypedExpression?,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get condition {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.condition, (value) {
     return _then(_self.copyWith(condition: value));
   });
@@ -16967,7 +17003,7 @@ $TypedExpressionCopyWith<$Res> get condition {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -16991,7 +17027,7 @@ $TypedExpressionCopyWith<$Res>? get guidance {
 
 class DebouncedSearchProvider implements SearchProvider {
   const DebouncedSearchProvider({required this.duration, required this.child});
-  
+
 
  final  Duration duration;
  final  SearchProvider child;
@@ -17056,7 +17092,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17068,7 +17104,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class CachedSearchProvider implements SearchProvider {
   const CachedSearchProvider({required this.capacity, required this.child, this.retainStaleResults = true}): assert(capacity > 0, 'Cache capacity must be positive.');
-  
+
 
  final  int capacity;
  final  SearchProvider child;
@@ -17135,7 +17171,7 @@ as bool,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17147,7 +17183,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class RankedSearchProvider implements SearchProvider {
    RankedSearchProvider({required final  List<SearchRankingField> fields, required this.child}): assert(fields.isNotEmpty, 'Ranking fields must not be empty.'),_fields = fields;
-  
+
 
  final  List<SearchRankingField> _fields;
  List<SearchRankingField> get fields {
@@ -17218,7 +17254,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17230,7 +17266,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class LimitedSearchProvider implements SearchProvider {
   const LimitedSearchProvider({required this.maximum, required this.child});
-  
+
 
  final  TypedExpression maximum;
  final  SearchProvider child;
@@ -17295,7 +17331,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get maximum {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.maximum, (value) {
     return _then(_self.copyWith(maximum: value));
   });
@@ -17304,7 +17340,7 @@ $TypedExpressionCopyWith<$Res> get maximum {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17316,7 +17352,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class DistinctSearchProvider implements SearchProvider {
   const DistinctSearchProvider({required this.child});
-  
+
 
  final  SearchProvider child;
 
@@ -17379,7 +17415,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17391,7 +17427,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class HistoricalSearchProvider implements SearchProvider {
   const HistoricalSearchProvider({required this.key, required this.label, required this.capacity, required this.child}): assert(key != "", 'History key must not be empty.'),assert(capacity > 0, 'History capacity must be positive.');
-  
+
 
  final  String key;
  final  TypedExpression label;
@@ -17460,7 +17496,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -17469,7 +17505,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17481,7 +17517,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class SectionSearchProvider implements SearchProvider {
   const SectionSearchProvider({required this.id, required this.label, required this.child}): assert(id != "", 'Section ID must not be empty.');
-  
+
 
  final  String id;
  final  TypedExpression label;
@@ -17548,7 +17584,7 @@ as SearchProvider,
 @override
 @pragma('vm:prefer-inline')
 $TypedExpressionCopyWith<$Res> get label {
-  
+
   return $TypedExpressionCopyWith<$Res>(_self.label, (value) {
     return _then(_self.copyWith(label: value));
   });
@@ -17557,7 +17593,7 @@ $TypedExpressionCopyWith<$Res> get label {
 @override
 @pragma('vm:prefer-inline')
 $SearchProviderCopyWith<$Res> get child {
-  
+
   return $SearchProviderCopyWith<$Res>(_self.child, (value) {
     return _then(_self.copyWith(child: value));
   });
@@ -17569,7 +17605,7 @@ $SearchProviderCopyWith<$Res> get child {
 
 class MergedSearchProvider implements SearchProvider {
    MergedSearchProvider({required final  List<SearchProvider> children}): assert(children.isNotEmpty, 'Merged providers must not be empty.'),_children = children;
-  
+
 
  final  List<SearchProvider> _children;
  List<SearchProvider> get children {

@@ -1,70 +1,60 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "presentation_collection.freezed.dart";
 
 enum CollectionGraphDirection { forward, reverse }
 
-final class PresentationCollectionSourceId {
-  const PresentationCollectionSourceId(this.value)
-    : assert(value != "", "Collection source ID must not be empty.");
+@Freezed(toStringOverride: false)
+abstract class PresentationCollectionSourceId
+    with _$PresentationCollectionSourceId {
+  @Assert("value != \"\"", "Collection source ID must not be empty.")
+  const factory PresentationCollectionSourceId(String value) =
+      _PresentationCollectionSourceId;
 
-  final String value;
-
-  @override
-  bool operator ==(Object other) =>
-      other is PresentationCollectionSourceId && value == other.value;
-
-  @override
-  int get hashCode => value.hashCode;
+  const PresentationCollectionSourceId._();
 
   @override
   String toString() => value;
 }
 
-final class PresentationCollectionRelationId {
-  const PresentationCollectionRelationId(this.value)
-    : assert(value != "", "Collection relation ID must not be empty.");
+@Freezed(toStringOverride: false)
+abstract class PresentationCollectionRelationId
+    with _$PresentationCollectionRelationId {
+  @Assert("value != \"\"", "Collection relation ID must not be empty.")
+  const factory PresentationCollectionRelationId(String value) =
+      _PresentationCollectionRelationId;
 
-  final String value;
-
-  @override
-  bool operator ==(Object other) =>
-      other is PresentationCollectionRelationId && value == other.value;
-
-  @override
-  int get hashCode => value.hashCode;
+  const PresentationCollectionRelationId._();
 
   @override
   String toString() => value;
 }
 
-final class PresentationCollectionSchema {
-  const PresentationCollectionSchema({
-    required this.rowType,
-    required this.keyType,
-    required this.rowBindingId,
-    required this.key,
-    this.relations = const [],
-  });
-
-  final TypeExpression rowType;
-  final TypeExpression keyType;
-  final BindingId rowBindingId;
-  final TypedExpression key;
-  final List<PresentationCollectionRelation> relations;
+@freezed
+abstract class PresentationCollectionSchema
+    with _$PresentationCollectionSchema {
+  const factory PresentationCollectionSchema({
+    required TypeExpression rowType,
+    required TypeExpression keyType,
+    required BindingId rowBindingId,
+    required TypedExpression key,
+    @Default(<PresentationCollectionRelation>[])
+    List<PresentationCollectionRelation> relations,
+  }) = _PresentationCollectionSchema;
 }
 
-final class PresentationCollectionRelation {
-  const PresentationCollectionRelation({
-    required this.id,
-    required this.targets,
-  });
-
-  final PresentationCollectionRelationId id;
-  final TypedExpression targets;
+@freezed
+abstract class PresentationCollectionRelation
+    with _$PresentationCollectionRelation {
+  const factory PresentationCollectionRelation({
+    required PresentationCollectionRelationId id,
+    required TypedExpression targets,
+  }) = _PresentationCollectionRelation;
 }
 
-sealed class PresentationCollectionQuery {
-  const PresentationCollectionQuery();
-
+@freezed
+sealed class PresentationCollectionQuery with _$PresentationCollectionQuery {
   const factory PresentationCollectionQuery.all() = PresentationCollectionAll;
 
   const factory PresentationCollectionQuery.keys(List<DataValue> keys) =
@@ -73,45 +63,16 @@ sealed class PresentationCollectionQuery {
   const factory PresentationCollectionQuery.search(SearchQueryContext query) =
       PresentationCollectionSearch;
 
+  @Assert(
+    "maximumDepth == null || maximumDepth > 0",
+    "Maximum depth must be positive.",
+  )
   const factory PresentationCollectionQuery.graph({
     required List<DataValue> roots,
     required PresentationCollectionRelationId relation,
     required CollectionGraphDirection direction,
     int? maximumDepth,
   }) = PresentationCollectionGraph;
-}
-
-final class PresentationCollectionAll extends PresentationCollectionQuery {
-  const PresentationCollectionAll();
-}
-
-final class PresentationCollectionKeys extends PresentationCollectionQuery {
-  const PresentationCollectionKeys(this.keys);
-
-  final List<DataValue> keys;
-}
-
-final class PresentationCollectionSearch extends PresentationCollectionQuery {
-  const PresentationCollectionSearch(this.query);
-
-  final SearchQueryContext query;
-}
-
-final class PresentationCollectionGraph extends PresentationCollectionQuery {
-  const PresentationCollectionGraph({
-    required this.roots,
-    required this.relation,
-    required this.direction,
-    this.maximumDepth,
-  }) : assert(
-         maximumDepth == null || maximumDepth > 0,
-         "Maximum depth must be positive.",
-       );
-
-  final List<DataValue> roots;
-  final PresentationCollectionRelationId relation;
-  final CollectionGraphDirection direction;
-  final int? maximumDepth;
 }
 
 abstract interface class PresentationCollectionSource {
@@ -124,33 +85,35 @@ abstract interface class PresentationCollectionSource {
   );
 }
 
-final class PresentationCollectionRow {
-  const PresentationCollectionRow({required this.key, required this.value});
-
-  final DataValue key;
-  final DataValue value;
+@freezed
+abstract class PresentationCollectionRow with _$PresentationCollectionRow {
+  const factory PresentationCollectionRow({
+    required DataValue key,
+    required DataValue value,
+  }) = _PresentationCollectionRow;
 }
 
-final class PresentationCollectionPath {
-  const PresentationCollectionPath(this.keys);
-
-  final List<DataValue> keys;
+@freezed
+abstract class PresentationCollectionPath with _$PresentationCollectionPath {
+  const factory PresentationCollectionPath(List<DataValue> keys) =
+      _PresentationCollectionPath;
 }
 
-final class PresentationCollectionSnapshot {
-  const PresentationCollectionSnapshot({
-    this.rootRows = const [],
-    this.rows = const [],
-    this.paths = const [],
-    this.diagnostics = const [],
-    this.loading = false,
-  });
+@freezed
+abstract class PresentationCollectionSnapshot
+    with _$PresentationCollectionSnapshot {
+  const factory PresentationCollectionSnapshot({
+    @Default(<PresentationCollectionRow>[])
+    List<PresentationCollectionRow> rootRows,
+    @Default(<PresentationCollectionRow>[])
+    List<PresentationCollectionRow> rows,
+    @Default(<PresentationCollectionPath>[])
+    List<PresentationCollectionPath> paths,
+    @Default(<TypeDiagnostic>[]) List<TypeDiagnostic> diagnostics,
+    @Default(false) bool loading,
+  }) = _PresentationCollectionSnapshot;
 
-  final List<PresentationCollectionRow> rootRows;
-  final List<PresentationCollectionRow> rows;
-  final List<PresentationCollectionPath> paths;
-  final List<TypeDiagnostic> diagnostics;
-  final bool loading;
+  const PresentationCollectionSnapshot._();
 
   PresentationCollectionRow? row(DataValue key) {
     for (final row in rootRows) {

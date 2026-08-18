@@ -1,7 +1,10 @@
 import "package:collection/collection.dart";
 import "package:flutter/widgets.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:petitparser/petitparser.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "query_selector.freezed.dart";
 
 const quotes = ["'", '"'];
 
@@ -20,7 +23,7 @@ sealed class QuerySelectorDefinition {
   final QueryMultiplicity multiplicity;
   final Color? color;
 
-  Parser<QueryLexerSelectorToken> parser();
+  Parser<QueryLexerToken> parser();
   QuerySelectorDefinition merge(QuerySelectorDefinition other);
 
   List<QueryParseIssue> validate(List<QueryLexerSelectorToken> tokens) {
@@ -209,49 +212,34 @@ extension QuerySelectorDefinitionsX on List<QuerySelectorDefinition> {
   }
 }
 
-sealed class QuerySelectorValue {
-  const QuerySelectorValue._();
-
+@freezed
+sealed class QuerySelectorValue with _$QuerySelectorValue {
   const factory QuerySelectorValue.freeText() = FreeTextSelectorValue;
+
   const factory QuerySelectorValue.enumValue(List<String> possibleValues) =
       EnumSelectorValue;
 
-  bool isValid(String value);
-  List<String> suggestions(String partial);
-  QuerySelectorValue merge(QuerySelectorValue other);
-}
+  const QuerySelectorValue._();
 
-class FreeTextSelectorValue extends QuerySelectorValue {
-  const FreeTextSelectorValue() : super._();
+  bool isValid(String value) => switch (this) {
+    FreeTextSelectorValue() => true,
+    EnumSelectorValue(:final possibleValues) => possibleValues.contains(value),
+  };
 
-  @override
-  bool isValid(String value) => true;
+  List<String> suggestions(String partial) => switch (this) {
+    FreeTextSelectorValue() => const [],
+    EnumSelectorValue(:final possibleValues) => possibleValues,
+  };
 
-  @override
-  List<String> suggestions(String partial) => [];
-
-  @override
-  QuerySelectorValue merge(QuerySelectorValue other) => this;
-}
-
-class EnumSelectorValue extends QuerySelectorValue {
-  const EnumSelectorValue(this.possibleValues) : super._();
-
-  final List<String> possibleValues;
-
-  @override
-  bool isValid(String value) => possibleValues.contains(value);
-
-  @override
-  List<String> suggestions(String partial) => possibleValues;
-
-  @override
   QuerySelectorValue merge(QuerySelectorValue other) {
-    switch (other) {
-      case EnumSelectorValue(possibleValues: final otherValues):
-        return EnumSelectorValue({...possibleValues, ...otherValues}.toList());
-      case FreeTextSelectorValue():
-        return other;
-    }
+    return switch ((this, other)) {
+      (FreeTextSelectorValue(), _) => this,
+      (_, FreeTextSelectorValue()) => other,
+      (
+        EnumSelectorValue(possibleValues: final values),
+        EnumSelectorValue(possibleValues: final otherValues),
+      ) =>
+        QuerySelectorValue.enumValue({...values, ...otherValues}.toList()),
+    };
   }
 }
