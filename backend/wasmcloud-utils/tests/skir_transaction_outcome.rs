@@ -4,6 +4,10 @@ use wasmcloud_utils::skir::base::{
 };
 use wasmcloud_utils::skir_transaction_outcome;
 
+#[allow(
+    clippy::large_enum_variant,
+    reason = "The test mirrors transaction outcome shapes used by generated response types"
+)]
 enum MemberUpdateOutcome {
     Updated { member: OrganizationMember },
     UserNotFoundError,

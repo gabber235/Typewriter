@@ -141,7 +141,7 @@ pub async fn handle_approve(
 
     let db_role_ids = role_ids.as_slice().into_surreal_record_ids();
     let validation = validate_roles(
-        &org_id,
+        org_id,
         &db_role_ids,
         &[],
         "join-request-approve-role-validation-query-failed",
@@ -248,7 +248,7 @@ pub async fn handle_approve(
 
     let user_id = approved.request.user.id.key.to_string();
 
-    wasmcloud_utils::skir_subjects::organization_join_requests(&org_id)
+    wasmcloud_utils::skir_subjects::organization_join_requests(org_id)
         .publish(WatchOrganizationJoinRequestsResponse::Remove(Box::new(
             request_id.clone(),
         )))
@@ -258,7 +258,7 @@ pub async fn handle_approve(
         .publish(WatchUserJoinRequestsResponse::Remove(Box::new(request_id)))
         .await?;
 
-    wasmcloud_utils::skir_subjects::organization_members(&org_id)
+    wasmcloud_utils::skir_subjects::organization_members(org_id)
         .publish(WatchOrganizationMembersResponse::Add(Box::new(
             member.clone(),
         )))
@@ -345,7 +345,7 @@ pub async fn handle_decline(
         ));
     };
 
-    wasmcloud_utils::skir_subjects::organization_join_requests(&org_id)
+    wasmcloud_utils::skir_subjects::organization_join_requests(org_id)
         .publish(WatchOrganizationJoinRequestsResponse::Remove(Box::new(
             request_id.clone(),
         )))

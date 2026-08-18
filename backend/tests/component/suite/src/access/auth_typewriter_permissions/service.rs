@@ -2,10 +2,7 @@ use component_test::{TestContext, TestResult, component_test};
 use typewriter_component_test::prelude::SkirMessagingExpectationExt;
 use wasmcloud_utils::{
     skir::base::{
-        access::v1::permission::{
-            EntityPermissionQualifier, EntityPermissionQualifier_Service,
-            GetEntityPermissionRequest,
-        },
+        access::v1::permission::{EntityPermissionQualifier, GetEntityPermissionRequest},
         service::v1::status::{
             GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
             ServiceBinding, ServiceBinding_Bound, ServiceBinding_Unbound,
@@ -18,9 +15,7 @@ use super::{AuthTypewriterPermissions, request_permissions};
 
 fn request(service_id: &str) -> GetEntityPermissionRequest {
     GetEntityPermissionRequest {
-        qualifier: EntityPermissionQualifier::Service(Box::new(
-            EntityPermissionQualifier_Service::default(),
-        )),
+        qualifier: EntityPermissionQualifier::Service(Box::default()),
         jwt_claims: serde_json::to_vec(&serde_json::json!({
             "sub": service_id,
             "preferred_username": "Fixture Service"
@@ -82,9 +77,7 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
     }
 
     let subscribe = &response.permissions.subscribe.allow;
-    assert!(
-        subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into())
-    );
+    assert!(subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into()));
     for suffix in ["configuration", "command"] {
         assert!(subscribe.contains(&format!(
             "cloud.from.service.engine_one.organization.writers.{suffix}"
@@ -117,7 +110,11 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
         )));
     }
     assert!(publish.iter().all(|subject| !subject.ends_with("realm.>")));
-    assert!(subscribe.iter().all(|subject| !subject.ends_with("realm.>")));
+    assert!(
+        subscribe
+            .iter()
+            .all(|subject| !subject.ends_with("realm.>"))
+    );
     Ok(())
 }
 

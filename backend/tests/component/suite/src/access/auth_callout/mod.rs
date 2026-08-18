@@ -71,18 +71,20 @@ impl FixtureSpec for AuthCallout {
     }
 }
 
-fn external_jwt() -> anyhow::Result<String> {
+fn external_jwt(name: Option<&str>) -> anyhow::Result<String> {
     let key: JsonWebKey = serde_json::from_str(JWK)?;
     let checked = key
         .check(StandardPolicy::default())
         .map_err(|(_, error)| anyhow::anyhow!(error.to_string()))?;
     let mut signer: JwkSigner = checked.try_into()?;
-    let claims: jose::jwt::Claims<UntypedAdditionalProperties> =
-        serde_json::from_value(serde_json::json!({
-            "iss": "https://issuer.test",
-            "sub": "panel_user",
-            "name": "Panel User"
-        }))?;
+    let mut claims = serde_json::json!({
+        "iss": "https://issuer.test",
+        "sub": "panel_user"
+    });
+    if let Some(name) = name {
+        claims["name"] = name.into();
+    }
+    let claims: jose::jwt::Claims<UntypedAdditionalProperties> = serde_json::from_value(claims)?;
     let jwt = Jwt::builder_jwt().build(claims)?.sign(&mut signer)?;
     Ok(jwt.encode().to_string())
 }
@@ -158,6 +160,35 @@ fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
         .register()
 }
 
+fn expect_permissions(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
+    let permission_response = GetEntityPermissionResponse {
+        permissions: Permissions {
+            publish: Permission {
+                allow: vec!["cloud.to.user.panel_user.organization.watch".into()],
+                deny: vec!["private.>".into()],
+                _unrecognized: None,
+            },
+            subscribe: Permission {
+                allow: vec!["cloud.from.user.panel_user.organization.watch".into()],
+                deny: Vec::new(),
+                _unrecognized: None,
+            },
+            response: None,
+            _unrecognized: None,
+        },
+        tags: vec!["user:panel_user".into()],
+        _unrecognized: None,
+    };
+    context
+        .messaging_mock()?
+        .expect_request("auth.permissions.typewriter-panel")
+        .reply_skir(
+            &permission_response,
+            GetEntityPermissionResponse::serializer(),
+        );
+    Ok(())
+}
+
 #[component_test(AuthCallout)]
 async fn missing_user_token_returns_signed_denial(
     context: &mut TestContext<AuthCallout>,
@@ -185,33 +216,13 @@ async fn valid_user_token_receives_signed_permissions(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {
     expect_jwks(context)?;
-    let permission_response = GetEntityPermissionResponse {
-        permissions: Permissions {
-            publish: Permission {
-                allow: vec!["cloud.to.user.panel_user.organization.watch".into()],
-                deny: vec!["private.>".into()],
-                _unrecognized: None,
-            },
-            subscribe: Permission {
-                allow: vec!["cloud.from.user.panel_user.organization.watch".into()],
-                deny: Vec::new(),
-                _unrecognized: None,
-            },
-            response: None,
-            _unrecognized: None,
-        },
-        tags: vec!["user:panel_user".into()],
-        _unrecognized: None,
-    };
-    context
-        .messaging_mock()?
-        .expect_request("auth.permissions.typewriter-panel")
-        .reply_skir(
-            &permission_response,
-            GetEntityPermissionResponse::serializer(),
-        );
+    expect_permissions(context)?;
 
-    let response = authorize_raw(context, auth_request(Some(external_jwt()?))?).await?;
+    let response = authorize_raw(
+        context,
+        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+    )
+    .await?;
     let payload = authorization_payload(&response)?;
 
     assert!(payload["nats"].get("error").is_none_or(|error| error == ""));
@@ -219,6 +230,7 @@ async fn valid_user_token_receives_signed_permissions(
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("authorization response jwt missing"))?;
     let user_claims = Claims::<User>::decode(user_jwt)?;
+    assert_eq!(user_claims.name.as_deref(), Some("Panel User"));
     assert_eq!(
         user_claims.payload().permissions.permissions.publish.allow,
         ["cloud.to.user.panel_user.organization.watch"]
@@ -227,6 +239,24 @@ async fn valid_user_token_receives_signed_permissions(
         user_claims.payload().generic_fields.tags,
         Some(vec!["user:panel_user".into()])
     );
+    Ok(())
+}
+
+#[component_test(AuthCallout)]
+async fn user_token_without_name_receives_unknown_display_name(
+    context: &mut TestContext<AuthCallout>,
+) -> TestResult {
+    expect_jwks(context)?;
+    expect_permissions(context)?;
+
+    let response = authorize_raw(context, auth_request(Some(external_jwt(None)?))?).await?;
+    let payload = authorization_payload(&response)?;
+    let user_jwt = payload["nats"]["jwt"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("authorization response jwt missing"))?;
+    let user_claims = Claims::<User>::decode(user_jwt)?;
+
+    assert_eq!(user_claims.name.as_deref(), Some("Unknown"));
     Ok(())
 }
 
@@ -242,7 +272,11 @@ async fn jwks_failure_does_not_issue_credentials(
         .status(http::StatusCode::SERVICE_UNAVAILABLE)
         .register()?;
 
-    let result = authorize(context, auth_request(Some(external_jwt()?))?).await;
+    let result = authorize(
+        context,
+        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+    )
+    .await;
 
     assert!(result.is_err());
     Ok(())
@@ -258,7 +292,11 @@ async fn permission_exchange_failure_does_not_issue_credentials(
         .expect_request("auth.permissions.typewriter-panel")
         .reply_error("permission service unavailable");
 
-    let result = authorize(context, auth_request(Some(external_jwt()?))?).await;
+    let result = authorize(
+        context,
+        auth_request(Some(external_jwt(Some("Panel User"))?))?,
+    )
+    .await;
 
     assert!(result.is_err());
     Ok(())

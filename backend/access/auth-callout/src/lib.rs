@@ -191,7 +191,7 @@ async fn process_user_jwt(
         .from_bytes(&qualifier, Drop)
         .error_with_slug("auth-callout-connect-opts-nkey-invalid")?;
 
-    let claims = create_user_claims(&jwt, &request.payload().user_nkey, &issuer, qualifier).await?;
+    let claims = create_user_claims(&jwt, &request.payload().user_nkey, issuer, qualifier).await?;
     main_attribute!("auth.user_claims.created" = true);
 
     let encoded = claims
@@ -284,9 +284,9 @@ async fn create_user_claims(
     let name = jwt
         .additional
         .get("name")
-        .cloned()
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "Unkown".to_string());
+        .and_then(|value| value.as_str())
+        .unwrap_or("Unknown")
+        .to_string();
 
     let mut claims = User::new_claims(name, user_nkey.to_string());
     claims.payload_mut().issuer_account = Some(issuer.nats_account_key.clone());
@@ -335,7 +335,7 @@ async fn create_user_claims(
         .as_ref()
         .and_then(|r| r.ttl.clone())
     {
-        main_attribute!("auth.permissions.response.ttl_ms" = ttl.milliseconds as i64);
+        main_attribute!("auth.permissions.response.ttl_ms" = ttl.milliseconds);
     }
 
     let nats_permissions = convert_permissions(response.permissions);
@@ -475,16 +475,16 @@ impl Claim for FixedAuthRequest {
     fn validate() {}
 }
 
-impl Into<AuthRequest> for FixedAuthRequest {
-    fn into(self) -> AuthRequest {
+impl From<FixedAuthRequest> for AuthRequest {
+    fn from(value: FixedAuthRequest) -> Self {
         AuthRequest {
-            server: self.server,
-            user_nkey: self.user_nkey,
-            client_info: self.client_info,
-            connect_opts: self.connect_opts,
+            server: value.server,
+            user_nkey: value.user_nkey,
+            client_info: value.client_info,
+            connect_opts: value.connect_opts,
             client_tls: None,
-            request_nonce: self.request_nonce,
-            generic_fields: self.generic_fields,
+            request_nonce: value.request_nonce,
+            generic_fields: value.generic_fields,
         }
     }
 }

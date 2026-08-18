@@ -26,9 +26,9 @@ pub struct Jwks {
     pub keys: Vec<jose::Jwk>,
 }
 
-pub fn validate_jwt<'t, 'c>(
-    token: &'t str,
-    configs: &'c Vec<IssuerConfig>,
+pub fn validate_jwt<'c>(
+    token: &str,
+    configs: &'c [IssuerConfig],
 ) -> Result<Option<(Claims<UntypedAdditionalProperties>, &'c IssuerConfig)>, otel_wasi::Error> {
     attribute!("auth.jwt.raw.size" = token.len() as i64);
 
@@ -102,7 +102,7 @@ fn extract_issuer(unverified: &Unverified<Jwt<UntypedAdditionalProperties>>) -> 
 }
 
 fn find_issuer_config<'c>(
-    configs: &'c Vec<IssuerConfig>,
+    configs: &'c [IssuerConfig],
     issuer_url: &str,
 ) -> Option<&'c IssuerConfig> {
     configs.iter().find(|i| i.issuer_url == issuer_url)
