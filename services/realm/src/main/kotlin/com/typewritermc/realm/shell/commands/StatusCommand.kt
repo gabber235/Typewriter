@@ -88,22 +88,32 @@ class StatusCommand(
                 echo("Connection Generation: ${state.connectionGeneration}")
             }
 
-            is RegistrarState.Degraded -> {
+            is RegistrarState.DegradedBeforeReady -> {
                 echo("Status: Degraded")
                 echo("Stage: ${state.stage.displayName()}")
                 echo("Error: ${state.failure.displayName()}")
                 echo("Retry Attempt: ${state.retry.attempt}")
                 echo("Retry Delay: ${state.retry.delay}")
-                state.session?.let {
-                    displayIdentity(it.identity.serviceId, it.identity.displayName)
-                    displayBinding(it.binding.organizationId, it.binding.organizationName)
-                }
+            }
+
+            is RegistrarState.DegradedAfterReady -> {
+                echo("Status: Degraded After Ready")
+                echo("Stage: ${state.stage.displayName()}")
+                echo("Error: ${state.failure.displayName()}")
+                echo("Retry Attempt: ${state.retry.attempt}")
+                echo("Retry Delay: ${state.retry.delay}")
+                displayIdentity(state.session.identity.serviceId, state.session.identity.displayName)
+                displayBinding(state.session.binding.organizationId, state.session.binding.organizationName)
             }
 
             is RegistrarState.Failed -> {
                 echo("Status: Failed")
                 echo("Error: ${state.failure.displayName()}")
-                echo("Identity Outcome Ambiguous: ${state.identityOutcomeMayBeAmbiguous}")
+            }
+
+            is RegistrarState.IdentityOutcomeUnknown -> {
+                echo("Status: Identity Outcome Unknown")
+                echo("Error: ${state.failure.displayName()}")
             }
 
             RegistrarState.Stopping -> {

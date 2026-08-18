@@ -4,8 +4,10 @@ import com.surrealdb.Surreal
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.schema.RealmDatabaseProvider
+import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -39,7 +41,10 @@ class Realm(
     private var registrarMonitor: Job? = null
 
     context(main: MainSpanScope)
-    suspend fun start(states: StateFlow<RegistrarSnapshot>) {
+    suspend fun start(
+        states: StateFlow<RegistrarSnapshot>,
+        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
+    ) {
         childSpan("realm.database.initialize") {
             database.set(databaseProvider.connect())
         }
@@ -47,13 +52,13 @@ class Realm(
         val ready =
             snapshot.state as? RegistrarState.Ready
                 ?: error("Registrar must be ready before Realm starts")
-        replaceRouter(snapshot.attempt, ready)
+        replaceRouter(snapshot.attempt, ready, communicatorFor)
         registrarMonitor =
             scope.launch {
                 states.collectLatest { snapshot ->
                     val state = snapshot.state
                     if (state is RegistrarState.Ready) {
-                        replaceRouterWithRetry(snapshot.attempt, state)
+                        replaceRouterWithRetry(snapshot.attempt, state, communicatorFor)
                     }
                 }
             }
@@ -79,6 +84,7 @@ class Realm(
     private suspend fun replaceRouterWithRetry(
         attempt: Long,
         ready: RegistrarState.Ready,
+        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
     ) {
         while (true) {
             try {
@@ -86,7 +92,7 @@ class Realm(
                     name = "realm.routes.replace",
                     unhandledFailureSlug = ErrorSlug.of("realm-routes-replace-failed"),
                 ) {
-                    replaceRouter(attempt, ready)
+                    replaceRouter(attempt, ready, communicatorFor)
                 }
                 return
             } catch (failure: Throwable) {
@@ -100,6 +106,7 @@ class Realm(
     private suspend fun replaceRouter(
         attempt: Long,
         ready: RegistrarState.Ready,
+        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
     ) = lifecycle.withLock {
         val session = RouterSession(attempt, ready.connectionGeneration)
         if (routerSession == session) return@withLock
@@ -112,7 +119,12 @@ class Realm(
                 realmId = ready.session.identity.serviceId,
                 organizationId = ready.session.binding.organizationId,
             )
-        val replacement = ready.session.communicator.createRouter(routeFactory.create(address), scope)
+        val communicator =
+            when (val result = communicatorFor(ready.connectionGeneration)) {
+                is RegistrarResult.Success -> result.value
+                is RegistrarResult.Failure -> error("Registrar communicator unavailable: ${result.failure}")
+            }
+        val replacement = communicator.createRouter(routeFactory.create(address), scope)
         replacement.start().requireSuccess("start")
         router = replacement
         routerSession = session

@@ -21,15 +21,15 @@ registrar.start()
 when (val result = registrar.awaitReady()) {
     is RegistrarResult.Success -> {
         val session = result.value
-        use(session.identity, session.binding, session.communicator)
+        use(session.identity, session.binding)
     }
     is RegistrarResult.Failure -> report(result.failure)
 }
 ```
 
-Registrar is single-run. The application supplies its lifecycle scope and calls suspending `stop()`. Caller cancellation of `awaitReady()` does not cancel registration. Expected failures are typed; cancellation, fatal JVM failures, and unexpected programming failures escape.
+Registrar has one lifecycle run. The application supplies its lifecycle scope and calls suspending `stop()`. Caller cancellation of `awaitReady()` does not cancel registration. Expected failures are typed; cancellation, fatal JVM failures, and unexpected programming failures escape.
 
-`states` exposes detailed loading, issuance, persistence, authentication, connection, binding, reauthorization, Ready, Degraded, failure, and shutdown phases. A call to `awaitReady()` made during Degraded waits for current connectivity to recover. Ready sessions expose only public identity, organization binding, and `Communicator`; credentials and raw NATS lifecycle objects remain private.
+`states` exposes detailed loading, issuance, persistence, authentication, connection, binding, reauthorization, ready, degraded, failure, and shutdown phases. Degradation before readiness and degradation after readiness are distinct variants. An uncertain identity issuance outcome is also distinct from a confirmed terminal failure. A call to `awaitReady()` made during degradation waits for current connectivity to recover. Ready sessions expose only durable identity and organization binding metadata. Consumers obtain a live communicator through `communicatorFor()` with the observed connection generation. Credentials and raw NATS lifecycle objects remain private to the registrar lifecycle.
 
 ## Identity safety
 
@@ -74,4 +74,4 @@ The application must bind `OpenTelemetry`, `ServiceTelemetry`, and `CredentialSt
 
 ## Realm migration
 
-The old registrar APIs and compatibility qualifiers were removed. Realm is intentionally unchanged and must migrate separately to `RegistrarConfiguration`, `states`, `awaitReady()`, `ReadySession.communicator`, explicit lifecycle ownership, and per-connection-generation router recreation.
+The old registrar APIs and compatibility qualifiers were removed. Realm uses `RegistrarConfiguration`, `states`, `awaitReady()`, generation checked `communicatorFor()` access, explicit lifecycle ownership, and router recreation for each connection generation.

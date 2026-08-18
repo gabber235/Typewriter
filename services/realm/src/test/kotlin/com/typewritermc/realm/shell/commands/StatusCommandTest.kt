@@ -2,7 +2,6 @@ package com.typewritermc.realm.shell.commands
 
 import com.github.ajalt.clikt.testing.test
 import com.typewritermc.realm.shell.RealmShellContext
-import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.registrar.MessagingOperation
 import com.typewritermc.services.libs.registrar.OrganizationBinding
 import com.typewritermc.services.libs.registrar.ReadySession
@@ -18,7 +17,6 @@ import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
@@ -82,7 +80,7 @@ val StatusCommandTest by testSuite {
 
     test("displays degraded stage failure and retry context") {
         val state =
-            RegistrarState.Degraded(
+            RegistrarState.DegradedAfterReady(
                 session = readySession(),
                 stage = RegistrarStage.HEARTBEAT,
                 failure = RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT),
@@ -96,7 +94,7 @@ val StatusCommandTest by testSuite {
 
         val output = StatusCommand(context).test().output
 
-        output shouldContain "Status: Degraded"
+        output shouldContain "Status: Degraded After Ready"
         output shouldContain "Stage: heartbeat"
         output shouldContain "Error: messaging heartbeat"
         output shouldContain "Retry Attempt: 7"
@@ -105,10 +103,7 @@ val StatusCommandTest by testSuite {
 
     test("displays terminal failure") {
         val state =
-            RegistrarState.Failed(
-                failure = RegistrarFailure.Internal("registration_unavailable"),
-                identityOutcomeMayBeAmbiguous = true,
-            )
+            RegistrarState.Failed(RegistrarFailure.Internal("registration_unavailable"))
         val context =
             RealmShellContext(
                 startTime = Instant.parse("2026-08-02T12:00:00Z"),
@@ -119,7 +114,6 @@ val StatusCommandTest by testSuite {
 
         output shouldContain "Status: Failed"
         output shouldContain "Error: internal registration_unavailable"
-        output shouldContain "Identity Outcome Ambiguous: true"
     }
 
     test("displays stopping and stopped states") {
@@ -155,5 +149,4 @@ private fun readySession() =
     ReadySession(
         identity = identity,
         binding = OrganizationBinding("organization123", "Test Organization"),
-        communicator = mockk<Communicator>(),
     )

@@ -36,8 +36,14 @@ sealed interface RegistrarState {
         val connectionGeneration: Long,
     ) : RegistrarState
 
-    data class Degraded(
-        val session: ReadySession?,
+    data class DegradedBeforeReady(
+        val stage: RegistrarStage,
+        val failure: RegistrarFailure,
+        val retry: RetrySchedule,
+    ) : RegistrarState
+
+    data class DegradedAfterReady(
+        val session: ReadySession,
         val stage: RegistrarStage,
         val failure: RegistrarFailure,
         val retry: RetrySchedule,
@@ -45,7 +51,10 @@ sealed interface RegistrarState {
 
     data class Failed(
         val failure: RegistrarFailure,
-        val identityOutcomeMayBeAmbiguous: Boolean,
+    ) : RegistrarState
+
+    data class IdentityOutcomeUnknown(
+        val failure: RegistrarFailure.IdentityIssuance,
     ) : RegistrarState
 
     data object Stopping : RegistrarState

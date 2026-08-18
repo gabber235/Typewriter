@@ -60,6 +60,22 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
+    test("concurrent stops clean up the runtime exactly once") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+
+                List(10) { async { f.registrar.stop() } }.forEach { it.await() shouldBe RegistrarStopResult.Success }
+
+                f.ledger.actions.count { it == RegistrarAction.Shutdown } shouldBe 1
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 1
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Stopped>()
+            }
+        }
+    }
     test("stored credentials skip identity issuance") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
@@ -103,13 +119,14 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 runCurrent()
                 advanceTimeBy(10_000)
                 runCurrent()
-                (f.registrar.states.value.state as RegistrarState.Failed).identityOutcomeMayBeAmbiguous shouldBe true
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.IdentityOutcomeUnknown>()
                 f.ledger.actions.count { it is RegistrarAction.IssueIdentity } shouldBe 1
                 f.harness
                     .finishedLogs()
                     .last()
                     .bodyValue
-                    ?.asString() shouldBe "Service registration failed"
+                    ?.asString() shouldBe "Service identity issuance outcome is unknown"
             }
         }
     }
@@ -124,6 +141,28 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 f.registrar.retry()
                 runCurrent()
                 f.ledger.actions.count { it is RegistrarAction.IssueIdentity } shouldBe 2
+            }
+        }
+    }
+    test("concurrent retry and stop serialize without restarting after stop") {
+        runTest {
+            fixture(this).use { f ->
+                f.issuer.enqueue(IdentityIssueResult.Failure(IdentityIssueError.Rejected(IdentityRejectionReason.MALFORMED_REQUEST)))
+                f.issuer.enqueue(IdentityIssueResult.Success(credentials()))
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+
+                val retry = async { f.registrar.retry() }
+                val stop = async { f.registrar.stop() }
+                retry.await()
+                stop.await() shouldBe RegistrarStopResult.Success
+                runCurrent()
+
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Stopped>()
+                f.registrar.start().shouldBeInstanceOf<RegistrarResult.Failure>()
+                (f.ledger.actions.count { it == RegistrarAction.Close } <= 1) shouldBe true
             }
         }
     }
@@ -451,6 +490,26 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 runCurrent()
                 collect.cancelAndJoin()
                 seen.zipWithNext().all { (a, b) -> b.sequence > a.sequence && b.attempt >= a.attempt } shouldBe true
+            }
+        }
+    }
+    test("telemetry follows lifecycle transition order") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                f.registrar.stop()
+
+                val logs = f.harness.finishedLogs().mapNotNull { it.bodyValue?.asString() }
+                val connecting = logs.indexOfFirst { it.startsWith("Connecting to messaging") }
+                val ready = logs.indexOf("Service registration is ready")
+                val stopping = logs.indexOf("Stopping service registration")
+                val stopped = logs.indexOf("Service registration stopped")
+
+                (connecting < ready) shouldBe true
+                (ready < stopping) shouldBe true
+                (stopping < stopped) shouldBe true
             }
         }
     }
