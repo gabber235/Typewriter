@@ -51,6 +51,10 @@ pub async fn handle_service(
     allow_publish.push(format!("cloud.to.service.{service_id}.status"));
     allow_publish.push(format!("cloud.to.service.{service_id}.heartbeat"));
     allow_publish.push(format!("cloud.to.service.{service_id}.shutdown"));
+    allow_subscribe.push(format!(
+        "cloud.from.service.{service_id}.registration.bound"
+    ));
+    main_attribute!("auth.permissions.category.registration" = true);
 
     match status {
         GetServiceStatusResponse::Status(status) => handle_service_status(
@@ -121,7 +125,7 @@ fn handle_service_status(
             handle_bound_binding(*bound, service_id, allow_publish, allow_subscribe, tags);
         }
         ServiceBinding::Unbound(_) => {
-            handle_unbound_binding(service_id, allow_subscribe);
+            handle_unbound_binding();
         }
         ServiceBinding::Unknown(_) => {
             return Err(wasi_error!(
@@ -162,6 +166,9 @@ fn handle_bound_binding(
     }
 
     for suffix in [
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "book.create",
@@ -185,6 +192,8 @@ fn handle_bound_binding(
         ));
     }
     for suffix in [
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "page.watch",
@@ -197,12 +206,6 @@ fn handle_bound_binding(
     }
 }
 
-fn handle_unbound_binding(service_id: &str, allow_subscribe: &mut Vec<String>) {
-    main_attribute!(
-        "auth.permissions.service.binding" = "unbound",
-        "auth.permissions.category.registration" = true,
-    );
-    allow_subscribe.push(format!(
-        "cloud.from.service.{service_id}.registration.bound"
-    ));
+fn handle_unbound_binding() {
+    main_attribute!("auth.permissions.service.binding" = "unbound");
 }

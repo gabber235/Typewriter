@@ -194,10 +194,8 @@ class _ActionIntent extends Intent {
   final ActionShortcut action;
 }
 
-typedef _IntentActionFactory =
-    Action<Intent> Function(ActionInvoke onInvoke, WidgetRef ref);
-
-final _intentActionFactories = <Type, _IntentActionFactory>{
+final _intentActionFactories =
+    <Type, Action<Intent> Function(ActionInvoke onInvoke, WidgetRef ref)>{
   ActivateIntent: (onInvoke, ref) =>
       CallbackAction<ActivateIntent>(onInvoke: (_) => onInvoke(ref)),
   ActivateAllIntent: (onInvoke, ref) =>

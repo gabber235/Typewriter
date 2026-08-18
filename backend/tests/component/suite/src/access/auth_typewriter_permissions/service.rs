@@ -68,6 +68,8 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
         )));
     }
     for suffix in [
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "page.watch",
@@ -80,12 +82,18 @@ async fn bound_service_receives_scoped_cloud_and_realm_permissions(
     }
 
     let subscribe = &response.permissions.subscribe.allow;
+    assert!(
+        subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into())
+    );
     for suffix in ["configuration", "command"] {
         assert!(subscribe.contains(&format!(
             "cloud.from.service.engine_one.organization.writers.{suffix}"
         )));
     }
     for suffix in [
+        "editor.catalog.fetch",
+        "editor.catalog.invalidate",
+        "editor.presentation.search",
         "book.watch",
         "book.resource.watch",
         "book.create",
