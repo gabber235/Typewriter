@@ -2,12 +2,11 @@ use crate::validate_roles;
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::database::organization::projections::{
     JoinRequestProjection, OrganizationMemberProjection,
 };
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, TransactionOutcome, read_query, transaction_query},
     decode_skir, extract_params,
     skir::base::organization::v1::{
         join_request::*,
@@ -27,7 +26,7 @@ struct ApprovalRecord {
 
 #[derive(Debug, Deserialize)]
 struct RequesterRecord {
-    user_id: surrealdb_component_sdk::RecordId,
+    user_id: RecordId,
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -42,7 +41,8 @@ pub async fn handle_watch(
     );
     let _ = decode_skir!(WatchOrganizationJoinRequestsRequest, &msg.body)?;
 
-    let rows = query(
+    let organization_id = RecordId::new("organization", org_id);
+    let rows = read_query!(
         r#"
         SELECT
             id,
@@ -51,15 +51,15 @@ pub async fn handle_watch(
             requested_at,
             expires_at
         FROM request_to_join
-        WHERE out = type::record('organization',$org_id)
+        WHERE out = $org_id
             AND expires_at > time::now()
         "#,
     )
-    .bind("org_id", org_id)
+    .bind("org_id", organization_id)
     .execute()
     .await
     .error_with_slug("join-request-watch-query-failed")?
-    .take::<Vec<JoinRequestProjection>>(0)
+    .take::<Vec<JoinRequestProjection>>()
     .error_with_slug("join-request-watch-result-parse-failed")?;
 
     otel_wasi::main_attribute!(
@@ -97,8 +97,10 @@ pub async fn handle_approve(
         "request.id" = request_id.key.to_string(),
         "role.result_count" = role_ids.len() as i64
     );
+    let request_record_id = RecordId::from(&request_id);
+    let organization_id = RecordId::new("organization", org_id);
 
-    let requester = query(
+    let requester = read_query!(
         r#"
         SELECT
             in AS user_id
@@ -107,18 +109,12 @@ pub async fn handle_approve(
             AND expires_at > time::now()
         "#,
     )
-    .bind(
-        "request",
-        surrealdb_component_sdk::RecordId::from(&request_id),
-    )
-    .bind(
-        "org",
-        surrealdb_component_sdk::RecordId::new("organization", org_id),
-    )
+    .bind("request", request_record_id.clone())
+    .bind("org", organization_id.clone())
     .execute()
     .await
     .error_with_slug("join-request-approve-requester-query-failed")?
-    .parse::<Option<RequesterRecord>>(0)
+    .parse::<Option<RequesterRecord>>()
     .error_with_slug("join-request-approve-requester-result-parse-failed")?;
 
     let Some(requester) = requester else {
@@ -141,7 +137,7 @@ pub async fn handle_approve(
 
     let db_role_ids = role_ids.as_slice().into_surreal_record_ids();
     let validation = validate_roles(
-        org_id,
+        &organization_id,
         &db_role_ids,
         &[],
         "join-request-approve-role-validation-query-failed",
@@ -168,7 +164,8 @@ pub async fn handle_approve(
     }
 
     let roles = db_role_ids;
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        ApprovalRecord,
         r#"
         BEGIN TRANSACTION;
 
@@ -219,22 +216,16 @@ pub async fn handle_approve(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind(
-        "request",
-        surrealdb_component_sdk::RecordId::from(&request_id),
-    )
-    .bind(
-        "org",
-        surrealdb_component_sdk::RecordId::new("organization", org_id),
-    )
+    .bind("request", request_record_id)
+    .bind("org", organization_id)
     .bind("roles", roles)
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
-    .transaction::<ApprovalRecord>(11)
+    .decode()
     .error_with_slug("join-request-approve-result-parse-failed")?;
 
-    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &result {
+    if let TransactionOutcome::Rejected(error) = &result {
         otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
     }
     let approved = wasmcloud_utils::skir_domain_result!(ApproveOrganizationJoinRequestResponse, result,
@@ -294,8 +285,11 @@ pub async fn handle_decline(
         "organization.id" = org_id.to_string(),
         "request.id" = request_id.key.to_string()
     );
+    let request_record_id = RecordId::from(&request_id);
+    let organization_id = RecordId::new("organization", org_id);
 
-    let row = retrying_transaction(
+    let row = transaction_query!(
+        Option<JoinRequestProjection>,
         r#"
         BEGIN TRANSACTION;
 
@@ -316,21 +310,15 @@ pub async fn handle_decline(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind(
-        "request",
-        surrealdb_component_sdk::RecordId::from(&request_id),
-    )
-    .bind(
-        "org",
-        surrealdb_component_sdk::RecordId::new("organization", org_id),
-    )
+    .bind("request", request_record_id)
+    .bind("org", organization_id)
     .execute()
     .await
     .error_with_slug("join-request-decline-query-failed")?
-    .transaction::<Option<JoinRequestProjection>>(3)
+    .decode()
     .error_with_slug("join-request-decline-result-parse-failed")?;
 
-    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &row {
+    if let TransactionOutcome::Rejected(error) = &row {
         otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
     }
 

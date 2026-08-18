@@ -2,9 +2,8 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use surrealdb_component_sdk::RecordId;
 use wasmcloud_utils::{
-    database::{retrying_transaction, service::ServiceRecord},
+    database::{RecordId, service::ServiceRecord, transaction_query},
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::{
@@ -79,7 +78,8 @@ pub async fn handle_update(
     let service_id = RecordId::from(&request.service_id);
     let organization_id = RecordId::new("organization", org_id);
     let runs_in = request.runs_in.as_ref().map(RecordId::from);
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        ServiceUpdateOutcome,
         r#"
         BEGIN TRANSACTION;
 
@@ -149,9 +149,10 @@ pub async fn handle_update(
     .execute()
     .await
     .error_with_slug("service-update-query-failed")?
-    .parse::<ServiceUpdateOutcome>(1)
+    .decode()
     .error_with_slug("service-update-result-parse-failed")?;
 
+    let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServiceResponse, result);
     otel_wasi::main_attribute!("service.outcome" = result.as_str());
     let service = match result {
         ServiceUpdateOutcome::Updated { service } => Service::try_from(service)?,

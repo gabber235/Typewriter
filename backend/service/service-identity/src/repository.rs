@@ -1,8 +1,6 @@
-use surrealdb_component_sdk::{RecordId, query};
-
 use crate::identity::{IdentityRepository, NewIdentity, RepositoryError};
-use wasmcloud_utils::database::retrying_transaction;
 use wasmcloud_utils::database::service::ServiceRoleRecord;
+use wasmcloud_utils::database::{RecordId, TransactionOutcome, read_query, transaction_query};
 
 pub struct SurrealIdentityRepository;
 
@@ -14,17 +12,15 @@ impl IdentityRepository for SurrealIdentityRepository {
     ) -> Result<Result<bool, String>, RepositoryError> {
         otel_wasi::attribute!("persistence.operation" = "validate_roles");
 
-        query("RETURN fn::service::valid_roles($roles);")
+        read_query!("RETURN fn::service::valid_roles($roles);")
             .bind("roles", roles.to_vec())
             .execute()
             .await
             .map_err(|error| RepositoryError(error.to_string()))?
-            .transaction(0)
+            .transaction()
             .map(|outcome| match outcome {
-                surrealdb_component_sdk::TransactionOutcome::Committed(value) => Ok(value),
-                surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {
-                    Err(error.message().to_owned())
-                }
+                TransactionOutcome::Committed(value) => Ok(value),
+                TransactionOutcome::Rejected(error) => Err(error.message().to_owned()),
             })
             .map_err(|error| RepositoryError(error.to_string()))
     }
@@ -36,31 +32,33 @@ impl IdentityRepository for SurrealIdentityRepository {
     ) -> Result<Result<RecordId, String>, RepositoryError> {
         otel_wasi::attribute!("persistence.operation" = "create_identity");
 
-        retrying_transaction(
+        let service_id = RecordId::new("service", identity.service_id.as_str());
+        transaction_query!(
+            RecordId,
             r#"
             BEGIN TRANSACTION;
 
-            CREATE ONLY type::record('service', $service_id)
+            LET $identity = CREATE ONLY $service_id
             SET
                 name = $display_name,
                 roles = $roles
             RETURN VALUE id;
 
+            RETURN $identity;
+
             COMMIT TRANSACTION;
             "#,
         )
-        .bind("service_id", &identity.service_id)
+        .bind("service_id", service_id)
         .bind("display_name", &identity.display_name)
         .bind("roles", &identity.roles)
         .execute()
         .await
         .map_err(|error| RepositoryError(error.to_string()))?
-        .transaction(1)
+        .decode()
         .map(|outcome| match outcome {
-            surrealdb_component_sdk::TransactionOutcome::Committed(value) => Ok(value),
-            surrealdb_component_sdk::TransactionOutcome::Rejected(error) => {
-                Err(error.message().to_owned())
-            }
+            TransactionOutcome::Committed(value) => Ok(value),
+            TransactionOutcome::Rejected(error) => Err(error.message().to_owned()),
         })
         .map_err(|error| RepositoryError(error.to_string()))
     }

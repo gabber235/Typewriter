@@ -9,7 +9,6 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-surrealdb-component-sdk.workspace = true
 wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
 opentelemetry.workspace = true

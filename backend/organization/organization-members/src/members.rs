@@ -1,10 +1,9 @@
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use std::collections::HashMap;
-use surrealdb_component_sdk::{RecordId, query};
 use wasmcloud_utils::database::organization::projections::OrganizationMemberProjection;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, TransactionOutcome, read_query, transaction_query},
     decode_skir, extract_params,
     skir::base::organization::v1::{member::*, user::WatchUserOrganizationsResponse},
     skir_transaction_outcome,
@@ -59,7 +58,8 @@ pub async fn handle_watch(
         "organization.id" = org_id.to_string()
     );
     let _ = decode_skir!(WatchOrganizationMembersRequest, &msg.body)?;
-    let members = query(
+    let organization_id = RecordId::new("organization", org_id);
+    let members = read_query!(
         r#"
         SELECT
             in.id AS user_id,
@@ -69,15 +69,15 @@ pub async fn handle_watch(
             roles.* AS roles,
             joined_at
         FROM member_of
-        WHERE out = type::record('organization', $org_id)
+        WHERE out = $org_id
         FETCH roles
         "#,
     )
-    .bind("org_id", org_id)
+    .bind("org_id", organization_id)
     .execute()
     .await
     .error_with_slug("member-watch-query-failed")?
-    .take::<Vec<OrganizationMemberProjection>>(0)
+    .take::<Vec<OrganizationMemberProjection>>()
     .error_with_slug("member-watch-result-parse-failed")?
     .into_iter()
     .map(Into::into)
@@ -115,8 +115,12 @@ pub async fn handle_update(
         "user.id" = user_id.key.to_string(),
         "role.result_count" = role_ids.len() as i64
     );
+    let user_record_id = RecordId::from(&user_id);
+    let organization_id = RecordId::new("organization", org_id);
+    let role_record_ids = role_ids.as_slice().into_surreal_record_ids();
 
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        MemberUpdateOutcome,
         r#"
         BEGIN TRANSACTION;
 
@@ -175,15 +179,17 @@ pub async fn handle_update(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user", RecordId::from(&user_id))
-    .bind("org", RecordId::new("organization", org_id))
-    .bind("roles", role_ids.as_slice().into_surreal_record_ids())
+    .bind("user", user_record_id)
+    .bind("org", organization_id)
+    .bind("roles", role_record_ids)
     .execute()
     .await
     .error_with_slug("member-update-query-failed")?
-    .parse::<MemberUpdateOutcome>(1)
+    .decode()
     .error_with_slug("member-update-result-parse-failed")?;
 
+    let result =
+        wasmcloud_utils::skir_domain_result!(UpdateOrganizationMemberRolesResponse, result);
     otel_wasi::main_attribute!("member.outcome" = result.as_str());
     let member = skir_transaction_outcome!(
         UpdateOrganizationMemberRolesResponse,
@@ -236,8 +242,11 @@ pub async fn handle_remove(
         "organization.id" = org_id.to_string(),
         "user.id" = user_id.key.to_string()
     );
+    let user_record_id = RecordId::from(&user_id);
+    let organization_id = RecordId::new("organization", org_id);
 
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        RemovedMemberRecord,
         r#"
         BEGIN TRANSACTION;
 
@@ -266,15 +275,15 @@ pub async fn handle_remove(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user", RecordId::from(&user_id))
-    .bind("org", RecordId::new("organization", org_id))
+    .bind("user", user_record_id)
+    .bind("org", organization_id)
     .execute()
     .await
     .error_with_slug("member-remove-query-failed")?
-    .transaction::<RemovedMemberRecord>(9)
+    .decode()
     .error_with_slug("member-remove-result-parse-failed")?;
 
-    if let surrealdb_component_sdk::TransactionOutcome::Rejected(error) = &result {
+    if let TransactionOutcome::Rejected(error) = &result {
         otel_wasi::main_attribute!("member.outcome" = error.message().to_owned());
     }
     let deleted = wasmcloud_utils::skir_domain_result!(RemoveOrganizationMemberResponse, result,

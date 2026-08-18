@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, transaction_query},
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::WatchOrganizationServicesResponse,
@@ -29,27 +29,33 @@ pub async fn handle_unbind(
         "organization.id" = org_id.to_string(),
         "service.id" = request.service_id.clone()
     );
+    let service_id = RecordId::new("service", request.service_id.as_str());
+    let organization_id = RecordId::new("organization", org_id);
 
-    let records = retrying_transaction(
+    let records = transaction_query!(
+        Option<ServiceRecord>,
         r#"
         BEGIN TRANSACTION;
 
-        UPDATE type::record('service', $service_id) SET
+        LET $records = UPDATE $service_id SET
             organization = NONE,
             registration = NONE
-        WHERE organization = type::record('organization', $org_id)
+        WHERE organization = $organization_id
         RETURN BEFORE;
+
+        RETURN $records[0];
 
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("service_id", &request.service_id)
-    .bind("org_id", org_id)
+    .bind("service_id", service_id)
+    .bind("organization_id", organization_id)
     .execute()
     .await
     .error_with_slug("service-unbind-query-failed")?
-    .take::<Option<ServiceRecord>>(1)
+    .decode()
     .error_with_slug("service-unbind-result-parse-failed")?;
+    let records = wasmcloud_utils::skir_domain_result!(UnbindServiceResponse, records);
 
     let Some(record) = records else {
         otel_wasi::main_attribute!("service.outcome" = "not_found");

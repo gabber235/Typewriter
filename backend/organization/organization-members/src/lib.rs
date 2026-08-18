@@ -12,8 +12,8 @@ mod members;
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
+    database::{RecordId, read_query},
     dispatch_actions,
     wasmcloud::messaging::{handler::Guest, types},
 };
@@ -23,36 +23,33 @@ wasmcloud_utils::export!(Component);
 
 #[derive(Debug)]
 pub(crate) struct RoleValidation {
-    pub missing: Vec<surrealdb_component_sdk::RecordId>,
-    pub unassignable: Vec<surrealdb_component_sdk::RecordId>,
+    pub missing: Vec<RecordId>,
+    pub unassignable: Vec<RecordId>,
 }
 
 pub(crate) async fn validate_roles(
-    org_id: &str,
-    requested: &[surrealdb_component_sdk::RecordId],
-    allowed_unassignable: &[surrealdb_component_sdk::RecordId],
+    organization_id: &RecordId,
+    requested: &[RecordId],
+    allowed_unassignable: &[RecordId],
     query_slug: &'static str,
     parse_slug: &'static str,
 ) -> Result<RoleValidation, otel_wasi::Error> {
-    let found = query("SELECT id, assignable FROM $roles WHERE organization = $org")
+    let found = read_query!("SELECT id, assignable FROM $roles WHERE organization = $org")
         .bind("roles", requested.to_vec())
-        .bind(
-            "org",
-            surrealdb_component_sdk::RecordId::new("organization", org_id),
-        )
+        .bind("org", organization_id.clone())
         .execute()
         .await
         .error_with_slug(query_slug)?
-        .take::<Vec<ValidatedRoleRecord>>(0)
+        .take::<Vec<ValidatedRoleRecord>>()
         .error_with_slug(parse_slug)?;
 
-    let missing: Vec<surrealdb_component_sdk::RecordId> = requested
+    let missing: Vec<RecordId> = requested
         .iter()
         .filter(|id| !found.iter().any(|role| role.id == **id))
         .cloned()
         .collect();
 
-    let unassignable: Vec<surrealdb_component_sdk::RecordId> = requested
+    let unassignable: Vec<RecordId> = requested
         .iter()
         .filter(|id| {
             found.iter().any(|role| role.id == **id && !role.assignable)
@@ -68,7 +65,7 @@ pub(crate) async fn validate_roles(
 
 #[derive(Debug, Deserialize)]
 struct ValidatedRoleRecord {
-    id: surrealdb_component_sdk::RecordId,
+    id: RecordId,
     assignable: bool,
 }
 

@@ -1,3 +1,5 @@
+extern crate self as wasmcloud_utils;
+
 mod bindings {
     wit_bindgen::generate!({
         pub_export_macro: true,
@@ -25,7 +27,8 @@ pub use skir_client;
 
 // Re-export proc macros
 pub use wasmcloud_utils_macros::{
-    dispatch_actions, skir_domain_result, skir_response, skir_transaction_outcome, skir_variant,
+    dispatch_actions, read_query, skir_domain_result, skir_response, skir_transaction_outcome,
+    skir_variant, transaction_query,
 };
 
 // SkirResponse trait and domain-result helpers

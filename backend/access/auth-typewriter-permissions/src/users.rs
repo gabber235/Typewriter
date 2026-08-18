@@ -1,5 +1,7 @@
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
-use wasmcloud_utils::database::retrying_transaction;
+use wasmcloud_utils::database::{
+    RecordId as DatabaseRecordId, TransactionOutcome, read_query, transaction_query,
+};
 use wasmcloud_utils::skir::base::{
     access::v1::permission::{EntityPermissionQualifier, Permissions},
     kernel::v1::record_id::RecordId,
@@ -132,28 +134,38 @@ async fn upsert_user(
     email: &Option<String>,
     avatar_url: &Option<String>,
 ) -> Result<(), otel_wasi::Error> {
-    retrying_transaction(
+    let user_id = DatabaseRecordId::new("user", user_id);
+    let outcome = transaction_query!(
+        Option<User>,
         "
             BEGIN TRANSACTION;
 
-            UPSERT type::record('user',$uid) SET
+            LET $user = UPSERT $user_id SET
                 name = $name,
                 email = $email,
                 avatar_url = $avatar_url,
                 last_login = time::now();
 
+            RETURN $user[0];
+
             COMMIT TRANSACTION;
             ",
     )
-    .bind("uid", user_id)
+    .bind("user_id", user_id)
     .bind("name", name)
     .bind("email", email)
     .bind("avatar_url", avatar_url)
     .execute()
     .await
     .error_with_slug("user-db-upsert-failed")?
-    .take::<Option<User>>(1)
+    .decode()
     .error_with_slug("user-db-upsert-failed")?;
+    if let TransactionOutcome::Rejected(error) = outcome {
+        return Err(otel_wasi::Error::new(
+            "user-db-upsert-failed",
+            error.message(),
+        ));
+    }
     Ok(())
 }
 
@@ -163,20 +175,21 @@ async fn is_member_of_organization(
     user_id: &str,
     org_id: &RecordId,
 ) -> Result<bool, otel_wasi::Error> {
-    surrealdb_component_sdk::query(
+    let user_id = DatabaseRecordId::new("user", user_id);
+    read_query!(
         "
         RETURN count(
             SELECT * FROM member_of
-            WHERE in = type::record('user', $user_id) AND out = $org_id
+            WHERE in = $user_id AND out = $org_id
         ) > 0
         ",
     )
     .bind("user_id", user_id)
-    .bind("org_id", surrealdb_component_sdk::RecordId::from(org_id))
+    .bind("org_id", DatabaseRecordId::from(org_id))
     .execute()
     .await
     .error_with_slug("organization-permissions-failed")?
-    .parse::<bool>(0)
+    .parse::<bool>()
     .error_with_slug("organization-permissions-failed")
 }
 

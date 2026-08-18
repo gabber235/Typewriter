@@ -2,9 +2,8 @@ use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
-use surrealdb_component_sdk::query;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId as DatabaseRecordId, read_query, transaction_query},
     decode_skir, extract_param,
     skir::base::{
         kernel::v1::record_id::RecordId,
@@ -25,7 +24,7 @@ use wasmcloud_utils::database::organization::{
 pub struct JoinRequestCodeRecord {
     organization: OrganizationRecord,
     single_use: bool,
-    auto_accept_roles: Vec<surrealdb_component_sdk::RecordId>,
+    auto_accept_roles: Vec<DatabaseRecordId>,
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -37,7 +36,8 @@ pub async fn handle_watch(
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let _request = decode_skir!(WatchUserJoinRequestsRequest, &msg.body)?;
 
-    let join_requests = query(
+    let user_id = DatabaseRecordId::new("user", user_id);
+    let join_requests = read_query!(
         r#"
         SELECT
             id,
@@ -46,7 +46,7 @@ pub async fn handle_watch(
             requested_at,
             expires_at
         FROM request_to_join
-        WHERE in = type::record('user', $user_id)
+        WHERE in = $user_id
           AND expires_at > time::now()
         "#,
     )
@@ -54,7 +54,7 @@ pub async fn handle_watch(
     .execute()
     .await
     .error_with_slug("join-request-watch-query-failed")?
-    .take::<Vec<JoinRequestProjection>>(0)
+    .take::<Vec<JoinRequestProjection>>()
     .error_with_slug("join-request-watch-result-parse-failed")?
     .into_iter()
     .map(UserJoinRequest::from)
@@ -74,6 +74,8 @@ pub async fn handle_request(
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
+    let user_key = user_id;
+    let user_id = DatabaseRecordId::new("user", user_key);
     let request = decode_skir!(SubmitUserJoinRequestRequest, &msg.body)?;
     wasmcloud_utils::validate_record_ids!(
         SubmitUserJoinRequestResponse,
@@ -105,9 +107,17 @@ pub async fn handle_request(
     );
 
     if !auto_accept_roles.is_empty() {
-        handle_auto_accept(user_id, &org, &code, single_use, &auto_accept_roles).await
+        handle_auto_accept(
+            user_key,
+            &user_id,
+            &org,
+            &code,
+            single_use,
+            &auto_accept_roles,
+        )
+        .await
     } else {
-        handle_manual_accept(user_id, &org.id, &code, single_use).await
+        handle_manual_accept(user_key, &user_id, &org.id, &code, single_use).await
     }
 }
 
@@ -115,7 +125,7 @@ pub async fn handle_request(
 async fn fetch_join_code(
     code: &RecordId,
 ) -> Result<Option<JoinRequestCodeRecord>, otel_wasi::Error> {
-    query(
+    read_query!(
         r#"
         SELECT
             organization.*,
@@ -125,27 +135,29 @@ async fn fetch_join_code(
         WHERE expires_at IS NONE OR expires_at IS NULL OR expires_at > time::now()
         "#,
     )
-    .bind("code", surrealdb_component_sdk::RecordId::from(code))
+    .bind("code", DatabaseRecordId::from(code))
     .execute()
     .await
     .error_with_slug("join-request-code-query-failed")?
-    .take(0)
+    .take()
     .error_with_slug("join-request-code-result-parse-failed")
 }
 
-#[tracing::instrument(skip(user_id, org, code, auto_accept_roles))]
+#[tracing::instrument(skip(user_key, user_id, org, code, auto_accept_roles))]
 async fn handle_auto_accept(
-    user_id: &str,
+    user_key: &str,
+    user_id: &DatabaseRecordId,
     org: &OrganizationRecord,
     code: &RecordId,
     single_use: bool,
-    auto_accept_roles: &[surrealdb_component_sdk::RecordId],
+    auto_accept_roles: &[DatabaseRecordId],
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        OrganizationMemberProjection,
         r#"
         BEGIN TRANSACTION;
 
-        LET $user = type::record('user', $user_id);
+        LET $user = $user_id;
 
         IF $single_use {
             DELETE $code;
@@ -186,15 +198,15 @@ async fn handle_auto_accept(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user_id", user_id)
+    .bind("user_id", user_id.clone())
     .bind("org", org.id.clone())
-    .bind("code", surrealdb_component_sdk::RecordId::from(code))
+    .bind("code", DatabaseRecordId::from(code))
     .bind("single_use", single_use)
     .bind("auto_accept_roles", auto_accept_roles)
     .execute()
     .await
     .error_with_slug("join-request-auto-accept-query-failed")?
-    .transaction::<OrganizationMemberProjection>(9)
+    .decode()
     .error_with_slug("join-request-auto-accept-result-parse-failed")?;
 
     let member = skir_domain_result!(SubmitUserJoinRequestResponse, result);
@@ -205,7 +217,7 @@ async fn handle_auto_accept(
         .map(OrganizationRole::from)
         .collect::<Vec<_>>();
 
-    wasmcloud_utils::skir_subjects::user_organizations(user_id)
+    wasmcloud_utils::skir_subjects::user_organizations(user_key)
         .publish(WatchUserOrganizationsResponse::Add(Box::new(
             org.clone().into(),
         )))
@@ -237,18 +249,20 @@ async fn handle_auto_accept(
     )))
 }
 
-#[tracing::instrument(skip(user_id, org_id, code))]
+#[tracing::instrument(skip(user_key, user_id, org_id, code))]
 async fn handle_manual_accept(
-    user_id: &str,
-    org_id: &surrealdb_component_sdk::RecordId,
+    user_key: &str,
+    user_id: &DatabaseRecordId,
+    org_id: &DatabaseRecordId,
     code: &RecordId,
     single_use: bool,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        JoinRequestProjection,
         r#"
         BEGIN TRANSACTION;
 
-        LET $user = type::record('user', $user_id);
+        LET $user = $user_id;
 
         IF $single_use {
             DELETE $code;
@@ -284,19 +298,19 @@ async fn handle_manual_accept(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user_id", user_id)
+    .bind("user_id", user_id.clone())
     .bind("org", org_id.clone())
-    .bind("code", surrealdb_component_sdk::RecordId::from(code))
+    .bind("code", DatabaseRecordId::from(code))
     .bind("single_use", single_use)
     .execute()
     .await
     .error_with_slug("join-request-create-query-failed")?
-    .transaction::<JoinRequestProjection>(9)
+    .decode()
     .error_with_slug("join-request-create-result-parse-failed")?;
 
     let request_record = skir_domain_result!(SubmitUserJoinRequestResponse, result);
 
-    wasmcloud_utils::skir_subjects::user_join_requests(user_id)
+    wasmcloud_utils::skir_subjects::user_join_requests(user_key)
         .publish(WatchUserJoinRequestsResponse::Add(Box::new(
             request_record.clone().into(),
         )))
@@ -329,6 +343,8 @@ pub async fn handle_cancel(
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
     let user_id = extract_param!(params, user_id)?;
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
+    let user_key = user_id;
+    let user_id = DatabaseRecordId::new("user", user_id);
     let request = decode_skir!(CancelUserJoinRequestRequest, &msg.body)?;
     wasmcloud_utils::validate_record_ids!(
         CancelUserJoinRequestResponse,
@@ -338,29 +354,31 @@ pub async fn handle_cancel(
 
     let request_id = request.request_id;
 
-    let join_request = retrying_transaction(
+    let join_request = transaction_query!(
+        Option<JoinRequestProjection>,
         r#"
             BEGIN TRANSACTION;
 
             LET $request = SELECT id, in.* as user, out.* as organization, requested_at, expires_at FROM $request
-            WHERE in = type::record('user', $user_id);
+            WHERE in = $user_id;
 
             DELETE $request.id;
 
-            RETURN $request;
+            RETURN $request[0];
             COMMIT TRANSACTION;
             "#,
     )
     .bind(
         "request",
-        surrealdb_component_sdk::RecordId::from(&request_id),
+        DatabaseRecordId::from(&request_id),
     )
     .bind("user_id", user_id)
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
-    .take::<Option<JoinRequestProjection>>(3)
+    .decode()
     .error_with_slug("join-request-cancel-result-parse-failed")?;
+    let join_request = skir_domain_result!(CancelUserJoinRequestResponse, join_request);
 
     let Some(join_request) = join_request else {
         otel_wasi::main_attribute!("join_request.outcome" = "request_not_found");
@@ -369,7 +387,7 @@ pub async fn handle_cancel(
         ));
     };
 
-    wasmcloud_utils::skir_subjects::user_join_requests(user_id)
+    wasmcloud_utils::skir_subjects::user_join_requests(user_key)
         .publish(WatchUserJoinRequestsResponse::Remove(Box::new(
             join_request.id.clone().into(),
         )))

@@ -1,0 +1,5 @@
+error: transaction_query! requires COMMIT TRANSACTION as its final statement
+  --> tests/ui/query/fail/transaction_missing_commit.rs:10:9
+   |
+10 |         "BEGIN TRANSACTION; UPDATE user:test SET active = true; RETURN true;",
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

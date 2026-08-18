@@ -3,7 +3,7 @@ use wasmcloud_utils::database::service::ServiceStatusRecord;
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, transaction_query},
     decode_skir, extract_param,
     skir::base::service::v1::{
         lifecycle::ServiceHeartbeatNotification, organization::WatchOrganizationServicesResponse,
@@ -22,23 +22,30 @@ pub async fn handle_heartbeat(
     otel_wasi::main_attribute!("service.id" = service_id.to_string());
     let _ = decode_skir!(ServiceHeartbeatNotification, &msg.body)?;
 
-    update_state(service_id, &ServiceStatusRecord::Online).await
+    update_state(
+        &RecordId::new("service", service_id),
+        &ServiceStatusRecord::Online,
+    )
+    .await
 }
 
 #[tracing::instrument]
 pub(crate) async fn update_state(
-    service_id: &str,
+    service_id: &RecordId,
     status: &ServiceStatusRecord,
 ) -> Result<(), otel_wasi::Error> {
-    let records = retrying_transaction(
+    let records = transaction_query!(
+        Option<ServiceRecord>,
         r#"
         BEGIN TRANSACTION;
 
-        UPDATE type::record('service', $service_id) SET state = {
+        LET $records = UPDATE $service_id SET state = {
             status: $status,
             last_seen: time::now()
         }
         RETURN AFTER;
+
+        RETURN $records[0];
 
         COMMIT TRANSACTION;
         "#,
@@ -48,10 +55,19 @@ pub(crate) async fn update_state(
     .execute()
     .await
     .error_with_slug("service-state-update-query-failed")?
-    .take::<Option<ServiceRecord>>(1)
+    .decode()
     .error_with_slug("service-state-update-result-parse-failed")?;
+    let records = match records {
+        wasmcloud_utils::database::TransactionOutcome::Committed(records) => records,
+        wasmcloud_utils::database::TransactionOutcome::Rejected(error) => {
+            return Err(otel_wasi::Error::new(
+                "service-state-update-rejected",
+                error.message(),
+            ));
+        }
+    };
 
-    let Some(record) = records.into_iter().next() else {
+    let Some(record) = records else {
         return Err(otel_wasi::wasi_error!(
             "service-state-update-not-found",
             "service not found",

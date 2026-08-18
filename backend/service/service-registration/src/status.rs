@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::retrying_transaction,
+    database::{RecordId, transaction_query},
     decode_skir, extract_param,
     skir::base::service::v1::status::{
         GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
@@ -30,8 +30,10 @@ pub async fn handle_status(
     let service_id = extract_param!(params, service_id)?;
     otel_wasi::main_attribute!("service.id" = service_id.to_string());
     let _ = decode_skir!(GetServiceStatusRequest, &msg.body)?;
+    let service_id = RecordId::new("service", service_id);
 
-    let result = retrying_transaction(
+    let result = transaction_query!(
+        StatusQueryResult,
         r#"
         BEGIN TRANSACTION;
 
@@ -42,7 +44,7 @@ pub async fn handle_status(
                 IF organization THEN { id: organization.id, name: organization.name } ELSE NONE END AS organization,
                 registration.token AS existing_token,
                 registration.expires_at AS existing_expires_at
-            FROM type::record('service', $service_id)
+            FROM $service_id
             FETCH organization;
 
             IF array::is_empty($services) {
@@ -61,7 +63,7 @@ pub async fn handle_status(
             };
 
             IF $service.existing_token = NONE OR $service.existing_expires_at <= time::now() + $registration_renewal_window {
-                UPDATE type::record('service', $service_id) SET registration = {
+                UPDATE $service_id SET registration = {
                     token: $registration_token,
                     expires_at: time::now() + $registration_lease
                 }
@@ -78,7 +80,7 @@ pub async fn handle_status(
     .execute()
     .await
     .error_with_slug("service-status-query-failed")?
-    .transaction::<StatusQueryResult>(1)
+    .decode()
     .error_with_slug("service-status-result-parse-failed")?;
 
     let status = skir_domain_result!(GetServiceStatusResponse, result);
