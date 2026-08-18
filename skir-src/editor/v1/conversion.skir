@@ -1,0 +1,88 @@
+import { DataPath } from "editor/v1/path.skir";
+import {
+  ConversionId,
+  ResolvedTypeRef,
+} from "editor/v1/type_catalog.skir";
+
+enum ConversionSafety(810500001) {
+  lossless = 1;
+  lossy = 2;
+}
+
+enum ConversionFallibility(810500002) {
+  infallible = 1;
+  fallible = 2;
+}
+
+enum ConversionLocality(810500003) {
+  local = 1;
+  realm = 2;
+}
+
+enum ScalarCastKind(810500004) {
+  signed_widen = 1;
+  signed_narrow = 2;
+  unsigned_widen = 3;
+  unsigned_narrow = 4;
+  integer_to_float = 5;
+  float_to_integer = 6;
+  numeric_to_decimal = 7;
+  decimal_to_numeric = 8;
+  timestamp_to_string = 9;
+  string_to_timestamp = 10;
+  duration_to_string = 11;
+  string_to_duration = 12;
+}
+
+struct RecordProjectionField(810500005) {
+  source: DataPath = 0;
+  target: DataPath = 1;
+  conversion_id: ConversionId? = 2;
+}
+
+struct RecordProjectionRule(810500006) {
+  fields: [RecordProjectionField] = 0;
+}
+
+struct RecordConstructionField(810500007) {
+  target_field: string = 0;
+  source: DataPath = 1;
+  conversion_id: ConversionId? = 2;
+}
+
+struct RecordConstructionRule(810500008) {
+  fields: [RecordConstructionField|target_field] = 0;
+}
+
+struct CollectionMappingRule(810500009) {
+  element_conversion_id: ConversionId = 0;
+}
+
+struct ConversionCompositionRule(810500010) {
+  steps: [ConversionId] = 0;
+}
+
+struct RealmConversionRule(810500011) {}
+
+enum ConversionRule(810500012) {
+  identity = 1;
+  inheritance_upcast = 2;
+  validated_downcast = 3;
+  scalar_cast: ScalarCastKind = 4;
+  record_projection: RecordProjectionRule = 5;
+  record_construction: RecordConstructionRule = 6;
+  collection_mapping: CollectionMappingRule = 7;
+  composition: ConversionCompositionRule = 8;
+  realm: RealmConversionRule = 9;
+}
+
+struct ConversionDefinition(810500013) {
+  conversion_id: ConversionId = 0;
+  source: ResolvedTypeRef = 1;
+  target: ResolvedTypeRef = 2;
+  safety: ConversionSafety = 3;
+  fallibility: ConversionFallibility = 4;
+  locality: ConversionLocality = 5;
+  cost: int32 = 6;
+  rule: ConversionRule = 7;
+}

@@ -86,7 +86,10 @@ wasmcloud_utils_macros::skir_response! {
         success: Success,
         errors {
             InvalidRecordIdError,
+            ConflictError => "Service changed elsewhere",
             ServiceNotFoundError => "Service not found in organization",
+            RunsInNotFoundError => "Runs in service not found",
+            ValidationError => "Service update is invalid",
         }
     }
 }

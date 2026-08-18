@@ -64,7 +64,7 @@ class Dropdown<T extends Object> extends HookWidget {
       () => dropdownMenuEntries
           .where((entry) => entry.value == selected)
           .firstOrNull,
-      [selected],
+      [selected, dropdownMenuEntries],
     );
     final currentLabel = current?.label;
     final controller =
@@ -115,6 +115,7 @@ class Dropdown<T extends Object> extends HookWidget {
         dropdownMenuEntries: dropdownMenuEntries,
         inputDecorationTheme: inputDecorationTheme,
         menuStyle: menuStyle,
+        expandedInsets: EdgeInsets.zero,
       ),
     );
   }

@@ -35,7 +35,7 @@ class _OrganizationsSelector extends HookWidget {
         spacer,
         SliverStaggerEntrance(
           sliver: SliverToBoxAdapter(
-            child: DecoratedTextField(
+            child: EditorTextField(
               decoration: const InputDecoration(
                 hintText: "Search Organization",
                 prefixIcon: Icon(Icons.search),

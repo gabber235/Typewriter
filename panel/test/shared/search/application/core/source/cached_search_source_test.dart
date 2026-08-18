@@ -37,6 +37,63 @@ void main() {
       expect(inner.searches, [context]);
     });
 
+    test("memoizes ready snapshots by parsed query", () {
+      final inner = FakeSearchSource();
+      final source = inner.cached(capacity: 2);
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+      final alpha = queryContext("alpha");
+      final beta = queryContext("beta");
+
+      source.search(alpha);
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
+      source.search(beta);
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("beta")]));
+      source.search(alpha);
+
+      expect(resultIds(snapshots.last), ["alpha"]);
+      expect(inner.searches, [alpha, beta, alpha]);
+    });
+
+    test("evicts the least recently used parsed query", () {
+      final inner = FakeSearchSource();
+      final source = inner.cached(capacity: 1);
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+      final alpha = queryContext("alpha");
+      final beta = queryContext("beta");
+
+      source.search(alpha);
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
+      source.search(beta);
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("beta")]));
+      final countBeforeSearch = snapshots.length;
+      source.search(alpha);
+
+      expect(snapshots, hasLength(countBeforeSearch));
+    });
+
+    test("can refresh without retaining stale results", () {
+      final inner = FakeSearchSource();
+      final source = inner.cached(retainStaleResults: false);
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+      final context = queryContext("alpha");
+
+      source.search(context);
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("alpha")]));
+      inner.emitSnapshot(SearchSourceSnapshot.loading());
+
+      expect(snapshots.last.status, SearchSourceStatus.loading);
+      expect(snapshots.last.nodes, isEmpty);
+    });
+
     test("forwards selectors unchanged", () {
       final inner = FakeSearchSource();
       final source = inner.cached();

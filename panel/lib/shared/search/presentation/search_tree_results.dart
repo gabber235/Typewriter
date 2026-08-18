@@ -116,11 +116,13 @@ class SearchTreeRowWidget extends ConsumerWidget {
   const SearchTreeRowWidget({
     required this.row,
     required this.rowRenderers,
+    this.vsync,
     super.key,
   });
 
   final SearchTreeRow row;
   final Map<String, SearchResultRowBuilder> rowRenderers;
+  final TickerProvider? vsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -132,16 +134,22 @@ class SearchTreeRowWidget extends ConsumerWidget {
       final SearchTreeResultRow resultRow => _SearchTreeResultRow(
         row: resultRow,
         rowRenderers: rowRenderers,
+        vsync: vsync,
       ),
     };
   }
 }
 
 class _SearchTreeResultRow extends HookConsumerWidget {
-  const _SearchTreeResultRow({required this.row, required this.rowRenderers});
+  const _SearchTreeResultRow({
+    required this.row,
+    required this.rowRenderers,
+    this.vsync,
+  });
 
   final SearchTreeResultRow row;
   final Map<String, SearchResultRowBuilder> rowRenderers;
+  final TickerProvider? vsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -166,7 +174,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final rowContext = SearchResultRowContext(
       result: result,
       selected: controller.isSelected(result.id),
-      focused: focused.value,
+      focused: focused.value || controller.currentPreview?.id == result.id,
       loading: actionsBusy && actionConcersThis,
       onTap: () {
         if (controller.selectionMode == .single && actions.isNotEmpty) {
@@ -211,7 +219,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
         );
       }
       if (action.icon != null) {
-        return Icones(action.icon!);
+        return Icones(action.icon);
       }
       return null;
     }
@@ -229,11 +237,13 @@ class _SearchTreeResultRow extends HookConsumerWidget {
     final errorAnimation = useForwardAnimation(
       play: actionConcersThis && actionState is SearchActionFailed,
       delay: delay,
+      vsync: vsync,
     );
 
     final runningAnimation = useForwardAnimation(
       play: actionConcersThis && actionsBusy,
       delay: delay,
+      vsync: vsync,
     );
 
     final scale = TweenSequence([
@@ -308,10 +318,7 @@ class _SearchTreeResultRow extends HookConsumerWidget {
                 );
                 controller.preview(result);
               },
-              child: MouseRegion(
-                onEnter: (_) => controller.preview(result),
-                child: child,
-              ),
+              child: child,
             ),
           ),
         ),

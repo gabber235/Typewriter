@@ -1,4 +1,3 @@
-// Custom selectable implementation for testing
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -10,43 +9,59 @@ part "test_selectable.g.dart";
 @Riverpod(keepAlive: true)
 class TestSelectableData extends _$TestSelectableData {
   @override
-  Map<String, DynamicData> build() {
+  Map<String, RecordValue> build() {
     return {};
   }
 
-  void set(String id, DynamicData data) {
+  void set(String id, RecordValue data) {
     state = {...state, id: data};
   }
 
   @override
   bool updateShouldNotify(
-    Map<String, DynamicData> previous,
-    Map<String, DynamicData> next,
+    Map<String, RecordValue> previous,
+    Map<String, RecordValue> next,
   ) {
     return !mapEquals(previous, next);
   }
 }
 
 @riverpod
-DynamicData? testData(Ref ref, String id) {
+RecordValue? testData(Ref ref, String id) {
   final data = ref.watch(testSelectableDataProvider)[id];
   return data;
 }
 
-// Custom selectable identifier for testing
 class TestSelectableIdentifier extends SelectableIdentifier {
   TestSelectableIdentifier({
     required this.id,
-    this.dataBlueprint = const ObjectBlueprint(fields: {}),
+    RecordType? rootType,
     this.color = Colors.redAccent,
     this.onDelete,
-  });
+  }) : representation =
+           rootType ??
+           RecordType(
+             fields: const {
+               "name": TypeField(name: "name", type: StringType()),
+             },
+           );
 
   @override
   final String id;
-  final ObjectBlueprint dataBlueprint;
+  final RecordType representation;
   final Color color;
   final VoidCallback? onDelete;
+
+  late final TypeDefinition rootDefinition = TypeDefinition(
+    id: ResolvedTypeRef(
+      id: QualifiedTypeId(namespace: "testkit", name: id),
+      revision: 1,
+    ),
+    kind: NominalTypeKind.concrete,
+    representation: representation,
+  );
+
+  late final TypeCatalog typeCatalog = TypeCatalog([rootDefinition]);
 
   @override
   int get hashCode => id.hashCode;
@@ -60,15 +75,22 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
+    final initial = NamedType(
+      rootDefinition.id,
+    ).createInitialValue(registry: TypeRegistry(typeCatalog)).valueOrNull;
     final data =
         ref.watch(testDataProvider(id)) ??
-        DynamicData({...dataBlueprint.defaultValue(), "name": id.formatted});
+        (initial is RecordValue ? initial : RecordValue(const {})).withField(
+          "name",
+          StringValue(id.formatted),
+        );
 
     return AsyncValue.data(
       TestSelectable(
         ref: ref,
         id: this,
-        objectBlueprint: dataBlueprint,
+        rootDefinition: rootDefinition,
+        typeCatalog: typeCatalog,
         data: data,
         color: color,
         onDelete: onDelete,
@@ -86,7 +108,8 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   TestSelectable({
     required this.ref,
     required this.id,
-    required this.objectBlueprint,
+    required this.rootDefinition,
+    required this.typeCatalog,
     required this.data,
     required this.color,
     required this.onDelete,
@@ -97,14 +120,24 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   @override
   final TestSelectableIdentifier id;
 
-  @override
-  final ObjectBlueprint objectBlueprint;
+  final TypeDefinition rootDefinition;
 
-  final DynamicData data;
+  @override
+  final TypeCatalog typeCatalog;
+
+  final RecordValue data;
 
   final Color color;
 
   final VoidCallback? onDelete;
+
+  @override
+  late final EditorDocument document = EditorDocument(
+    rootType: NamedType(rootDefinition.id),
+    typeCatalog: typeCatalog,
+    confirmedValue: data,
+    revision: 1,
+  );
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -112,7 +145,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   ];
 
   @override
-  int get hashCode => Object.hash(id, objectBlueprint, data, color);
+  int get hashCode => Object.hash(id, rootType, data, color);
 
   @override
   bool operator ==(Object other) =>
@@ -120,30 +153,36 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
       other is TestSelectable &&
           runtimeType == other.runtimeType &&
           id == other.id &&
-          objectBlueprint == other.objectBlueprint &&
+          rootType == other.rootType &&
           data == other.data &&
           color == other.color;
 
   @override
   String get name {
-    final name = data.get("name") as String?;
+    final value = data.fields["name"];
+    final name = value is StringValue ? value.value : null;
     return (name?.nullIfEmpty ?? id.id).formatted;
-  }
-
-  @override
-  dynamic fieldValue(String path) {
-    final value = data.get(path);
-    return value;
   }
 
   @override
   Widget? buildInspectorHeader() => TestSelectableHeader(selectable: this);
 
   @override
-  void setFieldValue(String path, dynamic value) {
-    ref
-        .read(testSelectableDataProvider.notifier)
-        .set(id.id, data.copyWith(path, value));
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    final next = commit.rootValue;
+    if (next is! RecordValue) {
+      return TypedMutationResult.invalid([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "The selectable root must remain a record",
+        ),
+      ]);
+    }
+    ref.read(testSelectableDataProvider.notifier).set(id.id, next);
+    return TypedMutationResult.success(
+      revision: commit.expectedRevision + 1,
+      value: next,
+    );
   }
 
   @override

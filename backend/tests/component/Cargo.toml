@@ -74,13 +74,13 @@ wasmtime-wasi-http = { version = "47.0.3", default-features = false, features = 
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 
-wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "9f43d83c0", default-features = false, features = [
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "76dc551a3", default-features = false, features = [
     "wasi-config",
     "wasi-logging",
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "801a0b0001fef87bbd4305a4e8d37996ab5979b9" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "b3bf99e0f87ebaf404474f43cebc10ee82da8f60" }
 
 [profile.dev]
 debug = 0

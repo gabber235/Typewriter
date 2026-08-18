@@ -148,9 +148,12 @@ class SearchController extends ChangeNotifier {
   SearchResult? get currentPreview => _currentPreview;
 
   void preview(SearchResult? result) {
+    if (_currentPreview?.id == result?.id && _currentPreview == result) return;
     _currentPreview = result;
     notifyListeners();
   }
+
+  void refresh() => _sourceController.triggerQuery();
 
   Future<SearchPreviewRequestResult> requestPreview(
     SearchPreviewRequest request,
@@ -185,7 +188,8 @@ class SearchController extends ChangeNotifier {
       stack.add(snapshot.nodes[i]);
     }
 
-    while (stack.isNotEmpty && leftOverSelectedIds.isNotEmpty) {
+    while (stack.isNotEmpty &&
+        (leftOverSelectedIds.isNotEmpty || oldPreviewId != null)) {
       final node = stack.removeLast();
       switch (node) {
         case SearchSectionNode(:final children):

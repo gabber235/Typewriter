@@ -8,6 +8,7 @@ Service service({
   ServiceState? state,
 }) => Service(
   serviceId: recordId("service:test"),
+  revision: 1,
   name: name,
   roles: roles ?? [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),

@@ -9,15 +9,19 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
-Service generateRandomService() {
-  final roles = <ServiceRole>[];
-  if (faker.randomGenerator.boolean()) {
-    roles.add(
+Service generateRandomService({
+  skir.RecordId? organization,
+  List<ServiceRole>? roles,
+}) {
+  final generatedRoles = <ServiceRole>[];
+  if (roles == null && faker.randomGenerator.boolean()) {
+    generatedRoles.add(
       EngineServiceRole(version: generateRandomVersion().canonicalizedVersion),
     );
   }
-  if (faker.randomGenerator.boolean() || roles.isEmpty) {
-    roles.add(
+  if (roles == null &&
+      (faker.randomGenerator.boolean() || generatedRoles.isEmpty)) {
+    generatedRoles.add(
       RealmServiceRole(version: generateRandomVersion().canonicalizedVersion),
     );
   }
@@ -34,17 +38,18 @@ Service generateRandomService() {
       : faker.date.dateTimeBetween(createdAt, DateTime.now().subtract(14.days));
   return Service(
     serviceId: recordId("service:${faker.guid.guid()}"),
+    revision: 1,
     name: faker.lorem
         .words(faker.randomGenerator.integer(3, min: 1))
         .join("_")
         .toLowerCase(),
-    roles: roles,
+    roles: roles ?? generatedRoles,
     createdAt: createdAt,
     state: ServiceState(
       status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
       lastSeen: lastSeen,
     ),
-    organization: recordId("organization:${faker.guid.guid()}"),
+    organization: organization ?? recordId("organization:${faker.guid.guid()}"),
   );
 }
 
@@ -53,21 +58,44 @@ class ServicesMock extends Services {
   final DisplayState displayState;
   @override
   Stream<List<Service>> build() async* {
-    yield await displayState.generate(generateRandomService);
+    yield await displayState.generateBatch((count) {
+      final organization = recordId("organization:${faker.guid.guid()}");
+      return List.generate(count, (index) {
+        final roles = switch (index) {
+          0 => [
+            EngineServiceRole(
+              version: generateRandomVersion().canonicalizedVersion,
+            ),
+          ],
+          1 => [
+            RealmServiceRole(
+              version: generateRandomVersion().canonicalizedVersion,
+            ),
+          ],
+          _ => null,
+        };
+        return generateRandomService(organization: organization, roles: roles);
+      });
+    });
   }
 
   @override
   Future<void> bindService(String token) async =>
       Future<void>.delayed(const Duration(milliseconds: 1000));
   @override
-  Future<void> updateService(Service service) async {
+  Future<TypedMutationResult> updateService(Service service) async {
     await Future<void>.delayed(const Duration(milliseconds: 100));
+    final canonical = service.copyWith(revision: service.revision + 1);
     state = AsyncData(
       (await future)
           .map(
-            (value) => value.serviceId == service.serviceId ? service : value,
+            (value) => value.serviceId == service.serviceId ? canonical : value,
           )
           .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: canonical.revision,
+      value: canonical.inspectorValue,
     );
   }
 

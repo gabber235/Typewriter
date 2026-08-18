@@ -61,6 +61,7 @@ impl Placement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Tag {
     pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub revision: i64,
     pub name: String,
     pub color: crate::skirout::base::kernel::v1::color::Color,
     pub parent_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
@@ -104,10 +105,9 @@ impl Tag {
 pub enum TagValidationError {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TagValidationError>>),
     NameRequired,
-    PositionRequired,
-    SizeRequired,
     WidthInvalid,
     HeightInvalid,
+    InheritanceCycle,
 }
 
 impl Default for TagValidationError {
@@ -124,10 +124,9 @@ impl TagValidationError {
                     |x: &TagValidationError| match x {
                         TagValidationError::Unknown(_) => 0,
                         TagValidationError::NameRequired => 1,
-                        TagValidationError::PositionRequired => 2,
-                        TagValidationError::SizeRequired => 3,
-                        TagValidationError::WidthInvalid => 4,
-                        TagValidationError::HeightInvalid => 5,
+                        TagValidationError::WidthInvalid => 2,
+                        TagValidationError::HeightInvalid => 3,
+                        TagValidationError::InheritanceCycle => 4,
                     },
                     |u| TagValidationError::Unknown(Some(u)),
                     |x: &TagValidationError| match x { TagValidationError::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -489,10 +488,11 @@ impl CreateTagResponse {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UpdateTagRequest {
     pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub name: Option<String>,
-    pub color: Option<crate::skirout::base::kernel::v1::color::Color>,
-    pub parent_ids: Option<Vec<crate::skirout::base::kernel::v1::record_id::RecordId>>,
-    pub placement: Option<Placement>,
+    pub expected_revision: i64,
+    pub name: String,
+    pub color: crate::skirout::base::kernel::v1::color::Color,
+    pub parent_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    pub placement: Placement,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateTagRequest>>,
 }
@@ -521,6 +521,45 @@ impl UpdateTagRequest {
     pub fn serializer() -> crate::skir_client::Serializer<UpdateTagRequest> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(UpdateTagRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct UpdateTagResponse.ConflictError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct UpdateTagResponse_ConflictError {
+    pub expected_revision: i64,
+    pub actual: Tag,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdateTagResponse_ConflictError>>,
+}
+
+impl UpdateTagResponse_ConflictError {
+    pub fn default_ref() -> &'static UpdateTagResponse_ConflictError {
+        static D: std::sync::LazyLock<UpdateTagResponse_ConflictError> = std::sync::LazyLock::new(UpdateTagResponse_ConflictError::default);
+        &D
+    }
+}
+
+impl UpdateTagResponse_ConflictError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateTagResponse_ConflictError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateTagResponse_ConflictError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/tag.skir",
+                    "UpdateTagResponse.ConflictError",
+                    "",
+                    |x: &UpdateTagResponse_ConflictError| &x._unrecognized,
+                    |x: &mut UpdateTagResponse_ConflictError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<UpdateTagResponse_ConflictError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_ConflictError::_adapter())
     }
 }
 
@@ -609,6 +648,7 @@ pub enum UpdateTagResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdateTagResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<Tag>),
+    ConflictError(Box<UpdateTagResponse_ConflictError>),
     TagNotFoundError(Box<UpdateTagResponse_TagNotFoundError>),
     ParentsNotFoundError(Box<UpdateTagResponse_ParentsNotFoundError>),
     ValidationError(Box<TagValidationError>),
@@ -630,10 +670,11 @@ impl UpdateTagResponse {
                         UpdateTagResponse::Unknown(_) => 0,
                         UpdateTagResponse::InternalError(_) => 1,
                         UpdateTagResponse::Success(_) => 2,
-                        UpdateTagResponse::TagNotFoundError(_) => 3,
-                        UpdateTagResponse::ParentsNotFoundError(_) => 4,
-                        UpdateTagResponse::ValidationError(_) => 5,
-                        UpdateTagResponse::InvalidRecordIdError(_) => 6,
+                        UpdateTagResponse::ConflictError(_) => 3,
+                        UpdateTagResponse::TagNotFoundError(_) => 4,
+                        UpdateTagResponse::ParentsNotFoundError(_) => 5,
+                        UpdateTagResponse::ValidationError(_) => 6,
+                        UpdateTagResponse::InvalidRecordIdError(_) => 7,
                     },
                     |u| UpdateTagResponse::Unknown(Some(u)),
                     |x: &UpdateTagResponse| match x { UpdateTagResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -810,258 +851,6 @@ impl DeleteTagResponse {
 }
 
 // ==============================================================================
-// struct MoveTagRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct MoveTagRequest {
-    pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub x: Option<i32>,
-    pub y: Option<i32>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MoveTagRequest>>,
-}
-
-impl MoveTagRequest {
-    pub fn default_ref() -> &'static MoveTagRequest {
-        static D: std::sync::LazyLock<MoveTagRequest> = std::sync::LazyLock::new(MoveTagRequest::default);
-        &D
-    }
-}
-
-impl MoveTagRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<MoveTagRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<MoveTagRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/tag.skir",
-                    "MoveTagRequest",
-                    "",
-                    |x: &MoveTagRequest| &x._unrecognized,
-                    |x: &mut MoveTagRequest, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<MoveTagRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(MoveTagRequest::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct MoveTagResponse.TagNotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct MoveTagResponse_TagNotFoundError {
-    pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MoveTagResponse_TagNotFoundError>>,
-}
-
-impl MoveTagResponse_TagNotFoundError {
-    pub fn default_ref() -> &'static MoveTagResponse_TagNotFoundError {
-        static D: std::sync::LazyLock<MoveTagResponse_TagNotFoundError> = std::sync::LazyLock::new(MoveTagResponse_TagNotFoundError::default);
-        &D
-    }
-}
-
-impl MoveTagResponse_TagNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<MoveTagResponse_TagNotFoundError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<MoveTagResponse_TagNotFoundError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/tag.skir",
-                    "MoveTagResponse.TagNotFoundError",
-                    "",
-                    |x: &MoveTagResponse_TagNotFoundError| &x._unrecognized,
-                    |x: &mut MoveTagResponse_TagNotFoundError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<MoveTagResponse_TagNotFoundError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(MoveTagResponse_TagNotFoundError::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum MoveTagResponse
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum MoveTagResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<MoveTagResponse>>),
-    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-    Success(Box<Tag>),
-    TagNotFoundError(Box<MoveTagResponse_TagNotFoundError>),
-    ValidationError(Box<TagValidationError>),
-    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
-}
-
-impl Default for MoveTagResponse {
-    fn default() -> Self {
-        MoveTagResponse::Unknown(None)
-    }
-}
-
-impl MoveTagResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<MoveTagResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<MoveTagResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &MoveTagResponse| match x {
-                        MoveTagResponse::Unknown(_) => 0,
-                        MoveTagResponse::InternalError(_) => 1,
-                        MoveTagResponse::Success(_) => 2,
-                        MoveTagResponse::TagNotFoundError(_) => 3,
-                        MoveTagResponse::ValidationError(_) => 4,
-                        MoveTagResponse::InvalidRecordIdError(_) => 5,
-                    },
-                    |u| MoveTagResponse::Unknown(Some(u)),
-                    |x: &MoveTagResponse| match x { MoveTagResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "library/v1/tag.skir",
-                    "MoveTagResponse",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<MoveTagResponse> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(MoveTagResponse::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ResizeTagRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResizeTagRequest {
-    pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub width: Option<i32>,
-    pub height: Option<i32>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResizeTagRequest>>,
-}
-
-impl ResizeTagRequest {
-    pub fn default_ref() -> &'static ResizeTagRequest {
-        static D: std::sync::LazyLock<ResizeTagRequest> = std::sync::LazyLock::new(ResizeTagRequest::default);
-        &D
-    }
-}
-
-impl ResizeTagRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResizeTagRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResizeTagRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/tag.skir",
-                    "ResizeTagRequest",
-                    "",
-                    |x: &ResizeTagRequest| &x._unrecognized,
-                    |x: &mut ResizeTagRequest, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResizeTagRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResizeTagRequest::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ResizeTagResponse.TagNotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ResizeTagResponse_TagNotFoundError {
-    pub tag_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResizeTagResponse_TagNotFoundError>>,
-}
-
-impl ResizeTagResponse_TagNotFoundError {
-    pub fn default_ref() -> &'static ResizeTagResponse_TagNotFoundError {
-        static D: std::sync::LazyLock<ResizeTagResponse_TagNotFoundError> = std::sync::LazyLock::new(ResizeTagResponse_TagNotFoundError::default);
-        &D
-    }
-}
-
-impl ResizeTagResponse_TagNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResizeTagResponse_TagNotFoundError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResizeTagResponse_TagNotFoundError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/tag.skir",
-                    "ResizeTagResponse.TagNotFoundError",
-                    "",
-                    |x: &ResizeTagResponse_TagNotFoundError| &x._unrecognized,
-                    |x: &mut ResizeTagResponse_TagNotFoundError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResizeTagResponse_TagNotFoundError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ResizeTagResponse_TagNotFoundError::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum ResizeTagResponse
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ResizeTagResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResizeTagResponse>>),
-    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-    Success(Box<Tag>),
-    TagNotFoundError(Box<ResizeTagResponse_TagNotFoundError>),
-    ValidationError(Box<TagValidationError>),
-    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
-}
-
-impl Default for ResizeTagResponse {
-    fn default() -> Self {
-        ResizeTagResponse::Unknown(None)
-    }
-}
-
-impl ResizeTagResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResizeTagResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ResizeTagResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ResizeTagResponse| match x {
-                        ResizeTagResponse::Unknown(_) => 0,
-                        ResizeTagResponse::InternalError(_) => 1,
-                        ResizeTagResponse::Success(_) => 2,
-                        ResizeTagResponse::TagNotFoundError(_) => 3,
-                        ResizeTagResponse::ValidationError(_) => 4,
-                        ResizeTagResponse::InvalidRecordIdError(_) => 5,
-                    },
-                    |u| ResizeTagResponse::Unknown(Some(u)),
-                    |x: &ResizeTagResponse| match x { ResizeTagResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "library/v1/tag.skir",
-                    "ResizeTagResponse",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ResizeTagResponse> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ResizeTagResponse::_adapter())
-    }
-}
-
-// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -1079,19 +868,19 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<Tag> = Tag::_adapter() as *const _ as *mut _;
                 (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Tag| &x.tag_id, |x: &mut Tag, v| x.tag_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &Tag| &x.name, |x: &mut Tag, v| x.name = v);
-                (*a).add_field("color", 2, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &Tag| &x.color, |x: &mut Tag, v| x.color = v);
-                (*a).add_field("parent_ids", 3, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Tag| &x.parent_ids, |x: &mut Tag, v| x.parent_ids = v);
-                (*a).add_field("placement", 4, crate::skir_client::internal::struct_serializer_from_static(Placement::_adapter()), "", |x: &Tag| &x.placement, |x: &mut Tag, v| x.placement = v);
+                (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Tag| &x.revision, |x: &mut Tag, v| x.revision = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &Tag| &x.name, |x: &mut Tag, v| x.name = v);
+                (*a).add_field("color", 3, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &Tag| &x.color, |x: &mut Tag, v| x.color = v);
+                (*a).add_field("parent_ids", 4, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Tag| &x.parent_ids, |x: &mut Tag, v| x.parent_ids = v);
+                (*a).add_field("placement", 5, crate::skir_client::internal::struct_serializer_from_static(Placement::_adapter()), "", |x: &Tag| &x.placement, |x: &mut Tag, v| x.placement = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TagValidationError> = TagValidationError::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("name_required", 1, 1, "", TagValidationError::NameRequired);
-                (*a).add_constant_variant("position_required", 2, 2, "", TagValidationError::PositionRequired);
-                (*a).add_constant_variant("size_required", 3, 3, "", TagValidationError::SizeRequired);
-                (*a).add_constant_variant("width_invalid", 4, 4, "", TagValidationError::WidthInvalid);
-                (*a).add_constant_variant("height_invalid", 5, 5, "", TagValidationError::HeightInvalid);
+                (*a).add_constant_variant("width_invalid", 2, 2, "", TagValidationError::WidthInvalid);
+                (*a).add_constant_variant("height_invalid", 3, 3, "", TagValidationError::HeightInvalid);
+                (*a).add_constant_variant("inheritance_cycle", 4, 4, "", TagValidationError::InheritanceCycle);
                 (*a).finalize();
             }
             unsafe {
@@ -1152,10 +941,17 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<UpdateTagRequest> = UpdateTagRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &UpdateTagRequest| &x.tag_id, |x: &mut UpdateTagRequest, v| x.tag_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdateTagRequest| &x.name, |x: &mut UpdateTagRequest, v| x.name = v);
-                (*a).add_field("color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::color::Color::serializer()), "", |x: &UpdateTagRequest| &x.color, |x: &mut UpdateTagRequest, v| x.color = v);
-                (*a).add_field("parent_ids", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer())), "", |x: &UpdateTagRequest| &x.parent_ids, |x: &mut UpdateTagRequest, v| x.parent_ids = v);
-                (*a).add_field("placement", 4, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(Placement::_adapter())), "", |x: &UpdateTagRequest| &x.placement, |x: &mut UpdateTagRequest, v| x.placement = v);
+                (*a).add_field("expected_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &UpdateTagRequest| &x.expected_revision, |x: &mut UpdateTagRequest, v| x.expected_revision = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &UpdateTagRequest| &x.name, |x: &mut UpdateTagRequest, v| x.name = v);
+                (*a).add_field("color", 3, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &UpdateTagRequest| &x.color, |x: &mut UpdateTagRequest, v| x.color = v);
+                (*a).add_field("parent_ids", 4, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &UpdateTagRequest| &x.parent_ids, |x: &mut UpdateTagRequest, v| x.parent_ids = v);
+                (*a).add_field("placement", 5, crate::skir_client::internal::struct_serializer_from_static(Placement::_adapter()), "", |x: &UpdateTagRequest| &x.placement, |x: &mut UpdateTagRequest, v| x.placement = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<UpdateTagResponse_ConflictError> = UpdateTagResponse_ConflictError::_adapter() as *const _ as *mut _;
+                (*a).add_field("expected_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &UpdateTagResponse_ConflictError| &x.expected_revision, |x: &mut UpdateTagResponse_ConflictError, v| x.expected_revision = v);
+                (*a).add_field("actual", 1, crate::skir_client::internal::struct_serializer_from_static(Tag::_adapter()), "", |x: &UpdateTagResponse_ConflictError| &x.actual, |x: &mut UpdateTagResponse_ConflictError, v| x.actual = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1172,10 +968,11 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<UpdateTagResponse> = UpdateTagResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| UpdateTagResponse::InternalError(Box::new(v)), |x| match x { UpdateTagResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Tag::_adapter()), "", |v| UpdateTagResponse::Success(Box::new(v)), |x| match x { UpdateTagResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tag_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_TagNotFoundError::_adapter()), "", |v| UpdateTagResponse::TagNotFoundError(Box::new(v)), |x| match x { UpdateTagResponse::TagNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("parents_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_ParentsNotFoundError::_adapter()), "", |v| UpdateTagResponse::ParentsNotFoundError(Box::new(v)), |x| match x { UpdateTagResponse::ParentsNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("validation_error", 5, 5, crate::skir_client::internal::enum_serializer_from_static(TagValidationError::_adapter()), "", |v| UpdateTagResponse::ValidationError(Box::new(v)), |x| match x { UpdateTagResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 6, 6, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateTagResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateTagResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conflict_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_ConflictError::_adapter()), "", |v| UpdateTagResponse::ConflictError(Box::new(v)), |x| match x { UpdateTagResponse::ConflictError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("tag_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_TagNotFoundError::_adapter()), "", |v| UpdateTagResponse::TagNotFoundError(Box::new(v)), |x| match x { UpdateTagResponse::TagNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("parents_not_found_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(UpdateTagResponse_ParentsNotFoundError::_adapter()), "", |v| UpdateTagResponse::ParentsNotFoundError(Box::new(v)), |x| match x { UpdateTagResponse::ParentsNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("validation_error", 6, 6, crate::skir_client::internal::enum_serializer_from_static(TagValidationError::_adapter()), "", |v| UpdateTagResponse::ValidationError(Box::new(v)), |x| match x { UpdateTagResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 7, 7, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdateTagResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdateTagResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1198,48 +995,6 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeleteTagResponse_Success::_adapter()), "", |v| DeleteTagResponse::Success(Box::new(v)), |x| match x { DeleteTagResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("tag_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(DeleteTagResponse_TagNotFoundError::_adapter()), "", |v| DeleteTagResponse::TagNotFoundError(Box::new(v)), |x| match x { DeleteTagResponse::TagNotFoundError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalid_record_id_error", 4, 4, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| DeleteTagResponse::InvalidRecordIdError(Box::new(v)), |x| match x { DeleteTagResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<MoveTagRequest> = MoveTagRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &MoveTagRequest| &x.tag_id, |x: &mut MoveTagRequest, v| x.tag_id = v);
-                (*a).add_field("x", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &MoveTagRequest| &x.x, |x: &mut MoveTagRequest, v| x.x = v);
-                (*a).add_field("y", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &MoveTagRequest| &x.y, |x: &mut MoveTagRequest, v| x.y = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<MoveTagResponse_TagNotFoundError> = MoveTagResponse_TagNotFoundError::_adapter() as *const _ as *mut _;
-                (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &MoveTagResponse_TagNotFoundError| &x.tag_id, |x: &mut MoveTagResponse_TagNotFoundError, v| x.tag_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<MoveTagResponse> = MoveTagResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| MoveTagResponse::InternalError(Box::new(v)), |x| match x { MoveTagResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Tag::_adapter()), "", |v| MoveTagResponse::Success(Box::new(v)), |x| match x { MoveTagResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tag_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(MoveTagResponse_TagNotFoundError::_adapter()), "", |v| MoveTagResponse::TagNotFoundError(Box::new(v)), |x| match x { MoveTagResponse::TagNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("validation_error", 4, 4, crate::skir_client::internal::enum_serializer_from_static(TagValidationError::_adapter()), "", |v| MoveTagResponse::ValidationError(Box::new(v)), |x| match x { MoveTagResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 5, 5, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| MoveTagResponse::InvalidRecordIdError(Box::new(v)), |x| match x { MoveTagResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ResizeTagRequest> = ResizeTagRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ResizeTagRequest| &x.tag_id, |x: &mut ResizeTagRequest, v| x.tag_id = v);
-                (*a).add_field("width", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &ResizeTagRequest| &x.width, |x: &mut ResizeTagRequest, v| x.width = v);
-                (*a).add_field("height", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &ResizeTagRequest| &x.height, |x: &mut ResizeTagRequest, v| x.height = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ResizeTagResponse_TagNotFoundError> = ResizeTagResponse_TagNotFoundError::_adapter() as *const _ as *mut _;
-                (*a).add_field("tag_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ResizeTagResponse_TagNotFoundError| &x.tag_id, |x: &mut ResizeTagResponse_TagNotFoundError, v| x.tag_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ResizeTagResponse> = ResizeTagResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ResizeTagResponse::InternalError(Box::new(v)), |x| match x { ResizeTagResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Tag::_adapter()), "", |v| ResizeTagResponse::Success(Box::new(v)), |x| match x { ResizeTagResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("tag_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ResizeTagResponse_TagNotFoundError::_adapter()), "", |v| ResizeTagResponse::TagNotFoundError(Box::new(v)), |x| match x { ResizeTagResponse::TagNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("validation_error", 4, 4, crate::skir_client::internal::enum_serializer_from_static(TagValidationError::_adapter()), "", |v| ResizeTagResponse::ValidationError(Box::new(v)), |x| match x { ResizeTagResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 5, 5, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ResizeTagResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ResizeTagResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });
@@ -1309,32 +1064,6 @@ pub fn delete_tag_method() -> &'static crate::skir_client::Method<DeleteTagReque
             number: 852297_i64,
             request_serializer: DeleteTagRequest::serializer(),
             response_serializer: DeleteTagResponse::serializer(),
-            doc: "".to_string(),
-        }
-    });
-    &*METHOD
-}
-
-pub fn move_tag_method() -> &'static crate::skir_client::Method<MoveTagRequest, MoveTagResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<MoveTagRequest, MoveTagResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "MoveTag".to_string(),
-            number: 428020_i64,
-            request_serializer: MoveTagRequest::serializer(),
-            response_serializer: MoveTagResponse::serializer(),
-            doc: "".to_string(),
-        }
-    });
-    &*METHOD
-}
-
-pub fn resize_tag_method() -> &'static crate::skir_client::Method<ResizeTagRequest, ResizeTagResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<ResizeTagRequest, ResizeTagResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "ResizeTag".to_string(),
-            number: 356809_i64,
-            request_serializer: ResizeTagRequest::serializer(),
-            response_serializer: ResizeTagResponse::serializer(),
             doc: "".to_string(),
         }
     });

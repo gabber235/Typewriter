@@ -12,7 +12,44 @@ class TestIntent extends Intent {
 }
 
 void main() {
-  group("Dropdown - focus & actions", () {
+  group("Dropdown layout", () {
+    testWidgets("fills available width like EditorTextField", (tester) async {
+      const parentKey = Key("parent");
+
+      await tester.pumpTestApp(
+        child: SizedBox(
+          key: parentKey,
+          width: 360,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Dropdown<String>(
+                dropdownMenuEntries: const [
+                  DropdownMenuEntry(value: "A", label: "Alpha"),
+                  DropdownMenuEntry(value: "B", label: "Beta"),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const EditorTextField(),
+            ],
+          ),
+        ),
+      );
+
+      final fields = find.byType(InputFieldContainer);
+      expect(fields, findsNWidgets(2));
+      expect(
+        tester.getSize(fields.first).width,
+        tester.getSize(find.byKey(parentKey)).width,
+      );
+      expect(
+        tester.getSize(fields.first).width,
+        tester.getSize(fields.last).width,
+      );
+    });
+  });
+
+  group("Dropdown focus & actions", () {
     testWidgets("DismissIntent moves focus away from the inner DropdownMenu", (
       tester,
     ) async {
@@ -98,7 +135,7 @@ void main() {
     });
   });
 
-  group("Dropdown - callbacks", () {
+  group("Dropdown callbacks", () {
     testWidgets(
       "onSelected is called with correct value and controller updates",
       (tester) async {
@@ -154,7 +191,7 @@ void main() {
     );
   });
 
-  group("Dropdown - controller resets", () {
+  group("Dropdown controller resets", () {
     testWidgets("Controller resets to selected label when dismissing", (
       tester,
     ) async {
@@ -253,7 +290,7 @@ void main() {
     });
   });
 
-  group("Dropdown - selection interactions", () {
+  group("Dropdown selection interactions", () {
     testWidgets(
       "Selecting Gamma calls onSelected with 'C' and updates controller",
       (tester) async {

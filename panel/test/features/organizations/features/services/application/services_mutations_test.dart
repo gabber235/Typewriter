@@ -12,8 +12,9 @@ const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
 final _organizationId = recordId("organization:org1");
 
-Service _service({String name = "Original"}) => Service(
+Service _service({String name = "Original", int revision = 1}) => Service(
   serviceId: recordId("service:service1"),
+  revision: revision,
   name: name,
   roles: [RealmServiceRole(version: "1")],
   createdAt: DateTime.utc(2025),
@@ -26,6 +27,10 @@ class _SeededServices extends Services {
   @override
   Stream<List<Service>> build() async* {
     yield services;
+  }
+
+  void observe(Service service) {
+    state = AsyncData([service]);
   }
 }
 
@@ -43,13 +48,16 @@ class _Harness {
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
-        servicesProvider.overrideWith(() => _SeededServices([_service()])),
+        servicesProvider.overrideWith(
+          () => notifier = _SeededServices([_service()]),
+        ),
       ],
     );
   }
 
   static const _default = Object();
   final MockNatsClient nats = MockNatsClient();
+  late final _SeededServices notifier;
   late final ProviderContainer container;
   ProviderSubscription<AsyncValue<List<Service>>>? subscription;
 
@@ -120,50 +128,82 @@ void main() {
     });
 
     test(
-      "update sends decoded id and name and keeps optimistic state",
+      "update sends complete state and applies the canonical response",
       () async {
+        final updated = _service(name: "Updated");
+        final canonical = updated.copyWith(revision: updated.revision + 1);
         skir.UpdateOrganizationServiceRequest? request;
         harness.respond(_updateSubject, (data) {
           request = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(
             data,
           );
           return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-            skir.UpdateOrganizationServiceResponse.createSuccess(),
+            skir.UpdateOrganizationServiceResponse.wrapSuccess(
+              canonical.toSkir(),
+            ),
           );
         });
-        final updated = _service(name: "Updated");
 
-        await harness.container
+        final result = await harness.container
             .read(servicesProvider.notifier)
             .updateService(updated);
 
         expect(harness.nats.requests.single.subject, _updateSubject);
         expect(request!.serviceId, updated.serviceId);
+        expect(request!.expectedRevision, updated.revision);
         expect(request!.name, "Updated");
+        expect(request!.runsIn, updated.runsIn);
+        expect(result, isA<MutationSuccess>());
         expect(harness.container.read(servicesProvider).requireValue, [
-          updated,
+          canonical,
         ]);
       },
     );
 
-    test("update rolls back typed service not found response", () async {
-      harness.respond(
-        _updateSubject,
-        (data) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
-          skir.UpdateOrganizationServiceResponse.createServiceNotFoundError(),
-        ),
-      );
+    test(
+      "delayed update response cannot replace a newer observation",
+      () async {
+        final newest = _service(name: "Newest", revision: 4);
+        final delayed = _service(name: "Delayed", revision: 2);
+        harness.respond(_updateSubject, (data) {
+          harness.notifier.observe(newest);
+          return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+            skir.UpdateOrganizationServiceResponse.wrapSuccess(
+              delayed.toSkir(),
+            ),
+          );
+        });
 
-      await expectLater(
-        harness.container
+        final result = await harness.container
             .read(servicesProvider.notifier)
-            .updateService(_service(name: "Updated")),
-        throwsA(_apiException(404)),
-      );
-      expect(harness.container.read(servicesProvider).requireValue, [
-        _service(),
-      ]);
-    });
+            .updateService(_service(name: "Requested"));
+
+        expect(result, isA<MutationSuccess>());
+        expect((result as MutationSuccess).revision, newest.revision);
+        expect(harness.container.read(servicesProvider).requireValue, [newest]);
+      },
+    );
+
+    test(
+      "update returns unavailable and rolls back service not found",
+      () async {
+        harness.respond(
+          _updateSubject,
+          (data) => skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+            skir.UpdateOrganizationServiceResponse.createServiceNotFoundError(),
+          ),
+        );
+
+        final result = await harness.container
+            .read(servicesProvider.notifier)
+            .updateService(_service(name: "Updated"));
+
+        expect(result, isA<MutationUnavailable>());
+        expect(harness.container.read(servicesProvider).requireValue, [
+          _service(),
+        ]);
+      },
+    );
 
     test(
       "unbind sends decoded string id and keeps optimistic removal",

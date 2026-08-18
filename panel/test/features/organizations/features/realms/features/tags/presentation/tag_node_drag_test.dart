@@ -20,6 +20,7 @@ class _TagRefresh extends Notifier<int> {
 
 Tag _testTag({int x = 0, int y = 0}) => Tag(
   tagId: _testTagId,
+  revision: 1,
   name: "Test Tag",
   color: Colors.blue,
   parentIds: const [],
@@ -27,7 +28,7 @@ Tag _testTag({int x = 0, int y = 0}) => Tag(
 );
 
 void main() {
-  group("TagNode - drag and drop", () {
+  group("TagNode drag and drop", () {
     testWidgets("retains selector and focus while tag refreshes", (
       tester,
     ) async {

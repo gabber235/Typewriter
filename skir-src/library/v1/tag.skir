@@ -14,6 +14,7 @@ struct Placement {
 
 struct Tag {
   tag_id: RecordId;
+  revision: int64;
   name: string;
   color: Color;
   parent_ids: [RecordId];
@@ -22,10 +23,9 @@ struct Tag {
 
 enum TagValidationError {
   name_required;
-  position_required;
-  size_required;
   width_invalid;
   height_invalid;
+  inheritance_cycle;
 }
 
 method WatchTags(
@@ -80,15 +80,21 @@ method CreateTag(
 method UpdateTag(
   struct {
     tag_id: RecordId;
-    name: string?;
-    color: Color?;
-    parent_ids: [RecordId]?;
-    placement: Placement?;
+    expected_revision: int64;
+    name: string;
+    color: Color;
+    parent_ids: [RecordId];
+    placement: Placement;
   }
 ): enum {
   internal_error: InternalError;
 
   success: Tag;
+
+  conflict_error: struct {
+    expected_revision: int64;
+    actual: Tag;
+  };
 
   tag_not_found_error: struct {
     tag_id: RecordId;
@@ -116,41 +122,3 @@ method DeleteTag(
 
   invalid_record_id_error: InvalidRecordIdError;
 } = 852297;
-
-method MoveTag(
-  struct {
-    tag_id: RecordId;
-    x: int32?;
-    y: int32?;
-  }
-): enum {
-  internal_error: InternalError;
-
-  success: Tag;
-
-  tag_not_found_error: struct {
-    tag_id: RecordId;
-  };
-  validation_error: TagValidationError;
-
-  invalid_record_id_error: InvalidRecordIdError;
-} = 428020;
-
-method ResizeTag(
-  struct {
-    tag_id: RecordId;
-    width: int32?;
-    height: int32?;
-  }
-): enum {
-  internal_error: InternalError;
-
-  success: Tag;
-
-  tag_not_found_error: struct {
-    tag_id: RecordId;
-  };
-  validation_error: TagValidationError;
-
-  invalid_record_id_error: InvalidRecordIdError;
-} = 356809;

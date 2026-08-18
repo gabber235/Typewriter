@@ -5,132 +5,85 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../support/editor_utils.dart";
 
 void main() {
-  group("StringEditor", () {
-    testWidgets("renders existing value and updates on change", (tester) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(),
-        initialData: {"test": "Bob"},
-      );
+  testWidgets("updates a StringValue", (tester) async {
+    final source = await tester.pumpTypedEditor(
+      type: const StringType(),
+      value: const StringValue("Alice"),
+    );
 
-      expect(find.text("Bob"), findsOneWidget);
-      expect(tester.fieldValue(), "Bob");
+    await tester.enterText(find.byType(TextFormField), "Bob");
+    await tester.pump();
 
-      await tester.enterText(find.byType(TextField), "Alice");
-      await tester.pumpAndSettle();
-      expect(find.text("Alice"), findsOneWidget);
-      expect(tester.fieldValue(), "Alice");
-    });
+    expect(source.rootValue, const StringValue("Bob"));
+  });
 
-    testWidgets("multiline modifier allows multiple lines", (tester) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(modifiers: [Modifier.multiline()]),
-      );
+  testWidgets("honors string length constraints", (tester) async {
+    final source = await tester.pumpTypedEditor(
+      type: const StringType(minimumLength: 3),
+      value: const StringValue("valid"),
+    );
 
-      await tester.enterText(find.byType(TextField), "Line 1\nLine 2");
-      await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "no");
+    await tester.pump();
 
-      expect(find.text("Line 1\nLine 2"), findsOneWidget);
-      expect(tester.fieldValue(), "Line 1\nLine 2");
-    });
+    expect(source.rootValue, const StringValue("valid"));
+  });
 
-    testWidgets("readOnly mode disables editing", (tester) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(),
-        initialData: {"test": "Bob"},
-        editorMode: EditorMode.readOnlyInspector,
-      );
+  testWidgets("supports multiline string input", (tester) async {
+    final source = await tester.pumpTypedEditor(
+      type: const StringType(),
+      value: const StringValue("Line one"),
+    );
 
-      expect(find.text("Bob"), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField), "Line one\nLine two");
+    await tester.pump();
 
-      await tester.enterText(find.byType(TextField), "Alice");
-      await tester.pumpAndSettle();
+    expect(source.rootValue, const StringValue("Line one\nLine two"));
+    expect(find.textContaining("Line two"), findsOneWidget);
+  });
 
-      expect(find.text("Bob"), findsOneWidget);
-      expect(find.text("Alice"), findsNothing);
-      expect(tester.fieldValue(), "Bob");
-
-      final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.readOnly, isTrue);
-    });
-
-    testWidgets("readOnly modifier disables editing even in interactive mode", (
-      tester,
-    ) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(modifiers: [Modifier.readOnly()]),
-        initialData: {"test": "Bob"},
-        editorMode: EditorMode.interactiveInspector,
-      );
-
-      expect(find.text("Bob"), findsOneWidget);
-
-      await tester.enterText(find.byType(TextField), "Alice");
-      await tester.pumpAndSettle();
-
-      expect(find.text("Bob"), findsOneWidget);
-      expect(find.text("Alice"), findsNothing);
-      expect(tester.fieldValue(), "Bob");
-
-      final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.readOnly, isTrue);
-    });
-
-    testWidgets("default hint is shown when no hint is provided", (
-      tester,
-    ) async {
-      await tester.pumpEditor(dataBlueprint: DataBlueprint.string());
-
-      expect(find.text("Enter a string"), findsOneWidget);
-    });
-
-    testWidgets("hint parameter overrides default", (tester) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(),
-        child: StringEditorWidget(
-          path: "test",
-          primitiveBlueprint: DataBlueprint.string() as PrimitiveBlueprint,
-          editorMode: EditorMode.interactiveInspector,
-          hint: "Custom hint",
+  testWidgets("applies declared text input formatters before validation", (
+    tester,
+  ) async {
+    final source = await tester.pumpTypedEditor(
+      type: identifierStringType,
+      value: const StringValue("before"),
+      presentation: const PresentationNode(
+        id: "identifier",
+        element: TextInputElement(
+          control: BoundControl(
+            binding: BindingReference(bindingId: BindingId(0)),
+          ),
+          multiline: false,
+          inputFormatters: identifierInputFormats,
         ),
-      );
+      ),
+    );
 
-      expect(find.text("Custom hint"), findsOneWidget);
-    });
+    final field = find.byType(TextFormField);
+    await tester.enterText(field, "My Book!");
+    await tester.pump();
 
-    testWidgets("forceValue shows forced text and still updates on change", (
-      tester,
-    ) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(),
-        child: StringEditorWidget(
-          path: "test",
-          primitiveBlueprint: DataBlueprint.string() as PrimitiveBlueprint,
-          editorMode: EditorMode.interactiveInspector,
-          forceValue: "Forced",
-        ),
-      );
+    expect(source.rootValue, const StringValue("my_book"));
 
-      expect(find.text("Forced"), findsOneWidget);
+    await tester.enterText(field, "a_");
+    await tester.pump();
 
-      await tester.enterText(find.byType(TextField), "Alice");
-      await tester.pumpAndSettle();
+    expect(tester.widget<TextFormField>(field).controller?.text, "a_");
+    expect(source.rootValue, const StringValue("my_book"));
+  });
 
-      expect(tester.fieldValue(), "Alice");
-      expect(find.text("Alice"), findsOneWidget);
-    });
+  testWidgets("renders a literal without an editable field", (tester) async {
+    await tester.pumpTypedEditor(
+      type: EnumType(
+        valueType: const StringType(),
+        values: const [StringValue("fixed")],
+      ),
+      value: const StringValue("fixed"),
+    );
 
-    testWidgets("snake_case modifier formats input to snake_case", (
-      tester,
-    ) async {
-      await tester.pumpEditor(
-        dataBlueprint: DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
-      );
-
-      await tester.enterText(find.byType(TextField), "Hello World");
-      await tester.pumpAndSettle();
-
-      expect(find.text("hello_world"), findsOneWidget);
-      expect(tester.fieldValue(), "hello_world");
-    });
+    expect(find.text("fixed"), findsWidgets);
+    expect(find.byType(Dropdown<DataValue>), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
   });
 }

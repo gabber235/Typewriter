@@ -21,6 +21,7 @@ import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 sealed class Service_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
+  _core.int get revision;
   _core.String get name;
   _core.Iterable<ServiceRole> get roles;
   _core.DateTime get createdAt;
@@ -36,6 +37,8 @@ sealed class Service_orMutable {
 final class Service implements Service_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId serviceId;
+  @_core.override
+  final _core.int revision;
   @_core.override
   final _core.String name;
   @_core.override
@@ -54,6 +57,7 @@ final class Service implements Service_orMutable {
 
   factory Service({
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
     required _core.String name,
     required _core.Iterable<ServiceRole> roles,
     required _core.DateTime createdAt,
@@ -63,6 +67,7 @@ final class Service implements Service_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable? runsIn,
   }) => Service._(
     serviceId.toFrozen(),
+    revision,
     name,
     _skir.internal__frozenCopy(roles),
     createdAt.toUtc(),
@@ -74,6 +79,7 @@ final class Service implements Service_orMutable {
 
   Service._(
     this.serviceId,
+    this.revision,
     this.name,
     this.roles,
     this.createdAt,
@@ -86,6 +92,7 @@ final class Service implements Service_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = Service._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
     "",
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
@@ -99,6 +106,7 @@ final class Service implements Service_orMutable {
   /// Fields are initialized to their default values.
   static Service_mutable mutable() => Service_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
     "",
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
@@ -116,6 +124,7 @@ final class Service implements Service_orMutable {
   /// Returns a mutable shallow copy of this instance.
   Service_mutable toMutable() => Service_mutable._(
     this.serviceId,
+    this.revision,
     this.name,
     this.roles,
     this.createdAt,
@@ -137,6 +146,7 @@ final class Service implements Service_orMutable {
 
   _core.List get _equality_proxy => [
     this.serviceId,
+    this.revision,
     this.name,
     this.roles,
     this.createdAt,
@@ -162,9 +172,18 @@ final class Service implements Service_orMutable {
         (it, v) => it.serviceId = v,
       );
       _serializerBuilder.addField(
-        "name",
-        "name",
+        "revision",
+        "revision",
         1,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.revision,
+        (it, v) => it.revision = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        2,
         _skir.Serializers.string,
         "",
         (it) => it.name,
@@ -173,7 +192,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "roles",
         "roles",
-        2,
+        3,
         _skir.Serializers.iterable(
           ServiceRole.serializer,
         ),
@@ -184,7 +203,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "created_at",
         "createdAt",
-        3,
+        4,
         _skir.Serializers.timestamp,
         "",
         (it) => it.createdAt,
@@ -193,7 +212,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "organization",
         "organization",
-        4,
+        5,
         _skir.Serializers.optional(
           _lib_kernel_v1_record_id.RecordId.serializer,
         ),
@@ -204,7 +223,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "registration",
         "registration",
-        5,
+        6,
         _skir.Serializers.optional(
           ServiceRegistration.serializer,
         ),
@@ -215,7 +234,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "state",
         "state",
-        6,
+        7,
         _skir.Serializers.optional(
           ServiceState.serializer,
         ),
@@ -226,7 +245,7 @@ final class Service implements Service_orMutable {
       _serializerBuilder.addField(
         "runs_in",
         "runsIn",
-        7,
+        8,
         _skir.Serializers.optional(
           _lib_kernel_v1_record_id.RecordId.serializer,
         ),
@@ -253,6 +272,7 @@ final class Service implements Service_orMutable {
 /// Mutable version of [Service].
 final class Service_mutable implements Service_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
+  _core.int revision;
   _core.String name;
   _core.Iterable<ServiceRole> roles;
   _core.DateTime createdAt;
@@ -264,6 +284,7 @@ final class Service_mutable implements Service_orMutable {
 
   Service_mutable._(
     this.serviceId,
+    this.revision,
     this.name,
     this.roles,
     this.createdAt,
@@ -299,6 +320,7 @@ final class Service_mutable implements Service_orMutable {
   @_core.override
   Service toFrozen() => Service(
     serviceId: this.serviceId,
+    revision: this.revision,
     name: this.name,
     roles: this.roles,
     createdAt: this.createdAt,

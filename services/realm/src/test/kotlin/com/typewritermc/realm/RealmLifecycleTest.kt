@@ -5,6 +5,8 @@ import com.typewritermc.realm.repository.SurrealBookRepository
 import com.typewritermc.realm.repository.SurrealPageRepository
 import com.typewritermc.realm.repository.SurrealTagRepository
 import com.typewritermc.realm.routes.RealmRouteFactory
+import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
+import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.schema.SchemaMigrator
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -76,7 +78,7 @@ val RealmLifecycleTest by testSuite {
     }
 }
 
-private const val ROUTE_COUNT = 17
+private const val ROUTE_COUNT = 18
 
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
@@ -90,7 +92,14 @@ private class RealmLifecycleFixture(
         Realm(
             database = database,
             databaseProvider = TestDatabaseProvider(),
-            routeFactory = RealmRouteFactory(books, pages, tags),
+            routeFactory =
+                RealmRouteFactory(
+                    books,
+                    pages,
+                    tags,
+                    UnavailableRealmEditorCatalogSource(),
+                    UnavailableRealmPresentationSearchSource(),
+                ),
             scope = scope,
             telemetry = telemetry.telemetry,
         )

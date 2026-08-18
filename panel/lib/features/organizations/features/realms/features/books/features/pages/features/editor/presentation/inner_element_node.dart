@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class InnerElementNode extends StatelessWidget {
   const InnerElementNode({
     required this.name,
-    required this.blueprint,
+    required this.elementDefinition,
     required this.color,
     required this.isDeprecated,
     this.isReference = false,
@@ -18,7 +18,7 @@ class InnerElementNode extends StatelessWidget {
   });
 
   final String name;
-  final ElementBlueprint blueprint;
+  final ElementDefinition elementDefinition;
   final Color color;
   final bool isDeprecated;
   final bool isReference;
@@ -79,7 +79,11 @@ class InnerElementNode extends StatelessWidget {
     return AdaptiveLeadingLayout(
       padding: padding,
       compactPadding: compactPadding,
-      leading: Icones(blueprint.icon, size: iconSize, color: color),
+      leading: Icones.value(
+        elementDefinition.icon,
+        size: iconSize,
+        color: color,
+      ),
       center: centerContent,
       suffix: isReference
           ? Icon(Icons.open_in_new, color: color, size: iconSize)

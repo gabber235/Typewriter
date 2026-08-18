@@ -106,6 +106,7 @@ void main() {
   testWidgets("shows offline realm details", (tester) async {
     final realm = Service(
       serviceId: recordId("service:test"),
+      revision: 1,
       name: "story_realm",
       roles: [RealmServiceRole(version: "1")],
       createdAt: DateTime.utc(2026),
@@ -131,7 +132,7 @@ void main() {
 
     expect(find.text("Realm connection lost"), findsOneWidget);
     expect(
-      find.textContaining("Changes to Story Realm are paused"),
+      find.textContaining("Changes to 'Story Realm' are paused"),
       findsOneWidget,
     );
     expect(find.text("4m ago"), findsOneWidget);

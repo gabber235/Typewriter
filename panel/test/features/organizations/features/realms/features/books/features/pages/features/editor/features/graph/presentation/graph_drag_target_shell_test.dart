@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  group("Graph - drag target shell (layout & hit testing)", () {
+  group("Graph drag target shell (layout & hit testing)", () {
     testWidgets("drag target covers the viewport and accepts drags anywhere", (
       tester,
     ) async {

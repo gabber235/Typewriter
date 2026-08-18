@@ -1,7 +1,7 @@
 library;
 
 export "../src/features/organizations/features/realms/features/books/books.dart";
-export "../src/features/organizations/features/realms/features/books/features/pages/features/editor/data_blueprint.dart";
+export "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
 export "../src/features/organizations/features/realms/features/books/features/pages/features/editor/entries.dart";
 export "../src/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/testing/graph_layout.dart";
 export "../src/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/scene.dart";

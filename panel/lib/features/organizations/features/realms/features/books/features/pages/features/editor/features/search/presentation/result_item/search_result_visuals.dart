@@ -6,15 +6,26 @@ class SearchResultIconTile extends StatelessWidget {
   const SearchResultIconTile({
     required this.color,
     required this.onColor,
+    required String icon,
+    this.focused = false,
+    this.loading = false,
+    super.key,
+  }) : iconify = icon,
+       icon = null;
+
+  const SearchResultIconTile.value({
+    required this.color,
+    required this.onColor,
     required this.icon,
     this.focused = false,
     this.loading = false,
     super.key,
-  });
+  }) : iconify = null;
 
   final Color color;
   final Color onColor;
-  final String icon;
+  final IconValue? icon;
+  final String? iconify;
   final bool focused;
   final bool loading;
 
@@ -46,7 +57,10 @@ class SearchResultIconTile extends StatelessWidget {
                 color: focused ? color : onColor,
                 padding: EdgeInsets.all(context.spacing.space1),
               )
-            : Icones(icon, color: focused ? color : onColor),
+            : Icones.value(
+                icon ?? IconValue.iconify(iconify!),
+                color: focused ? color : onColor,
+              ),
       ),
     );
   }

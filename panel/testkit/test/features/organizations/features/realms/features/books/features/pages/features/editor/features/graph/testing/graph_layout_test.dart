@@ -7,18 +7,18 @@ EntryDefinition createTestEntry() {
   return EntryDefinition(
     id: faker.guid.guid(),
     name: faker.lorem.words(2).join(" "),
-    blueprint: ElementBlueprint(
-      id: faker.guid.guid(),
+    elementDefinition: ElementDefinition(
+      rootType: ResolvedTypeRef(
+        id: QualifiedTypeId(namespace: "test", name: faker.guid.guid()),
+        revision: 1,
+      ),
       name: faker.lorem.word(),
       description: faker.lorem.sentence(),
-      extension: "test",
-      dataBlueprint: ObjectBlueprint(fields: {}),
       color: safeColors.first,
-      icon: "fa-solid:star",
-      tags: [],
+      icon: const IconValue.iconify("fa-solid:star"),
     ),
     placement: const EntryPlacement(x: 0, y: 0, width: 0, height: 0),
-    data: DynamicData({}),
+    data: RecordValue(const {}),
     inwardEdges: [],
     outwardEdges: [],
   );

@@ -142,6 +142,7 @@ DragTargetDetails<TagIdentifier> _details(skir.RecordId id) =>
 
 Tag _tag(skir.RecordId id, {List<skir.RecordId> parentIds = const []}) => Tag(
   tagId: id,
+  revision: 1,
   name: id.id,
   color: Colors.blue,
   parentIds: parentIds,
@@ -185,12 +186,16 @@ class _RecordingTags extends Tags {
   }
 
   @override
-  Future<void> updateTag(Tag tag) async {
+  Future<TypedMutationResult> updateTag(Tag tag) async {
     updatedTag = tag;
     state = AsyncData(
       state.requireValue
           .map((current) => current.tagId == tag.tagId ? tag : current)
           .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: tag.revision,
+      value: StringValue(tag.name),
     );
   }
 }

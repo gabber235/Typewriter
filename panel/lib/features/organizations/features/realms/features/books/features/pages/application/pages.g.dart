@@ -50,7 +50,7 @@ final class BookPagesProvider
   }
 }
 
-String _$bookPagesHash() => r'352687bac2e3e87abdcf57cf90bdeb0d9c41ad29';
+String _$bookPagesHash() => r'939f38ebbfebad3c875a38ed01f016f146596e91';
 
 final class BookPagesFamily extends $Family
     with
@@ -139,7 +139,7 @@ final class PagesProvider extends $StreamNotifierProvider<Pages, Page> {
   }
 }
 
-String _$pagesHash() => r'98b51043aee9c9bdf6b6ed20fa19e78406786b0f';
+String _$pagesHash() => r'ad0694142c5eb2ef34f56a16adfe28fc93787110';
 
 final class PagesFamily extends $Family
     with

@@ -2,17 +2,13 @@ import "dart:math" as math;
 
 import "package:faker/faker.dart" hide Color;
 import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
-const _tagWidth = 4;
-const _tagHeight = 1;
-const _horizontalSpacing = 2;
-const _verticalSpacing = 2;
+part "tag_batch_layout.dart";
 
 const _probNoParents = 0.2;
 const _probOneParent = 0.85;
@@ -24,16 +20,16 @@ List<Tag> generateTagBatch(int count) {
   if (count <= 0) return [];
 
   final rawTags = _generateRawTags(count);
-  final layerMap = _calculateLayers(rawTags);
+  final layerMap = rawTags._calculateLayers();
 
   final maxLayer = layerMap.values.fold(0, math.max);
   final layers = List.generate(
     maxLayer + 1,
     (i) => rawTags.where((t) => layerMap[t.tagId] == i).toList(),
   );
-  final orderedLayers = _orderLayersForMinimalCrossing(layers);
+  final orderedLayers = layers._orderedForMinimalCrossing();
 
-  return _assignCoordinates(orderedLayers);
+  return orderedLayers._assignCoordinates();
 }
 
 List<Tag> _generateRawTags(int count) {
@@ -63,6 +59,7 @@ List<Tag> _generateRawTags(int count) {
     tags.add(
       Tag(
         tagId: recordId("tag:${faker.guid.guid()}"),
+        revision: 1,
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
@@ -77,123 +74,11 @@ List<Tag> _generateRawTags(int count) {
   return tags;
 }
 
-Map<skir.RecordId, int> _calculateLayers(List<Tag> tags) {
-  final tagById = {for (final t in tags) t.tagId: t};
-  final depthCache = <skir.RecordId, int>{};
-
-  int calculateDepth(skir.RecordId tagId, [Set<skir.RecordId>? visiting]) {
-    visiting ??= {};
-
-    if (visiting.contains(tagId)) return 0;
-    if (depthCache.containsKey(tagId)) return depthCache[tagId]!;
-
-    visiting.add(tagId);
-
-    final tag = tagById[tagId];
-    if (tag == null || tag.parentIds.isEmpty) {
-      depthCache[tagId] = 0;
-      visiting.remove(tagId);
-      return 0;
-    }
-
-    var maxParentDepth = -1;
-    for (final parentId in tag.parentIds) {
-      if (tagById.containsKey(parentId)) {
-        maxParentDepth = math.max(
-          maxParentDepth,
-          calculateDepth(parentId, visiting),
-        );
-      }
-    }
-
-    depthCache[tagId] = maxParentDepth == -1 ? 0 : maxParentDepth + 1;
-    visiting.remove(tagId);
-    return depthCache[tagId]!;
-  }
-
-  for (final tag in tags) {
-    calculateDepth(tag.tagId);
-  }
-
-  return depthCache;
-}
-
-List<List<Tag>> _orderLayersForMinimalCrossing(List<List<Tag>> layers) {
-  if (layers.isEmpty) return layers;
-
-  final positionInLayer = <skir.RecordId, int>{};
-
-  for (int i = 0; i < layers.first.length; i++) {
-    positionInLayer[layers.first[i].tagId] = i;
-  }
-
-  final result = <List<Tag>>[layers.first];
-
-  for (int layerIdx = 1; layerIdx < layers.length; layerIdx++) {
-    final layer = layers[layerIdx].toList();
-
-    layer.sort((a, b) {
-      final aBarycenter = _calculateBarycenter(a, positionInLayer);
-      final bBarycenter = _calculateBarycenter(b, positionInLayer);
-      return aBarycenter.compareTo(bBarycenter);
-    });
-
-    for (int i = 0; i < layer.length; i++) {
-      positionInLayer[layer[i].tagId] = i;
-    }
-
-    result.add(layer);
-  }
-
-  return result;
-}
-
-double _calculateBarycenter(Tag tag, Map<skir.RecordId, int> positionInLayer) {
-  if (tag.parentIds.isEmpty) return 0;
-
-  var sum = 0;
-  var count = 0;
-  for (final parentId in tag.parentIds) {
-    if (positionInLayer.containsKey(parentId)) {
-      sum += positionInLayer[parentId]!;
-      count++;
-    }
-  }
-
-  return count > 0 ? sum / count : 0;
-}
-
-List<Tag> _assignCoordinates(List<List<Tag>> orderedLayers) {
-  final result = <Tag>[];
-
-  for (int layerIdx = 0; layerIdx < orderedLayers.length; layerIdx++) {
-    final layer = orderedLayers[layerIdx];
-    final y = layerIdx * (_tagHeight + _verticalSpacing);
-
-    for (int posIdx = 0; posIdx < layer.length; posIdx++) {
-      final tag = layer[posIdx];
-      final x = posIdx * (_tagWidth + _horizontalSpacing);
-
-      result.add(
-        tag.copyWith(
-          placement: Placement(
-            x: x,
-            y: y,
-            width: _tagWidth,
-            height: _tagHeight,
-          ),
-        ),
-      );
-    }
-  }
-
-  return result;
-}
-
 /// Generates a random standalone tag with no parent relationships.
 Tag generateRandomTag() {
   return Tag(
     tagId: recordId("tag:${faker.guid.guid()}"),
+    revision: 1,
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
@@ -237,6 +122,7 @@ class TagsMock extends Tags {
 
     final newTag = Tag(
       tagId: recordId("tag:${faker.guid.guid()}"),
+      revision: 1,
       name: name,
       color: color ?? safeColors.randomElement(),
       parentIds: parentIds,
@@ -248,49 +134,24 @@ class TagsMock extends Tags {
   }
 
   @override
-  Future<void> updateTag(Tag tag) async {
+  Future<TypedMutationResult> updateTag(Tag tag) async {
     final tags = await future;
-    state = AsyncData(tags.map((t) => t.tagId == tag.tagId ? tag : t).toList());
+    final canonical = tag.copyWith(revision: tag.revision + 1);
+    state = AsyncData(
+      tags
+          .map((value) => value.tagId == tag.tagId ? canonical : value)
+          .toList(),
+    );
+    return TypedMutationResult.success(
+      revision: canonical.revision,
+      value: canonical.inspectorValue,
+    );
   }
 
   @override
   Future<void> deleteTag(skir.RecordId tagId) async {
     final tags = await future;
     state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
-  }
-
-  @override
-  Future<void> moveTags(List<TagMovePayload> changes) async {
-    final tags = await future;
-    final changesById = {for (final change in changes) change.id: change};
-    state = AsyncData(
-      tags.map((tag) {
-        final change = changesById[tag.tagId];
-        if (change == null) return tag;
-        return tag.copyWith(
-          placement: tag.placement.copyWith(x: change.x, y: change.y),
-        );
-      }).toList(),
-    );
-  }
-
-  @override
-  Future<void> resizeTag(skir.RecordId tagId, int width, int height) async {
-    final tags = await future;
-    state = AsyncData(
-      tags
-          .map(
-            (tag) => tag.tagId == tagId
-                ? tag.copyWith(
-                    placement: tag.placement.copyWith(
-                      width: width,
-                      height: height,
-                    ),
-                  )
-                : tag,
-          )
-          .toList(),
-    );
   }
 }
 

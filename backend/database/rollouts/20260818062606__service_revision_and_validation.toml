@@ -1,0 +1,48 @@
+id = "20260818062606__service_revision_and_validation"
+name = "service revision and validation"
+source_schema_hash = "a7b147905f1093dd3c3705af6aa46aa74117481e129605f411f700231538574b"
+target_schema_hash = "234dd32361e81d99ea453327048d7ca968e935c58a4482336f2fb70aad308051"
+compatibility = "phased"
+
+[[steps]]
+id = "apply_service_revision_and_validation"
+phase = "start"
+kind = "apply_schema"
+files = [
+    "database/schema/kernel/id.surql",
+    "database/schema/service/functions.surql",
+    "database/schema/service/service.surql",
+]
+
+[[steps]]
+id = "restore_previous_service_schema"
+phase = "rollback"
+kind = "apply_schema"
+sql = '''
+DEFINE FUNCTION OVERWRITE fn::is_id($id: string) -> bool {
+    RETURN string::matches($id, '^[a-z0-9][a-z0-9_]{1,}[a-z0-9]$');
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_runs_in($service: object, $realm: option<record<service>>) -> bool {
+    IF $realm == NONE { RETURN true };
+
+    LET $can_run_in = fn::service::has_role($service, "engine") OR fn::service::has_role($service, "custom");
+    IF !$can_run_in {
+        THROW "runs-in-requires-engine-or-custom-role"
+    };
+
+    IF !fn::service::has_role({ roles: $realm.roles }, "realm") {
+        THROW "runs-in-must-reference-realm-role"
+    };
+
+    LET $service_org = $service.organization;
+    LET $realm_org = $realm.organization;
+
+    IF $service_org == NONE AND $realm_org == NONE { RETURN true };
+    IF $service_org != NONE AND $realm_org != NONE AND $service_org = $realm_org { RETURN true };
+
+    THROW "runs-in-organization-mismatch";
+};
+
+REMOVE FIELD IF EXISTS revision ON service;
+'''

@@ -47,6 +47,7 @@ class InputFieldController {
   final FocusNode surroundingFocusNode;
 
   VoidCallback? _endInteraction;
+  VoidCallback? _beginInteraction;
 
   final bool _ownsInputFocusNode;
   final bool _ownsSurroundingFocusNode;
@@ -54,6 +55,8 @@ class InputFieldController {
   void requestInputFocus() => inputFocusNode.requestFocus();
 
   void requestSurroundingFocus() => surroundingFocusNode.requestFocus();
+
+  void beginInteraction() => _beginInteraction?.call();
 
   void endInteraction() => _endInteraction?.call();
 
@@ -76,6 +79,7 @@ class InputFieldContainer extends HookConsumerWidget {
     this.borderRadius,
     this.onInputFocus,
     this.onDismiss,
+    this.onCancel,
     this.autofocus = false,
     super.key,
   });
@@ -102,7 +106,12 @@ class InputFieldContainer extends HookConsumerWidget {
   final VoidCallback? onInputFocus;
 
   /// Called when a dismiss intent is handled while the input is focused.
+  /// Dismissing leaves the field but keeps what was typed.
   final VoidCallback? onDismiss;
+
+  /// Called when a cancel intent is handled while the input is focused.
+  /// Cancelling leaves the field and discards what was typed.
+  final VoidCallback? onCancel;
 
   /// Whether the surrounding focus should request focus automatically.
   final bool autofocus;
@@ -116,80 +125,69 @@ class InputFieldContainer extends HookConsumerWidget {
     useListenable(inputFocusNode);
 
     final focusType = useState(FocusType.none);
-
     final id = useMemoized(() => uuid.v4());
-    final currentMode = ref.watch(currentInteractionModeProvider);
+    final modeCoordinator = ref.read(inputFieldModeCoordinatorProvider);
 
     useEffect(() {
-      if (currentMode is InsertMode && surroundingNode.hasPrimaryFocus) {
-        if (currentMode.id != id) {
-          ref
-              .read(currentInteractionModeProvider.notifier)
-              .setMode(InsertMode(id));
-        }
-        inputFocusNode.requestFocus();
+      void beginInteraction() {
+        modeCoordinator.begin(id);
       }
 
-      if (currentMode is! InsertMode && inputFocusNode.hasPrimaryFocus) {
-        surroundingNode.requestFocus();
-      }
-      return null;
-    }, [currentMode]);
-
-    useEffect(() {
       void endInteraction() {
-        final mode = ref.read(currentInteractionModeProvider);
-        if (mode is! InsertMode || mode.id != id) return;
-        ref.read(currentInteractionModeProvider.notifier).normal();
+        modeCoordinator.end(id);
       }
 
+      final unregister = modeCoordinator.register(
+        id: id,
+        inputFocusNode: inputFocusNode,
+        surroundingFocusNode: surroundingNode,
+        onInputFocus: onInputFocus,
+      );
+      controller._beginInteraction = beginInteraction;
       controller._endInteraction = endInteraction;
+
       return () {
+        if (controller._beginInteraction == beginInteraction) {
+          controller._beginInteraction = null;
+        }
         if (controller._endInteraction == endInteraction) {
           controller._endInteraction = null;
         }
+        unregister();
       };
-    }, [controller, id]);
-
-    useEffect(() {
-      if (inputFocusNode.hasPrimaryFocus) onInputFocus?.call();
-      return null;
-    }, [inputFocusNode.hasPrimaryFocus]);
+    }, [controller, id, modeCoordinator, onInputFocus]);
 
     return FocusHighlight(
       type: focusType.value,
       borderRadius: borderRadius ?? context.shapes.largeBorderRadius,
-      child: ManagedActionSet(
-        shortcuts: [
-          if (surroundingNode.hasPrimaryFocus) ...[
-            ActionShortcut(
-              id: "focus_input",
-              label: "Focus Input",
-              description: "Focus the input field",
-              activators: [
-                const SingleActivator(LogicalKeyboardKey.enter),
-                const SingleActivator(LogicalKeyboardKey.space),
-              ],
-              priority: 100,
-            ),
-            ...?surroundingActions,
+      child: Actions(
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (intent) {
+              if (surroundingNode.hasPrimaryFocus) {
+                modeCoordinator.begin(id);
+              }
+              return null;
+            },
+          ),
+        },
+        child: ManagedActionSet(
+          shortcuts: [
+            if (surroundingNode.hasPrimaryFocus) ...[
+              ActionShortcut(
+                id: "focus_input",
+                label: "Focus Input",
+                description: "Focus the input field",
+                activators: [
+                  const SingleActivator(LogicalKeyboardKey.enter),
+                  const SingleActivator(LogicalKeyboardKey.space),
+                ],
+                priority: 100,
+              ),
+              ...?surroundingActions,
+              ...?actions,
+            ],
           ],
-          if (inputFocusNode.hasPrimaryFocus) ...[...?inputActions],
-          if (surroundingNode.hasFocus) ...?actions,
-        ],
-        child: Actions(
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(
-              onInvoke: (intent) {
-                if (surroundingNode.hasPrimaryFocus) {
-                  ref
-                      .read(currentInteractionModeProvider.notifier)
-                      .setMode(InsertMode(id));
-                }
-                return null;
-              },
-            ),
-          },
           child: Focus(
             focusNode: surroundingNode,
             autofocus: autofocus,
@@ -197,33 +195,35 @@ class InputFieldContainer extends HookConsumerWidget {
             descendantsAreTraversable: false,
             onFocusChange: (_) {
               focusType.value = FocusHighlighting.onlyPrimary(surroundingNode);
-
-              if (inputFocusNode.hasPrimaryFocus &&
-                  currentMode is! InsertMode) {
-                ref
-                    .read(currentInteractionModeProvider.notifier)
-                    .setMode(InsertMode(id));
-              }
-
-              if (currentMode is InsertMode &&
-                  currentMode.id == id &&
-                  !inputFocusNode.hasFocus) {
-                ref.read(currentInteractionModeProvider.notifier).normal();
-              }
             },
             child: Actions(
               actions: {
-                if (inputFocusNode.hasPrimaryFocus)
+                if (inputFocusNode.hasPrimaryFocus) ...{
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
-                      ref
-                          .read(currentInteractionModeProvider.notifier)
-                          .normal();
+                      onDismiss?.call();
+                      modeCoordinator.end(id);
                       return null;
                     },
                   ),
+                  CancelIntent: CallbackAction<CancelIntent>(
+                    onInvoke: (intent) {
+                      onCancel?.call();
+                      modeCoordinator.end(id);
+                      return null;
+                    },
+                  ),
+                },
               },
-              child: child,
+              child: ManagedActionSet(
+                shortcuts: [
+                  if (inputFocusNode.hasPrimaryFocus) ...[
+                    ...?inputActions,
+                    ...?actions,
+                  ],
+                ],
+                child: child,
+              ),
             ),
           ),
         ),

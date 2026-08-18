@@ -21,6 +21,7 @@ dependencies:
   mocktail: ^1.0.4
   iconify_flutter_plus: ^1.0.4
 
+  riverpod: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

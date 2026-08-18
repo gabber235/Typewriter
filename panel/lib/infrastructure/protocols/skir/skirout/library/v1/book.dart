@@ -23,6 +23,7 @@ import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 sealed class Book_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get bookId;
+  _core.int get revision;
   _core.String get title;
   _core.String get icon;
   _lib_kernel_v1_color.Color_orMutable get color;
@@ -36,6 +37,8 @@ final class Book implements Book_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   @_core.override
+  final _core.int revision;
+  @_core.override
   final _core.String title;
   @_core.override
   final _core.String icon;
@@ -47,12 +50,14 @@ final class Book implements Book_orMutable {
 
   factory Book({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
     required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds,
   }) => Book._(
     bookId.toFrozen(),
+    revision,
     title,
     icon,
     color.toFrozen(),
@@ -61,6 +66,7 @@ final class Book implements Book_orMutable {
 
   Book._(
     this.bookId,
+    this.revision,
     this.title,
     this.icon,
     this.color,
@@ -70,6 +76,7 @@ final class Book implements Book_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = Book._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
     "",
     "",
     _lib_kernel_v1_color.Color.defaultInstance,
@@ -80,6 +87,7 @@ final class Book implements Book_orMutable {
   /// Fields are initialized to their default values.
   static Book_mutable mutable() => Book_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    0,
     "",
     "",
     _lib_kernel_v1_color.Color.defaultInstance,
@@ -94,6 +102,7 @@ final class Book implements Book_orMutable {
   /// Returns a mutable shallow copy of this instance.
   Book_mutable toMutable() => Book_mutable._(
     this.bookId,
+    this.revision,
     this.title,
     this.icon,
     this.color,
@@ -112,6 +121,7 @@ final class Book implements Book_orMutable {
 
   _core.List get _equality_proxy => [
     this.bookId,
+    this.revision,
     this.title,
     this.icon,
     this.color,
@@ -134,9 +144,18 @@ final class Book implements Book_orMutable {
         (it, v) => it.bookId = v,
       );
       _serializerBuilder.addField(
-        "title",
-        "title",
+        "revision",
+        "revision",
         1,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.revision,
+        (it, v) => it.revision = v,
+      );
+      _serializerBuilder.addField(
+        "title",
+        "title",
+        2,
         _skir.Serializers.string,
         "",
         (it) => it.title,
@@ -145,7 +164,7 @@ final class Book implements Book_orMutable {
       _serializerBuilder.addField(
         "icon",
         "icon",
-        2,
+        3,
         _skir.Serializers.string,
         "",
         (it) => it.icon,
@@ -154,7 +173,7 @@ final class Book implements Book_orMutable {
       _serializerBuilder.addField(
         "color",
         "color",
-        3,
+        4,
         _lib_kernel_v1_color.Color.serializer,
         "",
         (it) => it.color,
@@ -163,7 +182,7 @@ final class Book implements Book_orMutable {
       _serializerBuilder.addField(
         "tag_ids",
         "tagIds",
-        4,
+        5,
         _skir.Serializers.iterable(
           _lib_kernel_v1_record_id.RecordId.serializer,
         ),
@@ -190,6 +209,7 @@ final class Book implements Book_orMutable {
 /// Mutable version of [Book].
 final class Book_mutable implements Book_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
+  _core.int revision;
   _core.String title;
   _core.String icon;
   _lib_kernel_v1_color.Color_orMutable color;
@@ -198,6 +218,7 @@ final class Book_mutable implements Book_orMutable {
 
   Book_mutable._(
     this.bookId,
+    this.revision,
     this.title,
     this.icon,
     this.color,
@@ -241,6 +262,7 @@ final class Book_mutable implements Book_orMutable {
   @_core.override
   Book toFrozen() => Book(
     bookId: this.bookId,
+    revision: this.revision,
     title: this.title,
     icon: this.icon,
     color: this.color,
@@ -469,6 +491,7 @@ sealed class WatchBooksResponse {
   /// Same as `wrapAdd(Book(...))`.
   factory WatchBooksResponse.createAdd({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -476,6 +499,7 @@ sealed class WatchBooksResponse {
   }) => WatchBooksResponse.wrapAdd(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
@@ -491,6 +515,7 @@ sealed class WatchBooksResponse {
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBooksResponse.createUpdate({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -498,6 +523,7 @@ sealed class WatchBooksResponse {
   }) => WatchBooksResponse.wrapUpdate(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
@@ -967,6 +993,7 @@ sealed class WatchBookResponse {
   /// Same as `wrapInitial(Book(...))`.
   factory WatchBookResponse.createInitial({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -974,6 +1001,7 @@ sealed class WatchBookResponse {
   }) => WatchBookResponse.wrapInitial(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
@@ -989,6 +1017,7 @@ sealed class WatchBookResponse {
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBookResponse.createUpdate({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -996,6 +1025,7 @@ sealed class WatchBookResponse {
   }) => WatchBookResponse.wrapUpdate(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
@@ -1586,6 +1616,7 @@ sealed class CreateBookResponse {
   /// Same as `wrapSuccess(Book(...))`.
   factory CreateBookResponse.createSuccess({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -1593,6 +1624,7 @@ sealed class CreateBookResponse {
   }) => CreateBookResponse.wrapSuccess(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
@@ -1806,10 +1838,11 @@ final class CreateBookResponse_invalidRecordIdErrorWrapper extends _CreateBookRe
 
 sealed class UpdateBookRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get bookId;
-  _core.String? get title;
-  _core.String? get icon;
-  _lib_kernel_v1_color.Color_orMutable? get color;
-  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>? get tagIds;
+  _core.int get expectedRevision;
+  _core.String get title;
+  _core.String get icon;
+  _lib_kernel_v1_color.Color_orMutable get color;
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get tagIds;
 
   UpdateBookRequest toFrozen();
 }
@@ -1819,31 +1852,36 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   @_core.override
-  final _core.String? title;
+  final _core.int expectedRevision;
   @_core.override
-  final _core.String? icon;
+  final _core.String title;
   @_core.override
-  final _lib_kernel_v1_color.Color? color;
+  final _core.String icon;
   @_core.override
-  final _core.Iterable<_lib_kernel_v1_record_id.RecordId>? tagIds;
+  final _lib_kernel_v1_color.Color color;
+  @_core.override
+  final _core.Iterable<_lib_kernel_v1_record_id.RecordId> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
   factory UpdateBookRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-    required _core.String? title,
-    required _core.String? icon,
-    required _lib_kernel_v1_color.Color_orMutable? color,
-    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>? tagIds,
+    required _core.int expectedRevision,
+    required _core.String title,
+    required _core.String icon,
+    required _lib_kernel_v1_color.Color_orMutable color,
+    required _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds,
   }) => UpdateBookRequest._(
     bookId.toFrozen(),
+    expectedRevision,
     title,
     icon,
-    (color != null) ? color.toFrozen() : null,
-    (tagIds != null) ? _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()) : null,
+    color.toFrozen(),
+    _skir.internal__frozenMappedCopy(tagIds, (it) => it.toFrozen()),
   );
 
   UpdateBookRequest._(
     this.bookId,
+    this.expectedRevision,
     this.title,
     this.icon,
     this.color,
@@ -1853,20 +1891,22 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateBookRequest._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    null,
-    null,
-    null,
-    null,
+    0,
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static UpdateBookRequest_mutable mutable() => UpdateBookRequest_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    null,
-    null,
-    null,
-    null,
+    0,
+    "",
+    "",
+    _lib_kernel_v1_color.Color.defaultInstance,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -1877,6 +1917,7 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
   /// Returns a mutable shallow copy of this instance.
   UpdateBookRequest_mutable toMutable() => UpdateBookRequest_mutable._(
     this.bookId,
+    this.expectedRevision,
     this.title,
     this.icon,
     this.color,
@@ -1895,6 +1936,7 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
 
   _core.List get _equality_proxy => [
     this.bookId,
+    this.expectedRevision,
     this.title,
     this.icon,
     this.color,
@@ -1917,12 +1959,19 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
         (it, v) => it.bookId = v,
       );
       _serializerBuilder.addField(
-        "title",
-        "title",
+        "expected_revision",
+        "expectedRevision",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.int64,
+        "",
+        (it) => it.expectedRevision,
+        (it, v) => it.expectedRevision = v,
+      );
+      _serializerBuilder.addField(
+        "title",
+        "title",
+        2,
+        _skir.Serializers.string,
         "",
         (it) => it.title,
         (it, v) => it.title = v,
@@ -1930,10 +1979,8 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
       _serializerBuilder.addField(
         "icon",
         "icon",
-        2,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        3,
+        _skir.Serializers.string,
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1941,10 +1988,8 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
       _serializerBuilder.addField(
         "color",
         "color",
-        3,
-        _skir.Serializers.optional(
-          _lib_kernel_v1_color.Color.serializer,
-        ),
+        4,
+        _lib_kernel_v1_color.Color.serializer,
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -1952,11 +1997,9 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
       _serializerBuilder.addField(
         "tag_ids",
         "tagIds",
-        4,
-        _skir.Serializers.optional(
-          _skir.Serializers.iterable(
-            _lib_kernel_v1_record_id.RecordId.serializer,
-          ),
+        5,
+        _skir.Serializers.iterable(
+          _lib_kernel_v1_record_id.RecordId.serializer,
         ),
         "",
         (it) => it.tagIds,
@@ -1981,14 +2024,16 @@ final class UpdateBookRequest implements UpdateBookRequest_orMutable {
 /// Mutable version of [UpdateBookRequest].
 final class UpdateBookRequest_mutable implements UpdateBookRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
-  _core.String? title;
-  _core.String? icon;
-  _lib_kernel_v1_color.Color_orMutable? color;
-  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable>? tagIds;
+  _core.int expectedRevision;
+  _core.String title;
+  _core.String icon;
+  _lib_kernel_v1_color.Color_orMutable color;
+  _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> tagIds;
   _skir.internal__UnrecognizedFields? _u;
 
   UpdateBookRequest_mutable._(
     this.bookId,
+    this.expectedRevision,
     this.title,
     this.icon,
     this.color,
@@ -2006,14 +2051,178 @@ final class UpdateBookRequest_mutable implements UpdateBookRequest_orMutable {
     }
   }
 
+  /// If the value of [color] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+  _lib_kernel_v1_color.Color_mutable get mutableColor {
+    final value = this.color;
+    if (value is _lib_kernel_v1_color.Color_mutable) {
+      return value;
+    } else {
+      return this.color = (value as _lib_kernel_v1_color.Color).toMutable();
+    }
+  }
+
+  /// If the value of [tagIds] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
+  _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
+    final value = this.tagIds;
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
+      return value;
+    } else {
+      return this.tagIds = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   UpdateBookRequest toFrozen() => UpdateBookRequest(
     bookId: this.bookId,
+    expectedRevision: this.expectedRevision,
     title: this.title,
     icon: this.icon,
     color: this.color,
     tagIds: this.tagIds,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct UpdateBookResponse.ConflictError
+// -----------------------------------------------------------------------------
+
+sealed class UpdateBookResponse_ConflictError_orMutable {
+  _core.int get expectedRevision;
+  Book_orMutable get actual;
+
+  UpdateBookResponse_ConflictError toFrozen();
+}
+
+/// Deeply immutable.
+final class UpdateBookResponse_ConflictError implements UpdateBookResponse_ConflictError_orMutable {
+  @_core.override
+  final _core.int expectedRevision;
+  @_core.override
+  final Book actual;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory UpdateBookResponse_ConflictError({
+    required _core.int expectedRevision,
+    required Book_orMutable actual,
+  }) => UpdateBookResponse_ConflictError._(
+    expectedRevision,
+    actual.toFrozen(),
+  );
+
+  UpdateBookResponse_ConflictError._(
+    this.expectedRevision,
+    this.actual,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = UpdateBookResponse_ConflictError._(
+    0,
+    Book.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static UpdateBookResponse_ConflictError_mutable mutable() => UpdateBookResponse_ConflictError_mutable._(
+    0,
+    Book.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  UpdateBookResponse_ConflictError toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  UpdateBookResponse_ConflictError_mutable toMutable() => UpdateBookResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! UpdateBookResponse_ConflictError) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.expectedRevision,
+    this.actual,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `UpdateBookResponse_ConflictError` instances.
+  static _skir.StructSerializer<UpdateBookResponse_ConflictError, UpdateBookResponse_ConflictError_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "expected_revision",
+        "expectedRevision",
+        0,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.expectedRevision,
+        (it, v) => it.expectedRevision = v,
+      );
+      _serializerBuilder.addField(
+        "actual",
+        "actual",
+        1,
+        Book.serializer,
+        "",
+        (it) => it.actual,
+        (it, v) => it.actual = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "library/v1/book.skir:UpdateBookResponse.ConflictError",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (UpdateBookResponse_ConflictError_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [UpdateBookResponse_ConflictError].
+final class UpdateBookResponse_ConflictError_mutable implements UpdateBookResponse_ConflictError_orMutable {
+  _core.int expectedRevision;
+  Book_orMutable actual;
+  _skir.internal__UnrecognizedFields? _u;
+
+  UpdateBookResponse_ConflictError_mutable._(
+    this.expectedRevision,
+    this.actual,
+  );
+
+  /// If the value of [actual] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
+  Book_mutable get mutableActual {
+    final value = this.actual;
+    if (value is Book_mutable) {
+      return value;
+    } else {
+      return this.actual = (value as Book).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  UpdateBookResponse_ConflictError toFrozen() => UpdateBookResponse_ConflictError(
+    expectedRevision: this.expectedRevision,
+    actual: this.actual,
   ).._u = this._u;
 }
 
@@ -2267,6 +2476,7 @@ final class UpdateBookResponse_TagsNotFoundError_mutable implements UpdateBookRe
 ///     case UpdateBookResponse_unknown(): { ... }
 ///     case UpdateBookResponse_internalError(:var value): { ... }
 ///     case UpdateBookResponse_success(:var value): { ... }
+///     case UpdateBookResponse_conflictError(:var value): { ... }
 ///     case UpdateBookResponse_bookNotFoundError(:var value): { ... }
 ///     case UpdateBookResponse_tagsNotFoundError(:var value): { ... }
 ///     case UpdateBookResponse_validationError(:var value): { ... }
@@ -2298,6 +2508,7 @@ sealed class UpdateBookResponse {
   /// Same as `wrapSuccess(Book(...))`.
   factory UpdateBookResponse.createSuccess({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
+    required _core.int revision,
     required _core.String title,
     required _core.String icon,
     required _lib_kernel_v1_color.Color_orMutable color,
@@ -2305,10 +2516,27 @@ sealed class UpdateBookResponse {
   }) => UpdateBookResponse.wrapSuccess(
     Book(
       bookId: bookId,
+      revision: revision,
       title: title,
       icon: icon,
       color: color,
       tagIds: tagIds,
+    )
+  );
+
+  /// Create a 'conflict_error' variant wrapping around the given value.
+  factory UpdateBookResponse.wrapConflictError(
+    UpdateBookResponse_ConflictError value
+  ) => UpdateBookResponse_conflictErrorWrapper._(value);
+
+  /// Same as `wrapConflictError(UpdateBookResponse_ConflictError(...))`.
+  factory UpdateBookResponse.createConflictError({
+    required _core.int expectedRevision,
+    required Book_orMutable actual,
+  }) => UpdateBookResponse.wrapConflictError(
+    UpdateBookResponse_ConflictError(
+      expectedRevision: expectedRevision,
+      actual: actual,
     )
   );
 
@@ -2389,6 +2617,16 @@ sealed class UpdateBookResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
+        "conflict_error",
+        "wrapConflictError",
+        UpdateBookResponse_ConflictError.serializer,
+        "",
+        UpdateBookResponse_conflictErrorWrapper._,
+        (it) => it.value,
+        ordinal: UpdateBookResponse_kind.conflictErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
         "book_not_found_error",
         "wrapBookNotFoundError",
         UpdateBookResponse_BookNotFoundError.serializer,
@@ -2398,7 +2636,7 @@ sealed class UpdateBookResponse {
         ordinal: UpdateBookResponse_kind.bookNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        4,
+        5,
         "tags_not_found_error",
         "wrapTagsNotFoundError",
         UpdateBookResponse_TagsNotFoundError.serializer,
@@ -2408,7 +2646,7 @@ sealed class UpdateBookResponse {
         ordinal: UpdateBookResponse_kind.tagsNotFoundErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        5,
+        6,
         "validation_error",
         "wrapValidationError",
         BookValidationError.serializer,
@@ -2418,7 +2656,7 @@ sealed class UpdateBookResponse {
         ordinal: UpdateBookResponse_kind.validationErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        6,
+        7,
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
@@ -2448,10 +2686,11 @@ enum UpdateBookResponse_kind {
   unknown(0),
   internalErrorWrapper(1),
   successWrapper(2),
-  bookNotFoundErrorWrapper(3),
-  tagsNotFoundErrorWrapper(4),
-  validationErrorWrapper(5),
-  invalidRecordIdErrorWrapper(6);
+  conflictErrorWrapper(3),
+  bookNotFoundErrorWrapper(4),
+  tagsNotFoundErrorWrapper(5),
+  validationErrorWrapper(6),
+  invalidRecordIdErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -2508,6 +2747,15 @@ final class UpdateBookResponse_successWrapper extends _UpdateBookResponse_wrappe
 
   @_core.override
   UpdateBookResponse_kind get kind => UpdateBookResponse_kind.successWrapper;
+}
+
+final class UpdateBookResponse_conflictErrorWrapper extends _UpdateBookResponse_wrapper {
+  final UpdateBookResponse_ConflictError value;
+
+  UpdateBookResponse_conflictErrorWrapper._(this.value);
+
+  @_core.override
+  UpdateBookResponse_kind get kind => UpdateBookResponse_kind.conflictErrorWrapper;
 }
 
 final class UpdateBookResponse_bookNotFoundErrorWrapper extends _UpdateBookResponse_wrapper {

@@ -16,6 +16,10 @@ import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.telemetry.ErrorSlug
+import skirout.editor.v1.catalog.CatalogFetchResult
+import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.FetchEditorCatalog
+import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.library.v1.book.CreateBook
 import skirout.library.v1.book.CreateBookResponse
 import skirout.library.v1.book.UpdateBook
@@ -42,10 +46,6 @@ import skirout.library.v1.tag.CreateTag
 import skirout.library.v1.tag.CreateTagResponse
 import skirout.library.v1.tag.DeleteTag
 import skirout.library.v1.tag.DeleteTagResponse
-import skirout.library.v1.tag.MoveTag
-import skirout.library.v1.tag.MoveTagResponse
-import skirout.library.v1.tag.ResizeTag
-import skirout.library.v1.tag.ResizeTagResponse
 import skirout.library.v1.tag.UpdateTag
 import skirout.library.v1.tag.UpdateTagResponse
 import skirout.library.v1.tag.WatchTag
@@ -62,6 +62,24 @@ data class RealmAddress(
 internal class LibraryContracts(
     private val address: RealmAddress,
 ) {
+    val fetchEditorCatalog =
+        unary(
+            FetchEditorCatalog,
+            "editor.catalog.fetch",
+            unavailableCatalogFetchResult("Realm editor catalog fetch failed"),
+            catalogFetchResponseClassifier(),
+        )
+    val watchEditorCatalog =
+        watch(
+            WatchEditorCatalog,
+            CatalogWatchUpdate.serializer,
+            "editor.catalog.invalidate",
+            "editor.catalog.invalidate",
+            CatalogWatchUpdate.createInitial(value = "unavailable"),
+            catalogWatchResponseClassifier(),
+        )
+    val watchRealmPresentationSearch = realmPresentationSearchContract(address)
+
     val watchBooks =
         watch(
             WatchBooks,
@@ -122,19 +140,18 @@ internal class LibraryContracts(
     val createTag = unary(CreateTag, "tag.create", CreateTagResponse.createInternalError())
     val updateTag = unary(UpdateTag, "tag.update", UpdateTagResponse.createInternalError())
     val deleteTag = unary(DeleteTag, "tag.delete", DeleteTagResponse.createInternalError())
-    val moveTag = unary(MoveTag, "tag.move", MoveTagResponse.createInternalError())
-    val resizeTag = unary(ResizeTag, "tag.resize", ResizeTagResponse.createInternalError())
 
     private fun <Request : Any, Response : Any> unary(
         method: Method<Request, Response>,
         suffix: String,
         internalFailureResponse: Response,
+        classifier: ResponseClassifier<Response> = responseClassifier(),
     ): UnaryContract<RealmAddress, Request, Response> =
         skirUnaryContract(
             method = method,
             name = OperationName.of(suffix),
             address = requestAddress(suffix).subscribedAt(address),
-            responsePolicy = responsePolicy(internalFailureResponse),
+            responsePolicy = ResponsePolicy(internalFailureResponse, classifier),
             failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
         )
 
@@ -153,19 +170,19 @@ internal class LibraryContracts(
             name = OperationName.of(operation),
             requestAddress = requestAddress(suffix).subscribedAt(address),
             updateAddress = updateAddress(suffix),
-            initialPolicy = responsePolicy(internalFailureResponse),
+            initialPolicy = ResponsePolicy(internalFailureResponse, classifier),
             updateClassifier = classifier,
             failureSlug = ErrorSlug.of(operation.replace('.', '-') + "-failed"),
             updateFilter = updateFilter,
         )
 }
 
-private fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
+internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
     realmAddress(
         "service.to.{realm}.organization.{organization}.realm.$suffix",
     )
 
-private fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
+internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
     realmAddress(
         "service.from.{realm}.organization.{organization}.realm.$suffix",
     )
@@ -182,8 +199,52 @@ private fun realmAddress(pattern: String): AddressTemplate<RealmAddress> =
         { values -> RealmAddress(values.require("realm"), values.require("organization")) },
     )
 
-private fun <Response : Any> responsePolicy(internalFailureResponse: Response): ResponsePolicy<Response> =
-    ResponsePolicy(internalFailureResponse, responseClassifier())
+private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchResult> =
+    ResponseClassifier { response ->
+        val outcome =
+            when (response) {
+                is CatalogFetchResult.SuccessWrapper -> ResponseOutcome.SUCCESS
+                is CatalogFetchResult.UnavailableWrapper -> ResponseOutcome.INTERNAL_ERROR
+                else -> ResponseOutcome.DOMAIN_ERROR
+            }
+        ResponseClassification(
+            outcome,
+            ResponseVariant.of(
+                requireNotNull(response::class.simpleName)
+                    .removeSuffix("Wrapper")
+                    .replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2")
+                    .lowercase(),
+            ),
+        )
+    }
+
+private fun catalogWatchResponseClassifier(): ResponseClassifier<CatalogWatchUpdate> =
+    ResponseClassifier { response ->
+        val outcome =
+            when (response) {
+                is CatalogWatchUpdate.InitialWrapper -> {
+                    if (response.value.value == "unavailable") {
+                        ResponseOutcome.INTERNAL_ERROR
+                    } else {
+                        ResponseOutcome.SUCCESS
+                    }
+                }
+
+                is CatalogWatchUpdate.InvalidatedWrapper -> {
+                    ResponseOutcome.SUCCESS
+                }
+
+                else -> {
+                    ResponseOutcome.DOMAIN_ERROR
+                }
+            }
+        val variant =
+            requireNotNull(response::class.simpleName)
+                .removeSuffix("Wrapper")
+                .replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2")
+                .lowercase()
+        ResponseClassification(outcome, ResponseVariant.of(variant))
+    }
 
 private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> =
     ResponseClassifier { response ->

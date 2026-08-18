@@ -4,13 +4,12 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class EntrySearchResultItem extends StatelessWidget {
   const EntrySearchResultItem({
     required this.name,
-    required this.blueprintName,
+    required this.elementDefinitionName,
     required this.bookTitle,
     required this.chapter,
     required this.pageTitle,
     required this.color,
     required this.icon,
-    this.tags = const [],
     this.deprecated = false,
     this.selected = false,
     this.focused = false,
@@ -32,17 +31,16 @@ class EntrySearchResultItem extends StatelessWidget {
     ShortcutActivator? shortcutActivator,
     Key? key,
   }) {
-    final blueprint = entry.blueprint;
+    final elementDefinition = entry.elementDefinition;
     return EntrySearchResultItem(
       name: entry.name,
-      blueprintName: blueprint.name,
+      elementDefinitionName: elementDefinition.name,
       bookTitle: bookTitle,
       chapter: chapter,
       pageTitle: pageTitle,
-      color: blueprint.color,
-      icon: blueprint.icon,
-      tags: blueprint.tags,
-      deprecated: blueprint.hasModifier<DeprecatedModifier>(),
+      color: elementDefinition.color,
+      icon: elementDefinition.icon,
+      deprecated: elementDefinition.isDeprecated,
       selected: selected,
       focused: focused,
       loading: loading,
@@ -53,13 +51,12 @@ class EntrySearchResultItem extends StatelessWidget {
   }
 
   final String name;
-  final String blueprintName;
+  final String elementDefinitionName;
   final String bookTitle;
   final String chapter;
   final String pageTitle;
   final Color color;
-  final String icon;
-  final List<String> tags;
+  final IconValue icon;
   final bool deprecated;
   final bool selected;
   final bool focused;
@@ -87,7 +84,7 @@ class EntrySearchResultItem extends StatelessWidget {
       selected: selected,
       focused: focused,
       onTap: onTap,
-      prefix: SearchResultIconTile(
+      prefix: SearchResultIconTile.value(
         color: color,
         onColor: color.on(context),
         icon: icon,
@@ -99,23 +96,11 @@ class EntrySearchResultItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: context.spacing.space1,
         children: [
-          Row(
-            spacing: context.spacing.space1,
-            children: [
-              SearchResultTitle(title: name.formatted, deprecated: deprecated),
-              if (tags.isNotEmpty)
-                SearchResultTags(
-                  tags: tags,
-                  selected: selected,
-                  focused: focused,
-                  color: color,
-                ),
-            ],
-          ),
+          SearchResultTitle(title: name.formatted, deprecated: deprecated),
           Text.rich(
             TextSpan(
               children: [
-                TextSpan(text: blueprintName.formatted),
+                TextSpan(text: elementDefinitionName.formatted),
                 TextSpan(
                   text: " • ",
                   style: Theme.of(context).textTheme.bodySmall!.copyWith(

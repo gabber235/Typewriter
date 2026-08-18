@@ -24,11 +24,11 @@ const mockEntrySearchResultType = SearchResultType(
   label: "Entry",
 );
 
-const mockBlueprintSearchResultType = SearchResultType(
-  id: "blueprint",
-  rowRendererId: "mockBlueprintRow",
-  previewRendererId: "mockBlueprintPreview",
-  label: "Blueprint",
+const mockElementDefinitionSearchResultType = SearchResultType(
+  id: "elementDefinition",
+  rowRendererId: "mockElementDefinitionRow",
+  previewRendererId: "mockElementDefinitionPreview",
+  label: "Element definition",
 );
 
 const mockBookSearchResultType = SearchResultType(
@@ -351,7 +351,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       final entry = payload.entry;
       final page = payload.page.page;
       final book = payload.page.book;
-      final blueprint = entry.blueprint;
+      final elementDefinition = entry.elementDefinition;
       yield "entry";
       yield entry.id;
       yield entry.name;
@@ -360,20 +360,19 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield page.chapter;
       yield book.bookId.id;
       yield book.title;
-      yield blueprint.id;
-      yield blueprint.name;
-      yield blueprint.extension;
-      yield blueprint.description;
-      yield* blueprint.tags;
+      yield elementDefinition.typeId.name;
+      yield elementDefinition.qualifiedName;
+      yield elementDefinition.name;
+      yield elementDefinition.namespace;
+      yield elementDefinition.description;
       yield* book.tagIds.map((tagId) => tagId.id);
-    case ElementBlueprint():
-      yield "blueprint";
-      yield payload.id;
+    case ElementDefinition():
+      yield "elementDefinition";
+      yield payload.typeId.name;
+      yield payload.qualifiedName;
       yield payload.name;
-      yield payload.extension;
+      yield payload.namespace;
       yield payload.description;
-      yield payload.icon;
-      yield* payload.tags;
     case Tag():
       yield "tag";
       yield payload.tagId.id;
@@ -414,10 +413,9 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
       final entry = payload.entry;
       final page = payload.page.page;
       final book = payload.page.book;
-      final blueprint = entry.blueprint;
+      final elementDefinition = entry.elementDefinition;
       switch (selectorId) {
         case "tag":
-          yield* blueprint.tags;
           yield* book.tagIds.map((tagId) => tagId.id);
         case "book":
           yield book.title;
@@ -428,22 +426,20 @@ Iterable<String> _valuesForSelector(Object payload, String selectorId) sync* {
           yield page.name;
           yield page.pageId.id;
         case "entryType":
-          yield blueprint.name;
-        case "extension":
-          yield blueprint.extension;
+          yield elementDefinition.name;
+        case "namespace":
+          yield elementDefinition.namespace;
         case "type":
           yield "entry";
       }
-    case ElementBlueprint():
+    case ElementDefinition():
       switch (selectorId) {
-        case "tag":
-          yield* payload.tags;
         case "entryType":
           yield payload.name;
-        case "extension":
-          yield payload.extension;
+        case "namespace":
+          yield payload.namespace;
         case "type":
-          yield "blueprint";
+          yield "elementDefinition";
       }
     case Tag():
       switch (selectorId) {
@@ -484,15 +480,15 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "page": payload.page.page.name,
       "pageId": payload.page.page.pageId.id,
       "chapter": payload.page.page.chapter,
-      "entryType": payload.entry.blueprint.name,
-      "extension": payload.entry.blueprint.extension,
+      "entryType": payload.entry.elementDefinition.name,
+      "namespace": payload.entry.elementDefinition.namespace,
     },
-    ElementBlueprint() => {
-      "id": payload.id,
+    ElementDefinition() => {
+      "id": payload.typeId.name,
       "name": payload.name,
       "title": payload.name,
       "entryType": payload.name,
-      "extension": payload.extension,
+      "namespace": payload.namespace,
       "description": payload.description,
     },
     Tag() => {
@@ -671,14 +667,14 @@ final class MockSearchIndex {
     required this.books,
     required this.pages,
     required this.entries,
-    required this.blueprints,
+    required this.elementDefinitions,
   });
 
   final List<Tag> tags;
   final List<Book> books;
   final List<MockPageRecord> pages;
   final List<MockEntryRecord> entries;
-  final List<ElementBlueprint> blueprints;
+  final List<ElementDefinition> elementDefinitions;
 
   Map<String, String> get tagNameById => {
     for (final tag in tags) tag.tagId.id: tag.name,
@@ -711,7 +707,7 @@ MockSearchIndex mockSearchIndex({
   int bookCount = 8,
   int pagesPerBook = 5,
   int entryCount = 32,
-  int blueprintCount = 18,
+  int elementDefinitionCount = 18,
 }) {
   final tags = generateTagBatch(tagCount);
   final books = List.generate(bookCount, (_) => generateRandomBook(tags)());
@@ -727,19 +723,22 @@ MockSearchIndex mockSearchIndex({
         entry: generateRandomEntryDefinition(),
       ),
   ];
-  final blueprintsById = <String, ElementBlueprint>{};
-  for (final blueprint in <ElementBlueprint>[
-    ...entries.map((record) => record.entry.blueprint),
-    ...List.generate(blueprintCount, (_) => generateRandomElementBlueprint()),
+  final definitionsById = <ResolvedTypeRef, ElementDefinition>{};
+  for (final elementDefinition in <ElementDefinition>[
+    ...entries.map((record) => record.entry.elementDefinition),
+    ...List.generate(
+      elementDefinitionCount,
+      (_) => generateRandomElementDefinition(),
+    ),
   ]) {
-    blueprintsById[blueprint.id] = blueprint;
+    definitionsById[elementDefinition.rootType] = elementDefinition;
   }
   return MockSearchIndex(
     tags: tags,
     books: books,
     pages: pages,
     entries: entries,
-    blueprints: blueprintsById.values.toList(),
+    elementDefinitions: definitionsById.values.toList(),
   );
 }
 
@@ -759,15 +758,15 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       .map((record) => _pageTypeLabel(record.page.type))
       .toSet()
       .toList();
-  final entryTypes = index.blueprints
-      .map((blueprint) => blueprint.name)
+  final entryTypes = index.elementDefinitions
+      .map((elementDefinition) => elementDefinition.name)
       .toSet()
       .toList();
-  final extensions = index.blueprints
-      .map((blueprint) => blueprint.extension)
+  final namespaces = index.elementDefinitions
+      .map((elementDefinition) => elementDefinition.namespace)
       .toSet()
       .toList();
-  const resultTypes = ["book", "page", "entry", "blueprint", "tag"];
+  const resultTypes = ["book", "page", "entry", "elementDefinition", "tag"];
 
   return [
     KeyValueSelectorDefinition(
@@ -813,9 +812,9 @@ List<QuerySelectorDefinition> mockSearchQuerySelectors(MockSearchIndex index) {
       color: safeColors[8],
     ),
     KeyValueSelectorDefinition(
-      id: "extension",
-      key: "extension:",
-      value: QuerySelectorValue.enumValue(extensions),
+      id: "namespace",
+      key: "namespace:",
+      value: QuerySelectorValue.enumValue(namespaces),
       color: safeColors[9],
     ),
     KeyValueSelectorDefinition(
@@ -857,12 +856,14 @@ List<SearchNode> mockMixedGlobalSearchNodes([MockSearchIndex? index]) {
             .map((record) => _entrySearchNode(record, searchIndex))
             .toList(),
       ),
-    if (searchIndex.blueprints.isNotEmpty)
+    if (searchIndex.elementDefinitions.isNotEmpty)
       mockSearchSection(
-        id: "blueprints",
-        title: "Blueprints",
+        id: "elementDefinitions",
+        title: "Element definitions",
         subtitle: "Entry definitions",
-        children: searchIndex.blueprints.map(_blueprintSearchNode).toList(),
+        children: searchIndex.elementDefinitions
+            .map(_elementDefinitionSearchNode)
+            .toList(),
       ),
     if (searchIndex.tags.isNotEmpty)
       mockSearchSection(
@@ -914,25 +915,26 @@ SearchNode _entrySearchNode(MockEntryRecord record, MockSearchIndex index) {
   final entry = record.entry;
   final page = record.page.page;
   final book = record.page.book;
-  final blueprint = entry.blueprint;
+  final elementDefinition = entry.elementDefinition;
   final tags = _tagNames(book.tagIds.map((tagId) => tagId.id), index);
   return mockSearchResultNode(
     id: "entry.${entry.id}",
     type: mockEntrySearchResultType,
     title: entry.name,
-    subtitle: "${blueprint.name} / ${page.name.formatted} / ${tags.join(", ")}",
+    subtitle:
+        "${elementDefinition.name} / ${page.name.formatted} / ${tags.join(", ")}",
     payload: record,
     actions: const [MockCloseSearchAction, MockRefreshSearchAction],
   );
 }
 
-SearchNode _blueprintSearchNode(ElementBlueprint blueprint) {
+SearchNode _elementDefinitionSearchNode(ElementDefinition elementDefinition) {
   return mockSearchResultNode(
-    id: "blueprint.${blueprint.id}",
-    type: mockBlueprintSearchResultType,
-    title: blueprint.name,
-    subtitle: "${blueprint.extension} / ${blueprint.tags.join(", ")}",
-    payload: blueprint,
+    id: "elementDefinition.${elementDefinition.typeId.name}",
+    type: mockElementDefinitionSearchResultType,
+    title: elementDefinition.name,
+    subtitle: elementDefinition.namespace,
+    payload: elementDefinition,
     actions: const [MockUpdateQuerySearchAction, MockRefreshSearchAction],
   );
 }
@@ -1030,7 +1032,7 @@ SearchSource mockMixedGlobalSearchSource({
     bookCount: hasData ? 8 : 0,
     pagesPerBook: hasData ? 5 : 0,
     entryCount: hasData ? 32 : 0,
-    blueprintCount: hasData ? 18 : 0,
+    elementDefinitionCount: hasData ? 18 : 0,
   );
 
   final searchSelectors = selectors.merge(mockSearchQuerySelectors(index));

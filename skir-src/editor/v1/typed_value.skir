@@ -1,0 +1,9 @@
+import {
+  ResolvedTypeRef,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+
+struct TypedValueEnvelope(810200008) {
+  root_type: ResolvedTypeRef = 0;
+  root_value: TypedValue = 1;
+}

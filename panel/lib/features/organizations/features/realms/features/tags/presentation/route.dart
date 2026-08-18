@@ -95,18 +95,18 @@ class TagsPage extends HookConsumerWidget {
             final controller = useTextEditingController();
             final isValid = useListenableSelector(
               controller,
-              () => controller.text.isNotEmpty,
+              () => controller.text.isValidIdentifier,
             );
             final focusNode = useFocusNode();
 
             return AlertDialog(
               title: const Text("Create Tag"),
-              content: DecoratedTextField(
+              content: EditorTextField(
                 focusNode: focusNode,
                 controller: controller,
-                autofocus: DecoratedTextFieldAutoFocus.textField,
+                autofocus: EditorTextFieldAutoFocus.textField,
                 decoration: const InputDecoration(hintText: "Enter tag name"),
-                inputFormatters: [SnakeCaseInputFormatter()],
+                inputFormatters: identifierInputFormats.toTextInputFormatters(),
                 onSubmitted: (value) {
                   if (!isValid) return;
                   Navigator.of(context).pop(value);

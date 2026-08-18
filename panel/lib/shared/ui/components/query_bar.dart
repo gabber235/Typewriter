@@ -11,7 +11,17 @@ class QueryBar extends HookWidget {
     required this.selectors,
     this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
-    this.autofocus = DecoratedTextFieldAutoFocus.none,
+    this.autofocus = EditorTextFieldAutoFocus.none,
+    this.onSubmitted,
+    this.onEditingComplete,
+    this.onDone,
+    this.onInputFocus,
+    this.onDismiss,
+    this.onCancel,
+    this.textFieldActions,
+    this.selectAllOnFocus = false,
+    this.enabled = true,
+    this.readOnly = false,
     super.key,
   });
 
@@ -20,7 +30,17 @@ class QueryBar extends HookWidget {
   final void Function(String) onQueryChanged;
   final List<QuerySelectorDefinition> selectors;
   final InputDecoration inputDecoration;
-  final DecoratedTextFieldAutoFocus autofocus;
+  final EditorTextFieldAutoFocus autofocus;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onEditingComplete;
+  final ValueChanged<String>? onDone;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onCancel;
+  final List<ActionShortcut>? textFieldActions;
+  final bool selectAllOnFocus;
+  final bool enabled;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -174,14 +194,11 @@ class QueryBar extends HookWidget {
     final shortcuts = useMemoized(() {
       return [
         if (popupSuggestionsVisible) ...[
-          ActionShortcut(
+          ActionShortcut.intent(
             id: "query_bar_accept_first_suggestion",
             label: "Accept suggestion",
             description: "Accept the first suggestion",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.enter),
-              SingleActivator(LogicalKeyboardKey.numpadEnter),
-            ],
+            intent: ActivateIntent,
             priority: 2000,
             show: true,
             onInvoke: (_) => acceptActiveOrFirstSuggestion(),
@@ -191,9 +208,13 @@ class QueryBar extends HookWidget {
             label: "Switch suggestions",
             description: "Switch between the suggestions popup",
             activators: [
-              SortedLogicalKeyActivator(
-                LogicalKeyboardKey.arrowUp,
-                LogicalKeyboardKey.arrowDown,
+              ...shortcutsFor(PreviousFocusIntent),
+              ...shortcutsFor(NextFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.up,
+              ),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.down,
               ),
             ],
             show: true,
@@ -203,9 +224,11 @@ class QueryBar extends HookWidget {
             id: "query_bar_previous_suggestion",
             label: "",
             description: "",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.arrowUp),
-              SingleActivator(LogicalKeyboardKey.keyP, control: true),
+            activators: [
+              ...shortcutsFor(PreviousFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.up,
+              ),
             ],
             onInvoke: (_) => selectPreviousSuggestion(),
             show: false,
@@ -215,9 +238,11 @@ class QueryBar extends HookWidget {
             id: "query_bar_next_suggestion",
             label: "",
             description: "",
-            activators: const [
-              SingleActivator(LogicalKeyboardKey.arrowDown),
-              SingleActivator(LogicalKeyboardKey.keyN, control: true),
+            activators: [
+              ...shortcutsFor(NextFocusIntent),
+              ...shortcutsForIntent<DirectionalFocusIntent>(
+                (intent) => intent.direction == TraversalDirection.down,
+              ),
             ],
             onInvoke: (_) => selectNextSuggestion(),
             show: false,
@@ -254,7 +279,7 @@ class QueryBar extends HookWidget {
                 spacing: 4,
                 sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
               ),
-              child: DecoratedTextField(
+              child: EditorTextField(
                 inputFieldController: inputFieldController,
                 controller: controller,
                 autofocus: autofocus,
@@ -271,11 +296,26 @@ class QueryBar extends HookWidget {
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
                 ],
+                textFieldActions: [...?textFieldActions, ...shortcuts],
+                selectAllOnFocus: selectAllOnFocus,
+                enabled: enabled,
+                readOnly: readOnly,
+                onInputFocus: onInputFocus,
+                onDismiss: onDismiss,
+                onCancel: onCancel,
                 onChanged: (value) {
                   dismissedSignature.value = null;
                   onQueryChanged(value);
                 },
-                onSubmitted: (_) => acceptActiveOrFirstSuggestion(),
+                onDone: onDone,
+                onEditingComplete: onEditingComplete,
+                onSubmitted: (value) {
+                  if (popupSuggestionsVisible) {
+                    acceptActiveOrFirstSuggestion();
+                    return;
+                  }
+                  onSubmitted?.call(value);
+                },
               ),
               overlayBuilder: (context, _) => _buildSuggestionPanel(
                 context: context,

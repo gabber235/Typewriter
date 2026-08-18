@@ -16,16 +16,22 @@ class RealmRouteFactory(
     private val books: BookRepository,
     private val pages: PageRepository,
     private val tags: TagRepository,
+    private val editorCatalog: RealmEditorCatalogSource,
+    private val presentationSearch: RealmPresentationSearchSource,
 ) {
     fun create(address: RealmAddress): CommunicatorRoutes {
         val contracts = LibraryContracts(address)
         val bookRoutes = BookRoutes(books, tags, contracts, address)
         val pageRoutes = PageRoutes(pages, books, contracts, address)
         val tagRoutes = TagRoutes(tags, books, contracts, address)
+        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)
+        val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         return communicatorRoutes {
             bookRoutes.register(this)
             pageRoutes.register(this)
             tagRoutes.register(this)
+            editorCatalogRoutes.register(this)
+            presentationSearchRoutes.register(this)
         }
     }
 }
@@ -35,5 +41,7 @@ val REALM_ROUTES_MODULE =
         single<TagRepository> { SurrealTagRepository(get(qualifier(DATABASE))) }
         single<BookRepository> { SurrealBookRepository(get(qualifier(DATABASE))) }
         single<PageRepository> { SurrealPageRepository(get(qualifier(DATABASE))) }
-        single { RealmRouteFactory(get(), get(), get()) }
+        single<RealmEditorCatalogSource> { UnavailableRealmEditorCatalogSource() }
+        single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
+        single { RealmRouteFactory(get(), get(), get(), get(), get()) }
     }

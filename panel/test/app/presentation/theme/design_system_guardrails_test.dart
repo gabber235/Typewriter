@@ -24,7 +24,7 @@ final exemptions = <Exemption>[
     "persisted page-type identity colors",
   ),
   Exemption(
-    "lib/features/organizations/features/services/application/services.dart",
+    "lib/features/organizations/features/services/application/service_models.dart",
     RegExp(r"Colors\.(?:blue|deepPurple|deepOrangeAccent|green)"),
     "service-role identity colors",
   ),
@@ -43,10 +43,41 @@ final exemptions = <Exemption>[
     RegExp(r"Colors\."),
     "editor operation identity color",
   ),
+  for (final path in [
+    "lib/shared/editors/presentation/protocol/renderers/content/badge_renderer.dart",
+    "lib/shared/editors/presentation/protocol/renderers/content/chip_renderer.dart",
+    "lib/shared/editors/presentation/protocol/renderers/content/text_renderer.dart",
+    "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
+  ])
+    Exemption(
+      path,
+      RegExp(r"TextStyle\s*\("),
+      "protocol or state supplied text styling",
+    ),
   Exemption(
-    "lib/shared/editors/presentation/headers/list_header.dart",
-    RegExp(r"Colors\.green"),
-    "list validity indicator",
+    "lib/shared/editors/presentation/components/color_picker/color_picker_surface.dart",
+    RegExp(r"Color\(0x"),
+    "intrinsic color spectrum",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/components/color_picker/color_area.dart",
+    RegExp(r"Colors\.(?:white|black|black54|transparent)"),
+    "intrinsic color field geometry",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/components/color_picker/color_slider.dart",
+    RegExp(r"Colors\.(?:white|black54)"),
+    "contrast over arbitrary colors",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/components/color_picker/checkerboard.dart",
+    RegExp(r"Color\(0x"),
+    "alpha checkerboard colors",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/components/color_picker/color_value.dart",
+    RegExp(r"Color\.fromARGB\("),
+    "color value conversion",
   ),
   Exemption(
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.dart",
@@ -56,7 +87,7 @@ final exemptions = <Exemption>[
   Exemption(
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/entry.dart",
     RegExp(r"Colors\.white"),
-    "established entry-node focus treatment over arbitrary blueprint colors",
+    "established entry-node focus treatment over arbitrary elementDefinition colors",
   ),
   Exemption(
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",
@@ -104,6 +135,12 @@ final exemptions = <Exemption>[
     "lib/shared/ui/components/focus_highlight.dart",
     "lib/shared/ui/components/depth_box.dart",
     "lib/shared/search/presentation/search_modal_body.dart",
+    "lib/features/organizations/features/realms/presentation/realm_suspension.dart",
+    "lib/shared/editors/presentation/protocol/renderers/input/list_input_renderer.dart",
+    "lib/shared/editors/presentation/protocol/header_renderer.dart",
+    "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar.dart",
+    "lib/shared/editors/presentation/components/date_time_picker/date_time_calendar_selection_grid.dart",
+    "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
   ])
     Exemption(path, RegExp(r"Colors\.transparent"), "intentional transparency"),
   for (final path in [

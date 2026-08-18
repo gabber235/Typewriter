@@ -75,8 +75,8 @@ class PageElements extends _$PageElements {
 
   Future<void> updateCueFieldValue(
     String cueId,
-    String path,
-    dynamic value,
+    DataPath path,
+    DataValue value,
   ) async {
     state.ensureReady();
     final data = state.requireValue;
@@ -102,9 +102,6 @@ abstract class PageElement with _$PageElement {
   }) = PageElementGroup;
 
   const factory PageElement.cue({required Cue cue}) = PageElementCue;
-
-  factory PageElement.fromJson(Map<String, dynamic> json) =>
-      _$PageElementFromJson(json);
 }
 
 extension PageElementExtension on PageElement {
@@ -123,7 +120,10 @@ extension PageElementExtension on PageElement {
             x: x,
             y: y,
           ),
-          NoBlueprintPageEntry() => entry.copyWith.placement(x: x, y: y),
+          MissingElementDefinitionPageEntry() => entry.copyWith.placement(
+            x: x,
+            y: y,
+          ),
           _ => entry,
         },
       ),
@@ -145,7 +145,7 @@ extension PageElementExtension on PageElement {
             width: width,
             height: height,
           ),
-          NoBlueprintPageEntry() => entry.copyWith.placement(
+          MissingElementDefinitionPageEntry() => entry.copyWith.placement(
             width: width,
             height: height,
           ),
@@ -175,25 +175,32 @@ extension PageElementExtension on PageElement {
     };
   }
 
-  PageElement updateFieldValue(String path, dynamic value) {
+  PageElement updateFieldValue(DataPath path, DataValue value) {
     return switch (this) {
       PageElementEntry(:final entry) => PageElement.entry(
         entry: switch (entry) {
           DefinitionPageEntry() => entry.copyWith.definition(
-            data: entry.definition.data.copyWith(path, value),
+            data: entry.definition.data.updatedAt(path, value),
           ),
           _ => entry,
         },
       ),
       PageElementCue(:final cue) => PageElement.cue(
         cue: switch (cue) {
-          Segment() => cue.copyWith(data: cue.data.copyWith(path, value)),
-          Keyframe() => cue.copyWith(data: cue.data.copyWith(path, value)),
+          Segment() => cue.copyWith(data: cue.data.updatedAt(path, value)),
+          Keyframe() => cue.copyWith(data: cue.data.updatedAt(path, value)),
           _ => cue,
         },
       ),
       _ => this,
     };
+  }
+}
+
+extension on RecordValue {
+  RecordValue updatedAt(DataPath path, DataValue value) {
+    final updated = path.replace(this, value).valueOrNull;
+    return updated is RecordValue ? updated : this;
   }
 }
 

@@ -20,6 +20,7 @@ internal data class PlacementRecord(
 @Suppress("PropertyName")
 internal data class TagRecord(
     val id: RecordId = RecordId("tag", ""),
+    val revision: Long = 1,
     val name: String = "",
     val color: Long = 0L,
     val placement: PlacementRecord = PlacementRecord(),
@@ -28,6 +29,7 @@ internal data class TagRecord(
     fun toTag(): Tag =
         Tag(
             tagId = id.toSkirRecordId(),
+            revision = revision,
             name = name,
             color = Color(argb = color.toInt()),
             parentIds = parent_tags.map(RecordId::toSkirRecordId),
@@ -51,5 +53,16 @@ internal data class TagDeletionRecord(
 
     companion object {
         fun parse(result: Value): TagDeletionRecord = result.get(TagDeletionRecord::class.java)
+    }
+}
+
+internal data class TagMutationRecord(
+    val conflict: Boolean = false,
+    val actual: TagRecord = TagRecord(),
+    val errorSlug: String = "",
+    val relatedIds: List<RecordId> = emptyList(),
+) {
+    companion object {
+        fun parse(result: Value): TagMutationRecord = result.get(TagMutationRecord::class.java)
     }
 }

@@ -35,7 +35,8 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     required this.value,
     this.controller,
     this.focusNode,
-    this.autofocus = DecoratedTextFieldAutoFocus.none,
+    this.inputFieldController,
+    this.autofocus = EditorTextFieldAutoFocus.none,
     this.name = "",
     this.icon = Ic.round_text_fields,
     this.keyboardType = TextInputType.text,
@@ -50,6 +51,10 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.onDone,
     this.onEditingComplete,
     this.onSubmitted,
+    this.onInputFocus,
+    this.onInputBlur,
+    this.onDismiss,
+    this.onCancel,
     this.actions,
     this.textFieldActions,
     this.surroundingActions,
@@ -58,12 +63,14 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.maxLines = 1,
     this.textAlign = TextAlign.start,
     this.readOnly = false,
+    this.selectAllOnFocus = false,
     super.key,
   });
   final T value;
   final TextEditingController? controller;
   final FocusNode? focusNode;
-  final DecoratedTextFieldAutoFocus autofocus;
+  final InputFieldController? inputFieldController;
+  final EditorTextFieldAutoFocus autofocus;
   final String name;
   final String icon;
   final TextInputType keyboardType;
@@ -88,6 +95,10 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   /// Called when the user presses done.
   final ValueChanged<T>? onSubmitted;
+  final VoidCallback? onInputFocus;
+  final VoidCallback? onInputBlur;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onCancel;
 
   /// Actions that can be performed when either the text field or the surrounding is focused.
   final List<ActionShortcut>? actions;
@@ -103,6 +114,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final int? maxLines;
   final TextAlign textAlign;
   final bool readOnly;
+  final bool selectAllOnFocus;
 
   _State _parse(String value) {
     try {
@@ -126,7 +138,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final focus = focusNode ?? useFocusNode();
+    final fallbackFocus = useFocusNode();
+    final focus =
+        inputFieldController?.inputFocusNode ?? focusNode ?? fallbackFocus;
     final state = useState<_State>(_initial);
 
     final formattedValue = deserialize?.call(value) ?? value.toString();
@@ -163,8 +177,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        DecoratedTextField(
+        EditorTextField(
           focusNode: focus,
+          inputFieldController: inputFieldController,
           autofocus: autofocus,
           controller: controller,
           text: formattedValue,
@@ -175,6 +190,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           maxLines: maxLines,
           textAlign: textAlign,
           readOnly: readOnly,
+          selectAllOnFocus: selectAllOnFocus,
           actions: actions,
           textFieldActions: textFieldActions,
           surroundingActions: surroundingActions,
@@ -182,17 +198,21 @@ class ValidatedTextField<T> extends HookConsumerWidget {
             final object = _updateState(value, state);
             if (object != null) onChanged?.call(object);
           },
-          onDone: keepErrorVisibleWhenUnfocused
-              ? (value) {
-                  final object = _updateState(value, state);
-                  if (object != null) onDone?.call(object);
-                }
-              : null,
+          onDone: (value) {
+            if (keepErrorVisibleWhenUnfocused) {
+              final object = _updateState(value, state);
+              if (object != null) onDone?.call(object);
+            }
+            onInputBlur?.call();
+          },
           onEditingComplete: onEditingComplete,
           onSubmitted: (value) {
             final object = _updateState(value, state);
             if (object != null) onSubmitted?.call(object);
           },
+          onInputFocus: onInputFocus,
+          onDismiss: onDismiss,
+          onCancel: onCancel,
         ),
         _StateText(
           name: name,

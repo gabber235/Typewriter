@@ -221,6 +221,48 @@ void main() {
   });
 
   group("QueryBar keyboard", () {
+    testWidgets("Enter delegates when suggestions are not visible", (
+      tester,
+    ) async {
+      String? submitted;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: const [],
+          onQueryChanged: (_) {},
+          onSubmitted: (value) => submitted = value,
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "mdi:home");
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      expect(submitted, "mdi:home");
+    });
+
+    testWidgets("Escape delegates when suggestions are not visible", (
+      tester,
+    ) async {
+      var dismissals = 0;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: const [],
+          onQueryChanged: (_) {},
+          onDismiss: () => dismissals++,
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pump();
+
+      expect(dismissals, 1);
+    });
+
     testWidgets("arrow keys navigate and Enter applies active suggestion", (
       tester,
     ) async {
@@ -246,6 +288,39 @@ void main() {
 
       final editable = tester.widget<EditableText>(find.byType(EditableText));
       expect(editable.controller.text, "status:archived");
+    });
+
+    testWidgets("suggestion activation precedes the containing input action", (
+      tester,
+    ) async {
+      var containingActivations = 0;
+      await tester.pumpTestApp(
+        child: QueryBar(
+          query: "",
+          selectors: mockQuerySelectors,
+          onQueryChanged: (_) {},
+          textFieldActions: [
+            ActionShortcut.intent(
+              id: "containing_input_activate",
+              label: "Activate input",
+              description: "Activate the containing input",
+              intent: ActivateIntent,
+              priority: 1,
+              onInvoke: (_) => containingActivations++,
+            ),
+          ],
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), "status:a");
+      await _waitForSuggestionsVisible(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.controller.text, "status:active");
+      expect(containingActivations, 0);
     });
 
     testWidgets("control navigation shortcuts work with suggestion list", (

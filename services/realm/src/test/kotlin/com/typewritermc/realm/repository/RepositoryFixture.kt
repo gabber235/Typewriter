@@ -51,8 +51,33 @@ internal fun <Value> RepositoryResult<Value>.successValue(): Value =
         is RepositoryResult.DomainFailure -> error("Expected success but received $slug")
     }
 
+internal fun <Value> RevisionedRepositoryResult<Value>.successValue(): Value =
+    when (this) {
+        is RevisionedRepositoryResult.Success -> value
+        is RevisionedRepositoryResult.Conflict -> error("Expected success but received a conflict")
+        is RevisionedRepositoryResult.DomainFailure -> error("Expected success but received $slug")
+    }
+
 internal fun RepositoryResult<*>.failureSlug(): String =
     when (this) {
         is RepositoryResult.Success -> error("Expected domain failure")
         is RepositoryResult.DomainFailure -> slug
     }
+
+internal fun RevisionedRepositoryResult<*>.failureSlug(): String =
+    when (this) {
+        is RevisionedRepositoryResult.Success -> error("Expected domain failure")
+        is RevisionedRepositoryResult.Conflict -> error("Expected domain failure but received a conflict")
+        is RevisionedRepositoryResult.DomainFailure -> slug
+    }
+
+internal fun <Value> RevisionedRepositoryResult<Value>.conflictValue(): Value =
+    when (this) {
+        is RevisionedRepositoryResult.Success -> error("Expected conflict")
+        is RevisionedRepositoryResult.Conflict -> actual
+        is RevisionedRepositoryResult.DomainFailure -> error("Expected conflict but received $slug")
+    }
+
+internal suspend fun SurrealBookRepository.updateBook(book: skirout.library.v1.book.Book) = updateBook(book.revision, book)
+
+internal suspend fun SurrealTagRepository.updateTag(tag: skirout.library.v1.tag.Tag) = updateTag(tag.revision, tag)

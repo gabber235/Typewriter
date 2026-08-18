@@ -72,6 +72,7 @@ val BookRepositoryTest by testSuite {
                         .updateBook(
                             Book(
                                 bookId = book.bookId,
+                                revision = book.revision,
                                 title = "better_title",
                                 icon = "diamond",
                                 color = book.color,
@@ -80,6 +81,7 @@ val BookRepositoryTest by testSuite {
                         ).successValue()
 
                 updated.tagIds shouldBe emptyList()
+                updated.revision shouldBe book.revision + 1
                 fixture.books.listBooks() shouldContainExactly listOf(updated)
                 fixture.books.getBook(book.bookId) shouldBe updated
             }
@@ -194,6 +196,7 @@ val BookRepositoryTest by testSuite {
                     .updateBook(
                         Book(
                             bookId = recordId("book", "missing"),
+                            revision = 1,
                             title = "missing_book",
                             icon = "book",
                             color = Color(argb = 0),
@@ -239,10 +242,32 @@ val BookRepositoryTest by testSuite {
         }
     }
 
+    test("stale book updates return the canonical entity without writing") {
+        runTest {
+            RepositoryFixture().use { fixture ->
+                val original =
+                    fixture.books
+                        .createBook("revision_book", "mdi:book", Color(argb = 1), emptyList())
+                        .successValue()
+                val updated = fixture.books.updateBook(original.copy(title = "updated_book")).successValue()
+
+                val conflict =
+                    fixture.books
+                        .updateBook(
+                            expectedRevision = original.revision,
+                            book = original.copy(title = "stale_book"),
+                        ).conflictValue()
+
+                conflict shouldBe updated
+                fixture.books.getBook(original.bookId) shouldBe updated
+            }
+        }
+    }
+
     test("book creation rejects invalid title variants without persisting records") {
         runTest {
             RepositoryFixture().use { fixture ->
-                listOf("ab", "Upper", "has space", "has-dash", "ümlaut", "_leading", "trailing_").forEach { title ->
+                listOf("ab", "Upper", "has space", "has-dash", "has__gap", "ümlaut", "_leading", "trailing_").forEach { title ->
                     fixture.books.createBook(title, "book", Color(argb = 0), emptyList()).failureSlug() shouldBe
                         "book-title-invalid-error"
                 }

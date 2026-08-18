@@ -1,112 +1,167 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/misc.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../support/test_utils.dart";
 
-extension EditorTesterExtension on WidgetTester {
-  ProviderContainer get editorContainer =>
-      container(of: find.byType(EditorRoot));
+final class TestEditorSource extends ChangeNotifier implements EditorSource {
+  TestEditorSource({
+    required this.rootType,
+    required DataValue value,
+    this.registry,
+    this.rootPresentation,
+  }) : _value = value;
 
-  Future<void> pumpEditor({
-    List<Override> overrides = const [],
-    String selectedId = "editor",
-    String path = "test",
-    DataBlueprint? dataBlueprint,
-    Widget? child,
-    EditorMode editorMode = EditorMode.interactiveInspector,
-    bool defaultExpanded = true,
-    bool settle = true,
-    bool actionRow = false,
-    Map<String, dynamic> initialData = const {},
-    EditorController Function(Ref ref)? createEditor,
-  }) async {
-    assert(
-      child != null || dataBlueprint != null,
-      "Either child or dataBlueprint must be provided",
+  final TypeExpression rootType;
+
+  final TypeRegistry? registry;
+  final PresentationNode? rootPresentation;
+
+  DataValue _value;
+  late EditorDocument _document = EditorDocument(
+    rootType: rootType,
+    typeCatalog: const TypeCatalog([]),
+    confirmedValue: _value,
+    revision: 0,
+    rootPresentation: rootPresentation,
+  );
+
+  DataValue get rootValue => _value;
+
+  int beginCount = 0;
+  int commitCount = 0;
+  int cancelCount = 0;
+  DataPath? lastUpdatedPath;
+
+  @override
+  EditorDocument get document => _document;
+
+  @override
+  EditorValue value(DataPath path) => _value.readEditorValue(path);
+
+  @override
+  EditorMutationResult update(DataPath path, DataValue value) {
+    lastUpdatedPath = path;
+    final validation = rootType.validateEditorMutation(
+      path,
+      value,
+      registry: registry,
     );
+    if (validation is! AppliedEditorMutation) return validation;
+    final replaced = path.replace(_value, value);
+    if (replaced case TypeFailure(:final diagnostics)) {
+      return EditorMutationResult.invalid(diagnostics);
+    }
+    _value = replaced.valueOrNull!;
+    notifyListeners();
+    return validation;
+  }
 
-    final objectBlueprint = dataBlueprint is ObjectBlueprint && path.isEmpty
-        ? dataBlueprint
-        : dataBlueprint != null
-        ? ObjectBlueprint(fields: {path: dataBlueprint})
-        : null;
+  @override
+  void refreshDocument(EditorDocument document) {
+    _document = document;
+    _value = document.confirmedValue;
+    notifyListeners();
+  }
 
+  @override
+  EditorInteractionSession beginInteraction(DataPath path) {
+    beginCount++;
+    return _TestInteraction(this, path, path.read(_value).valueOrNull);
+  }
+
+  @override
+  EditorSaveState saveState(DataPath path) => const EditorSaveState.idle();
+
+  @override
+  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async =>
+      TypedMutationResult.success(revision: 0, value: _value);
+
+  @override
+  Future<TypedMutationResult> executeAction(
+    EditorAction action,
+    ExpressionContext context,
+    Map<BindingId, BindingReference> aliases,
+  ) async => switch (action) {
+    LocalEditorAction() =>
+      action.canonicalizedWith(aliases).execute(context, registry: registry),
+    RealmEditorAction() => TypedMutationResult.unavailable([
+      const TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "Realm actions are unavailable in tests",
+      ),
+    ]),
+  };
+
+  @override
+  void acceptRemote({required int revision, required DataValue value}) {}
+
+  @override
+  void acceptRemoteDeletion() {}
+
+  @override
+  void useRemote(DataPath path) {}
+
+  @override
+  Future<TypedMutationResult> keepLocal(DataPath path) => flush(paths: {path});
+}
+
+final class _TestInteraction implements EditorInteractionSession {
+  _TestInteraction(this.source, this.path, this.origin);
+
+  final TestEditorSource source;
+  @override
+  final DataPath path;
+  final DataValue? origin;
+  @override
+  bool active = true;
+
+  @override
+  Future<TypedMutationResult> commit() async {
+    if (active) source.commitCount++;
+    active = false;
+    return source.flush(paths: {path});
+  }
+
+  @override
+  void cancel() {
+    if (!active) return;
+    source.cancelCount++;
+    active = false;
+    if (origin != null) source.update(path, origin!);
+  }
+}
+
+extension TypedEditorTesterExtension on WidgetTester {
+  Future<TestEditorSource> pumpTypedEditor({
+    required TypeExpression type,
+    required DataValue value,
+    DataPath path = DataPath.root,
+    bool readOnly = false,
+    TypeRegistry? registry,
+    PresentationNode? presentation,
+  }) async {
+    final source = TestEditorSource(
+      rootType: type,
+      value: value,
+      registry: registry,
+      rootPresentation: presentation,
+    );
     await pumpTestApp(
-      overrides: [
-        ...overrides,
-        if (objectBlueprint != null)
-          selectionProvider.overrideWithValue([
-            TestSelectableIdentifier(
-              id: selectedId,
-              dataBlueprint: objectBlueprint,
-            ),
-          ]),
-      ],
-      settle: settle,
       child: EditorRoot(
-        create:
-            createEditor ??
-            (ref) => EditorController(source: SelectionEditorSource(ref)),
-        child: Consumer(
-          child:
-              child ??
-              SingleChildScrollView(
-                child: ObjectEditorWidget(
-                  path: "",
-                  objectBlueprint: objectBlueprint!,
-                  editorMode: editorMode,
-                  defaultExpanded: defaultExpanded,
-                ),
-              ),
-          builder: (context, ref, child) {
-            ref.watch(selectedProvider);
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: child,
-                  ),
-                ),
-                if (actionRow) ActionRow(),
-              ],
-            );
-          },
+        create: (_) => source,
+        child: Material(
+          child: SizedBox(
+            width: 500,
+            child: TypedEditor(
+              path: path,
+              registry: registry,
+              readOnly: readOnly,
+            ),
+          ),
         ),
       ),
     );
-
-    final Map<dynamic, dynamic> baseData =
-        objectBlueprint?.defaultValue() ?? {};
-    final data = stringMap(baseData.mask(initialData));
-    editorContainer
-        .read(testSelectableDataProvider.notifier)
-        .set(selectedId, DynamicData(data));
-
-    if (settle) {
-      await pumpAndSettle();
-    }
-  }
-
-  void selectSelectables(List<SelectableIdentifier> identifiers) {
-    editorContainer.read(selectionProvider.notifier).selectAll(identifiers);
-  }
-
-  dynamic fieldValue({String selectedId = "editor", String path = "test"}) {
-    return editorContainer.read(testDataProvider(selectedId))?.get(path);
-  }
-
-  void setTestSelectableData({
-    required Map<String, dynamic> data,
-    String selectedId = "editor",
-  }) {
-    editorContainer
-        .read(testSelectableDataProvider.notifier)
-        .set(selectedId, DynamicData(data));
+    return source;
   }
 }

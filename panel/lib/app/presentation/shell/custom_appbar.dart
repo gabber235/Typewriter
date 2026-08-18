@@ -5,8 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// A customizable app bar for flexible layouts, always including the organization selector if available.
 class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   const CustomAppBar({
-    required this.row,
+    required this.leading,
     required this.sidebar,
+    this.trailing,
     this.backgroundColor,
     this.height = 48.0,
     super.key,
@@ -15,7 +16,8 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final double height;
 
-  final List<Widget> row;
+  final List<Widget> leading;
+  final Widget? trailing;
   final Widget sidebar;
 
   @override
@@ -41,34 +43,42 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
             borderRadius: context.shapes.mediumBorderRadius,
             child: Surface(
               color: color,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: context.spacing.space2,
-                  children: [
-                    ...row,
-                    if (context.isMobile)
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (ctx) => UncontrolledProviderScope(
-                              container: ProviderScope.containerOf(context),
-                              child: _MobileSidebarMenu(child: sidebar),
-                            ),
-                          );
-                        },
-                      ),
-                    if (context.debugShowCheckedModeBanner)
-                      const SizedBox(width: 40),
-                  ],
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final showTrailing =
+                      trailing != null && constraints.maxWidth >= 600;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      spacing: context.spacing.space2,
+                      children: [
+                        ...leading,
+                        const Spacer(),
+                        if (showTrailing) trailing!,
+                        if (context.isMobile)
+                          IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (ctx) => UncontrolledProviderScope(
+                                  container: ProviderScope.containerOf(context),
+                                  child: _MobileSidebarMenu(child: sidebar),
+                                ),
+                              );
+                            },
+                          ),
+                        if (context.debugShowCheckedModeBanner)
+                          const SizedBox(width: 40),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),

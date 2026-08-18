@@ -4,7 +4,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "LabeledDivider", type: LabeledDivider)
+@widgetbook.UseCase(name: "Default", type: LabeledDivider)
 Widget labeledDividerUseCase(BuildContext context) {
   final text = context.knobs.string(label: "Text", initialValue: "OR");
   final direction = context.knobs.object.dropdown(

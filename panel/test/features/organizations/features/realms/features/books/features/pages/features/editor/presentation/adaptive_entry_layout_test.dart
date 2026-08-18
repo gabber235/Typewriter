@@ -5,17 +5,28 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("unsafe SVG icon renders a safe fallback", (tester) async {
+    await tester.pumpTestApp(
+      child: const Icones.value(
+        IconValue.svg('<svg><script>alert("x")</script></svg>'),
+      ),
+    );
+
+    expect(find.byIcon(Icons.broken_image), findsOneWidget);
+  });
+
   group("AdaptiveLeadingLayout via EntryNode", () {
-    late ElementBlueprint testBlueprint;
+    late ElementDefinition testBlueprint;
 
     setUp(() {
-      testBlueprint = ElementBlueprint(
-        id: "test_blueprint",
+      testBlueprint = ElementDefinition(
+        rootType: ResolvedTypeRef(
+          id: const QualifiedTypeId(namespace: "test", name: "test_blueprint"),
+          revision: 1,
+        ),
         name: "Test Blueprint",
-        description: "A test blueprint",
-        extension: "test",
-        dataBlueprint: const ObjectBlueprint(fields: {}),
-        icon: "star",
+        description: "A test elementDefinition",
+        icon: const IconValue.iconify("star"),
         color: Colors.green,
       );
     });
@@ -36,14 +47,14 @@ void main() {
                     definition: EntryDefinition(
                       id: "test-entry",
                       name: "Test Entry",
-                      blueprint: testBlueprint,
+                      elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
                         y: 0,
                         width: 6,
                         height: 1,
                       ),
-                      data: const DynamicData({}),
+                      data: RecordValue(const {}),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -71,14 +82,14 @@ void main() {
                     definition: EntryDefinition(
                       id: "test-entry",
                       name: "Test Entry",
-                      blueprint: testBlueprint,
+                      elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
                         y: 0,
                         width: 1,
                         height: 1,
                       ),
-                      data: const DynamicData({}),
+                      data: RecordValue(const {}),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -106,7 +117,7 @@ void main() {
                   entry: PageEntry.reference(
                     id: "ref-entry",
                     name: "Reference Entry",
-                    blueprint: testBlueprint,
+                    elementDefinition: testBlueprint,
                     pageId: "other-page",
                   ),
                 ),
@@ -138,14 +149,14 @@ void main() {
                     definition: EntryDefinition(
                       id: "test-entry",
                       name: "Test Entry",
-                      blueprint: testBlueprint,
+                      elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
                         y: 0,
                         width: 1,
                         height: 1,
                       ),
-                      data: const DynamicData({}),
+                      data: RecordValue(const {}),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -185,14 +196,14 @@ void main() {
                     definition: EntryDefinition(
                       id: "test-entry",
                       name: "Test Entry",
-                      blueprint: testBlueprint,
+                      elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
                         y: 0,
                         width: 6,
                         height: 1,
                       ),
-                      data: const DynamicData({}),
+                      data: RecordValue(const {}),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -237,14 +248,14 @@ void main() {
                       id: "test-entry",
                       name:
                           "This is a very long entry name that should be truncated",
-                      blueprint: testBlueprint,
+                      elementDefinition: testBlueprint,
                       placement: const EntryPlacement(
                         x: 0,
                         y: 0,
                         width: 3,
                         height: 1,
                       ),
-                      data: const DynamicData({}),
+                      data: RecordValue(const {}),
                       inwardEdges: const [],
                       outwardEdges: const [],
                     ),
@@ -282,7 +293,9 @@ void main() {
         expect(find.text("Non-existent entry"), findsOneWidget);
       });
 
-      testWidgets("NoBlueprintEntryNode uses adaptive layout", (tester) async {
+      testWidgets("missing definition entry uses adaptive layout", (
+        tester,
+      ) async {
         await tester.pumpTestApp(
           child: GraphDrag(
             draggingInsideGraph: ValueNotifier(false),
@@ -291,9 +304,9 @@ void main() {
               height: 50,
               child: Material(
                 child: EntryNode(
-                  entry: PageEntry.noBlueprint(
-                    id: "no-blueprint",
-                    name: "Entry Without Blueprint",
+                  entry: PageEntry.missingElementDefinition(
+                    id: "no-elementDefinition",
+                    name: "Entry Without Element Definition",
                     placement: EntryPlacement(x: 0, y: 0, width: 6, height: 1),
                     inwardLinks: [],
                     outwardLinks: [],
@@ -305,7 +318,7 @@ void main() {
         );
 
         expect(find.byIcon(Icons.error), findsOneWidget);
-        expect(find.text("Entry Without Blueprint"), findsOneWidget);
+        expect(find.text("Entry Without Element Definition"), findsOneWidget);
       });
     });
 
@@ -329,14 +342,14 @@ void main() {
                         definition: EntryDefinition(
                           id: "test-entry",
                           name: "Test Entry",
-                          blueprint: testBlueprint,
+                          elementDefinition: testBlueprint,
                           placement: const EntryPlacement(
                             x: 0,
                             y: 0,
                             width: 6,
                             height: 1,
                           ),
-                          data: const DynamicData({}),
+                          data: RecordValue(const {}),
                           inwardEdges: const [],
                           outwardEdges: const [],
                         ),

@@ -64,7 +64,7 @@ class ConfirmationDialogue extends HookWidget {
   final String cancelIcon;
 
   /// The action to perform when the user confirms the action.
-  final FutureOr<void> Function() onConfirm;
+  final FutureOr<void> Function()? onConfirm;
 
   /// An optional action to perform when the user cancels the action.
   final Function? onCancel;
@@ -117,7 +117,7 @@ class ConfirmationDialogue extends HookWidget {
           ),
           onPressed: canConfirm
               ? () async {
-                  await onConfirm();
+                  await onConfirm?.call();
                   if (!context.mounted) return;
                   Navigator.of(context).pop(true);
                 }
@@ -130,7 +130,6 @@ class ConfirmationDialogue extends HookWidget {
 
 Future<bool> showConfirmationDialogue({
   required BuildContext context,
-  required FutureOr<void> Function() onConfirm,
   String title = "Are you sure?",
   Color? titleColor,
   String? content = "This action cannot be undone.",
@@ -142,6 +141,7 @@ Future<bool> showConfirmationDialogue({
   Duration delayConfirm = Duration.zero,
   String cancelText = "Cancel",
   String cancelIcon = Fa6Solid.xmark,
+  FutureOr<void> Function()? onConfirm,
   Function? onCancel,
 }) async {
   // If the user has its shift key pressed, we skip the confirmation dialogue.
@@ -154,14 +154,13 @@ Future<bool> showConfirmationDialogue({
         LogicalKeyboardKey.shiftRight,
       );
   if (hasShiftDown && delayConfirm.inSeconds == 0) {
-    await onConfirm();
+    await onConfirm?.call();
     return true;
   }
 
   return await showAdvancedDialog<bool>(
         context: context,
         builder: (context) => ConfirmationDialogue(
-          onConfirm: onConfirm,
           title: title,
           titleColor: titleColor,
           content: body != null ? null : content,
@@ -174,6 +173,7 @@ Future<bool> showConfirmationDialogue({
           delayConfirm: hasShiftDown ? Duration.zero : delayConfirm,
           cancelText: cancelText,
           cancelIcon: cancelIcon,
+          onConfirm: onConfirm,
           onCancel: onCancel,
         ),
       ) ??

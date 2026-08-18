@@ -10,10 +10,16 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
       ActivateAllIntent(),
   SingleActivator(LogicalKeyboardKey.space, shift: true): ActivateAllIntent(),
 
+  AdaptiveSingleActivator(LogicalKeyboardKey.escape, control: true):
+      CancelIntent(),
+
   AdaptiveSingleActivator(LogicalKeyboardKey.keyN, control: true):
       NextFocusIntent(),
   AdaptiveSingleActivator(LogicalKeyboardKey.keyP, control: true):
       PreviousFocusIntent(),
+
+  SingleActivator(LogicalKeyboardKey.home): FirstItemIntent(),
+  SingleActivator(LogicalKeyboardKey.end): LastItemIntent(),
 
   SingleActivator(LogicalKeyboardKey.pageUp): ScrollIntent(
     direction: AxisDirection.down,
@@ -77,8 +83,22 @@ class ActivateAllIntent extends Intent {
   const ActivateAllIntent();
 }
 
+/// Intentionally discards the current edit, unlike [DismissIntent] which
+/// leaves a field while keeping what was typed.
+class CancelIntent extends Intent {
+  const CancelIntent();
+}
+
 class DeleteIntent extends Intent {
   const DeleteIntent();
+}
+
+class FirstItemIntent extends Intent {
+  const FirstItemIntent();
+}
+
+class LastItemIntent extends Intent {
+  const LastItemIntent();
 }
 
 List<ShortcutActivator> shortcutsFor(Type intent) {

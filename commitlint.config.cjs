@@ -65,6 +65,7 @@ const allowedScopeSet = new Set(allowedScopes);
 const requiredScopeTypes = new Set(normalizeConfigList(scopeConfig.scopeRequiredForTypes, "scopeRequiredForTypes"));
 
 module.exports = {
+    parserPreset: "conventional-changelog-conventionalcommits",
     plugins: [
         {
             rules: {

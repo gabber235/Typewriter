@@ -1,0 +1,171 @@
+import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:widgetbook/widgetbook.dart";
+import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/input/input_renderer_scenarios.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_renderer_story.dart";
+import "package:widgetbook_workspace/stories/shared/editors/presentation/protocol/renderers/presentation_story_support.dart";
+
+const _path = "shared/editors/presentation/protocol/renderers/input";
+
+@widgetbook.UseCase(name: "Text", type: EditorProtocolRenderer, path: _path)
+Widget textInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[0]);
+
+@widgetbook.UseCase(name: "Numeric", type: EditorProtocolRenderer, path: _path)
+Widget numericInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[1]);
+
+@widgetbook.UseCase(name: "Toggle", type: EditorProtocolRenderer, path: _path)
+Widget toggleInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[2]);
+
+@widgetbook.UseCase(name: "Select", type: EditorProtocolRenderer, path: _path)
+Widget selectInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[3]);
+
+@widgetbook.UseCase(name: "Slider", type: EditorProtocolRenderer, path: _path)
+Widget sliderInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[4]);
+
+@widgetbook.UseCase(
+  name: "Date and time",
+  type: EditorProtocolRenderer,
+  path: _path,
+)
+Widget dateTimeInputRendererUseCase(BuildContext context) =>
+    _dateTimeRendererStory(context);
+
+Widget _dateTimeRendererStory(BuildContext context) {
+  final includeDate = context.knobs.boolean(
+    label: "Include date",
+    initialValue: true,
+  );
+  final includeTime = context.knobs.boolean(
+    label: "Include time",
+    initialValue: true,
+  );
+  final timestampDraft = context.knobs.string(
+    label: "Timestamp value",
+    initialValue: "2026-08-12T18:30:45.123456Z",
+  );
+  final readOnly = context.knobs.boolean(label: "Read only");
+  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
+  final width = context.knobs.double.slider(
+    label: "Width",
+    initialValue: 520,
+    min: 280,
+    max: 760,
+  );
+  final timestamp =
+      DateTime.tryParse(timestampDraft)?.toUtc() ??
+      DateTime.utc(2026, 8, 12, 18, 30, 45, 123, 456);
+  final base = inputRendererScenarios[5];
+  final scenario = RendererStoryScenario(
+    kind: base.kind,
+    name: base.name,
+    type: base.type,
+    value: TimestampValue(timestamp),
+    definitions: base.definitions,
+    presentation: storyNode(
+      "dateTimeInput",
+      PresentationElement.dateTimeInput(
+        control: storyControl("Available from"),
+        includeDate: includeDate,
+        includeTime: includeTime,
+      ),
+      properties: PresentationProperties(enabledIf: enabled.asBooleanLiteral),
+    ),
+  );
+  return PresentationRendererStory(
+    scenario: scenario,
+    width: width,
+    readOnly: readOnly,
+  );
+}
+
+@widgetbook.UseCase(name: "Duration", type: EditorProtocolRenderer, path: _path)
+Widget durationInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[6]);
+
+@widgetbook.UseCase(name: "Color", type: EditorProtocolRenderer, path: _path)
+Widget colorInputRendererUseCase(BuildContext context) {
+  final includeAlpha = context.knobs.boolean(label: "Include alpha");
+  final color = context.knobs.color(
+    label: "Color",
+    initialValue: const Color(0xCC7C4DFF),
+  );
+  final readOnly = context.knobs.boolean(label: "Read only");
+  final enabled = context.knobs.boolean(label: "Enabled", initialValue: true);
+  final width = context.knobs.double.slider(
+    label: "Width",
+    initialValue: 520,
+    min: 280,
+    max: 760,
+  );
+  final sampleLibrary = context.knobs.boolean(label: "Sample library");
+  final base = inputRendererScenarios[7];
+  final scenario = RendererStoryScenario(
+    kind: base.kind,
+    name: base.name,
+    type: base.type,
+    value: color.integerValue,
+    definitions: base.definitions,
+    presentation: storyNode(
+      "colorInput",
+      PresentationElement.colorInput(
+        control: storyControl("Accent color"),
+        includeAlpha: includeAlpha,
+      ),
+      properties: PresentationProperties(enabledIf: enabled.asBooleanLiteral),
+    ),
+  );
+  return PresentationRendererStory(
+    scenario: scenario,
+    width: width,
+    readOnly: readOnly,
+    colorLibraryStorage: sampleLibrary
+        ? MemoryColorLibraryStorage(
+            '{"recent":["FF7C4DFF","CC00A896","FFFFB000"],'
+            '"favorites":["FF7C4DFF","FFEF476F","FF06D6A0",'
+            '"FF118AB2","FF073B4C"],"format":"hex"}',
+          )
+        : null,
+  );
+}
+
+@widgetbook.UseCase(name: "Search", type: EditorProtocolRenderer, path: _path)
+Widget searchInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[8]);
+
+@widgetbook.UseCase(name: "Bytes", type: EditorProtocolRenderer, path: _path)
+Widget bytesInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[9]);
+
+@widgetbook.UseCase(name: "Enum", type: EditorProtocolRenderer, path: _path)
+Widget enumInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[10]);
+
+@widgetbook.UseCase(name: "Named", type: EditorProtocolRenderer, path: _path)
+Widget namedInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[11]);
+
+@widgetbook.UseCase(name: "List", type: EditorProtocolRenderer, path: _path)
+Widget listInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[12]);
+
+@widgetbook.UseCase(name: "Map", type: EditorProtocolRenderer, path: _path)
+Widget mapInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[13]);
+
+@widgetbook.UseCase(name: "Record", type: EditorProtocolRenderer, path: _path)
+Widget recordInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[14]);
+
+@widgetbook.UseCase(
+  name: "Polymorphic",
+  type: EditorProtocolRenderer,
+  path: _path,
+)
+Widget polymorphicInputRendererUseCase(BuildContext context) =>
+    rendererStory(context, inputRendererScenarios[15]);

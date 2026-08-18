@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -37,12 +36,8 @@ class EntryLinkWithOperation extends ActivatorShortcutOperation {
   @override
   bool canExecuteOn(List<Selectable> selection) {
     if (!selection.allAre<EntrySelection>()) return false;
-    final definitions = selection
-        .whereType<EntrySelection>()
-        .map((e) => e.definition)
-        .toList();
-
-    final hasLinkablePaths = _linkablePaths(definitions).isNotEmpty;
+    final entries = selection.whereType<EntrySelection>().toList();
+    final hasLinkablePaths = _linkablePaths(entries).isNotEmpty;
     return hasLinkablePaths;
   }
 
@@ -50,38 +45,22 @@ class EntryLinkWithOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selected = ref.read(selectedProvider).requireValue;
     if (selected.isEmpty) return;
-    // ignore: unused_local_variable
-    final entrySelections = selected.whereType<EntrySelection>().toList(
-      growable: false,
-    );
-
     // TODO: Implement link flow:
     // 1) Use the new selector popup to pick a target entry.
     // 2) If multiple paths are possible, show the selector for a path.
     // 3) Persist the link to the backend and refresh state.
   }
 
-  List<String> _linkablePaths(List<EntryDefinition> definitions) {
-    if (definitions.isEmpty) return [];
-    final wildPaths = definitions
-        .map((e) => e.blueprint.fieldsWithModifier<EntryReferenceModifier>())
-        .reduce((acc, map) {
-          return acc.entries
-              .where((e) => listEquals(e.value, map[e.key]))
-              .toMap();
-        })
-        .keys
-        .toList();
-
-    if (wildPaths.isEmpty) return [];
-
-    return wildPaths.expand((wildPath) {
-      return definitions
-          .map((e) => e.data.newPaths(wildPath))
-          .reduce(
-            (acc, paths) => acc.intersection(paths).toList(growable: false),
-          );
-    }).toList();
+  List<TypeReferenceLocation> _linkablePaths(List<EntrySelection> entries) {
+    if (entries.isEmpty) return [];
+    return entries
+        .map(
+          (entry) =>
+              entry.referenceLocations().valueOrNull?.toSet() ??
+              <TypeReferenceLocation>{},
+        )
+        .reduce((left, right) => left.intersection(right))
+        .toList(growable: false);
   }
 
   @override
@@ -130,12 +109,8 @@ class EntryLinkWithDuplicateOperation extends ActivatorShortcutOperation {
   @override
   bool canExecuteOn(List<Selectable> selection) {
     if (!selection.allAre<EntrySelection>()) return false;
-    final definitions = selection
-        .whereType<EntrySelection>()
-        .map((e) => e.definition)
-        .toList();
-
-    final hasLinkablePaths = _linkableDuplicatePaths(definitions).isNotEmpty;
+    final entries = selection.whereType<EntrySelection>().toList();
+    final hasLinkablePaths = _linkableDuplicatePaths(entries).isNotEmpty;
     return hasLinkablePaths;
   }
 
@@ -143,11 +118,6 @@ class EntryLinkWithDuplicateOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selected = ref.read(selectedProvider).requireValue;
     if (selected.isEmpty) return;
-    // ignore: unused_local_variable
-    final entries = selected.whereType<EntrySelection>().toList(
-      growable: false,
-    );
-
     // TODO: Implement link-with-duplicate flow:
     // 1) Pick target entry.
     // 2) Duplicate it.
@@ -155,35 +125,18 @@ class EntryLinkWithDuplicateOperation extends ActivatorShortcutOperation {
     // 4) Persist + refresh.
   }
 
-  List<String> _linkableDuplicatePaths(List<EntryDefinition> definitions) {
-    if (definitions.isEmpty) return [];
-
-    final possibleTags = definitions
-        .map((e) => e.blueprint.tags)
-        .reduce((acc, tags) => acc.intersection(tags).toList(growable: false));
-
-    final wildPaths = definitions
-        .map((e) => e.blueprint.fieldsWithModifier<EntryReferenceModifier>())
-        .map((m) {
-          return m.entries
-              .where((e) => e.value.every((m) => possibleTags.contains(m.tag)))
-              .toMap();
-        })
-        .reduce((acc, map) {
-          return acc.entries
-              .where((e) => listEquals(e.value, map[e.key]))
-              .toMap();
-        })
-        .keys
-        .toList();
-
-    if (wildPaths.isEmpty) return [];
-
-    return wildPaths.expand((wildPath) {
-      return definitions
-          .map((e) => e.data.newPaths(wildPath).toSet())
-          .reduce((acc, paths) => acc.intersection(paths));
-    }).toList();
+  List<TypeReferenceLocation> _linkableDuplicatePaths(
+    List<EntrySelection> entries,
+  ) {
+    if (entries.isEmpty) return [];
+    return entries
+        .map(
+          (entry) =>
+              entry.referenceLocations().valueOrNull?.toSet() ??
+              <TypeReferenceLocation>{},
+        )
+        .reduce((left, right) => left.intersection(right))
+        .toList(growable: false);
   }
 
   @override

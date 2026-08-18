@@ -139,8 +139,7 @@ class Auth extends _$Auth {
       throw Exception("Auth manager not initialized");
     }
     await manager.loginAuthorizationCodeFlow();
-    ref
-      .invalidateSelf();
+    ref.invalidateSelf();
   }
 
   Future<void> signOut() async {

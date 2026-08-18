@@ -166,7 +166,7 @@ class EntryMock extends Entry {
   }
 
   @override
-  Future<void> updateFieldValue(String path, dynamic value) async {
+  Future<void> updateFieldValue(DataPath path, DataValue value) async {
     await Future<void>.delayed(200.ms);
   }
 

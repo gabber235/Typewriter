@@ -7,7 +7,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  group("Graph - center focused child", () {
+  group("Graph center focused child", () {
     testWidgets("centers the focused element at scale 1.0", (tester) async {
       final focusNodes = <String, FocusNode>{
         "a": FocusNode(debugLabel: "a"),

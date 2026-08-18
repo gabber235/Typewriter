@@ -9,7 +9,6 @@ import "package:flutter/services.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/iconify_flutter_plus.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:iconify_flutter_plus/icons/mingcute.dart";
@@ -35,13 +34,7 @@ class BookPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BookScaffold(
-      child: InspectorScaffold(
-        margin: EdgeInsets.only(
-          top: context.spacing.space2,
-          right: context.spacing.space2,
-        ),
-        child: AutoRouter(placeholder: (context) => EmptyBookPage()),
-      ),
+      child: AutoRouter(placeholder: (context) => EmptyBookPage()),
     );
   }
 }
@@ -94,11 +87,11 @@ class BookScaffold extends HookConsumerWidget {
 
     return SimpleScaffold(
       appBar: CustomAppBar(
-        row: [
+        leading: [
           if (organizationId != null) ...[
             const OrganizationSelector(),
             if (realmId != null) ...[
-              Iconify(
+              Icones(
                 MaterialSymbols.chevron_right,
                 size: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -106,13 +99,13 @@ class BookScaffold extends HookConsumerWidget {
               const RealmSelector(),
             ],
           ],
-          const Spacer(),
-          if (!context.isMobile)
-            RealmSuspensionInline(
-              suspended: interaction.suspended,
-              child: const ModeDisplayWidget(),
-            ),
         ],
+        trailing: !context.isMobile
+            ? RealmSuspensionInline(
+                suspended: interaction.suspended,
+                child: const ModeDisplayWidget(),
+              )
+            : null,
         sidebar: RealmSuspensionBarrier(
           interaction: interaction,
           realm: selectedRealm,
@@ -130,7 +123,15 @@ class BookScaffold extends HookConsumerWidget {
             Expanded(
               child: Column(
                 children: [
-                  Expanded(child: child),
+                  Expanded(
+                    child: InspectorScaffold(
+                      margin: EdgeInsets.only(
+                        top: context.spacing.space2,
+                        right: context.spacing.space2,
+                      ),
+                      child: child,
+                    ),
+                  ),
                   ActionRow(),
                 ],
               ),
@@ -202,7 +203,7 @@ class BookSidebarContent extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SidebarHeader(text: "Pages"),
-            DecoratedTextField(
+            EditorTextField(
               focusNode: focusNode,
               controller: searchController,
               onChanged: (value) =>
@@ -247,12 +248,12 @@ class LoadingPagesSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      spacing: context.spacing.space2,
-      children: [
-        for (var i = 0; i < 10; i++)
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: 10,
+      itemBuilder: (_, _) =>
           ShimmerBox.rectangle(height: 35, width: double.infinity),
-      ],
+      separatorBuilder: (_, _) => SizedBox(height: context.spacing.space2),
     );
   }
 }
@@ -671,6 +672,7 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final elementTypes = ref.watch(pageElementTypesProvider(page.type)).value;
 
     final color = Theme.of(context).colorScheme.onSurface;
 
@@ -701,8 +703,12 @@ class _PageTile extends HookConsumerWidget {
         final definition = ref.read(entryProvider(entryId)).value;
         if (definition == null) return false;
 
-        final entryPageType = definition.blueprint.pageType;
-        return entryPageType == page.type;
+        return switch (elementTypes) {
+          PageElementTypesReady(:final types) => types.contains(
+            definition.elementDefinition.rootType,
+          ),
+          _ => false,
+        };
       },
       onAcceptWithDetails: (details) {
         final entryId = details.data.id;
@@ -1095,7 +1101,7 @@ class AddPageDialogue extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ValidatedTextField<String>(
-            autofocus: DecoratedTextFieldAutoFocus.textField,
+            autofocus: EditorTextFieldAutoFocus.textField,
             keepErrorVisibleWhenUnfocused: true,
             value: name.value,
             name: "Page Name",
@@ -1106,9 +1112,8 @@ class AddPageDialogue extends HookConsumerWidget {
               return validation;
             },
             inputFormatters: [
-              SnakeCaseInputFormatter(),
+              ...identifierInputFormats.toTextInputFormatters(),
               FilteringTextInputFormatter.singleLineFormatter,
-              FilteringTextInputFormatter.allow(RegExp("[a-z0-9_]")),
             ],
             onChanged: (value) => name.value = value,
             onSubmitted: (_) => Actions.maybeInvoke(context, NextFocusIntent()),
@@ -1138,11 +1143,11 @@ class AddPageDialogue extends HookConsumerWidget {
             shape: const RoundedRectangleBorder(),
             children: [
               SizedBox(height: context.spacing.space3),
-              FormattedTextField(
+              EditorTextField(
                 focusNode: chapterFocus,
                 text: chapter.value,
                 hintText: "Chapter Name",
-                icon: Ph.book_bookmark_fill,
+                prefix: Icones(Ph.book_bookmark_fill),
                 inputFormatters: [
                   TextInputFormatter.withFunction(
                     (oldValue, newValue) => newValue.copyWith(
@@ -1161,11 +1166,11 @@ class AddPageDialogue extends HookConsumerWidget {
                     Actions.maybeInvoke(context, NextFocusIntent()),
               ),
               SizedBox(height: context.spacing.space3),
-              FormattedTextField(
+              EditorTextField(
                 focusNode: priorityFocus,
                 text: priority.value.toString(),
                 hintText: "Priority",
-                icon: MaterialSymbols.priority_high_rounded,
+                prefix: Icones(MaterialSymbols.priority_high_rounded),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r"^-?\d*")),
                 ],
@@ -1247,7 +1252,7 @@ class RenamePageDialogue extends HookConsumerWidget {
     return AlertDialog(
       title: Text("Rename ${oldName.formatted}"),
       content: ValidatedTextField<String>(
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         value: name.value,
         name: "Page Name",
         icon: Ph.book_fill,
@@ -1257,9 +1262,8 @@ class RenamePageDialogue extends HookConsumerWidget {
           return validation;
         },
         inputFormatters: [
-          SnakeCaseInputFormatter(),
+          ...identifierInputFormats.toTextInputFormatters(),
           FilteringTextInputFormatter.singleLineFormatter,
-          FilteringTextInputFormatter.allow(RegExp("[a-z0-9_]")),
         ],
         onChanged: (value) => name.value = value,
         onSubmitted: (_) => buttonController.trigger(),
@@ -1328,12 +1332,12 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
     return AlertDialog(
       title: Text(title),
-      content: FormattedTextField(
+      content: EditorTextField(
         focusNode: focusNode,
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         text: chapter.value,
         hintText: "Chapter Name",
-        icon: Ph.book_bookmark_fill,
+        prefix: Icones(Ph.book_bookmark_fill),
         inputFormatters: [
           TextInputFormatter.withFunction(
             (oldValue, newValue) => newValue.copyWith(
@@ -1410,13 +1414,13 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
     return AlertDialog(
       title: Text("Change priority of $pageName"),
-      content: FormattedTextField(
+      content: EditorTextField(
         controller: controller,
         focusNode: focusNode,
-        autofocus: DecoratedTextFieldAutoFocus.textField,
+        autofocus: EditorTextFieldAutoFocus.textField,
         text: priority.toString(),
         hintText: "Priority",
-        icon: MaterialSymbols.priority_high_rounded,
+        prefix: Icones(MaterialSymbols.priority_high_rounded),
         inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"^-?\d*"))],
         onSubmitted: (value) async => buttonController.trigger(),
       ),

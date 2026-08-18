@@ -28,9 +28,9 @@ class _CreateOrganization extends HookConsumerWidget {
             SizedBox(height: context.spacing.space6),
             const StaggerEntrance(child: SectionTitle(title: "Name")),
             StaggerEntrance(
-              child: DecoratedTextField(
+              child: EditorTextField(
                 controller: nameController,
-                inputFormatters: [SnakeCaseInputFormatter()],
+                inputFormatters: identifierInputFormats.toTextInputFormatters(),
                 decoration: const InputDecoration(
                   hintText: "Enter organization name",
                 ),

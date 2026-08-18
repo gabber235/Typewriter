@@ -1,9 +1,11 @@
 import "package:collection/collection.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "realm.freezed.dart";
 part "realm.g.dart";
 
 enum RealmConnectionState {
@@ -14,10 +16,13 @@ enum RealmConnectionState {
   unavailable,
 }
 
-class RealmInteractionState {
-  const RealmInteractionState({required this.connectionState});
+@freezed
+abstract class RealmInteractionState with _$RealmInteractionState {
+  const factory RealmInteractionState({
+    required RealmConnectionState connectionState,
+  }) = _RealmInteractionState;
 
-  final RealmConnectionState connectionState;
+  const RealmInteractionState._();
 
   bool get suspended => switch (connectionState) {
     RealmConnectionState.notSelected || RealmConnectionState.online => false,

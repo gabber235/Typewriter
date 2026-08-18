@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.RepositoryResult
+import com.typewritermc.realm.repository.RevisionedRepositoryResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.utils.invalidRecordId
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -12,9 +13,7 @@ import skirout.kernel.v1.color.Color
 import skirout.library.v1.book.WatchBooksResponse
 import skirout.library.v1.tag.CreateTagResponse
 import skirout.library.v1.tag.DeleteTagResponse
-import skirout.library.v1.tag.MoveTagResponse
 import skirout.library.v1.tag.Placement
-import skirout.library.v1.tag.ResizeTagResponse
 import skirout.library.v1.tag.Tag
 import skirout.library.v1.tag.TagValidationError
 import skirout.library.v1.tag.UpdateTagResponse
@@ -44,8 +43,6 @@ internal class TagRoutes(
             unary(contracts.createTag) { call -> create(call) }
             unary(contracts.updateTag) { call -> update(call) }
             unary(contracts.deleteTag) { call -> delete(call) }
-            unary(contracts.moveTag) { call -> move(call) }
-            unary(contracts.resizeTag) { call -> resize(call) }
         }
 
     context(main: MainSpanScope)
@@ -110,58 +107,65 @@ internal class TagRoutes(
         request.tagId.invalidRecordId("tag")?.let {
             return UpdateTagResponse.InvalidRecordIdErrorWrapper(it)
         }
-        request.parentIds?.let { ids ->
-            ids.invalidRecordId("tag")?.let { return UpdateTagResponse.InvalidRecordIdErrorWrapper(it) }
+        request.parentIds.invalidRecordId("tag")?.let {
+            return UpdateTagResponse.InvalidRecordIdErrorWrapper(it)
         }
-        val existing =
-            childSpan("db.tag.get") { tags.getTag(request.tagId) }
-                ?: return UpdateTagResponse.createTagNotFoundError(tagId = request.tagId)
-        val placement = request.placement ?: existing.placement
-        validate(request.name ?: existing.name, placement)?.let {
-            return UpdateTagResponse.ValidationErrorWrapper(it)
-        }
-        val parentIds = request.parentIds ?: existing.parentIds
-        val missing = missingParents(parentIds)
-        if (missing.isNotEmpty()) return UpdateTagResponse.createParentsNotFoundError(parentIds = missing)
         val result =
             childSpan("db.tag.update") {
                 tags.updateTag(
+                    expectedRevision = request.expectedRevision,
                     Tag(
-                        tagId = existing.tagId,
-                        name = request.name ?: existing.name,
-                        color = request.color ?: existing.color,
-                        parentIds = parentIds,
-                        placement = placement,
+                        tagId = request.tagId,
+                        revision = request.expectedRevision,
+                        name = request.name,
+                        color = request.color,
+                        parentIds = request.parentIds,
+                        placement = request.placement,
                     ),
                 )
             }
         val tag =
             when (result) {
-                is RepositoryResult.Success -> result.value
+                is RevisionedRepositoryResult.Success -> {
+                    result.value
+                }
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "tag-not-found-error" -> {
-                        UpdateTagResponse.createTagNotFoundError(tagId = request.tagId)
-                    }
+                is RevisionedRepositoryResult.Conflict -> {
+                    return UpdateTagResponse.createConflictError(
+                        expectedRevision = request.expectedRevision,
+                        actual = result.actual,
+                    )
+                }
 
-                    "tag-name-invalid-error" -> {
-                        UpdateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
-                    }
+                is RevisionedRepositoryResult.DomainFailure -> {
+                    return when (result.slug) {
+                        "tag-not-found-error" -> {
+                            UpdateTagResponse.createTagNotFoundError(tagId = request.tagId)
+                        }
 
-                    "tag-width-invalid-error" -> {
-                        UpdateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
-                    }
+                        "tag-name-invalid-error" -> {
+                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
+                        }
 
-                    "tag-height-invalid-error" -> {
-                        UpdateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
-                    }
+                        "tag-width-invalid-error" -> {
+                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
+                        }
 
-                    "parents-not-found-error" -> {
-                        UpdateTagResponse.createParentsNotFoundError(parentIds = result.relatedIds)
-                    }
+                        "tag-height-invalid-error" -> {
+                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
+                        }
 
-                    else -> {
-                        error("Unexpected tag update domain error: ${result.slug}")
+                        "parents-not-found-error" -> {
+                            UpdateTagResponse.createParentsNotFoundError(parentIds = result.relatedIds)
+                        }
+
+                        "tag-inheritance-cycle-error" -> {
+                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.INHERITANCE_CYCLE)
+                        }
+
+                        else -> {
+                            error("Unexpected tag update domain error: ${result.slug}")
+                        }
                     }
                 }
             }
@@ -212,81 +216,6 @@ internal class TagRoutes(
                 ).requirePublished()
         }
         return DeleteTagResponse.createSuccess()
-    }
-
-    context(main: MainSpanScope)
-    private suspend fun move(
-        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
-            RealmAddress,
-            skirout.library.v1.tag.MoveTagRequest,
-            MoveTagResponse,
-        >,
-    ): MoveTagResponse {
-        val request = call.request
-        request.tagId.invalidRecordId("tag")?.let {
-            return MoveTagResponse.InvalidRecordIdErrorWrapper(it)
-        }
-        if (request.x == null && request.y == null) {
-            return MoveTagResponse.ValidationErrorWrapper(TagValidationError.POSITION_REQUIRED)
-        }
-        val tag =
-            when (
-                val result =
-                    childSpan("db.tag.move") {
-                        tags.moveTag(request.tagId, request.x, request.y)
-                    }
-            ) {
-                is RepositoryResult.Success -> result.value
-
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "tag-not-found-error" -> MoveTagResponse.createTagNotFoundError(tagId = request.tagId)
-                    else -> error("Unexpected tag move domain error: ${result.slug}")
-                }
-            }
-        publish(call.communicator, WatchTagsResponse.UpdateWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
-        return MoveTagResponse.SuccessWrapper(tag)
-    }
-
-    context(main: MainSpanScope)
-    private suspend fun resize(
-        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
-            RealmAddress,
-            skirout.library.v1.tag.ResizeTagRequest,
-            ResizeTagResponse,
-        >,
-    ): ResizeTagResponse {
-        val request = call.request
-        request.tagId.invalidRecordId("tag")?.let {
-            return ResizeTagResponse.InvalidRecordIdErrorWrapper(it)
-        }
-        if (request.width == null && request.height == null) {
-            return ResizeTagResponse.ValidationErrorWrapper(TagValidationError.SIZE_REQUIRED)
-        }
-        val width = request.width
-        val height = request.height
-        if (width != null && width <= 0) {
-            return ResizeTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
-        }
-        if (height != null && height <= 0) {
-            return ResizeTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
-        }
-        val result =
-            childSpan("db.tag.resize") {
-                tags.resizeTag(request.tagId, width, height)
-            }
-        val tag =
-            when (result) {
-                is RepositoryResult.Success -> result.value
-
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "tag-not-found-error" -> ResizeTagResponse.createTagNotFoundError(tagId = request.tagId)
-                    "tag-width-invalid-error" -> ResizeTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
-                    "tag-height-invalid-error" -> ResizeTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
-                    else -> error("Unexpected tag resize domain error: ${result.slug}")
-                }
-            }
-        publish(call.communicator, WatchTagsResponse.UpdateWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
-        return ResizeTagResponse.SuccessWrapper(tag)
     }
 
     context(main: MainSpanScope)

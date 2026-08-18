@@ -15,17 +15,25 @@ class SearchTreeAnimatedBody extends StatefulWidget {
   State<SearchTreeAnimatedBody> createState() => _SearchTreeAnimatedBodyState();
 }
 
-class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
+class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody>
+    with TickerProviderStateMixin {
   static const _insertDuration = Duration(milliseconds: 750);
   static const _deleteDuration = Duration(milliseconds: 500);
 
   final _listKey = GlobalKey<SliverAnimatedListState>();
   late List<SearchTreeRow> _rows;
+  var _disableAnimations = false;
 
   @override
   void initState() {
     super.initState();
     _rows = List.of(widget.rows);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _disableAnimations = MediaQuery.disableAnimationsOf(context);
   }
 
   @override
@@ -48,13 +56,16 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
       state.removeItem(
         removal.index,
         (context, animation) => _animatedRow(removed, animation),
-        duration: _deleteDuration,
+        duration: _disableAnimations ? Duration.zero : _deleteDuration,
       );
     }
 
     for (final insertion in diff.insertions) {
       _rows.insert(insertion.index, insertion.row);
-      state.insertItem(insertion.index, duration: _insertDuration);
+      state.insertItem(
+        insertion.index,
+        duration: _disableAnimations ? Duration.zero : _insertDuration,
+      );
     }
 
     final nextByKey = {for (final row in nextRows) row.key: row};
@@ -82,6 +93,7 @@ class _SearchTreeAnimatedBodyState extends State<SearchTreeAnimatedBody> {
         key: ValueKey(row.key),
         row: row,
         rowRenderers: widget.rowRenderers,
+        vsync: this,
       ),
     );
   }

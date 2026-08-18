@@ -1,35 +1,31 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final class CachedSearchSource implements SearchSource {
-  CachedSearchSource({required this.source}) {
-    _snapshotSubscription = source.snapshots.listen(_onSnapshot);
-  }
+final class CachedSearchSource extends DelegatingSearchSource {
+  CachedSearchSource({
+    required super.source,
+    this.capacity = 100,
+    this.retainStaleResults = true,
+  }) : assert(capacity > 0);
 
-  final SearchSource source;
+  final int capacity;
+  final bool retainStaleResults;
 
-  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
-    sync: true,
-  );
-
-  StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
   SearchSourceSnapshot? _cachedReadySnapshot;
+  SearchQueryContext? _activeContext;
+  final Map<SearchQueryContext, SearchSourceSnapshot> _queryCache = {};
   final Map<String, SearchPreviewRequestResultData> _previewCache = {};
 
   @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
-
-  @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
-
-  @override
-  void initialize() {
-    source.initialize();
-  }
-
-  @override
   void search(SearchQueryContext context) {
+    _activeContext = context;
+    final cached = _queryCache.remove(context);
+    if (cached != null) {
+      _queryCache[context] = cached;
+      _cachedReadySnapshot = cached;
+      emit(cached);
+    } else {
+      _cachedReadySnapshot = null;
+    }
     source.search(context);
   }
 
@@ -48,39 +44,42 @@ final class CachedSearchSource implements SearchSource {
   }
 
   @override
-  void dispose() {
-    unawaited(_snapshotSubscription?.cancel());
-    _snapshotSubscription = null;
-    unawaited(_snapshots.close());
-    source.dispose();
-  }
-
-  void _onSnapshot(SearchSourceSnapshot snapshot) {
+  void onSnapshot(SearchSourceSnapshot snapshot) {
     if (snapshot.status == SearchSourceStatus.ready) {
       _cachedReadySnapshot = snapshot;
-      _snapshots.add(snapshot);
+      _rememberActiveQuery(snapshot);
+      emit(snapshot);
       return;
     }
 
     final cachedSnapshot = _cachedReadySnapshot;
-    if (cachedSnapshot == null) {
-      _snapshots.add(snapshot);
+    if (cachedSnapshot == null || !retainStaleResults) {
+      emit(snapshot);
       return;
     }
 
     switch (snapshot.status) {
       case SearchSourceStatus.loading || SearchSourceStatus.error:
-        _snapshots.add(
+        emit(
           snapshot.copyWith(
             nodes: _markNodesStale(cachedSnapshot.nodes),
             actions: cachedSnapshot.actions,
           ),
         );
       case SearchSourceStatus.idle:
-        _snapshots.add(snapshot);
+        emit(snapshot);
       case SearchSourceStatus.ready:
         throw StateError("Ready snapshot handled before switch");
     }
+  }
+
+  void _rememberActiveQuery(SearchSourceSnapshot snapshot) {
+    final context = _activeContext;
+    if (context == null) return;
+    _queryCache.remove(context);
+    _queryCache[context] = snapshot;
+    if (_queryCache.length <= capacity) return;
+    _queryCache.remove(_queryCache.keys.first);
   }
 
   List<SearchNode> _markNodesStale(List<SearchNode> nodes) {
@@ -109,7 +108,11 @@ final class CachedSearchSource implements SearchSource {
 }
 
 extension CachedSearchSourceX on SearchSource {
-  SearchSource cached() {
-    return CachedSearchSource(source: this);
+  SearchSource cached({int capacity = 100, bool retainStaleResults = true}) {
+    return CachedSearchSource(
+      source: this,
+      capacity: capacity,
+      retainStaleResults: retainStaleResults,
+    );
   }
 }

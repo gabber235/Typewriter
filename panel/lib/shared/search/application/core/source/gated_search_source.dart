@@ -1,41 +1,20 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef SearchSourceGate = bool Function(SearchQueryContext context);
 typedef SearchSourceClosedGuidance =
     SearchGuidance? Function(SearchQueryContext context);
 
-final class GatedSearchSource implements SearchSource {
+final class GatedSearchSource extends DelegatingSearchSource {
   GatedSearchSource({
-    required this.source,
+    required super.source,
     required this.isOpen,
     this.closedGuidance,
-  }) {
-    _snapshotSubscription = source.snapshots.listen(_onSnapshot);
-  }
+  });
 
-  final SearchSource source;
   final SearchSourceGate isOpen;
   final SearchSourceClosedGuidance? closedGuidance;
 
-  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
-    sync: true,
-  );
-
-  StreamSubscription<SearchSourceSnapshot>? _snapshotSubscription;
   bool _acceptSnapshots = true;
-
-  @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
-
-  @override
-  Stream<List<QuerySelectorDefinition>> get selectors => source.selectors;
-
-  @override
-  void initialize() {
-    source.initialize();
-  }
 
   @override
   void search(SearchQueryContext context) {
@@ -47,7 +26,7 @@ final class GatedSearchSource implements SearchSource {
 
     _acceptSnapshots = false;
     final guidance = closedGuidance?.call(context);
-    _snapshots.add(SearchSourceSnapshot.idle(guidance: [?guidance]));
+    emit(SearchSourceSnapshot.idle(guidance: [?guidance]));
   }
 
   @override
@@ -65,16 +44,9 @@ final class GatedSearchSource implements SearchSource {
   }
 
   @override
-  void dispose() {
-    unawaited(_snapshotSubscription?.cancel());
-    _snapshotSubscription = null;
-    unawaited(_snapshots.close());
-    source.dispose();
-  }
-
-  void _onSnapshot(SearchSourceSnapshot snapshot) {
+  void onSnapshot(SearchSourceSnapshot snapshot) {
     if (!_acceptSnapshots) return;
-    _snapshots.add(snapshot);
+    emit(snapshot);
   }
 }
 

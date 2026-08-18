@@ -1,5 +1,6 @@
 library;
 
+export "components/adaptive_choice_control.dart";
 export "components/adaptive_leading_layout.dart";
 export "components/admonition.dart";
 export "components/anchored_overlay/anchored_overlay.dart";
@@ -15,6 +16,7 @@ export "components/context_menu.dart";
 export "components/countdown_badge.dart";
 export "components/cursor_controller.dart";
 export "components/depth_box.dart";
+export "components/directional_content_switcher.dart";
 export "components/drag_handle.dart";
 export "components/draggable_sheet_handle.dart";
 export "components/elastic_message_switcher.dart";
@@ -32,7 +34,9 @@ export "components/identifier.dart";
 export "components/input_icon_button.dart";
 export "components/labeled_divider.dart";
 export "components/labeled_message.dart";
-export "components/loading_button.dart";
+export "components/loading_button/loading_button.dart";
+export "components/loading_button/loading_button_controller.dart";
+export "components/loading_button/loading_icon_button.dart";
 export "components/loading_indicator.dart";
 export "components/modal_header.dart";
 export "components/multiselect_dropdown.dart";

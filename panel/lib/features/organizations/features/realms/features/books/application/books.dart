@@ -8,37 +8,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "books.freezed.dart";
 part "books.g.dart";
-
-@freezed
-abstract class Book with _$Book {
-  @Assert("title != \"\"", "Title must not be empty.")
-  @Assert("icon != \"\"", "Icon must not be empty.")
-  const factory Book({
-    required skir.RecordId bookId,
-    required String title,
-    required String icon,
-    required Color color,
-    required List<skir.RecordId> tagIds,
-  }) = _Book;
-
-  const Book._();
-
-  factory Book.fromSkir(skir.Book book) => Book(
-    bookId: book.bookId,
-    title: book.title,
-    icon: book.icon,
-    color: book.color.toFlutterColor(),
-    tagIds: book.tagIds.toList(),
-  );
-
-  skir.Book toSkir() => skir.Book(
-    bookId: this.bookId,
-    title: title,
-    icon: icon,
-    color: color.toSkirColor(),
-    tagIds: tagIds,
-  );
-}
+part "book_model.dart";
+part "book_queries.dart";
+part "book_selection.dart";
+part "book_validation.dart";
 
 @riverpod
 class Books extends _$Books {
@@ -68,15 +41,9 @@ class Books extends _$Books {
           case skir.WatchBooksResponse_listWrapper(:final value):
             return value.map(Book.fromSkir).toList();
           case skir.WatchBooksResponse_addWrapper(:final value):
-            return previous.upsertByKey(
-              (book) => book.bookId,
-              Book.fromSkir(value),
-            );
+            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
           case skir.WatchBooksResponse_updateWrapper(:final value):
-            return previous.upsertByKey(
-              (book) => book.bookId,
-              Book.fromSkir(value),
-            );
+            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
           case skir.WatchBooksResponse_removeWrapper(:final value):
             return previous?.where((book) => book.bookId != value).toList() ??
                 [];
@@ -117,37 +84,33 @@ class Books extends _$Books {
         case skir.CreateBookResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
         case skir.CreateBookResponse_validationErrorWrapper(:final value):
-          throw _bookValidationException(value);
+          throw value.toApiException();
         case skir.CreateBookResponse_tagsNotFoundErrorWrapper():
           throw ApiException.notFound("Tags");
         case skir.CreateBookResponse_invalidRecordIdErrorWrapper(:final value):
           throw ApiException.invalidRecordId(value);
         case skir.CreateBookResponse_successWrapper(:final value):
           final book = Book.fromSkir(value);
-          state = AsyncData(
-            state.requireValue.upsertByKey((book) => book.bookId, book),
-          );
-          return book;
+          final upsert = _upsertCanonicalBook(state.requireValue, book);
+          state = AsyncData(upsert.values);
+          return upsert.canonical;
       }
-    } catch (_) {
+    } on Object catch (_) {
       state = previousState;
       rethrow;
     }
   }
 
-  Future<void> updateBook(Book book) async {
+  Future<TypedMutationResult> updateBook(Book book) async {
     state.ensureReady();
-    final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     if (organizationId == null) throw ApiException.noOrganization();
 
-    state = AsyncData(
-      state.requireValue.upsertByKey((value) => value.bookId, book),
-    );
     final request = skir.UpdateBookRequest(
       bookId: book.bookId,
+      expectedRevision: book.revision,
       title: book.title,
       icon: book.icon,
       color: book.color.toSkirColor(),
@@ -162,26 +125,40 @@ class Books extends _$Books {
       );
       switch (response) {
         case skir.UpdateBookResponse_unknown():
-          throw ApiException.unknownResponseMessage();
+          return unavailableMutation("The server returned an unknown response");
         case skir.UpdateBookResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
+          return unavailableMutation("The server could not update the book");
+        case skir.UpdateBookResponse_conflictErrorWrapper(:final value):
+          final actual = Book.fromSkir(value.actual);
+          final upsert = _upsertCanonicalBook(state.requireValue, actual);
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.conflict(
+            expectedRevision: value.expectedRevision,
+            actualRevision: upsert.canonical.revision,
+            actualValue: upsert.canonical.inspectorValue,
+          );
         case skir.UpdateBookResponse_bookNotFoundErrorWrapper():
-          throw ApiException.notFound("Book");
+          return unavailableMutation(
+            "The book no longer exists",
+            targetDeleted: true,
+          );
         case skir.UpdateBookResponse_tagsNotFoundErrorWrapper():
-          throw ApiException.notFound("Tags");
-        case skir.UpdateBookResponse_validationErrorWrapper(:final value):
-          throw _bookValidationException(value);
-        case skir.UpdateBookResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
+          return invalidMutation("One or more selected tags no longer exist");
+        case skir.UpdateBookResponse_validationErrorWrapper():
+          return invalidMutation("The book contains invalid values");
+        case skir.UpdateBookResponse_invalidRecordIdErrorWrapper():
+          return invalidMutation("The book contains an invalid reference");
         case skir.UpdateBookResponse_successWrapper(:final value):
           final updatedBook = Book.fromSkir(value);
-          state = AsyncData(
-            state.requireValue.upsertByKey((book) => book.bookId, updatedBook),
+          final upsert = _upsertCanonicalBook(state.requireValue, updatedBook);
+          state = AsyncData(upsert.values);
+          return TypedMutationResult.success(
+            revision: upsert.canonical.revision,
+            value: upsert.canonical.inspectorValue,
           );
       }
-    } catch (_) {
-      state = previousState;
-      rethrow;
+    } on Object catch (_) {
+      return unavailableMutation("The book update could not be completed");
     }
   }
 
@@ -219,7 +196,7 @@ class Books extends _$Books {
       skir.CreatePageResponse_bookNotFoundErrorWrapper() =>
         throw ApiException.notFound("Book"),
       skir.CreatePageResponse_validationErrorWrapper(:final value) =>
-        throw _pageValidationException(value),
+        throw value.toApiException(),
       skir.CreatePageResponse_invalidRecordIdErrorWrapper(:final value) =>
         throw ApiException.invalidRecordId(value),
       skir.CreatePageResponse_successWrapper(:final value) => value.pageId,
@@ -287,139 +264,4 @@ class Books extends _$Books {
       case skir.ChangePagesChaptersResponse_successWrapper():
     }
   }
-}
-
-@riverpod
-Future<List<Book>> filteredBooks(Ref ref, String query) async {
-  final books = await ref.watch(booksProvider.future);
-  if (query.isEmpty) return books;
-  final tags = await ref.watch(tagsProvider.future);
-  final lowercaseQuery = query.toLowerCase();
-  return books.where((book) {
-    if (book.title.toLowerCase().contains(lowercaseQuery)) return true;
-    return book.tagIds
-        .map((tagId) => tags.firstWhereOrNull((tag) => tag.tagId == tagId))
-        .nonNulls
-        .any((tag) => tag.name.toLowerCase().contains(lowercaseQuery));
-  }).toList();
-}
-
-@riverpod
-skir.RecordId? bookId(Ref ref) {
-  final id = ref.watch(routeParamProvider("bookId"));
-  if (id == null) return null;
-  return recordId("book:$id");
-}
-
-@riverpod
-Future<Book?> book(Ref ref, skir.RecordId bookId) async {
-  final books = await ref.watch(booksProvider.future);
-  return books.firstWhereOrNull((book) => book.bookId == bookId);
-}
-
-class BookIdentifier extends SelectableIdentifier {
-  const BookIdentifier(this.bookId);
-
-  final skir.RecordId bookId;
-
-  @override
-  String get id => bookId.id;
-
-  @override
-  AsyncValue<Selectable> create(Ref ref) {
-    final asyncBook = ref.watch(bookProvider(bookId));
-    return asyncBook.whenData((value) {
-      if (value == null) throw SelectableNotFoundException(this);
-      return BookSelection(ref: ref, id: this, book: value);
-    });
-  }
-
-  @override
-  int get hashCode => bookId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BookIdentifier && other.bookId == bookId;
-
-  @override
-  String toString() => "BookIdentifier(bookId: $bookId)";
-}
-
-class BookSelection extends InspectableSelectable<BookIdentifier> {
-  BookSelection({required this.ref, required this.id, required this.book})
-    : _data = DynamicData({"title": book.title});
-
-  @override
-  final BookIdentifier id;
-  final Book book;
-  final Ref ref;
-  final DynamicData _data;
-
-  @override
-  String get name => book.title;
-
-  @override
-  ObjectBlueprint get objectBlueprint => ObjectBlueprint(
-    fields: {
-      "title": DataBlueprint.string(modifiers: [Modifier.snakeCase()]),
-    },
-  );
-
-  @override
-  List<SelectionCapability> get capabilities => [];
-
-  @override
-  Widget? buildInspectorHeader() => BookHeader(
-    id: book.bookId.id,
-    name: book.title.formatted,
-    color: book.color,
-  );
-
-  @override
-  dynamic fieldValue(String path) => _data.get(path);
-
-  @override
-  void setFieldValue(String path, dynamic value) {
-    final newData = _data.copyWith(path, value);
-    ref
-        .read(booksProvider.notifier)
-        .updateBook(book.copyWith(title: newData.get("title") as String));
-  }
-
-  @override
-  int get hashCode => Object.hash(id, book);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BookSelection && other.id == id && other.book == book;
-
-  @override
-  String toString() => "BookSelection(id: $id, book: $book)";
-}
-
-ApiException _bookValidationException(skir.BookValidationError error) {
-  return switch (error.kind) {
-    skir.BookValidationError_kind.unknown =>
-      ApiException.unknownResponseMessage(),
-    skir.BookValidationError_kind.titleRequiredConst => ApiException.badRequest(
-      "Book title is required",
-    ),
-    skir.BookValidationError_kind.iconRequiredConst => ApiException.badRequest(
-      "Book icon is required",
-    ),
-  };
-}
-
-ApiException _pageValidationException(skir.PageValidationError error) {
-  return switch (error.kind) {
-    skir.PageValidationError_kind.unknown =>
-      ApiException.unknownResponseMessage(),
-    skir.PageValidationError_kind.nameRequiredConst => ApiException.badRequest(
-      "Page name is required",
-    ),
-    skir.PageValidationError_kind.pageTypeUnknownConst =>
-      ApiException.badRequest("Page type is unknown"),
-  };
 }

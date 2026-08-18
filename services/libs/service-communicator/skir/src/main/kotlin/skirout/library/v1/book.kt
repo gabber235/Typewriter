@@ -22,6 +22,7 @@ import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface Book_OrMutable {
     val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val revision: kotlin.Long;
     val title: kotlin.String;
     val icon: kotlin.String;
     val color: skirout.kernel.v1.color.Color_OrMutable;
@@ -34,6 +35,7 @@ sealed interface Book_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Book private constructor(
     override val bookId: skirout.kernel.v1.record_id.RecordId,
+    override val revision: kotlin.Long,
     override val title: kotlin.String,
     override val icon: kotlin.String,
     override val color: skirout.kernel.v1.color.Color,
@@ -45,6 +47,7 @@ class Book private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        revision: kotlin.Long,
         title: kotlin.String,
         icon: kotlin.String,
         color: skirout.kernel.v1.color.Color_OrMutable,
@@ -53,6 +56,7 @@ class Book private constructor(
             null,
     ): this(
         bookId.toFrozen(),
+        revision,
         title,
         icon,
         color.toFrozen(),
@@ -66,6 +70,7 @@ class Book private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         bookId = this.bookId,
+        revision = this.revision,
         title = this.title,
         icon = this.icon,
         color = this.color,
@@ -78,6 +83,8 @@ class Book private constructor(
             _MustNameArguments,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.bookId,
+        revision: kotlin.Long =
+            this.revision,
         title: kotlin.String =
             this.title,
         icon: kotlin.String =
@@ -88,6 +95,7 @@ class Book private constructor(
             this.tagIds,
     ) = skirout.library.v1.book.Book(
         bookId.toFrozen(),
+        revision,
         title,
         icon,
         color.toFrozen(),
@@ -99,11 +107,11 @@ class Book private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.book.Book && this.bookId == other.bookId && this.title == other.title && this.icon == other.icon && this.color == other.color && this.tagIds == other.tagIds);
+        return this === other || (other is skirout.library.v1.book.Book && this.bookId == other.bookId && this.revision == other.revision && this.title == other.title && this.icon == other.icon && this.color == other.color && this.tagIds == other.tagIds);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.title, this.icon, this.color, this.tagIds).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.revision, this.title, this.icon, this.color, this.tagIds).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -119,6 +127,8 @@ class Book private constructor(
             _MustNameArguments,
         override var bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
+        override var revision: kotlin.Long =
+            0L,
         override var title: kotlin.String =
             "",
         override var icon: kotlin.String =
@@ -133,6 +143,7 @@ class Book private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.book.Book(
             bookId = this.bookId,
+            revision = this.revision,
             title = this.title,
             icon = this.icon,
             color = this.color,
@@ -193,6 +204,7 @@ class Book private constructor(
         private val default =
             skirout.library.v1.book.Book(
                 skirout.kernel.v1.record_id.RecordId.partial(),
+                0L,
                 "",
                 "",
                 skirout.kernel.v1.color.Color.partial(),
@@ -212,6 +224,8 @@ class Book private constructor(
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
+            revision: kotlin.Long =
+                0L,
             title: kotlin.String =
                 "",
             icon: kotlin.String =
@@ -222,6 +236,7 @@ class Book private constructor(
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         ) = skirout.library.v1.book.Book(
             bookId = bookId,
+            revision = revision,
             title = title,
             icon = icon,
             color = color,
@@ -256,9 +271,18 @@ class Book private constructor(
                 { mut, v -> mut.bookId = v },
             );
             serializerImpl.addField(
-                "title",
-                "title",
+                "revision",
+                "revision",
                 1,
+                build.skir.Serializers.int64,
+                "",
+                { it.revision },
+                { mut, v -> mut.revision = v },
+            );
+            serializerImpl.addField(
+                "title",
+                "title",
+                2,
                 build.skir.Serializers.string,
                 "",
                 { it.title },
@@ -267,7 +291,7 @@ class Book private constructor(
             serializerImpl.addField(
                 "icon",
                 "icon",
-                2,
+                3,
                 build.skir.Serializers.string,
                 "",
                 { it.icon },
@@ -276,7 +300,7 @@ class Book private constructor(
             serializerImpl.addField(
                 "color",
                 "color",
-                3,
+                4,
                 skirout.kernel.v1.color.Color.serializer,
                 "",
                 { it.color },
@@ -285,7 +309,7 @@ class Book private constructor(
             serializerImpl.addField(
                 "tag_ids",
                 "tagIds",
-                4,
+                5,
                 build.skir.Serializers.list(
                     skirout.kernel.v1.record_id.RecordId.serializer,
                 ),
@@ -664,6 +688,7 @@ sealed class WatchBooksResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -671,6 +696,7 @@ sealed class WatchBooksResponse private constructor() {
         ) = AddWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
@@ -684,6 +710,7 @@ sealed class WatchBooksResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -691,6 +718,7 @@ sealed class WatchBooksResponse private constructor() {
         ) = UpdateWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
@@ -1108,6 +1136,7 @@ sealed class WatchBookResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -1115,6 +1144,7 @@ sealed class WatchBookResponse private constructor() {
         ) = InitialWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
@@ -1128,6 +1158,7 @@ sealed class WatchBookResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -1135,6 +1166,7 @@ sealed class WatchBookResponse private constructor() {
         ) = UpdateWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
@@ -1788,6 +1820,7 @@ sealed class CreateBookResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -1795,6 +1828,7 @@ sealed class CreateBookResponse private constructor() {
         ) = SuccessWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
@@ -2057,10 +2091,11 @@ sealed class CreateBookResponse private constructor() {
 
 sealed interface UpdateBookRequest_OrMutable {
     val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-    val title: kotlin.String?;
-    val icon: kotlin.String?;
-    val color: skirout.kernel.v1.color.Color_OrMutable?;
-    val tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>?;
+    val expectedRevision: kotlin.Long;
+    val title: kotlin.String;
+    val icon: kotlin.String;
+    val color: skirout.kernel.v1.color.Color_OrMutable;
+    val tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
 
     fun toFrozen(): skirout.library.v1.book.UpdateBookRequest;
 }
@@ -2069,10 +2104,11 @@ sealed interface UpdateBookRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UpdateBookRequest private constructor(
     override val bookId: skirout.kernel.v1.record_id.RecordId,
-    override val title: kotlin.String?,
-    override val icon: kotlin.String?,
-    override val color: skirout.kernel.v1.color.Color?,
-    override val tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>?,
+    override val expectedRevision: kotlin.Long,
+    override val title: kotlin.String,
+    override val icon: kotlin.String,
+    override val color: skirout.kernel.v1.color.Color,
+    override val tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookRequest>? =
         null,
 ): skirout.library.v1.book.UpdateBookRequest_OrMutable {
@@ -2080,18 +2116,20 @@ class UpdateBookRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        title: kotlin.String?,
-        icon: kotlin.String?,
-        color: skirout.kernel.v1.color.Color_OrMutable?,
-        tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>?,
+        expectedRevision: kotlin.Long,
+        title: kotlin.String,
+        icon: kotlin.String,
+        color: skirout.kernel.v1.color.Color_OrMutable,
+        tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookRequest>? =
             null,
     ): this(
         bookId.toFrozen(),
+        expectedRevision,
         title,
         icon,
-        if (color != null) color.toFrozen() else null,
-        if (tagIds != null) build.skir.internal.toFrozenList(tagIds, { it.toFrozen() }) else null,
+        color.toFrozen(),
+        build.skir.internal.toFrozenList(tagIds, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -2101,6 +2139,7 @@ class UpdateBookRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         bookId = this.bookId,
+        expectedRevision = this.expectedRevision,
         title = this.title,
         icon = this.icon,
         color = this.color,
@@ -2113,20 +2152,23 @@ class UpdateBookRequest private constructor(
             _MustNameArguments,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.bookId,
-        title: kotlin.String? =
+        expectedRevision: kotlin.Long =
+            this.expectedRevision,
+        title: kotlin.String =
             this.title,
-        icon: kotlin.String? =
+        icon: kotlin.String =
             this.icon,
-        color: skirout.kernel.v1.color.Color_OrMutable? =
+        color: skirout.kernel.v1.color.Color_OrMutable =
             this.color,
-        tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
+        tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.tagIds,
     ) = skirout.library.v1.book.UpdateBookRequest(
         bookId.toFrozen(),
+        expectedRevision,
         title,
         icon,
-        if (color != null) color.toFrozen() else null,
-        if (tagIds != null) build.skir.internal.toFrozenList(tagIds, { it.toFrozen() }) else null,
+        color.toFrozen(),
+        build.skir.internal.toFrozenList(tagIds, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -2134,11 +2176,11 @@ class UpdateBookRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.book.UpdateBookRequest && this.bookId == other.bookId && this.title == other.title && this.icon == other.icon && this.color == other.color && this.tagIds == other.tagIds);
+        return this === other || (other is skirout.library.v1.book.UpdateBookRequest && this.bookId == other.bookId && this.expectedRevision == other.expectedRevision && this.title == other.title && this.icon == other.icon && this.color == other.color && this.tagIds == other.tagIds);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.title, this.icon, this.color, this.tagIds).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.expectedRevision, this.title, this.icon, this.color, this.tagIds).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2154,20 +2196,23 @@ class UpdateBookRequest private constructor(
             _MustNameArguments,
         override var bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
-        override var title: kotlin.String? =
-            null,
-        override var icon: kotlin.String? =
-            null,
-        override var color: skirout.kernel.v1.color.Color_OrMutable? =
-            null,
-        override var tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
-            null,
+        override var expectedRevision: kotlin.Long =
+            0L,
+        override var title: kotlin.String =
+            "",
+        override var icon: kotlin.String =
+            "",
+        override var color: skirout.kernel.v1.color.Color_OrMutable =
+            skirout.kernel.v1.color.Color.partial(),
+        override var tagIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookRequest>? =
             null,
     ): skirout.library.v1.book.UpdateBookRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.book.UpdateBookRequest(
             bookId = this.bookId,
+            expectedRevision = this.expectedRevision,
             title = this.title,
             icon = this.icon,
             color = this.color,
@@ -2190,16 +2235,49 @@ class UpdateBookRequest private constructor(
                 is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [color] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
+         */
+        val mutableColor: skirout.kernel.v1.color.Color.Mutable get() {
+            var value = this.color;
+            return when (value) {
+                is skirout.kernel.v1.color.Color -> {
+                    value = value.toMutable();
+                    this.color = value;
+                    return value;
+                }
+                is skirout.kernel.v1.color.Color.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [tagIds] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
+         */
+        val mutableTagIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
+            var value = this.tagIds;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.tagIds = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
         private val default =
             skirout.library.v1.book.UpdateBookRequest(
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                null,
-                null,
-                null,
-                null,
+                0L,
+                "",
+                "",
+                skirout.kernel.v1.color.Color.partial(),
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2215,16 +2293,19 @@ class UpdateBookRequest private constructor(
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
-            title: kotlin.String? =
-                null,
-            icon: kotlin.String? =
-                null,
-            color: skirout.kernel.v1.color.Color_OrMutable? =
-                null,
-            tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>? =
-                null,
+            expectedRevision: kotlin.Long =
+                0L,
+            title: kotlin.String =
+                "",
+            icon: kotlin.String =
+                "",
+            color: skirout.kernel.v1.color.Color_OrMutable =
+                skirout.kernel.v1.color.Color.partial(),
+            tagIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         ) = skirout.library.v1.book.UpdateBookRequest(
             bookId = bookId,
+            expectedRevision = expectedRevision,
             title = title,
             icon = icon,
             color = color,
@@ -2259,12 +2340,19 @@ class UpdateBookRequest private constructor(
                 { mut, v -> mut.bookId = v },
             );
             serializerImpl.addField(
-                "title",
-                "title",
+                "expected_revision",
+                "expectedRevision",
                 1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
+                build.skir.Serializers.int64,
+                "",
+                { it.expectedRevision },
+                { mut, v -> mut.expectedRevision = v },
+            );
+            serializerImpl.addField(
+                "title",
+                "title",
+                2,
+                build.skir.Serializers.string,
                 "",
                 { it.title },
                 { mut, v -> mut.title = v },
@@ -2272,10 +2360,8 @@ class UpdateBookRequest private constructor(
             serializerImpl.addField(
                 "icon",
                 "icon",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
+                3,
+                build.skir.Serializers.string,
                 "",
                 { it.icon },
                 { mut, v -> mut.icon = v },
@@ -2283,10 +2369,8 @@ class UpdateBookRequest private constructor(
             serializerImpl.addField(
                 "color",
                 "color",
-                3,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.color.Color.serializer,
-                ),
+                4,
+                skirout.kernel.v1.color.Color.serializer,
                 "",
                 { it.color },
                 { mut, v -> mut.color = v },
@@ -2294,11 +2378,9 @@ class UpdateBookRequest private constructor(
             serializerImpl.addField(
                 "tag_ids",
                 "tagIds",
-                4,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordId.serializer,
-                    ),
+                5,
+                build.skir.Serializers.list(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
                 ),
                 "",
                 { it.tagIds },
@@ -2316,6 +2398,7 @@ sealed class UpdateBookResponse private constructor() {
         UNKNOWN,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
+        CONFLICT_ERROR_WRAPPER,
         BOOK_NOT_FOUND_ERROR_WRAPPER,
         TAGS_NOT_FOUND_ERROR_WRAPPER,
         VALIDATION_ERROR_WRAPPER,
@@ -2370,6 +2453,24 @@ sealed class UpdateBookResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class ConflictErrorWrapper private constructor (
+        val value: skirout.library.v1.book.UpdateBookResponse.ConflictError,
+    ) : skirout.library.v1.book.UpdateBookResponse() {
+        constructor(
+            value: skirout.library.v1.book.UpdateBookResponse.ConflictError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.book.UpdateBookResponse.ConflictErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 274643803;
         }
     }
 
@@ -2474,6 +2575,7 @@ sealed class UpdateBookResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             title: kotlin.String,
             icon: kotlin.String,
             color: skirout.kernel.v1.color.Color_OrMutable,
@@ -2481,10 +2583,25 @@ sealed class UpdateBookResponse private constructor() {
         ) = SuccessWrapper(
             skirout.library.v1.book.Book(
                 bookId = bookId,
+                revision = revision,
                 title = title,
                 icon = icon,
                 color = color,
                 tagIds = tagIds,
+            )
+        );
+
+        /** Shortcut for `ConflictErrorWrapper(skirout.library.v1.book.UpdateBookResponse.ConflictError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConflictError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.book.Book_OrMutable,
+        ) = ConflictErrorWrapper(
+            skirout.library.v1.book.UpdateBookResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
             )
         );
 
@@ -2572,6 +2689,15 @@ sealed class UpdateBookResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     3,
+                    "conflict_error",
+                    Kind.CONFLICT_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.book.UpdateBookResponse.ConflictError.serializer,
+                    "",
+                    { ConflictErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
                     "book_not_found_error",
                     Kind.BOOK_NOT_FOUND_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.book.UpdateBookResponse.BookNotFoundError.serializer,
@@ -2580,7 +2706,7 @@ sealed class UpdateBookResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    4,
+                    5,
                     "tags_not_found_error",
                     Kind.TAGS_NOT_FOUND_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.book.UpdateBookResponse.TagsNotFoundError.serializer,
@@ -2589,7 +2715,7 @@ sealed class UpdateBookResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    5,
+                    6,
                     "validation_error",
                     Kind.VALIDATION_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.book.BookValidationError.serializer,
@@ -2598,7 +2724,7 @@ sealed class UpdateBookResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    6,
+                    7,
                     "invalid_record_id_error",
                     Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -2607,6 +2733,178 @@ sealed class UpdateBookResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface ConflictError_OrMutable {
+        val expectedRevision: kotlin.Long;
+        val actual: skirout.library.v1.book.Book_OrMutable;
+
+        fun toFrozen(): skirout.library.v1.book.UpdateBookResponse.ConflictError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ConflictError private constructor(
+        override val expectedRevision: kotlin.Long,
+        override val actual: skirout.library.v1.book.Book,
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookResponse.ConflictError>? =
+            null,
+    ): skirout.library.v1.book.UpdateBookResponse.ConflictError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.book.Book_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookResponse.ConflictError>? =
+                null,
+        ): this(
+            expectedRevision,
+            actual.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            expectedRevision = this.expectedRevision,
+            actual = this.actual,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long =
+                this.expectedRevision,
+            actual: skirout.library.v1.book.Book_OrMutable =
+                this.actual,
+        ) = skirout.library.v1.book.UpdateBookResponse.ConflictError(
+            expectedRevision,
+            actual.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.book.UpdateBookResponse.ConflictError && this.expectedRevision == other.expectedRevision && this.actual == other.actual);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.expectedRevision, this.actual).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.book.UpdateBookResponse.ConflictError.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [ConflictError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var expectedRevision: kotlin.Long =
+                0L,
+            override var actual: skirout.library.v1.book.Book_OrMutable =
+                skirout.library.v1.book.Book.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.book.UpdateBookResponse.ConflictError>? =
+                null,
+        ): skirout.library.v1.book.UpdateBookResponse.ConflictError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.book.UpdateBookResponse.ConflictError(
+                expectedRevision = this.expectedRevision,
+                actual = this.actual,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [actual] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
+             */
+            val mutableActual: skirout.library.v1.book.Book.Mutable get() {
+                var value = this.actual;
+                return when (value) {
+                    is skirout.library.v1.book.Book -> {
+                        value = value.toMutable();
+                        this.actual = value;
+                        return value;
+                    }
+                    is skirout.library.v1.book.Book.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.book.UpdateBookResponse.ConflictError(
+                    0L,
+                    skirout.library.v1.book.Book.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ConflictError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                expectedRevision: kotlin.Long =
+                    0L,
+                actual: skirout.library.v1.book.Book_OrMutable =
+                    skirout.library.v1.book.Book.partial(),
+            ) = skirout.library.v1.book.UpdateBookResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/book.skir:UpdateBookResponse.ConflictError",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [ConflictError] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.addField(
+                    "expected_revision",
+                    "expectedRevision",
+                    0,
+                    build.skir.Serializers.int64,
+                    "",
+                    { it.expectedRevision },
+                    { mut, v -> mut.expectedRevision = v },
+                );
+                serializerImpl.addField(
+                    "actual",
+                    "actual",
+                    1,
+                    skirout.library.v1.book.Book.serializer,
+                    "",
+                    { it.actual },
+                    { mut, v -> mut.actual = v },
+                );
+                serializerImpl.finalizeStruct();
             }
         }
     }

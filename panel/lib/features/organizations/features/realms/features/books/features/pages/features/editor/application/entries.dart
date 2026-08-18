@@ -16,7 +16,7 @@ class Entry extends _$Entry {
     throw UnimplementedError();
   }
 
-  Future<void> updateFieldValue(String path, dynamic value) async {
+  Future<void> updateFieldValue(DataPath path, DataValue value) async {
     state.ensureReady();
 
     // TODO: Implement optimistic updates
@@ -39,7 +39,6 @@ class Entry extends _$Entry {
 /// - definition: an entry fully defined on the current page
 /// - reference: a reference to an entry defined on a different page
 /// - nonexistent: a dangling reference (entry no longer exists)
-/// - noBlueprint: an entry without a blueprint (blueprint removed/missing)
 @Freezed(unionKey: "_kind")
 abstract class PageEntry with _$PageEntry {
   const factory PageEntry.definition({required EntryDefinition definition}) =
@@ -50,7 +49,7 @@ abstract class PageEntry with _$PageEntry {
   const factory PageEntry.reference({
     required String id,
     required String name,
-    required ElementBlueprint blueprint,
+    required ElementDefinition elementDefinition,
     required String pageId,
     @Default([]) List<EntryMetadata> metadata,
   }) = ReferencePageEntry;
@@ -60,17 +59,14 @@ abstract class PageEntry with _$PageEntry {
       NonexistentPageEntry;
 
   @Assert("id != \"\"", "ID must not be empty.")
-  const factory PageEntry.noBlueprint({
+  const factory PageEntry.missingElementDefinition({
     required String id,
     required String name,
     required EntryPlacement placement,
     required List<ElementLink> inwardLinks,
     required List<ElementLink> outwardLinks,
     @Default([]) List<EntryMetadata> metadata,
-  }) = NoBlueprintPageEntry;
-
-  factory PageEntry.fromJson(Map<String, dynamic> json) =>
-      _$PageEntryFromJson(json);
+  }) = MissingElementDefinitionPageEntry;
 }
 
 @freezed
@@ -79,16 +75,13 @@ abstract class EntryDefinition with _$EntryDefinition {
   const factory EntryDefinition({
     required String id,
     required String name,
-    required ElementBlueprint blueprint,
+    required ElementDefinition elementDefinition,
     required EntryPlacement placement,
-    required DynamicData data,
+    required RecordValue data,
     required List<ElementLink> inwardEdges,
     required List<ElementLink> outwardEdges,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
-
-  factory EntryDefinition.fromJson(Map<String, dynamic> json) =>
-      _$EntryDefinitionFromJson(json);
 }
 
 @freezed
@@ -123,13 +116,13 @@ extension PageEntryExtension on PageEntry {
     DefinitionPageEntry(:final definition) => definition.id,
     ReferencePageEntry(:final id) => id,
     NonexistentPageEntry(:final id) => id,
-    NoBlueprintPageEntry(:final id) => id,
+    MissingElementDefinitionPageEntry(:final id) => id,
     _ => throw UnimplementedError(),
   };
 
   (List<ElementLink> inwardLinks, List<ElementLink> outwardLinks) get links =>
       switch (this) {
-        NoBlueprintPageEntry(
+        MissingElementDefinitionPageEntry(
           inwardLinks: final inwardLinks,
           outwardLinks: final outwardLinks,
         ) =>
@@ -162,12 +155,27 @@ class EntryIdentifier extends SelectableIdentifier
   @override
   AsyncValue<Selectable<EntryIdentifier>> create(Ref ref) {
     final asyncEntry = ref.watch(entryProvider(id));
-    return asyncEntry.whenData((value) {
-      if (value == null) {
-        throw SelectableNotFoundException(this);
-      }
-      return EntrySelection(ref: ref, id: this, definition: value);
-    });
+    return asyncEntry.when(
+      data: (value) {
+        if (value == null) {
+          throw SelectableNotFoundException(this);
+        }
+        final catalogState = ref.watch(
+          realmEditorCatalogForTypeProvider(value.elementDefinition.rootType),
+        );
+        return catalogState.resolveElement(
+          value.elementDefinition,
+          (catalog) => EntrySelection(
+            ref: ref,
+            id: this,
+            definition: value,
+            typeCatalog: catalog,
+          ),
+        );
+      },
+      error: AsyncValue.error,
+      loading: AsyncValue.loading,
+    );
   }
 
   @override
@@ -189,6 +197,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     required this.ref,
     required this.id,
     required this.definition,
+    required this.typeCatalog,
   });
 
   @override
@@ -197,10 +206,18 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   final EntryDefinition definition;
 
   @override
+  final TypeCatalog typeCatalog;
+
+  @override
   String get name => definition.name;
 
   @override
-  ObjectBlueprint get objectBlueprint => definition.blueprint.dataBlueprint;
+  EditorDocument get document => EditorDocument(
+    rootType: NamedType(definition.elementDefinition.rootType),
+    typeCatalog: typeCatalog,
+    confirmedValue: definition.data,
+    revision: 0,
+  );
 
   @override
   List<SelectionCapability> get capabilities => [];
@@ -210,17 +227,19 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     return EntryHeader(
       id: id.id,
       name: name,
-      color: definition.blueprint.color,
+      color: definition.elementDefinition.color,
     );
   }
 
   @override
-  dynamic fieldValue(String path) => definition.data.get(path);
-
-  @override
-  void setFieldValue(String path, dynamic value) {
-    ref.read(entryProvider(id.id).notifier).updateFieldValue(path, value);
-  }
+  Future<TypedMutationResult> commit(EditorCommit commit) => Future.value(
+    TypedMutationResult.unavailable([
+      const TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "Entry persistence is not available yet",
+      ),
+    ]),
+  );
 
   @override
   int get hashCode => id.hashCode;

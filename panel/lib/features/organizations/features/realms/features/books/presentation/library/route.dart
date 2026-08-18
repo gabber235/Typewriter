@@ -68,7 +68,7 @@ class LibraryPage extends HookConsumerWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.all(context.spacing.space4),
-                  child: DecoratedTextField(
+                  child: EditorTextField(
                     focusNode: useFocusNode(),
                     controller: searchController,
                     decoration: InputDecoration(
@@ -148,18 +148,18 @@ class LibraryPage extends HookConsumerWidget {
             final controller = useTextEditingController();
             final isValid = useListenableSelector(
               controller,
-              () => controller.text.isNotEmpty,
+              () => controller.text.isValidIdentifier,
             );
             final focusNode = useFocusNode();
 
             return AlertDialog(
               title: Text("Create Book"),
-              content: DecoratedTextField(
+              content: EditorTextField(
                 controller: controller,
                 focusNode: focusNode,
-                autofocus: DecoratedTextFieldAutoFocus.textField,
+                autofocus: EditorTextFieldAutoFocus.textField,
                 decoration: const InputDecoration(hintText: "Enter book title"),
-                inputFormatters: [SnakeCaseInputFormatter()],
+                inputFormatters: identifierInputFormats.toTextInputFormatters(),
                 onSubmitted: (value) {
                   if (!isValid) return;
                   Navigator.of(context).pop(value);
