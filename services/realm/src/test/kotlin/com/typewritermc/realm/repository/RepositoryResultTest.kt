@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 
 val RepositoryResultTest by testSuite {
     test("known database slugs become domain failures") {
-        repositoryMutation<Unit> { error("database rejected tag-width-invalid-error") } shouldBe
-            RepositoryResult.DomainFailure("tag-width-invalid-error")
+        repositoryMutation<Unit> { error("database rejected page-chapter-invalid-error") } shouldBe
+            RepositoryResult.DomainFailure("page-chapter-invalid-error")
     }
 }

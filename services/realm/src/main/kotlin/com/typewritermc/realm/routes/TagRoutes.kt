@@ -1,9 +1,10 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.BookRepository
-import com.typewritermc.realm.repository.RepositoryResult
-import com.typewritermc.realm.repository.RevisionedRepositoryResult
+import com.typewritermc.realm.repository.TagCreateResult
+import com.typewritermc.realm.repository.TagDeleteResult
 import com.typewritermc.realm.repository.TagRepository
+import com.typewritermc.realm.repository.TagUpdateResult
 import com.typewritermc.realm.repository.utils.invalidRecordId
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -67,28 +68,24 @@ internal class TagRoutes(
             }
         val tag =
             when (result) {
-                is RepositoryResult.Success -> result.value
+                is TagCreateResult.Success -> {
+                    result.tag
+                }
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "tag-name-invalid-error" -> {
-                        CreateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
-                    }
+                TagCreateResult.NameInvalid -> {
+                    return CreateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
+                }
 
-                    "tag-width-invalid-error" -> {
-                        CreateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
-                    }
+                TagCreateResult.WidthInvalid -> {
+                    return CreateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
+                }
 
-                    "tag-height-invalid-error" -> {
-                        CreateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
-                    }
+                TagCreateResult.HeightInvalid -> {
+                    return CreateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
+                }
 
-                    "parents-not-found-error" -> {
-                        CreateTagResponse.createParentsNotFoundError(parentIds = result.relatedIds)
-                    }
-
-                    else -> {
-                        error("Unexpected tag creation domain error: ${result.slug}")
-                    }
+                is TagCreateResult.ParentsNotFound -> {
+                    return CreateTagResponse.createParentsNotFoundError(parentIds = result.parentIds)
                 }
             }
         publish(call.communicator, WatchTagsResponse.AddWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
@@ -126,47 +123,39 @@ internal class TagRoutes(
             }
         val tag =
             when (result) {
-                is RevisionedRepositoryResult.Success -> {
-                    result.value
+                is TagUpdateResult.Success -> {
+                    result.tag
                 }
 
-                is RevisionedRepositoryResult.Conflict -> {
+                is TagUpdateResult.Conflict -> {
                     return UpdateTagResponse.createConflictError(
                         expectedRevision = request.expectedRevision,
                         actual = result.actual,
                     )
                 }
 
-                is RevisionedRepositoryResult.DomainFailure -> {
-                    return when (result.slug) {
-                        "tag-not-found-error" -> {
-                            UpdateTagResponse.createTagNotFoundError(tagId = request.tagId)
-                        }
+                TagUpdateResult.NotFound -> {
+                    return UpdateTagResponse.createTagNotFoundError(tagId = request.tagId)
+                }
 
-                        "tag-name-invalid-error" -> {
-                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
-                        }
+                TagUpdateResult.NameInvalid -> {
+                    return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.NAME_REQUIRED)
+                }
 
-                        "tag-width-invalid-error" -> {
-                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
-                        }
+                TagUpdateResult.WidthInvalid -> {
+                    return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.WIDTH_INVALID)
+                }
 
-                        "tag-height-invalid-error" -> {
-                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
-                        }
+                TagUpdateResult.HeightInvalid -> {
+                    return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.HEIGHT_INVALID)
+                }
 
-                        "parents-not-found-error" -> {
-                            UpdateTagResponse.createParentsNotFoundError(parentIds = result.relatedIds)
-                        }
+                is TagUpdateResult.ParentsNotFound -> {
+                    return UpdateTagResponse.createParentsNotFoundError(parentIds = result.parentIds)
+                }
 
-                        "tag-inheritance-cycle-error" -> {
-                            UpdateTagResponse.ValidationErrorWrapper(TagValidationError.INHERITANCE_CYCLE)
-                        }
-
-                        else -> {
-                            error("Unexpected tag update domain error: ${result.slug}")
-                        }
-                    }
+                TagUpdateResult.InheritanceCycle -> {
+                    return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.INHERITANCE_CYCLE)
                 }
             }
         publish(call.communicator, WatchTagsResponse.UpdateWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
@@ -187,12 +176,8 @@ internal class TagRoutes(
         }
         val deletion =
             when (val result = childSpan("db.tag.delete") { tags.deleteTag(id) }) {
-                is RepositoryResult.Success -> result.value
-
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "tag-not-found-error" -> DeleteTagResponse.createTagNotFoundError(tagId = id)
-                    else -> error("Unexpected tag deletion domain error: ${result.slug}")
-                }
+                is TagDeleteResult.Success -> result.deletion
+                TagDeleteResult.NotFound -> return DeleteTagResponse.createTagNotFoundError(tagId = id)
             }
         publish(call.communicator, WatchTagsResponse.RemoveWrapper(id), WatchTagResponse.RemoveWrapper(id))
         for (childId in deletion.childTagIds) {

@@ -1,8 +1,8 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.repository.BookCreateResult
 import com.typewritermc.realm.repository.BookRepository
-import com.typewritermc.realm.repository.RepositoryResult
-import com.typewritermc.realm.repository.RevisionedRepositoryResult
+import com.typewritermc.realm.repository.BookUpdateResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.utils.invalidRecordId
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
@@ -72,24 +72,20 @@ internal class BookRoutes(
             }
         val book =
             when (result) {
-                is RepositoryResult.Success -> result.value
+                is BookCreateResult.Success -> {
+                    result.book
+                }
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "book-title-invalid-error" -> {
-                        CreateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
-                    }
+                BookCreateResult.TitleInvalid -> {
+                    return CreateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+                }
 
-                    "book-icon-required-error" -> {
-                        CreateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
-                    }
+                BookCreateResult.IconRequired -> {
+                    return CreateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+                }
 
-                    "tags-not-found-error" -> {
-                        CreateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
-                    }
-
-                    else -> {
-                        error("Unexpected book creation domain error: ${result.slug}")
-                    }
+                is BookCreateResult.TagsNotFound -> {
+                    return CreateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
                 }
             }
         call.communicator
@@ -132,39 +128,31 @@ internal class BookRoutes(
             }
         val updated =
             when (result) {
-                is RevisionedRepositoryResult.Success -> {
-                    result.value
+                is BookUpdateResult.Success -> {
+                    result.book
                 }
 
-                is RevisionedRepositoryResult.Conflict -> {
+                is BookUpdateResult.Conflict -> {
                     return UpdateBookResponse.createConflictError(
                         expectedRevision = request.expectedRevision,
                         actual = result.actual,
                     )
                 }
 
-                is RevisionedRepositoryResult.DomainFailure -> {
-                    return when (result.slug) {
-                        "book-not-found-error" -> {
-                            UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
-                        }
+                BookUpdateResult.NotFound -> {
+                    return UpdateBookResponse.createBookNotFoundError(bookId = request.bookId)
+                }
 
-                        "book-title-invalid-error" -> {
-                            UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
-                        }
+                BookUpdateResult.TitleInvalid -> {
+                    return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
+                }
 
-                        "book-icon-required-error" -> {
-                            UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
-                        }
+                BookUpdateResult.IconRequired -> {
+                    return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.ICON_REQUIRED)
+                }
 
-                        "tags-not-found-error" -> {
-                            UpdateBookResponse.createTagsNotFoundError(tagIds = result.relatedIds)
-                        }
-
-                        else -> {
-                            error("Unexpected book update domain error: ${result.slug}")
-                        }
-                    }
+                is BookUpdateResult.TagsNotFound -> {
+                    return UpdateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
                 }
             }
         call.communicator

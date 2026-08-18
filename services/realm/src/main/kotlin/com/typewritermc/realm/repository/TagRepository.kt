@@ -17,14 +17,62 @@ interface TagRepository {
         color: Color,
         parentIds: List<RecordId>,
         placement: Placement,
-    ): RepositoryResult<Tag>
+    ): TagCreateResult
 
     suspend fun updateTag(
         expectedRevision: Long,
         tag: Tag,
-    ): RevisionedRepositoryResult<Tag>
+    ): TagUpdateResult
 
-    suspend fun deleteTag(id: RecordId): RepositoryResult<TagDeletion>
+    suspend fun deleteTag(id: RecordId): TagDeleteResult
+}
+
+sealed interface TagCreateResult {
+    data class Success(
+        val tag: Tag,
+    ) : TagCreateResult
+
+    data object NameInvalid : TagCreateResult
+
+    data object WidthInvalid : TagCreateResult
+
+    data object HeightInvalid : TagCreateResult
+
+    data class ParentsNotFound(
+        val parentIds: List<RecordId>,
+    ) : TagCreateResult
+}
+
+sealed interface TagUpdateResult {
+    data class Success(
+        val tag: Tag,
+    ) : TagUpdateResult
+
+    data class Conflict(
+        val actual: Tag,
+    ) : TagUpdateResult
+
+    data object NotFound : TagUpdateResult
+
+    data object NameInvalid : TagUpdateResult
+
+    data object WidthInvalid : TagUpdateResult
+
+    data object HeightInvalid : TagUpdateResult
+
+    data class ParentsNotFound(
+        val parentIds: List<RecordId>,
+    ) : TagUpdateResult
+
+    data object InheritanceCycle : TagUpdateResult
+}
+
+sealed interface TagDeleteResult {
+    data class Success(
+        val deletion: TagDeletion,
+    ) : TagDeleteResult
+
+    data object NotFound : TagDeleteResult
 }
 
 data class TagDeletion(

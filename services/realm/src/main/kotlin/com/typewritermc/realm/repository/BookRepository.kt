@@ -14,10 +14,44 @@ interface BookRepository {
         icon: String,
         color: Color,
         tagIds: List<RecordId>,
-    ): RepositoryResult<Book>
+    ): BookCreateResult
 
     suspend fun updateBook(
         expectedRevision: Long,
         book: Book,
-    ): RevisionedRepositoryResult<Book>
+    ): BookUpdateResult
+}
+
+sealed interface BookCreateResult {
+    data class Success(
+        val book: Book,
+    ) : BookCreateResult
+
+    data object TitleInvalid : BookCreateResult
+
+    data object IconRequired : BookCreateResult
+
+    data class TagsNotFound(
+        val tagIds: List<RecordId>,
+    ) : BookCreateResult
+}
+
+sealed interface BookUpdateResult {
+    data class Success(
+        val book: Book,
+    ) : BookUpdateResult
+
+    data class Conflict(
+        val actual: Book,
+    ) : BookUpdateResult
+
+    data object NotFound : BookUpdateResult
+
+    data object TitleInvalid : BookUpdateResult
+
+    data object IconRequired : BookUpdateResult
+
+    data class TagsNotFound(
+        val tagIds: List<RecordId>,
+    ) : BookUpdateResult
 }

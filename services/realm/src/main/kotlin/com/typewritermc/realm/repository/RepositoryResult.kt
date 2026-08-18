@@ -13,32 +13,6 @@ sealed interface RepositoryResult<out Value> {
     ) : RepositoryResult<Nothing>
 }
 
-sealed interface RevisionedRepositoryResult<out Value> {
-    data class Success<Value>(
-        val value: Value,
-    ) : RevisionedRepositoryResult<Value>
-
-    data class Conflict<Value>(
-        val actual: Value,
-    ) : RevisionedRepositoryResult<Value>
-
-    data class DomainFailure(
-        val slug: String,
-        val relatedIds: List<RecordId> = emptyList(),
-    ) : RevisionedRepositoryResult<Nothing>
-}
-
-internal inline fun <Value> revisionedRepositoryMutation(
-    relatedIds: List<RecordId> = emptyList(),
-    operation: () -> RevisionedRepositoryResult<Value>,
-): RevisionedRepositoryResult<Value> =
-    try {
-        operation()
-    } catch (failure: RuntimeException) {
-        val slug = failure.domainSlug() ?: throw failure
-        RevisionedRepositoryResult.DomainFailure(slug, relatedIds)
-    }
-
 internal inline fun <Value> repositoryMutation(
     relatedIds: List<RecordId> = emptyList(),
     operation: () -> Value,
