@@ -45,7 +45,7 @@ class DateTimeCalendarHeader extends StatelessWidget {
           icon: MaterialSymbols.chevron_left_rounded,
           onPressed: onPrevious,
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: context.spacing.space1),
         Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -58,7 +58,7 @@ class DateTimeCalendarHeader extends StatelessWidget {
                   onPressed: onMonthPickerRequested,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: context.spacing.space1),
               _PickerButton(
                 key: const ValueKey("date_time_year_picker"),
                 label: "${visibleMonth.year}",
@@ -68,7 +68,7 @@ class DateTimeCalendarHeader extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: context.spacing.space1),
         _StepButton(
           tooltip: _nextTooltip,
           icon: MaterialSymbols.chevron_right_rounded,
@@ -95,7 +95,7 @@ class _PickerButton extends StatelessWidget {
   Widget build(BuildContext context) => TextButton.icon(
     style: TextButton.styleFrom(
       minimumSize: const Size(0, 36),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: context.spacing.space2),
       backgroundColor: selected
           ? Theme.of(context).colorScheme.primaryContainer
           : null,

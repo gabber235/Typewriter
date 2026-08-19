@@ -44,7 +44,7 @@ class _CreateOrganization extends HookConsumerWidget {
                 onRandomize: () => randomSeed.value = _generateSeed(),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: context.spacing.space8),
             StaggerEntrance(
               child: SizedBox(
                 width: double.infinity,

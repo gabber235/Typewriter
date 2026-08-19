@@ -24,7 +24,7 @@ class MembersTabletList extends HookConsumerWidget {
       items: members,
       identity: (item) => item.userId,
       removedItemBuilder: (context, item, animation) =>
-          _child(item, selectedIds, animation, ignorePointer: true),
+          _child(context, item, selectedIds, animation, ignorePointer: true),
     );
 
     if (members.isEmpty) {
@@ -90,7 +90,7 @@ class MembersTabletList extends HookConsumerWidget {
           initialItemCount: animation.items.length,
           itemBuilder: (context, index, animation) {
             final member = members[index];
-            return _child(member, selectedIds, animation);
+            return _child(context, member, selectedIds, animation);
           },
         ),
       ],
@@ -98,6 +98,7 @@ class MembersTabletList extends HookConsumerWidget {
   }
 
   Widget _child(
+    BuildContext context,
     OrganizationMember member,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
     Animation<double> animation, {
@@ -110,7 +111,7 @@ class MembersTabletList extends HookConsumerWidget {
         animation: animation,
         child: StaggerEntrance(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: context.spacing.space3),
             child: MemberTabletCard(
               key: ValueKey(member.userId),
               member: member,

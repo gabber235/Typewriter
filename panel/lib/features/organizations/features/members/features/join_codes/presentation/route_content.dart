@@ -225,7 +225,10 @@ class _ShimmerCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+    padding: EdgeInsets.symmetric(
+      horizontal: context.spacing.space2,
+      vertical: context.spacing.space3,
+    ),
     child: child,
   );
 }
@@ -242,7 +245,7 @@ class _JoinCodesListShimmer extends StatelessWidget {
           child: Row(
             children: [
               ShimmerBox.rectangle(width: 24, height: 24),
-              SizedBox(width: 12),
+              SizedBox(width: context.spacing.space3),
               ShimmerBox.rectangle(width: 72, height: 14),
             ],
           ),
@@ -251,7 +254,7 @@ class _JoinCodesListShimmer extends StatelessWidget {
       SliverList.builder(
         itemCount: context.responsive(mobile: 6, tablet: 8),
         itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(bottom: context.spacing.space3),
           child: Surface(
             color: Surface.colorOf(context),
             child: Padding(
@@ -259,7 +262,7 @@ class _JoinCodesListShimmer extends StatelessWidget {
               child: Row(
                 children: [
                   ShimmerBox.circle(width: 40, height: 40),
-                  SizedBox(width: 12),
+                  SizedBox(width: context.spacing.space3),
                   Expanded(child: ShimmerBox.rectangle(height: 36)),
                 ],
               ),

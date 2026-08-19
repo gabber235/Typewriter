@@ -18,14 +18,14 @@ class _SecretFieldView extends StatelessWidget {
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: context.spacing.space1),
         Text(
           field.description,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
         _SecretFieldContent(
           state: controller.state,
           prefix: field.prefix,
@@ -74,10 +74,10 @@ class _SecretFieldContent extends StatelessWidget {
             color: theme.inputDecorationTheme.fillColor,
             borderRadius: .circular(12),
           ),
-          padding: const .all(16),
+          padding: EdgeInsets.all(context.spacing.space4),
           child: _buildSecretDisplay(context),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
         _buildActions(context),
       ],
     );
@@ -118,23 +118,23 @@ class _SecretFieldContent extends StatelessWidget {
 
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
-      runSpacing: 8,
-      spacing: 8,
+      runSpacing: context.spacing.space2,
+      spacing: context.spacing.space2,
       children: [
         Wrap(
-          runSpacing: 8,
-          spacing: 8,
+          runSpacing: context.spacing.space2,
+          spacing: context.spacing.space2,
           children: [
             if (state is SecretFieldRevealed) ...[
               CountdownBadge(endDate: (state as SecretFieldRevealed).expiresAt),
-              const SizedBox(width: 8),
+              SizedBox(width: context.spacing.space2),
             ],
 
             if (state is SecretFieldExpired) ...[
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 4,
+                  vertical: context.spacing.space1,
                 ),
                 decoration: BoxDecoration(
                   color: colorScheme.errorContainer,
@@ -148,7 +148,7 @@ class _SecretFieldContent extends StatelessWidget {
                       size: 14,
                       color: colorScheme.onErrorContainer,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: context.spacing.space1),
                     Text(
                       expiredText,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -159,13 +159,13 @@ class _SecretFieldContent extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: context.spacing.space2),
             ],
           ],
         ),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: context.spacing.space2,
+          runSpacing: context.spacing.space2,
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: [
@@ -178,9 +178,9 @@ class _SecretFieldContent extends StatelessWidget {
                 ),
                 label: Text(copyButtonText),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space3,
+                    vertical: context.spacing.space2,
                   ),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -194,9 +194,9 @@ class _SecretFieldContent extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: isError ? colorScheme.error : null,
                 foregroundColor: isError ? colorScheme.onError : null,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space4,
+                  vertical: context.spacing.space2,
                 ),
                 visualDensity: VisualDensity.compact,
               ),

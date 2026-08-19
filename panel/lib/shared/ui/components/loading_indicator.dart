@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
@@ -19,7 +20,7 @@ class LoadingIndicator extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircularProgressIndicator(),
-                SizedBox(height: 24),
+                SizedBox(height: context.spacing.space6),
                 Text(message, style: Theme.of(context).textTheme.titleLarge),
               ],
             )

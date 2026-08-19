@@ -77,7 +77,7 @@ class ColorPickerSurface extends HookConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 12,
+                    spacing: context.spacing.space3,
                     children: [
                       SizedBox(
                         height: 180,

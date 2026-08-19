@@ -46,7 +46,10 @@ class CountdownBadge extends HookWidget {
     return Surface(
       color: backgroundColor,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: context.spacing.space1,
+        ),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(16),
@@ -59,7 +62,7 @@ class CountdownBadge extends HookWidget {
               size: 14,
               color: foregroundColor,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: context.spacing.space1),
             Text(
               _formatDuration(remaining.value),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -105,7 +108,10 @@ class _NeverExpiresBadge extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: context.spacing.space1,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(16),
@@ -118,7 +124,7 @@ class _NeverExpiresBadge extends StatelessWidget {
             size: 14,
             color: colorScheme.onPrimaryContainer,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: context.spacing.space1),
           Text(
             "Never",
             style: Theme.of(context).textTheme.labelSmall?.copyWith(

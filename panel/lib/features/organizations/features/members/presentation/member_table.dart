@@ -81,8 +81,8 @@ class MembersTable extends HookConsumerWidget {
                   ),
                 ),
               ),
-              _headerCell(theme, "Member"),
-              _headerCell(theme, "Roles"),
+              _headerCell(context, theme, "Member"),
+              _headerCell(context, theme, "Roles"),
               const TableCell(child: SizedBox.shrink()),
             ],
           ),
@@ -121,11 +121,14 @@ class MembersTable extends HookConsumerWidget {
     );
   }
 
-  TableCell _headerCell(ThemeData theme, String label) {
+  TableCell _headerCell(BuildContext context, ThemeData theme, String label) {
     return TableCell(
       child: StaggerEntrance(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.spacing.space2,
+            vertical: context.spacing.space3,
+          ),
           child: Text(
             label,
             style: theme.textTheme.bodyMedium!.copyWith(
@@ -200,9 +203,9 @@ class MembersTable extends HookConsumerWidget {
           child: StaggerEntrance(
             child: withShortcuts(
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: context.spacing.space3,
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -233,9 +236,9 @@ class MembersTable extends HookConsumerWidget {
                   borderRadius: context.shapes.mediumBorderRadius,
                   onTap: toggleSelection,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: context.spacing.space3,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +275,10 @@ class MembersTable extends HookConsumerWidget {
           child: StaggerEntrance(
             child: withShortcuts(
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: context.spacing.space2,
+                ),
                 child: RoleMultiselectDropdown(
                   selectedRoles: member.roles,
                   onRolesChanged: (newRoles) {

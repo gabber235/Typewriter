@@ -75,7 +75,7 @@ class _MapInputState extends State<_MapInput> {
         for (final slot in _slots)
           Padding(
             key: ObjectKey(slot.identity),
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: context.spacing.space2),
             child: _entry(context, type, value, slot),
           ),
       ],

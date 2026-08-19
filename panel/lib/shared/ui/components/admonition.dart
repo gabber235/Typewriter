@@ -87,7 +87,7 @@ class Admonition extends StatelessWidget {
                   data: IconThemeData(color: color),
                   child: icon,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: context.spacing.space3),
                 Flexible(
                   child: AnimatedDefaultTextStyle(
                     duration: animationDuration,

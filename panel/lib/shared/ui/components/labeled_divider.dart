@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class LabeledDivider extends StatelessWidget {
   const LabeledDivider({
@@ -30,8 +31,8 @@ class LabeledDivider extends StatelessWidget {
     );
     final textWidget = Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: direction == Axis.horizontal ? 8.0 : 0.0,
-        vertical: direction == Axis.vertical ? 8.0 : 0.0,
+        horizontal: direction == Axis.horizontal ? context.spacing.space2 : 0.0,
+        vertical: direction == Axis.vertical ? context.spacing.space2 : 0.0,
       ),
       child: DefaultTextStyle(
         style: Theme.of(

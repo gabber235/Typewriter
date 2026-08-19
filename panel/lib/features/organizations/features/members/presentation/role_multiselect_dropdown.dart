@@ -66,7 +66,7 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
           height: 12,
           decoration: BoxDecoration(color: role.color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: context.spacing.space2),
         Text(role.name),
         const Spacer(),
         if (isSelected)

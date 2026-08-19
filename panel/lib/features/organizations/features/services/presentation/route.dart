@@ -65,8 +65,8 @@ class ServicesPage extends HookConsumerWidget {
                       child: ResponsiveGridView.builder(
                         gridDelegate: ResponsiveGridDelegate(
                           crossAxisExtent: _serviceCardWidth,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
+                          mainAxisSpacing: context.spacing.space4,
+                          crossAxisSpacing: context.spacing.space4,
                           childAspectRatio: _serviceCardAspectRatio,
                         ),
                         clipBehavior: Clip.none,

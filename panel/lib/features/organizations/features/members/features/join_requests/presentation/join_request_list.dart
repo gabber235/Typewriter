@@ -61,6 +61,7 @@ class JoinRequestsList extends HookConsumerWidget {
       items: requests,
       identity: (item) => item.requestId,
       removedItemBuilder: (context, item, animation) => _child(
+        context,
         item,
         selectedIds,
         declineSelection,
@@ -164,7 +165,13 @@ class JoinRequestsList extends HookConsumerWidget {
             initialItemCount: animation.items.length,
             itemBuilder: (context, index, animation) {
               final request = requests[index];
-              return _child(request, selectedIds, declineSelection, animation);
+              return _child(
+                context,
+                request,
+                selectedIds,
+                declineSelection,
+                animation,
+              );
             },
           ),
         ],
@@ -173,6 +180,7 @@ class JoinRequestsList extends HookConsumerWidget {
   }
 
   Widget _child(
+    BuildContext context,
     OrganizationJoinRequest request,
     ValueNotifier<Set<skir.RecordId>> selectedIds,
     Future<void> Function() onDeclineSelection,
@@ -186,7 +194,7 @@ class JoinRequestsList extends HookConsumerWidget {
         animation: animation,
         child: StaggerEntrance(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: context.spacing.space3),
             child: JoinRequestCard(
               request: request,
               isSelected: selectedIds.value.contains(request.requestId),

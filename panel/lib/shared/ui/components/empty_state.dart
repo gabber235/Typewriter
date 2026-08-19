@@ -51,7 +51,7 @@ class EmptyState extends HookConsumerWidget {
           children: [
             if (icon != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.only(bottom: context.spacing.space3),
                 child: Icones(
                   icon,
                   size: 48,
@@ -63,7 +63,7 @@ class EmptyState extends HookConsumerWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(color: textColor),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: context.spacing.space2),
             Text(
               description,
               textAlign: TextAlign.center,
@@ -72,7 +72,7 @@ class EmptyState extends HookConsumerWidget {
               ),
             ),
             if (buttonText != null) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: context.spacing.space4),
               FilledButton.icon(
                 onPressed: onPressed,
                 icon: const Icones(Fa6Solid.plus),

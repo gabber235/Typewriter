@@ -178,7 +178,10 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const .symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: context.spacing.space1,
+      ),
       decoration: ShapeDecoration(
         color: isSelected ? onColor : color,
         shape: const StadiumBorder(),

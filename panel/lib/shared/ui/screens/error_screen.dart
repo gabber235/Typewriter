@@ -88,11 +88,11 @@ class ErrorScreen extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: context.spacing.space6),
         Padding(
           padding: EdgeInsets.all(context.spacing.space2),
           child: Column(
-            spacing: 8,
+            spacing: context.spacing.space2,
             children: [
               Text(
                     title.isEmpty ? funnyErrorTitles.randomElement() : title,
@@ -144,7 +144,7 @@ class ErrorScreen extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: context.spacing.space6),
         if (child != null)
           child!
               .animate()
@@ -172,7 +172,7 @@ class SmallErrorScreen extends ErrorScreen {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      spacing: 8,
+      spacing: context.spacing.space2,
       children: [
         if (withIcon)
           MouseRegion(

@@ -251,7 +251,7 @@ Widget presentationDiagnostic(
     color: colors.errorContainer,
     borderRadius: context.shapes.mediumBorderRadius,
     child: Padding(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(context.spacing.space3),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 24),
         child: Stack(

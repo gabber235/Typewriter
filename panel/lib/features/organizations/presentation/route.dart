@@ -82,7 +82,8 @@ class _IndexPageContent extends StatelessWidget {
   final List<OrganizationData> organizations;
   final List<UserJoinRequest> joinRequests;
 
-  Widget get spacer => const SliverToBoxAdapter(child: SizedBox(height: 24));
+  Widget spacer(BuildContext context) =>
+      SliverToBoxAdapter(child: SizedBox(height: context.spacing.space6));
 
   @override
   Widget build(BuildContext context) {
@@ -103,18 +104,18 @@ class _IndexPageContent extends StatelessWidget {
                     slivers: [
                       if (organizations.isNotEmpty) ...[
                         _OrganizationsSelector(organizations: organizations),
-                        spacer,
+                        spacer(context),
                         const SliverStaggerEntrance(
                           sliver: SliverToBoxAdapter(child: LabeledDivider()),
                         ),
-                        spacer,
+                        spacer(context),
                       ],
                       _JoinOrganization(joinRequests: joinRequests),
-                      spacer,
+                      spacer(context),
                       const SliverStaggerEntrance(
                         sliver: SliverToBoxAdapter(child: LabeledDivider()),
                       ),
-                      spacer,
+                      spacer(context),
                       const _CreateOrganization(),
                     ],
                   ),

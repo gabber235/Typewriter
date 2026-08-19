@@ -253,9 +253,11 @@ class _TreeCategory extends HookConsumerWidget {
       padding: EdgeInsets.all(context.spacing.space2),
       child: Row(
         children: [
-          if (expanded) const SizedBox(width: 4),
+          if (expanded) SizedBox(width: context.spacing.space1),
           Padding(
-            padding: EdgeInsets.symmetric(vertical: expanded ? 4 : 0),
+            padding: EdgeInsets.symmetric(
+              vertical: expanded ? context.spacing.space1 : 0,
+            ),
             child: Icones(
               isExpanded ? Fa6Solid.chevron_down : Fa6Solid.chevron_right,
               size: 11,
@@ -263,7 +265,7 @@ class _TreeCategory extends HookConsumerWidget {
             ),
           ),
           if (expanded) ...[
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.space2),
             if (expand)
               Expanded(
                 child: Text(
