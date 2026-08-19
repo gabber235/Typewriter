@@ -1,0 +1,5 @@
+name: TypewriterLoader
+version: 1000.0.0
+main: com.typewritermc.loader.paper.TypewriterLoaderPlugin
+api-version: "1.21"
+load: STARTUP

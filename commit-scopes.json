@@ -17,6 +17,7 @@
     "documentation",
     "engine",
     "extensions",
+    "loader",
     "extensions/_docsextension",
     "extensions/basicextension",
     "extensions/citizensextension",
