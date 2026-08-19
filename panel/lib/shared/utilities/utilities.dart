@@ -15,6 +15,7 @@ export "identifier_input_formatter.dart";
 export "map.dart";
 export "number.dart";
 export "object.dart";
+export "panel_mutation.dart";
 export "rect.dart";
 export "rect_converter.dart";
 export "render_box.dart";

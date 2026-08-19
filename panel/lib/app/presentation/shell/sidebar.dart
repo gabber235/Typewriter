@@ -503,8 +503,9 @@ class UserMenu extends HookConsumerWidget {
         onPressed: () async {
           try {
             await ref.read(authProvider.notifier).signOut();
-          } on Exception catch (e) {
-            debugPrint(e.toString());
+          } on Object catch (_) {
+            if (!context.mounted) return;
+            showErrorSnackBar(context, "Could not sign out. Please try again.");
           }
         },
       ),

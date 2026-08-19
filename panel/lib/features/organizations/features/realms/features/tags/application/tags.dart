@@ -61,7 +61,6 @@ class Tags extends _$Tags {
     int height = 1,
   }) async {
     state.ensureReady();
-    final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
@@ -74,33 +73,31 @@ class Tags extends _$Tags {
       placement: skir.Placement(x: x, y: y, width: width, height: height),
     );
 
-    try {
-      final response = await ref.requestSkir(
+    final response = await runPanelMutation(
+      operation: PanelMutationOperation.createTag,
+      mutation: () => ref.requestSkir(
         "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.create",
         skir.CreateTagRequest.serializer.toBytes(request),
         skir.CreateTagResponse.serializer,
-      );
+      ),
+    );
 
-      switch (response) {
-        case skir.CreateTagResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-        case skir.CreateTagResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.CreateTagResponse_parentsNotFoundErrorWrapper():
-          throw ApiException.notFound("Parent tags");
-        case skir.CreateTagResponse_validationErrorWrapper(:final value):
-          throw _tagValidationException(value);
-        case skir.CreateTagResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
-        case skir.CreateTagResponse_successWrapper(:final value):
-          final tag = Tag.fromSkir(value);
-          final upsert = _upsertCanonicalTag(state.requireValue, tag);
-          state = AsyncData(upsert.values);
-          return upsert.canonical;
-      }
-    } on Object catch (_) {
-      state = previousState;
-      rethrow;
+    switch (response) {
+      case skir.CreateTagResponse_unknown():
+        throw ApiException.unknownResponseMessage();
+      case skir.CreateTagResponse_internalErrorWrapper():
+        throw ApiException.internalServerError();
+      case skir.CreateTagResponse_parentsNotFoundErrorWrapper():
+        throw ApiException.notFound("Parent tags");
+      case skir.CreateTagResponse_validationErrorWrapper(:final value):
+        throw _tagValidationException(value);
+      case skir.CreateTagResponse_invalidRecordIdErrorWrapper(:final value):
+        throw ApiException.invalidRecordId(value);
+      case skir.CreateTagResponse_successWrapper(:final value):
+        final tag = Tag.fromSkir(value);
+        final upsert = _upsertCanonicalTag(state.requireValue, tag);
+        state = AsyncData(upsert.values);
+        return upsert.canonical;
     }
   }
 
@@ -120,49 +117,51 @@ class Tags extends _$Tags {
       placement: tag.placement.toSkir(),
     );
 
-    try {
-      final response = await ref.requestSkir(
+    final response = await runPanelMutation<skir.UpdateTagResponse?>(
+      operation: PanelMutationOperation.updateTag,
+      mutation: () => ref.requestSkir(
         "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.update",
         skir.UpdateTagRequest.serializer.toBytes(request),
         skir.UpdateTagResponse.serializer,
-      );
+      ),
+      recover: (_, _) => null,
+    );
 
-      switch (response) {
-        case skir.UpdateTagResponse_unknown():
-          return unavailableMutation("The server returned an unknown response");
-        case skir.UpdateTagResponse_internalErrorWrapper():
-          return unavailableMutation("The server could not update the tag");
-        case skir.UpdateTagResponse_conflictErrorWrapper(:final value):
-          final actual = Tag.fromSkir(value.actual);
-          final upsert = _upsertCanonicalTag(state.requireValue, actual);
-          state = AsyncData(upsert.values);
-          return TypedMutationResult.conflict(
-            expectedRevision: value.expectedRevision,
-            actualRevision: upsert.canonical.revision,
-            actualValue: upsert.canonical.inspectorValue,
-          );
-        case skir.UpdateTagResponse_tagNotFoundErrorWrapper():
-          return unavailableMutation(
-            "The tag no longer exists",
-            targetDeleted: true,
-          );
-        case skir.UpdateTagResponse_parentsNotFoundErrorWrapper():
-          return invalidMutation("One or more parent tags no longer exist");
-        case skir.UpdateTagResponse_validationErrorWrapper(:final value):
-          return invalidMutation(_tagValidationMessage(value));
-        case skir.UpdateTagResponse_invalidRecordIdErrorWrapper():
-          return invalidMutation("The tag contains an invalid reference");
-        case skir.UpdateTagResponse_successWrapper(:final value):
-          final updatedTag = Tag.fromSkir(value);
-          final upsert = _upsertCanonicalTag(state.requireValue, updatedTag);
-          state = AsyncData(upsert.values);
-          return TypedMutationResult.success(
-            revision: upsert.canonical.revision,
-            value: upsert.canonical.inspectorValue,
-          );
-      }
-    } on Object catch (_) {
-      return unavailableMutation("The tag update could not be completed");
+    switch (response) {
+      case null:
+        return unavailableMutation("The tag update could not be completed");
+      case skir.UpdateTagResponse_unknown():
+        return unavailableMutation("The server returned an unknown response");
+      case skir.UpdateTagResponse_internalErrorWrapper():
+        return unavailableMutation("The server could not update the tag");
+      case skir.UpdateTagResponse_conflictErrorWrapper(:final value):
+        final actual = Tag.fromSkir(value.actual);
+        final upsert = _upsertCanonicalTag(state.requireValue, actual);
+        state = AsyncData(upsert.values);
+        return TypedMutationResult.conflict(
+          expectedRevision: value.expectedRevision,
+          actualRevision: upsert.canonical.revision,
+          actualValue: upsert.canonical.inspectorValue,
+        );
+      case skir.UpdateTagResponse_tagNotFoundErrorWrapper():
+        return unavailableMutation(
+          "The tag no longer exists",
+          targetDeleted: true,
+        );
+      case skir.UpdateTagResponse_parentsNotFoundErrorWrapper():
+        return invalidMutation("One or more parent tags no longer exist");
+      case skir.UpdateTagResponse_validationErrorWrapper(:final value):
+        return invalidMutation(_tagValidationMessage(value));
+      case skir.UpdateTagResponse_invalidRecordIdErrorWrapper():
+        return invalidMutation("The tag contains an invalid reference");
+      case skir.UpdateTagResponse_successWrapper(:final value):
+        final updatedTag = Tag.fromSkir(value);
+        final upsert = _upsertCanonicalTag(state.requireValue, updatedTag);
+        state = AsyncData(upsert.values);
+        return TypedMutationResult.success(
+          revision: upsert.canonical.revision,
+          value: upsert.canonical.inspectorValue,
+        );
     }
   }
 
@@ -190,39 +189,51 @@ class Tags extends _$Tags {
 
   Future<void> deleteTag(skir.RecordId tagId) async {
     state.ensureReady();
-    final previousState = state;
     final organizationId = ref.read(organizationIdProvider);
     final realmId = ref.read(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     if (organizationId == null) throw ApiException.noOrganization();
 
+    final removed = state.requireValue.firstWhere((tag) => tag.tagId == tagId);
     state = AsyncData(
       state.requireValue.where((tag) => tag.tagId != tagId).toList(),
     );
     final request = skir.DeleteTagRequest(tagId: tagId);
 
-    try {
-      final response = await ref.requestSkir(
+    final response = await runPanelMutation(
+      operation: PanelMutationOperation.deleteTag,
+      mutation: () => ref.requestSkir(
         "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.delete",
         skir.DeleteTagRequest.serializer.toBytes(request),
         skir.DeleteTagResponse.serializer,
-      );
+      ),
+      recover: (error, stackTrace) {
+        _restoreTag(removed);
+        Error.throwWithStackTrace(error, stackTrace);
+      },
+    );
 
-      switch (response) {
-        case skir.DeleteTagResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-        case skir.DeleteTagResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.DeleteTagResponse_tagNotFoundErrorWrapper():
-          throw ApiException.notFound("Tag");
-        case skir.DeleteTagResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
-        case skir.DeleteTagResponse_successWrapper():
-      }
-    } catch (_) {
-      state = previousState;
-      rethrow;
+    switch (response) {
+      case skir.DeleteTagResponse_unknown():
+        _restoreTag(removed);
+        throw ApiException.unknownResponseMessage();
+      case skir.DeleteTagResponse_internalErrorWrapper():
+        _restoreTag(removed);
+        throw ApiException.internalServerError();
+      case skir.DeleteTagResponse_tagNotFoundErrorWrapper():
+        _restoreTag(removed);
+        throw ApiException.notFound("Tag");
+      case skir.DeleteTagResponse_invalidRecordIdErrorWrapper(:final value):
+        _restoreTag(removed);
+        throw ApiException.invalidRecordId(value);
+      case skir.DeleteTagResponse_successWrapper():
     }
+  }
+
+  void _restoreTag(Tag removed) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(_upsertCanonicalTag(current, removed).values);
   }
 }
 

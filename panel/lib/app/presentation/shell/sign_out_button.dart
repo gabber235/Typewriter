@@ -11,7 +11,10 @@ class SignOutButton extends HookConsumerWidget {
       onPressed: () async {
         try {
           await ref.read(authProvider.notifier).signOut();
-        } on Exception catch (_) {}
+        } on Object catch (_) {
+          if (!context.mounted) return;
+          showErrorSnackBar(context, "Could not sign out. Please try again.");
+        }
       },
       child: const Text("Sign out"),
     );

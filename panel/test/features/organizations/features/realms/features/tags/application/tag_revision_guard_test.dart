@@ -9,6 +9,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _updateSubject = "service.to.realm1.organization.org1.realm.tag.update";
+const _deleteSubject = "service.to.realm1.organization.org1.realm.tag.delete";
 const _listenSubject = "service.from.realm1.organization.org1.realm.tag.watch";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
@@ -130,6 +131,94 @@ void main() {
     expect((result as MutationSuccess).revision, newest.revision);
     expect(container.read(tagsProvider).requireValue, [newest]);
   });
+
+  test(
+    "unexpected Tag update preserves canonical state and reports once",
+    () async {
+      final reports = <FlutterErrorDetails>[];
+      final previousErrorHandler = FlutterError.onError;
+      FlutterError.onError = reports.add;
+      addTearDown(() => FlutterError.onError = previousErrorHandler);
+      final nats = MockNatsClient();
+      late _SeededTags notifier;
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(_organizationId),
+          realmIdProvider.overrideWithValue(_realmId),
+          natsProvider.overrideWithValue(nats),
+          panelTelemetryProvider.overrideWithValue(
+            const AsyncData(NoopPanelTelemetry()),
+          ),
+          tagsProvider.overrideWith(() => notifier = _SeededTags([_tag()])),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(nats.dispose);
+      final subscription = container.listen(tagsProvider, (_, _) {});
+      addTearDown(subscription.close);
+      await container.read(tagsProvider.future);
+      final newest = _tag(name: "Newest", revision: 4);
+      nats.registerHandler(_updateSubject, (data) {
+        notifier.observe(newest);
+        throw StateError("transport failed");
+      });
+
+      final result = await container
+          .read(tagsProvider.notifier)
+          .updateTag(_tag(name: "Requested"));
+
+      expect(result, isA<MutationUnavailable>());
+      expect(
+        (result as MutationUnavailable).diagnostics.single.message,
+        "The tag update could not be completed",
+      );
+      expect(container.read(tagsProvider).requireValue, [newest]);
+      expect(reports, hasLength(1));
+      expect(reports.single.context.toString(), "while updating a tag");
+    },
+  );
+
+  test(
+    "unexpected Tag delete restores without replacing newer state",
+    () async {
+      final reports = <FlutterErrorDetails>[];
+      final previousErrorHandler = FlutterError.onError;
+      FlutterError.onError = reports.add;
+      addTearDown(() => FlutterError.onError = previousErrorHandler);
+      final nats = MockNatsClient();
+      late _SeededTags notifier;
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(_organizationId),
+          realmIdProvider.overrideWithValue(_realmId),
+          natsProvider.overrideWithValue(nats),
+          panelTelemetryProvider.overrideWithValue(
+            const AsyncData(NoopPanelTelemetry()),
+          ),
+          tagsProvider.overrideWith(() => notifier = _SeededTags([_tag()])),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(nats.dispose);
+      final subscription = container.listen(tagsProvider, (_, _) {});
+      addTearDown(subscription.close);
+      await container.read(tagsProvider.future);
+      final newest = _tag(name: "Newest", revision: 4);
+      nats.registerHandler(_deleteSubject, (data) {
+        notifier.observe(newest);
+        throw StateError("transport failed");
+      });
+
+      await expectLater(
+        container.read(tagsProvider.notifier).deleteTag(_tag().tagId),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(container.read(tagsProvider).requireValue, [newest]);
+      expect(reports, hasLength(1));
+      expect(reports.single.context.toString(), "while deleting a tag");
+    },
+  );
 }
 
 void _emit(MockNatsClient nats, skir.WatchTagsResponse response) {
