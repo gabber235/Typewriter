@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="typewriter_panel"
+        android:label="Typewriter"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:fullBackupContent="@xml/backup_rules"
