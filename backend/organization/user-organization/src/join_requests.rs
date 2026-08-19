@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::{RecordId as DatabaseRecordId, read_query, transaction_query},
+    database::{
+        RecordId as DatabaseRecordId, read_query, transaction_query, transaction_query_file,
+    },
     decode_skir, extract_param,
     skir::base::{
         kernel::v1::record_id::RecordId,
@@ -19,8 +21,6 @@ use wasmcloud_utils::database::organization::{
     OrganizationRecord,
     projections::{JoinRequestProjection, OrganizationMemberProjection},
 };
-
-include!("join_submission_transaction.rs");
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -98,14 +98,17 @@ pub async fn handle_request(
     );
 
     let code = request.code;
-    let result = join_submission_transaction!(JoinSubmissionOutcome)
-        .bind("user", user_id)
-        .bind("code", DatabaseRecordId::from(&code))
-        .execute()
-        .await
-        .error_with_slug("join-request-query-failed")?
-        .decode()
-        .error_with_slug("join-request-result-parse-failed")?;
+    let result = transaction_query_file!(
+        JoinSubmissionOutcome,
+        "src/join_submission_transaction.surql",
+    )
+    .bind("user", user_id)
+    .bind("code", DatabaseRecordId::from(&code))
+    .execute()
+    .await
+    .error_with_slug("join-request-query-failed")?
+    .decode()
+    .error_with_slug("join-request-result-parse-failed")?;
 
     let outcome = skir_domain_result!(SubmitUserJoinRequestResponse, result);
     match outcome {

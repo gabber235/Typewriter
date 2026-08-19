@@ -19,13 +19,13 @@ use wasmcloud_utils::{
     skir_client::UnrecognizedValues,
 };
 
-include!(concat!(
+const JOIN_SUBMISSION_TRANSACTION: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../../../organization/user-organization/src/join_submission_transaction.rs"
+    "/../../../organization/user-organization/src/join_submission_transaction.surql"
 ));
-
-const JOIN_SUBMISSION_TRANSACTION: &str = join_submission_transaction!(query);
-const JOIN_SUBMISSION_OUTCOME_INDEX: usize = join_submission_transaction!(outcome_index);
+const JOIN_SUBMISSION_OUTCOME_INDEX: usize = wasmcloud_utils::transaction_outcome_index_file!(
+    "../../../organization/user-organization/src/join_submission_transaction.surql"
+);
 
 async fn execute_join_submission_transaction(
     query: typewriter_component_test::SeedQuery,

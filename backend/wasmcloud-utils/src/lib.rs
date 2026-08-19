@@ -28,7 +28,8 @@ pub use skir_client;
 // Re-export proc macros
 pub use wasmcloud_utils_macros::{
     dispatch_actions, read_query, skir_domain_result, skir_response, skir_transaction_outcome,
-    skir_variant, transaction_outcome_index, transaction_query,
+    skir_variant, transaction_outcome_index, transaction_outcome_index_file, transaction_query,
+    transaction_query_file,
 };
 
 // SkirResponse trait and domain-result helpers
