@@ -32,18 +32,16 @@ pub async fn handle_unbind(
     let service_id = RecordId::new("service", request.service_id.as_str());
     let organization_id = RecordId::new("organization", org_id);
 
-    let records = transaction_query!(
+    let result = transaction_query!(
         Option<ServiceRecord>,
         r#"
         BEGIN TRANSACTION;
 
-        LET $records = UPDATE $service_id SET
+        RETURN UPDATE ONLY $service_id SET
             organization = NONE,
             registration = NONE
         WHERE organization = $organization_id
         RETURN BEFORE;
-
-        RETURN $records[0];
 
         COMMIT TRANSACTION;
         "#,
@@ -55,9 +53,9 @@ pub async fn handle_unbind(
     .error_with_slug("service-unbind-query-failed")?
     .decode()
     .error_with_slug("service-unbind-result-parse-failed")?;
-    let records = wasmcloud_utils::skir_domain_result!(UnbindServiceResponse, records);
+    let record = wasmcloud_utils::skir_domain_result!(UnbindServiceResponse, result);
 
-    let Some(record) = records else {
+    let Some(record) = record else {
         otel_wasi::main_attribute!("service.outcome" = "not_found");
         return Ok(skir_variant!(UnbindServiceResponse::ServiceNotFoundError));
     };

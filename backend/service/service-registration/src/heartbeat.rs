@@ -34,18 +34,16 @@ pub(crate) async fn update_state(
     service_id: &RecordId,
     status: &ServiceStatusRecord,
 ) -> Result<(), otel_wasi::Error> {
-    let records = transaction_query!(
+    let result = transaction_query!(
         Option<ServiceRecord>,
         r#"
         BEGIN TRANSACTION;
 
-        LET $records = UPDATE $service_id SET state = {
+        RETURN UPDATE ONLY $service_id SET state = {
             status: $status,
             last_seen: time::now()
         }
         RETURN AFTER;
-
-        RETURN $records[0];
 
         COMMIT TRANSACTION;
         "#,
@@ -57,8 +55,8 @@ pub(crate) async fn update_state(
     .error_with_slug("service-state-update-query-failed")?
     .decode()
     .error_with_slug("service-state-update-result-parse-failed")?;
-    let records = match records {
-        wasmcloud_utils::database::TransactionOutcome::Committed(records) => records,
+    let record = match result {
+        wasmcloud_utils::database::TransactionOutcome::Committed(record) => record,
         wasmcloud_utils::database::TransactionOutcome::Rejected(error) => {
             return Err(otel_wasi::Error::new(
                 "service-state-update-rejected",
@@ -67,7 +65,7 @@ pub(crate) async fn update_state(
         }
     };
 
-    let Some(record) = records else {
+    let Some(record) = record else {
         return Err(otel_wasi::wasi_error!(
             "service-state-update-not-found",
             "service not found",

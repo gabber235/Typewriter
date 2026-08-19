@@ -63,7 +63,7 @@ pub async fn handle_status(
             };
 
             IF $service.existing_token = NONE OR $service.existing_expires_at <= time::now() + $registration_renewal_window {
-                UPDATE $service_id SET registration = {
+                UPDATE ONLY $service_id SET registration = {
                     token: $registration_token,
                     expires_at: time::now() + $registration_lease
                 }

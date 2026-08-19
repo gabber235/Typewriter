@@ -56,13 +56,13 @@ pub async fn handle_bind(
         };
 
         LET $organization = array::first($organizations);
-        LET $updated = UPDATE $services[0].id SET
+        LET $updated = UPDATE ONLY $services[0].id SET
             organization = $organization.id,
             registration = NONE
         RETURN AFTER;
 
         RETURN {
-            service: $updated[0],
+            service: $updated,
             organization: $organization
         };
 
