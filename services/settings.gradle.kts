@@ -89,6 +89,7 @@ val serviceBuilds =
             "extensions",
             listOf(":extension-types", ":extension-codegen", ":conformance-extension"),
         ),
+        ServiceBuild("dev-paper", "dev-paper", emptyList()),
     )
 
 val declaredPaths = serviceBuilds.map(ServiceBuild::path).toSet()

@@ -15,3 +15,7 @@ abstract class ConformanceActivator : ExtensionActivator {
 
 @TypewriterActivator("common")
 class CommonConformanceActivator : ConformanceActivator()
+
+class ConformanceFailureActivator : ExtensionActivator {
+    override fun activate(context: ExtensionActivationContext): ExtensionActivation = error("conformance activation failure")
+}

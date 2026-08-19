@@ -92,9 +92,20 @@ class HostReconciler(
         staged: Map<ChildKind, ActiveDeployment>,
     ) {
         val replaced = ChildKind.entries.filter { kind -> active[kind]?.child != desired.child(kind) }
+        val retained = replaced.mapNotNull(active::get).reversed()
         val deadline = clock.instant().plus(quiesceTimeout)
-        replaced.mapNotNull(active::get).reversed().forEach { it.runtime.quiesce(deadline) }
-        replaced.mapNotNull(active::get).reversed().forEach { it.runtime.stop() }
+        retained.forEach { it.runtime.quiesce(deadline) }
+        try {
+            replaced.mapNotNull(staged::get).forEach { deployment ->
+                (deployment.runtime as? ReplaceableDeploymentRuntime)?.activate()
+            }
+        } catch (failure: Throwable) {
+            retained.reversed().forEach { deployment ->
+                (deployment.runtime as? ReplaceableDeploymentRuntime)?.resume()
+            }
+            throw failure
+        }
+        retained.forEach { it.runtime.stop() }
         replaced.forEach { kind ->
             val replacement = staged[kind]
             if (replacement == null) active.remove(kind) else active[kind] = replacement

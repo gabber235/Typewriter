@@ -72,6 +72,32 @@ val HostReconcilerTest by testSuite {
         }
     }
 
+    test("activation failure resumes the retained replaceable runtime") {
+        runTest {
+            val events = mutableListOf<String>()
+            val store = MemoryStore()
+            val reconciler =
+                HostReconciler(
+                    hostId = "host",
+                    workDirectory = Files.createTempDirectory("typewriter-replacement"),
+                    runtimeFactory =
+                        DeploymentRuntimeFactory { child, _ ->
+                            events += "stage:${child.manifestRevision}"
+                            ReplaceableRecordingRuntime(child.manifestRevision, events, child.manifestRevision == 2L)
+                        },
+                    stateStore = store,
+                )
+            reconciler.reconcile(topology(1, null, 1))
+            events.clear()
+
+            reconciler.reconcile(topology(2, null, 2)).shouldBeInstanceOf<ReconciliationResult.RolledBack>()
+
+            events shouldContainExactly
+                listOf("stage:2", "quiesce:1", "activate:2", "resume:1", "stop:2")
+            store.value shouldBe topology(1, null, 1)
+        }
+    }
+
     test("file state survives a new store instance") {
         val directory = Files.createTempDirectory("typewriter-loader-state")
         val path = directory.resolve("nested/topology.bin")
@@ -113,6 +139,29 @@ private class RecordingRuntime(
 
     override suspend fun stop() {
         events += "stop:${child.kind}:${child.manifestRevision}"
+    }
+}
+
+private class ReplaceableRecordingRuntime(
+    private val revision: Long,
+    private val events: MutableList<String>,
+    private val failActivation: Boolean,
+) : ReplaceableDeploymentRuntime {
+    override suspend fun activate() {
+        events += "activate:$revision"
+        if (failActivation) error("activation failed")
+    }
+
+    override suspend fun resume() {
+        events += "resume:$revision"
+    }
+
+    override suspend fun quiesce(deadline: Instant) {
+        events += "quiesce:$revision"
+    }
+
+    override suspend fun stop() {
+        events += "stop:$revision"
     }
 }
 

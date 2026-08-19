@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":engine-core"))
     implementation(project(":engine-minecraft"))
+    testImplementation(libs.kotlin.coroutines.test)
 }
 
 typewriter {

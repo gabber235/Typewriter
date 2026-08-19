@@ -13,6 +13,12 @@ interface DeploymentRuntime {
     suspend fun stop()
 }
 
+interface ReplaceableDeploymentRuntime : DeploymentRuntime {
+    suspend fun activate()
+
+    suspend fun resume()
+}
+
 data class DeploymentContext(
     val hostId: String,
     val workDirectory: Path,

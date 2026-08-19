@@ -17,7 +17,12 @@ class TypewriterLoaderPlugin : JavaPlugin() {
 
     override fun onEnable() {
         scope.launch {
-            host = LoaderBootstrap.discover().start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
+            val bootstrap =
+                runCatching { LoaderBootstrap.discover() }.getOrElse { failure ->
+                    logger.warning(failure.message ?: "No loader bootstrap provider is installed.")
+                    return@launch
+                }
+            host = bootstrap.start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
         }
     }
 

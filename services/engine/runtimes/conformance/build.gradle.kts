@@ -6,6 +6,8 @@ plugins {
 dependencies {
     implementation(project(":engine-core"))
     implementation(project(":engine-conformance-composite"))
+    testImplementation("com.typewritermc:conformance-extension")
+    testImplementation(libs.kotlin.coroutines.test)
 }
 
 typewriter {
