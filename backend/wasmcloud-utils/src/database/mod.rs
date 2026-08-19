@@ -3,7 +3,7 @@ use std::{num::NonZeroU32, time::Duration};
 use serde::{Serialize, de::DeserializeOwned};
 use surrealdb_component_sdk::{ConflictRetryPolicy, Query, query};
 
-pub use crate::{read_query, transaction_query};
+pub use crate::{read_query, transaction_query, transaction_query_file};
 pub use surrealdb_component_sdk::{
     Datetime, DomainError, Duration as DatabaseDuration, QueryError, QueryResponse,
     QueryResultError, RecordId, RecordIdKey, RecordIdValue, SingleQueryResultExtractor,

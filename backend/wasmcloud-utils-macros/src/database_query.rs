@@ -1,3 +1,5 @@
+use std::{fs, path::Path};
+
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{LitStr, Token, Type, parse::Parse, parse::ParseStream};
@@ -26,6 +28,11 @@ pub(crate) struct TransactionQueryInput {
     query: LitStr,
 }
 
+pub(crate) struct TransactionQueryFileInput {
+    outcome: Type,
+    path: LitStr,
+}
+
 impl Parse for TransactionQueryInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let outcome = input.parse()?;
@@ -40,6 +47,23 @@ impl Parse for TransactionQueryInput {
             );
         }
         Ok(Self { outcome, query })
+    }
+}
+
+impl Parse for TransactionQueryFileInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let outcome = input.parse()?;
+        let _: Token![,] = input.parse()?;
+        let path = input.parse()?;
+        if input.peek(Token![,]) {
+            let _: Token![,] = input.parse()?;
+        }
+        if !input.is_empty() {
+            return Err(input.error(
+                "transaction_query_file! accepts an outcome type and one manifest relative path",
+            ));
+        }
+        Ok(Self { outcome, path })
     }
 }
 
@@ -76,9 +100,58 @@ pub(crate) fn expand_transaction(input: TransactionQueryInput) -> syn::Result<To
     })
 }
 
+pub(crate) fn expand_transaction_file(
+    input: TransactionQueryFileInput,
+) -> syn::Result<TokenStream> {
+    let query = read_query_file(&input.path)?;
+    let outcome_index = transaction_outcome_index(&query)?;
+    let outcome = input.outcome;
+    let path = input.path;
+    Ok(quote! {
+        ::wasmcloud_utils::database::TransactionQuery::<#outcome>::__from_literal(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", #path)),
+            #outcome_index,
+        )
+    })
+}
+
 pub(crate) fn expand_transaction_outcome_index(query: LitStr) -> syn::Result<TokenStream> {
     let outcome_index = transaction_outcome_index(&query)?;
     Ok(quote! { #outcome_index })
+}
+
+pub(crate) fn expand_transaction_outcome_index_file(path: LitStr) -> syn::Result<TokenStream> {
+    let query = read_query_file(&path)?;
+    let outcome_index = transaction_outcome_index(&query)?;
+    Ok(quote! {{
+        const _: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", #path));
+        #outcome_index
+    }})
+}
+
+fn read_query_file(path: &LitStr) -> syn::Result<LitStr> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|error| {
+        syn::Error::new(
+            path.span(),
+            format!("could not locate the caller manifest directory: {error}"),
+        )
+    })?;
+    let path_value = path.value();
+    if Path::new(&path_value).is_absolute() {
+        return Err(syn::Error::new(
+            path.span(),
+            "transaction query file path must be relative to the caller manifest",
+        ));
+    }
+    let query_path = Path::new(&manifest_dir).join(&path_value);
+    let query = fs::read_to_string(&query_path).map_err(|error| {
+        syn::Error::new(
+            path.span(),
+            format!("could not read transaction query file {path_value}: {error}"),
+        )
+    })?;
+
+    Ok(LitStr::new(&query, path.span()))
 }
 
 fn transaction_outcome_index(query: &LitStr) -> syn::Result<usize> {
@@ -260,7 +333,10 @@ fn statement_matches(statement: &str, expected: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{MUTATION_TOKENS, mutation_token, top_level_statements};
+    use proc_macro2::Span;
+    use syn::LitStr;
+
+    use super::{MUTATION_TOKENS, mutation_token, read_query_file, top_level_statements};
 
     #[test]
     fn rejects_every_read_mutation_token() {
@@ -289,5 +365,20 @@ mod tests {
 
         assert_eq!(statements.len(), 4);
         assert!(statements[2].starts_with("RETURN"));
+    }
+
+    #[test]
+    fn rejects_absolute_transaction_query_paths() {
+        let path = LitStr::new("/tmp/query.surql", Span::call_site());
+
+        let Err(error) = read_query_file(&path) else {
+            panic!("absolute path should be rejected");
+        };
+
+        assert!(
+            error
+                .to_string()
+                .contains("path must be relative to the caller manifest")
+        );
     }
 }
