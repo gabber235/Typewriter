@@ -162,13 +162,6 @@ class _SearchInputSummary extends HookWidget {
         ? Text(binding.value.expressionDisplayText)
         : PresentationNodeRenderer(node: presentation, scope: summaryScope);
 
-    final themedPadding =
-        InputDecorationTheme.of(context).contentPadding ?? EdgeInsets.zero;
-
-    final contentPadding = themedPadding.add(
-      EdgeInsets.symmetric(vertical: context.spacing.space3),
-    );
-
     return InputFieldContainer(
       controller: inputController,
       onInputFocus: onStartEditing,
@@ -191,7 +184,9 @@ class _SearchInputSummary extends HookWidget {
                   visualDensity: .comfortable,
                 ),
                 child: Padding(
-                  padding: contentPadding,
+                  padding: EdgeInsets.symmetric(
+                    vertical: context.spacing.space3,
+                  ),
                   child: IgnorePointer(child: summary),
                 ),
               ),
