@@ -1,12 +1,10 @@
 package com.typewritermc.realm.routes
 
-import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.TagCreateResult
 import com.typewritermc.realm.repository.TagDeleteResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.TagUpdateResult
 import com.typewritermc.realm.repository.utils.invalidRecordId
-import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpan
@@ -23,7 +21,6 @@ import skirout.library.v1.tag.WatchTagsResponse
 
 internal class TagRoutes(
     private val tags: TagRepository,
-    private val books: BookRepository,
     private val contracts: LibraryContracts,
     private val realmAddress: RealmAddress,
 ) {
@@ -64,7 +61,15 @@ internal class TagRoutes(
         if (missing.isNotEmpty()) return CreateTagResponse.createParentsNotFoundError(parentIds = missing)
         val result =
             childSpan("db.tag.create") {
-                tags.createTag(request.name, request.color ?: Color(argb = 0), request.parentIds, placement)
+                tags.createTag(
+                    request.name,
+                    request.color ?: Color(argb = 0),
+                    request.parentIds,
+                    placement,
+                    encodeEvents = { tag ->
+                        tagEvents(WatchTagsResponse.AddWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
+                    },
+                )
             }
         val tag =
             when (result) {
@@ -88,7 +93,6 @@ internal class TagRoutes(
                     return CreateTagResponse.createParentsNotFoundError(parentIds = result.parentIds)
                 }
             }
-        publish(call.communicator, WatchTagsResponse.AddWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
         return CreateTagResponse.SuccessWrapper(tag)
     }
 
@@ -119,6 +123,12 @@ internal class TagRoutes(
                         parentIds = request.parentIds,
                         placement = request.placement,
                     ),
+                    encodeEvents = { updated ->
+                        tagEvents(
+                            WatchTagsResponse.UpdateWrapper(updated),
+                            WatchTagResponse.UpdateWrapper(updated),
+                        )
+                    },
                 )
             }
         val tag =
@@ -158,7 +168,6 @@ internal class TagRoutes(
                     return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.INHERITANCE_CYCLE)
                 }
             }
-        publish(call.communicator, WatchTagsResponse.UpdateWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
         return UpdateTagResponse.SuccessWrapper(tag)
     }
 
@@ -174,31 +183,14 @@ internal class TagRoutes(
         id.invalidRecordId("tag")?.let {
             return DeleteTagResponse.InvalidRecordIdErrorWrapper(it)
         }
-        val deletion =
-            when (val result = childSpan("db.tag.delete") { tags.deleteTag(id) }) {
-                is TagDeleteResult.Success -> result.deletion
-                TagDeleteResult.NotFound -> return DeleteTagResponse.createTagNotFoundError(tagId = id)
-            }
-        publish(call.communicator, WatchTagsResponse.RemoveWrapper(id), WatchTagResponse.RemoveWrapper(id))
-        for (childId in deletion.childTagIds) {
-            val child = childSpan("db.tag.get") { tags.getTag(childId) } ?: continue
-            publish(call.communicator, WatchTagsResponse.UpdateWrapper(child), WatchTagResponse.UpdateWrapper(child))
-        }
-        for (bookId in deletion.bookIds) {
-            val book = childSpan("db.book.get") { books.getBook(bookId) } ?: continue
-            call.communicator
-                .publishUpdate(
-                    contracts.watchBooks,
-                    realmAddress,
-                    WatchBooksResponse.UpdateWrapper(book),
-                ).requirePublished()
-            call.communicator
-                .publishUpdate(
-                    contracts.watchBook,
-                    realmAddress,
-                    skirout.library.v1.book.WatchBookResponse
-                        .UpdateWrapper(book),
-                ).requirePublished()
+        when (
+            val result =
+                childSpan("db.tag.delete") {
+                    tags.deleteTag(id) { deletion -> deletionEvents(id, deletion) }
+                }
+        ) {
+            is TagDeleteResult.Success -> Unit
+            TagDeleteResult.NotFound -> return DeleteTagResponse.createTagNotFoundError(tagId = id)
         }
         return DeleteTagResponse.createSuccess()
     }
@@ -207,13 +199,32 @@ internal class TagRoutes(
     private suspend fun missingParents(parentIds: List<skirout.kernel.v1.record_id.RecordId>) =
         childSpan("db.tag.validate") { tags.findMissing(parentIds) }
 
-    private suspend fun publish(
-        communicator: Communicator,
+    private fun tagEvents(
         collection: WatchTagsResponse,
         resource: WatchTagResponse,
-    ) {
-        communicator.publishUpdate(contracts.watchTags, realmAddress, collection).requirePublished()
-        communicator.publishUpdate(contracts.watchTag, realmAddress, resource).requirePublished()
+    ) = listOf(
+        contracts.watchTags.encodeUpdate(realmAddress, collection),
+        contracts.watchTag.encodeUpdate(realmAddress, resource),
+    )
+
+    private fun deletionEvents(
+        id: skirout.kernel.v1.record_id.RecordId,
+        deletion: com.typewritermc.realm.repository.TagDeletion,
+    ) = buildList {
+        addAll(tagEvents(WatchTagsResponse.RemoveWrapper(id), WatchTagResponse.RemoveWrapper(id)))
+        deletion.childTags.forEach { child ->
+            addAll(tagEvents(WatchTagsResponse.UpdateWrapper(child), WatchTagResponse.UpdateWrapper(child)))
+        }
+        deletion.books.forEach { book ->
+            add(contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.UpdateWrapper(book)))
+            add(
+                contracts.watchBook.encodeUpdate(
+                    realmAddress,
+                    skirout.library.v1.book.WatchBookResponse
+                        .UpdateWrapper(book),
+                ),
+            )
+        }
     }
 
     private fun validate(

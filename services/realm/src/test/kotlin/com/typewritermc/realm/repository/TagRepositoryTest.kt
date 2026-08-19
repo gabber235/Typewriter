@@ -184,7 +184,7 @@ val TagRepositoryTest by testSuite {
                 val updatedChild = fixture.tags.getTag(child.tagId) ?: error("Child tag was not persisted")
                 val updatedBook = fixture.books.getBook(book.bookId) ?: error("Book was not persisted")
 
-                deletion shouldBe TagDeletion(listOf(child.tagId), listOf(book.bookId))
+                deletion shouldBe TagDeletion(listOf(updatedChild), listOf(updatedBook))
                 fixture.tags.getTag(parent.tagId).shouldBeNull()
                 updatedChild.parentIds shouldBe emptyList()
                 updatedChild.revision shouldBe child.revision + 1

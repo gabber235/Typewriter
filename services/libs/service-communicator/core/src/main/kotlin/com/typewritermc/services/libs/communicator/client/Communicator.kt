@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.client
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
+import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationOutcome
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
@@ -134,6 +135,22 @@ class Communicator(
             val message = outbound(contract.address.render(address), payload, headers)
             annotate { attribute("messaging.destination.name", message.address.value) }
             classifyTransport(contract.failureSlug, transport.publish(message))
+        }
+
+    /** Publishes an immutable payload that was encoded before the current process lifetime. */
+    suspend fun publishEncoded(publication: EncodedPublication): CommunicationResult<Unit> =
+        operation(
+            "encoded.publish",
+            "publish",
+            ENCODED_PUBLISH_FAILURE,
+            SpanKind.PRODUCER,
+            null,
+        ) { annotate ->
+            annotate { attribute("messaging.destination.name", publication.address.value) }
+            classifyTransport(
+                ENCODED_PUBLISH_FAILURE,
+                transport.publish(outbound(publication.address, publication.payload, MessageHeaders.Empty)),
+            )
         }
 
     /** Publishes an independent typed watch update. */
@@ -493,6 +510,8 @@ class Communicator(
         val error: CommunicationError,
     ) : RuntimeException(error.cause)
 }
+
+private val ENCODED_PUBLISH_FAILURE = ErrorSlug.of("encoded-publish-failed")
 
 private fun <Value> CommunicationResult<OperationOutcome<Value>>.responseResult(): CommunicationResult<Value> =
     when (this) {

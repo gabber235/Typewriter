@@ -55,6 +55,7 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 import java.nio.file.Paths
+import java.time.Clock
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
 import kotlin.time.Duration.Companion.seconds
@@ -66,6 +67,7 @@ fun main() {
     val configuration = RealmSettings.system().applicationConfiguration()
     val delayScheduler = CoroutineDelayScheduler
     val timeSource = TimeSource.Monotonic
+    val clock = Clock.systemUTC()
     val registrarRetryPolicy = RetryPolicy.exponential(1.seconds, 30.seconds, jitterRatio = .2)
     val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
     val consoleOutput = RealmConsoleLogOutput()
@@ -82,7 +84,7 @@ fun main() {
             single<RealmDatabaseProvider> { DatabaseProvider(get()) }
             single<RealmEditorCatalogSource> { UnavailableRealmEditorCatalogSource() }
             single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
-            single { Realm(get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler) }
+            single { Realm(get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler, clock) }
             single {
                 Cbor {
                     ignoreUnknownKeys = true

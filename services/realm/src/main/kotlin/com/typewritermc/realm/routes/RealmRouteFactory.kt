@@ -17,7 +17,7 @@ class RealmRouteFactory(
         val contracts = LibraryContracts(address)
         val bookRoutes = BookRoutes(books, tags, contracts, address)
         val pageRoutes = PageRoutes(pages, books, contracts, address)
-        val tagRoutes = TagRoutes(tags, books, contracts, address)
+        val tagRoutes = TagRoutes(tags, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         return communicatorRoutes {

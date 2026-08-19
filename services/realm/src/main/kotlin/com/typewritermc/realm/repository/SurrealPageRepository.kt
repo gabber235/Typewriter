@@ -1,8 +1,12 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.outbox.OutboxEvent
+import com.typewritermc.realm.outbox.RealmOutbox
+import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.records.PageRecord
 import com.typewritermc.realm.repository.utils.databaseValue
+import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import skirout.kernel.v1.record_id.RecordId
@@ -11,6 +15,7 @@ import skirout.library.v1.page.PageType
 
 class SurrealPageRepository(
     private val database: Surreal,
+    private val outbox: RealmOutbox = SurrealRealmOutbox(database),
 ) : PageRepository {
     override suspend fun searchPages(
         bookId: RecordId,
@@ -49,39 +54,50 @@ class SurrealPageRepository(
         type: PageType,
         chapter: String,
         priority: Int,
+        encodeEvents: (Page) -> List<OutboxEvent>,
     ): RepositoryResult<Page> =
         repositoryMutation(listOf(bookId)) {
-            val result =
-                database
-                    .query(
-                        $$"""
+            database
+                .inTransaction { transaction ->
+                    val result =
+                        transaction
+                            .query(
+                                $$"""
                 CREATE ONLY page SET
                     book = $book,
                     name = $name,
                     type = $type,
                     chapter = $chapter,
                     priority = $priority
-                        """.trimIndent(),
-                        mapOf(
-                            "book" to bookId.surrealId("book"),
-                            "name" to name,
-                            "type" to type.databaseValue(),
-                            "chapter" to chapter,
-                            "priority" to priority,
-                        ),
-                    ).take(0)
+                                """.trimIndent(),
+                                mapOf(
+                                    "book" to bookId.surrealId("book"),
+                                    "name" to name,
+                                    "type" to type.databaseValue(),
+                                    "chapter" to chapter,
+                                    "priority" to priority,
+                                ),
+                            ).take(0)
 
-            PageRecord.parseList(result).singleOrNull()?.toPage()
-                ?: error("Page creation returned no record")
+                    val page =
+                        PageRecord.parseList(result).singleOrNull()?.toPage()
+                            ?: error("Page creation returned no record")
+                    outbox.enqueue(transaction, encodeEvents(page))
+                    page
+                }.also { outbox.signalPending() }
         }
 
-    override suspend fun updatePage(page: Page): RepositoryResult<Page> =
+    override suspend fun updatePage(
+        page: Page,
+        encodeEvents: (Page) -> List<OutboxEvent>,
+    ): RepositoryResult<Page> =
         repositoryMutation {
-            val result =
-                database
-                    .query(
-                        $$"""
-                BEGIN TRANSACTION;
+            database
+                .inTransaction { transaction ->
+                    val result =
+                        transaction
+                            .query(
+                                $$"""
                 IF !record::exists($page) {
                     THROW "page-not-found-error";
                 };
@@ -91,55 +107,61 @@ class SurrealPageRepository(
                     type = $type,
                     chapter = $chapter,
                     priority = $priority;
+                                """.trimIndent(),
+                                mapOf(
+                                    "page" to page.pageId.surrealId("page"),
+                                    "name" to page.name,
+                                    "type" to page.type.databaseValue(),
+                                    "chapter" to page.chapter,
+                                    "priority" to page.priority,
+                                ),
+                            ).takeTransaction(1)
 
-                COMMIT TRANSACTION;
-                        """.trimIndent(),
-                        mapOf(
-                            "page" to page.pageId.surrealId("page"),
-                            "name" to page.name,
-                            "type" to page.type.databaseValue(),
-                            "chapter" to page.chapter,
-                            "priority" to page.priority,
-                        ),
-                    ).takeTransaction(2)
-
-            PageRecord.parseList(result).singleOrNull()?.toPage()
-                ?: error("Page update returned no record")
+                    val updated =
+                        PageRecord.parseList(result).singleOrNull()?.toPage()
+                            ?: error("Page update returned no record")
+                    outbox.enqueue(transaction, encodeEvents(updated))
+                    updated
+                }.also { outbox.signalPending() }
         }
 
-    override suspend fun deletePage(id: RecordId): RepositoryResult<Unit> =
+    override suspend fun deletePage(
+        id: RecordId,
+        encodeEvents: (RecordId) -> List<OutboxEvent>,
+    ): RepositoryResult<Unit> =
         repositoryMutation {
             database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
+                .inTransaction { transaction ->
+                    transaction
+                        .query(
+                            $$"""
+                        IF !record::exists($page) {
+                            THROW "page-not-found-error";
+                        };
 
-                IF !record::exists($page) {
-                    THROW "page-not-found-error";
-                };
-
-                DELETE $page;
-
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf("page" to id.surrealId("page")),
-                ).takeTransaction(2)
+                        DELETE $page;
+                            """.trimIndent(),
+                            mapOf("page" to id.surrealId("page")),
+                        ).takeTransaction(1)
+                    outbox.enqueue(transaction, encodeEvents(id))
+                }.also { outbox.signalPending() }
         }
 
     override suspend fun changePagesChapters(
         bookId: RecordId,
         oldChapter: String,
         newChapter: String,
+        encodeEvents: (List<Page>) -> List<OutboxEvent>,
     ): RepositoryResult<List<Page>> {
         if (oldChapter == newChapter) return RepositoryResult.Success(emptyList())
 
         return repositoryMutation(listOf(bookId)) {
-            val result =
-                database
-                    .query(
-                        $$"""
-                    BEGIN TRANSACTION;
-
+            database
+                .inTransaction { transaction ->
+                    val result =
+                        transaction
+                            .query(
+                                $$"""
                     IF !record::exists($book) {
                         THROW "book-not-found-error";
                     };
@@ -162,16 +184,18 @@ class SurrealPageRepository(
                         RETURN AFTER);
 
                     RETURN ($exact + $prefixed);
-                    COMMIT TRANSACTION;
-                        """.trimIndent(),
-                        mapOf(
-                            "book" to bookId.surrealId("book"),
-                            "old_chapter" to oldChapter,
-                            "new_chapter" to newChapter,
-                        ),
-                    ).takeTransaction(5)
+                                """.trimIndent(),
+                                mapOf(
+                                    "book" to bookId.surrealId("book"),
+                                    "old_chapter" to oldChapter,
+                                    "new_chapter" to newChapter,
+                                ),
+                            ).takeTransaction(4)
 
-            PageRecord.parseList(result).map(PageRecord::toPage)
+                    val pages = PageRecord.parseList(result).map(PageRecord::toPage)
+                    outbox.enqueue(transaction, encodeEvents(pages))
+                    pages
+                }.also { outbox.signalPending() }
         }
     }
 }

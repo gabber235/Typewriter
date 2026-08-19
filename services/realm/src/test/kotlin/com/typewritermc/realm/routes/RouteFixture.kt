@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
@@ -79,7 +80,19 @@ internal class RouteFixture(
                 }
                 error("Reply wait ended unexpectedly")
             }
+        publishOutbox()
         return responseSerializer.fromBytes(publication.message.payload.toByteArray())
+    }
+
+    private suspend fun publishOutbox() {
+        while (true) {
+            val pending = repositories.outbox.pending(100)
+            if (pending.isEmpty()) return
+            pending.forEach { row ->
+                communicator.publishEncoded(row.event)
+                repositories.outbox.markPublished(row.id, Instant.now())
+            }
+        }
     }
 
     fun publishedTo(suffix: String) =

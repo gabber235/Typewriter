@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.client.EncodedPublication
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
@@ -317,6 +318,27 @@ val CommunicatorTest by testSuite {
                 parent.status.statusCode shouldBe StatusCode.UNSET
                 child.status.statusCode shouldBe StatusCode.ERROR
                 child.attributes[AttributeKey.stringKey("exception.slug")] shouldBe "book-publish-failed"
+            }
+        }
+    }
+
+    test("encoded publication sends the exact immutable payload") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val source = byteArrayOf(0, 1, 2, 127, -1)
+                val publication = EncodedPublication(MessageAddress.of("service.realm.watch"), Payload.copyOf(source))
+                source.fill(42)
+
+                client.publishEncoded(publication) shouldBe CommunicationResult.Success(Unit)
+
+                val sent =
+                    fake.actions
+                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                        .single()
+                        .message
+                sent.address shouldBe publication.address
+                sent.payload.toByteArray().toList() shouldBe listOf<Byte>(0, 1, 2, 127, -1)
+                sent.replyTo shouldBe null
             }
         }
     }

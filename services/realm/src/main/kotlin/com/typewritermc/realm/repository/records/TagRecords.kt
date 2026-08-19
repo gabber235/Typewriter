@@ -45,13 +45,13 @@ internal data class TagRecord(
 }
 
 internal data class TagDeletionRecord(
-    val childTagIds: List<RecordId> = emptyList(),
-    val bookIds: List<RecordId> = emptyList(),
+    val childTags: List<TagRecord> = emptyList(),
+    val books: List<BookRecord> = emptyList(),
 ) {
     fun toTagDeletion(): TagDeletion =
         TagDeletion(
-            childTagIds = childTagIds.map(RecordId::toSkirRecordId),
-            bookIds = bookIds.map(RecordId::toSkirRecordId),
+            childTags = childTags.map(TagRecord::toTag),
+            books = books.map(BookRecord::toBook),
         )
 }
 
