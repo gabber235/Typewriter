@@ -47,7 +47,48 @@ val serviceBuilds =
                 ":service-registrar-testing",
             ),
         ),
+        ServiceBuild(
+            "service-file-transfer",
+            "libs/service-file-transfer",
+            listOf(
+                ":service-file-transfer-core",
+                ":service-file-transfer-messaging",
+                ":service-file-transfer-storage-file",
+                ":service-file-transfer-koin",
+                ":service-file-transfer-testing",
+            ),
+        ),
         ServiceBuild("realm", "realm", listOf(":")),
+        ServiceBuild(
+            "imprint",
+            "imprint",
+            listOf(":imprint-model", ":imprint-gradle-plugin", ":imprint-testing"),
+        ),
+        ServiceBuild(
+            "loader",
+            "loader",
+            listOf(":loader-core", ":loader-standalone", ":loader-paper"),
+        ),
+        ServiceBuild(
+            "engine",
+            "engine",
+            listOf(
+                ":engine-types",
+                ":engine-core",
+                ":engine-codegen",
+                ":engine-minecraft",
+                ":engine-conformance-base",
+                ":engine-conformance-composite",
+                ":engine-panel",
+                ":engine-paper",
+                ":engine-conformance",
+            ),
+        ),
+        ServiceBuild(
+            "extensions",
+            "extensions",
+            listOf(":extension-types", ":extension-codegen", ":conformance-extension"),
+        ),
     )
 
 val declaredPaths = serviceBuilds.map(ServiceBuild::path).toSet()
