@@ -355,17 +355,20 @@ async fn join_code_rejects_missing_and_protected_roles(
                 UnrecognizedValues::Drop,
             )
             .await?;
-        assert!(if expected_assignable {
-            matches!(
-                response,
-                GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(_)
-            )
+        let returned_role_ids = if expected_assignable {
+            let GenerateOrganizationJoinCodeResponse::RolesNotAssignableError(error) = response
+            else {
+                anyhow::bail!("expected protected role error, received {response:?}")
+            };
+            error.role_ids
         } else {
-            matches!(
-                response,
-                GenerateOrganizationJoinCodeResponse::RolesNotFoundError(_)
-            )
-        });
+            let GenerateOrganizationJoinCodeResponse::RolesNotFoundError(error) = response else {
+                anyhow::bail!("expected missing role error, received {response:?}")
+            };
+            error.role_ids
+        };
+        assert_eq!(returned_role_ids.len(), 1);
+        assert_eq!(returned_role_ids[0].key.to_string(), role);
     }
     assert_jm!(
         database
@@ -541,6 +544,61 @@ async fn approve_existing_member_rolls_back_request_deletion(
             .query_json("RETURN count(SELECT id FROM request_to_join WHERE in = user:member)")
             .await?,
         1
+    );
+    Ok(())
+}
+
+#[component_test(OrganizationMembers)]
+async fn approval_uses_current_role_policy_inside_transaction(
+    context: &mut TestContext<OrganizationMembers>,
+) -> TestResult {
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    seed_organization(&database).await?;
+    database
+        .execute("RELATE ONLY user:applicant->request_to_join->organization:alpha")
+        .await?;
+    let request_id = database
+        .query_json("SELECT VALUE id FROM request_to_join WHERE in = user:applicant")
+        .await?;
+    let request_key = database_record_key(&request_id, "request_to_join")?;
+    let writer = role_key(&database, "writer").await?;
+    let request = ApproveOrganizationJoinRequestRequest {
+        request_id: skir_record_id("request_to_join", &request_key),
+        role_ids: vec![skir_record_id("organization_role", &writer)],
+        _unrecognized: None,
+    };
+
+    database
+        .execute(
+            "UPDATE organization_role SET assignable = false WHERE organization = organization:alpha AND name = 'writer'",
+        )
+        .await?;
+
+    let response = context
+        .messaging()?
+        .request_skir(
+            "typewriter.from.user.founder.organization.alpha.members.join_requests.approve",
+            &request,
+            ApproveOrganizationJoinRequestRequest::serializer(),
+            ApproveOrganizationJoinRequestResponse::serializer(),
+            Duration::from_secs(2),
+            UnrecognizedValues::Drop,
+        )
+        .await?;
+    let ApproveOrganizationJoinRequestResponse::RolesNotAssignableError(error) = response else {
+        anyhow::bail!("expected current role policy error, received {response:?}")
+    };
+    assert_eq!(error.role_ids.len(), 1);
+    assert_eq!(error.role_ids[0].key.to_string(), writer);
+    assert_jm!(
+        database
+            .query_json(
+                "RETURN { requests: count(SELECT id FROM request_to_join WHERE in = user:applicant), members: count(SELECT id FROM member_of WHERE in = user:applicant AND out = organization:alpha) }"
+            )
+            .await?,
+        { "requests": 1, "members": 0 }
     );
     Ok(())
 }

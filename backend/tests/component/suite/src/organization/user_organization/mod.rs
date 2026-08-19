@@ -19,6 +19,22 @@ use wasmcloud_utils::{
     skir_client::UnrecognizedValues,
 };
 
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../../organization/user-organization/src/join_submission_transaction.rs"
+));
+
+const JOIN_SUBMISSION_TRANSACTION: &str = join_submission_transaction!(query);
+const JOIN_SUBMISSION_OUTCOME_INDEX: usize = join_submission_transaction!(outcome_index);
+
+async fn execute_join_submission_transaction(
+    query: typewriter_component_test::SeedQuery,
+) -> anyhow::Result<serde_json::Value> {
+    query
+        .query_json_retrying_conflicts(JOIN_SUBMISSION_OUTCOME_INDEX)
+        .await
+}
+
 #[component_fixture(
     id = "user-organization",
     primary(package = "user-organization", target = "user_organization"),
@@ -206,6 +222,139 @@ async fn manual_join_consumes_single_use_code_and_publishes_both_views(
         )
         .await?;
     assert_jm!(state, { "codes": 0, "requests": 1 });
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn concurrent_single_use_join_allows_exactly_one_request(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    database
+        .execute(
+            r#"
+            CREATE user:founder SET name = 'founder';
+            CREATE user:first SET name = 'first';
+            CREATE user:second SET name = 'second';
+            CREATE organization:alpha SET name = 'alpha', founder = user:founder;
+            CREATE organization_join_code:invite SET
+                organization = organization:alpha,
+                single_use = true,
+                auto_accept_roles = [],
+                expires_at = time::now() + 1h;
+            "#,
+        )
+        .await?;
+
+    let code = surrealdb_types::RecordId::from(skir_record_id("organization_join_code", "invite"));
+    let first = database
+        .seed(JOIN_SUBMISSION_TRANSACTION)
+        .bind(
+            "user",
+            surrealdb_types::RecordId::from(skir_record_id("user", "first")),
+        )?
+        .bind("code", code.clone())?;
+    let second = database
+        .seed(JOIN_SUBMISSION_TRANSACTION)
+        .bind(
+            "user",
+            surrealdb_types::RecordId::from(skir_record_id("user", "second")),
+        )?
+        .bind("code", code)?;
+    let (first, second) = tokio::join!(
+        execute_join_submission_transaction(first),
+        execute_join_submission_transaction(second),
+    );
+    let responses = [first?, second?];
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response["kind"] == "request_made")
+            .count(),
+        1
+    );
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response["kind"] == "code_not_found_error")
+            .count(),
+        1
+    );
+    assert_jm!(
+        database
+            .query_json(
+                "RETURN { codes: count(SELECT id FROM organization_join_code:invite), requests: count(SELECT id FROM request_to_join), members: count(SELECT id FROM member_of WHERE in IN [user:first, user:second]) }"
+            )
+            .await?,
+        { "codes": 0, "requests": 1, "members": 0 }
+    );
+    Ok(())
+}
+
+#[component_test(UserOrganization)]
+async fn concurrent_automatic_join_retries_without_duplicate_membership(
+    context: &mut TestContext<UserOrganization>,
+) -> TestResult {
+    let database = context
+        .extension::<DatabaseHandle>()
+        .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
+    database
+        .execute(
+            r#"
+            CREATE user:founder SET name = 'founder';
+            CREATE user:applicant SET name = 'applicant';
+            CREATE organization:alpha SET name = 'alpha', founder = user:founder;
+            LET $writer = SELECT VALUE id FROM ONLY organization_role
+                WHERE organization = organization:alpha AND name = 'writer';
+            CREATE organization_join_code:automatic SET
+                organization = organization:alpha,
+                single_use = false,
+                auto_accept_roles = [$writer],
+                expires_at = time::now() + 1h;
+            "#,
+        )
+        .await?;
+
+    let user = surrealdb_types::RecordId::from(skir_record_id("user", "applicant"));
+    let code =
+        surrealdb_types::RecordId::from(skir_record_id("organization_join_code", "automatic"));
+    let first = database
+        .seed(JOIN_SUBMISSION_TRANSACTION)
+        .bind("user", user.clone())?
+        .bind("code", code.clone())?;
+    let second = database
+        .seed(JOIN_SUBMISSION_TRANSACTION)
+        .bind("user", user)?
+        .bind("code", code)?;
+    let (first, second) = tokio::join!(
+        execute_join_submission_transaction(first),
+        execute_join_submission_transaction(second),
+    );
+    let responses = [first?, second?];
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response["kind"] == "auto_accepted")
+            .count(),
+        1
+    );
+    assert_eq!(
+        responses
+            .iter()
+            .filter(|response| response["kind"] == "already_member_error")
+            .count(),
+        1
+    );
+    assert_jm!(
+        database
+            .query_json(
+                "RETURN { memberships: count(SELECT id FROM member_of WHERE in = user:applicant AND out = organization:alpha), codes: count(SELECT id FROM organization_join_code:automatic) }"
+            )
+            .await?,
+        { "memberships": 1, "codes": 1 }
+    );
     Ok(())
 }
 

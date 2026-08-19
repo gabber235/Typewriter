@@ -13,6 +13,10 @@ pub use surrealdb_component_sdk::{
 pub mod organization;
 pub mod service;
 
+pub const TRANSACTION_CONFLICT_MAX_ATTEMPTS: u32 = 3;
+pub const TRANSACTION_CONFLICT_INITIAL_DELAY: Duration = Duration::from_millis(10);
+pub const TRANSACTION_CONFLICT_MAXIMUM_DELAY: Duration = Duration::from_millis(40);
+
 /// Read query that cannot opt into mutation retry behavior.
 pub struct ReadQuery<'a> {
     query: Query<'a>,
@@ -111,9 +115,10 @@ impl<T: DeserializeOwned> TransactionResponse<T> {
 
 fn transaction_retry_policy() -> ConflictRetryPolicy {
     ConflictRetryPolicy::new(
-        NonZeroU32::new(3).expect("transaction attempt count is nonzero"),
-        Duration::from_millis(10),
-        Duration::from_millis(40),
+        NonZeroU32::new(TRANSACTION_CONFLICT_MAX_ATTEMPTS)
+            .expect("transaction attempt count is nonzero"),
+        TRANSACTION_CONFLICT_INITIAL_DELAY,
+        TRANSACTION_CONFLICT_MAXIMUM_DELAY,
     )
 }
 

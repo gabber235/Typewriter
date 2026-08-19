@@ -1,17 +1,35 @@
-use crate::validate_roles;
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
+use serde::Deserialize;
 use std::collections::HashMap;
 use wasmcloud_utils::{
     database::{
-        DatabaseDuration, RecordId, TransactionOutcome, organization::JoinCodeRecord, read_query,
-        transaction_query,
+        DatabaseDuration, RecordId, organization::JoinCodeRecord, read_query, transaction_query,
     },
     decode_skir, extract_params,
     skir::base::organization::v1::join_codes::*,
+    skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum JoinCodeGenerationOutcome {
+    Created { code: JoinCodeRecord },
+    RolesNotFoundError { role_ids: Vec<RecordId> },
+    RolesNotAssignableError { role_ids: Vec<RecordId> },
+}
+
+impl JoinCodeGenerationOutcome {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Created { .. } => "created",
+            Self::RolesNotFoundError { .. } => "roles-not-found-error",
+            Self::RolesNotAssignableError { .. } => "roles-not-assignable-error",
+        }
+    }
+}
 
 #[tracing::instrument(skip(msg, params))]
 pub async fn handle_watch(
@@ -103,65 +121,43 @@ pub async fn handle_generate(
         .as_slice()
         .into_surreal_record_ids();
 
-    let validation = validate_roles(
-        &organization_id,
-        &role_ids,
-        &[],
-        "join-code-generate-role-validation-query-failed",
-        "join-code-generate-role-validation-result-parse-failed",
-    )
-    .await?;
-
-    if !validation.missing.is_empty() {
-        main_attribute!("join_code.outcome" = "roles-not-found-error");
-        return Ok(skir_variant!(
-            GenerateOrganizationJoinCodeResponse::RolesNotFoundError {
-                role_ids: validation.missing.into_skir_record_ids()
-            }
-        ));
-    }
-
-    if !validation.unassignable.is_empty() {
-        main_attribute!("join_code.outcome" = "roles-not-assignable-error");
-        return Ok(skir_variant!(
-            GenerateOrganizationJoinCodeResponse::RolesNotAssignableError {
-                role_ids: validation.unassignable.into_skir_record_ids()
-            }
-        ));
-    }
-
-    let roles = role_ids.clone();
-
     let result = transaction_query!(
-        JoinCodeRecord,
+        JoinCodeGenerationOutcome,
         r#"
         BEGIN TRANSACTION;
 
-        LET $valid = SELECT * FROM $roles WHERE organization=$org;
+        RETURN {
+            LET $requested = SELECT * FROM $roles WHERE organization = $org;
+            LET $missing = array::complement(array::distinct($roles), $requested.id);
 
-        IF array::len($valid) != array::len(array::distinct($roles)) {
-            THROW 'roles-not-found-error'
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'roles-not-found-error', role_ids: $missing }
+            };
+
+            LET $unassignable = SELECT VALUE id FROM $requested WHERE !assignable;
+            IF array::len($unassignable) > 0 {
+                RETURN { outcome: 'roles-not-assignable-error', role_ids: $unassignable }
+            };
+
+            LET $code = CREATE ONLY organization_join_code SET
+                organization = $org,
+                created_by = $actor,
+                single_use = $single_use,
+                auto_accept_roles = $roles,
+                expires_at = IF $duration = NONE OR $duration = NULL { NULL } ELSE { time::now() + $duration };
+
+            RETURN {
+                outcome: 'created',
+                code: (SELECT id, created_at, expires_at, single_use, auto_accept_roles FROM ONLY $code)
+            };
         };
-
-        IF array::any($valid,|$r|!$r.assignable) {
-            THROW 'roles-not-assignable-error'
-        };
-
-        LET $code = CREATE ONLY organization_join_code SET
-            organization = $org,
-            created_by = $actor,
-            single_use = $single_use,
-            auto_accept_roles = $roles,
-            expires_at = IF $duration = NONE OR $duration = NULL { NULL } ELSE { time::now() + $duration };
-
-        RETURN SELECT id, created_at, expires_at, single_use, auto_accept_roles FROM ONLY $code;
         COMMIT TRANSACTION;
         "#,
     )
     .bind("org", organization_id)
     .bind("actor", actor_id)
     .bind("single_use", req.single_use)
-    .bind("roles", roles)
+    .bind("roles", role_ids)
     .bind("duration", expiration)
     .execute()
     .await
@@ -169,13 +165,20 @@ pub async fn handle_generate(
     .decode()
     .error_with_slug("join-code-generate-result-parse-failed")?;
 
-    if let TransactionOutcome::Rejected(error) = &result {
-        main_attribute!("join_code.outcome" = error.message().to_owned());
-    }
-
-    let row = wasmcloud_utils::skir_domain_result!(GenerateOrganizationJoinCodeResponse, result,
-        "roles-not-found-error" => { role_ids: role_ids.as_slice().into_skir_record_ids() },
-        "roles-not-assignable-error" => { role_ids: role_ids.as_slice().into_skir_record_ids() }
+    let result = wasmcloud_utils::skir_domain_result!(GenerateOrganizationJoinCodeResponse, result);
+    main_attribute!("join_code.outcome" = result.as_str());
+    let row = skir_transaction_outcome!(
+        GenerateOrganizationJoinCodeResponse,
+        result,
+        success JoinCodeGenerationOutcome::Created { code } => code,
+        errors {
+            JoinCodeGenerationOutcome::RolesNotFoundError { role_ids } => {
+                role_ids: role_ids.into_skir_record_ids()
+            },
+            JoinCodeGenerationOutcome::RolesNotAssignableError { role_ids } => {
+                role_ids: role_ids.into_skir_record_ids()
+            },
+        }
     );
 
     let code: JoinCode = row.into();
