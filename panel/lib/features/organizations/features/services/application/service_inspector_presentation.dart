@@ -184,9 +184,6 @@ PresentationNode _serviceOptionCard({
         id: "$id.card",
         element: ContainerElement(
           backgroundColor: color.withAlpha(32),
-          border: PresentationBorder.all(
-            PresentationBorderSide(color: color, width: 1.5),
-          ),
           radius: PresentationRadius.custom(8.asFloatLiteral),
           child: PresentationNode(
             id: "$id.padding",
@@ -313,9 +310,6 @@ PresentationNode _serviceRoleSection({
   properties: const PresentationProperties(readOnly: true),
   element: ContainerElement(
     backgroundColor: color.withAlpha(28),
-    border: PresentationBorder.all(
-      PresentationBorderSide(color: color, width: 2),
-    ),
     radius: PresentationRadius.medium(),
     child: PresentationNode(
       id: "$id.fields",
