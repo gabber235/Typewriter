@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
     implementation(project(":imprint-model"))
+    implementation(libs.kotlin.gradle.plugin)
+    implementation(libs.ksp.gradle.plugin)
     testImplementation(gradleTestKit())
 }
 

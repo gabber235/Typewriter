@@ -3,6 +3,8 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.TypewriterEngineLayerReference
 import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterProjectKind
+import com.typewritermc.imprint.TypewriterRuntimeTarget
+import com.typewritermc.imprint.TypewriterRuntimeTargetKind
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -10,7 +12,9 @@ import org.gradle.api.Project
 
 class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val typewriter = project.extensions.create("typewriter", TypewriterProjectExtension::class.java)
+        project.pluginManager.apply("com.google.devtools.ksp")
+        val typewriter =
+            project.extensions.create("typewriter", TypewriterProjectExtension::class.java, project)
 
         project.tasks.register("typewriterInfo") { task ->
             task.group = "typewriter"
@@ -23,6 +27,9 @@ class ImprintPlugin : Plugin<Project> {
                 declaration.layers.forEach { layer ->
                     task.logger.lifecycle("Typewriter engine layer ${layer.id} ${layer.version}")
                 }
+                declaration.targets.forEach { target ->
+                    task.logger.lifecycle("Typewriter target ${target.kind.name.lowercase()} ${target.id} ${target.version}")
+                }
             }
         }
 
@@ -32,7 +39,9 @@ class ImprintPlugin : Plugin<Project> {
     }
 }
 
-open class TypewriterProjectExtension {
+open class TypewriterProjectExtension(
+    private val project: Project,
+) {
     private val declarations = mutableListOf<ProjectDeclaration>()
 
     fun engine(action: Action<EngineDeclaration>) {
@@ -44,7 +53,9 @@ open class TypewriterProjectExtension {
     }
 
     fun extension(action: Action<ExtensionDeclaration>) {
-        add(ExtensionDeclaration(), action)
+        val declaration = ExtensionDeclaration()
+        add(declaration, action)
+        project.configureExtensionProject(declaration.toModel())
     }
 
     internal fun declaration(): TypewriterProjectDeclaration {
@@ -85,8 +96,10 @@ sealed class ProjectDeclaration(
         }
         validateVersion(version, "Typewriter project")
 
-        return TypewriterProjectDeclaration(kind, id, version, layers.toList())
+        return TypewriterProjectDeclaration(kind, id, version, layers.toList(), targets())
     }
+
+    protected open fun targets(): List<TypewriterRuntimeTarget> = emptyList()
 }
 
 open class EngineDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE) {
@@ -101,7 +114,51 @@ open class EngineLayerDeclaration : ProjectDeclaration(TypewriterProjectKind.ENG
     }
 }
 
-open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTENSION)
+open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTENSION) {
+    private val configuredTargets = mutableListOf<TypewriterRuntimeTarget>()
+
+    fun targets(action: Action<ExtensionTargets>) {
+        val targets = ExtensionTargets()
+        action.execute(targets)
+        configuredTargets += targets.targets
+    }
+
+    override fun targets(): List<TypewriterRuntimeTarget> = configuredTargets.toList()
+}
+
+open class ExtensionTargets {
+    internal val targets = mutableListOf<TypewriterRuntimeTarget>()
+
+    fun realm(version: String) {
+        add(TypewriterRuntimeTargetKind.REALM, "realm", version)
+    }
+
+    fun panel(version: String) {
+        add(TypewriterRuntimeTargetKind.PANEL, "panel", version)
+    }
+
+    fun engine(
+        id: String,
+        version: String,
+    ) {
+        add(TypewriterRuntimeTargetKind.ENGINE, id, version)
+    }
+
+    private fun add(
+        kind: TypewriterRuntimeTargetKind,
+        id: String,
+        version: String,
+    ) {
+        if (id.isBlank()) {
+            throw GradleException("The runtime target id must not be blank.")
+        }
+        validateVersion(version, "Runtime target $id")
+        if (targets.any { it.kind == kind && it.id == id }) {
+            throw GradleException("Runtime target $id is declared more than once.")
+        }
+        targets += TypewriterRuntimeTarget(kind, id, version)
+    }
+}
 
 open class EngineLayers {
     internal val references = mutableListOf<TypewriterEngineLayerReference>()

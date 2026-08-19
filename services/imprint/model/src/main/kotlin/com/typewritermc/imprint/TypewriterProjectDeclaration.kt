@@ -13,9 +13,22 @@ data class TypewriterProjectDeclaration(
     val id: String,
     val version: String,
     val layers: List<TypewriterEngineLayerReference> = emptyList(),
+    val targets: List<TypewriterRuntimeTarget> = emptyList(),
 )
 
 data class TypewriterEngineLayerReference(
+    val id: String,
+    val version: String,
+)
+
+enum class TypewriterRuntimeTargetKind {
+    REALM,
+    PANEL,
+    ENGINE,
+}
+
+data class TypewriterRuntimeTarget(
+    val kind: TypewriterRuntimeTargetKind,
     val id: String,
     val version: String,
 )

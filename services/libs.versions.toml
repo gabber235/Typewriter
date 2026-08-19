@@ -1,5 +1,6 @@
 [versions]
 kotlin = "2.4.10"
+ksp = "2.3.10"
 ktlint = "1.8.0"
 ktlint-gradle = "14.2.0"
 detekt = "2.0.0-alpha.5"
@@ -35,6 +36,8 @@ mockk = "1.14.11"
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
+ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint-gradle" }
 detekt-gradle-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 
