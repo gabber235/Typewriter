@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::{RecordId, service::ServiceRecord, transaction_query},
+    database::{RecordId, TransactionOutcome, service::ServiceRecord, transaction_query},
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::{
@@ -23,13 +23,7 @@ enum ServiceUpdateOutcome {
     Updated { service: ServiceRecord },
     ConflictError { actual: ServiceRecord },
     ServiceNotFoundError,
-    RunsInNotFoundError { service_id: RecordId },
     NameInvalid,
-    RunsInRequiresEngineOrCustomRole,
-    RunsInMustReferenceRealmRole,
-    RunsInOrganizationMismatch,
-    RunsInSelfReference,
-    RunsInCycle,
 }
 
 impl ServiceUpdateOutcome {
@@ -38,13 +32,7 @@ impl ServiceUpdateOutcome {
             Self::Updated { .. } => "updated",
             Self::ConflictError { .. } => "conflict-error",
             Self::ServiceNotFoundError => "service-not-found-error",
-            Self::RunsInNotFoundError { .. } => "runs-in-not-found-error",
             Self::NameInvalid => "name-invalid",
-            Self::RunsInRequiresEngineOrCustomRole => "runs-in-requires-engine-or-custom-role",
-            Self::RunsInMustReferenceRealmRole => "runs-in-must-reference-realm-role",
-            Self::RunsInOrganizationMismatch => "runs-in-organization-mismatch",
-            Self::RunsInSelfReference => "runs-in-self-reference",
-            Self::RunsInCycle => "runs-in-cycle",
         }
     }
 }
@@ -78,6 +66,7 @@ pub async fn handle_update(
     let service_id = RecordId::from(&request.service_id);
     let organization_id = RecordId::new("organization", org_id);
     let runs_in = request.runs_in.as_ref().map(RecordId::from);
+    let runs_in_for_error = request.runs_in.clone();
     let result = transaction_query!(
         ServiceUpdateOutcome,
         r#"
@@ -99,35 +88,7 @@ pub async fn handle_update(
                 RETURN { outcome: 'name-invalid' }
             };
 
-            IF $runs_in != NONE {
-                IF $runs_in = $service_id {
-                    RETURN { outcome: 'runs-in-self-reference' }
-                };
-
-                LET $targets = SELECT * FROM $runs_in;
-                IF array::is_empty($targets) {
-                    RETURN { outcome: 'runs-in-not-found-error', service_id: $runs_in }
-                };
-
-                LET $target = array::first($targets);
-                LET $can_run_in = fn::service::has_role($current, 'engine') OR fn::service::has_role($current, 'custom');
-                IF !$can_run_in {
-                    RETURN { outcome: 'runs-in-requires-engine-or-custom-role' }
-                };
-
-                IF !fn::service::has_role($target, 'realm') {
-                    RETURN { outcome: 'runs-in-must-reference-realm-role' }
-                };
-
-                IF $target.organization != $organization_id {
-                    RETURN { outcome: 'runs-in-organization-mismatch' }
-                };
-
-                LET $reachable = $runs_in.{1..256+collect}.runs_in;
-                IF $service_id IN $reachable {
-                    RETURN { outcome: 'runs-in-cycle' }
-                };
-            };
+            fn::service::valid_runs_in($current, $runs_in);
 
             LET $updated = UPDATE ONLY $current.id SET
                 name = $name,
@@ -152,7 +113,46 @@ pub async fn handle_update(
     .decode()
     .error_with_slug("service-update-result-parse-failed")?;
 
-    let result = wasmcloud_utils::skir_domain_result!(UpdateOrganizationServiceResponse, result);
+    let result = match result {
+        TransactionOutcome::Committed(result) => result,
+        TransactionOutcome::Rejected(error) => match error.message() {
+            "runs-in-service-not-found-error" => {
+                return Ok(UpdateOrganizationServiceResponse::RunsInNotFoundError(
+                    Box::new(UpdateOrganizationServiceResponse_RunsInNotFoundError {
+                        service_id: runs_in_for_error.expect("parent validation requires runs_in"),
+                        _unrecognized: None,
+                    }),
+                ));
+            }
+            "runs-in-requires-engine-or-custom-role" => {
+                return Ok(validation_error(
+                    ServiceUpdateValidationError::RunsInRequiresEngineOrCustomRole,
+                ));
+            }
+            "runs-in-must-reference-realm-role" => {
+                return Ok(validation_error(
+                    ServiceUpdateValidationError::RunsInMustReferenceRealmRole,
+                ));
+            }
+            "runs-in-organization-mismatch" => {
+                return Ok(validation_error(
+                    ServiceUpdateValidationError::RunsInOrganizationMismatch,
+                ));
+            }
+            "runs-in-self-reference-error" => {
+                return Ok(validation_error(
+                    ServiceUpdateValidationError::RunsInSelfReference,
+                ));
+            }
+            "runs-in-cycle-error" => {
+                return Ok(validation_error(ServiceUpdateValidationError::RunsInCycle));
+            }
+            _ => wasmcloud_utils::skir_domain_result!(
+                UpdateOrganizationServiceResponse,
+                TransactionOutcome::Rejected(error)
+            ),
+        },
+    };
     otel_wasi::main_attribute!("service.outcome" = result.as_str());
     let service = match result {
         ServiceUpdateOutcome::Updated { service } => Service::try_from(service)?,
@@ -170,39 +170,8 @@ pub async fn handle_update(
                 Box::default(),
             ));
         }
-        ServiceUpdateOutcome::RunsInNotFoundError { service_id } => {
-            return Ok(UpdateOrganizationServiceResponse::RunsInNotFoundError(
-                Box::new(UpdateOrganizationServiceResponse_RunsInNotFoundError {
-                    service_id: service_id.into(),
-                    _unrecognized: None,
-                }),
-            ));
-        }
         ServiceUpdateOutcome::NameInvalid => {
             return Ok(validation_error(ServiceUpdateValidationError::NameInvalid));
-        }
-        ServiceUpdateOutcome::RunsInRequiresEngineOrCustomRole => {
-            return Ok(validation_error(
-                ServiceUpdateValidationError::RunsInRequiresEngineOrCustomRole,
-            ));
-        }
-        ServiceUpdateOutcome::RunsInMustReferenceRealmRole => {
-            return Ok(validation_error(
-                ServiceUpdateValidationError::RunsInMustReferenceRealmRole,
-            ));
-        }
-        ServiceUpdateOutcome::RunsInOrganizationMismatch => {
-            return Ok(validation_error(
-                ServiceUpdateValidationError::RunsInOrganizationMismatch,
-            ));
-        }
-        ServiceUpdateOutcome::RunsInSelfReference => {
-            return Ok(validation_error(
-                ServiceUpdateValidationError::RunsInSelfReference,
-            ));
-        }
-        ServiceUpdateOutcome::RunsInCycle => {
-            return Ok(validation_error(ServiceUpdateValidationError::RunsInCycle));
         }
     };
 

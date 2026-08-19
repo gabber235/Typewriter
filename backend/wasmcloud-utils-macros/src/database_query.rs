@@ -68,23 +68,37 @@ pub(crate) fn expand_read(input: ReadQueryInput) -> syn::Result<TokenStream> {
 }
 
 pub(crate) fn expand_transaction(input: TransactionQueryInput) -> syn::Result<TokenStream> {
-    let query_value = input.query.value();
+    let outcome_index = transaction_outcome_index(&input.query)?;
+    let outcome = input.outcome;
+    let query = input.query;
+    Ok(quote! {
+        ::wasmcloud_utils::database::TransactionQuery::<#outcome>::__from_literal(#query, #outcome_index)
+    })
+}
+
+pub(crate) fn expand_transaction_outcome_index(query: LitStr) -> syn::Result<TokenStream> {
+    let outcome_index = transaction_outcome_index(&query)?;
+    Ok(quote! { #outcome_index })
+}
+
+fn transaction_outcome_index(query: &LitStr) -> syn::Result<usize> {
+    let query_value = query.value();
     let statements = top_level_statements(&query_value).map_err(|message| {
         syn::Error::new(
-            input.query.span(),
+            query.span(),
             format!("invalid transaction query: {message}"),
         )
     })?;
 
     let Some(first) = statements.first() else {
         return Err(syn::Error::new(
-            input.query.span(),
+            query.span(),
             "transaction_query! requires BEGIN TRANSACTION as its first statement",
         ));
     };
     if !statement_matches(first, "BEGIN TRANSACTION") {
         return Err(syn::Error::new(
-            input.query.span(),
+            query.span(),
             "transaction_query! requires BEGIN TRANSACTION as its first statement",
         ));
     }
@@ -94,7 +108,7 @@ pub(crate) fn expand_transaction(input: TransactionQueryInput) -> syn::Result<To
     };
     if !statement_matches(last, "COMMIT TRANSACTION") {
         return Err(syn::Error::new(
-            input.query.span(),
+            query.span(),
             "transaction_query! requires COMMIT TRANSACTION as its final statement",
         ));
     }
@@ -106,22 +120,18 @@ pub(crate) fn expand_transaction(input: TransactionQueryInput) -> syn::Result<To
         .find_map(|(index, statement)| statement_starts_with(statement, "RETURN").then_some(index))
     else {
         return Err(syn::Error::new(
-            input.query.span(),
+            query.span(),
             "transaction_query! requires a top level RETURN outcome statement",
         ));
     };
     if outcome_index + 1 != statements.len() - 1 {
         return Err(syn::Error::new(
-            input.query.span(),
+            query.span(),
             "transaction_query! requires RETURN to be the final statement before COMMIT TRANSACTION",
         ));
     }
 
-    let outcome = input.outcome;
-    let query = input.query;
-    Ok(quote! {
-        ::wasmcloud_utils::database::TransactionQuery::<#outcome>::__from_literal(#query, #outcome_index)
-    })
+    Ok(outcome_index)
 }
 
 fn mutation_token(query: &str) -> Option<&'static str> {

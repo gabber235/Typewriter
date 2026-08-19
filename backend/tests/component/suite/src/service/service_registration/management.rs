@@ -258,6 +258,83 @@ async fn update_rejects_missing_runs_in_service(
 }
 
 #[component_test(ServiceRegistration)]
+async fn update_uses_canonical_parent_policy_for_every_validation(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    let database = database(context)?;
+    database
+        .seed(
+            r#"
+            CREATE user:actor SET name = 'actor';
+            CREATE organization:test_org SET name = 'test_org', founder = user:actor;
+            CREATE organization:other_org SET name = 'other_org', founder = user:actor;
+            CREATE service:managed SET name = 'managed', roles = [{ type: 'engine', version: '1' }], organization = organization:test_org;
+            CREATE service:realm_only SET name = 'realm_only', roles = [{ type: 'realm', version: '1' }], organization = organization:test_org;
+            CREATE service:realm_target SET name = 'realm_target', roles = [{ type: 'realm', version: '1' }], organization = organization:test_org;
+            CREATE service:engine_target SET name = 'engine_target', roles = [{ type: 'engine', version: '1' }], organization = organization:test_org;
+            CREATE service:other_realm SET name = 'other_realm', roles = [{ type: 'realm', version: '1' }], organization = organization:other_org;
+            "#,
+        )
+        .execute()
+        .await?;
+
+    for (source, target, expected) in [
+        (
+            "managed",
+            "managed",
+            ServiceUpdateValidationError::RunsInSelfReference,
+        ),
+        (
+            "realm_only",
+            "realm_target",
+            ServiceUpdateValidationError::RunsInRequiresEngineOrCustomRole,
+        ),
+        (
+            "managed",
+            "engine_target",
+            ServiceUpdateValidationError::RunsInMustReferenceRealmRole,
+        ),
+        (
+            "managed",
+            "other_realm",
+            ServiceUpdateValidationError::RunsInOrganizationMismatch,
+        ),
+    ] {
+        let response: UpdateOrganizationServiceResponse = request(
+            context,
+            "typewriter.from.user.actor.organization.test_org.services.update",
+            &UpdateOrganizationServiceRequest {
+                service_id: service_id(source),
+                expected_revision: 1,
+                name: source.into(),
+                runs_in: Some(service_id(target)),
+                _unrecognized: None,
+            },
+            UpdateOrganizationServiceRequest::serializer(),
+            UpdateOrganizationServiceResponse::serializer(),
+        )
+        .await?;
+
+        let UpdateOrganizationServiceResponse::ValidationError(error) = response else {
+            anyhow::bail!(
+                "expected parent validation {expected:?} for {source}, received {response:?}"
+            )
+        };
+        assert_eq!(*error, expected);
+    }
+
+    assert_jm!(
+        database
+            .query_json(
+                "RETURN { managed: service:managed.revision, realm_only: service:realm_only.revision }"
+            )
+            .await?,
+        { "managed": 1, "realm_only": 1 }
+    );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
 async fn update_rejects_runs_in_cycle(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {

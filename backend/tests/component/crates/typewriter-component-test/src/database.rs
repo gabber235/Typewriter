@@ -12,6 +12,12 @@ use surrealdb::{
 use uuid::Uuid;
 use wash_runtime::wit::WitInterface;
 use wasmcloud_plugin_surrealdb::{ConnectionKey, WasmcloudSurrealdb};
+use wasmcloud_utils::database::{
+    TRANSACTION_CONFLICT_INITIAL_DELAY, TRANSACTION_CONFLICT_MAX_ATTEMPTS,
+    TRANSACTION_CONFLICT_MAXIMUM_DELAY,
+};
+
+const FAILED_TRANSACTION_MESSAGE: &str = "The query was not executed due to a failed transaction";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SchemaPreset {
@@ -182,6 +188,41 @@ impl SeedQuery {
         let mut response = self.database.response(&self.sql, self.bindings).await?;
         let value: surrealdb::types::Value = response.take(0)?;
         Ok(value.into_json_value())
+    }
+
+    pub async fn query_json_retrying_conflicts(
+        self,
+        outcome_index: usize,
+    ) -> Result<serde_json::Value> {
+        for attempt in 1..=TRANSACTION_CONFLICT_MAX_ATTEMPTS {
+            match self
+                .database
+                .response(&self.sql, self.bindings.clone())
+                .await
+            {
+                Ok(mut response) => {
+                    let value: surrealdb::types::Value = response.take(outcome_index)?;
+                    return Ok(value.into_json_value());
+                }
+                Err(error)
+                    if attempt < TRANSACTION_CONFLICT_MAX_ATTEMPTS
+                        && error.chain().any(|cause| {
+                            cause.to_string().contains(FAILED_TRANSACTION_MESSAGE)
+                        }) =>
+                {
+                    let multiplier = 1_u32
+                        .checked_shl(attempt.saturating_sub(1))
+                        .unwrap_or(u32::MAX);
+                    let delay = TRANSACTION_CONFLICT_INITIAL_DELAY
+                        .saturating_mul(multiplier)
+                        .min(TRANSACTION_CONFLICT_MAXIMUM_DELAY);
+                    tokio::time::sleep(delay).await;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+
+        unreachable!("transaction conflict attempt count is nonzero")
     }
 }
 

@@ -6,7 +6,9 @@ mod database;
 mod record;
 mod skir;
 
-pub use database::{DatabaseHandle, SchemaPreset, TypewriterDatabase, TypewriterFixtureBuilderExt};
+pub use database::{
+    DatabaseHandle, SchemaPreset, SeedQuery, TypewriterDatabase, TypewriterFixtureBuilderExt,
+};
 pub use record::{database_record_key, skir_record_id};
 pub use skir::{SkirHttpExt, SkirHttpResponse, SkirMessagingExpectationExt, SkirMessagingExt};
 

@@ -1,4 +1,3 @@
-use crate::validate_roles;
 use otel_wasi::ResultWithSlug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -13,6 +12,7 @@ use wasmcloud_utils::{
         member::{OrganizationMember, WatchOrganizationMembersResponse},
         user::{WatchUserJoinRequestsResponse, WatchUserOrganizationsResponse},
     },
+    skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
     skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
@@ -25,8 +25,27 @@ struct ApprovalRecord {
 }
 
 #[derive(Debug, Deserialize)]
-struct RequesterRecord {
-    user_id: RecordId,
+#[serde(tag = "outcome", rename_all = "kebab-case")]
+enum ApprovalOutcome {
+    Approved { approval: Box<ApprovalRecord> },
+    RequestNotFoundError,
+    RolesRequiredError,
+    RolesNotFoundError { role_ids: Vec<RecordId> },
+    RolesNotAssignableError { role_ids: Vec<RecordId> },
+    UserAlreadyMemberError { user_id: RecordId },
+}
+
+impl ApprovalOutcome {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::Approved { .. } => "approved",
+            Self::RequestNotFoundError => "request-not-found-error",
+            Self::RolesRequiredError => "roles-required-error",
+            Self::RolesNotFoundError { .. } => "roles-not-found-error",
+            Self::RolesNotAssignableError { .. } => "roles-not-assignable-error",
+            Self::UserAlreadyMemberError { .. } => "user-already-member-error",
+        }
+    }
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -100,139 +119,95 @@ pub async fn handle_approve(
     let request_record_id = RecordId::from(&request_id);
     let organization_id = RecordId::new("organization", org_id);
 
-    let requester = read_query!(
-        r#"
-        SELECT
-            in AS user_id
-        FROM ONLY $request
-        WHERE out = $org
-            AND expires_at > time::now()
-        "#,
-    )
-    .bind("request", request_record_id.clone())
-    .bind("org", organization_id.clone())
-    .execute()
-    .await
-    .error_with_slug("join-request-approve-requester-query-failed")?
-    .parse::<Option<RequesterRecord>>()
-    .error_with_slug("join-request-approve-requester-result-parse-failed")?;
-
-    let Some(requester) = requester else {
-        otel_wasi::main_attribute!("join_request.outcome" = "request_not_found");
-        return Ok(skir_variant!(
-            ApproveOrganizationJoinRequestResponse::RequestNotFoundError { request_id }
-        ));
-    };
-
-    let requester_id: wasmcloud_utils::skir::base::kernel::v1::record_id::RecordId =
-        requester.user_id.into();
-    otel_wasi::main_attribute!("requester.id" = requester_id.key.to_string());
-
-    if role_ids.is_empty() {
-        otel_wasi::main_attribute!("join_request.outcome" = "roles-required-error");
-        return Ok(skir_variant!(
-            ApproveOrganizationJoinRequestResponse::RolesRequiredError
-        ));
-    }
-
     let db_role_ids = role_ids.as_slice().into_surreal_record_ids();
-    let validation = validate_roles(
-        &organization_id,
-        &db_role_ids,
-        &[],
-        "join-request-approve-role-validation-query-failed",
-        "join-request-approve-role-validation-result-parse-failed",
-    )
-    .await?;
-
-    if !validation.missing.is_empty() {
-        otel_wasi::main_attribute!("join_request.outcome" = "roles-not-found-error");
-        return Ok(skir_variant!(
-            ApproveOrganizationJoinRequestResponse::RolesNotFoundError {
-                role_ids: validation.missing.into_skir_record_ids()
-            }
-        ));
-    }
-
-    if !validation.unassignable.is_empty() {
-        otel_wasi::main_attribute!("join_request.outcome" = "roles-not-assignable-error");
-        return Ok(skir_variant!(
-            ApproveOrganizationJoinRequestResponse::RolesNotAssignableError {
-                role_ids: validation.unassignable.into_skir_record_ids()
-            }
-        ));
-    }
-
-    let roles = db_role_ids;
     let result = transaction_query!(
-        ApprovalRecord,
+        ApprovalOutcome,
         r#"
         BEGIN TRANSACTION;
 
-        LET $request = SELECT id, in.* AS user, out.* AS organization, requested_at, expires_at
-            FROM $request
-            WHERE out = $org AND expires_at > time::now();
-
-        IF array::len($request) = 0 {
-            THROW 'request-not-found-error'
-        };
-
-        IF array::len($roles) = 0 {
-            THROW 'roles-required-error'
-        };
-
-        LET $valid = SELECT * FROM $roles WHERE organization = $org;
-        IF array::len($valid) != array::len(array::distinct($roles)) {
-            THROW 'roles-not-found-error'
-        };
-
-        IF array::any($valid, |$r| !$r.assignable) {
-            THROW 'roles-not-assignable-error'
-        };
-
-        IF array::len(SELECT * FROM member_of WHERE in = $request[0].user.id AND out = $org) > 0 {
-            THROW 'user-already-member-error'
-        };
-
-        LET $user = $request[0].user.id;
-        LET $member = RELATE ONLY $user->member_of->$org SET roles = $roles;
-
-        DELETE $request[0].id;
-
         RETURN {
-            request: $request[0],
-            member: (
-                SELECT
-                    in.id AS user_id,
-                    in.name AS name,
-                    in.email AS email,
-                    in.avatar_url AS avatar_url,
-                    roles.* AS roles,
-                    joined_at
-                FROM ONLY $member
-                FETCH roles
-            )
+            LET $requests = SELECT id, in.* AS user, out.* AS organization, requested_at, expires_at
+                FROM $request
+                WHERE out = $org AND expires_at > time::now();
+
+            IF array::is_empty($requests) {
+                RETURN { outcome: 'request-not-found-error' }
+            };
+
+            IF array::is_empty($roles) {
+                RETURN { outcome: 'roles-required-error' }
+            };
+
+            LET $requested = SELECT * FROM $roles WHERE organization = $org;
+            LET $missing = array::complement(array::distinct($roles), $requested.id);
+            IF array::len($missing) > 0 {
+                RETURN { outcome: 'roles-not-found-error', role_ids: $missing }
+            };
+
+            LET $unassignable = SELECT VALUE id FROM $requested WHERE !assignable;
+            IF array::len($unassignable) > 0 {
+                RETURN { outcome: 'roles-not-assignable-error', role_ids: $unassignable }
+            };
+
+            LET $join_request = array::first($requests);
+            LET $request_user = $join_request.user.id;
+            IF array::len(SELECT * FROM member_of WHERE in = $request_user AND out = $org) > 0 {
+                RETURN { outcome: 'user-already-member-error', user_id: $request_user }
+            };
+
+            LET $member = RELATE ONLY $request_user->member_of->$org SET roles = $roles;
+            DELETE $join_request.id;
+
+            RETURN {
+                outcome: 'approved',
+                approval: {
+                    request: $join_request,
+                    member: (SELECT
+                        in.id AS user_id,
+                        in.name AS name,
+                        in.email AS email,
+                        in.avatar_url AS avatar_url,
+                        roles.* AS roles,
+                        joined_at
+                    FROM ONLY $member
+                    FETCH roles)
+                }
+            }
         };
         COMMIT TRANSACTION;
         "#,
     )
     .bind("request", request_record_id)
     .bind("org", organization_id)
-    .bind("roles", roles)
+    .bind("roles", db_role_ids)
     .execute()
     .await
     .error_with_slug("join-request-approve-query-failed")?
     .decode()
     .error_with_slug("join-request-approve-result-parse-failed")?;
 
-    if let TransactionOutcome::Rejected(error) = &result {
-        otel_wasi::main_attribute!("join_request.outcome" = error.message().to_owned());
-    }
-    let approved = wasmcloud_utils::skir_domain_result!(ApproveOrganizationJoinRequestResponse, result,
-        "request-not-found-error" => { request_id: request_id.clone() },
-        "roles-not-found-error" => { role_ids: role_ids.clone() },
-        "roles-not-assignable-error" => { role_ids: role_ids.clone() },
-        "user-already-member-error" => { user_id: requester_id.clone() }
+    let result =
+        wasmcloud_utils::skir_domain_result!(ApproveOrganizationJoinRequestResponse, result);
+    otel_wasi::main_attribute!("join_request.outcome" = result.as_str());
+    let approved = skir_transaction_outcome!(
+        ApproveOrganizationJoinRequestResponse,
+        result,
+        success ApprovalOutcome::Approved { approval } => approval,
+        errors {
+            ApprovalOutcome::RequestNotFoundError => {
+                request_id: request_id.clone()
+            },
+            ApprovalOutcome::RolesRequiredError => {},
+            ApprovalOutcome::RolesNotFoundError { role_ids } => {
+                role_ids: role_ids.into_skir_record_ids()
+            },
+            ApprovalOutcome::RolesNotAssignableError { role_ids } => {
+                role_ids: role_ids.into_skir_record_ids()
+            },
+            ApprovalOutcome::UserAlreadyMemberError { user_id } => {
+                user_id: user_id.into()
+            },
+        }
     );
 
     let member: OrganizationMember = approved.member.into();

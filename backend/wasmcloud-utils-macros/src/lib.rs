@@ -44,6 +44,15 @@ pub fn transaction_query(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+pub fn transaction_outcome_index(input: TokenStream) -> TokenStream {
+    let query = parse_macro_input!(input as syn::LitStr);
+    match database_query::expand_transaction_outcome_index(query) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+#[proc_macro]
 pub fn skir_domain_result(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as skir_domain_result::SkirDomainResultInput);
 
