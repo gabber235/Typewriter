@@ -8,10 +8,10 @@ import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
+import com.typewritermc.services.libs.communicator.contract.operationOutcome
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.telemetry.MessageHeadersGetter
 import com.typewritermc.services.libs.communicator.transport.ConsumerGroup
@@ -577,9 +577,7 @@ class CommunicatorRouter internal constructor(
             }
         annotateResponse(main, classification)
         sendReply(name, responseTemplate, responseCodec, slug, replyTo, response, classification)
-        if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-            throw SluggedException.wrap(slug, ReturnedInternalFailure())
-        }
+        classification.operationOutcome(Unit)
     }
 
     private suspend fun <R : Any> sendInternalFailure(
@@ -638,15 +636,15 @@ class CommunicatorRouter internal constructor(
         }
     }
 
-    private suspend fun consume(
+    private suspend fun <Value> consume(
         name: OperationName,
         template: String,
         slug: ErrorSlug,
         message: InboundMessage,
-        block: suspend (MainSpanScope) -> Unit,
-    ) {
+        block: suspend (MainSpanScope) -> Value,
+    ): Value {
         val parent = propagators.textMapPropagator.extract(Context.current(), message.headers, MessageHeadersGetter)
-        telemetry.consumerSpan(
+        return telemetry.consumerSpan(
             "${name.value} receive",
             slug,
             parent,
@@ -672,8 +670,6 @@ class CommunicatorRouter internal constructor(
     private class StartupFailure(
         cause: Throwable,
     ) : RuntimeException(cause)
-
-    private class ReturnedInternalFailure : RuntimeException("Handler returned internal error")
 
     private class RouteCompleted(
         pattern: String,

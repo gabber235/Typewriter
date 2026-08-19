@@ -174,6 +174,23 @@ val RegistrarMessagingRuntimeTest by testSuite {
         }
     }
 
+    test("query preserves a redacted messaging cause") {
+        val fixture = runtimeFixture()
+        try {
+            val cause = IllegalStateException("sensitive-query-details")
+            fixture.transport.failNextRequest(TransportError.Failure(cause))
+
+            val result = fixture.runtime.queryBinding() as RuntimeResult.Failure
+            val failure = result.failure as RegistrarFailure.Messaging
+
+            failure.operation shouldBe MessagingOperation.BINDING_QUERY
+            failure.cause?.reveal() shouldBe cause
+            failure.toString().contains("sensitive-query-details") shouldBe false
+        } finally {
+            fixture.close()
+        }
+    }
+
     test("query preserves a blank organization name") {
         val mapped =
             mapStatus(
@@ -290,6 +307,25 @@ val RegistrarMessagingRuntimeTest by testSuite {
         }
     }
 
+    test("watch preserves a redacted messaging cause") {
+        runTest {
+            val fixture = runtimeFixture()
+            try {
+                val cause = IllegalStateException("sensitive-watch-details")
+                fixture.transport.failNextSubscribe(TransportError.Failure(cause))
+
+                val result = fixture.runtime.watchBinding().first() as RuntimeResult.Failure
+                val failure = result.failure as RegistrarFailure.Messaging
+
+                failure.operation shouldBe MessagingOperation.BINDING_WATCH
+                failure.cause?.reveal() shouldBe cause
+                failure.toString().contains("sensitive-watch-details") shouldBe false
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
     test("heartbeat publishes exact subject and canonical payload") {
         val fixture = runtimeFixture()
         try {
@@ -319,9 +355,13 @@ val RegistrarMessagingRuntimeTest by testSuite {
             ServiceShutdownNotification.serializer
                 .fromBytes(published.message.payload.toByteArray())
                 .shouldBe(ServiceShutdownNotification())
-            fixture.transport.failNextPublish(TransportError.Unavailable())
+            val cause = IllegalStateException("sensitive-shutdown-details")
+            fixture.transport.failNextPublish(TransportError.Unavailable(cause))
             val failed = fixture.runtime.sendShutdown() as RuntimeResult.Failure
-            failed.failure shouldBe RegistrarFailure.Messaging(MessagingOperation.SHUTDOWN)
+            val failure = failed.failure as RegistrarFailure.Messaging
+            failure.operation shouldBe MessagingOperation.SHUTDOWN
+            failure.cause?.reveal() shouldBe cause
+            failure.toString().contains("sensitive-shutdown-details") shouldBe false
         } finally {
             fixture.close()
         }
@@ -350,12 +390,15 @@ val RegistrarMessagingRuntimeTest by testSuite {
     test("reconnect failure is recoverable messaging failure") {
         val fixture = runtimeFixture()
         try {
+            val cause = IllegalStateException("offline")
             fixture.nats.reconnectResult =
                 NatsLifecycleResult.Failure(
-                    NatsLifecycleError.Connection(IllegalStateException("offline")),
+                    NatsLifecycleError.Connection(cause),
                 )
             val result = fixture.runtime.reconnectForBoundPermissions() as RuntimeResult.Failure
-            result.failure shouldBe RegistrarFailure.Messaging(MessagingOperation.REAUTHORIZE)
+            val failure = result.failure as RegistrarFailure.Messaging
+            failure.operation shouldBe MessagingOperation.REAUTHORIZE
+            failure.cause?.reveal() shouldBe cause
         } finally {
             fixture.close()
         }

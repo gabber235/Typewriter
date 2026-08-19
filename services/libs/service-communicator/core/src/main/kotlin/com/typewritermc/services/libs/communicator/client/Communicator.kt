@@ -2,12 +2,13 @@ package com.typewritermc.services.libs.communicator.client
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
 import com.typewritermc.services.libs.communicator.contract.EventContract
+import com.typewritermc.services.libs.communicator.contract.OperationOutcome
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
-import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
+import com.typewritermc.services.libs.communicator.contract.operationOutcome
 import com.typewritermc.services.libs.communicator.result.CommunicationError
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -83,47 +84,32 @@ class Communicator(
         require(effectiveTimeout.isPositive() && effectiveTimeout.isFinite()) {
             "Request timeout must be positive and finite"
         }
-        val result =
-            operation(
-                contract.name.value,
-                "request",
-                contract.failureSlug,
-                SpanKind.CLIENT,
-                contract.requestAddress.template,
-            ) { annotate ->
-                val payload =
-                    classify(
-                        block = { contract.requestCodec.encode(request) },
-                        error = { CommunicationError.Encode(contract.failureSlug, it) },
-                    )
-                val message = outbound(contract.requestAddress.render(address), payload, headers)
-                annotate { attribute("messaging.destination.name", message.address.value) }
-                val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout))
-                val response =
-                    classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
-                        CommunicationError.Decode(contract.failureSlug, it)
-                    })
-                val classification = contract.responsePolicy.classify(response)
-                annotate {
-                    attribute("domain.outcome", classification.variant.value)
-                    attribute("operation.outcome", classification.outcome.name.lowercase())
-                }
-                if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-                    throw Classified(
-                        CommunicationError.Transport(
-                            contract.failureSlug,
-                            InternalResponseException(response),
-                        ),
-                    )
-                }
-                response
+        return operation(
+            contract.name.value,
+            "request",
+            contract.failureSlug,
+            SpanKind.CLIENT,
+            contract.requestAddress.template,
+        ) { annotate ->
+            val payload =
+                classify(
+                    block = { contract.requestCodec.encode(request) },
+                    error = { CommunicationError.Encode(contract.failureSlug, it) },
+                )
+            val message = outbound(contract.requestAddress.render(address), payload, headers)
+            annotate { attribute("messaging.destination.name", message.address.value) }
+            val inbound = classifyTransport(contract.failureSlug, transport.request(message, effectiveTimeout))
+            val response =
+                classify(block = { contract.responseCodec.decode(inbound.payload) }, error = {
+                    CommunicationError.Decode(contract.failureSlug, it)
+                })
+            val classification = contract.responsePolicy.classify(response)
+            annotate {
+                attribute("domain.outcome", classification.variant.value)
+                attribute("operation.outcome", classification.outcome.name.lowercase())
             }
-        if (result is CommunicationResult.Failure && result.error.cause is InternalResponseException) {
-            val internal = result.error.cause as InternalResponseException
-            @Suppress("UNCHECKED_CAST")
-            return CommunicationResult.Success(internal.response as Response)
-        }
-        return result
+            classification.operationOutcome(response)
+        }.responseResult()
     }
 
     /** Publishes a typed event. */
@@ -175,7 +161,7 @@ class Communicator(
                 headers,
                 annotate,
             )
-        }.normalizeInternalResponse()
+        }.responseResult()
     }
 
     internal suspend fun <Response : Any> sendResponse(
@@ -190,7 +176,7 @@ class Communicator(
     ): CommunicationResult<Unit> =
         operation(name, "publish", failureSlug, SpanKind.PRODUCER, template) { annotate ->
             publishResponse(destination, response, codec, classification, failureSlug, headers, annotate)
-        }.normalizeInternalResponse()
+        }.responseResult()
 
     private suspend fun <Response : Any> publishResponse(
         destination: com.typewritermc.services.libs.communicator.address.MessageAddress,
@@ -200,7 +186,7 @@ class Communicator(
         failureSlug: ErrorSlug,
         headers: MessageHeaders,
         annotate: (TypedAttributes.() -> Unit) -> Unit,
-    ) {
+    ): OperationOutcome<Unit> {
         annotate {
             attribute("messaging.destination.name", destination.value)
             attribute("domain.outcome", classification.variant.value)
@@ -208,19 +194,8 @@ class Communicator(
         }
         val payload = classify({ codec.encode(response) }) { CommunicationError.Encode(failureSlug, it) }
         classifyTransport(failureSlug, transport.publish(outbound(destination, payload, headers)))
-        if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-            throw Classified(CommunicationError.Transport(failureSlug, InternalResponseException(response)))
-        }
+        return classification.operationOutcome(Unit)
     }
-
-    private fun CommunicationResult<Unit>.normalizeInternalResponse(): CommunicationResult<Unit> =
-        if (this is CommunicationResult.Failure && error.cause is InternalResponseException) {
-            CommunicationResult.Success(
-                Unit,
-            )
-        } else {
-            this
-        }
 
     /** Creates a cold-typed watch flow; every collector owns a subscription. */
     fun <Address : Any, Request : Any, Initial : Any, Update : Any> watch(
@@ -369,7 +344,7 @@ class Communicator(
     ): CommunicationResult<WatchMessage<Initial, Update>> {
         val parent = propagators.textMapPropagator.extract(Context.current(), message.headers, MessageHeadersGetter)
         return try {
-            val value =
+            val outcome =
                 telemetry.consumerSpan(
                     "${contract.name.value} receive",
                     contract.failureSlug,
@@ -388,21 +363,11 @@ class Communicator(
                         domainOutcome(classification.variant.value)
                         operationOutcome(classification.outcome.name.lowercase())
                     }
-                    if (classification.outcome == ResponseOutcome.INTERNAL_ERROR) {
-                        val error = CommunicationError.Transport(contract.failureSlug, InternalResponseException(update))
-                        throw SluggedException.wrap(error.slug, Classified(error))
-                    }
-                    update
+                    classification.operationOutcome(update)
                 }
-            CommunicationResult.Success(WatchMessage.Update(value))
+            CommunicationResult.Success(WatchMessage.Update(outcome.value()))
         } catch (failure: Throwable) {
-            val internal = failure.causes().filterIsInstance<InternalResponseException>().firstOrNull()
-            if (internal != null) {
-                @Suppress("UNCHECKED_CAST")
-                CommunicationResult.Success(WatchMessage.Update(internal.response as Update))
-            } else {
-                recover(failure)
-            }
+            recover(failure)
         }
     }
 
@@ -527,11 +492,20 @@ class Communicator(
     private class Classified(
         val error: CommunicationError,
     ) : RuntimeException(error.cause)
-
-    private class InternalResponseException(
-        val response: Any,
-    ) : RuntimeException("Typed internal-error response")
 }
+
+private fun <Value> CommunicationResult<OperationOutcome<Value>>.responseResult(): CommunicationResult<Value> =
+    when (this) {
+        is CommunicationResult.Failure -> this
+        is CommunicationResult.Success -> CommunicationResult.Success(value.value())
+    }
+
+private fun <Value> OperationOutcome<Value>.value(): Value =
+    when (this) {
+        is OperationOutcome.Success -> value
+        is OperationOutcome.DomainError -> value
+        is OperationOutcome.InternalError -> value
+    }
 
 private fun TransportError.toCommunicationError(slug: ErrorSlug): CommunicationError =
     when (this) {

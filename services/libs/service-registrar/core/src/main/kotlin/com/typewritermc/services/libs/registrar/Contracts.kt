@@ -42,6 +42,7 @@ sealed interface RegistrarFailure {
     data class Messaging(
         val operation: MessagingOperation,
         val recoverable: Boolean = true,
+        val cause: RegistrarCause? = null,
     ) : RegistrarFailure
 
     data object ServiceNotFound : RegistrarFailure
@@ -54,6 +55,23 @@ sealed interface RegistrarFailure {
     data class Internal(
         val slug: String,
     ) : RegistrarFailure
+}
+
+/** Preserved failure cause whose diagnostics are redacted unless deliberately revealed. */
+class RegistrarCause private constructor(
+    private val failure: Throwable,
+) {
+    fun reveal(): Throwable = failure
+
+    override fun equals(other: Any?): Boolean = other is RegistrarCause && failure === other.failure
+
+    override fun hashCode(): Int = System.identityHashCode(failure)
+
+    override fun toString(): String = "[REDACTED]"
+
+    companion object {
+        fun from(failure: Throwable?): RegistrarCause? = failure?.let(::RegistrarCause)
+    }
 }
 
 enum class AccessTokenFailureReason { UNAVAILABLE, REJECTED, PROTOCOL }

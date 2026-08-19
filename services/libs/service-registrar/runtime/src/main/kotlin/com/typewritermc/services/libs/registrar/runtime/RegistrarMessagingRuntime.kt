@@ -26,6 +26,7 @@ import com.typewritermc.services.libs.registrar.BindingStatus
 import com.typewritermc.services.libs.registrar.IdentityCredentials
 import com.typewritermc.services.libs.registrar.MessagingOperation
 import com.typewritermc.services.libs.registrar.OrganizationBinding
+import com.typewritermc.services.libs.registrar.RegistrarCause
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.registrar.RegistrarRuntime
@@ -189,7 +190,7 @@ internal class TypewriterRegistrarRuntime(
 
     override suspend fun queryBinding(): RuntimeResult<BindingStatus> =
         when (val result = communicator.request(statusContract, service, GetServiceStatusRequest())) {
-            is CommunicationResult.Failure -> messaging(MessagingOperation.BINDING_QUERY)
+            is CommunicationResult.Failure -> messaging(MessagingOperation.BINDING_QUERY, result.error.cause)
             is CommunicationResult.Success -> mapStatus(result.value, MessagingOperation.BINDING_QUERY)
         }
 
@@ -199,7 +200,7 @@ internal class TypewriterRegistrarRuntime(
             .map { result ->
                 when (result) {
                     is CommunicationResult.Failure -> {
-                        messaging(MessagingOperation.BINDING_WATCH)
+                        messaging(MessagingOperation.BINDING_WATCH, result.error.cause)
                     }
 
                     is CommunicationResult.Success -> {
@@ -246,16 +247,18 @@ internal class TypewriterRegistrarRuntime(
         sentinel.invalidate()
         val cause = (result as NatsLifecycleResult.Failure).error.cause
         val auth = generateSequence(cause as Throwable?) { it.cause }.filterIsInstance<RegistrarAuthenticationException>().firstOrNull()
-        return RuntimeResult.Failure(auth?.failure ?: RegistrarFailure.Messaging(operation))
+        return RuntimeResult.Failure(
+            auth?.failure ?: RegistrarFailure.Messaging(operation, cause = RegistrarCause.from(cause)),
+        )
     }
 
     private suspend fun <E : Any> publish(
         contract: EventContract<ServiceAddress, E>,
         event: E,
         operation: MessagingOperation,
-    ) = when (communicator.publish(contract, service, event)) {
+    ) = when (val result = communicator.publish(contract, service, event)) {
         is CommunicationResult.Success -> RuntimeResult.Success(Unit)
-        is CommunicationResult.Failure -> messaging(operation)
+        is CommunicationResult.Failure -> messaging(operation, result.error.cause)
     }
 }
 
@@ -332,7 +335,10 @@ private fun <A, B> RuntimeResult<A>.map(transform: (A) -> B): RuntimeResult<B> =
         is RuntimeResult.Failure -> this
     }
 
-private fun <V> messaging(operation: MessagingOperation): RuntimeResult<V> = RuntimeResult.Failure(RegistrarFailure.Messaging(operation))
+private fun <V> messaging(
+    operation: MessagingOperation,
+    cause: Throwable? = null,
+): RuntimeResult<V> = RuntimeResult.Failure(RegistrarFailure.Messaging(operation, cause = RegistrarCause.from(cause)))
 
 internal class RegistrarAuthenticationException(
     val failure: RegistrarFailure,

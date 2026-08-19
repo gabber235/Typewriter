@@ -4,7 +4,12 @@ import com.typewritermc.services.libs.communicator.address.AddressValues
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.services.libs.communicator.contract.OperationOutcome
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
+import com.typewritermc.services.libs.communicator.contract.ResponseClassification
+import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
+import com.typewritermc.services.libs.communicator.contract.ResponseVariant
+import com.typewritermc.services.libs.communicator.contract.operationOutcome
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageHeaders
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
@@ -37,6 +42,15 @@ private val codec =
     }
 
 val CoreFoundationsTest by testSuite {
+    test("response classifications map to every typed operation outcome") {
+        ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of("success"))
+            .operationOutcome("value") shouldBe OperationOutcome.Success("value")
+        ResponseClassification(ResponseOutcome.DOMAIN_ERROR, ResponseVariant.of("domain-error"))
+            .operationOutcome("value") shouldBe OperationOutcome.DomainError("value")
+        ResponseClassification(ResponseOutcome.INTERNAL_ERROR, ResponseVariant.of("internal-error"))
+            .operationOutcome("value") shouldBe OperationOutcome.InternalError("value")
+    }
+
     test("payload copies source and returned bytes") {
         val source = byteArrayOf(1, 2, 3)
         val payload = Payload.copyOf(source)

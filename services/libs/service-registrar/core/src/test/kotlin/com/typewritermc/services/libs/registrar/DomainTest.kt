@@ -14,6 +14,15 @@ val DomainTest by testSuite {
         RegistrationToken("token").toString().contains("token") shouldBe false
         RedactedSecret.AccessToken("access").toString() shouldBe "[REDACTED]"
     }
+    test("registrar causes preserve throwable identity and redact diagnostics") {
+        val failure = IllegalStateException("sensitive-token")
+        val cause = checkNotNull(RegistrarCause.from(failure))
+        val messaging = RegistrarFailure.Messaging(MessagingOperation.HEARTBEAT, cause = cause)
+
+        cause.reveal() shouldBe failure
+        cause.toString() shouldBe "[REDACTED]"
+        messaging.toString().contains("sensitive-token") shouldBe false
+    }
     test("configuration validates backend role invariants") {
         shouldThrow<IllegalArgumentException> { configuration(emptyList()) }
         shouldThrow<IllegalArgumentException> { configuration(listOf(ServiceRole.Engine("1"), ServiceRole.Engine("2"))) }
