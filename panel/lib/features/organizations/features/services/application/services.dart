@@ -83,61 +83,62 @@ class Services extends _$Services {
     final organizationId = ref.read(organizationIdProvider);
     if (organizationId == null) throw ApiException.noOrganization();
     state.ensureReady();
-    try {
-      final request = skir.UpdateOrganizationServiceRequest(
-        serviceId: service.serviceId,
-        expectedRevision: service.revision,
-        name: service.name,
-        runsIn: service.runsIn,
-      );
-      final response = await ref.requestSkir(
-        "cloud.to.user.$userId.organization.${organizationId.id}.services.update",
-        skir.UpdateOrganizationServiceRequest.serializer.toBytes(request),
-        skir.UpdateOrganizationServiceResponse.serializer,
-      );
-      switch (response) {
-        case skir.UpdateOrganizationServiceResponse_unknown():
-          return unavailableMutation("The server returned an unknown response");
-        case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
-          return unavailableMutation("The server could not update the service");
-        case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
-          :final value,
-        ):
-          final actual = Service.fromSkir(value.actual);
-          final upsert = _upsertCanonicalService(state.requireValue, actual);
-          state = AsyncData(upsert.values);
-          return TypedMutationResult.conflict(
-            expectedRevision: value.expectedRevision,
-            actualRevision: upsert.canonical.revision,
-            actualValue: upsert.canonical.inspectorValue,
-          );
-        case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper():
-          return invalidMutation("The service contains an invalid reference");
-        case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
-          return unavailableMutation(
-            "The service no longer exists",
-            targetDeleted: true,
-          );
-        case skir.UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper():
-          return invalidMutation("The selected Realm service no longer exists");
-        case skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
-          return invalidMutation("The service contains invalid values");
-        case skir.UpdateOrganizationServiceResponse_successWrapper(
-          :final value,
-        ):
-          final updatedService = Service.fromSkir(value);
-          final upsert = _upsertCanonicalService(
-            state.requireValue,
-            updatedService,
-          );
-          state = AsyncData(upsert.values);
-          return TypedMutationResult.success(
-            revision: upsert.canonical.revision,
-            value: upsert.canonical.inspectorValue,
-          );
-      }
-    } on Object catch (_) {
-      return unavailableMutation("The service update could not be completed");
+    final request = skir.UpdateOrganizationServiceRequest(
+      serviceId: service.serviceId,
+      expectedRevision: service.revision,
+      name: service.name,
+      runsIn: service.runsIn,
+    );
+    final response =
+        await runPanelMutation<skir.UpdateOrganizationServiceResponse?>(
+          operation: PanelMutationOperation.updateService,
+          mutation: () => ref.requestSkir(
+            "cloud.to.user.$userId.organization.${organizationId.id}.services.update",
+            skir.UpdateOrganizationServiceRequest.serializer.toBytes(request),
+            skir.UpdateOrganizationServiceResponse.serializer,
+          ),
+          recover: (_, _) => null,
+        );
+    switch (response) {
+      case null:
+        return unavailableMutation("The service update could not be completed");
+      case skir.UpdateOrganizationServiceResponse_unknown():
+        return unavailableMutation("The server returned an unknown response");
+      case skir.UpdateOrganizationServiceResponse_internalErrorWrapper():
+        return unavailableMutation("The server could not update the service");
+      case skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
+        :final value,
+      ):
+        final actual = Service.fromSkir(value.actual);
+        final upsert = _upsertCanonicalService(state.requireValue, actual);
+        state = AsyncData(upsert.values);
+        return TypedMutationResult.conflict(
+          expectedRevision: value.expectedRevision,
+          actualRevision: upsert.canonical.revision,
+          actualValue: upsert.canonical.inspectorValue,
+        );
+      case skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper():
+        return invalidMutation("The service contains an invalid reference");
+      case skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper():
+        return unavailableMutation(
+          "The service no longer exists",
+          targetDeleted: true,
+        );
+      case skir.UpdateOrganizationServiceResponse_runsInNotFoundErrorWrapper():
+        return invalidMutation("The selected Realm service no longer exists");
+      case skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
+        return invalidMutation("The service contains invalid values");
+      case skir.UpdateOrganizationServiceResponse_successWrapper(:final value):
+        final updatedService = Service.fromSkir(value);
+        final upsert = _upsertCanonicalService(
+          state.requireValue,
+          updatedService,
+        );
+        state = AsyncData(upsert.values);
+        return TypedMutationResult.success(
+          revision: upsert.canonical.revision,
+          value: upsert.canonical.inspectorValue,
+        );
     }
   }
 
@@ -147,32 +148,45 @@ class Services extends _$Services {
     final organizationId = ref.read(organizationIdProvider);
     if (organizationId == null) throw ApiException.noOrganization();
     state.ensureReady();
-    final previousState = state;
+    final removed = state.requireValue.firstWhere(
+      (service) => service.serviceId == serviceId,
+    );
     state = AsyncData(
       state.requireValue
           .where((service) => service.serviceId != serviceId)
           .toList(),
     );
-    try {
-      final request = skir.UnbindServiceRequest(serviceId: serviceId.id);
-      final response = await ref.requestSkir(
+    final request = skir.UnbindServiceRequest(serviceId: serviceId.id);
+    final response = await runPanelMutation(
+      operation: PanelMutationOperation.deleteService,
+      mutation: () => ref.requestSkir(
         "cloud.to.user.$userId.organization.${organizationId.id}.services.unbind",
         skir.UnbindServiceRequest.serializer.toBytes(request),
         skir.UnbindServiceResponse.serializer,
-      );
-      switch (response) {
-        case skir.UnbindServiceResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-        case skir.UnbindServiceResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.UnbindServiceResponse_serviceNotFoundErrorWrapper():
-          throw ApiException.notFound("Service");
-        case skir.UnbindServiceResponse_successWrapper():
-      }
-    } catch (_) {
-      state = previousState;
-      rethrow;
+      ),
+      recover: (error, stackTrace) {
+        _restoreService(removed);
+        Error.throwWithStackTrace(error, stackTrace);
+      },
+    );
+    switch (response) {
+      case skir.UnbindServiceResponse_unknown():
+        _restoreService(removed);
+        throw ApiException.unknownResponseMessage();
+      case skir.UnbindServiceResponse_internalErrorWrapper():
+        _restoreService(removed);
+        throw ApiException.internalServerError();
+      case skir.UnbindServiceResponse_serviceNotFoundErrorWrapper():
+        _restoreService(removed);
+        throw ApiException.notFound("Service");
+      case skir.UnbindServiceResponse_successWrapper():
     }
+  }
+
+  void _restoreService(Service removed) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(_upsertCanonicalService(current, removed).values);
   }
 }
 

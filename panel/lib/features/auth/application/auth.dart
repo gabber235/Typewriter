@@ -148,7 +148,10 @@ class Auth extends _$Auth {
     if (manager == null) {
       return;
     }
-    await Future.wait([manager.forgetUser(), manager.logout()]);
+    await runPanelMutation(
+      operation: PanelMutationOperation.signOut,
+      mutation: () => Future.wait([manager.forgetUser(), manager.logout()]),
+    );
     ref.invalidateSelf();
   }
 }
