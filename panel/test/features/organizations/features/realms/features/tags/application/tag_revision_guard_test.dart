@@ -95,6 +95,35 @@ void main() {
     expect(errors.single.exceptionAsString(), contains("revision 3"));
   });
 
+  test("replayed Tag remove remains absent", () async {
+    final nats = MockNatsClient();
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(_organizationId),
+        realmIdProvider.overrideWithValue(_realmId),
+        natsProvider.overrideWithValue(nats),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(nats.dispose);
+    final subscription = container.listen(tagsProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitFor(() => nats.subscriptionSubjects.contains(_listenSubject));
+    final tag = _tag();
+    _emit(nats, skir.WatchTagsResponse.wrapList([tag.toSkir()]));
+    await _waitFor(
+      () =>
+          container.read(tagsProvider).value?.singleOrNull?.tagId == tag.tagId,
+    );
+
+    _emit(nats, skir.WatchTagsResponse.wrapRemove(tag.tagId));
+    await _waitFor(() => container.read(tagsProvider).value?.isEmpty ?? false);
+    _emit(nats, skir.WatchTagsResponse.wrapRemove(tag.tagId));
+    await pumpEventQueue();
+
+    expect(container.read(tagsProvider).requireValue, isEmpty);
+  });
+
   test("delayed Tag mutation cannot replace a newer observation", () async {
     final nats = MockNatsClient();
     late _SeededTags notifier;
