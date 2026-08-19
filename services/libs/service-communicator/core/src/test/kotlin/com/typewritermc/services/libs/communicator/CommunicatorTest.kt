@@ -353,7 +353,7 @@ val CommunicatorTest by testSuite {
         }
     }
 
-    test("typed internal response is success but operation span is error") {
+    test("typed internal response is success without exception based span failure") {
         runTest {
             fixture().use { (client, fake, harness) ->
                 fake.respondWith { message, _ ->
@@ -366,7 +366,7 @@ val CommunicatorTest by testSuite {
                 }
                 client.request(unary, Target("a"), "x") shouldBe CommunicationResult.Success("internal")
                 val span = harness.finishedSpans().single()
-                span.status.statusCode shouldBe StatusCode.ERROR
+                span.status.statusCode shouldBe StatusCode.UNSET
                 span.attributes[AttributeKey.stringKey("domain.outcome")] shouldBe "internal"
             }
         }

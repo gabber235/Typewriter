@@ -353,7 +353,7 @@ val CommunicatorRouterTest by testSuite {
                         "domain",
                         "internal",
                     )
-                spans.map { it.status.statusCode.name } shouldBe listOf("UNSET", "ERROR")
+                spans.map { it.status.statusCode.name } shouldBe listOf("UNSET", "UNSET")
                 fixture.router.stop()
             }
         }

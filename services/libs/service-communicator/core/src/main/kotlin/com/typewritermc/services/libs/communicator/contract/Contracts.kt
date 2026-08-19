@@ -47,6 +47,28 @@ data class ResponseClassification(
     val variant: ResponseVariant,
 )
 
+/** Typed result of classifying a normal response. */
+internal sealed interface OperationOutcome<out Value> {
+    data class Success<Value>(
+        val value: Value,
+    ) : OperationOutcome<Value>
+
+    data class DomainError<Value>(
+        val value: Value,
+    ) : OperationOutcome<Value>
+
+    data class InternalError<Value>(
+        val value: Value,
+    ) : OperationOutcome<Value>
+}
+
+internal fun <Value> ResponseClassification.operationOutcome(value: Value): OperationOutcome<Value> =
+    when (outcome) {
+        ResponseOutcome.SUCCESS -> OperationOutcome.Success(value)
+        ResponseOutcome.DOMAIN_ERROR -> OperationOutcome.DomainError(value)
+        ResponseOutcome.INTERNAL_ERROR -> OperationOutcome.InternalError(value)
+    }
+
 /** Classifies a typed response into its semantic outcome and stable variant. */
 fun interface ResponseClassifier<Response : Any> {
     fun classify(response: Response): ResponseClassification
