@@ -32,6 +32,7 @@
     "marketplace",
     "module-plugin",
     "panel",
+    "realm",
     "services",
     "services/build-logic",
     "services/libs/service-communicator",

@@ -16,3 +16,6 @@ rootProject.name = "realm"
 includeBuild("../libs/service-utils")
 includeBuild("../libs/service-telemetry")
 includeBuild("../libs/service-registrar")
+includeBuild("../libs/service-file-transfer")
+includeBuild("../loader")
+includeBuild("../engine")

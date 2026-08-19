@@ -42,6 +42,10 @@ dependencies {
     implementation("com.typewritermc:service-registrar-koin")
     implementation("com.typewritermc:service-registrar-console")
     implementation("com.typewritermc:service-communicator-skir")
+    implementation("com.typewritermc:service-file-transfer-core")
+    implementation("com.typewritermc:service-file-transfer-storage-file")
+    implementation("com.typewritermc:loader-core")
+    implementation("com.typewritermc:engine-types")
     implementation(platform(libs.opentelemetry.bom))
     implementation(libs.opentelemetry.sdk)
     implementation(libs.opentelemetry.exporter.otlp)
@@ -52,6 +56,7 @@ dependencies {
     implementation(libs.surrealdb.java.sdk)
 
     testImplementation("com.typewritermc:service-communicator-testing")
+    testImplementation("com.typewritermc:service-file-transfer-messaging")
     testImplementation("com.typewritermc:service-telemetry-testing")
     testImplementation(libs.mockk)
     testImplementation(libs.kotlin.coroutines.test)

@@ -1,6 +1,9 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.deployment.CompatibleNoOperationCheckpoint
+import com.typewritermc.realm.deployment.ManagedRealmRuntime
+import com.typewritermc.realm.deployment.RealmUpgradeCheckpoint
 import com.typewritermc.realm.outbox.RealmOutboxPublisher
 import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.SurrealBookRepository
@@ -45,7 +48,7 @@ class Realm(
     private val retryPolicy: RetryPolicy,
     private val delayScheduler: DelayScheduler,
     private val clock: Clock,
-) {
+) : ManagedRealmRuntime {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
     private var routeFactory: RealmRouteFactory? = null
@@ -134,6 +137,12 @@ class Realm(
             }
             it.annotate { operationOutcome("completed") }
         }
+
+    override suspend fun prepareUpgradeCheckpoint(): RealmUpgradeCheckpoint = CompatibleNoOperationCheckpoint
+
+    override suspend fun stop() {
+        shutdown()
+    }
 
     context(main: MainSpanScope)
     private suspend fun replaceRouterWithRetry(
