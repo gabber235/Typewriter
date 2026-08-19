@@ -390,7 +390,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.typewritermc.panel.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/typewriter_panel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/typewriter_panel";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Typewriter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Typewriter";
 			};
 			name = Debug;
 		};
@@ -404,7 +404,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.typewritermc.panel.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/typewriter_panel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/typewriter_panel";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Typewriter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Typewriter";
 			};
 			name = Release;
 		};
@@ -418,7 +418,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.typewritermc.panel.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/typewriter_panel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/typewriter_panel";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Typewriter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Typewriter";
 			};
 			name = Profile;
 		};

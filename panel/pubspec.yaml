@@ -88,7 +88,10 @@ icons_launcher:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/cute_robot.riv
+    - assets/game_character.riv
+    - assets/robot_island.riv
+    - assets/tour.riv
   fonts:
     - family: JetBrainsMono
       fonts:
