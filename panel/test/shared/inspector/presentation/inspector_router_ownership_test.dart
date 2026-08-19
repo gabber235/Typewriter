@@ -7,8 +7,11 @@ void main() {
     final organization = File(
       "lib/features/organizations/presentation/organization_route.dart",
     ).readAsStringSync();
-    final book = File(
+    final bookRoute = File(
       "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
+    ).readAsStringSync();
+    final bookShell = File(
+      "lib/features/organizations/features/realms/features/books/presentation/book/book_route_shell.dart",
     ).readAsStringSync();
 
     expect(organization, contains("InspectorScaffold("));
@@ -19,10 +22,10 @@ void main() {
       contains("Expanded(\n                    child: InspectorScaffold("),
     );
     expect(organization, contains("child: child,"));
-    expect(book, contains("InspectorScaffold("));
-    expect("InspectorScaffold(".allMatches(book), hasLength(1));
-    expect(book, contains("child: AutoRouter("));
-    expect(book, contains("child: child,"));
+    expect(bookShell, contains("InspectorScaffold("));
+    expect("InspectorScaffold(".allMatches(bookShell), hasLength(1));
+    expect(bookRoute, contains("child: AutoRouter("));
+    expect(bookShell, contains("child: child,"));
   });
 
   test("selectable route pages do not own inspectors", () {
