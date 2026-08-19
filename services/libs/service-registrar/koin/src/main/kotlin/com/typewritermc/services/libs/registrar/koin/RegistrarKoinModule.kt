@@ -12,17 +12,23 @@ import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.registrar.runtime.TypewriterIdentityIssuer
 import com.typewritermc.services.libs.registrar.runtime.TypewriterRegistrarRuntimeFactory
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.dsl.onClose
+import kotlin.time.TimeSource
 
 /** Wires registrar adapters while leaving storage, telemetry, scope, and lifecycle application-owned. */
 fun registrarModule(
     configuration: RegistrarConfiguration,
     scope: CoroutineScope,
+    retryPolicy: RetryPolicy,
+    delayScheduler: DelayScheduler,
+    timeSource: TimeSource,
     httpConfiguration: JdkHttpTransportConfiguration = JdkHttpTransportConfiguration(),
 ): Module =
     module {
@@ -36,6 +42,7 @@ fun registrarModule(
                 get(),
                 get<ServiceTelemetry>(),
                 get<OpenTelemetry>().propagators,
+                timeSource,
             )
         }
         single {
@@ -46,6 +53,9 @@ fun registrarModule(
                 get<IdentityIssuer>(),
                 get<RegistrarRuntimeFactory>(),
                 get<ServiceTelemetry>(),
+                retryPolicy,
+                delayScheduler,
+                timeSource,
             )
         }
     }

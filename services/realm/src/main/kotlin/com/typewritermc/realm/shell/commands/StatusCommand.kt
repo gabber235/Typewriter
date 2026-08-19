@@ -12,8 +12,7 @@ import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.RegistrarStopFailure
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.SentinelFailureReason
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 
 class StatusCommand(
     private val context: RealmShellContext,
@@ -21,8 +20,7 @@ class StatusCommand(
     override fun help(context: Context) = "Show the current status of the Realm service"
 
     override fun run() {
-        val uptime = Duration.between(context.startTime, Instant.now())
-        val uptimeFormatted = formatDuration(uptime)
+        val uptimeFormatted = formatDuration(context.uptime)
 
         echo("Realm Service Status")
         echo("Version: ${context.version}")
@@ -144,9 +142,9 @@ class StatusCommand(
     }
 
     private fun formatDuration(duration: Duration): String {
-        val hours = duration.toHours()
-        val minutes = duration.toMinutesPart()
-        val seconds = duration.toSecondsPart()
+        val hours = duration.inWholeHours
+        val minutes = duration.inWholeMinutes % 60
+        val seconds = duration.inWholeSeconds % 60
         return "%02d:%02d:%02d".format(hours, minutes, seconds)
     }
 }

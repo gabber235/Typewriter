@@ -349,7 +349,7 @@ class TypewriterRegistrarRuntimeFactory(
     private val httpClient: ServiceHttpClient,
     private val telemetry: ServiceTelemetry,
     private val propagators: ContextPropagators,
-    private val clock: TimeSource = TimeSource.Monotonic,
+    private val clock: TimeSource,
 ) : RegistrarRuntimeFactory {
     override suspend fun create(
         credentials: IdentityCredentials,

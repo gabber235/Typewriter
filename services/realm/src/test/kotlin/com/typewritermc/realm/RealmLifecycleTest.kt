@@ -19,6 +19,8 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -28,6 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
@@ -65,8 +69,8 @@ val RealmLifecycleTest by testSuite {
 
                 first.transport.activeSubscriptionCount shouldBe 0
                 second.transport.activeSubscriptionCount shouldBe 0
-                fixture.retryDelay.awaitRequest()
-                fixture.retryDelay.resume()
+                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.resume()
                 runCurrent()
 
                 second.transport.activeSubscriptionCount shouldBe ROUTE_COUNT
@@ -85,7 +89,7 @@ private class RealmLifecycleFixture(
     private val transports = mutableListOf<FakeMessageTransport>()
     private val telemetry = TelemetryTestHarness.create()
     private val lifecycleEvents = mutableListOf<String>()
-    val retryDelay = FakeRealmRouteRetryDelay()
+    val delayScheduler = FakeDelayScheduler()
     val realm =
         Realm(
             databaseProvider =
@@ -100,7 +104,8 @@ private class RealmLifecycleFixture(
             presentationSearch = UnavailableRealmPresentationSearchSource(),
             scope = scope,
             telemetry = telemetry.telemetry,
-            retryDelay = retryDelay,
+            retryPolicy = RetryPolicy.fixed(1.seconds),
+            delayScheduler = delayScheduler,
         )
 
     fun ready(
@@ -170,17 +175,17 @@ private class TestDatabaseProvider(
     }
 }
 
-private class FakeRealmRouteRetryDelay : RealmRouteRetryDelay {
-    private val requested = Channel<Unit>(Channel.UNLIMITED)
+private class FakeDelayScheduler : DelayScheduler {
+    private val requested = Channel<Duration>(Channel.UNLIMITED)
     private val resumed = Channel<Unit>(Channel.UNLIMITED)
 
-    override suspend fun awaitRetry() {
-        requested.send(Unit)
+    override suspend fun delay(duration: Duration) {
+        requested.send(duration)
         resumed.receive()
     }
 
     suspend fun awaitRequest() {
-        requested.receive()
+        requested.receive() shouldBe 1.seconds
     }
 
     fun resume() {

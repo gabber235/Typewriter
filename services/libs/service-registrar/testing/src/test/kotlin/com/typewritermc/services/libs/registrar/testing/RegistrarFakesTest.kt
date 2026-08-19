@@ -50,7 +50,7 @@ val RegistrarFakesTest by testSuite {
         runTest {
             val ledger = RegistrarActionLedger()
             FakeCredentialStorage(ledger = ledger).load()
-            FakeRegistrarDelay(ledger = ledger).delay(kotlin.time.Duration.ZERO)
+            FakeDelayScheduler(ledger = ledger).delay(kotlin.time.Duration.ZERO)
             ledger.actions shouldBe listOf(RegistrarAction.LoadCredentials, RegistrarAction.Delay(kotlin.time.Duration.ZERO))
             val snapshot = ledger.actions
             FakeCredentialStorage(ledger = ledger).load()

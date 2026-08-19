@@ -21,11 +21,12 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -38,7 +39,8 @@ class Realm(
     private val presentationSearch: RealmPresentationSearchSource,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
-    private val retryDelay: RealmRouteRetryDelay = RealmRouteRetryDelay { delay(1_000) },
+    private val retryPolicy: RetryPolicy,
+    private val delayScheduler: DelayScheduler,
 ) {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
@@ -128,6 +130,7 @@ class Realm(
         ready: RegistrarState.Ready,
         communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
     ) {
+        var retryAttempt = 0L
         while (true) {
             try {
                 telemetry.mainSpan(
@@ -139,7 +142,8 @@ class Realm(
                 return
             } catch (failure: Throwable) {
                 rethrowExceptionalThrowable(failure)
-                retryDelay.awaitRetry()
+                delayScheduler.delay(retryPolicy.delayFor(retryAttempt))
+                retryAttempt = if (retryAttempt == Long.MAX_VALUE) Long.MAX_VALUE else retryAttempt + 1
             }
         }
     }
@@ -172,10 +176,6 @@ class Realm(
         router = replacement
         routerSession = session
     }
-}
-
-fun interface RealmRouteRetryDelay {
-    suspend fun awaitRetry()
 }
 
 private data class RouterSession(

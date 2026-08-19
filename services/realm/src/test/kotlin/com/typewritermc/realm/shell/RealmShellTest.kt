@@ -19,7 +19,7 @@ import io.opentelemetry.api.trace.SpanId
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
-import java.time.Instant
+import kotlin.time.TestTimeSource
 
 val RealmShellTest by testSuite {
     test("tokenization preserves quoted arguments") {
@@ -29,8 +29,8 @@ val RealmShellTest by testSuite {
     test("malformed input is reported without preventing the next command") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
 
@@ -54,8 +54,8 @@ val RealmShellTest by testSuite {
     test("shell command is a bounded root span") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
 
@@ -75,8 +75,8 @@ val RealmShellTest by testSuite {
     test("shell exit is a bounded root span with its outcome") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
 
         TelemetryTestHarness.create().use { harness ->
@@ -93,8 +93,8 @@ val RealmShellTest by testSuite {
     test("end of input returns a bounded shell exit reason") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
         every { reader.readLine("realm> ") } throws EndOfFileException()

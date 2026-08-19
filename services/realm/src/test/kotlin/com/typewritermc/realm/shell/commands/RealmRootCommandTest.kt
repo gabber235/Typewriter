@@ -8,14 +8,14 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.time.Instant
+import kotlin.time.TestTimeSource
 
 val RealmRootCommandTest by testSuite {
     test("help displays the command catalog") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
 
         val result = RealmRootCommand(context).test("help")
@@ -29,8 +29,8 @@ val RealmRootCommandTest by testSuite {
     test("stop requests only local shell termination") {
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = TestTimeSource(),
             )
 
         val result = RealmRootCommand(context).test("stop")

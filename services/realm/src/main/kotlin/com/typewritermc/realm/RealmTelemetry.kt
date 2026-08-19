@@ -20,9 +20,10 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
 import java.util.concurrent.TimeUnit
 
-private val realmSettings by lazy(RealmSettings::system)
-
-fun realmOpenTelemetry(console: ConsoleLogOutput): OpenTelemetrySdk {
+internal fun realmOpenTelemetry(
+    console: ConsoleLogOutput,
+    configuration: RealmTelemetryConfiguration,
+): OpenTelemetrySdk {
     val resource =
         Resource.getDefault().merge(
             Resource
@@ -35,14 +36,14 @@ fun realmOpenTelemetry(console: ConsoleLogOutput): OpenTelemetrySdk {
         SdkTracerProvider
             .builder()
             .setResource(resource)
-            .setSampler(realmSampler())
+            .setSampler(realmSampler(configuration.sampler))
     val loggerProvider =
         SdkLoggerProvider
             .builder()
             .setResource(resource)
             .addLogRecordProcessor(SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(console)))
 
-    realmSetting("OTEL_EXPORTER_OTLP_ENDPOINT")?.let { endpoint ->
+    configuration.otlpEndpoint?.let { endpoint ->
         val spanExporter = OtlpGrpcSpanExporter.builder().setEndpoint(endpoint).build()
         tracerProvider.addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
         val logExporter = OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build()
@@ -71,17 +72,21 @@ fun closeRealmOpenTelemetry(openTelemetry: OpenTelemetry) {
     sdk.shutdown().join(10, TimeUnit.SECONDS)
 }
 
-private fun realmSampler(): Sampler =
-    when (realmSetting("OTEL_TRACES_SAMPLER") ?: "always_on") {
-        "parentbased_traceidratio" -> Sampler.parentBased(Sampler.traceIdRatioBased(realmSamplerRatio()))
-        "traceidratio" -> Sampler.traceIdRatioBased(realmSamplerRatio())
-        "always_off" -> Sampler.alwaysOff()
-        else -> Sampler.alwaysOn()
+private fun realmSampler(configuration: RealmSamplerConfiguration): Sampler =
+    when (configuration) {
+        RealmSamplerConfiguration.AlwaysOn -> {
+            Sampler.alwaysOn()
+        }
+
+        RealmSamplerConfiguration.AlwaysOff -> {
+            Sampler.alwaysOff()
+        }
+
+        is RealmSamplerConfiguration.TraceIdRatio -> {
+            Sampler.traceIdRatioBased(configuration.ratio)
+        }
+
+        is RealmSamplerConfiguration.ParentBasedTraceIdRatio -> {
+            Sampler.parentBased(Sampler.traceIdRatioBased(configuration.ratio))
+        }
     }
-
-private fun realmSamplerRatio(): Double = realmSetting("OTEL_TRACES_SAMPLER_ARG")?.toDoubleOrNull()?.coerceIn(0.0, 1.0) ?: 1.0
-
-internal fun realmSetting(
-    name: String,
-    default: String? = null,
-): String? = realmSettings.get(name, default)
