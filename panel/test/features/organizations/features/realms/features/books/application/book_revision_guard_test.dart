@@ -94,6 +94,36 @@ void main() {
     expect(errors.single.exceptionAsString(), contains("revision 3"));
   });
 
+  test("replayed Book remove remains absent", () async {
+    final nats = MockNatsClient();
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(_organizationId),
+        realmIdProvider.overrideWithValue(_realmId),
+        natsProvider.overrideWithValue(nats),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(nats.dispose);
+    final subscription = container.listen(booksProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await _waitFor(() => nats.subscriptionSubjects.contains(_listenSubject));
+    final book = _book();
+    _emit(nats, skir.WatchBooksResponse.wrapList([book.toSkir()]));
+    await _waitFor(
+      () =>
+          container.read(booksProvider).value?.singleOrNull?.bookId ==
+          book.bookId,
+    );
+
+    _emit(nats, skir.WatchBooksResponse.wrapRemove(book.bookId));
+    await _waitFor(() => container.read(booksProvider).value?.isEmpty ?? false);
+    _emit(nats, skir.WatchBooksResponse.wrapRemove(book.bookId));
+    await pumpEventQueue();
+
+    expect(container.read(booksProvider).requireValue, isEmpty);
+  });
+
   test("delayed Book mutation cannot replace a newer observation", () async {
     final nats = MockNatsClient();
     late _SeededBooks notifier;
