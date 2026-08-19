@@ -153,7 +153,8 @@ async fn process_user_jwt(
     let configs = load_issuer_configs()?;
     main_attribute!("auth.issuer_config.count" = configs.len() as i64);
 
-    let (jwt, issuer) = match validate_user_jwt(&raw_jwt, &configs, request)? {
+    let clock = jwt::SystemValidationClock;
+    let (jwt, issuer) = match validate_user_jwt(&raw_jwt, &configs, request, &clock)? {
         Some(result) => {
             main_attribute!(
                 "auth.jwt.validation.success" = true,
@@ -211,19 +212,25 @@ fn load_issuer_configs() -> Result<Vec<IssuerConfig>, otel_wasi::Error> {
         )
     })?;
 
-    let configs: Vec<IssuerConfig> = serde_json::from_str(&config_str)
-        .error_with_slug("auth-callout-issuer-config-load-failed")?;
+    let configs = config::parse_issuer_configs(&config_str).map_err(|error| {
+        wasi_error!(
+            "auth-callout-issuer-config-load-failed",
+            "invalid ISSUERS configuration: {}",
+            error
+        )
+    })?;
 
     attribute!("auth.issuer_config.count" = configs.len() as i64);
     main_attribute!("auth.issuer_config.count" = configs.len() as i64);
     Ok(configs)
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(clock))]
 fn validate_user_jwt<'a>(
     raw_jwt: &str,
-    configs: &'a Vec<IssuerConfig>,
+    configs: &'a [IssuerConfig],
     request: &Claims<AuthRequest>,
+    clock: &impl jwt::ValidationClock,
 ) -> Result<
     Option<(
         jose::jwt::Claims<UntypedAdditionalProperties>,
@@ -235,7 +242,7 @@ fn validate_user_jwt<'a>(
         "auth.jwt.raw.size" = raw_jwt.len() as i64,
         "auth.jwt.issuer_config.candidate.count" = configs.len() as i64,
     );
-    match jwt::validate_jwt(raw_jwt, configs) {
+    match jwt::validate_jwt(raw_jwt, configs, clock) {
         Ok(Some(result)) => Ok(Some(result)),
         Ok(None) => {
             let username = request
