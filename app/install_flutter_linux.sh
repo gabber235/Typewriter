@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Install Flutter for Linux
-FLUTTER_VERSION="${FLUTTER_VERSION:-3.33.0-0.2.pre-beta}"
+FLUTTER_VERSION="${FLUTTER_VERSION:-3.48.0-0.1.pre-beta}"
 ARCHIVE="flutter_linux_${FLUTTER_VERSION}.tar.xz"
 
 mkdir -p ~/development

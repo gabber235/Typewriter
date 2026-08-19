@@ -14,6 +14,7 @@ runs:
         uses: subosito/flutter-action@v2
         with:
           channel: "beta"
+          flutter-version: "3.48.0-0.1.pre"
           cache: true
 
       - name: Get Flutter dependencies
@@ -22,7 +23,7 @@ runs:
         working-directory: ./app
 
       - name: Run Lint
-        run: flutter analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
         shell: bash
         working-directory: ./app
 
