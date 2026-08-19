@@ -1,0 +1,42 @@
+[schema.record_id]
+files = ["kernel/id.surql"]
+
+[schema.color]
+files = ["kernel/color.surql"]
+
+[schema.url]
+files = ["kernel/url.surql"]
+
+[schema.user]
+depends_on = ["record_id"]
+files = ["user.surql"]
+
+[schema.service]
+depends_on = ["record_id"]
+files = ["service/functions.surql", "service/service.surql"]
+
+[schema.organization]
+depends_on = ["record_id", "color", "url", "user"]
+files = [
+    "organization/functions.surql",
+    "organization/organization.surql",
+    "organization/organization_role.surql",
+    "organization/member_of.surql",
+    "organization/organization_join_code.surql",
+    "organization/request_to_join.surql",
+]
+
+[preset.service]
+capabilities = ["service"]
+
+[preset.organization]
+capabilities = ["organization"]
+
+[preset.registration]
+capabilities = ["service", "organization"]
+
+[preset.full]
+capabilities = ["service", "organization"]
+
+[deployment]
+capabilities = ["service", "organization"]

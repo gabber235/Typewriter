@@ -28,6 +28,7 @@ http = "1"
 http-body-util = "0.1"
 hyper = "1"
 inventory = "0.3"
+indexmap = { version = "2", features = ["serde"] }
 jose = { version = "0.0.2", features = ["crypto-rustcrypto"] }
 nats-jwt-rs = "0.1"
 nkeys = "0.4"
@@ -56,6 +57,7 @@ tokio = { version = "1", features = [
     "sync",
     "time",
 ] }
+toml = { version = "1", features = ["preserve_order"] }
 uuid = { version = "1", features = ["v4"] }
 
 component-test-model = { path = "crates/component-test-model" }
