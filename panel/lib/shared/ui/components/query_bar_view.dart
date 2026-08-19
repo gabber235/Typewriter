@@ -17,7 +17,7 @@ class _QueryBarView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 4,
+          spacing: context.spacing.space1,
           children: [
             AnchoredOverlayPortal(
               visible: controller.popupVisible,
@@ -34,9 +34,9 @@ class _QueryBarView extends StatelessWidget {
                   errorText: controller.parseResult.issues.isNotEmpty
                       ? controller.parseResult.issues.first.message
                       : null,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 8,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: context.spacing.space3,
+                    horizontal: context.spacing.space2,
                   ),
                 ),
                 maxLines: null,
@@ -96,7 +96,9 @@ class _QueryBarHelperRow extends StatelessWidget {
         child: !visible
             ? null
             : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                ),
                 child: Text.rich(
                   TextSpan(
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

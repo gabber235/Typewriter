@@ -19,7 +19,7 @@ class LoadingScreen extends StatelessWidget {
             stateMachineName: "state_machine",
           ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: context.spacing.space6),
         Text(
           title,
           style: Theme.of(context).textTheme.displayLarge!.copyWith(
@@ -33,7 +33,7 @@ class LoadingScreen extends StatelessWidget {
             color: context.colors.contentSecondary,
           ),
         ),
-        SizedBox(height: 24),
+        SizedBox(height: context.spacing.space6),
         Spacer(),
       ],
     );

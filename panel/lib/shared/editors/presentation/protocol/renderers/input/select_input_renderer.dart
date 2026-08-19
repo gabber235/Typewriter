@@ -31,7 +31,7 @@ extension SelectInputElementRendering on SelectInputElement {
               },
             ),
             if (allowCustomValue) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: context.spacing.space2),
               ProtocolBoundValueEditor(
                 control: BoundControl(binding: control.binding),
                 scope: scope,

@@ -19,7 +19,7 @@ class PresentationSurface extends StatelessWidget {
     children: [
       if (diagnostics.isNotEmpty) ...[
         presentationDiagnostic(context, diagnostics),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
       ],
       PresentationNodeRenderer(node: presentation, scope: scope),
     ],

@@ -130,8 +130,8 @@ class _ColorSwatchGridState extends State<ColorSwatchGrid> {
           crossAxisCount: columns,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
+          mainAxisSpacing: context.spacing.space1,
+          crossAxisSpacing: context.spacing.space1,
           children: values,
         );
         final child = widget.onReordered == null

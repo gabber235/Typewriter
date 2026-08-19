@@ -79,15 +79,18 @@ class SearchResultCard extends StatelessWidget {
               children: [
                 if (prefix != null)
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: context.spacing.space1,
+                    ),
                     child: prefix,
                   ),
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
-                      top: 8,
+                      top: context.spacing.space2,
                       right: 10,
-                      bottom: 8,
+                      bottom: context.spacing.space2,
                       left: 10,
                     ),
                     child: content,

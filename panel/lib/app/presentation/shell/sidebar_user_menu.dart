@@ -122,7 +122,9 @@ class UserMenu extends HookConsumerWidget {
               borderRadius: context.shapes.mediumBorderRadius,
               focusNode: focusNode,
               child: Padding(
-                padding: EdgeInsets.all(compact ? 8 : 12),
+                padding: EdgeInsets.all(
+                  compact ? context.spacing.space2 : context.spacing.space3,
+                ),
                 child: Row(
                   mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
                   children: [

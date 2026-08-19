@@ -23,7 +23,7 @@ class ColorFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 8,
+    spacing: context.spacing.space2,
     children: [
       AdaptiveChoiceControl<ColorFieldFormat>(
         selected: format,
@@ -87,7 +87,7 @@ class _HexField extends StatelessWidget {
     ],
     decoration: InputDecoration(
       labelText: includeAlpha ? "ARGB" : "Hex",
-      prefixIcon: const SizedBox(width: 12),
+      prefixIcon: SizedBox(width: context.spacing.space3),
     ),
     onChanged: onChanged,
   );
@@ -110,7 +110,7 @@ class _RgbFields extends StatelessWidget {
   Widget build(BuildContext context) {
     final alpha = (color.alphaByte * 100 / 255).round();
     return Row(
-      spacing: 4,
+      spacing: context.spacing.space1,
       children: [
         _ChannelField(
           label: "R",
@@ -203,7 +203,7 @@ class _HslFields extends StatelessWidget {
           alphaPercent: a ?? alpha,
         );
     return Row(
-      spacing: 4,
+      spacing: context.spacing.space1,
       children: [
         _ChannelField(
           label: "H",
@@ -294,7 +294,10 @@ class _ChannelField extends StatelessWidget {
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: InputDecoration(
           prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 12, right: 4),
+            padding: EdgeInsets.only(
+              left: context.spacing.space3,
+              right: context.spacing.space1,
+            ),
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(

@@ -133,10 +133,10 @@ class ContextMenuRegion extends HookWidget {
     required bool isLast,
   }) {
     final padding = EdgeInsets.only(
-      left: 4,
-      right: 4,
-      top: isFirst ? 4 : 0,
-      bottom: isLast ? 4 : 0,
+      left: context.spacing.space1,
+      right: context.spacing.space1,
+      top: isFirst ? context.spacing.space1 : 0,
+      bottom: isLast ? context.spacing.space1 : 0,
     );
     return switch (item) {
       final MenuItemSubmenu submenu => Padding(
@@ -167,7 +167,12 @@ class ContextMenuRegion extends HookWidget {
           children: [
             if (section.label != null)
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                padding: EdgeInsets.fromLTRB(
+                  context.spacing.space2,
+                  context.spacing.space1,
+                  context.spacing.space2,
+                  context.spacing.space1,
+                ),
                 child: DefaultTextStyle(
                   style: Theme.of(context).textTheme.labelSmall!.copyWith(
                     color:
@@ -191,7 +196,7 @@ class ContextMenuRegion extends HookWidget {
                           ),
                           child: section.icon!,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: context.spacing.space1),
                       ],
                       Text(section.label!),
                     ],
@@ -228,7 +233,7 @@ class ContextMenuRegion extends HookWidget {
             disabledMouseCursor: SystemMouseCursors.forbidden,
           ),
           child: Row(
-            spacing: 8,
+            spacing: context.spacing.space2,
             children: [
               Expanded(child: Text(menuItem.label, maxLines: 1)),
               if (menuItem.shortcuts.isNotEmpty) ...[

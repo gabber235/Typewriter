@@ -64,7 +64,10 @@ class _PresentationSearchResultRow extends HookWidget {
       focused: focused,
       label: context.result.title ?? context.result.id,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        padding: EdgeInsets.symmetric(
+          horizontal: buildContext.spacing.space1,
+          vertical: 1,
+        ),
         child: AnimatedContainer(
           duration: MediaQuery.disableAnimationsOf(buildContext)
               ? Duration.zero
@@ -88,8 +91,8 @@ class _PresentationSearchResultRow extends HookWidget {
                 ),
                 onTap: context.loading ? null : onSelect,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: buildContext.spacing.space3,
                     vertical: 10,
                   ),
                   child: IgnorePointer(

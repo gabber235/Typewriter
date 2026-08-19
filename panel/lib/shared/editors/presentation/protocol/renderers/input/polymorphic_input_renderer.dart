@@ -44,7 +44,7 @@ extension PolymorphicInputElementRendering on PolymorphicInputElement {
               enabled: field.editable,
               onSelected: (type) => type._replace(element, scope),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: context.spacing.space3),
             DirectionalContentSwitcher(
               index: selectedIndex,
               child: KeyedSubtree(

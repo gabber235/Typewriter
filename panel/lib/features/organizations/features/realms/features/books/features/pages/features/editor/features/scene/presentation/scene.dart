@@ -259,7 +259,10 @@ class _SceneTimelineSegmentWidget extends HookWidget {
             elementDefinition: cue.elementDefinition,
             color: foregroundColor,
             isDeprecated: isDeprecated,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: 0,
+            ),
           ),
         );
       },

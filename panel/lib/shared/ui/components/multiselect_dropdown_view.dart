@@ -102,7 +102,7 @@ class _MultiselectDropdownView<T extends Object> extends StatelessWidget {
                 isCollapsed: false,
                 isDense: false,
                 visualDensity: VisualDensity.comfortable,
-                contentPadding: EdgeInsets.all(12),
+                contentPadding: EdgeInsets.all(context.spacing.space3),
               ),
               keyboardType: TextInputType.text,
               style: Theme.of(

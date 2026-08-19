@@ -5,7 +5,8 @@ class _OrganizationsSelector extends HookWidget {
 
   final List<OrganizationData> organizations;
 
-  Widget get spacer => const SliverToBoxAdapter(child: SizedBox(height: 16));
+  Widget spacer(BuildContext context) =>
+      SliverToBoxAdapter(child: SizedBox(height: context.spacing.space4));
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +33,7 @@ class _OrganizationsSelector extends HookWidget {
             ),
           ),
         ),
-        spacer,
+        spacer(context),
         SliverStaggerEntrance(
           sliver: SliverToBoxAdapter(
             child: EditorTextField(
@@ -44,7 +45,7 @@ class _OrganizationsSelector extends HookWidget {
             ),
           ),
         ),
-        spacer,
+        spacer(context),
         if (filteredOrganizations.isEmpty)
           SliverPadding(
             padding: EdgeInsets.symmetric(vertical: context.spacing.space6),

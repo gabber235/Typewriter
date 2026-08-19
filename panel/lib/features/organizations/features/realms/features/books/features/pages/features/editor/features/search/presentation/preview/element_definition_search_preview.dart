@@ -76,7 +76,10 @@ class _PreviewFrame extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1.4),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: context.spacing.space2,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

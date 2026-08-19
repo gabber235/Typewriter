@@ -188,7 +188,7 @@ class JoinRequestCard extends HookConsumerWidget {
           isSelected: isSelected,
           radius: 24,
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: context.spacing.space4),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +222,7 @@ class JoinRequestCard extends HookConsumerWidget {
                 .cleanupExpiredRequests();
           },
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: context.spacing.space4),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -236,7 +236,7 @@ class JoinRequestCard extends HookConsumerWidget {
               ),
               child: Text("Decline"),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: context.spacing.space2),
             LoadingButton.filled(
               onPressed: () {
                 expansibleController.toggle();

@@ -83,9 +83,9 @@ class JoinCodesTable extends HookConsumerWidget {
                   ),
                 ),
               ),
-              _headerCell(theme, "Join Code"),
-              _headerCell(theme, "Type"),
-              _headerCell(theme, "Expires"),
+              _headerCell(context, theme, "Join Code"),
+              _headerCell(context, theme, "Type"),
+              _headerCell(context, theme, "Expires"),
               const TableCell(child: SizedBox.shrink()),
             ],
           ),
@@ -123,11 +123,14 @@ class JoinCodesTable extends HookConsumerWidget {
     );
   }
 
-  TableCell _headerCell(ThemeData theme, String label) {
+  TableCell _headerCell(BuildContext context, ThemeData theme, String label) {
     return TableCell(
       child: StaggerEntrance(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.spacing.space2,
+            vertical: context.spacing.space3,
+          ),
           child: Text(
             label,
             style: theme.textTheme.bodyMedium!.copyWith(
@@ -199,7 +202,10 @@ class JoinCodesTable extends HookConsumerWidget {
           verticalAlignment: TableCellVerticalAlignment.middle,
           child: StaggerEntrance(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
               child: withShortcuts(
                 Checkbox(
                   value: isSelected,
@@ -213,9 +219,9 @@ class JoinCodesTable extends HookConsumerWidget {
           child: StaggerEntrance(
             child: withShortcuts(
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: context.spacing.space3,
                 ),
                 child: Row(
                   children: [
@@ -231,7 +237,7 @@ class JoinCodesTable extends HookConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: context.spacing.space2),
                     IconButton(
                       icon: const Icon(Icons.copy, size: 16),
                       onPressed: () => _copyToClipboard(context, fullUrl),
@@ -247,7 +253,10 @@ class JoinCodesTable extends HookConsumerWidget {
         TableCell(
           child: StaggerEntrance(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
               child: JoinCodeTypeBadges(code: code),
             ),
           ),
@@ -255,7 +264,10 @@ class JoinCodesTable extends HookConsumerWidget {
         TableCell(
           child: StaggerEntrance(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space3,
+              ),
               child: CountdownBadge(
                 endDate: code.expiresAt,
                 onExpired: () {

@@ -110,7 +110,10 @@ class _RealmMenuItem extends HookConsumerWidget {
     useRefreshAt(realm.nextTimeout);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.spacing.space2,
+        vertical: 2,
+      ),
       child: Material(
         borderRadius: context.shapes.mediumBorderRadius,
         color: isSelected ? realm.color : null,

@@ -45,10 +45,10 @@ class LogicalKeyBoardDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _KeyDisplay(size: size, style: style, child: _buildKey());
+    return _KeyDisplay(size: size, style: style, child: _buildKey(context));
   }
 
-  Widget _buildKey() {
+  Widget _buildKey(BuildContext context) {
     switch (keyBoardKey) {
       case LogicalKeyboardKey.control:
       case LogicalKeyboardKey.controlLeft:
@@ -78,7 +78,7 @@ class LogicalKeyBoardDisplay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text("Num"),
-            const SizedBox(width: 4),
+            SizedBox(width: context.spacing.space1),
             const Icon(Icons.keyboard_return_rounded),
           ],
         );
@@ -214,7 +214,7 @@ class _KeyDisplay extends StatelessWidget {
     final height = size + 8;
     final width = fixedWidth ? size + 8 : null;
 
-    final padding = const EdgeInsets.symmetric(horizontal: 4);
+    final padding = EdgeInsets.symmetric(horizontal: context.spacing.space1);
     final rounding = context.shapes.smallBorderRadius;
 
     final text = DefaultTextStyle(

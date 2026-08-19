@@ -24,7 +24,7 @@ class JoinCodesCardList extends HookConsumerWidget {
       items: codes,
       identity: (code) => code.code,
       removedItemBuilder: (context, code, animation) =>
-          _child(code, animation, deleting: true),
+          _child(context, code, animation, deleting: true),
     );
 
     if (codes.isEmpty) {
@@ -79,13 +79,14 @@ class JoinCodesCardList extends HookConsumerWidget {
           key: animated.key,
           initialItemCount: animated.items.length,
           itemBuilder: (context, index, animation) =>
-              _child(animated.items[index], animation),
+              _child(context, animated.items[index], animation),
         ),
       ],
     );
   }
 
   Widget _child(
+    BuildContext context,
     OrganizationJoinCode code,
     Animation<double> animation, {
     bool deleting = false,
@@ -96,7 +97,7 @@ class JoinCodesCardList extends HookConsumerWidget {
       animation: animation,
       child: StaggerEntrance(
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: context.spacing.space2),
           child: JoinCodeCard(
             code: code,
             isSelected: selectedCodes.value.contains(code.code),

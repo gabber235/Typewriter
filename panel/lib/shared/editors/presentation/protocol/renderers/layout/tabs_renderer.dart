@@ -74,7 +74,7 @@ class _TabsRendererState extends State<_TabsRenderer>
           },
           onSelected: _select,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: context.spacing.space3),
         ContentSizeTabBarView(
           key: ObjectKey(_controller),
           controller: _controller,

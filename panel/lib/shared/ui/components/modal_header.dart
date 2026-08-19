@@ -10,7 +10,12 @@ class ModalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: EdgeInsets.fromLTRB(
+        context.spacing.space3,
+        context.spacing.space2,
+        context.spacing.space3,
+        0,
+      ),
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
@@ -28,7 +33,7 @@ class ModalHeader extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: EdgeInsets.only(top: context.spacing.space3),
                 child: Text(
                   title!,
                   style: Theme.of(context).textTheme.labelMedium,

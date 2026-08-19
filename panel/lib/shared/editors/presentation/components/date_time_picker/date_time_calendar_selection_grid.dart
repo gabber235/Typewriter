@@ -102,8 +102,8 @@ class _DateTimeCalendarSelectionGridState
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: widget.columns,
               childAspectRatio: 2.2,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
+              crossAxisSpacing: context.spacing.space1,
+              mainAxisSpacing: context.spacing.space1,
             ),
             itemCount: widget.items.length,
             itemBuilder: (context, index) {

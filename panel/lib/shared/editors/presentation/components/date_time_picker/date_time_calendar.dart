@@ -149,7 +149,7 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
           onMonthPickerRequested: _toggleMonthPicker,
           onYearPickerRequested: _toggleYearPicker,
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: context.spacing.space1),
         switch (_view) {
           DateTimeCalendarView.days => _buildDays(context),
           DateTimeCalendarView.months => _buildMonths(),

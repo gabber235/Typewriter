@@ -22,10 +22,10 @@ class DurationInput extends HookWidget {
     Duration(days: 30),
   ];
 
-  Widget _presets() {
+  Widget _presets(BuildContext context) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: context.spacing.space2,
+      runSpacing: context.spacing.space2,
       children: [
         for (final duration in _presetDurations)
           PresetChip(
@@ -56,7 +56,7 @@ class DurationInput extends HookWidget {
       spacing: context.spacing.space2,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!inlinePresets) _presets(),
+        if (!inlinePresets) _presets(context),
         ValidatedTextField<Duration>(
           value: duration,
           name: "Expiration period",
@@ -65,7 +65,7 @@ class DurationInput extends HookWidget {
             FilteringTextInputFormatter.allow(RegExp(r"[\dwdhminsu ]")),
           ],
           decoration: InputDecoration(
-            suffix: inlinePresets ? _presets() : null,
+            suffix: inlinePresets ? _presets(context) : null,
           ),
           surroundingActions: [
             for (final (index, duration) in _presetDurations.indexed)

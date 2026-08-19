@@ -15,7 +15,10 @@ Widget _buildSuggestionPanel({
       RoundedRectangleBorder(borderRadius: context.shapes.mediumBorderRadius);
   final padding =
       menuStyle.padding?.resolve(states) ??
-      const EdgeInsets.symmetric(horizontal: 4, vertical: 4);
+      EdgeInsets.symmetric(
+        horizontal: context.spacing.space1,
+        vertical: context.spacing.space1,
+      );
   final elevation = menuStyle.elevation?.resolve(states) ?? 1;
   final backgroundColor =
       menuStyle.backgroundColor?.resolve(states) ?? theme.colorScheme.surface;
@@ -160,7 +163,10 @@ Widget _buildHelperBadge(BuildContext context, String label, {Key? key}) {
 
   return Container(
     key: key,
-    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+    padding: EdgeInsets.symmetric(
+      horizontal: context.spacing.space1,
+      vertical: 1,
+    ),
     decoration: BoxDecoration(
       color: colors.surfaceContainerHighest,
       borderRadius: context.shapes.smallBorderRadius,

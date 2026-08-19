@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class InputIconButton extends StatelessWidget {
   const InputIconButton({
@@ -15,7 +16,7 @@ class InputIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 4),
+      padding: EdgeInsets.only(right: context.spacing.space1),
       child: IconButton(icon: icon, tooltip: tooltip, onPressed: onPressed),
     );
   }

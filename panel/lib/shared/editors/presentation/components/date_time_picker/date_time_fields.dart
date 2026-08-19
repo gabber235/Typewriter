@@ -42,7 +42,7 @@ class DateTimeFields extends HookWidget {
           Row(
             children: [
               const Icones(MaterialSymbols.schedule_rounded, size: 18),
-              const SizedBox(width: 8),
+              SizedBox(width: context.spacing.space2),
               Text("Time", style: Theme.of(context).textTheme.titleSmall),
             ],
           ),
@@ -56,7 +56,7 @@ class DateTimeFields extends HookWidget {
               const Expanded(child: _TimeFieldLabel("Second")),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: context.spacing.space1),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,7 +134,7 @@ class _TimeSeparator extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _TimeSeparatorDot(color: color),
-            const SizedBox(height: 4),
+            SizedBox(height: context.spacing.space1),
             _TimeSeparatorDot(color: color),
           ],
         ),

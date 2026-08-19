@@ -117,6 +117,7 @@ final exemptions = <Exemption>[
   for (final path in [
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/sidebar.dart",
+    "lib/app/presentation/shell/sidebar_links.dart",
     "lib/shared/editors/presentation/header.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
@@ -124,6 +125,9 @@ final exemptions = <Exemption>[
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector_popup.dart",
     "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
+    "lib/features/organizations/features/realms/features/books/presentation/book/page_actions.dart",
+    "lib/features/organizations/features/realms/features/books/presentation/book/page_tile.dart",
+    "lib/features/organizations/features/realms/features/books/presentation/book/page_tree.dart",
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/join_code_table.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/preset_chip.dart",
@@ -161,51 +165,214 @@ final exemptions = <Exemption>[
     ),
 ];
 
-void main() {
-  test("handwritten UI uses design-system typography, colors, and shapes", () {
-    final violations = <String>[];
-    for (final file in Directory(
-      "lib",
-    ).listSync(recursive: true).whereType<File>()) {
-      final path = file.path.replaceAll(Platform.pathSeparator, "/");
-      if (!path.endsWith(".dart") ||
-          path.endsWith(".g.dart") ||
-          path.endsWith(".freezed.dart")) {
-        continue;
-      }
-      final isUi =
-          path.contains("/presentation/") ||
-          path.contains("/shared/ui/") ||
-          path.contains("/application/services.dart") ||
-          path.contains("/domain/page_type_extensions.dart");
-      if (!isUi) {
-        continue;
-      }
-      final source = file.readAsStringSync();
-      final checks = <RegExp>[
-        if (path != "lib/app/presentation/theme/typography.dart")
-          RegExp(
-            r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\(",
-          ),
-        if (!path.contains("/theme/"))
-          RegExp(
-            r"Colors\.[A-Za-z_][A-Za-z0-9_]*|Color\s*\(\s*0x|Color\.from(?:ARGB|RGBO)\s*\(|Color\.from\s*\(",
-          ),
-        RegExp(
-          r"(?:Radius|BorderRadius)\.(?:circular|all)\s*\(\s*(?:const\s+)?(?:Radius\.circular\s*\(\s*)?(?:4|8|12|16)(?:\.0)?\s*\)?\s*\)",
-        ),
-      ];
-      for (final pattern in checks) {
-        for (final match in pattern.allMatches(source)) {
-          final allowed = exemptions.any(
-            (entry) =>
-                entry.path == path && entry.pattern.hasMatch(match.group(0)!),
-          );
-          if (!allowed) violations.add("$path: ${match.group(0)}");
-        }
-      }
+final layoutSpacingExemptions = <Exemption>[
+  Exemption(
+    "lib/app/presentation/shell/custom_appbar.dart",
+    RegExp(r"SizedBox\(width: 40\)"),
+    "fixed app bar drag geometry",
+  ),
+  Exemption(
+    "lib/app/presentation/shell/panes.dart",
+    RegExp(r"EdgeInsets\.all\(8\)"),
+    "public component fallback without a build context",
+  ),
+  Exemption(
+    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/inner_element_node.dart",
+    RegExp(r"EdgeInsets\.(?:symmetric|all)"),
+    "public render node fallback without a build context",
+  ),
+  Exemption(
+    "lib/features/organizations/features/realms/features/books/presentation/book.dart",
+    RegExp(r"SizedBox\([\s\S]*?width: 16"),
+    "fixed book artwork geometry",
+  ),
+  Exemption(
+    "lib/shared/editors/domain/presentation/default_presentation.dart",
+    RegExp("spacing: 12"),
+    "protocol data cannot depend on theme context",
+  ),
+  Exemption(
+    "lib/shared/inspector/presentation/inspector.dart",
+    RegExp(r"EdgeInsets\.only\(top: 8"),
+    "public pane fallback without a build context",
+  ),
+  Exemption(
+    "lib/shared/ui/components/grid_selectable_card.dart",
+    RegExp(r"EdgeInsets\.fromLTRB\(14, 12, 14, 12\)"),
+    "public card fallback without a build context",
+  ),
+  Exemption(
+    "lib/shared/ui/components/query_bar_view.dart",
+    RegExp("spacing: 4"),
+    "anchored overlay placement geometry",
+  ),
+  Exemption(
+    "lib/shared/ui/components/retry_indicator.dart",
+    RegExp(r"SizedBox\(width: 16, height: 16"),
+    "fixed progress indicator geometry",
+  ),
+  Exemption(
+    "lib/shared/ui/components/section.dart",
+    RegExp(r"EdgeInsets\.all\(8\)"),
+    "public section fallback without a build context",
+  ),
+];
+
+const spacingTokenNames = <int, String>{
+  4: "space1",
+  8: "space2",
+  12: "space3",
+  16: "space4",
+  20: "space5",
+  24: "space6",
+  32: "space8",
+  40: "space10",
+  48: "space12",
+};
+
+final _spacingLiteralPattern = RegExp(
+  r"(?<![A-Za-z0-9_.])(?:4|8|12|16|20|24|32|40|48)(?:\.0)?(?![A-Za-z0-9_.])",
+);
+final _edgeInsetsPattern = RegExp(
+  r"(?:EdgeInsets|const)\s*\.(?:all|symmetric|only|fromLTRB)\s*\([\s\S]*?\)",
+);
+final _sizedBoxPattern = RegExp(r"(?:const\s+)?SizedBox\s*\([\s\S]*?\)");
+final _sizedBoxDimensionPattern = RegExp(
+  r"(?:width|height)\s*:\s*((?:4|8|12|16|20|24|32|40|48)(?:\.0)?)\b",
+);
+final _spacingPropertyPattern = RegExp(
+  r"\b(?:spacing|runSpacing|mainAxisSpacing|crossAxisSpacing)\s*:\s*((?:4|8|12|16|20|24|32|40|48)(?:\.0)?)\b",
+);
+
+Iterable<String> layoutSpacingViolations(
+  String path,
+  String source, {
+  List<Exemption>? allowedExemptions,
+}) sync* {
+  final effectiveExemptions = allowedExemptions ?? layoutSpacingExemptions;
+  final occurrences = <({int offset, String snippet, String literal})>[];
+
+  for (final construct in _edgeInsetsPattern.allMatches(source)) {
+    final snippet = construct.group(0)!;
+    for (final literal in _spacingLiteralPattern.allMatches(snippet)) {
+      occurrences.add((
+        offset: construct.start + literal.start,
+        snippet: snippet,
+        literal: literal.group(0)!,
+      ));
     }
-    expect(violations, isEmpty, reason: violations.join("\n"));
+  }
+  for (final construct in _sizedBoxPattern.allMatches(source)) {
+    final snippet = construct.group(0)!;
+    final childOffset = snippet.indexOf(RegExp(r"\bchild\s*:"));
+    for (final literal in _sizedBoxDimensionPattern.allMatches(snippet)) {
+      if (childOffset >= 0 && literal.start > childOffset) continue;
+      occurrences.add((
+        offset: construct.start + literal.start,
+        snippet: snippet,
+        literal: literal.group(1)!,
+      ));
+    }
+  }
+  for (final literal in _spacingPropertyPattern.allMatches(source)) {
+    occurrences.add((
+      offset: literal.start,
+      snippet: literal.group(0)!,
+      literal: literal.group(1)!,
+    ));
+  }
+
+  for (final occurrence in occurrences) {
+    final allowed = effectiveExemptions.any(
+      (entry) =>
+          entry.path == path && entry.pattern.hasMatch(occurrence.snippet),
+    );
+    if (allowed) continue;
+    final value = double.parse(occurrence.literal).toInt();
+    final line =
+        "\n".allMatches(source.substring(0, occurrence.offset)).length + 1;
+    yield "$path:$line: ${occurrence.snippet.trim()} should use "
+        "context.spacing.${spacingTokenNames[value]}";
+  }
+}
+
+void main() {
+  test(
+    "handwritten UI uses design system typography, colors, shapes, and spacing",
+    () {
+      final violations = <String>[];
+      for (final file in Directory(
+        "lib",
+      ).listSync(recursive: true).whereType<File>()) {
+        final path = file.path.replaceAll(Platform.pathSeparator, "/");
+        if (!path.endsWith(".dart") ||
+            path.endsWith(".g.dart") ||
+            path.endsWith(".freezed.dart")) {
+          continue;
+        }
+        final isUi =
+            path.contains("/presentation/") ||
+            path.contains("/shared/ui/") ||
+            path.contains("/application/services.dart") ||
+            path.contains("/domain/page_type_extensions.dart");
+        if (!isUi) {
+          continue;
+        }
+        final source = file.readAsStringSync();
+        final checks = <RegExp>[
+          if (path != "lib/app/presentation/theme/typography.dart")
+            RegExp(
+              r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\(",
+            ),
+          if (!path.contains("/theme/"))
+            RegExp(
+              r"Colors\.[A-Za-z_][A-Za-z0-9_]*|Color\s*\(\s*0x|Color\.from(?:ARGB|RGBO)\s*\(|Color\.from\s*\(",
+            ),
+          RegExp(
+            r"(?:Radius|BorderRadius)\.(?:circular|all)\s*\(\s*(?:const\s+)?(?:Radius\.circular\s*\(\s*)?(?:4|8|12|16)(?:\.0)?\s*\)?\s*\)",
+          ),
+        ];
+        for (final pattern in checks) {
+          for (final match in pattern.allMatches(source)) {
+            final allowed = exemptions.any(
+              (entry) =>
+                  entry.path == path && entry.pattern.hasMatch(match.group(0)!),
+            );
+            if (!allowed) violations.add("$path: ${match.group(0)}");
+          }
+        }
+        violations.addAll(layoutSpacingViolations(path, source));
+      }
+      expect(violations, isEmpty, reason: violations.join("\n"));
+    },
+  );
+
+  test("layout spacing violations suggest tokens and honor exemptions", () {
+    const path = "lib/shared/ui/example.dart";
+    const source = "padding: EdgeInsets.all(8)";
+    expect(layoutSpacingViolations(path, source), [
+      contains("context.spacing.space2"),
+    ]);
+    expect(
+      layoutSpacingViolations(
+        path,
+        source,
+        allowedExemptions: [
+          Exemption(path, RegExp(r"EdgeInsets\.all\(8\)"), "fixed geometry"),
+        ],
+      ),
+      isEmpty,
+    );
+  });
+
+  test("layout spacing violations include shorthand EdgeInsets", () {
+    expect(
+      layoutSpacingViolations(
+        "lib/shared/ui/example.dart",
+        "padding: const .all(8)",
+      ),
+      [contains("context.spacing.space2")],
+    );
   });
 
   test("domain showcase colors have accessible foregrounds", () {

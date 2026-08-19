@@ -113,8 +113,11 @@ class SmallChip extends HookWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: onDelete != null
-          ? const EdgeInsets.only(left: 8)
-          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ? EdgeInsets.only(left: context.spacing.space2)
+          : EdgeInsets.symmetric(
+              horizontal: context.spacing.space2,
+              vertical: context.spacing.space1,
+            ),
       decoration: ShapeDecoration(
         shape: StadiumBorder(side: BorderSide(color: color)),
         color: color.withValues(alpha: 0.15),
@@ -137,7 +140,10 @@ class SmallChip extends HookWidget {
               onTap: onDelete,
               borderRadius: BorderRadius.circular(100),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: context.spacing.space1,
+                ),
                 child: Icon(Icons.close, size: 13, color: color),
               ),
             ),

@@ -126,7 +126,10 @@ class _OrganizationsList extends StatelessWidget {
             itemBuilder: (context, index) {
               final org = organizations[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.spacing.space2,
+                  vertical: 2,
+                ),
                 child: Material(
                   borderRadius: context.shapes.mediumBorderRadius,
                   child: ListTile(
