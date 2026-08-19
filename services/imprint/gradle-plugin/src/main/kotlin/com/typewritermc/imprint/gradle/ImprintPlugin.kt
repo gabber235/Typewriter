@@ -1,5 +1,6 @@
 package com.typewritermc.imprint.gradle
 
+import com.typewritermc.imprint.TypewriterEngineLayerReference
 import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterProjectKind
 import org.gradle.api.Action
@@ -19,6 +20,9 @@ class ImprintPlugin : Plugin<Project> {
                 task.logger.lifecycle(
                     "Typewriter ${declaration.kind.displayName} ${declaration.id} ${declaration.version}",
                 )
+                declaration.layers.forEach { layer ->
+                    task.logger.lifecycle("Typewriter engine layer ${layer.id} ${layer.version}")
+                }
             }
         }
 
@@ -67,21 +71,60 @@ sealed class ProjectDeclaration(
 ) {
     var id: String = ""
     var version: String = ""
+    private val layers = mutableListOf<TypewriterEngineLayerReference>()
+
+    protected fun configureLayers(action: Action<EngineLayers>) {
+        val configuredLayers = EngineLayers()
+        action.execute(configuredLayers)
+        layers += configuredLayers.references
+    }
 
     internal fun toModel(): TypewriterProjectDeclaration {
         if (id.isBlank()) {
             throw GradleException("The Typewriter project id must not be blank.")
         }
-        if (version.isBlank()) {
-            throw GradleException("The Typewriter project version must not be blank.")
-        }
+        validateVersion(version, "Typewriter project")
 
-        return TypewriterProjectDeclaration(kind, id, version)
+        return TypewriterProjectDeclaration(kind, id, version, layers.toList())
     }
 }
 
-open class EngineDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE)
+open class EngineDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE) {
+    fun implements(action: Action<EngineLayers>) {
+        configureLayers(action)
+    }
+}
 
-open class EngineLayerDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE_LAYER)
+open class EngineLayerDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE_LAYER) {
+    fun requires(action: Action<EngineLayers>) {
+        configureLayers(action)
+    }
+}
 
 open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTENSION)
+
+open class EngineLayers {
+    internal val references = mutableListOf<TypewriterEngineLayerReference>()
+
+    fun layer(
+        id: String,
+        version: String,
+    ) {
+        if (id.isBlank()) {
+            throw GradleException("The engine layer id must not be blank.")
+        }
+        validateVersion(version, "Engine layer $id")
+        references += TypewriterEngineLayerReference(id, version)
+    }
+}
+
+private val semanticVersionPattern = Regex("(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)")
+
+private fun validateVersion(
+    version: String,
+    subject: String,
+) {
+    if (!semanticVersionPattern.matches(version)) {
+        throw GradleException("$subject version must use canonical major.minor.patch syntax.")
+    }
+}

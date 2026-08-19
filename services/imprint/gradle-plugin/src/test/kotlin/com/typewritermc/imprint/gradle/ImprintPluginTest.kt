@@ -70,6 +70,50 @@ val ImprintPluginTest by testSuite {
 
         result shouldContain "must declare exactly one engine, engine layer, or extension"
     }
+
+    test("engine projects expose implemented layers") {
+        val result =
+            runBuild(
+                """
+                plugins {
+                    id("com.typewritermc.imprint")
+                }
+
+                typewriter {
+                    engine {
+                        id = "paper"
+                        version = "1.0.0"
+                        implements {
+                            layer("typewritermc:minecraft", version = "1.2.0")
+                        }
+                    }
+                }
+                """.trimIndent(),
+            )
+
+        result shouldContain "Typewriter engine layer typewritermc:minecraft 1.2.0"
+    }
+
+    test("versions must use canonical semantic version syntax") {
+        val result =
+            runBuild(
+                """
+                plugins {
+                    id("com.typewritermc.imprint")
+                }
+
+                typewriter {
+                    engineLayer {
+                        id = "typewritermc:minecraft"
+                        version = "1"
+                    }
+                }
+                """.trimIndent(),
+                expectFailure = true,
+            )
+
+        result shouldContain "version must use canonical major.minor.patch syntax"
+    }
 }
 
 private fun runBuild(

@@ -12,4 +12,10 @@ data class TypewriterProjectDeclaration(
     val kind: TypewriterProjectKind,
     val id: String,
     val version: String,
+    val layers: List<TypewriterEngineLayerReference> = emptyList(),
+)
+
+data class TypewriterEngineLayerReference(
+    val id: String,
+    val version: String,
 )
