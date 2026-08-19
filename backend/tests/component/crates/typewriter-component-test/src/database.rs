@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use component_test::{
@@ -33,93 +33,36 @@ struct SchemaFile {
     sql: &'static str,
 }
 
-const ID: SchemaFile = SchemaFile {
-    name: "kernel/id.surql",
-    sql: include_str!("../../../../../database/schema/kernel/id.surql"),
-};
-const COLOR: SchemaFile = SchemaFile {
-    name: "kernel/color.surql",
-    sql: include_str!("../../../../../database/schema/kernel/color.surql"),
-};
-const URL: SchemaFile = SchemaFile {
-    name: "kernel/url.surql",
-    sql: include_str!("../../../../../database/schema/kernel/url.surql"),
-};
-const USER: SchemaFile = SchemaFile {
-    name: "user.surql",
-    sql: include_str!("../../../../../database/schema/user.surql"),
-};
-const SERVICE_FUNCTIONS: SchemaFile = SchemaFile {
-    name: "service/functions.surql",
-    sql: include_str!("../../../../../database/schema/service/functions.surql"),
-};
-const SERVICE: SchemaFile = SchemaFile {
-    name: "service/service.surql",
-    sql: include_str!("../../../../../database/schema/service/service.surql"),
-};
-const ORG_FUNCTIONS: SchemaFile = SchemaFile {
-    name: "organization/functions.surql",
-    sql: include_str!("../../../../../database/schema/organization/functions.surql"),
-};
-const ORGANIZATION: SchemaFile = SchemaFile {
-    name: "organization/organization.surql",
-    sql: include_str!("../../../../../database/schema/organization/organization.surql"),
-};
-const ORG_ROLE: SchemaFile = SchemaFile {
-    name: "organization/organization_role.surql",
-    sql: include_str!("../../../../../database/schema/organization/organization_role.surql"),
-};
-const MEMBER_OF: SchemaFile = SchemaFile {
-    name: "organization/member_of.surql",
-    sql: include_str!("../../../../../database/schema/organization/member_of.surql"),
-};
-const JOIN_CODE: SchemaFile = SchemaFile {
-    name: "organization/organization_join_code.surql",
-    sql: include_str!("../../../../../database/schema/organization/organization_join_code.surql"),
-};
-const JOIN_REQUEST: SchemaFile = SchemaFile {
-    name: "organization/request_to_join.surql",
-    sql: include_str!("../../../../../database/schema/organization/request_to_join.surql"),
-};
+const CAPABILITY_MANIFEST: &str = include_str!("../../../../../database/capabilities.toml");
+include!(concat!(env!("OUT_DIR"), "/schema_files.rs"));
 
 impl SchemaPreset {
-    fn files(self) -> Vec<SchemaFile> {
-        let groups: &[&[SchemaFile]] = match self {
-            Self::Service => &[&[ID, SERVICE_FUNCTIONS, SERVICE]],
-            Self::Organization => &[&[
-                ID,
-                COLOR,
-                URL,
-                USER,
-                ORG_FUNCTIONS,
-                ORGANIZATION,
-                ORG_ROLE,
-                MEMBER_OF,
-                JOIN_CODE,
-                JOIN_REQUEST,
-            ]],
-            Self::Registration | Self::Full => &[
-                &[ID, SERVICE_FUNCTIONS, SERVICE],
-                &[
-                    ID,
-                    COLOR,
-                    URL,
-                    USER,
-                    ORG_FUNCTIONS,
-                    ORGANIZATION,
-                    ORG_ROLE,
-                    MEMBER_OF,
-                    JOIN_CODE,
-                    JOIN_REQUEST,
-                ],
-            ],
-        };
-        let mut seen = HashSet::new();
-        groups
-            .iter()
-            .flat_map(|group| *group)
-            .copied()
-            .filter(|file| seen.insert(file.name))
+    fn manifest_name(self) -> &'static str {
+        match self {
+            Self::Service => "service",
+            Self::Organization => "organization",
+            Self::Registration => "registration",
+            Self::Full => "full",
+        }
+    }
+
+    fn files(self) -> Result<Vec<SchemaFile>> {
+        let manifest = crate::schema_manifest::Manifest::parse(CAPABILITY_MANIFEST, |_| true)
+            .map_err(anyhow::Error::msg)?;
+        if manifest.declared_files().len() != EMBEDDED_SCHEMA_FILES.len() {
+            anyhow::bail!("embedded schema files do not match the capability manifest");
+        }
+        manifest
+            .preset_files(self.manifest_name())
+            .map_err(anyhow::Error::msg)?
+            .into_iter()
+            .map(|name| {
+                EMBEDDED_SCHEMA_FILES
+                    .iter()
+                    .find(|file| file.name == name)
+                    .copied()
+                    .with_context(|| format!("schema file {name:?} was not embedded"))
+            })
             .collect()
     }
 }
@@ -252,7 +195,7 @@ impl FixtureExtension for TypewriterDatabase {
             plugin: plugin.clone(),
             key: key.clone(),
         };
-        for (index, file) in self.preset.files().iter().enumerate() {
+        for (index, file) in self.preset.files()?.iter().enumerate() {
             handle.execute(file.sql).await.with_context(|| {
                 format!(
                     "applying schema preset {:?}, file {} `{}`, query index {index}",
@@ -310,35 +253,58 @@ mod tests {
             plugin: Arc::new(WasmcloudSurrealdb::new()),
             key,
         };
-        for file in preset.files() {
+        for file in preset.files()? {
             handle.execute(file.sql).await?;
         }
         Ok(handle)
     }
 
     #[test]
-    fn full_preset_preserves_order_without_duplicates() {
-        let names = SchemaPreset::Full
-            .files()
-            .iter()
-            .map(|file| file.name)
-            .collect::<Vec<_>>();
-        assert_eq!(names.first(), Some(&"kernel/id.surql"));
-        assert_eq!(
-            names
+    fn manifest_presets_preserve_existing_schema_sets_and_order() {
+        let names = |preset: SchemaPreset| {
+            preset
+                .files()
+                .expect("schema preset must resolve")
                 .iter()
-                .filter(|name| **name == "kernel/id.surql")
-                .count(),
-            1
-        );
-        assert!(
-            names
-                .iter()
-                .position(|name| *name == "organization/functions.surql")
-                < names
-                    .iter()
-                    .position(|name| *name == "organization/organization.surql")
-        );
+                .map(|file| file.name)
+                .collect::<Vec<_>>()
+        };
+        let service = vec![
+            "kernel/id.surql",
+            "service/functions.surql",
+            "service/service.surql",
+        ];
+        let organization = vec![
+            "kernel/id.surql",
+            "kernel/color.surql",
+            "kernel/url.surql",
+            "user.surql",
+            "organization/functions.surql",
+            "organization/organization.surql",
+            "organization/organization_role.surql",
+            "organization/member_of.surql",
+            "organization/organization_join_code.surql",
+            "organization/request_to_join.surql",
+        ];
+        let combined = vec![
+            "kernel/id.surql",
+            "service/functions.surql",
+            "service/service.surql",
+            "kernel/color.surql",
+            "kernel/url.surql",
+            "user.surql",
+            "organization/functions.surql",
+            "organization/organization.surql",
+            "organization/organization_role.surql",
+            "organization/member_of.surql",
+            "organization/organization_join_code.surql",
+            "organization/request_to_join.surql",
+        ];
+
+        assert_eq!(names(SchemaPreset::Service), service);
+        assert_eq!(names(SchemaPreset::Organization), organization);
+        assert_eq!(names(SchemaPreset::Registration), combined);
+        assert_eq!(names(SchemaPreset::Full), combined);
     }
 
     #[tokio::test]

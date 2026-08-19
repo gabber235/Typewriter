@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"dagger/typewriter/internal/dagger"
+	"dagger/typewriter/internal/databasecapabilities"
 )
 
 const (
@@ -33,12 +34,7 @@ func (m *Typewriter) surrealdbService() *dagger.Service {
 		})
 }
 
-// DatabaseImage packages the SurrealKit database folder into an immutable image.
-// The image is used by Flux-managed Kubernetes Jobs, avoiding ConfigMap encoding
-// of many schema, rollout, snapshot, and test files.
-func (m *Typewriter) DatabaseImage(
-	source *dagger.Workspace,
-) *dagger.Container {
+func databaseBackend(ctx context.Context, source *dagger.Workspace) (*dagger.Directory, error) {
 	backend := source.Directory("/backend", dagger.WorkspaceDirectoryOpts{
 		Gitignore: true,
 		Include: []string{
@@ -46,6 +42,36 @@ func (m *Typewriter) DatabaseImage(
 			"surrealkit.toml",
 		},
 	})
+	contents, err := backend.File("database/capabilities.toml").Contents(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("read database capability manifest: %w", err)
+	}
+	manifest, err := databasecapabilities.Parse(contents, func(file string) (bool, error) {
+		return backend.Exists(ctx, "database/schema/"+file, dagger.DirectoryExistsOpts{})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	projected := backend.WithoutDirectory("database/schema")
+	for _, file := range manifest.DeploymentFiles() {
+		path := "database/schema/" + file
+		projected = projected.WithFile(path, backend.File(path))
+	}
+	return projected, nil
+}
+
+// DatabaseImage packages the SurrealKit database folder into an immutable image.
+// The image is used by Flux-managed Kubernetes Jobs, avoiding ConfigMap encoding
+// of many schema, rollout, snapshot, and test files.
+func (m *Typewriter) DatabaseImage(
+	ctx context.Context,
+	source *dagger.Workspace,
+) (*dagger.Container, error) {
+	backend, err := databaseBackend(ctx, source)
+	if err != nil {
+		return nil, err
+	}
 
 	return dag.Container().
 		From("alpine:3.20").
@@ -53,7 +79,7 @@ func (m *Typewriter) DatabaseImage(
 		WithFile("/usr/local/bin/surrealkit", m.surrealkitContainer().File("/usr/local/bin/surrealkit"), dagger.ContainerWithFileOpts{Permissions: 0o755}).
 		WithDirectory("/workspace/backend", backend).
 		WithWorkdir("/workspace/backend").
-		WithEntrypoint([]string{"/usr/local/bin/surrealkit"})
+		WithEntrypoint([]string{"/usr/local/bin/surrealkit"}), nil
 }
 
 func (m *Typewriter) DatabasePublish(
@@ -67,7 +93,11 @@ func (m *Typewriter) DatabasePublish(
 	if strings.TrimSpace(ref) == "" {
 		return "", fmt.Errorf("ref is required")
 	}
-	return m.DatabaseImage(source).
+	image, err := m.DatabaseImage(ctx, source)
+	if err != nil {
+		return "", err
+	}
+	return image.
 		WithRegistryAuth(ref, username, password).
 		Publish(ctx, ref, dagger.ContainerPublishOpts{
 			RegistryService: registry,
@@ -78,17 +108,19 @@ func (m *Typewriter) DatabasePublish(
 func (m *Typewriter) DatabaseTest(
 	ctx context.Context,
 	source *dagger.Workspace,
-) *dagger.Container {
+) (*dagger.Container, error) {
+	backend, err := databaseBackend(ctx, source)
+	if err != nil {
+		return nil, err
+	}
 	return m.surrealkitContainer().
-		WithDirectory("/backend/database", source.Directory("/backend/database", dagger.WorkspaceDirectoryOpts{
-			Gitignore: true,
-		}), dagger.ContainerWithDirectoryOpts{
+		WithDirectory("/backend/database", backend.Directory("database"), dagger.ContainerWithDirectoryOpts{
 			Owner: "65532",
 		}).
 		WithWorkdir("/backend").
 		WithServiceBinding("surrealdb", m.surrealdbService()).
 		WithEnvVariable("SURREALDB_FOLDER", "database").
-		WithExec([]string{"surrealkit", "--host", "http://surrealdb:8000", "test"})
+		WithExec([]string{"surrealkit", "--host", "http://surrealdb:8000", "test"}), nil
 }
 
 // +check
@@ -96,13 +128,10 @@ func (m *Typewriter) DatabaseRolloutLint(
 	ctx context.Context,
 	source *dagger.Workspace,
 ) (*dagger.Container, error) {
-	backend := source.Directory("/backend", dagger.WorkspaceDirectoryOpts{
-		Gitignore: true,
-		Include: []string{
-			"database/**",
-			"surrealkit.toml",
-		},
-	})
+	backend, err := databaseBackend(ctx, source)
+	if err != nil {
+		return nil, err
+	}
 
 	rolloutsDirExists, err := backend.Exists(ctx, "database/rollouts", dagger.DirectoryExistsOpts{
 		ExpectedType: dagger.ExistsTypeDirectoryType,
@@ -221,13 +250,10 @@ func (m *Typewriter) localClusterSurrealkit(
 		return nil, err
 	}
 
-	backend := source.Directory("/backend", dagger.WorkspaceDirectoryOpts{
-		Gitignore: true,
-		Include: []string{
-			"database/**",
-			"surrealkit.toml",
-		},
-	})
+	backend, err := databaseBackend(ctx, source)
+	if err != nil {
+		return nil, err
+	}
 
 	container := m.surrealkitContainer().
 		WithDirectory("/workspace/backend", backend).

@@ -4,6 +4,7 @@
 
 mod database;
 mod record;
+mod schema_manifest;
 mod skir;
 
 pub use database::{
