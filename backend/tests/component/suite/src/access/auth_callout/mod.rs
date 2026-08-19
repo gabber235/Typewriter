@@ -1,12 +1,13 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use base64::Engine;
 use component_test::{
     FixtureBuilder, FixtureSpec, TestContext, TestResult, component_fixture, component_test,
 };
 use jose::{
-    JsonWebKey, Jwt, UntypedAdditionalProperties,
+    JsonWebKey, Jwt,
     jwk::JwkSigner,
+    jws::{IntoPayload, PayloadData, PayloadKind},
     policy::{Checkable, StandardPolicy},
 };
 use nats_jwt_rs::{
@@ -21,15 +22,41 @@ use wasmcloud_utils::skir::base::access::v1::permission::{
     Permission, Permissions,
 };
 
-const JWK: &str = r#"{
-    "kty": "oct",
-    "k": "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE",
+const PRIVATE_JWK: &str = r#"{
+    "use": "sig",
+    "kty": "OKP",
     "kid": "fixture-key",
-    "alg": "HS256",
+    "crv": "Ed25519",
+    "alg": "EdDSA",
+    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY",
+    "d": "629kbTnU3Pgfkoq7zG9qe5LPuMi1PdaLcNo87nUya1I",
     "key_ops": ["sign", "verify"]
 }"#;
 
+const PUBLIC_JWK: &str = r#"{
+    "use": "sig",
+    "kty": "OKP",
+    "kid": "fixture-key",
+    "crv": "Ed25519",
+    "alg": "EdDSA",
+    "x": "etkJX1EBhliHzBaimUQb0h2JhJKQ3G0beRVR3ssiedY",
+    "key_ops": ["verify"]
+}"#;
+
 struct IdentityProvider;
+
+struct JsonClaims(serde_json::Value);
+
+impl IntoPayload for JsonClaims {
+    type Error = serde_json::Error;
+
+    fn into_payload(self) -> Result<PayloadKind, Self::Error> {
+        let encoded = serde_json::to_vec(&self.0)?;
+        Ok(PayloadKind::Attached(PayloadData::Standard(
+            jose::Base64UrlString::encode(encoded),
+        )))
+    }
+}
 
 #[component_fixture(
     id = "auth-callout",
@@ -45,8 +72,11 @@ impl FixtureSpec for AuthCallout {
         let nats_account = KeyPair::new_account();
         let issuers = serde_json::json!([{
             "id": "typewriter-panel",
-            "issuer_url": "https://issuer.test",
-            "jwks_url": "http://issuer.test/jwks",
+            "issuer_url": "https://issuer.test/",
+            "jwks_url": "http://issuer.test:8080/identity/keys?tenant=panel",
+            "audiences": ["typewriter-panel", "typewriter-shared"],
+            "require_expiration": true,
+            "clock_skew_seconds": 30,
             "nats_account_key": nats_account.public_key()
         }]);
         let signing_keys = serde_json::json!({
@@ -56,7 +86,7 @@ impl FixtureSpec for AuthCallout {
         builder
             .messaging_subscription("$SYS.REQ.USER.AUTH")
             .otel()
-            .outgoing_http::<IdentityProvider>("http://issuer.test")
+            .outgoing_http::<IdentityProvider>("http://issuer.test:8080")
             .primary(|component| {
                 component
                     .secret_environment(
@@ -72,20 +102,39 @@ impl FixtureSpec for AuthCallout {
 }
 
 fn external_jwt(name: Option<&str>) -> anyhow::Result<String> {
-    let key: JsonWebKey = serde_json::from_str(JWK)?;
+    external_jwt_with_claims(name, serde_json::json!({}))
+}
+
+fn external_jwt_with_claims(
+    name: Option<&str>,
+    overrides: serde_json::Value,
+) -> anyhow::Result<String> {
+    let key: JsonWebKey = serde_json::from_str(PRIVATE_JWK)?;
     let checked = key
         .check(StandardPolicy::default())
         .map_err(|(_, error)| anyhow::anyhow!(error.to_string()))?;
     let mut signer: JwkSigner = checked.try_into()?;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let mut claims = serde_json::json!({
-        "iss": "https://issuer.test",
-        "sub": "panel_user"
+        "iss": "https://issuer.test/",
+        "sub": "panel_user",
+        "aud": "typewriter-panel",
+        "exp": now + 300,
+        "nbf": now - 1,
+        "iat": now
     });
     if let Some(name) = name {
         claims["name"] = name.into();
     }
-    let claims: jose::jwt::Claims<UntypedAdditionalProperties> = serde_json::from_value(claims)?;
-    let jwt = Jwt::builder_jwt().build(claims)?.sign(&mut signer)?;
+    for (key, value) in overrides
+        .as_object()
+        .expect("claim overrides are an object")
+    {
+        claims[key] = value.clone();
+    }
+    let jwt = Jwt::builder_jwt()
+        .build(JsonClaims(claims))?
+        .sign(&mut signer)?;
     Ok(jwt.encode().to_string())
 }
 
@@ -150,13 +199,15 @@ fn authorization_payload(response: &[u8]) -> anyhow::Result<serde_json::Value> {
 }
 
 fn expect_jwks(context: &TestContext<AuthCallout>) -> anyhow::Result<()> {
-    let key: serde_json::Value = serde_json::from_str(JWK)?;
+    let current_key: serde_json::Value = serde_json::from_str(PUBLIC_JWK)?;
+    let mut previous_key = current_key.clone();
+    previous_key["kid"] = "previous-key".into();
     context
         .http_mock::<IdentityProvider>()?
         .expect()
         .get()
-        .path_query("/jwks")
-        .response_json(&serde_json::json!({ "keys": [key] }))?
+        .path_query("/identity/keys?tenant=panel")
+        .response_json(&serde_json::json!({ "keys": [previous_key, current_key] }))?
         .register()
 }
 
@@ -243,6 +294,46 @@ async fn valid_user_token_receives_signed_permissions(
 }
 
 #[component_test(AuthCallout)]
+async fn token_with_one_matching_audience_in_array_is_authorized(
+    context: &mut TestContext<AuthCallout>,
+) -> TestResult {
+    expect_jwks(context)?;
+    expect_permissions(context)?;
+    let token = external_jwt_with_claims(
+        Some("Panel User"),
+        serde_json::json!({ "aud": ["unrelated", "typewriter-shared"] }),
+    )?;
+
+    let response = authorize_raw(context, auth_request(Some(token))?).await?;
+    let payload = authorization_payload(&response)?;
+
+    assert!(payload["nats"].get("error").is_none_or(|error| error == ""));
+    assert!(
+        payload["nats"]["jwt"]
+            .as_str()
+            .is_some_and(|jwt| !jwt.is_empty())
+    );
+    Ok(())
+}
+
+#[component_test(AuthCallout)]
+async fn token_with_no_matching_audience_is_denied(
+    context: &mut TestContext<AuthCallout>,
+) -> TestResult {
+    expect_jwks(context)?;
+    let token = external_jwt_with_claims(
+        Some("Panel User"),
+        serde_json::json!({ "aud": ["unrelated", "also-unrelated"] }),
+    )?;
+
+    let response = authorize(context, auth_request(Some(token))?).await?;
+
+    assert_eq!(response.payload().error, "user not authorized");
+    assert!(response.payload().jwt.is_empty());
+    Ok(())
+}
+
+#[component_test(AuthCallout)]
 async fn user_token_without_name_receives_unknown_display_name(
     context: &mut TestContext<AuthCallout>,
 ) -> TestResult {
@@ -268,7 +359,7 @@ async fn jwks_failure_does_not_issue_credentials(
         .http_mock::<IdentityProvider>()?
         .expect()
         .get()
-        .path_query("/jwks")
+        .path_query("/identity/keys?tenant=panel")
         .status(http::StatusCode::SERVICE_UNAVAILABLE)
         .register()?;
 
