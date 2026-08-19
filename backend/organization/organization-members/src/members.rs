@@ -160,7 +160,7 @@ pub async fn handle_update(
                 RETURN { outcome: 'founder-role-required-error' }
             };
 
-            UPDATE $member[0].id SET roles = $effective;
+            UPDATE ONLY $member[0].id SET roles = $effective;
 
             RETURN {
                 outcome: 'updated',
