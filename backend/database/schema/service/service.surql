@@ -38,7 +38,7 @@ DEFINE FIELD OVERWRITE state.last_seen ON service TYPE datetime;
 
 DEFINE FIELD OVERWRITE organization ON service TYPE option<record<organization>>
     REFERENCE ON DELETE THEN {
-        UPDATE $this SET runs_in = NONE, organization = NONE;
+        UPDATE $this SET organization = NONE;
     }
     ASSERT {
         IF $value != NONE AND $this.registration != NONE {
@@ -64,10 +64,6 @@ DEFINE FIELD OVERWRITE registration.token ON service TYPE string
     };
 
 DEFINE FIELD OVERWRITE registration.expires_at ON service TYPE datetime;
-
-DEFINE FIELD OVERWRITE runs_in ON service TYPE option<record<service>>
-    REFERENCE ON DELETE UNSET
-    ASSERT fn::service::valid_runs_in($this, $value);
 
 DEFINE INDEX OVERWRITE service_by_organization ON service FIELDS organization;
 DEFINE INDEX OVERWRITE service_registration_token ON service FIELDS registration.token UNIQUE;

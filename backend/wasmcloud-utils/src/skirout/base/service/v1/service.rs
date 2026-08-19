@@ -27,7 +27,6 @@ pub struct Service {
     pub organization: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     pub registration: Option<ServiceRegistration>,
     pub state: Option<ServiceState>,
-    pub runs_in: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<Service>>,
 }
@@ -50,7 +49,6 @@ impl Default for Service {
             organization: None,
             registration: None,
             state: None,
-            runs_in: None,
             _unrecognized: None,
         }
     }
@@ -392,7 +390,6 @@ fn initialize_module_serializers() {
                 (*a).add_field("organization", 5, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.organization, |x: &mut Service, v| x.organization = v);
                 (*a).add_field("registration", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceRegistration::_adapter())), "", |x: &Service| &x.registration, |x: &mut Service, v| x.registration = v);
                 (*a).add_field("state", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceState::_adapter())), "", |x: &Service| &x.state, |x: &mut Service, v| x.state = v);
-                (*a).add_field("runs_in", 8, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.runs_in, |x: &mut Service, v| x.runs_in = v);
                 (*a).finalize();
             }
             unsafe {

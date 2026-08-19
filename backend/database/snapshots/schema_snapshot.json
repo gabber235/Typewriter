@@ -39,11 +39,15 @@
     },
     {
       "path": "database/schema/service/functions.surql",
-      "hash": "0df9e5466c3431e721083f3fb07708d7538139e4597b8241f493699162002705"
+      "hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
     },
     {
       "path": "database/schema/service/service.surql",
-      "hash": "32f79b6d1f30dfe32d38ab8fd004ce80de7fc31227dc8e8925365ac0e9baea72"
+      "hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+    },
+    {
+      "path": "database/schema/service/topology.surql",
+      "hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
     },
     {
       "path": "database/schema/user.surql",

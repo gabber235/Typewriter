@@ -13,7 +13,11 @@ files = ["user.surql"]
 
 [schema.service]
 depends_on = ["record_id"]
-files = ["service/functions.surql", "service/service.surql"]
+files = [
+    "service/functions.surql",
+    "service/service.surql",
+    "service/topology.surql",
+]
 
 [schema.organization]
 depends_on = ["record_id", "color", "url", "user"]

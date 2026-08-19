@@ -9,6 +9,7 @@ mod binding;
 mod lifecycle;
 mod management;
 mod status;
+mod topology;
 
 #[component_fixture(
     id = "service-registration",
@@ -28,6 +29,8 @@ impl FixtureSpec for ServiceRegistration {
             .messaging_subscription("typewriter.from.service.*.heartbeat")
             .messaging_subscription("typewriter.from.service.*.shutdown")
             .messaging_subscription("typewriter.from.user.*.organization.*.services.*")
+            .messaging_subscription("typewriter.from.user.*.organization.*.topology.*")
+            .messaging_subscription("typewriter.from.service.*.execution.*")
             .otel()
             .typewriter_database(SchemaPreset::Registration)
     }

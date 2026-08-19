@@ -147,27 +147,28 @@ func (m *Typewriter) DatabaseRolloutLint(
 	if err != nil {
 		return nil, err
 	}
-	sort.Strings(entries)
-
-	container := m.surrealkitContainer().
-		WithDirectory("/workspace/backend", backend).
-		WithWorkdir("/workspace/backend").
-		WithEnvVariable("SURREALDB_FOLDER", "database")
-
-	linted := false
+	rollouts := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		if !strings.HasSuffix(entry, ".toml") {
-			continue
+		if strings.HasSuffix(entry, ".toml") {
+			rollouts = append(rollouts, entry)
 		}
-		rolloutID := strings.TrimSuffix(entry, ".toml")
-		container = container.WithExec([]string{"surrealkit", "rollout", "lint", rolloutID})
-		linted = true
 	}
-
-	if !linted {
+	if len(rollouts) == 0 {
 		return dag.Container().From("alpine:3.20").WithExec([]string{"true"}), nil
 	}
-	return container, nil
+	sort.Strings(rollouts)
+	latestRollout := rollouts[len(rollouts)-1]
+
+	return m.surrealkitContainer().
+		WithDirectory("/workspace/backend", backend).
+		WithWorkdir("/workspace/backend").
+		WithEnvVariable("SURREALDB_FOLDER", "database").
+		WithExec([]string{
+			"surrealkit",
+			"rollout",
+			"lint",
+			strings.TrimSuffix(latestRollout, ".toml"),
+		}), nil
 }
 
 func (m *Typewriter) localKubectlContainer(

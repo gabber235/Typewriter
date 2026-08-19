@@ -18,7 +18,6 @@ abstract class Service with _$Service {
     skir.RecordId? organization,
     ServiceRegistration? registration,
     ServiceState? state,
-    skir.RecordId? runsIn,
   }) = _Service;
 
   const Service._();
@@ -34,7 +33,6 @@ abstract class Service with _$Service {
         ? ServiceRegistration.fromSkir(service.registration!)
         : null,
     state: service.state != null ? ServiceState.fromSkir(service.state!) : null,
-    runsIn: service.runsIn,
   );
 
   skir.Service toSkir() => skir.Service(
@@ -46,7 +44,6 @@ abstract class Service with _$Service {
     organization: organization,
     registration: registration?.toSkir(),
     state: state?.toSkir(),
-    runsIn: runsIn,
   );
 
   String get displayName =>

@@ -15,6 +15,7 @@ use crate::skir::base::service::v1::identity::*;
 use crate::skir::base::service::v1::organization::*;
 use crate::skir::base::service::v1::registration::*;
 use crate::skir::base::service::v1::status::*;
+use crate::skir::base::service::v1::topology::*;
 use crate::skirout::base::organization::v1::role::*;
 
 wasmcloud_utils_macros::skir_response! {
@@ -88,8 +89,42 @@ wasmcloud_utils_macros::skir_response! {
             InvalidRecordIdError,
             ConflictError => "Service changed elsewhere",
             ServiceNotFoundError => "Service not found in organization",
-            RunsInNotFoundError => "Runs in service not found",
             ValidationError => "Service update is invalid",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    ConfigureServiceHostResponse {
+        success: Success,
+        errors {
+            ConflictError => "Host changed elsewhere",
+            InvalidConfigurationError => "Host configuration is invalid",
+            IncompatibleEngineError => "Engine target is incompatible",
+            RealmNotFoundError => "Realm not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchOrganizationTopologyResponse {
+        success: [List, HostUpdated, RealmUpdated, EngineUpdated, ResourceRemoved],
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    WatchHostExecutionResponse {
+        success: Desired,
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    ReportHostExecutionResponse {
+        success: Success,
+        errors {
+            StaleRevisionError => "Host topology revision is stale",
         }
     }
 }

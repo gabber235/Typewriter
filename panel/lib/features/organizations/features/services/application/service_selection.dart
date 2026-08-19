@@ -25,10 +25,6 @@ const customRoleTypeRef = ResolvedTypeRef(
   revision: 1,
 );
 
-final _serviceReferenceType = NamedType(
-  standardTypeRefs.refTo(NamedType(serviceInspectorTypeRef)),
-);
-
 final _serviceInspectorType = TypeDefinition(
   id: serviceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
@@ -36,10 +32,6 @@ final _serviceInspectorType = TypeDefinition(
   representation: RecordType(
     fields: {
       "name": TypeField(name: "name", type: identifierStringType),
-      "runsIn": TypeField(
-        name: "runsIn",
-        type: NamedType(standardTypeRefs.optionOf(_serviceReferenceType)),
-      ),
       "roles": TypeField(
         name: "roles",
         type: ListType(element: NamedType(serviceRoleTypeRef)),
@@ -97,18 +89,9 @@ class ServiceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final services = ref.watch(servicesProvider).value ?? const <Service>[];
     return ref.watch(serviceProvider(serviceId)).whenData((value) {
       if (value == null) throw SelectableNotFoundException(this);
-      return ServiceSelectable(
-        ref: ref,
-        id: this,
-        service: value,
-        serviceCollection: servicePresentationCollection(
-          services,
-          editingService: value,
-        ),
-      );
+      return ServiceSelectable(ref: ref, id: this, service: value);
     });
   }
 
@@ -129,14 +112,12 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
     required this.ref,
     required this.id,
     required this.service,
-    required this.serviceCollection,
   });
 
   @override
   final ServiceIdentifier id;
   final Service service;
   final Ref ref;
-  final PresentationCollectionSource serviceCollection;
 
   RecordValue get _data => service.inspectorValue;
 
@@ -150,7 +131,6 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
     confirmedValue: _data,
     revision: service.revision,
     presentations: [serviceInspectorPresentation(service)],
-    collections: [serviceCollection],
   );
 
   @override
@@ -194,16 +174,6 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
         ),
       ]);
     }
-    final runsInPath = DataPath.root.field("runsIn");
-    if (path == runsInPath && !service.isEngine && !service.isCustom) {
-      return EditorMutationResult.invalid([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPath,
-          message: "Runs in is not applicable to this service",
-          path: path,
-        ),
-      ]);
-    }
     return super.validate(path, value);
   }
 
@@ -240,44 +210,16 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   }) {
     if (value is! RecordValue) return null;
     final name = value.fields["name"];
-    final runsIn = value.fields["runsIn"];
-    if (name is! StringValue || name.value.trim().isEmpty || runsIn == null) {
+    if (name is! StringValue || name.value.trim().isEmpty) {
       return null;
     }
-    final decodedRunsIn = _decodeOptionalReference(runsIn);
-    if (!decodedRunsIn.$1) return null;
-    return service.copyWith(
-      revision: expectedRevision,
-      name: name.value,
-      runsIn: decodedRunsIn.$2,
-    );
+    return service.copyWith(revision: expectedRevision, name: name.value);
   }
-}
-
-(bool, skir.RecordId?) _decodeOptionalReference(DataValue value) {
-  if (value case PolymorphicValue(
-    concreteType: final type,
-    value: UnitValue(),
-  ) when type == standardTypeRefs.noneOf(_serviceReferenceType)) {
-    return (true, null);
-  }
-  if (value case PolymorphicValue(
-    concreteType: final type,
-    value: RecordValue(fields: {"value": StringValue(:final value)}),
-  ) when type == standardTypeRefs.someOf(_serviceReferenceType)) {
-    return (true, _decodeServiceReference(value));
-  }
-  return (false, null);
 }
 
 extension ServiceInspectorValue on Service {
   RecordValue get inspectorValue => RecordValue({
     "name": StringValue(name),
-    "runsIn": _optionalValue(
-      runsIn,
-      _serviceReferenceType,
-      encode: (runsIn) => StringValue(_encodeServiceReference(runsIn)),
-    ),
     "roles": ListValue(roles.map((role) => role.inspectorValue).toList()),
   });
 }
@@ -300,21 +242,4 @@ extension on ServiceRole {
       }),
     ),
   };
-}
-
-DataValue _optionalValue<T>(
-  T? item,
-  TypeExpression valueType, {
-  required DataValue Function(T item) encode,
-}) {
-  if (item == null) {
-    return PolymorphicValue(
-      concreteType: standardTypeRefs.noneOf(valueType),
-      value: const UnitValue(),
-    );
-  }
-  return PolymorphicValue(
-    concreteType: standardTypeRefs.someOf(valueType),
-    value: RecordValue({"value": encode(item)}),
-  );
 }

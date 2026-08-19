@@ -152,7 +152,6 @@ void main() {
         expect(request!.serviceId, updated.serviceId);
         expect(request!.expectedRevision, updated.revision);
         expect(request!.name, "Updated");
-        expect(request!.runsIn, updated.runsIn);
         expect(result, isA<MutationSuccess>());
         expect(harness.container.read(servicesProvider).requireValue, [
           canonical,

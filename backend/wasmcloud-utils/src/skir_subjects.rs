@@ -8,7 +8,9 @@ use crate::{
             user::{WatchUserJoinRequestsResponse, WatchUserOrganizationsResponse},
         },
         service::v1::{
-            organization::WatchOrganizationServicesResponse, registration::ServiceBoundNotification,
+            organization::WatchOrganizationServicesResponse,
+            registration::ServiceBoundNotification,
+            topology::{WatchHostExecutionResponse, WatchOrganizationTopologyResponse},
         },
     },
 };
@@ -31,6 +33,12 @@ define_skir_subjects! {
 
     organization_services(organization_id) -> WatchOrganizationServicesResponse =
         "typewriter.to.organization.{organization_id}.services.watch";
+
+    organization_topology(organization_id) -> WatchOrganizationTopologyResponse =
+        "typewriter.to.organization.{organization_id}.topology.watch";
+
+    host_execution(service_id) -> WatchHostExecutionResponse =
+        "typewriter.to.service.{service_id}.execution.watch";
 
     service_bound(service_id) -> ServiceBoundNotification =
         "typewriter.to.service.{service_id}.registration.bound";

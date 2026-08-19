@@ -67,7 +67,6 @@ pub struct ServiceRecord {
     pub organization: Option<RecordId>,
     pub registration: Option<ServiceRegistrationRecord>,
     pub state: Option<ServiceStateRecord>,
-    pub runs_in: Option<RecordId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -155,7 +154,6 @@ impl TryFrom<ServiceRecord> for Service {
             organization: value.organization.map(Into::into),
             registration: value.registration.map(Into::into),
             state: value.state.map(Into::into),
-            runs_in: value.runs_in.map(Into::into),
             _unrecognized: None,
         })
     }

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Service {
 
- skir.RecordId get serviceId; int get revision; String get name; List<ServiceRole> get roles; DateTime get createdAt; skir.RecordId? get organization; ServiceRegistration? get registration; ServiceState? get state; skir.RecordId? get runsIn;
+ skir.RecordId get serviceId; int get revision; String get name; List<ServiceRole> get roles; DateTime get createdAt; skir.RecordId? get organization; ServiceRegistration? get registration; ServiceState? get state;
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ServiceCopyWith<Service> get copyWith => _$ServiceCopyWithImpl<Service>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state)&&(identical(other.runsIn, runsIn) || other.runsIn == runsIn));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(roles),createdAt,organization,registration,state,runsIn);
+int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(roles),createdAt,organization,registration,state);
 
 @override
 String toString() {
-  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state, runsIn: $runsIn)';
+  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ServiceCopyWith<$Res>  {
   factory $ServiceCopyWith(Service value, $Res Function(Service) _then) = _$ServiceCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state, skir.RecordId? runsIn
+ skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
 });
 
 
@@ -62,7 +62,7 @@ class _$ServiceCopyWithImpl<$Res>
 
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,Object? runsIn = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
   return _then(_self.copyWith(
 serviceId: null == serviceId ? _self.serviceId : serviceId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
@@ -72,8 +72,7 @@ as List<ServiceRole>,createdAt: null == createdAt ? _self.createdAt : createdAt 
 as DateTime,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
 as skir.RecordId?,registration: freezed == registration ? _self.registration : registration // ignore: cast_nullable_to_non_nullable
 as ServiceRegistration?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
-as ServiceState?,runsIn: freezed == runsIn ? _self.runsIn : runsIn // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as ServiceState?,
   ));
 }
 /// Create a copy of Service
@@ -182,10 +181,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state,  skir.RecordId? runsIn)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Service() when $default != null:
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state,_that.runsIn);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   return orElse();
 
 }
@@ -203,10 +202,10 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state,  skir.RecordId? runsIn)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)  $default,) {final _that = this;
 switch (_that) {
 case _Service():
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state,_that.runsIn);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +222,10 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state,  skir.RecordId? runsIn)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,) {final _that = this;
 switch (_that) {
 case _Service() when $default != null:
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state,_that.runsIn);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   return null;
 
 }
@@ -238,7 +237,7 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 
 
 class _Service extends Service {
-   _Service({required this.serviceId, required this.revision, required this.name, required final  List<ServiceRole> roles, required this.createdAt, this.organization, this.registration, this.state, this.runsIn}): assert(name.isNotEmpty, 'Name must not be empty.'),assert(roles.isNotEmpty, 'Roles must not be empty.'),_roles = roles,super._();
+   _Service({required this.serviceId, required this.revision, required this.name, required final  List<ServiceRole> roles, required this.createdAt, this.organization, this.registration, this.state}): assert(name.isNotEmpty, 'Name must not be empty.'),assert(roles.isNotEmpty, 'Roles must not be empty.'),_roles = roles,super._();
   
 
 @override final  skir.RecordId serviceId;
@@ -255,7 +254,6 @@ class _Service extends Service {
 @override final  skir.RecordId? organization;
 @override final  ServiceRegistration? registration;
 @override final  ServiceState? state;
-@override final  skir.RecordId? runsIn;
 
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
@@ -267,16 +265,16 @@ _$ServiceCopyWith<_Service> get copyWith => __$ServiceCopyWithImpl<_Service>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state)&&(identical(other.runsIn, runsIn) || other.runsIn == runsIn));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(_roles),createdAt,organization,registration,state,runsIn);
+int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(_roles),createdAt,organization,registration,state);
 
 @override
 String toString() {
-  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state, runsIn: $runsIn)';
+  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
 }
 
 
@@ -287,7 +285,7 @@ abstract mixin class _$ServiceCopyWith<$Res> implements $ServiceCopyWith<$Res> {
   factory _$ServiceCopyWith(_Service value, $Res Function(_Service) _then) = __$ServiceCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state, skir.RecordId? runsIn
+ skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
 });
 
 
@@ -304,7 +302,7 @@ class __$ServiceCopyWithImpl<$Res>
 
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,Object? runsIn = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
   return _then(_Service(
 serviceId: null == serviceId ? _self.serviceId : serviceId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
@@ -314,8 +312,7 @@ as List<ServiceRole>,createdAt: null == createdAt ? _self.createdAt : createdAt 
 as DateTime,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
 as skir.RecordId?,registration: freezed == registration ? _self.registration : registration // ignore: cast_nullable_to_non_nullable
 as ServiceRegistration?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
-as ServiceState?,runsIn: freezed == runsIn ? _self.runsIn : runsIn // ignore: cast_nullable_to_non_nullable
-as skir.RecordId?,
+as ServiceState?,
   ));
 }
 

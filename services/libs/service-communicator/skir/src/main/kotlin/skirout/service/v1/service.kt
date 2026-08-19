@@ -29,7 +29,6 @@ sealed interface Service_OrMutable {
     val organization: skirout.kernel.v1.record_id.RecordId_OrMutable?;
     val registration: skirout.service.v1.service.ServiceRegistration_OrMutable?;
     val state: skirout.service.v1.service.ServiceState_OrMutable?;
-    val runsIn: skirout.kernel.v1.record_id.RecordId_OrMutable?;
 
     fun toFrozen(): skirout.service.v1.service.Service;
 }
@@ -45,7 +44,6 @@ class Service private constructor(
     override val organization: skirout.kernel.v1.record_id.RecordId?,
     override val registration: skirout.service.v1.service.ServiceRegistration?,
     override val state: skirout.service.v1.service.ServiceState?,
-    override val runsIn: skirout.kernel.v1.record_id.RecordId?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.Service>? =
         null,
 ): skirout.service.v1.service.Service_OrMutable {
@@ -60,7 +58,6 @@ class Service private constructor(
         organization: skirout.kernel.v1.record_id.RecordId_OrMutable?,
         registration: skirout.service.v1.service.ServiceRegistration_OrMutable?,
         state: skirout.service.v1.service.ServiceState_OrMutable?,
-        runsIn: skirout.kernel.v1.record_id.RecordId_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.Service>? =
             null,
     ): this(
@@ -72,7 +69,6 @@ class Service private constructor(
         if (organization != null) organization.toFrozen() else null,
         if (registration != null) registration.toFrozen() else null,
         if (state != null) state.toFrozen() else null,
-        if (runsIn != null) runsIn.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -89,7 +85,6 @@ class Service private constructor(
         organization = this.organization,
         registration = this.registration,
         state = this.state,
-        runsIn = this.runsIn,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -112,8 +107,6 @@ class Service private constructor(
             this.registration,
         state: skirout.service.v1.service.ServiceState_OrMutable? =
             this.state,
-        runsIn: skirout.kernel.v1.record_id.RecordId_OrMutable? =
-            this.runsIn,
     ) = skirout.service.v1.service.Service(
         serviceId.toFrozen(),
         revision,
@@ -123,7 +116,6 @@ class Service private constructor(
         if (organization != null) organization.toFrozen() else null,
         if (registration != null) registration.toFrozen() else null,
         if (state != null) state.toFrozen() else null,
-        if (runsIn != null) runsIn.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -131,11 +123,11 @@ class Service private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.revision == other.revision && this.name == other.name && this.roles == other.roles && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state && this.runsIn == other.runsIn);
+        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.revision == other.revision && this.name == other.name && this.roles == other.roles && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.revision, this.name, this.roles, this.createdAt, this.organization, this.registration, this.state, this.runsIn).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.revision, this.name, this.roles, this.createdAt, this.organization, this.registration, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -165,8 +157,6 @@ class Service private constructor(
             null,
         override var state: skirout.service.v1.service.ServiceState_OrMutable? =
             null,
-        override var runsIn: skirout.kernel.v1.record_id.RecordId_OrMutable? =
-            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.Service>? =
             null,
     ): skirout.service.v1.service.Service_OrMutable {
@@ -180,7 +170,6 @@ class Service private constructor(
             organization = this.organization,
             registration = this.registration,
             state = this.state,
-            runsIn = this.runsIn,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -228,7 +217,6 @@ class Service private constructor(
                 null,
                 null,
                 null,
-                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -258,8 +246,6 @@ class Service private constructor(
                 null,
             state: skirout.service.v1.service.ServiceState_OrMutable? =
                 null,
-            runsIn: skirout.kernel.v1.record_id.RecordId_OrMutable? =
-                null,
         ) = skirout.service.v1.service.Service(
             serviceId = serviceId,
             revision = revision,
@@ -269,7 +255,6 @@ class Service private constructor(
             organization = organization,
             registration = registration,
             state = state,
-            runsIn = runsIn,
             _unrecognizedFields = null,
         );
 
@@ -369,17 +354,6 @@ class Service private constructor(
                 "",
                 { it.state },
                 { mut, v -> mut.state = v },
-            );
-            serializerImpl.addField(
-                "runs_in",
-                "runsIn",
-                8,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.runsIn },
-                { mut, v -> mut.runsIn = v },
             );
             serializerImpl.finalizeStruct();
         }

@@ -29,7 +29,6 @@ sealed class Service_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable? get organization;
   ServiceRegistration_orMutable? get registration;
   ServiceState_orMutable? get state;
-  _lib_kernel_v1_record_id.RecordId_orMutable? get runsIn;
 
   Service toFrozen();
 }
@@ -52,8 +51,6 @@ final class Service implements Service_orMutable {
   final ServiceRegistration? registration;
   @_core.override
   final ServiceState? state;
-  @_core.override
-  final _lib_kernel_v1_record_id.RecordId? runsIn;
   _skir.internal__UnrecognizedFields? _u;
 
   factory Service({
@@ -65,7 +62,6 @@ final class Service implements Service_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
     required ServiceRegistration_orMutable? registration,
     required ServiceState_orMutable? state,
-    required _lib_kernel_v1_record_id.RecordId_orMutable? runsIn,
   }) => Service._(
     serviceId.toFrozen(),
     revision,
@@ -75,7 +71,6 @@ final class Service implements Service_orMutable {
     (organization != null) ? organization.toFrozen() : null,
     (registration != null) ? registration.toFrozen() : null,
     (state != null) ? state.toFrozen() : null,
-    (runsIn != null) ? runsIn.toFrozen() : null,
   );
 
   Service._(
@@ -87,7 +82,6 @@ final class Service implements Service_orMutable {
     this.organization,
     this.registration,
     this.state,
-    this.runsIn,
   );
 
   /// Default instance with all fields set to their default values.
@@ -97,7 +91,6 @@ final class Service implements Service_orMutable {
     "",
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
-    null,
     null,
     null,
     null,
@@ -111,7 +104,6 @@ final class Service implements Service_orMutable {
     "",
     _skir.KeyedIterable.empty,
     _skir.unixEpoch,
-    null,
     null,
     null,
     null,
@@ -132,7 +124,6 @@ final class Service implements Service_orMutable {
     this.organization,
     this.registration,
     this.state,
-    this.runsIn,
   );
 
   @_core.override
@@ -154,7 +145,6 @@ final class Service implements Service_orMutable {
     this.organization,
     this.registration,
     this.state,
-    this.runsIn,
   ];
 
   @_core.override
@@ -243,17 +233,6 @@ final class Service implements Service_orMutable {
         (it) => it.state,
         (it, v) => it.state = v,
       );
-      _serializerBuilder.addField(
-        "runs_in",
-        "runsIn",
-        8,
-        _skir.Serializers.optional(
-          _lib_kernel_v1_record_id.RecordId.serializer,
-        ),
-        "",
-        (it) => it.runsIn,
-        (it, v) => it.runsIn = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -280,7 +259,6 @@ final class Service_mutable implements Service_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable? organization;
   ServiceRegistration_orMutable? registration;
   ServiceState_orMutable? state;
-  _lib_kernel_v1_record_id.RecordId_orMutable? runsIn;
   _skir.internal__UnrecognizedFields? _u;
 
   Service_mutable._(
@@ -292,7 +270,6 @@ final class Service_mutable implements Service_orMutable {
     this.organization,
     this.registration,
     this.state,
-    this.runsIn,
   );
 
   /// If the value of [serviceId] is already mutable, returns it as-is.
@@ -328,7 +305,6 @@ final class Service_mutable implements Service_orMutable {
     organization: this.organization,
     registration: this.registration,
     state: this.state,
-    runsIn: this.runsIn,
   ).._u = this._u;
 }
 
