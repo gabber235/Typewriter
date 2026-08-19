@@ -1,12 +1,18 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.schema.SchemaMigrator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.mainSpanBlocking
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
+import skirout.library.v1.page.Page
+import skirout.library.v1.page.PageType
+import skirout.library.v1.tag.Placement
+import skirout.library.v1.tag.Tag
 
 internal class RepositoryFixture : AutoCloseable {
     private val telemetry = TelemetryTestHarness.create()
@@ -15,9 +21,10 @@ internal class RepositoryFixture : AutoCloseable {
             connect("memory")
             useNs("realm_repository_test").useDb("realm_repository_test")
         }
-    val books = SurrealBookRepository(database)
-    val pages = SurrealPageRepository(database)
-    val tags = SurrealTagRepository(database)
+    val outbox = SurrealRealmOutbox(database)
+    val books = SurrealBookRepository(database, outbox)
+    val pages = SurrealPageRepository(database, outbox)
+    val tags = SurrealTagRepository(database, outbox)
 
     init {
         telemetry.telemetry.mainSpanBlocking(
@@ -121,6 +128,50 @@ internal fun TagDeleteResult.successValue(): TagDeletion =
         TagDeleteResult.NotFound -> error("Expected success but the tag was missing")
     }
 
-internal suspend fun SurrealBookRepository.updateBook(book: skirout.library.v1.book.Book) = updateBook(book.revision, book)
+internal suspend fun BookRepository.createBook(
+    title: String,
+    icon: String,
+    color: Color,
+    tagIds: List<RecordId>,
+) = createBook(title, icon, color, tagIds) { emptyList() }
 
-internal suspend fun SurrealTagRepository.updateTag(tag: skirout.library.v1.tag.Tag) = updateTag(tag.revision, tag)
+internal suspend fun BookRepository.updateBook(
+    expectedRevision: Long,
+    book: skirout.library.v1.book.Book,
+) = updateBook(expectedRevision, book) { emptyList() }
+
+internal suspend fun BookRepository.updateBook(book: skirout.library.v1.book.Book) = updateBook(book.revision, book) { emptyList() }
+
+internal suspend fun PageRepository.createPage(
+    bookId: RecordId,
+    name: String,
+    type: PageType,
+    chapter: String,
+    priority: Int,
+) = createPage(bookId, name, type, chapter, priority) { emptyList() }
+
+internal suspend fun PageRepository.updatePage(page: Page) = updatePage(page) { emptyList() }
+
+internal suspend fun PageRepository.deletePage(id: RecordId) = deletePage(id) { emptyList() }
+
+internal suspend fun PageRepository.changePagesChapters(
+    bookId: RecordId,
+    oldChapter: String,
+    newChapter: String,
+) = changePagesChapters(bookId, oldChapter, newChapter) { emptyList() }
+
+internal suspend fun TagRepository.createTag(
+    name: String,
+    color: Color,
+    parentIds: List<RecordId>,
+    placement: Placement,
+) = createTag(name, color, parentIds, placement) { emptyList() }
+
+internal suspend fun TagRepository.updateTag(
+    expectedRevision: Long,
+    tag: Tag,
+) = updateTag(expectedRevision, tag) { emptyList() }
+
+internal suspend fun TagRepository.updateTag(tag: Tag) = updateTag(tag.revision, tag) { emptyList() }
+
+internal suspend fun TagRepository.deleteTag(id: RecordId) = deleteTag(id) { emptyList() }

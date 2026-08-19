@@ -1,5 +1,6 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.realm.outbox.OutboxEvent
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
 import skirout.library.v1.book.Book
@@ -14,11 +15,13 @@ interface BookRepository {
         icon: String,
         color: Color,
         tagIds: List<RecordId>,
+        encodeEvents: (Book) -> List<OutboxEvent>,
     ): BookCreateResult
 
     suspend fun updateBook(
         expectedRevision: Long,
         book: Book,
+        encodeEvents: (Book) -> List<OutboxEvent>,
     ): BookUpdateResult
 }
 

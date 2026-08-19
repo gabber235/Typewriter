@@ -77,6 +77,7 @@ internal class PageRoutes(
                     type = request.type,
                     chapter = request.chapter.orEmpty(),
                     priority = request.priority ?: 0,
+                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page)) },
                 )
             }
         val page =
@@ -97,7 +98,6 @@ internal class PageRoutes(
                     }
                 }
             }
-        publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
         return CreatePageResponse.SuccessWrapper(page)
     }
 
@@ -130,6 +130,7 @@ internal class PageRoutes(
                         chapter = request.chapter ?: existing.chapter,
                         priority = request.priority ?: existing.priority,
                     ),
+                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page)) },
                 )
             }
         val page =
@@ -150,7 +151,6 @@ internal class PageRoutes(
                     }
                 }
             }
-        publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
         return UpdatePageResponse.SuccessWrapper(page)
     }
 
@@ -166,7 +166,12 @@ internal class PageRoutes(
         id.invalidRecordId("page")?.let {
             return DeletePageResponse.InvalidRecordIdErrorWrapper(it)
         }
-        when (val result = childSpan("db.page.delete") { pages.deletePage(id) }) {
+        when (
+            val result =
+                childSpan("db.page.delete") {
+                    pages.deletePage(id) { pageId -> pageEvents(WatchPageResponse.RemoveWrapper(pageId)) }
+                }
+        ) {
             is RepositoryResult.Success -> Unit
 
             is RepositoryResult.DomainFailure -> return when (result.slug) {
@@ -174,7 +179,6 @@ internal class PageRoutes(
                 else -> error("Unexpected page deletion domain error: ${result.slug}")
             }
         }
-        publishPage(call.communicator, WatchPageResponse.RemoveWrapper(id))
         return DeletePageResponse.createSuccess()
     }
 
@@ -195,7 +199,15 @@ internal class PageRoutes(
                 ?: return ChangePagesChaptersResponse.createBookNotFoundError(bookId = request.bookId)
         val result =
             childSpan("db.page.change_chapters") {
-                pages.changePagesChapters(book.bookId, request.oldChapter, request.newChapter)
+                pages.changePagesChapters(
+                    book.bookId,
+                    request.oldChapter,
+                    request.newChapter,
+                ) { changed ->
+                    changed.map { page ->
+                        contracts.watchPage.encodeUpdate(realmAddress, WatchPageResponse.UpdateWrapper(page))
+                    }
+                }
             }
         val updated =
             when (result) {
@@ -211,16 +223,10 @@ internal class PageRoutes(
                     }
                 }
             }
-        for (page in updated) publishPage(call.communicator, WatchPageResponse.UpdateWrapper(page))
         return ChangePagesChaptersResponse.createSuccess(updatedCount = updated.size)
     }
 
-    private suspend fun publishPage(
-        communicator: com.typewritermc.services.libs.communicator.client.Communicator,
-        response: WatchPageResponse,
-    ) {
-        communicator.publishUpdate(contracts.watchPage, realmAddress, response).requirePublished()
-    }
+    private fun pageEvents(response: WatchPageResponse) = listOf(contracts.watchPage.encodeUpdate(realmAddress, response))
 
     private fun validate(
         name: String,

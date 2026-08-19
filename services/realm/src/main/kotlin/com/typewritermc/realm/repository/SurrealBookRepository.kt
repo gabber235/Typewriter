@@ -1,9 +1,12 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.outbox.RealmOutbox
+import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.records.BookCreateOutputRecord
 import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.records.BookUpdateOutputRecord
+import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import skirout.kernel.v1.color.Color
@@ -12,6 +15,7 @@ import skirout.library.v1.book.Book
 
 class SurrealBookRepository(
     private val database: Surreal,
+    private val outbox: RealmOutbox = SurrealRealmOutbox(database),
 ) : BookRepository {
     override suspend fun listBooks(): List<Book> {
         val result = database.query("SELECT * FROM book ORDER BY title, id").take(0)
@@ -33,13 +37,14 @@ class SurrealBookRepository(
         icon: String,
         color: Color,
         tagIds: List<RecordId>,
+        encodeEvents: (Book) -> List<com.typewritermc.realm.outbox.OutboxEvent>,
     ): BookCreateResult {
-        val result =
-            database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
-
+        val mutation =
+            database.inTransaction { transaction ->
+                val result =
+                    transaction
+                        .query(
+                            $$"""
                 LET $distinct_tags = array::distinct($tags);
                 LET $missing_tags = $distinct_tags.filter(|$tag| !record::exists($tag));
                 LET $result = IF $missing_tags != [] {
@@ -68,29 +73,33 @@ class SurrealBookRepository(
                     $result;
                 };
 
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf(
-                        "title" to title,
-                        "icon" to icon,
-                        "color" to color.argb.toUInt().toLong(),
-                        "tags" to tagIds.surrealId("tag"),
-                    ),
-                ).takeTransaction(4)
-
-        return BookCreateOutputRecord.parse(result).toResult()
+                            """.trimIndent(),
+                            mapOf(
+                                "title" to title,
+                                "icon" to icon,
+                                "color" to color.argb.toUInt().toLong(),
+                                "tags" to tagIds.surrealId("tag"),
+                            ),
+                        ).takeTransaction(3)
+                BookCreateOutputRecord.parse(result).toResult().also { mutation ->
+                    if (mutation is BookCreateResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.book))
+                }
+            }
+        if (mutation is BookCreateResult.Success) outbox.signalPending()
+        return mutation
     }
 
     override suspend fun updateBook(
         expectedRevision: Long,
         book: Book,
+        encodeEvents: (Book) -> List<com.typewritermc.realm.outbox.OutboxEvent>,
     ): BookUpdateResult {
-        val result =
-            database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
-
+        val mutation =
+            database.inTransaction { transaction ->
+                val result =
+                    transaction
+                        .query(
+                            $$"""
                 LET $actual = SELECT * FROM ONLY $book;
                 LET $result = IF $actual = NONE {
                     { kind: "not_found" };
@@ -132,21 +141,24 @@ class SurrealBookRepository(
                 } ELSE {
                     $result;
                 };
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf(
-                        "book" to book.bookId.surrealId("book"),
-                        "expected_revision" to expectedRevision,
-                        "title" to book.title,
-                        "icon" to book.icon,
-                        "color" to
-                            book.color.argb
-                                .toUInt()
-                                .toLong(),
-                        "tags" to book.tagIds.surrealId("tag"),
-                    ),
-                ).takeTransaction(3)
-
-        return BookUpdateOutputRecord.parse(result).toResult()
+                            """.trimIndent(),
+                            mapOf(
+                                "book" to book.bookId.surrealId("book"),
+                                "expected_revision" to expectedRevision,
+                                "title" to book.title,
+                                "icon" to book.icon,
+                                "color" to
+                                    book.color.argb
+                                        .toUInt()
+                                        .toLong(),
+                                "tags" to book.tagIds.surrealId("tag"),
+                            ),
+                        ).takeTransaction(2)
+                BookUpdateOutputRecord.parse(result).toResult().also { mutation ->
+                    if (mutation is BookUpdateResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.book))
+                }
+            }
+        if (mutation is BookUpdateResult.Success) outbox.signalPending()
+        return mutation
     }
 }

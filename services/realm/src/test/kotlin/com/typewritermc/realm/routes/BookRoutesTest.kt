@@ -1,7 +1,10 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.repository.createBook
+import com.typewritermc.realm.repository.createTag
 import com.typewritermc.realm.repository.recordId
 import com.typewritermc.realm.repository.successValue
+import com.typewritermc.realm.repository.updateBook
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

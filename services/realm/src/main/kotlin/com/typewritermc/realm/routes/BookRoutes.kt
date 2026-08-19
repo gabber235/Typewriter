@@ -5,7 +5,6 @@ import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.BookUpdateResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.utils.invalidRecordId
-import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpan
@@ -68,6 +67,9 @@ internal class BookRoutes(
                     icon = request.icon?.takeIf(String::isNotBlank) ?: "mdi:book",
                     color = request.color ?: Color(argb = 0),
                     tagIds = request.tagIds,
+                    encodeEvents = { book ->
+                        listOf(contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.AddWrapper(book)))
+                    },
                 )
             }
         val book =
@@ -88,12 +90,6 @@ internal class BookRoutes(
                     return CreateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
                 }
             }
-        call.communicator
-            .publishUpdate(
-                contracts.watchBooks,
-                realmAddress,
-                WatchBooksResponse.AddWrapper(book),
-            ).requirePublished()
         return CreateBookResponse.SuccessWrapper(book)
     }
 
@@ -124,6 +120,12 @@ internal class BookRoutes(
                         color = request.color,
                         tagIds = request.tagIds,
                     ),
+                    encodeEvents = { updated ->
+                        listOf(
+                            contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.UpdateWrapper(updated)),
+                            contracts.watchBook.encodeUpdate(realmAddress, WatchBookResponse.UpdateWrapper(updated)),
+                        )
+                    },
                 )
             }
         val updated =
@@ -155,22 +157,6 @@ internal class BookRoutes(
                     return UpdateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
                 }
             }
-        call.communicator
-            .publishUpdate(
-                contracts.watchBooks,
-                realmAddress,
-                WatchBooksResponse.UpdateWrapper(updated),
-            ).requirePublished()
-        call.communicator
-            .publishUpdate(
-                contracts.watchBook,
-                realmAddress,
-                WatchBookResponse.UpdateWrapper(updated),
-            ).requirePublished()
         return UpdateBookResponse.SuccessWrapper(updated)
     }
-}
-
-internal fun CommunicationResult<Unit>.requirePublished() {
-    if (this is CommunicationResult.Failure) error("Watch publication failed: $error")
 }

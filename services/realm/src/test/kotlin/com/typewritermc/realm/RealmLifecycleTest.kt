@@ -106,6 +106,7 @@ private class RealmLifecycleFixture(
             telemetry = telemetry.telemetry,
             retryPolicy = RetryPolicy.fixed(1.seconds),
             delayScheduler = delayScheduler,
+            clock = java.time.Clock.systemUTC(),
         )
 
     fun ready(

@@ -1,6 +1,8 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.outbox.RealmOutboxPublisher
+import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.SurrealBookRepository
 import com.typewritermc.realm.repository.SurrealPageRepository
 import com.typewritermc.realm.repository.SurrealTagRepository
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Clock
 
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
@@ -41,11 +44,13 @@ class Realm(
     private val telemetry: ServiceTelemetry,
     private val retryPolicy: RetryPolicy,
     private val delayScheduler: DelayScheduler,
+    private val clock: Clock,
 ) {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
     private var routeFactory: RealmRouteFactory? = null
     private var router: CommunicatorRouter? = null
+    private var outboxPublisher: RealmOutboxPublisher? = null
     private var routerSession: RouterSession? = null
     private var registrarMonitor: Job? = null
 
@@ -62,11 +67,13 @@ class Realm(
         val connected = childSpan("realm.database.initialize") { databaseProvider.connect() }
         try {
             database = connected
+            val outbox = SurrealRealmOutbox(connected)
+            outboxPublisher = RealmOutboxPublisher(outbox, scope, clock, retryPolicy, delayScheduler)
             routeFactory =
                 RealmRouteFactory(
-                    SurrealBookRepository(connected),
-                    SurrealPageRepository(connected),
-                    SurrealTagRepository(connected),
+                    SurrealBookRepository(connected, outbox),
+                    SurrealPageRepository(connected, outbox),
+                    SurrealTagRepository(connected, outbox),
                     editorCatalog,
                     presentationSearch,
                 )
@@ -81,6 +88,8 @@ class Realm(
                     }
                 }
         } catch (failure: Throwable) {
+            runCatching { outboxPublisher?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
+            outboxPublisher = null
             runCatching {
                 lifecycle.withLock {
                     val active = router
@@ -104,6 +113,8 @@ class Realm(
             val failures = mutableListOf<Throwable>()
             runCatching { registrarMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
             registrarMonitor = null
+            runCatching { outboxPublisher?.stop() }.exceptionOrNull()?.let(failures::add)
+            outboxPublisher = null
             runCatching {
                 lifecycle.withLock {
                     val active = router
@@ -159,6 +170,7 @@ class Realm(
         val previous = router
         router = null
         routerSession = null
+        outboxPublisher?.stop()
         previous?.stop()?.requireSuccess("replace")
         val address =
             RealmAddress(
@@ -175,6 +187,7 @@ class Realm(
         replacement.start().requireSuccess("start")
         router = replacement
         routerSession = session
+        checkNotNull(outboxPublisher) { "Realm outbox publisher is not initialized" }.replaceCommunicator(communicator)
     }
 }
 

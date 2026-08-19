@@ -1,7 +1,10 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.realm.repository.createBook
+import com.typewritermc.realm.repository.createPage
 import com.typewritermc.realm.repository.recordId
 import com.typewritermc.realm.repository.successValue
+import com.typewritermc.realm.repository.updatePage
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -663,18 +666,13 @@ val PageRoutesTest by testSuite {
         }
     }
 
-    test("page publication failure remains observable after the page is committed") {
+    test("page mutation response succeeds independently of later watch publication") {
         runTest {
             RouteFixture().use { fixture ->
                 val book =
                     fixture.repositories.books
                         .createBook("committed_book", "book", Color(argb = 0), emptyList())
                         .successValue()
-                fixture.transport.failNextPublish(
-                    com.typewritermc.services.libs.communicator.transport.TransportError
-                        .Unavailable(),
-                )
-
                 val response =
                     fixture.request(
                         "page.create",
@@ -689,7 +687,7 @@ val PageRoutesTest by testSuite {
                         CreatePageResponse.serializer,
                     )
 
-                response.kind shouldBe CreatePageResponse.Kind.INTERNAL_ERROR_WRAPPER
+                response.kind shouldBe CreatePageResponse.Kind.SUCCESS_WRAPPER
                 fixture.repositories.pages
                     .searchPages(book.bookId, null)
                     .single()

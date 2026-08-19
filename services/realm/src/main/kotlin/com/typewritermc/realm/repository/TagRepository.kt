@@ -1,7 +1,9 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.realm.outbox.OutboxEvent
 import skirout.kernel.v1.color.Color
 import skirout.kernel.v1.record_id.RecordId
+import skirout.library.v1.book.Book
 import skirout.library.v1.tag.Placement
 import skirout.library.v1.tag.Tag
 
@@ -17,14 +19,19 @@ interface TagRepository {
         color: Color,
         parentIds: List<RecordId>,
         placement: Placement,
+        encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagCreateResult
 
     suspend fun updateTag(
         expectedRevision: Long,
         tag: Tag,
+        encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagUpdateResult
 
-    suspend fun deleteTag(id: RecordId): TagDeleteResult
+    suspend fun deleteTag(
+        id: RecordId,
+        encodeEvents: (TagDeletion) -> List<OutboxEvent>,
+    ): TagDeleteResult
 }
 
 sealed interface TagCreateResult {
@@ -76,6 +83,6 @@ sealed interface TagDeleteResult {
 }
 
 data class TagDeletion(
-    val childTagIds: List<RecordId>,
-    val bookIds: List<RecordId>,
+    val childTags: List<Tag>,
+    val books: List<Book>,
 )

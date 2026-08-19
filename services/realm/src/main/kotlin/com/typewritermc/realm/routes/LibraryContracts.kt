@@ -5,6 +5,7 @@ import build.skir.service.Method
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.services.libs.communicator.client.EncodedPublication
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -258,6 +259,11 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
             }
         ResponseClassification(outcome, ResponseVariant.of(words))
     }
+
+internal fun <Request : Any, Initial : Any, Update : Any> WatchContract<RealmAddress, Request, Initial, Update>.encodeUpdate(
+    address: RealmAddress,
+    update: Update,
+): EncodedPublication = EncodedPublication(updateAddress.render(address), updateCodec.encode(update))
 
 private fun matchesBook(
     request: WatchBookRequest,

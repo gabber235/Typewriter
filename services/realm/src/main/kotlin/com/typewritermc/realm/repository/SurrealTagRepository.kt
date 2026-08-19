@@ -1,10 +1,14 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.realm.outbox.OutboxEvent
+import com.typewritermc.realm.outbox.RealmOutbox
+import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.records.TagCreateOutputRecord
 import com.typewritermc.realm.repository.records.TagDeleteOutputRecord
 import com.typewritermc.realm.repository.records.TagRecord
 import com.typewritermc.realm.repository.records.TagUpdateOutputRecord
+import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import com.typewritermc.realm.repository.utils.takeTransaction
 import com.typewritermc.realm.repository.utils.toSkirRecordId
@@ -15,6 +19,7 @@ import skirout.library.v1.tag.Tag
 
 class SurrealTagRepository(
     private val database: Surreal,
+    private val outbox: RealmOutbox = SurrealRealmOutbox(database),
 ) : TagRepository {
     override suspend fun listTags(): List<Tag> {
         val result = database.query("SELECT * FROM tag ORDER BY name, id").take(0)
@@ -52,13 +57,14 @@ class SurrealTagRepository(
         color: Color,
         parentIds: List<RecordId>,
         placement: Placement,
+        encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagCreateResult {
-        val result =
-            database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
-
+        val mutation =
+            database.inTransaction { transaction ->
+                val result =
+                    transaction
+                        .query(
+                            $$"""
                 LET $distinct_parent_tags = array::distinct($parent_tags);
                 LET $missing_parents = $distinct_parent_tags.filter(|$tag| !record::exists($tag));
                 LET $result = IF $missing_parents != [] {
@@ -88,32 +94,36 @@ class SurrealTagRepository(
                 } ELSE {
                     $result;
                 };
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf(
-                        "name" to name,
-                        "color" to color.argb.toUInt().toLong(),
-                        "x" to placement.x,
-                        "y" to placement.y,
-                        "width" to placement.width,
-                        "height" to placement.height,
-                        "parent_tags" to parentIds.surrealId("tag"),
-                    ),
-                ).takeTransaction(4)
-
-        return TagCreateOutputRecord.parse(result).toResult()
+                            """.trimIndent(),
+                            mapOf(
+                                "name" to name,
+                                "color" to color.argb.toUInt().toLong(),
+                                "x" to placement.x,
+                                "y" to placement.y,
+                                "width" to placement.width,
+                                "height" to placement.height,
+                                "parent_tags" to parentIds.surrealId("tag"),
+                            ),
+                        ).takeTransaction(3)
+                TagCreateOutputRecord.parse(result).toResult().also { mutation ->
+                    if (mutation is TagCreateResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.tag))
+                }
+            }
+        if (mutation is TagCreateResult.Success) outbox.signalPending()
+        return mutation
     }
 
     override suspend fun updateTag(
         expectedRevision: Long,
         tag: Tag,
+        encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagUpdateResult {
-        val result =
-            database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
-
+        val mutation =
+            database.inTransaction { transaction ->
+                val result =
+                    transaction
+                        .query(
+                            $$"""
                 LET $actual = SELECT * FROM ONLY $tag;
                 LET $result = IF $actual = NONE {
                     { kind: "not_found" };
@@ -162,35 +172,40 @@ class SurrealTagRepository(
                 } ELSE {
                     $result;
                 };
-
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf(
-                        "tag" to tag.tagId.surrealId("tag"),
-                        "expected_revision" to expectedRevision,
-                        "name" to tag.name,
-                        "color" to
-                            tag.color.argb
-                                .toUInt()
-                                .toLong(),
-                        "x" to tag.placement.x,
-                        "y" to tag.placement.y,
-                        "width" to tag.placement.width,
-                        "height" to tag.placement.height,
-                        "parent_tags" to tag.parentIds.surrealId("tag"),
-                    ),
-                ).takeTransaction(3)
-
-        return TagUpdateOutputRecord.parse(result).toResult()
+                            """.trimIndent(),
+                            mapOf(
+                                "tag" to tag.tagId.surrealId("tag"),
+                                "expected_revision" to expectedRevision,
+                                "name" to tag.name,
+                                "color" to
+                                    tag.color.argb
+                                        .toUInt()
+                                        .toLong(),
+                                "x" to tag.placement.x,
+                                "y" to tag.placement.y,
+                                "width" to tag.placement.width,
+                                "height" to tag.placement.height,
+                                "parent_tags" to tag.parentIds.surrealId("tag"),
+                            ),
+                        ).takeTransaction(2)
+                TagUpdateOutputRecord.parse(result).toResult().also { mutation ->
+                    if (mutation is TagUpdateResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.tag))
+                }
+            }
+        if (mutation is TagUpdateResult.Success) outbox.signalPending()
+        return mutation
     }
 
-    override suspend fun deleteTag(id: RecordId): TagDeleteResult {
-        val result =
-            database
-                .query(
-                    $$"""
-                BEGIN TRANSACTION;
-
+    override suspend fun deleteTag(
+        id: RecordId,
+        encodeEvents: (TagDeletion) -> List<OutboxEvent>,
+    ): TagDeleteResult {
+        val mutation =
+            database.inTransaction { transaction ->
+                val result =
+                    transaction
+                        .query(
+                            $$"""
                 LET $result = IF !record::exists($tag) {
                     { kind: "not_found" };
                 } ELSE {
@@ -202,19 +217,24 @@ class SurrealTagRepository(
                     DELETE inherits WHERE in = $tag OR out = $tag;
                     DELETE bears WHERE out = $tag;
                     DELETE $tag;
+                    LET $updated_child_tags = SELECT * FROM $child_tags;
+                    LET $updated_books = SELECT * FROM $books;
 
                     {
                         kind: "success",
-                        deletion: { childTagIds: $child_tags, bookIds: $books },
+                        deletion: { childTags: $updated_child_tags, books: $updated_books },
                     };
                 };
 
                 RETURN $result;
-                COMMIT TRANSACTION;
-                    """.trimIndent(),
-                    mapOf("tag" to id.surrealId("tag")),
-                ).takeTransaction(2)
-
-        return TagDeleteOutputRecord.parse(result).toResult()
+                            """.trimIndent(),
+                            mapOf("tag" to id.surrealId("tag")),
+                        ).takeTransaction(1)
+                TagDeleteOutputRecord.parse(result).toResult().also { mutation ->
+                    if (mutation is TagDeleteResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.deletion))
+                }
+            }
+        if (mutation is TagDeleteResult.Success) outbox.signalPending()
+        return mutation
     }
 }
