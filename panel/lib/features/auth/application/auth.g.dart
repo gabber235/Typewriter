@@ -33,7 +33,7 @@ final class AuthProvider
   Auth create() => Auth();
 }
 
-String _$authHash() => r'74ee0e853cfb5e22508f557b267b7296f6863b4b';
+String _$authHash() => r'f5fcbb5a594b66fa9d89b04dd12a6855f610eaa0';
 
 abstract class _$Auth extends $AsyncNotifier<OidcUserManager?> {
   FutureOr<OidcUserManager?> build();
