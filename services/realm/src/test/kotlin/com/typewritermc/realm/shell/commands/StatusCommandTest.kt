@@ -18,10 +18,22 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 
 val StatusCommandTest by testSuite {
+    test("displays uptime from the injected monotonic time source") {
+        val timeSource = TestTimeSource()
+        val context =
+            RealmShellContext(
+                registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
+                timeSource = timeSource,
+            )
+        timeSource += 3_661.seconds
+
+        StatusCommand(context).test().output shouldContain "Uptime:  01:01:01"
+    }
+
     test("displays each startup lifecycle state") {
         val states =
             listOf(
@@ -38,8 +50,8 @@ val StatusCommandTest by testSuite {
         states.forEach { (state, expected) ->
             val context =
                 RealmShellContext(
-                    startTime = Instant.parse("2026-08-02T12:00:00Z"),
                     registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                    timeSource = TestTimeSource(),
                 )
             StatusCommand(context).test().output shouldContain expected
         }
@@ -49,8 +61,8 @@ val StatusCommandTest by testSuite {
         val state = RegistrarState.AwaitingBinding(identity, RegistrationToken("SECRET12345"))
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
             )
 
         val output = StatusCommand(context).test().output
@@ -65,8 +77,8 @@ val StatusCommandTest by testSuite {
         val state = RegistrarState.Ready(readySession(), connectionGeneration = 4)
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
             )
 
         val output = StatusCommand(context).test().output
@@ -88,8 +100,8 @@ val StatusCommandTest by testSuite {
             )
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
             )
 
         val output = StatusCommand(context).test().output
@@ -106,8 +118,8 @@ val StatusCommandTest by testSuite {
             RegistrarState.Failed(RegistrarFailure.Internal("registration_unavailable"))
         val context =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
+                timeSource = TestTimeSource(),
             )
 
         val output = StatusCommand(context).test().output
@@ -119,16 +131,16 @@ val StatusCommandTest by testSuite {
     test("displays stopping and stopped states") {
         val stoppingContext =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Stopping)),
+                timeSource = TestTimeSource(),
             )
         StatusCommand(stoppingContext).test().output shouldContain "Status: Stopping"
 
         val stopped = RegistrarState.Stopped(RegistrarStopResult.Success)
         val stoppedContext =
             RealmShellContext(
-                startTime = Instant.parse("2026-08-02T12:00:00Z"),
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, stopped)),
+                timeSource = TestTimeSource(),
             )
         val output = StatusCommand(stoppedContext).test().output
 

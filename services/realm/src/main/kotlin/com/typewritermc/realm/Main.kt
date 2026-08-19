@@ -11,12 +11,10 @@ import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseProvider
-import com.typewritermc.realm.schema.databaseConfiguration
 import com.typewritermc.realm.shell.RealmConsoleLogOutput
 import com.typewritermc.realm.shell.RealmShell
 import com.typewritermc.realm.shell.RealmShellContext
 import com.typewritermc.services.libs.registrar.CredentialStorage
-import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
@@ -34,6 +32,8 @@ import com.typewritermc.services.libs.telemetry.console.installOpenTelemetryLogb
 import com.typewritermc.services.libs.telemetry.console.installOpenTelemetrySdkDiagnostics
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -54,32 +54,35 @@ import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
 import org.koin.dsl.onClose
-import org.koin.environmentProperties
-import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 @OptIn(ExperimentalSerializationApi::class)
 fun main() {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val configuration = RealmSettings.system().applicationConfiguration()
+    val delayScheduler = CoroutineDelayScheduler
+    val timeSource = TimeSource.Monotonic
+    val registrarRetryPolicy = RetryPolicy.exponential(1.seconds, 30.seconds, jitterRatio = .2)
+    val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
     val consoleOutput = RealmConsoleLogOutput()
     val sdkDiagnostics = installOpenTelemetrySdkDiagnostics(consoleOutput)
-    val openTelemetry = realmOpenTelemetry(consoleOutput)
-    val logback = installOpenTelemetryLogback(openTelemetry, realmDiagnosticLevel())
-    val registrarConfiguration = realmRegistrarConfiguration()
-    val databaseConfiguration = RealmSettings.system().databaseConfiguration()
+    val openTelemetry = realmOpenTelemetry(consoleOutput, configuration.telemetry)
+    val logback = installOpenTelemetryLogback(openTelemetry, Level.toLevel(configuration.diagnosticLevel.name, Level.WARN))
     val module =
         module {
             single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeRealmOpenTelemetry) }
             single { applicationScope } onClose { it?.cancel() }
             single { consoleOutput }
 
-            single { databaseConfiguration }
+            single { configuration.database }
             single<RealmDatabaseProvider> { DatabaseProvider(get()) }
             single<RealmEditorCatalogSource> { UnavailableRealmEditorCatalogSource() }
             single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
-            single { Realm(get(), get(), get(), get(), get()) }
+            single { Realm(get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler) }
             single {
                 Cbor {
                     ignoreUnknownKeys = true
@@ -102,17 +105,22 @@ fun main() {
 
             single<BindingTokenOutput> { MordantBindingTokenOutput() }
             single { RegistrarConsoleObserver(get()) }
-            single { RealmShellContext(registrarStates = get<ServiceRegistrar>().states) }
+            single { RealmShellContext(get<ServiceRegistrar>().states, timeSource) }
             single { RealmShell(get(), get(), get()) }
         }
 
     val application =
         startKoin {
-            environmentProperties()
             modules(
                 module,
                 serviceTelemetryModule("com.typewritermc.realm", REALM_VERSION),
-                registrarModule(registrarConfiguration, applicationScope),
+                registrarModule(
+                    configuration.registrar,
+                    applicationScope,
+                    retryPolicy = registrarRetryPolicy,
+                    delayScheduler = delayScheduler,
+                    timeSource = timeSource,
+                ),
             )
         }
     val registrar = application.koin.get<ServiceRegistrar>()
@@ -226,26 +234,6 @@ private suspend fun startRealm(
         attribute("workflow.stage", "database")
         attribute("operation.outcome", "completed")
     }
-}
-
-private fun realmDiagnosticLevel(): Level = Level.toLevel(realmSetting("TYPEWRITER_DIAGNOSTIC_LEVEL", "WARN"), Level.WARN)
-
-private fun realmRegistrarConfiguration(): RegistrarConfiguration {
-    val apiBase = URI(realmSetting("API_BASE_URL", "https://api.typewritermc.com")!!)
-    val authBase = URI(realmSetting("AUTH_BASE_URL", "https://auth.typewritermc.com")!!)
-    return RegistrarConfiguration(
-        identityIssueUri = apiBase.resolve("/service/identity/issue"),
-        sentinelCredentialsUri = apiBase.resolve("/auth/sentinel"),
-        oauthTokenUri = authBase.resolve("/application/o/token/"),
-        oauthClientId = realmSetting("JWT_CLIENT_ID", "typewriter-services")!!,
-        oauthScopes =
-            realmSetting("JWT_SCOPES", "openid profile entitlements")!!
-                .split(' ')
-                .filter(String::isNotBlank)
-                .toSet(),
-        natsServerUri = URI(realmSetting("NATS_URL", "nats://nats.seamlezz.com:4222")!!),
-        roles = listOf(ServiceRole.Realm(REALM_VERSION)),
-    )
 }
 
 private fun <T> RegistrarResult<T>.requireSuccess(operation: String): T =

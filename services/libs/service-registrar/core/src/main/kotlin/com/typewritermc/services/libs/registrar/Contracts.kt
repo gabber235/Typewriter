@@ -319,7 +319,3 @@ fun interface RegistrarRuntimeFactory {
 fun interface RetryRandom {
     fun normalizedSample(): Double
 }
-
-fun interface RegistrarDelay {
-    suspend fun delay(duration: Duration)
-}

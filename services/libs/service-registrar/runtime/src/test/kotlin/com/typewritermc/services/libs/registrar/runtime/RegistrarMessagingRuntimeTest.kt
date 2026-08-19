@@ -44,7 +44,7 @@ import skirout.service.v1.status.ServiceBinding
 import java.util.Base64
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.TimeSource
+import kotlin.time.TestTimeSource
 
 private val runtimeCredentials =
     IdentityCredentials(
@@ -84,6 +84,7 @@ private data class RuntimeFixture(
 private suspend fun runtimeFixture(): RuntimeFixture {
     var exchanges = 0
     var fetches = 0
+    val timeSource = TestTimeSource()
     val access =
         AccessTokenCache(
             runtimeCredentials,
@@ -91,7 +92,7 @@ private suspend fun runtimeFixture(): RuntimeFixture {
                 exchanges++
                 AccessTokenResult.Success(RedactedSecret.AccessToken("access-token"), 3600)
             },
-            TimeSource.Monotonic,
+            timeSource,
             1.minutes,
         )
     val sentinel =
@@ -107,7 +108,7 @@ private suspend fun runtimeFixture(): RuntimeFixture {
             },
             1.hours,
             2.hours,
-            TimeSource.Monotonic,
+            timeSource,
         )
     access.get()
     sentinel.get()

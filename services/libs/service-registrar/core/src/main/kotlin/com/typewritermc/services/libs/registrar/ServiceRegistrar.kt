@@ -5,6 +5,8 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.findExceptionalThrowable
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
@@ -16,7 +18,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
+import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /** Structured service bootstrap and registration supervisor. */
@@ -41,8 +43,10 @@ class ServiceRegistrar(
     private val identityIssuer: IdentityIssuer,
     private val runtimeFactory: RegistrarRuntimeFactory,
     private val telemetry: ServiceTelemetry,
+    private val retryPolicy: RetryPolicy,
+    private val delayScheduler: DelayScheduler,
+    private val timeSource: TimeSource,
     private val retryRandom: RetryRandom = RetryRandom { Random.nextDouble() },
-    private val registrarDelay: RegistrarDelay = RegistrarDelay { delay(it) },
 ) {
     private val commands = Channel<RegistrarCommand>(Channel.UNLIMITED)
     private val mutableStates = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
@@ -176,7 +180,7 @@ class ServiceRegistrar(
             coordinator?.cancel()
             withContext(NonCancellable) {
                 transitionOwned(RegistrarState.Stopping, main)
-                val deadline = TimeSource.Monotonic.markNow() + configuration.shutdownTimeout
+                val deadline = timeSource.markNow() + configuration.shutdownTimeout
                 val failures = mutableListOf<RegistrarStopFailure>()
                 if (!withinBudget(deadline) { coordinator?.join() }) {
                     failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.COORDINATOR_TIMEOUT)
@@ -762,7 +766,7 @@ class ServiceRegistrar(
         events: MainSpanScope,
     ) {
         val retryAttempt = nextAttempt()
-        val duration = configuration.retryPolicy.delayFor(backoffIndex, retryRandom.normalizedSample())
+        val duration = retryPolicy.delayFor(backoffIndex, retryRandom.normalizedSample())
         val retry = RetrySchedule(retryAttempt, duration)
         val state =
             if (session == null) {
@@ -771,7 +775,7 @@ class ServiceRegistrar(
                 RegistrarState.DegradedAfterReady(session, stage, failure, retry)
             }
         transition(state, events)
-        registrarDelay.delay(duration)
+        delayScheduler.delay(duration)
     }
 
     private suspend fun cleanupCurrentAttempt() {
@@ -786,7 +790,7 @@ class ServiceRegistrar(
     private suspend fun cleanup(
         active: RegistrarRuntime?,
         sendShutdown: Boolean,
-        deadline: TimeSource.Monotonic.ValueTimeMark?,
+        deadline: TimeMark?,
     ): List<RegistrarStopFailure> {
         if (active == null) return emptyList()
         val failures = mutableListOf<RegistrarStopFailure>()
@@ -992,7 +996,7 @@ private fun RegistrarFailure.runtimeCreateStage(fallback: RegistrarStage): Regis
     }
 
 private suspend fun withinBudget(
-    deadline: TimeSource.Monotonic.ValueTimeMark?,
+    deadline: TimeMark?,
     block: suspend () -> Unit,
 ): Boolean {
     if (deadline == null) {

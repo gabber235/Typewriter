@@ -1,7 +1,9 @@
 package com.typewritermc.realm
 
+import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import java.net.URI
 import java.nio.file.Path
 
 val RealmSettingsTest by testSuite {
@@ -35,6 +37,38 @@ val RealmSettingsTest by testSuite {
         settings.get("OTEL_EXPORTER_OTLP_ENDPOINT") shouldBe "https://otlp.seamlezz.com"
         settings.get("OTEL_TRACES_SAMPLER") shouldBe "parentbased_traceidratio"
         settings.get("OTEL_TRACES_SAMPLER_ARG") shouldBe "0.1"
+    }
+
+    test("application configuration parses typed slices") {
+        val configuration = RealmSettings.fromFile(profile("production")).applicationConfiguration()
+
+        configuration.diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
+        configuration.telemetry shouldBe
+            RealmTelemetryConfiguration(
+                otlpEndpoint = "https://otlp.seamlezz.com",
+                sampler = RealmSamplerConfiguration.ParentBasedTraceIdRatio(0.1),
+            )
+        configuration.registrar.identityIssueUri shouldBe URI("https://api.typewritermc.com/service/identity/issue")
+        configuration.registrar.sentinelCredentialsUri shouldBe URI("https://api.typewritermc.com/auth/sentinel")
+        configuration.registrar.oauthTokenUri shouldBe URI("https://auth.typewritermc.com/application/o/token/")
+        configuration.registrar.oauthClientId shouldBe "typewriter-services"
+        configuration.registrar.oauthScopes shouldBe setOf("openid", "profile", "entitlements")
+        configuration.registrar.natsServerUri shouldBe URI("nats://nats.seamlezz.com:4222")
+        configuration.registrar.roles shouldBe listOf(ServiceRole.Realm(REALM_VERSION))
+    }
+
+    test("telemetry sampler preserves fallback and ratio bounds") {
+        RealmSettings(
+            configuration =
+                mapOf(
+                    "OTEL_TRACES_SAMPLER" to "traceidratio",
+                    "OTEL_TRACES_SAMPLER_ARG" to "2.0",
+                ),
+        ).applicationConfiguration().telemetry.sampler shouldBe RealmSamplerConfiguration.TraceIdRatio(1.0)
+
+        RealmSettings(
+            configuration = mapOf("OTEL_TRACES_SAMPLER" to "unsupported"),
+        ).applicationConfiguration().telemetry.sampler shouldBe RealmSamplerConfiguration.AlwaysOn
     }
 
     test("process settings override the selected profile") {

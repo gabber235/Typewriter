@@ -5,8 +5,8 @@ package com.typewritermc.services.libs.registrar
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.registrar.testing.FakeCredentialStorage
+import com.typewritermc.services.libs.registrar.testing.FakeDelayScheduler
 import com.typewritermc.services.libs.registrar.testing.FakeIdentityIssuer
-import com.typewritermc.services.libs.registrar.testing.FakeRegistrarDelay
 import com.typewritermc.services.libs.registrar.testing.FakeRegistrarRuntime
 import com.typewritermc.services.libs.registrar.testing.FakeRegistrarRuntimeFactory
 import com.typewritermc.services.libs.registrar.testing.FakeRetryRandom
@@ -31,6 +31,7 @@ import kotlinx.coroutines.test.runTest
 import java.net.URI
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 
 val ServiceRegistrarLifecycleTest by testSuite {
     test("concurrent start is idempotent and loads once") {
@@ -556,8 +557,10 @@ private class Fixture(
             issuer,
             factory,
             harness.telemetry,
+            RetryPolicy.exponential(1.seconds, 8.seconds, jitterRatio = 0.0),
+            FakeDelayScheduler(ledger = ledger),
+            TestTimeSource(),
             FakeRetryRandom(listOf(.5), ledger),
-            FakeRegistrarDelay(ledger = ledger),
         )
     val bindingCallCount get() =
         ledger.actions.count {
@@ -604,5 +607,4 @@ private fun configuration() =
         bindingRefreshInterval = 100.milliseconds,
         heartbeatInterval = 100.milliseconds,
         shutdownTimeout = 100.milliseconds,
-        retryPolicy = RetryPolicy.exponential(1.seconds, 8.seconds, jitterRatio = 0.0),
     )

@@ -1,6 +1,5 @@
 package com.typewritermc.services.libs.registrar
 
-import com.typewritermc.services.libs.utils.RetryPolicy
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -22,7 +21,6 @@ class RegistrarConfiguration(
     val sentinelRefreshAfter: Duration = 1.hours,
     val sentinelMaximumStaleness: Duration = 24.hours,
     val shutdownTimeout: Duration = 30.seconds,
-    val retryPolicy: RetryPolicy = RetryPolicy.exponential(1.seconds, 30.seconds, jitterRatio = .2),
 ) {
     val oauthScopes: Set<String> = oauthScopes.toSet()
     val roles: List<ServiceRole> = roles.toList()

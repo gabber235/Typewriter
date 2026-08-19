@@ -15,6 +15,8 @@ import com.typewritermc.services.libs.registrar.testing.RegistrarActionLedger
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
+import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -27,6 +29,8 @@ import kotlinx.coroutines.cancel
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.net.URI
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 
 val RegistrarKoinModuleTest by testSuite {
     test("resolves singleton graph and closes owned HTTP transport") {
@@ -41,7 +45,13 @@ val RegistrarKoinModuleTest by testSuite {
                         single<ServiceTelemetry> { telemetry.serviceTelemetry("registrar-test") }
                         single<CredentialStorage> { FakeCredentialStorage(ledger = ledger) }
                     },
-                    registrarModule(configuration(), scope),
+                    registrarModule(
+                        configuration(),
+                        scope,
+                        RetryPolicy.fixed(1.seconds),
+                        CoroutineDelayScheduler,
+                        TestTimeSource(),
+                    ),
                 )
             }
         val transport = application.koin.get<HttpTransport>()
