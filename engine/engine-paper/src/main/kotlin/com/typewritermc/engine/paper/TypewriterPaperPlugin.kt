@@ -35,6 +35,7 @@ import com.typewritermc.engine.paper.ui.ClientSynchronizer
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.ui.Writers
+import com.typewritermc.engine.paper.utils.PlayerHides
 import com.typewritermc.engine.paper.utils.Sync
 import com.typewritermc.engine.paper.utils.createBukkitDataParser
 import com.typewritermc.loader.DependencyChecker
@@ -114,6 +115,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
             singleOf(::EntityHandler)
             singleOf(::TypewriterCommandManager)
             singleOf(::PlayerSkinCache)
+            singleOf(::PlayerHides)
 
             factory { FactTracker(it.get()) } bind SessionTracker::class
             single { InteractionTriggerHandler() } bind TriggerHandler::class
@@ -150,6 +152,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<PacketInterceptor>().initialize()
         get<AudienceManager>().initialize()
         get<EntityHandler>().initialize()
+        get<PlayerHides>().initialize()
 
         if (server.pluginManager.getPlugin("PlaceholderAPI") != null) {
             PlaceholderExpansion.register()
