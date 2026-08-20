@@ -3,6 +3,7 @@ plugins {
 }
 
 tasks.runServer {
+    dependsOn(gradle.includedBuild("loader").task(":shadowJar"))
     minecraftVersion("1.21.11")
     runDirectory.set(layout.buildDirectory.dir("server"))
     pluginJars.from(layout.projectDirectory.file("../loader/build/libs/typewriter-loader-1000.0.0.jar"))

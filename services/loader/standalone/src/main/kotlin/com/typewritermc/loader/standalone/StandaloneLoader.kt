@@ -10,11 +10,12 @@ import kotlin.io.path.Path
 
 object StandaloneLoader {
     @JvmStatic
-    fun main(args: Array<String>): Nothing =
+    fun main(args: Array<String>) {
         runBlocking {
             val workDirectory = args.firstOrNull()?.let(::Path) ?: Path.of("typewriter")
             run(workDirectory, LoaderBootstrap.discover())
         }
+    }
 
     suspend fun run(
         workDirectory: Path,

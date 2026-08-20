@@ -6,3 +6,5 @@ pluginManagement {
 }
 
 rootProject.name = "typewriter-paper-development"
+
+includeBuild("../loader")

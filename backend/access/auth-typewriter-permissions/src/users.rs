@@ -292,6 +292,13 @@ fn add_organization_services_permissions(
     allow_publish.push(format!(
         "cloud.to.user.{user_id}.organization.{org_id}.services.unbind"
     ));
+    allow_publish.push(format!(
+        "cloud.to.user.{user_id}.organization.{org_id}.topology.watch"
+    ));
+    allow_subscribe.push(format!("cloud.from.organization.{org_id}.topology.watch"));
+    allow_publish.push(format!(
+        "cloud.to.user.{user_id}.organization.{org_id}.topology.configure"
+    ));
 }
 
 /// Adds permissions for organization/realm component

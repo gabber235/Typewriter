@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     implementation(project(":loader-core"))
+    testImplementation(libs.kotlin.coroutines.test)
 }
