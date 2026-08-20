@@ -14,8 +14,11 @@ import com.typewritermc.engine.paper.ui.PanelHost
 import com.typewritermc.engine.paper.utils.sendMini
 import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.loader.ExtensionLoader
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.koin.java.KoinJavaComponent.get
 import java.lang.management.ManagementFactory
+
+private val miniMessage = MiniMessage.miniMessage()
 
 internal fun CommandTree.debugCommand() = literal("debug") {
     withPermission("typewriter.debug")
@@ -37,8 +40,11 @@ private fun createDebugMessage(): String {
 
     return buildString {
         append(createSection("Debug Information"))
-        append("<#5ba3d0>Version:</#5ba3d0> ${plugin.pluginMeta.version}\n")
-        append("<#5ba3d0>Server:</#5ba3d0> ${server.name} (${server.minecraftVersion})\n")
+        append("<#5ba3d0>Version:</#5ba3d0> ${plugin.pluginMeta.version.escapeMiniMessageTags()}\n")
+        append(
+            "<#5ba3d0>Server:</#5ba3d0> ${server.name.escapeMiniMessageTags()} " +
+                    "(${server.minecraftVersion.escapeMiniMessageTags()})\n"
+        )
         append("<#5ba3d0>Uptime:</#5ba3d0> ${formatDuration(ManagementFactory.getRuntimeMXBean().uptime)}\n")
         append("<#5ba3d0>Memory:</#5ba3d0> $usedMemory / $maxMemory MiB\n")
         append("<#5ba3d0>Players:</#5ba3d0> ${server.onlinePlayers.size} / ${server.maxPlayers}\n")
@@ -53,12 +59,13 @@ private fun createDebugMessage(): String {
         }
 
         extensionLoader.loadedExtensions.sortedBy { it.info.name }.forEach {
-            append("  <#7ed957>✓</#7ed957> <white>${it.info.name}Extension</white>")
-            append(" <gray>${it.info.version}</gray>\n")
+            append("  <#7ed957>✓</#7ed957> <white>${it.info.name.escapeMiniMessageTags()}Extension</white>")
+            append(" <gray>${it.info.version.escapeMiniMessageTags()}</gray>\n")
         }
         extensionLoader.failedExtensions.sortedBy { it.info?.name ?: it.jarName }.forEach {
             val name = it.info?.name?.let { name -> "${name}Extension" } ?: it.jarName
-            append("  <red>✕ $name</red> <#ff8888>(${it.reason.message})</#ff8888>\n")
+            append("  <red>✕ ${name.escapeMiniMessageTags()}</red>")
+            append(" <#ff8888>(${it.reason.message.escapeMiniMessageTags()})</#ff8888>\n")
         }
 
         append(createFooter())
@@ -87,3 +94,5 @@ internal fun formatDuration(milliseconds: Long): String {
 }
 
 private fun Long.toMebibytes(): Long = this / (1024 * 1024)
+
+internal fun String.escapeMiniMessageTags(): String = miniMessage.escapeTags(this)
