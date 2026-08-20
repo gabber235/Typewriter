@@ -58,6 +58,16 @@ val serviceBuilds =
                 ":service-file-transfer-testing",
             ),
         ),
+        ServiceBuild(
+            "service-integration-sdk",
+            "libs/service-integration-sdk",
+            listOf(
+                ":service-integration-sdk-types",
+                ":service-integration-sdk-client",
+                ":service-integration-sdk-messaging",
+                ":service-integration-sdk-testing",
+            ),
+        ),
         ServiceBuild("realm", "realm", listOf(":")),
         ServiceBuild(
             "imprint",
