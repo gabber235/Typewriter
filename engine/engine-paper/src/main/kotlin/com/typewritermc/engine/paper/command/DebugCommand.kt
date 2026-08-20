@@ -63,13 +63,13 @@ private fun createDebugMessage(): DebugMessage {
 
         extensionLoader.loadedExtensions.sortedBy { it.info.name }.forEach {
             append("  <#7ed957>✓</#7ed957> <white>")
-            appendUnparsed("${it.info.name}Extension", resolvers)
+            appendUnparsed("${it.info.name} Extension", resolvers)
             append("</white> <gray>")
             appendUnparsed(it.info.version, resolvers)
             append("</gray>\n")
         }
         extensionLoader.failedExtensions.sortedBy { it.info?.name ?: it.jarName }.forEach {
-            val name = it.info?.name?.let { name -> "${name}Extension" } ?: it.jarName
+            val name = it.info?.name?.let { name -> "$name Extension" } ?: it.jarName
             append("  <red>✕ ")
             appendUnparsed(name, resolvers)
             append("</red> <#ff8888>(")
