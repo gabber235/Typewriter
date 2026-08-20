@@ -22,3 +22,4 @@ export "skirout/service/v1/organization.dart";
 export "skirout/service/v1/registration.dart";
 export "skirout/service/v1/service.dart";
 export "skirout/service/v1/status.dart";
+export "skirout/service/v1/topology.dart";

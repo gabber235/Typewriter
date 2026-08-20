@@ -59,6 +59,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/topology_view.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_services_presentation_topology_view_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_icon.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_icon_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_selector.stories.dart'
@@ -793,6 +795,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     name: 'presentation',
                     children: [
                       _widgetbook.WidgetbookComponent(
+                        name: 'HostExecutionInspector',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Paper host configuration',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_topology_view_stories
+                                    .hostExecutionInspectorUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
                         name: 'ServicesPage',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -800,6 +813,34 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
                                     .servicesPageUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Runtime topology',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
+                                    .servicesPageTopologyUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'TopologyGraph',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Interactive graph',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_topology_view_stories
+                                    .topologyGraphUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'TopologyView',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Topology workspace',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_topology_view_stories
+                                    .topologyViewUseCase,
                           ),
                         ],
                       ),

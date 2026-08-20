@@ -238,7 +238,7 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 
 class _Service extends Service {
    _Service({required this.serviceId, required this.revision, required this.name, required final  List<ServiceRole> roles, required this.createdAt, this.organization, this.registration, this.state}): assert(name.isNotEmpty, 'Name must not be empty.'),assert(roles.isNotEmpty, 'Roles must not be empty.'),_roles = roles,super._();
-  
+
 
 @override final  skir.RecordId serviceId;
 @override final  int revision;
@@ -1254,6 +1254,287 @@ class __$ServiceStateCopyWithImpl<$Res>
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ServiceStateStatus,lastSeen: null == lastSeen ? _self.lastSeen : lastSeen // ignore: cast_nullable_to_non_nullable
 as DateTime,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$OrganizationTopology {
+
+ List<skir.ServiceHost> get hosts; List<skir.RealmInstance> get realmInstances; List<skir.EngineInstance> get engineInstances;
+/// Create a copy of OrganizationTopology
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OrganizationTopologyCopyWith<OrganizationTopology> get copyWith => _$OrganizationTopologyCopyWithImpl<OrganizationTopology>(this as OrganizationTopology, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrganizationTopology&&const DeepCollectionEquality().equals(other.hosts, hosts)&&const DeepCollectionEquality().equals(other.realmInstances, realmInstances)&&const DeepCollectionEquality().equals(other.engineInstances, engineInstances));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(hosts),const DeepCollectionEquality().hash(realmInstances),const DeepCollectionEquality().hash(engineInstances));
+
+@override
+String toString() {
+  return 'OrganizationTopology(hosts: $hosts, realmInstances: $realmInstances, engineInstances: $engineInstances)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OrganizationTopologyCopyWith<$Res>  {
+  factory $OrganizationTopologyCopyWith(OrganizationTopology value, $Res Function(OrganizationTopology) _then) = _$OrganizationTopologyCopyWithImpl;
+@useResult
+$Res call({
+ List<skir.ServiceHost> hosts, List<skir.RealmInstance> realmInstances, List<skir.EngineInstance> engineInstances
+});
+
+
+
+
+}
+/// @nodoc
+class _$OrganizationTopologyCopyWithImpl<$Res>
+    implements $OrganizationTopologyCopyWith<$Res> {
+  _$OrganizationTopologyCopyWithImpl(this._self, this._then);
+
+  final OrganizationTopology _self;
+  final $Res Function(OrganizationTopology) _then;
+
+/// Create a copy of OrganizationTopology
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? hosts = null,Object? realmInstances = null,Object? engineInstances = null,}) {
+  return _then(_self.copyWith(
+hosts: null == hosts ? _self.hosts : hosts // ignore: cast_nullable_to_non_nullable
+as List<skir.ServiceHost>,realmInstances: null == realmInstances ? _self.realmInstances : realmInstances // ignore: cast_nullable_to_non_nullable
+as List<skir.RealmInstance>,engineInstances: null == engineInstances ? _self.engineInstances : engineInstances // ignore: cast_nullable_to_non_nullable
+as List<skir.EngineInstance>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OrganizationTopology].
+extension OrganizationTopologyPatterns on OrganizationTopology {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OrganizationTopology value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OrganizationTopology() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OrganizationTopology value)  $default,){
+final _that = this;
+switch (_that) {
+case _OrganizationTopology():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OrganizationTopology value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OrganizationTopology() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<skir.ServiceHost> hosts,  List<skir.RealmInstance> realmInstances,  List<skir.EngineInstance> engineInstances)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OrganizationTopology() when $default != null:
+return $default(_that.hosts,_that.realmInstances,_that.engineInstances);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<skir.ServiceHost> hosts,  List<skir.RealmInstance> realmInstances,  List<skir.EngineInstance> engineInstances)  $default,) {final _that = this;
+switch (_that) {
+case _OrganizationTopology():
+return $default(_that.hosts,_that.realmInstances,_that.engineInstances);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<skir.ServiceHost> hosts,  List<skir.RealmInstance> realmInstances,  List<skir.EngineInstance> engineInstances)?  $default,) {final _that = this;
+switch (_that) {
+case _OrganizationTopology() when $default != null:
+return $default(_that.hosts,_that.realmInstances,_that.engineInstances);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _OrganizationTopology extends OrganizationTopology {
+  const _OrganizationTopology({required final  List<skir.ServiceHost> hosts, required final  List<skir.RealmInstance> realmInstances, required final  List<skir.EngineInstance> engineInstances}): _hosts = hosts,_realmInstances = realmInstances,_engineInstances = engineInstances,super._();
+
+
+ final  List<skir.ServiceHost> _hosts;
+@override List<skir.ServiceHost> get hosts {
+  if (_hosts is EqualUnmodifiableListView) return _hosts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_hosts);
+}
+
+ final  List<skir.RealmInstance> _realmInstances;
+@override List<skir.RealmInstance> get realmInstances {
+  if (_realmInstances is EqualUnmodifiableListView) return _realmInstances;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_realmInstances);
+}
+
+ final  List<skir.EngineInstance> _engineInstances;
+@override List<skir.EngineInstance> get engineInstances {
+  if (_engineInstances is EqualUnmodifiableListView) return _engineInstances;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_engineInstances);
+}
+
+
+/// Create a copy of OrganizationTopology
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OrganizationTopologyCopyWith<_OrganizationTopology> get copyWith => __$OrganizationTopologyCopyWithImpl<_OrganizationTopology>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrganizationTopology&&const DeepCollectionEquality().equals(other._hosts, _hosts)&&const DeepCollectionEquality().equals(other._realmInstances, _realmInstances)&&const DeepCollectionEquality().equals(other._engineInstances, _engineInstances));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_hosts),const DeepCollectionEquality().hash(_realmInstances),const DeepCollectionEquality().hash(_engineInstances));
+
+@override
+String toString() {
+  return 'OrganizationTopology(hosts: $hosts, realmInstances: $realmInstances, engineInstances: $engineInstances)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OrganizationTopologyCopyWith<$Res> implements $OrganizationTopologyCopyWith<$Res> {
+  factory _$OrganizationTopologyCopyWith(_OrganizationTopology value, $Res Function(_OrganizationTopology) _then) = __$OrganizationTopologyCopyWithImpl;
+@override @useResult
+$Res call({
+ List<skir.ServiceHost> hosts, List<skir.RealmInstance> realmInstances, List<skir.EngineInstance> engineInstances
+});
+
+
+
+
+}
+/// @nodoc
+class __$OrganizationTopologyCopyWithImpl<$Res>
+    implements _$OrganizationTopologyCopyWith<$Res> {
+  __$OrganizationTopologyCopyWithImpl(this._self, this._then);
+
+  final _OrganizationTopology _self;
+  final $Res Function(_OrganizationTopology) _then;
+
+/// Create a copy of OrganizationTopology
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? hosts = null,Object? realmInstances = null,Object? engineInstances = null,}) {
+  return _then(_OrganizationTopology(
+hosts: null == hosts ? _self._hosts : hosts // ignore: cast_nullable_to_non_nullable
+as List<skir.ServiceHost>,realmInstances: null == realmInstances ? _self._realmInstances : realmInstances // ignore: cast_nullable_to_non_nullable
+as List<skir.RealmInstance>,engineInstances: null == engineInstances ? _self._engineInstances : engineInstances // ignore: cast_nullable_to_non_nullable
+as List<skir.EngineInstance>,
   ));
 }
 

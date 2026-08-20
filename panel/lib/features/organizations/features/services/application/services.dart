@@ -11,6 +11,7 @@ part "services.g.dart";
 part "service_models.dart";
 part "service_inspector_presentation.dart";
 part "service_selection.dart";
+part "topology.dart";
 
 @riverpod
 class Services extends _$Services {

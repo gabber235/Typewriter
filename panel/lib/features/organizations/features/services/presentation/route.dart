@@ -16,6 +16,7 @@ class ServicesPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(servicesProvider);
+    final topologyAsync = ref.watch(organizationTopologyStreamProvider);
 
     return Pane(
       id: "services",
@@ -41,43 +42,51 @@ class ServicesPage extends HookConsumerWidget {
               child: const _TokenInput(),
             ),
             Expanded(
-              child: servicesAsync(
-                name: "Services",
-                builder: (services) {
-                  if (services.isEmpty) {
-                    return Center(
-                      child: EmptyState(
-                        title: "No services connected",
-                        description:
-                            "Start a server with Typewriter installed and enter the registration token above.",
-                        icon: MaterialSymbols.dns,
-                      ),
-                    );
+              child: topologyAsync(
+                name: "Runtime topology",
+                builder: (topology) {
+                  if (topology.hosts.isNotEmpty) {
+                    return TopologyView(topology: topology);
                   }
+                  return servicesAsync(
+                    name: "Services",
+                    builder: (services) {
+                      if (services.isEmpty) {
+                        return Center(
+                          child: EmptyState(
+                            title: "No services connected",
+                            description:
+                                "Start a server with Typewriter installed and enter the registration token above.",
+                            icon: MaterialSymbols.dns,
+                          ),
+                        );
+                      }
 
-                  return ClipPath(
-                    clipper: VerticalClipper(additionalWidth: 100),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.spacing.space2,
-                        vertical: context.spacing.space4,
-                      ),
-                      child: ResponsiveGridView.builder(
-                        gridDelegate: ResponsiveGridDelegate(
-                          crossAxisExtent: _serviceCardWidth,
-                          mainAxisSpacing: context.spacing.space4,
-                          crossAxisSpacing: context.spacing.space4,
-                          childAspectRatio: _serviceCardAspectRatio,
+                      return ClipPath(
+                        clipper: VerticalClipper(additionalWidth: 100),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.spacing.space2,
+                            vertical: context.spacing.space4,
+                          ),
+                          child: ResponsiveGridView.builder(
+                            gridDelegate: ResponsiveGridDelegate(
+                              crossAxisExtent: _serviceCardWidth,
+                              mainAxisSpacing: context.spacing.space4,
+                              crossAxisSpacing: context.spacing.space4,
+                              childAspectRatio: _serviceCardAspectRatio,
+                            ),
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
+                            itemCount: services.length,
+                            itemBuilder: (context, index) {
+                              final service = services[index];
+                              return _ServiceCard(service: service);
+                            },
+                          ),
                         ),
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.center,
-                        itemCount: services.length,
-                        itemBuilder: (context, index) {
-                          final service = services[index];
-                          return _ServiceCard(service: service);
-                        },
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),

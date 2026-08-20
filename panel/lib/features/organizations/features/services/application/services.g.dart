@@ -122,3 +122,59 @@ final class ServiceFamily extends $Family
   @override
   String toString() => r'serviceProvider';
 }
+
+@ProviderFor(OrganizationTopologyStream)
+final organizationTopologyStreamProvider =
+    OrganizationTopologyStreamProvider._();
+
+final class OrganizationTopologyStreamProvider
+    extends
+        $StreamNotifierProvider<
+          OrganizationTopologyStream,
+          OrganizationTopology
+        > {
+  OrganizationTopologyStreamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'organizationTopologyStreamProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$organizationTopologyStreamHash();
+
+  @$internal
+  @override
+  OrganizationTopologyStream create() => OrganizationTopologyStream();
+}
+
+String _$organizationTopologyStreamHash() =>
+    r'172bfc3472ce968b39b29f65f907d6a2ff33239c';
+
+abstract class _$OrganizationTopologyStream
+    extends $StreamNotifier<OrganizationTopology> {
+  Stream<OrganizationTopology> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<OrganizationTopology>, OrganizationTopology>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<OrganizationTopology>,
+                OrganizationTopology
+              >,
+              AsyncValue<OrganizationTopology>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
