@@ -208,8 +208,6 @@ class CameraCinematicAction(
                     LOCATION,
                     ALLOW_FLIGHT,
                     FLYING,
-                    VISIBLE_PLAYERS,
-                    SHOWING_PLAYER,
                     EffectStateProvider(INVISIBILITY),
                     VELOCITY.takeIf { entry.advancedCameraSettings.restoreVelocity }
                 )
@@ -222,9 +220,12 @@ class CameraCinematicAction(
             isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
 
+            // TODO: Remove this and the release in teardown once the visibility extension is
+            // released. Hiding the other players becomes opt in through a visibility rule, because
+            // opting out of it here is not possible.
             server.onlinePlayers.filter { it.uniqueId != uniqueId }.forEach {
-                it.hidePlayer(plugin, this@setup)
-                this@setup.hidePlayer(plugin, it)
+                playerHides.hide(this@CameraCinematicAction, it, this@setup)
+                playerHides.hide(this@CameraCinematicAction, this@setup, it)
             }
 
             // In creative mode, when the player opens the inventory while their inventory is fake cleared,
@@ -294,6 +295,9 @@ class CameraCinematicAction(
             originalState?.let {
                 restore(it)
             }
+            // Revealed only after the player is restored, so nobody sees them reappear at the
+            // camera's position.
+            playerHides.release(this@CameraCinematicAction)
             originalState = null
 
             if (gameMode != GameMode.CREATIVE && !isFloodgate) {
