@@ -15,6 +15,10 @@ class PanelHost : KoinComponent {
     private val port: Int by config("panel.port", 8080)
 
     private var server: ApplicationEngine? = null
+
+    internal val isStarted: Boolean
+        get() = server != null
+
     fun initialize() {
         if (!enabled) {
             // If we are developing the ui we don't want to start the server
@@ -46,5 +50,6 @@ class PanelHost : KoinComponent {
 
     fun dispose() {
         server?.stop()
+        server = null
     }
 }

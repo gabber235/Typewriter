@@ -38,6 +38,7 @@ import java.time.format.DateTimeFormatter
 
 fun typewriterCommand() = command("typewriter", "tw") {
     versionCommand()
+    debugCommand()
     reloadCommand()
     extensionsCommand()
     factsCommand()
@@ -232,12 +233,12 @@ private fun CommandSender.displayFailedExtension(failure: Extension.FailedExtens
     sendMini(message)
 }
 
-private fun createSection(title: String): String {
+internal fun createSection(title: String): String {
     val (leftPadding, rightPadding) = calculatePadding(title)
     return "\n<gradient:#00d4ff:#0099ff><b><st>$leftPadding</st> $title <st>$rightPadding</st></b></gradient>\n\n"
 }
 
-private fun createFooter(): String =
+internal fun createFooter(): String =
     "\n<gradient:#00d4ff:#0099ff><b><st>${" ".repeat(53)}</st></b></gradient>\n"
 
 private fun calculatePadding(title: String): Pair<String, String> {
