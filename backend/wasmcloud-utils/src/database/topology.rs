@@ -3,15 +3,24 @@ use surrealdb_component_sdk::{Datetime, RecordId};
 
 use crate::skir::base::service::v1::topology::{
     ChildRuntimeState, ChildRuntimeStatus, EngineInstance, EngineTarget, HostEntrypoint,
-    HostRuntimeState, HostRuntimeStatus, RealmInstance, SemanticVersion, ServiceHost,
+    HostRuntimeState, HostRuntimeStatus, RealmInstance, ReconciledRevision, ServiceHost,
     SupportedEngine,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct SemanticVersionRecord {
-    pub major: i32,
-    pub minor: i32,
-    pub patch: i32,
+pub struct ReconciledRevisionRecord {
+    pub desired: i64,
+    pub applied: i64,
+}
+
+impl From<ReconciledRevisionRecord> for ReconciledRevision {
+    fn from(value: ReconciledRevisionRecord) -> Self {
+        Self {
+            desired: value.desired,
+            applied: value.applied,
+            _unrecognized: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -140,7 +149,7 @@ impl From<ChildRuntimeStatusRecord> for ChildRuntimeStatus {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChildRuntimeStateRecord {
     pub status: ChildRuntimeStatusRecord,
-    pub active_artifact_version: Option<SemanticVersionRecord>,
+    pub active_artifact_version: Option<String>,
     pub message: Option<String>,
     pub updated_at: Datetime,
 }
@@ -149,14 +158,7 @@ impl From<ChildRuntimeStateRecord> for ChildRuntimeState {
     fn from(value: ChildRuntimeStateRecord) -> Self {
         Self {
             status: value.status.into(),
-            active_artifact_version: value
-                .active_artifact_version
-                .map(|version| SemanticVersion {
-                    major: version.major,
-                    minor: version.minor,
-                    patch: version.patch,
-                    _unrecognized: None,
-                }),
+            active_artifact_version: value.active_artifact_version,
             message: value.message,
             updated_at: value.updated_at.into(),
             _unrecognized: None,
@@ -178,23 +180,9 @@ impl TryFrom<&ChildRuntimeState> for ChildRuntimeStateRecord {
             ChildRuntimeStatus::Drifted => ChildRuntimeStatusRecord::Drifted,
             ChildRuntimeStatus::Unknown(_) => return Err(()),
         };
-        let active_artifact_version = value
-            .active_artifact_version
-            .as_ref()
-            .map(|version| {
-                if version.major < 0 || version.minor < 0 || version.patch < 0 {
-                    return Err(());
-                }
-                Ok(SemanticVersionRecord {
-                    major: version.major,
-                    minor: version.minor,
-                    patch: version.patch,
-                })
-            })
-            .transpose()?;
         Ok(Self {
             status,
-            active_artifact_version,
+            active_artifact_version: value.active_artifact_version.clone(),
             message: value.message.clone(),
             updated_at: value.updated_at.into(),
         })
@@ -209,8 +197,7 @@ pub struct ServiceHostRecord {
     pub entrypoint: HostEntrypointRecord,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngineRecord>,
-    pub desired_topology_revision: i64,
-    pub applied_topology_revision: i64,
+    pub topology_revision: ReconciledRevisionRecord,
     pub state: HostRuntimeStateRecord,
 }
 
@@ -227,8 +214,7 @@ impl From<ServiceHostRecord> for ServiceHost {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            desired_topology_revision: value.desired_topology_revision,
-            applied_topology_revision: value.applied_topology_revision,
+            topology_revision: value.topology_revision.into(),
             state: value.state.into(),
             _unrecognized: None,
         }
@@ -241,8 +227,7 @@ pub struct RealmInstanceRecord {
     pub owner_host_id: RecordId,
     pub revision: i64,
     pub target_engine: EngineTargetRecord,
-    pub desired_manifest_revision: i64,
-    pub applied_manifest_revision: i64,
+    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -253,8 +238,7 @@ impl From<RealmInstanceRecord> for RealmInstance {
             owner_host_id: value.owner_host_id.into(),
             revision: value.revision,
             target_engine: value.target_engine.into(),
-            desired_manifest_revision: value.desired_manifest_revision,
-            applied_manifest_revision: value.applied_manifest_revision,
+            manifest_revision: value.manifest_revision.into(),
             state: value.state.into(),
             _unrecognized: None,
         }
@@ -268,8 +252,7 @@ pub struct EngineInstanceRecord {
     pub realm_id: RecordId,
     pub revision: i64,
     pub target: EngineTargetRecord,
-    pub desired_manifest_revision: i64,
-    pub applied_manifest_revision: i64,
+    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -281,8 +264,7 @@ impl From<EngineInstanceRecord> for EngineInstance {
             realm_id: value.realm_id.into(),
             revision: value.revision,
             target: value.target.into(),
-            desired_manifest_revision: value.desired_manifest_revision,
-            applied_manifest_revision: value.applied_manifest_revision,
+            manifest_revision: value.manifest_revision.into(),
             state: value.state.into(),
             _unrecognized: None,
         }

@@ -20,35 +20,31 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface SemanticVersion_OrMutable {
-    val major: kotlin.Int;
-    val minor: kotlin.Int;
-    val patch: kotlin.Int;
+sealed interface ReconciledRevision_OrMutable {
+    val desired: kotlin.Long;
+    val applied: kotlin.Long;
 
-    fun toFrozen(): skirout.service.v1.topology.SemanticVersion;
+    fun toFrozen(): skirout.service.v1.topology.ReconciledRevision;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class SemanticVersion private constructor(
-    override val major: kotlin.Int,
-    override val minor: kotlin.Int,
-    override val patch: kotlin.Int,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SemanticVersion>? =
+class ReconciledRevision private constructor(
+    override val desired: kotlin.Long,
+    override val applied: kotlin.Long,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReconciledRevision>? =
         null,
-): skirout.service.v1.topology.SemanticVersion_OrMutable {
+): skirout.service.v1.topology.ReconciledRevision_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        major: kotlin.Int,
-        minor: kotlin.Int,
-        patch: kotlin.Int,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SemanticVersion>? =
+        desired: kotlin.Long,
+        applied: kotlin.Long,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReconciledRevision>? =
             null,
     ): this(
-        major,
-        minor,
-        patch,
+        desired,
+        applied,
         _unrecognizedFields,
     ) {}
 
@@ -57,25 +53,21 @@ class SemanticVersion private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        major = this.major,
-        minor = this.minor,
-        patch = this.patch,
+        desired = this.desired,
+        applied = this.applied,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        major: kotlin.Int =
-            this.major,
-        minor: kotlin.Int =
-            this.minor,
-        patch: kotlin.Int =
-            this.patch,
-    ) = skirout.service.v1.topology.SemanticVersion(
-        major,
-        minor,
-        patch,
+        desired: kotlin.Long =
+            this.desired,
+        applied: kotlin.Long =
+            this.applied,
+    ) = skirout.service.v1.topology.ReconciledRevision(
+        desired,
+        applied,
         this._unrecognizedFields,
     );
 
@@ -83,76 +75,69 @@ class SemanticVersion private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.SemanticVersion && this.major == other.major && this.minor == other.minor && this.patch == other.patch);
+        return this === other || (other is skirout.service.v1.topology.ReconciledRevision && this.desired == other.desired && this.applied == other.applied);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.major, this.minor, this.patch).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.desired, this.applied).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.SemanticVersion.serializerImpl,
+            skirout.service.v1.topology.ReconciledRevision.serializerImpl,
         )
     }
 
-    /** Mutable version of [SemanticVersion]. */
+    /** Mutable version of [ReconciledRevision]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var major: kotlin.Int =
-            0,
-        override var minor: kotlin.Int =
-            0,
-        override var patch: kotlin.Int =
-            0,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SemanticVersion>? =
+        override var desired: kotlin.Long =
+            0L,
+        override var applied: kotlin.Long =
+            0L,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReconciledRevision>? =
             null,
-    ): skirout.service.v1.topology.SemanticVersion_OrMutable {
+    ): skirout.service.v1.topology.ReconciledRevision_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.topology.SemanticVersion(
-            major = this.major,
-            minor = this.minor,
-            patch = this.patch,
+        override fun toFrozen() = skirout.service.v1.topology.ReconciledRevision(
+            desired = this.desired,
+            applied = this.applied,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
 
     companion object {
         private val default =
-            skirout.service.v1.topology.SemanticVersion(
-                0,
-                0,
-                0,
+            skirout.service.v1.topology.ReconciledRevision(
+                0L,
+                0L,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [SemanticVersion].
+         * Creates a new instance of [ReconciledRevision].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            major: kotlin.Int =
-                0,
-            minor: kotlin.Int =
-                0,
-            patch: kotlin.Int =
-                0,
-        ) = skirout.service.v1.topology.SemanticVersion(
-            major = major,
-            minor = minor,
-            patch = patch,
+            desired: kotlin.Long =
+                0L,
+            applied: kotlin.Long =
+                0L,
+        ) = skirout.service.v1.topology.ReconciledRevision(
+            desired = desired,
+            applied = applied,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:SemanticVersion",
+            recordId = "service/v1/topology.skir:ReconciledRevision",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -161,39 +146,30 @@ class SemanticVersion private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [SemanticVersion] instances. */
+        /** Serializer for [ReconciledRevision] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [SemanticVersion] type. Provides runtime introspection capabilities. */
+        /** Describes the [ReconciledRevision] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "major",
-                "major",
+                "desired",
+                "desired",
                 0,
-                build.skir.Serializers.int32,
+                build.skir.Serializers.int64,
                 "",
-                { it.major },
-                { mut, v -> mut.major = v },
+                { it.desired },
+                { mut, v -> mut.desired = v },
             );
             serializerImpl.addField(
-                "minor",
-                "minor",
+                "applied",
+                "applied",
                 1,
-                build.skir.Serializers.int32,
+                build.skir.Serializers.int64,
                 "",
-                { it.minor },
-                { mut, v -> mut.minor = v },
-            );
-            serializerImpl.addField(
-                "patch",
-                "patch",
-                2,
-                build.skir.Serializers.int32,
-                "",
-                { it.patch },
-                { mut, v -> mut.patch = v },
+                { it.applied },
+                { mut, v -> mut.applied = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -1280,7 +1256,7 @@ sealed class ChildRuntimeStatus private constructor() {
 
 sealed interface ChildRuntimeState_OrMutable {
     val status: skirout.service.v1.topology.ChildRuntimeStatus;
-    val activeArtifactVersion: skirout.service.v1.topology.SemanticVersion_OrMutable?;
+    val activeArtifactVersion: kotlin.String?;
     val message: kotlin.String?;
     val updatedAt: java.time.Instant;
 
@@ -1291,7 +1267,7 @@ sealed interface ChildRuntimeState_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ChildRuntimeState private constructor(
     override val status: skirout.service.v1.topology.ChildRuntimeStatus,
-    override val activeArtifactVersion: skirout.service.v1.topology.SemanticVersion?,
+    override val activeArtifactVersion: kotlin.String?,
     override val message: kotlin.String?,
     override val updatedAt: java.time.Instant,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ChildRuntimeState>? =
@@ -1301,14 +1277,14 @@ class ChildRuntimeState private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         status: skirout.service.v1.topology.ChildRuntimeStatus,
-        activeArtifactVersion: skirout.service.v1.topology.SemanticVersion_OrMutable?,
+        activeArtifactVersion: kotlin.String?,
         message: kotlin.String?,
         updatedAt: java.time.Instant,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ChildRuntimeState>? =
             null,
     ): this(
         status,
-        if (activeArtifactVersion != null) activeArtifactVersion.toFrozen() else null,
+        activeArtifactVersion,
         message,
         updatedAt,
         _unrecognizedFields,
@@ -1331,7 +1307,7 @@ class ChildRuntimeState private constructor(
             _MustNameArguments,
         status: skirout.service.v1.topology.ChildRuntimeStatus =
             this.status,
-        activeArtifactVersion: skirout.service.v1.topology.SemanticVersion_OrMutable? =
+        activeArtifactVersion: kotlin.String? =
             this.activeArtifactVersion,
         message: kotlin.String? =
             this.message,
@@ -1339,7 +1315,7 @@ class ChildRuntimeState private constructor(
             this.updatedAt,
     ) = skirout.service.v1.topology.ChildRuntimeState(
         status,
-        if (activeArtifactVersion != null) activeArtifactVersion.toFrozen() else null,
+        activeArtifactVersion,
         message,
         updatedAt,
         this._unrecognizedFields,
@@ -1369,7 +1345,7 @@ class ChildRuntimeState private constructor(
             _MustNameArguments,
         override var status: skirout.service.v1.topology.ChildRuntimeStatus =
             skirout.service.v1.topology.ChildRuntimeStatus.UNKNOWN,
-        override var activeArtifactVersion: skirout.service.v1.topology.SemanticVersion_OrMutable? =
+        override var activeArtifactVersion: kotlin.String? =
             null,
         override var message: kotlin.String? =
             null,
@@ -1410,7 +1386,7 @@ class ChildRuntimeState private constructor(
                 _MustNameArguments,
             status: skirout.service.v1.topology.ChildRuntimeStatus =
                 skirout.service.v1.topology.ChildRuntimeStatus.UNKNOWN,
-            activeArtifactVersion: skirout.service.v1.topology.SemanticVersion_OrMutable? =
+            activeArtifactVersion: kotlin.String? =
                 null,
             message: kotlin.String? =
                 null,
@@ -1455,7 +1431,7 @@ class ChildRuntimeState private constructor(
                 "activeArtifactVersion",
                 1,
                 build.skir.Serializers.optional(
-                    skirout.service.v1.topology.SemanticVersion.serializer,
+                    build.skir.Serializers.string,
                 ),
                 "",
                 { it.activeArtifactVersion },
@@ -1493,8 +1469,7 @@ sealed interface ServiceHost_OrMutable {
     val entrypoint: skirout.service.v1.topology.HostEntrypoint;
     val canHostRealm: kotlin.Boolean;
     val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
-    val desiredTopologyRevision: kotlin.Long;
-    val appliedTopologyRevision: kotlin.Long;
+    val topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
     val state: skirout.service.v1.topology.HostRuntimeState_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.ServiceHost;
@@ -1509,8 +1484,7 @@ class ServiceHost private constructor(
     override val entrypoint: skirout.service.v1.topology.HostEntrypoint,
     override val canHostRealm: kotlin.Boolean,
     override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
-    override val desiredTopologyRevision: kotlin.Long,
-    override val appliedTopologyRevision: kotlin.Long,
+    override val topologyRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.HostRuntimeState,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceHost>? =
         null,
@@ -1524,8 +1498,7 @@ class ServiceHost private constructor(
         entrypoint: skirout.service.v1.topology.HostEntrypoint,
         canHostRealm: kotlin.Boolean,
         supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-        desiredTopologyRevision: kotlin.Long,
-        appliedTopologyRevision: kotlin.Long,
+        topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
         state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceHost>? =
             null,
@@ -1536,8 +1509,7 @@ class ServiceHost private constructor(
         entrypoint,
         canHostRealm,
         build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        desiredTopologyRevision,
-        appliedTopologyRevision,
+        topologyRevision.toFrozen(),
         state.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -1553,8 +1525,7 @@ class ServiceHost private constructor(
         entrypoint = this.entrypoint,
         canHostRealm = this.canHostRealm,
         supportedEngines = this.supportedEngines,
-        desiredTopologyRevision = this.desiredTopologyRevision,
-        appliedTopologyRevision = this.appliedTopologyRevision,
+        topologyRevision = this.topologyRevision,
         state = this.state,
     );
 
@@ -1574,10 +1545,8 @@ class ServiceHost private constructor(
             this.canHostRealm,
         supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
             this.supportedEngines,
-        desiredTopologyRevision: kotlin.Long =
-            this.desiredTopologyRevision,
-        appliedTopologyRevision: kotlin.Long =
-            this.appliedTopologyRevision,
+        topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            this.topologyRevision,
         state: skirout.service.v1.topology.HostRuntimeState_OrMutable =
             this.state,
     ) = skirout.service.v1.topology.ServiceHost(
@@ -1587,8 +1556,7 @@ class ServiceHost private constructor(
         entrypoint,
         canHostRealm,
         build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        desiredTopologyRevision,
-        appliedTopologyRevision,
+        topologyRevision.toFrozen(),
         state.toFrozen(),
         this._unrecognizedFields,
     );
@@ -1597,11 +1565,11 @@ class ServiceHost private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.ServiceHost && this.hostId == other.hostId && this.serviceId == other.serviceId && this.revision == other.revision && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines && this.desiredTopologyRevision == other.desiredTopologyRevision && this.appliedTopologyRevision == other.appliedTopologyRevision && this.state == other.state);
+        return this === other || (other is skirout.service.v1.topology.ServiceHost && this.hostId == other.hostId && this.serviceId == other.serviceId && this.revision == other.revision && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines && this.topologyRevision == other.topologyRevision && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.hostId, this.serviceId, this.revision, this.entrypoint, this.canHostRealm, this.supportedEngines, this.desiredTopologyRevision, this.appliedTopologyRevision, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.hostId, this.serviceId, this.revision, this.entrypoint, this.canHostRealm, this.supportedEngines, this.topologyRevision, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1627,10 +1595,8 @@ class ServiceHost private constructor(
             false,
         override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-        override var desiredTopologyRevision: kotlin.Long =
-            0L,
-        override var appliedTopologyRevision: kotlin.Long =
-            0L,
+        override var topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            skirout.service.v1.topology.ReconciledRevision.partial(),
         override var state: skirout.service.v1.topology.HostRuntimeState_OrMutable =
             skirout.service.v1.topology.HostRuntimeState.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceHost>? =
@@ -1644,8 +1610,7 @@ class ServiceHost private constructor(
             entrypoint = this.entrypoint,
             canHostRealm = this.canHostRealm,
             supportedEngines = this.supportedEngines,
-            desiredTopologyRevision = this.desiredTopologyRevision,
-            appliedTopologyRevision = this.appliedTopologyRevision,
+            topologyRevision = this.topologyRevision,
             state = this.state,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -1699,6 +1664,22 @@ class ServiceHost private constructor(
         }
 
         /**
+         * If the value of [topologyRevision] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [topologyRevision] and returns it.
+         */
+        val mutableTopologyRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
+            var value = this.topologyRevision;
+            return when (value) {
+                is skirout.service.v1.topology.ReconciledRevision -> {
+                    value = value.toMutable();
+                    this.topologyRevision = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ReconciledRevision.Mutable -> value;
+            }
+        }
+
+        /**
          * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
@@ -1724,8 +1705,7 @@ class ServiceHost private constructor(
                 skirout.service.v1.topology.HostEntrypoint.UNKNOWN,
                 false,
                 build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-                0L,
-                0L,
+                skirout.service.v1.topology.ReconciledRevision.partial(),
                 skirout.service.v1.topology.HostRuntimeState.partial(),
             );
 
@@ -1752,10 +1732,8 @@ class ServiceHost private constructor(
                 false,
             supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-            desiredTopologyRevision: kotlin.Long =
-                0L,
-            appliedTopologyRevision: kotlin.Long =
-                0L,
+            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+                skirout.service.v1.topology.ReconciledRevision.partial(),
             state: skirout.service.v1.topology.HostRuntimeState_OrMutable =
                 skirout.service.v1.topology.HostRuntimeState.partial(),
         ) = skirout.service.v1.topology.ServiceHost(
@@ -1765,8 +1743,7 @@ class ServiceHost private constructor(
             entrypoint = entrypoint,
             canHostRealm = canHostRealm,
             supportedEngines = supportedEngines,
-            desiredTopologyRevision = desiredTopologyRevision,
-            appliedTopologyRevision = appliedTopologyRevision,
+            topologyRevision = topologyRevision,
             state = state,
             _unrecognizedFields = null,
         );
@@ -1845,27 +1822,18 @@ class ServiceHost private constructor(
                 { mut, v -> mut.supportedEngines = v },
             );
             serializerImpl.addField(
-                "desired_topology_revision",
-                "desiredTopologyRevision",
+                "topology_revision",
+                "topologyRevision",
                 6,
-                build.skir.Serializers.int64,
+                skirout.service.v1.topology.ReconciledRevision.serializer,
                 "",
-                { it.desiredTopologyRevision },
-                { mut, v -> mut.desiredTopologyRevision = v },
+                { it.topologyRevision },
+                { mut, v -> mut.topologyRevision = v },
             );
             serializerImpl.addField(
-                "applied_topology_revision",
-                "appliedTopologyRevision",
+                "state",
+                "state",
                 7,
-                build.skir.Serializers.int64,
-                "",
-                { it.appliedTopologyRevision },
-                { mut, v -> mut.appliedTopologyRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                8,
                 skirout.service.v1.topology.HostRuntimeState.serializer,
                 "",
                 { it.state },
@@ -1881,8 +1849,7 @@ sealed interface RealmInstance_OrMutable {
     val ownerHostId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val revision: kotlin.Long;
     val targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable;
-    val desiredManifestRevision: kotlin.Long;
-    val appliedManifestRevision: kotlin.Long;
+    val manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
     val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.RealmInstance;
@@ -1895,8 +1862,7 @@ class RealmInstance private constructor(
     override val ownerHostId: skirout.kernel.v1.record_id.RecordId,
     override val revision: kotlin.Long,
     override val targetEngine: skirout.service.v1.topology.EngineTarget,
-    override val desiredManifestRevision: kotlin.Long,
-    override val appliedManifestRevision: kotlin.Long,
+    override val manifestRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
         null,
@@ -1908,8 +1874,7 @@ class RealmInstance private constructor(
         ownerHostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         revision: kotlin.Long,
         targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
-        desiredManifestRevision: kotlin.Long,
-        appliedManifestRevision: kotlin.Long,
+        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
             null,
@@ -1918,8 +1883,7 @@ class RealmInstance private constructor(
         ownerHostId.toFrozen(),
         revision,
         targetEngine.toFrozen(),
-        desiredManifestRevision,
-        appliedManifestRevision,
+        manifestRevision.toFrozen(),
         state.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -1933,8 +1897,7 @@ class RealmInstance private constructor(
         ownerHostId = this.ownerHostId,
         revision = this.revision,
         targetEngine = this.targetEngine,
-        desiredManifestRevision = this.desiredManifestRevision,
-        appliedManifestRevision = this.appliedManifestRevision,
+        manifestRevision = this.manifestRevision,
         state = this.state,
     );
 
@@ -1950,10 +1913,8 @@ class RealmInstance private constructor(
             this.revision,
         targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
             this.targetEngine,
-        desiredManifestRevision: kotlin.Long =
-            this.desiredManifestRevision,
-        appliedManifestRevision: kotlin.Long =
-            this.appliedManifestRevision,
+        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            this.manifestRevision,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             this.state,
     ) = skirout.service.v1.topology.RealmInstance(
@@ -1961,8 +1922,7 @@ class RealmInstance private constructor(
         ownerHostId.toFrozen(),
         revision,
         targetEngine.toFrozen(),
-        desiredManifestRevision,
-        appliedManifestRevision,
+        manifestRevision.toFrozen(),
         state.toFrozen(),
         this._unrecognizedFields,
     );
@@ -1971,11 +1931,11 @@ class RealmInstance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.RealmInstance && this.realmId == other.realmId && this.ownerHostId == other.ownerHostId && this.revision == other.revision && this.targetEngine == other.targetEngine && this.desiredManifestRevision == other.desiredManifestRevision && this.appliedManifestRevision == other.appliedManifestRevision && this.state == other.state);
+        return this === other || (other is skirout.service.v1.topology.RealmInstance && this.realmId == other.realmId && this.ownerHostId == other.ownerHostId && this.revision == other.revision && this.targetEngine == other.targetEngine && this.manifestRevision == other.manifestRevision && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.ownerHostId, this.revision, this.targetEngine, this.desiredManifestRevision, this.appliedManifestRevision, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.ownerHostId, this.revision, this.targetEngine, this.manifestRevision, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1997,10 +1957,8 @@ class RealmInstance private constructor(
             0L,
         override var targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
             skirout.service.v1.topology.EngineTarget.partial(),
-        override var desiredManifestRevision: kotlin.Long =
-            0L,
-        override var appliedManifestRevision: kotlin.Long =
-            0L,
+        override var manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            skirout.service.v1.topology.ReconciledRevision.partial(),
         override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             skirout.service.v1.topology.ChildRuntimeState.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
@@ -2012,8 +1970,7 @@ class RealmInstance private constructor(
             ownerHostId = this.ownerHostId,
             revision = this.revision,
             targetEngine = this.targetEngine,
-            desiredManifestRevision = this.desiredManifestRevision,
-            appliedManifestRevision = this.appliedManifestRevision,
+            manifestRevision = this.manifestRevision,
             state = this.state,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2067,6 +2024,22 @@ class RealmInstance private constructor(
         }
 
         /**
+         * If the value of [manifestRevision] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
+         */
+        val mutableManifestRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
+            var value = this.manifestRevision;
+            return when (value) {
+                is skirout.service.v1.topology.ReconciledRevision -> {
+                    value = value.toMutable();
+                    this.manifestRevision = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ReconciledRevision.Mutable -> value;
+            }
+        }
+
+        /**
          * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
@@ -2090,8 +2063,7 @@ class RealmInstance private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
                 skirout.service.v1.topology.EngineTarget.partial(),
-                0L,
-                0L,
+                skirout.service.v1.topology.ReconciledRevision.partial(),
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
             );
 
@@ -2114,10 +2086,8 @@ class RealmInstance private constructor(
                 0L,
             targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
                 skirout.service.v1.topology.EngineTarget.partial(),
-            desiredManifestRevision: kotlin.Long =
-                0L,
-            appliedManifestRevision: kotlin.Long =
-                0L,
+            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+                skirout.service.v1.topology.ReconciledRevision.partial(),
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
         ) = skirout.service.v1.topology.RealmInstance(
@@ -2125,8 +2095,7 @@ class RealmInstance private constructor(
             ownerHostId = ownerHostId,
             revision = revision,
             targetEngine = targetEngine,
-            desiredManifestRevision = desiredManifestRevision,
-            appliedManifestRevision = appliedManifestRevision,
+            manifestRevision = manifestRevision,
             state = state,
             _unrecognizedFields = null,
         );
@@ -2185,27 +2154,18 @@ class RealmInstance private constructor(
                 { mut, v -> mut.targetEngine = v },
             );
             serializerImpl.addField(
-                "desired_manifest_revision",
-                "desiredManifestRevision",
+                "manifest_revision",
+                "manifestRevision",
                 4,
-                build.skir.Serializers.int64,
+                skirout.service.v1.topology.ReconciledRevision.serializer,
                 "",
-                { it.desiredManifestRevision },
-                { mut, v -> mut.desiredManifestRevision = v },
+                { it.manifestRevision },
+                { mut, v -> mut.manifestRevision = v },
             );
             serializerImpl.addField(
-                "applied_manifest_revision",
-                "appliedManifestRevision",
+                "state",
+                "state",
                 5,
-                build.skir.Serializers.int64,
-                "",
-                { it.appliedManifestRevision },
-                { mut, v -> mut.appliedManifestRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                6,
                 skirout.service.v1.topology.ChildRuntimeState.serializer,
                 "",
                 { it.state },
@@ -2222,8 +2182,7 @@ sealed interface EngineInstance_OrMutable {
     val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val revision: kotlin.Long;
     val target: skirout.service.v1.topology.EngineTarget_OrMutable;
-    val desiredManifestRevision: kotlin.Long;
-    val appliedManifestRevision: kotlin.Long;
+    val manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
     val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.EngineInstance;
@@ -2237,8 +2196,7 @@ class EngineInstance private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
     override val revision: kotlin.Long,
     override val target: skirout.service.v1.topology.EngineTarget,
-    override val desiredManifestRevision: kotlin.Long,
-    override val appliedManifestRevision: kotlin.Long,
+    override val manifestRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
         null,
@@ -2251,8 +2209,7 @@ class EngineInstance private constructor(
         realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         revision: kotlin.Long,
         target: skirout.service.v1.topology.EngineTarget_OrMutable,
-        desiredManifestRevision: kotlin.Long,
-        appliedManifestRevision: kotlin.Long,
+        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
             null,
@@ -2262,8 +2219,7 @@ class EngineInstance private constructor(
         realmId.toFrozen(),
         revision,
         target.toFrozen(),
-        desiredManifestRevision,
-        appliedManifestRevision,
+        manifestRevision.toFrozen(),
         state.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -2278,8 +2234,7 @@ class EngineInstance private constructor(
         realmId = this.realmId,
         revision = this.revision,
         target = this.target,
-        desiredManifestRevision = this.desiredManifestRevision,
-        appliedManifestRevision = this.appliedManifestRevision,
+        manifestRevision = this.manifestRevision,
         state = this.state,
     );
 
@@ -2297,10 +2252,8 @@ class EngineInstance private constructor(
             this.revision,
         target: skirout.service.v1.topology.EngineTarget_OrMutable =
             this.target,
-        desiredManifestRevision: kotlin.Long =
-            this.desiredManifestRevision,
-        appliedManifestRevision: kotlin.Long =
-            this.appliedManifestRevision,
+        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            this.manifestRevision,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             this.state,
     ) = skirout.service.v1.topology.EngineInstance(
@@ -2309,8 +2262,7 @@ class EngineInstance private constructor(
         realmId.toFrozen(),
         revision,
         target.toFrozen(),
-        desiredManifestRevision,
-        appliedManifestRevision,
+        manifestRevision.toFrozen(),
         state.toFrozen(),
         this._unrecognizedFields,
     );
@@ -2319,11 +2271,11 @@ class EngineInstance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.EngineInstance && this.engineId == other.engineId && this.ownerHostId == other.ownerHostId && this.realmId == other.realmId && this.revision == other.revision && this.target == other.target && this.desiredManifestRevision == other.desiredManifestRevision && this.appliedManifestRevision == other.appliedManifestRevision && this.state == other.state);
+        return this === other || (other is skirout.service.v1.topology.EngineInstance && this.engineId == other.engineId && this.ownerHostId == other.ownerHostId && this.realmId == other.realmId && this.revision == other.revision && this.target == other.target && this.manifestRevision == other.manifestRevision && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.ownerHostId, this.realmId, this.revision, this.target, this.desiredManifestRevision, this.appliedManifestRevision, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.ownerHostId, this.realmId, this.revision, this.target, this.manifestRevision, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2347,10 +2299,8 @@ class EngineInstance private constructor(
             0L,
         override var target: skirout.service.v1.topology.EngineTarget_OrMutable =
             skirout.service.v1.topology.EngineTarget.partial(),
-        override var desiredManifestRevision: kotlin.Long =
-            0L,
-        override var appliedManifestRevision: kotlin.Long =
-            0L,
+        override var manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+            skirout.service.v1.topology.ReconciledRevision.partial(),
         override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             skirout.service.v1.topology.ChildRuntimeState.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
@@ -2363,8 +2313,7 @@ class EngineInstance private constructor(
             realmId = this.realmId,
             revision = this.revision,
             target = this.target,
-            desiredManifestRevision = this.desiredManifestRevision,
-            appliedManifestRevision = this.appliedManifestRevision,
+            manifestRevision = this.manifestRevision,
             state = this.state,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2434,6 +2383,22 @@ class EngineInstance private constructor(
         }
 
         /**
+         * If the value of [manifestRevision] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
+         */
+        val mutableManifestRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
+            var value = this.manifestRevision;
+            return when (value) {
+                is skirout.service.v1.topology.ReconciledRevision -> {
+                    value = value.toMutable();
+                    this.manifestRevision = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ReconciledRevision.Mutable -> value;
+            }
+        }
+
+        /**
          * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
@@ -2458,8 +2423,7 @@ class EngineInstance private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
                 skirout.service.v1.topology.EngineTarget.partial(),
-                0L,
-                0L,
+                skirout.service.v1.topology.ReconciledRevision.partial(),
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
             );
 
@@ -2484,10 +2448,8 @@ class EngineInstance private constructor(
                 0L,
             target: skirout.service.v1.topology.EngineTarget_OrMutable =
                 skirout.service.v1.topology.EngineTarget.partial(),
-            desiredManifestRevision: kotlin.Long =
-                0L,
-            appliedManifestRevision: kotlin.Long =
-                0L,
+            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
+                skirout.service.v1.topology.ReconciledRevision.partial(),
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
         ) = skirout.service.v1.topology.EngineInstance(
@@ -2496,8 +2458,7 @@ class EngineInstance private constructor(
             realmId = realmId,
             revision = revision,
             target = target,
-            desiredManifestRevision = desiredManifestRevision,
-            appliedManifestRevision = appliedManifestRevision,
+            manifestRevision = manifestRevision,
             state = state,
             _unrecognizedFields = null,
         );
@@ -2565,27 +2526,18 @@ class EngineInstance private constructor(
                 { mut, v -> mut.target = v },
             );
             serializerImpl.addField(
-                "desired_manifest_revision",
-                "desiredManifestRevision",
+                "manifest_revision",
+                "manifestRevision",
                 5,
-                build.skir.Serializers.int64,
+                skirout.service.v1.topology.ReconciledRevision.serializer,
                 "",
-                { it.desiredManifestRevision },
-                { mut, v -> mut.desiredManifestRevision = v },
+                { it.manifestRevision },
+                { mut, v -> mut.manifestRevision = v },
             );
             serializerImpl.addField(
-                "applied_manifest_revision",
-                "appliedManifestRevision",
+                "state",
+                "state",
                 6,
-                build.skir.Serializers.int64,
-                "",
-                { it.appliedManifestRevision },
-                { mut, v -> mut.appliedManifestRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                7,
                 skirout.service.v1.topology.ChildRuntimeState.serializer,
                 "",
                 { it.state },
@@ -3583,6 +3535,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         INVALID_CONFIGURATION_ERROR_WRAPPER,
         INCOMPATIBLE_ENGINE_ERROR_WRAPPER,
         REALM_NOT_FOUND_ERROR_WRAPPER,
+        INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -3691,6 +3644,24 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
+    class InvalidRecordIdErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
+    ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidRecordIdErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -908768310;
+        }
+    }
+
     class InternalErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InternalError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -3791,6 +3762,20 @@ sealed class ConfigureServiceHostResponse private constructor() {
             )
         );
 
+        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidRecordIdError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedTable: kotlin.String,
+            givenTables: kotlin.collections.Iterable<kotlin.String>,
+        ) = InvalidRecordIdErrorWrapper(
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = expectedTable,
+                givenTables = givenTables,
+            )
+        );
+
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -3873,6 +3858,15 @@ sealed class ConfigureServiceHostResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     6,
+                    "invalid_record_id_error",
+                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+                    "",
+                    { InvalidRecordIdErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    7,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InternalError.serializer,
@@ -4937,8 +4931,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             entrypoint: skirout.service.v1.topology.HostEntrypoint,
             canHostRealm: kotlin.Boolean,
             supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-            desiredTopologyRevision: kotlin.Long,
-            appliedTopologyRevision: kotlin.Long,
+            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
             state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
         ) = HostUpdatedWrapper(
             skirout.service.v1.topology.ServiceHost(
@@ -4948,8 +4941,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
                 entrypoint = entrypoint,
                 canHostRealm = canHostRealm,
                 supportedEngines = supportedEngines,
-                desiredTopologyRevision = desiredTopologyRevision,
-                appliedTopologyRevision = appliedTopologyRevision,
+                topologyRevision = topologyRevision,
                 state = state,
             )
         );
@@ -4963,8 +4955,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             ownerHostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             revision: kotlin.Long,
             targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
-            desiredManifestRevision: kotlin.Long,
-            appliedManifestRevision: kotlin.Long,
+            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         ) = RealmUpdatedWrapper(
             skirout.service.v1.topology.RealmInstance(
@@ -4972,8 +4963,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
                 ownerHostId = ownerHostId,
                 revision = revision,
                 targetEngine = targetEngine,
-                desiredManifestRevision = desiredManifestRevision,
-                appliedManifestRevision = appliedManifestRevision,
+                manifestRevision = manifestRevision,
                 state = state,
             )
         );
@@ -4988,8 +4978,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             revision: kotlin.Long,
             target: skirout.service.v1.topology.EngineTarget_OrMutable,
-            desiredManifestRevision: kotlin.Long,
-            appliedManifestRevision: kotlin.Long,
+            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         ) = EngineUpdatedWrapper(
             skirout.service.v1.topology.EngineInstance(
@@ -4998,8 +4987,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
                 realmId = realmId,
                 revision = revision,
                 target = target,
-                desiredManifestRevision = desiredManifestRevision,
-                appliedManifestRevision = appliedManifestRevision,
+                manifestRevision = manifestRevision,
                 state = state,
             )
         );
@@ -5501,6 +5489,7 @@ sealed class WatchHostExecutionResponse private constructor() {
     enum class Kind {
         UNKNOWN,
         DESIRED_WRAPPER,
+        INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5534,6 +5523,24 @@ sealed class WatchHostExecutionResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1557044890;
+        }
+    }
+
+    class InvalidRecordIdErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
+    ) : skirout.service.v1.topology.WatchHostExecutionResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.WatchHostExecutionResponse.InvalidRecordIdErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -908768310;
         }
     }
 
@@ -5589,6 +5596,20 @@ sealed class WatchHostExecutionResponse private constructor() {
             )
         );
 
+        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidRecordIdError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedTable: kotlin.String,
+            givenTables: kotlin.collections.Iterable<kotlin.String>,
+        ) = InvalidRecordIdErrorWrapper(
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = expectedTable,
+                givenTables = givenTables,
+            )
+        );
+
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -5635,6 +5656,15 @@ sealed class WatchHostExecutionResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     2,
+                    "invalid_record_id_error",
+                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+                    "",
+                    { InvalidRecordIdErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InternalError.serializer,
@@ -6063,6 +6093,7 @@ sealed class ReportHostExecutionResponse private constructor() {
         UNKNOWN,
         SUCCESS_WRAPPER,
         STALE_REVISION_ERROR_WRAPPER,
+        INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -6114,6 +6145,24 @@ sealed class ReportHostExecutionResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1601585674;
+        }
+    }
+
+    class InvalidRecordIdErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
+    ) : skirout.service.v1.topology.ReportHostExecutionResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.ReportHostExecutionResponse.InvalidRecordIdErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -908768310;
         }
     }
 
@@ -6171,6 +6220,20 @@ sealed class ReportHostExecutionResponse private constructor() {
             skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError()
         );
 
+        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidRecordIdError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedTable: kotlin.String,
+            givenTables: kotlin.collections.Iterable<kotlin.String>,
+        ) = InvalidRecordIdErrorWrapper(
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = expectedTable,
+                givenTables = givenTables,
+            )
+        );
+
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -6226,6 +6289,15 @@ sealed class ReportHostExecutionResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     3,
+                    "invalid_record_id_error",
+                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+                    "",
+                    { InvalidRecordIdErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InternalError.serializer,

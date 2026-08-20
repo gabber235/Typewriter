@@ -8,7 +8,7 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, HostExecutionConfiguration, HostedEngineConfiguration,
     HostedRealmConfiguration, ReportHostExecutionRequest, ReportHostExecutionResponse,
-    SemanticVersion, WatchHostExecutionRequest, WatchHostExecutionResponse,
+    WatchHostExecutionRequest, WatchHostExecutionResponse,
     WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
 };
 
@@ -25,7 +25,7 @@ async fn watch_returns_first_class_topology_for_one_organization(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', major_version: 1 }; CREATE service:other_service SET name = 'other_service', roles = [{ type: 'engine', version: '1' }], organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]",
+            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', major_version: 1 }; CREATE service:other_service SET name = 'other_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]",
         )
         .execute()
         .await?;
@@ -80,7 +80,7 @@ async fn configure_creates_local_realm_and_engine_transactionally(
     let realm = configured.realm.as_ref().expect("Realm must be returned");
     let engine = configured.engine.as_ref().expect("engine must be returned");
     assert_eq!(configured.host.revision, 2);
-    assert_eq!(configured.host.desired_topology_revision, 1);
+    assert_eq!(configured.host.topology_revision.desired, 1);
     assert_eq!(engine.realm_id, realm.realm_id);
     assert_eq!(realm.target_engine, paper_target());
     assert_eq!(engine.target, paper_target());
@@ -94,6 +94,50 @@ async fn configure_creates_local_realm_and_engine_transactionally(
 }
 
 #[component_test(ServiceRegistration)]
+async fn configure_runs_an_advertised_custom_engine_on_a_standalone_host(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_standalone_host(context, "host", "host_service").await?;
+    database(context)?
+        .seed(
+            "UPDATE service_host:host SET supported_engines = [{ engine_id: 'custom_engine', supported_major_versions: [0] }]",
+        )
+        .execute()
+        .await?;
+    expect_publications(context, 3, 0, 1)?;
+    let target = EngineTarget {
+        engine_id: "custom_engine".into(),
+        major_version: 0,
+        _unrecognized: None,
+    };
+
+    let response = configure(
+        context,
+        1,
+        HostExecutionConfiguration {
+            realm: Some(HostedRealmConfiguration {
+                target_engine: target.clone(),
+                _unrecognized: None,
+            }),
+            engine: Some(HostedEngineConfiguration {
+                target: target.clone(),
+                realm: EngineRealmSelection::HostedRealm,
+                _unrecognized: None,
+            }),
+            _unrecognized: None,
+        },
+    )
+    .await?;
+
+    let ConfigureServiceHostResponse::Success(configured) = response else {
+        anyhow::bail!("expected custom engine configuration to succeed");
+    };
+    assert_eq!(configured.realm.expect("Realm must exist").target_engine, target);
+    assert_eq!(configured.engine.expect("engine must exist").target, target);
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
 async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
@@ -101,7 +145,7 @@ async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:realm_service SET name = 'realm_service', roles = [{ type: 'realm', version: '1' }], organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', major_version: 1 }",
+            "CREATE service:realm_service SET name = 'realm_service', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', major_version: 1 }",
         )
         .execute()
         .await?;
@@ -182,7 +226,7 @@ async fn configure_rejects_invalid_relationships_without_partial_writes(
     .await?;
     assert!(matches!(
         invalid_engine,
-        ConfigureServiceHostResponse::InvalidConfigurationError(_)
+        ConfigureServiceHostResponse::RealmNotFoundError(_)
     ));
 
     let incompatible = configure(
@@ -236,7 +280,7 @@ async fn configure_blocks_realm_removal_while_another_host_depends_on_it(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE service:paper_service SET name = 'paper_service', roles = [{ type: 'engine', version: '1' }], organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', major_version: 1 }",
+            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE service:paper_service SET name = 'paper_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', major_version: 1 }",
         )
         .execute()
         .await?;
@@ -263,7 +307,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     let database = database(context)?;
     database
         .seed(
-            "UPDATE service_host:host SET desired_topology_revision = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }, desired_manifest_revision = 2",
+            "UPDATE service_host:host SET topology_revision.desired = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }, manifest_revision.desired = 2",
         )
         .execute()
         .await?;
@@ -299,7 +343,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     ));
     assert_jm!(
         database
-            .query_json("RETURN [service_host:host.applied_topology_revision, service_host:host.state.status, realm_instance:realm.applied_manifest_revision, realm_instance:realm.state.status]")
+            .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.manifest_revision.applied, realm_instance:realm.state.status]")
             .await?,
         [4, "ACTIVE", 2, "ACTIVE"]
     );
@@ -373,12 +417,7 @@ fn paper_target() -> EngineTarget {
 fn active_state() -> ChildRuntimeState {
     ChildRuntimeState {
         status: ChildRuntimeStatus::Active,
-        active_artifact_version: Some(SemanticVersion {
-            major: 1,
-            minor: 0,
-            patch: 0,
-            _unrecognized: None,
-        }),
+        active_artifact_version: Some("1.0.0-alpha.1+build.7".into()),
         message: None,
         updated_at: SystemTime::now(),
         _unrecognized: None,
@@ -409,7 +448,7 @@ async fn seed_host(
 ) -> anyhow::Result<()> {
     database(context)?
         .seed(format!(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', roles = [{{ type: 'engine', version: '1' }}], organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper', supported_major_versions: [1] }}]",
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', roles = [{{ type: 'engine', version: '1.0.0' }}], organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper', supported_major_versions: [1] }}]",
         ))
         .execute()
         .await?;

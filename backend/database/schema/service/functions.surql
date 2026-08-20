@@ -7,8 +7,8 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         THROW "role-type-invalid-error"
     };
 
-    IF $role.version = NONE OR string::len(string::trim($role.version)) < 1 {
-        THROW "role-version-blank-error"
+    IF $role.version = NONE OR !string::is_semver($role.version) {
+        THROW "role-version-invalid-error"
     };
 
     IF $role.type = "custom" {
@@ -79,7 +79,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_engine_target($target: object) -> b
     IF !fn::is_id($target.engine_id) {
         THROW "engine-target-id-invalid-error"
     };
-    IF $target.major_version < 1 {
+    IF $target.major_version < 0 {
         THROW "engine-target-major-invalid-error"
     };
     RETURN true;
@@ -98,7 +98,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_supported_engine($engine: object) -
     IF array::len(array::distinct($engine.supported_major_versions)) != array::len($engine.supported_major_versions) {
         THROW "supported-engine-version-duplicate-error"
     };
-    IF !array::all($engine.supported_major_versions, |$major| $major >= 1) {
+    IF !array::all($engine.supported_major_versions, |$major| $major >= 0) {
         THROW "supported-engine-major-invalid-error"
     };
     RETURN true;

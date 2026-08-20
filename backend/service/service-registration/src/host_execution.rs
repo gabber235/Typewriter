@@ -46,12 +46,11 @@ pub async fn handle_watch(
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;
     let request = decode_skir!(WatchHostExecutionRequest, &msg.body)?;
-    if request.host_id.table != "service_host" {
-        return Err(wasi_error!(
-            "host-id-invalid",
-            "host id must reference a service host"
-        ));
-    }
+    wasmcloud_utils::validate_record_ids!(
+        WatchHostExecutionResponse,
+        request.host_id,
+        "service_host"
+    );
     let host_id = RecordId::from(&request.host_id);
     let service_id = RecordId::new("service", service_id);
     let desired = read_query!(
@@ -78,7 +77,7 @@ pub async fn handle_watch(
     };
     Ok(WatchHostExecutionResponse::Desired(Box::new(
         WatchHostExecutionResponse_Desired {
-            topology_revision: host.desired_topology_revision,
+            topology_revision: host.topology_revision.desired,
             realm: desired.realm.map(Into::into),
             engine: desired.engine.map(Into::into),
             _unrecognized: None,
@@ -93,12 +92,11 @@ pub async fn handle_report(
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;
     let request = decode_skir!(ReportHostExecutionRequest, &msg.body)?;
-    if request.host_id.table != "service_host" {
-        return Err(wasi_error!(
-            "host-id-invalid",
-            "host id must reference a service host"
-        ));
-    }
+    wasmcloud_utils::validate_record_ids!(
+        ReportHostExecutionResponse,
+        request.host_id,
+        "service_host"
+    );
     let realm_state = request
         .realm_state
         .as_ref()
@@ -122,7 +120,7 @@ pub async fn handle_report(
                 RETURN { outcome: 'host-not-found' }
             };
             LET $host = array::first($hosts);
-            IF $host.desired_topology_revision != $topology_revision {
+            IF $host.topology_revision.desired != $topology_revision {
                 RETURN { outcome: 'stale-revision' }
             };
             LET $realm = array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id);
@@ -143,10 +141,10 @@ pub async fn handle_report(
                         },
                         updated_at: <datetime>$realm_state.updated_at,
                     },
-                    applied_manifest_revision = IF $realm_state.status = 'ACTIVE' {
-                        desired_manifest_revision
+                    manifest_revision.applied = IF $realm_state.status = 'ACTIVE' {
+                        manifest_revision.desired
                     } ELSE {
-                        applied_manifest_revision
+                        manifest_revision.applied
                     }
                 WHERE owner_host_id = $host_id
             };
@@ -166,10 +164,10 @@ pub async fn handle_report(
                         },
                         updated_at: <datetime>$engine_state.updated_at,
                     },
-                    applied_manifest_revision = IF $engine_state.status = 'ACTIVE' {
-                        desired_manifest_revision
+                    manifest_revision.applied = IF $engine_state.status = 'ACTIVE' {
+                        manifest_revision.desired
                     } ELSE {
-                        applied_manifest_revision
+                        manifest_revision.applied
                     }
                 WHERE owner_host_id = $host_id
             };
@@ -204,10 +202,10 @@ pub async fn handle_report(
                 'RECONCILING'
             };
             LET $updated_host = UPDATE ONLY $host_id SET
-                applied_topology_revision = IF $complete {
+                topology_revision.applied = IF $complete {
                     $topology_revision
                 } ELSE {
-                    applied_topology_revision
+                    topology_revision.applied
                 },
                 state = { status: $host_status, updated_at: time::now() }
             RETURN AFTER;

@@ -226,13 +226,11 @@ class _HostExecutionInspectorState extends State<HostExecutionInspector> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text("Run an execution engine"),
-            subtitle: Text(
-              isPaper
-                  ? "Executes assigned Realm content on Paper"
-                  : "Standalone hosts cannot execute Paper content",
+            subtitle: const Text(
+              "Executes assigned Realm content with a supported engine",
             ),
             value: _engineEnabled,
-            onChanged: isPaper && engineOptions.isNotEmpty
+            onChanged: engineOptions.isNotEmpty
                 ? (value) => setState(() => _engineEnabled = value)
                 : null,
           ),

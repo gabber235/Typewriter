@@ -18,54 +18,46 @@ import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
 // -----------------------------------------------------------------------------
-// struct SemanticVersion
+// struct ReconciledRevision
 // -----------------------------------------------------------------------------
 
-sealed class SemanticVersion_orMutable {
-  _core.int get major;
-  _core.int get minor;
-  _core.int get patch;
+sealed class ReconciledRevision_orMutable {
+  _core.int get desired;
+  _core.int get applied;
 
-  SemanticVersion toFrozen();
+  ReconciledRevision toFrozen();
 }
 
 /// Deeply immutable.
-final class SemanticVersion implements SemanticVersion_orMutable {
+final class ReconciledRevision implements ReconciledRevision_orMutable {
   @_core.override
-  final _core.int major;
+  final _core.int desired;
   @_core.override
-  final _core.int minor;
-  @_core.override
-  final _core.int patch;
+  final _core.int applied;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory SemanticVersion({
-    required _core.int major,
-    required _core.int minor,
-    required _core.int patch,
-  }) => SemanticVersion._(
-    major,
-    minor,
-    patch,
+  factory ReconciledRevision({
+    required _core.int desired,
+    required _core.int applied,
+  }) => ReconciledRevision._(
+    desired,
+    applied,
   );
 
-  SemanticVersion._(
-    this.major,
-    this.minor,
-    this.patch,
+  ReconciledRevision._(
+    this.desired,
+    this.applied,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SemanticVersion._(
-    0,
+  static final defaultInstance = ReconciledRevision._(
     0,
     0,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SemanticVersion_mutable mutable() => SemanticVersion_mutable._(
-    0,
+  static ReconciledRevision_mutable mutable() => ReconciledRevision_mutable._(
     0,
     0,
   );
@@ -73,19 +65,18 @@ final class SemanticVersion implements SemanticVersion_orMutable {
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  SemanticVersion toFrozen() => this;
+  ReconciledRevision toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SemanticVersion_mutable toMutable() => SemanticVersion_mutable._(
-    this.major,
-    this.minor,
-    this.patch,
+  ReconciledRevision_mutable toMutable() => ReconciledRevision_mutable._(
+    this.desired,
+    this.applied,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! SemanticVersion) return false;
+    if (other is! ReconciledRevision) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -93,43 +84,33 @@ final class SemanticVersion implements SemanticVersion_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.major,
-    this.minor,
-    this.patch,
+    this.desired,
+    this.applied,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `SemanticVersion` instances.
-  static _skir.StructSerializer<SemanticVersion, SemanticVersion_mutable> get serializer {
+  /// Serializer for `ReconciledRevision` instances.
+  static _skir.StructSerializer<ReconciledRevision, ReconciledRevision_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "major",
-        "major",
+        "desired",
+        "desired",
         0,
-        _skir.Serializers.int32,
+        _skir.Serializers.int64,
         "",
-        (it) => it.major,
-        (it, v) => it.major = v,
+        (it) => it.desired,
+        (it, v) => it.desired = v,
       );
       _serializerBuilder.addField(
-        "minor",
-        "minor",
+        "applied",
+        "applied",
         1,
-        _skir.Serializers.int32,
+        _skir.Serializers.int64,
         "",
-        (it) => it.minor,
-        (it, v) => it.minor = v,
-      );
-      _serializerBuilder.addField(
-        "patch",
-        "patch",
-        2,
-        _skir.Serializers.int32,
-        "",
-        (it) => it.patch,
-        (it, v) => it.patch = v,
+        (it) => it.applied,
+        (it, v) => it.applied = v,
       );
       _serializerBuilder.finalize();
     }
@@ -137,35 +118,32 @@ final class SemanticVersion implements SemanticVersion_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:SemanticVersion",
+    recordId: "service/v1/topology.skir:ReconciledRevision",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SemanticVersion_mutable it) => it.toFrozen(),
+    toFrozen: (ReconciledRevision_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [SemanticVersion].
-final class SemanticVersion_mutable implements SemanticVersion_orMutable {
-  _core.int major;
-  _core.int minor;
-  _core.int patch;
+/// Mutable version of [ReconciledRevision].
+final class ReconciledRevision_mutable implements ReconciledRevision_orMutable {
+  _core.int desired;
+  _core.int applied;
   _skir.internal__UnrecognizedFields? _u;
 
-  SemanticVersion_mutable._(
-    this.major,
-    this.minor,
-    this.patch,
+  ReconciledRevision_mutable._(
+    this.desired,
+    this.applied,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SemanticVersion toFrozen() => SemanticVersion(
-    major: this.major,
-    minor: this.minor,
-    patch: this.patch,
+  ReconciledRevision toFrozen() => ReconciledRevision(
+    desired: this.desired,
+    applied: this.applied,
   ).._u = this._u;
 }
 
@@ -990,7 +968,7 @@ enum _ChildRuntimeStatus_consts implements ChildRuntimeStatus {
 
 sealed class ChildRuntimeState_orMutable {
   ChildRuntimeStatus get status;
-  SemanticVersion_orMutable? get activeArtifactVersion;
+  _core.String? get activeArtifactVersion;
   _core.String? get message;
   _core.DateTime get updatedAt;
 
@@ -1002,7 +980,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
   @_core.override
   final ChildRuntimeStatus status;
   @_core.override
-  final SemanticVersion? activeArtifactVersion;
+  final _core.String? activeArtifactVersion;
   @_core.override
   final _core.String? message;
   @_core.override
@@ -1011,12 +989,12 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
 
   factory ChildRuntimeState({
     required ChildRuntimeStatus status,
-    required SemanticVersion_orMutable? activeArtifactVersion,
+    required _core.String? activeArtifactVersion,
     required _core.String? message,
     required _core.DateTime updatedAt,
   }) => ChildRuntimeState._(
     status,
-    (activeArtifactVersion != null) ? activeArtifactVersion.toFrozen() : null,
+    activeArtifactVersion,
     message,
     updatedAt.toUtc(),
   );
@@ -1095,7 +1073,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
         "activeArtifactVersion",
         1,
         _skir.Serializers.optional(
-          SemanticVersion.serializer,
+          _skir.Serializers.string,
         ),
         "",
         (it) => it.activeArtifactVersion,
@@ -1140,7 +1118,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
 /// Mutable version of [ChildRuntimeState].
 final class ChildRuntimeState_mutable implements ChildRuntimeState_orMutable {
   ChildRuntimeStatus status;
-  SemanticVersion_orMutable? activeArtifactVersion;
+  _core.String? activeArtifactVersion;
   _core.String? message;
   _core.DateTime updatedAt;
   _skir.internal__UnrecognizedFields? _u;
@@ -1173,8 +1151,7 @@ sealed class ServiceHost_orMutable {
   HostEntrypoint get entrypoint;
   _core.bool get canHostRealm;
   _core.Iterable<SupportedEngine_orMutable> get supportedEngines;
-  _core.int get desiredTopologyRevision;
-  _core.int get appliedTopologyRevision;
+  ReconciledRevision_orMutable get topologyRevision;
   HostRuntimeState_orMutable get state;
 
   ServiceHost toFrozen();
@@ -1195,9 +1172,7 @@ final class ServiceHost implements ServiceHost_orMutable {
   @_core.override
   final _core.Iterable<SupportedEngine> supportedEngines;
   @_core.override
-  final _core.int desiredTopologyRevision;
-  @_core.override
-  final _core.int appliedTopologyRevision;
+  final ReconciledRevision topologyRevision;
   @_core.override
   final HostRuntimeState state;
   _skir.internal__UnrecognizedFields? _u;
@@ -1209,8 +1184,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     required HostEntrypoint entrypoint,
     required _core.bool canHostRealm,
     required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
-    required _core.int desiredTopologyRevision,
-    required _core.int appliedTopologyRevision,
+    required ReconciledRevision_orMutable topologyRevision,
     required HostRuntimeState_orMutable state,
   }) => ServiceHost._(
     hostId.toFrozen(),
@@ -1219,8 +1193,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     entrypoint,
     canHostRealm,
     _skir.internal__frozenMappedCopy(supportedEngines, (it) => it.toFrozen()),
-    desiredTopologyRevision,
-    appliedTopologyRevision,
+    topologyRevision.toFrozen(),
     state.toFrozen(),
   );
 
@@ -1231,8 +1204,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     this.entrypoint,
     this.canHostRealm,
     this.supportedEngines,
-    this.desiredTopologyRevision,
-    this.appliedTopologyRevision,
+    this.topologyRevision,
     this.state,
   );
 
@@ -1244,8 +1216,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     HostEntrypoint.unknown,
     false,
     _skir.KeyedIterable.empty,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     HostRuntimeState.defaultInstance,
   );
 
@@ -1258,8 +1229,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     HostEntrypoint.unknown,
     false,
     _skir.KeyedIterable.empty,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     HostRuntimeState.defaultInstance,
   );
 
@@ -1276,8 +1246,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     this.entrypoint,
     this.canHostRealm,
     this.supportedEngines,
-    this.desiredTopologyRevision,
-    this.appliedTopologyRevision,
+    this.topologyRevision,
     this.state,
   );
 
@@ -1298,8 +1267,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     this.entrypoint,
     this.canHostRealm,
     this.supportedEngines,
-    this.desiredTopologyRevision,
-    this.appliedTopologyRevision,
+    this.topologyRevision,
     this.state,
   ];
 
@@ -1366,27 +1334,18 @@ final class ServiceHost implements ServiceHost_orMutable {
         (it, v) => it.supportedEngines = v,
       );
       _serializerBuilder.addField(
-        "desired_topology_revision",
-        "desiredTopologyRevision",
+        "topology_revision",
+        "topologyRevision",
         6,
-        _skir.Serializers.int64,
+        ReconciledRevision.serializer,
         "",
-        (it) => it.desiredTopologyRevision,
-        (it, v) => it.desiredTopologyRevision = v,
+        (it) => it.topologyRevision,
+        (it, v) => it.topologyRevision = v,
       );
       _serializerBuilder.addField(
-        "applied_topology_revision",
-        "appliedTopologyRevision",
+        "state",
+        "state",
         7,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.appliedTopologyRevision,
-        (it, v) => it.appliedTopologyRevision = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        8,
         HostRuntimeState.serializer,
         "",
         (it) => it.state,
@@ -1416,8 +1375,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
   HostEntrypoint entrypoint;
   _core.bool canHostRealm;
   _core.Iterable<SupportedEngine_orMutable> supportedEngines;
-  _core.int desiredTopologyRevision;
-  _core.int appliedTopologyRevision;
+  ReconciledRevision_orMutable topologyRevision;
   HostRuntimeState_orMutable state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1428,8 +1386,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     this.entrypoint,
     this.canHostRealm,
     this.supportedEngines,
-    this.desiredTopologyRevision,
-    this.appliedTopologyRevision,
+    this.topologyRevision,
     this.state,
   );
 
@@ -1466,6 +1423,17 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     }
   }
 
+  /// If the value of [topologyRevision] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [topologyRevision] and returns it.
+  ReconciledRevision_mutable get mutableTopologyRevision {
+    final value = this.topologyRevision;
+    if (value is ReconciledRevision_mutable) {
+      return value;
+    } else {
+      return this.topologyRevision = (value as ReconciledRevision).toMutable();
+    }
+  }
+
   /// If the value of [state] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   HostRuntimeState_mutable get mutableState {
@@ -1486,8 +1454,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     entrypoint: this.entrypoint,
     canHostRealm: this.canHostRealm,
     supportedEngines: this.supportedEngines,
-    desiredTopologyRevision: this.desiredTopologyRevision,
-    appliedTopologyRevision: this.appliedTopologyRevision,
+    topologyRevision: this.topologyRevision,
     state: this.state,
   ).._u = this._u;
 }
@@ -1501,8 +1468,7 @@ sealed class RealmInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get ownerHostId;
   _core.int get revision;
   EngineTarget_orMutable get targetEngine;
-  _core.int get desiredManifestRevision;
-  _core.int get appliedManifestRevision;
+  ReconciledRevision_orMutable get manifestRevision;
   ChildRuntimeState_orMutable get state;
 
   RealmInstance toFrozen();
@@ -1519,9 +1485,7 @@ final class RealmInstance implements RealmInstance_orMutable {
   @_core.override
   final EngineTarget targetEngine;
   @_core.override
-  final _core.int desiredManifestRevision;
-  @_core.override
-  final _core.int appliedManifestRevision;
+  final ReconciledRevision manifestRevision;
   @_core.override
   final ChildRuntimeState state;
   _skir.internal__UnrecognizedFields? _u;
@@ -1531,16 +1495,14 @@ final class RealmInstance implements RealmInstance_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
-    required _core.int desiredManifestRevision,
-    required _core.int appliedManifestRevision,
+    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => RealmInstance._(
     realmId.toFrozen(),
     ownerHostId.toFrozen(),
     revision,
     targetEngine.toFrozen(),
-    desiredManifestRevision,
-    appliedManifestRevision,
+    manifestRevision.toFrozen(),
     state.toFrozen(),
   );
 
@@ -1549,8 +1511,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHostId,
     this.revision,
     this.targetEngine,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -1560,8 +1521,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1572,8 +1532,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1588,8 +1547,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHostId,
     this.revision,
     this.targetEngine,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -1608,8 +1566,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHostId,
     this.revision,
     this.targetEngine,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   ];
 
@@ -1656,27 +1613,18 @@ final class RealmInstance implements RealmInstance_orMutable {
         (it, v) => it.targetEngine = v,
       );
       _serializerBuilder.addField(
-        "desired_manifest_revision",
-        "desiredManifestRevision",
+        "manifest_revision",
+        "manifestRevision",
         4,
-        _skir.Serializers.int64,
+        ReconciledRevision.serializer,
         "",
-        (it) => it.desiredManifestRevision,
-        (it, v) => it.desiredManifestRevision = v,
+        (it) => it.manifestRevision,
+        (it, v) => it.manifestRevision = v,
       );
       _serializerBuilder.addField(
-        "applied_manifest_revision",
-        "appliedManifestRevision",
+        "state",
+        "state",
         5,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.appliedManifestRevision,
-        (it, v) => it.appliedManifestRevision = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        6,
         ChildRuntimeState.serializer,
         "",
         (it) => it.state,
@@ -1704,8 +1652,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId;
   _core.int revision;
   EngineTarget_orMutable targetEngine;
-  _core.int desiredManifestRevision;
-  _core.int appliedManifestRevision;
+  ReconciledRevision_orMutable manifestRevision;
   ChildRuntimeState_orMutable state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1714,8 +1661,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     this.ownerHostId,
     this.revision,
     this.targetEngine,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -1752,6 +1698,17 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
+  /// If the value of [manifestRevision] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
+  ReconciledRevision_mutable get mutableManifestRevision {
+    final value = this.manifestRevision;
+    if (value is ReconciledRevision_mutable) {
+      return value;
+    } else {
+      return this.manifestRevision = (value as ReconciledRevision).toMutable();
+    }
+  }
+
   /// If the value of [state] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
@@ -1770,8 +1727,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     ownerHostId: this.ownerHostId,
     revision: this.revision,
     targetEngine: this.targetEngine,
-    desiredManifestRevision: this.desiredManifestRevision,
-    appliedManifestRevision: this.appliedManifestRevision,
+    manifestRevision: this.manifestRevision,
     state: this.state,
   ).._u = this._u;
 }
@@ -1786,8 +1742,7 @@ sealed class EngineInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
   _core.int get revision;
   EngineTarget_orMutable get target;
-  _core.int get desiredManifestRevision;
-  _core.int get appliedManifestRevision;
+  ReconciledRevision_orMutable get manifestRevision;
   ChildRuntimeState_orMutable get state;
 
   EngineInstance toFrozen();
@@ -1806,9 +1761,7 @@ final class EngineInstance implements EngineInstance_orMutable {
   @_core.override
   final EngineTarget target;
   @_core.override
-  final _core.int desiredManifestRevision;
-  @_core.override
-  final _core.int appliedManifestRevision;
+  final ReconciledRevision manifestRevision;
   @_core.override
   final ChildRuntimeState state;
   _skir.internal__UnrecognizedFields? _u;
@@ -1819,8 +1772,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
     required _core.int revision,
     required EngineTarget_orMutable target,
-    required _core.int desiredManifestRevision,
-    required _core.int appliedManifestRevision,
+    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => EngineInstance._(
     engineId.toFrozen(),
@@ -1828,8 +1780,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     realmId.toFrozen(),
     revision,
     target.toFrozen(),
-    desiredManifestRevision,
-    appliedManifestRevision,
+    manifestRevision.toFrozen(),
     state.toFrozen(),
   );
 
@@ -1839,8 +1790,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realmId,
     this.revision,
     this.target,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -1851,8 +1801,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1864,8 +1813,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    0,
-    0,
+    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1881,8 +1829,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realmId,
     this.revision,
     this.target,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -1902,8 +1849,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realmId,
     this.revision,
     this.target,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   ];
 
@@ -1959,27 +1905,18 @@ final class EngineInstance implements EngineInstance_orMutable {
         (it, v) => it.target = v,
       );
       _serializerBuilder.addField(
-        "desired_manifest_revision",
-        "desiredManifestRevision",
+        "manifest_revision",
+        "manifestRevision",
         5,
-        _skir.Serializers.int64,
+        ReconciledRevision.serializer,
         "",
-        (it) => it.desiredManifestRevision,
-        (it, v) => it.desiredManifestRevision = v,
+        (it) => it.manifestRevision,
+        (it, v) => it.manifestRevision = v,
       );
       _serializerBuilder.addField(
-        "applied_manifest_revision",
-        "appliedManifestRevision",
+        "state",
+        "state",
         6,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.appliedManifestRevision,
-        (it, v) => it.appliedManifestRevision = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        7,
         ChildRuntimeState.serializer,
         "",
         (it) => it.state,
@@ -2008,8 +1945,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _core.int revision;
   EngineTarget_orMutable target;
-  _core.int desiredManifestRevision;
-  _core.int appliedManifestRevision;
+  ReconciledRevision_orMutable manifestRevision;
   ChildRuntimeState_orMutable state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2019,8 +1955,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     this.realmId,
     this.revision,
     this.target,
-    this.desiredManifestRevision,
-    this.appliedManifestRevision,
+    this.manifestRevision,
     this.state,
   );
 
@@ -2068,6 +2003,17 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
+  /// If the value of [manifestRevision] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
+  ReconciledRevision_mutable get mutableManifestRevision {
+    final value = this.manifestRevision;
+    if (value is ReconciledRevision_mutable) {
+      return value;
+    } else {
+      return this.manifestRevision = (value as ReconciledRevision).toMutable();
+    }
+  }
+
   /// If the value of [state] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
@@ -2087,8 +2033,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     realmId: this.realmId,
     revision: this.revision,
     target: this.target,
-    desiredManifestRevision: this.desiredManifestRevision,
-    appliedManifestRevision: this.appliedManifestRevision,
+    manifestRevision: this.manifestRevision,
     state: this.state,
   ).._u = this._u;
 }
@@ -3565,6 +3510,7 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable implements C
 ///     case ConfigureServiceHostResponse_invalidConfigurationError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_incompatibleEngineError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_realmNotFoundError(:var value): { ... }
+///     case ConfigureServiceHostResponse_invalidRecordIdError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -3649,6 +3595,22 @@ sealed class ConfigureServiceHostResponse {
     )
   );
 
+  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  factory ConfigureServiceHostResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError value
+  ) => ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._(value);
+
+  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
+  factory ConfigureServiceHostResponse.createInvalidRecordIdError({
+    required _core.String expectedTable,
+    required _core.Iterable<_core.String> givenTables,
+  }) => ConfigureServiceHostResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError(
+      expectedTable: expectedTable,
+      givenTables: givenTables,
+    )
+  );
+
   /// Create a 'internal_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError value
@@ -3717,6 +3679,16 @@ sealed class ConfigureServiceHostResponse {
       );
       _serializerBuilder.addWrapperVariant(
         6,
+        "invalid_record_id_error",
+        "wrapInvalidRecordIdError",
+        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
+        "",
+        ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._,
+        (it) => it.value,
+        ordinal: ConfigureServiceHostResponse_kind.invalidRecordIdErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -3749,7 +3721,8 @@ enum ConfigureServiceHostResponse_kind {
   invalidConfigurationErrorWrapper(3),
   incompatibleEngineErrorWrapper(4),
   realmNotFoundErrorWrapper(5),
-  internalErrorWrapper(6);
+  invalidRecordIdErrorWrapper(6),
+  internalErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -3833,6 +3806,15 @@ final class ConfigureServiceHostResponse_realmNotFoundErrorWrapper extends _Conf
 
   @_core.override
   ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.realmNotFoundErrorWrapper;
+}
+
+final class ConfigureServiceHostResponse_invalidRecordIdErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+  final _lib_kernel_v1_errors.InvalidRecordIdError value;
+
+  ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._(this.value);
+
+  @_core.override
+  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final class ConfigureServiceHostResponse_internalErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
@@ -4165,8 +4147,7 @@ sealed class WatchOrganizationTopologyResponse {
     required HostEntrypoint entrypoint,
     required _core.bool canHostRealm,
     required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
-    required _core.int desiredTopologyRevision,
-    required _core.int appliedTopologyRevision,
+    required ReconciledRevision_orMutable topologyRevision,
     required HostRuntimeState_orMutable state,
   }) => WatchOrganizationTopologyResponse.wrapHostUpdated(
     ServiceHost(
@@ -4176,8 +4157,7 @@ sealed class WatchOrganizationTopologyResponse {
       entrypoint: entrypoint,
       canHostRealm: canHostRealm,
       supportedEngines: supportedEngines,
-      desiredTopologyRevision: desiredTopologyRevision,
-      appliedTopologyRevision: appliedTopologyRevision,
+      topologyRevision: topologyRevision,
       state: state,
     )
   );
@@ -4193,8 +4173,7 @@ sealed class WatchOrganizationTopologyResponse {
     required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
-    required _core.int desiredManifestRevision,
-    required _core.int appliedManifestRevision,
+    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => WatchOrganizationTopologyResponse.wrapRealmUpdated(
     RealmInstance(
@@ -4202,8 +4181,7 @@ sealed class WatchOrganizationTopologyResponse {
       ownerHostId: ownerHostId,
       revision: revision,
       targetEngine: targetEngine,
-      desiredManifestRevision: desiredManifestRevision,
-      appliedManifestRevision: appliedManifestRevision,
+      manifestRevision: manifestRevision,
       state: state,
     )
   );
@@ -4220,8 +4198,7 @@ sealed class WatchOrganizationTopologyResponse {
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
     required _core.int revision,
     required EngineTarget_orMutable target,
-    required _core.int desiredManifestRevision,
-    required _core.int appliedManifestRevision,
+    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => WatchOrganizationTopologyResponse.wrapEngineUpdated(
     EngineInstance(
@@ -4230,8 +4207,7 @@ sealed class WatchOrganizationTopologyResponse {
       realmId: realmId,
       revision: revision,
       target: target,
-      desiredManifestRevision: desiredManifestRevision,
-      appliedManifestRevision: appliedManifestRevision,
+      manifestRevision: manifestRevision,
       state: state,
     )
   );
@@ -4731,6 +4707,7 @@ final class WatchHostExecutionResponse_Desired_mutable implements WatchHostExecu
 ///   switch (e) {
 ///     case WatchHostExecutionResponse_unknown(): { ... }
 ///     case WatchHostExecutionResponse_desired(:var value): { ... }
+///     case WatchHostExecutionResponse_invalidRecordIdError(:var value): { ... }
 ///     case WatchHostExecutionResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -4756,6 +4733,22 @@ sealed class WatchHostExecutionResponse {
       topologyRevision: topologyRevision,
       realm: realm,
       engine: engine,
+    )
+  );
+
+  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  factory WatchHostExecutionResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError value
+  ) => WatchHostExecutionResponse_invalidRecordIdErrorWrapper._(value);
+
+  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
+  factory WatchHostExecutionResponse.createInvalidRecordIdError({
+    required _core.String expectedTable,
+    required _core.Iterable<_core.String> givenTables,
+  }) => WatchHostExecutionResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError(
+      expectedTable: expectedTable,
+      givenTables: givenTables,
     )
   );
 
@@ -4787,6 +4780,16 @@ sealed class WatchHostExecutionResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
+        "invalid_record_id_error",
+        "wrapInvalidRecordIdError",
+        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
+        "",
+        WatchHostExecutionResponse_invalidRecordIdErrorWrapper._,
+        (it) => it.value,
+        ordinal: WatchHostExecutionResponse_kind.invalidRecordIdErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -4815,7 +4818,8 @@ sealed class WatchHostExecutionResponse {
 enum WatchHostExecutionResponse_kind {
   unknown(0),
   desiredWrapper(1),
-  internalErrorWrapper(2);
+  invalidRecordIdErrorWrapper(2),
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -4863,6 +4867,15 @@ final class WatchHostExecutionResponse_desiredWrapper extends _WatchHostExecutio
 
   @_core.override
   WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.desiredWrapper;
+}
+
+final class WatchHostExecutionResponse_invalidRecordIdErrorWrapper extends _WatchHostExecutionResponse_wrapper {
+  final _lib_kernel_v1_errors.InvalidRecordIdError value;
+
+  WatchHostExecutionResponse_invalidRecordIdErrorWrapper._(this.value);
+
+  @_core.override
+  WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final class WatchHostExecutionResponse_internalErrorWrapper extends _WatchHostExecutionResponse_wrapper {
@@ -5225,6 +5238,7 @@ final class ReportHostExecutionResponse_StaleRevisionError_mutable implements Re
 ///     case ReportHostExecutionResponse_unknown(): { ... }
 ///     case ReportHostExecutionResponse_success(:var value): { ... }
 ///     case ReportHostExecutionResponse_staleRevisionError(:var value): { ... }
+///     case ReportHostExecutionResponse_invalidRecordIdError(:var value): { ... }
 ///     case ReportHostExecutionResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -5253,6 +5267,22 @@ sealed class ReportHostExecutionResponse {
   /// Same as `wrapStaleRevisionError(ReportHostExecutionResponse_StaleRevisionError(...))`.
   factory ReportHostExecutionResponse.createStaleRevisionError() => ReportHostExecutionResponse.wrapStaleRevisionError(
     ReportHostExecutionResponse_StaleRevisionError()
+  );
+
+  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
+  factory ReportHostExecutionResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError value
+  ) => ReportHostExecutionResponse_invalidRecordIdErrorWrapper._(value);
+
+  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
+  factory ReportHostExecutionResponse.createInvalidRecordIdError({
+    required _core.String expectedTable,
+    required _core.Iterable<_core.String> givenTables,
+  }) => ReportHostExecutionResponse.wrapInvalidRecordIdError(
+    _lib_kernel_v1_errors.InvalidRecordIdError(
+      expectedTable: expectedTable,
+      givenTables: givenTables,
+    )
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -5293,6 +5323,16 @@ sealed class ReportHostExecutionResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
+        "invalid_record_id_error",
+        "wrapInvalidRecordIdError",
+        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
+        "",
+        ReportHostExecutionResponse_invalidRecordIdErrorWrapper._,
+        (it) => it.value,
+        ordinal: ReportHostExecutionResponse_kind.invalidRecordIdErrorWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -5322,7 +5362,8 @@ enum ReportHostExecutionResponse_kind {
   unknown(0),
   successWrapper(1),
   staleRevisionErrorWrapper(2),
-  internalErrorWrapper(3);
+  invalidRecordIdErrorWrapper(3),
+  internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
@@ -5379,6 +5420,15 @@ final class ReportHostExecutionResponse_staleRevisionErrorWrapper extends _Repor
 
   @_core.override
   ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.staleRevisionErrorWrapper;
+}
+
+final class ReportHostExecutionResponse_invalidRecordIdErrorWrapper extends _ReportHostExecutionResponse_wrapper {
+  final _lib_kernel_v1_errors.InvalidRecordIdError value;
+
+  ReportHostExecutionResponse_invalidRecordIdErrorWrapper._(this.value);
+
+  @_core.override
+  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final class ReportHostExecutionResponse_internalErrorWrapper extends _ReportHostExecutionResponse_wrapper {

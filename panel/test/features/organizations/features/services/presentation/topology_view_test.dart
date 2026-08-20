@@ -51,29 +51,42 @@ void main() {
       expect(find.text("Host execution"), findsOneWidget);
     },
   );
+
+  testWidgets("standalone hosts can run advertised custom engines", (
+    tester,
+  ) async {
+    final host = _host(
+      entrypoint: skir.HostEntrypoint.standalone,
+      engineId: "conformance",
+    );
+    final topology = OrganizationTopology(
+      hosts: [host],
+      realmInstances: const [],
+      engineInstances: const [],
+    );
+    await tester.pumpTestApp(
+      child: HostExecutionInspector(
+        host: host,
+        topology: topology,
+        onSave: (_) async {},
+      ),
+    );
+
+    final executionSwitch = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, "Run an execution engine"),
+    );
+    expect(executionSwitch.onChanged, isNotNull);
+  });
 }
 
 OrganizationTopology _topology() {
-  final host = skir.ServiceHost(
-    hostId: recordId("service_host:paper1"),
-    serviceId: recordId("service:paper1"),
-    revision: 2,
-    entrypoint: skir.HostEntrypoint.paper,
-    canHostRealm: true,
-    supportedEngines: [
-      skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
-    ],
-    desiredTopologyRevision: 2,
-    appliedTopologyRevision: 2,
-    state: skir.HostRuntimeState.defaultInstance,
-  );
+  final host = _host();
   final realm = skir.RealmInstance(
     realmId: recordId("realm_instance:realm1"),
     ownerHostId: host.hostId,
     revision: 1,
     targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    desiredManifestRevision: 1,
-    appliedManifestRevision: 1,
+    manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
     state: skir.ChildRuntimeState.defaultInstance,
   );
   final engine = skir.EngineInstance(
@@ -82,8 +95,7 @@ OrganizationTopology _topology() {
     realmId: realm.realmId,
     revision: 1,
     target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    desiredManifestRevision: 1,
-    appliedManifestRevision: 1,
+    manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
     state: skir.ChildRuntimeState.defaultInstance,
   );
   return OrganizationTopology(
@@ -92,3 +104,19 @@ OrganizationTopology _topology() {
     engineInstances: [engine],
   );
 }
+
+skir.ServiceHost _host({
+  skir.HostEntrypoint entrypoint = skir.HostEntrypoint.paper,
+  String engineId = "paper",
+}) => skir.ServiceHost(
+  hostId: recordId("service_host:paper1"),
+  serviceId: recordId("service:paper1"),
+  revision: 2,
+  entrypoint: entrypoint,
+  canHostRealm: true,
+  supportedEngines: [
+    skir.SupportedEngine(engineId: engineId, supportedMajorVersions: [1]),
+  ],
+  topologyRevision: skir.ReconciledRevision(desired: 2, applied: 2),
+  state: skir.HostRuntimeState.defaultInstance,
+);

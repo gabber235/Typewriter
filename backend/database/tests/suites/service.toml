@@ -52,7 +52,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:no_version SET name = 'no_version', roles = [{ type: 'engine' }];"
 allow = false
-error_contains = "role-version-blank-error"
+error_contains = "role-version-invalid-error"
 
 [[cases]]
 name = "role_version_cannot_be_empty"
@@ -60,7 +60,7 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:empty_version SET name = 'empty_version', roles = [{ type: 'engine', version: '' }];"
 allow = false
-error_contains = "role-version-blank-error"
+error_contains = "role-version-invalid-error"
 
 [[cases]]
 name = "role_version_cannot_be_whitespace"
@@ -68,7 +68,17 @@ kind = "sql_expect"
 actor = "root"
 sql = "CREATE service:blank_version SET name = 'blank_version', roles = [{ type: 'engine', version: '   ' }];"
 allow = false
-error_contains = "role-version-blank-error"
+error_contains = "role-version-invalid-error"
+
+[[cases]]
+name = "role_version_accepts_semver_prerelease_and_build_metadata"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN (CREATE ONLY service:prerelease SET name = 'prerelease', roles = [{ type: 'engine', version: '1.2.0-rc.1+local.4' }]).roles[0].version;"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = "1.2.0-rc.1+local.4"
 
 [[cases]]
 name = "engine_role_cannot_have_name"

@@ -90,6 +90,10 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
         );
       case skir.ConfigureServiceHostResponse_realmNotFoundErrorWrapper():
         throw ApiException.notFound("Realm");
+      case skir.ConfigureServiceHostResponse_invalidRecordIdErrorWrapper(
+        :final value,
+      ):
+        throw ApiException.invalidRecordId(value);
       case skir.ConfigureServiceHostResponse_internalErrorWrapper():
         throw ApiException.internalServerError();
       case skir.ConfigureServiceHostResponse_unknown():

@@ -47,23 +47,31 @@
       "name": "guard_service_state",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "d5a824ebeea2d6854620ef2fd9913f4042117573e3a9cd8668a4b6d5658d4700",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
       "scope": "engine_instance",
-      "name": "applied_manifest_revision",
+      "name": "manifest_revision",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "c996a26ba4577d376b47784df8ab9479f95a4f301ca4df2b641d3b87d9867069",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "db400e4c71d0138d5aa7fc319d52dcaecf4886438e0923e430a9524dddccb83b",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "engine_instance",
-      "name": "desired_manifest_revision",
+      "name": "manifest_revision.applied",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "085a05e2d73a5b0fa808c37c42baf46e3005bebfaeea6749229a1d2d02aed359",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "9c9b45a06f22f20a1a078ee6c85bbb6baa34533d4b7537a6595e66aecc1170cd",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
+    },
+    {
+      "kind": "field",
+      "scope": "engine_instance",
+      "name": "manifest_revision.desired",
+      "source_path": "database/schema/service/topology.surql",
+      "statement_hash": "bb050277087eaabeec51387849b28c55c3f4c54ae3aeed1e2252f402dfd692b8",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -71,7 +79,7 @@
       "name": "owner_host_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "50ac8aa0449703dd978534cd0eef6bbbe7b4f0446b340487fe18f507e4cb559a",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -79,7 +87,7 @@
       "name": "realm_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "3579019e052ae48ec2aa6b30c785e459a1d958da06063dd3da5ac35189147c93",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -87,7 +95,7 @@
       "name": "revision",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "bd5ae86d36fab144d6243d45a2730d63ef1feec02f7069b62d8cb05a1bbe4d3a",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -95,39 +103,15 @@
       "name": "state",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "0deb6515949591a3a31c9fdd1b6a286f0b639f61be943cad02345f8bbaebd00b",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "engine_instance",
       "name": "state.active_artifact_version",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "09daa968b353ff20eb5a233591951bfdd62e603e19d4cf70663654577ae2bf76",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "engine_instance",
-      "name": "state.active_artifact_version.major",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "42880a979c15470a219816db6c41f96e96f04844ce4273f9ea0603e83bfce75c",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "engine_instance",
-      "name": "state.active_artifact_version.minor",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "7d47c62b8312b03f7524a7bb20cca599cd5ea00a3bdc1e3825ea3cf97653e9c6",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "engine_instance",
-      "name": "state.active_artifact_version.patch",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "2605aee00b7d41122d5e61b77f7f048f54e89e0ebdd7efb6804e3e0c0fc30c2d",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "23fcad5744c08b1b8471d9d691fccdc2da24388244d28b554a1699f377aff38b",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -135,7 +119,7 @@
       "name": "state.message",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "eb7849ce60f057f8e612f22254a7e7178a5d63b96f9cb714271913cc42a1969f",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -143,7 +127,7 @@
       "name": "state.status",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "10a5c9426fb3e82bb22a72fdd4a3bad20e8b6c57cc4af46f5bcc6a428a9f1702",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -151,7 +135,7 @@
       "name": "state.updated_at",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "43da6932b996bdee76de87b5209123e6096cb433b2d35a622ad3ecb2fc8b7ac5",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -159,7 +143,7 @@
       "name": "target",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "4277f64e6180b380ba7b217b05a5d68527751a137b27c0f109bf9205144a1b1a",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -167,15 +151,15 @@
       "name": "target.engine_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "48940822d2da379c8cc5db7bd2a4c305e6321864f5e2b435f8fc4476c6128744",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "engine_instance",
       "name": "target.major_version",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "028d3db8418cca9a888e014e5bcad20698327cd33e90fde0af2ee8a307d560a9",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "bbc55bf775f870a9a8e06d18c432c5b5093e7e30f5776cd1eca81882d427a6d4",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -356,18 +340,26 @@
     {
       "kind": "field",
       "scope": "realm_instance",
-      "name": "applied_manifest_revision",
+      "name": "manifest_revision",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "05d961ab707a6807228056f9ae12f216db7ab10d1985b406d9448173030f7009",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "d8dac151446e2ec4651b7486acc61cc7219f2554b943e3fd65fc964a142a0011",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "realm_instance",
-      "name": "desired_manifest_revision",
+      "name": "manifest_revision.applied",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "32afd829af63d6d3fa20f5abad5f0d9914788697953cf417ba1eaa9ed49e929b",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "a2501451a03bb68585611f2f2961963c79c5fa08040bd169ca907a82df3f03cd",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
+    },
+    {
+      "kind": "field",
+      "scope": "realm_instance",
+      "name": "manifest_revision.desired",
+      "source_path": "database/schema/service/topology.surql",
+      "statement_hash": "9920f9b810b93ec982f23c1bf8459320dcaf180bc85da901e02ca574bd93612a",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -375,7 +367,7 @@
       "name": "owner_host_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "f01377fe34ebe6b3771a4072cd4917937ea41f1712f1deeb0a9c3d422d1daec5",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -383,7 +375,7 @@
       "name": "revision",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "3e5d834d1db5d53308bc9edce853b1827eac8f71d73997d1f9af0fe0b387249c",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -391,39 +383,15 @@
       "name": "state",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "afbc5aaaf0b9015ae7bf21897b14d23258c508b928b4600f2a1cc34099056db8",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "realm_instance",
       "name": "state.active_artifact_version",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "ec449f6247d5c255cca17645c16093ffdcef382026f7762e8716ed5c53cc1ab8",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "realm_instance",
-      "name": "state.active_artifact_version.major",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "1d37a772903827c7421db56cd7b30558262ad6d5c8d3b93e123a095dd4d9192a",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "realm_instance",
-      "name": "state.active_artifact_version.minor",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "d876b8e5814abac9d0bc0224f81ccbc3ed86fe38b68e104d5d7f8849e69eb3d2",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "realm_instance",
-      "name": "state.active_artifact_version.patch",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "67ec8fb0658e9528d6ddd9af968fbd023cd0c335882c3a2ca8fea07a5193f9fd",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "13d361e3e174bd5ee3a5f36f2f9792248104b17460a64793c0f2460976dfcde7",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -431,7 +399,7 @@
       "name": "state.message",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "821917b3b9ee29be359ec8c2479f821fc5ded9e69f643b1426120b5d5751a6c2",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -439,7 +407,7 @@
       "name": "state.status",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "3350c3cd4441bf2aef710736706944972f6da1f6cc40d64cbfa7e437a9d62f42",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -447,7 +415,7 @@
       "name": "state.updated_at",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "2bf4b9676b266f838b5d585550b13e2334b6037021161721d68b2244382c92eb",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -455,7 +423,7 @@
       "name": "target_engine",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "8539e01fb98205943c217d75d7432594727bc3b7337bd3266779c3b5de479b74",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -463,15 +431,15 @@
       "name": "target_engine.engine_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "314ea86abaecd634e00b2f03e0e36e5fe485a7628c07b6d608314526099a3ca9",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "realm_instance",
       "name": "target_engine.major_version",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "7b1f87126eee338bcd2796f6ded6a073f785ad3c087a2e63ab8cb7112e05f1e2",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "b8669131ec5c1e7f7716e42f25fc51b08a34dcc2129bbc717c83b70964bd0749",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -511,7 +479,7 @@
       "name": "created_at",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "4956d30a132e27ad02529507fb92e9d512cc514307e3a414a1e31ec2199495c5",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -519,7 +487,7 @@
       "name": "name",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "479f6d0f2c762894b9023bcffd86480f70aad3259165662f378167252b1846a3",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -527,7 +495,7 @@
       "name": "organization",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "5d2bdb8ee1f873a5eddda6e6b79b41282bb92920d3a2c4de1e0a00df40212141",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -535,7 +503,7 @@
       "name": "registration",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "73ba5ef1f2eef5c86d1231748a68d619c93ff47ec1e9c9c34bea4a73558eabba",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -543,7 +511,7 @@
       "name": "registration.expires_at",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "e50a04d35132d2fcfc0f4a4a6db9711dc2303bac596621686c13c17e43072e72",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -551,7 +519,7 @@
       "name": "registration.token",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "e8c36b4a92c2a4138807c25c2db92161b4743640a69a62510749718f3e5f6e77",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -559,7 +527,7 @@
       "name": "revision",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "aaf6adfeb541504c2123ec6c3c0bc64761bc0d34f9372f489eb6e8bbd82bc8c5",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -567,7 +535,7 @@
       "name": "roles",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "6483e8322a729fa6604aa7a96f658e9735702f32ba5e552da6004d7aff8f08d9",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -575,7 +543,7 @@
       "name": "roles.*",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "978ac85466f9f79343b1c8a8a62ae5c9aefb0d3feb76111cc98609a81a4fddda",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -583,7 +551,7 @@
       "name": "roles.*.name",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "fbb6da2fb4089f571eb69c67246c5f4b66087f88099adeea5a6192e549ce834f",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -591,15 +559,15 @@
       "name": "roles.*.type",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "1789161cabf766a6938ad12ccd21e18b9cb247b361a878828d99d50d35b31e6a",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
       "scope": "service",
       "name": "roles.*.version",
       "source_path": "database/schema/service/service.surql",
-      "statement_hash": "fd6be7ca3fe296c6bf71b139ce92ecb335dc18c00ba773b2cc55eddc36355c48",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "statement_hash": "55a813159d7b4154049f06a16251048836c054294e4d631ee73535935747fae9",
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -607,7 +575,7 @@
       "name": "state",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "4d348c1e54ca3bdb00d0b72b9dc41c1a9eb0acb199b54c7113eaf49a985fe7a3",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -615,7 +583,7 @@
       "name": "state.last_seen",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "2cb8185ea006669a7cc120226f039b21d95c1e6867c90b876e1ccef50889c19f",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -623,15 +591,7 @@
       "name": "state.status",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "f7e4329eaee27e981f353fb22efb404c05c350620e0b7327ca3dd0a7026c0e85",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
-    },
-    {
-      "kind": "field",
-      "scope": "service_host",
-      "name": "applied_topology_revision",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "19bb7077e064726c23b254a1c89904f92d1507ab0bf500c72df645baa7260d33",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "field",
@@ -639,15 +599,7 @@
       "name": "can_host_realm",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "b9cc79e85357a5dfbc9aab15616db988dbcd62915f21c9e20a17100f69a6c2e1",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
-    },
-    {
-      "kind": "field",
-      "scope": "service_host",
-      "name": "desired_topology_revision",
-      "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "ca9f1410b311ae3d9d0ba55da417c1bd58017e648353277ad9fbc0216a19592e",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -655,7 +607,7 @@
       "name": "entrypoint",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "a613fd931893a00df6736dccf858678d2f058067ff0665fd423d470664dc5dba",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -663,7 +615,7 @@
       "name": "revision",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "6f56eb66787180f7ca54b52fb25c4f90bd7031e1b1229c763372025331ef3b5a",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -671,7 +623,7 @@
       "name": "service_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "a42478aa786b8c32f006b07caac78a83890746a03afe8144efd19c9579059d63",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -679,7 +631,7 @@
       "name": "state",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "3420901bd753ca7acac311c1cc3f38e38a3f24e967f54cc8c1adb1cd5b5c557d",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -687,7 +639,7 @@
       "name": "state.message",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "3a4efacb6e120e06950632d4105d8d855c7b8a2f5d560eefa057d28e92dfd88c",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -695,7 +647,7 @@
       "name": "state.status",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "35f3d258d62d4f7544102495caab6568fb32d9e3071f3e35b0b419ae8ec7b5e1",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -703,7 +655,7 @@
       "name": "state.updated_at",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "9fb81cc94d1b972d3efac0556ed12eeb343961ed1f22bcca4384b93eb2bc9790",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -711,7 +663,7 @@
       "name": "supported_engines",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "8d58c69ecbfa29a7d54765d851105c17b8f8b4499eb272dc49d1e7b90f4e6ae8",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -719,7 +671,7 @@
       "name": "supported_engines.*",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "8a6e6d08a02629f92ecf332e71828b24401beb22ca0c6752e85a46b7d4e37a75",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -727,7 +679,7 @@
       "name": "supported_engines.*.engine_id",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "ae1262134c3804c3c185fa3e0af12e3cc74f03c05b5b215544fec386743fbfa8",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -735,15 +687,39 @@
       "name": "supported_engines.*.supported_major_versions",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "e66ccd1cfbc65bed28566495bd40d3441cd7a4068350d40c5fddc725f8599f1e",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
       "scope": "service_host",
       "name": "supported_engines.*.supported_major_versions.*",
       "source_path": "database/schema/service/topology.surql",
-      "statement_hash": "7e97be25d6a3a5568683658bf3400425722ca76d3ac664e22d8680da9a94b7ac",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "statement_hash": "f89c4514cd1fbda4dfc822e2079f51bd65c63c24a289fd732d3b4f18567def95",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
+    },
+    {
+      "kind": "field",
+      "scope": "service_host",
+      "name": "topology_revision",
+      "source_path": "database/schema/service/topology.surql",
+      "statement_hash": "89d5c62a12166999047b7a500c6631070970f93ea277b49e6e5743cbf75a9910",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
+    },
+    {
+      "kind": "field",
+      "scope": "service_host",
+      "name": "topology_revision.applied",
+      "source_path": "database/schema/service/topology.surql",
+      "statement_hash": "1da6094d09dae472ced4630184d4058227dc65016d9d50c6656c24d412584456",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
+    },
+    {
+      "kind": "field",
+      "scope": "service_host",
+      "name": "topology_revision.desired",
+      "source_path": "database/schema/service/topology.surql",
+      "statement_hash": "1f80daf998059763fa63ca23aa68505c65d837dea074a5557fd3254876b2d236",
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "field",
@@ -887,23 +863,23 @@
       "name": "fn::service::has_role",
       "source_path": "database/schema/service/functions.surql",
       "statement_hash": "d09551b59277adba7e5397e2a5a4908dc6e619c74b514f16d90d3a47592b62a4",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
       "scope": null,
       "name": "fn::service::valid_engine_target",
       "source_path": "database/schema/service/functions.surql",
-      "statement_hash": "ef422a7367e539f07ac4d8336d7065d732eb79392e5cda2bf36e62456fe3e586",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "statement_hash": "9b5d45a60948d6bb2e8b4eb8e79b604f0aa456f69d0a4b87d34f014fd8c21314",
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
       "scope": null,
       "name": "fn::service::valid_role",
       "source_path": "database/schema/service/functions.surql",
-      "statement_hash": "51f192d820c6ceb26e2666de986709c726ae9bc022ab40495f1cf11685fc0377",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "statement_hash": "ca1b3bfa065eed345da233cc73f2405111716d59a702b6d3773bcb1899c65684",
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
@@ -911,7 +887,7 @@
       "name": "fn::service::valid_roles",
       "source_path": "database/schema/service/functions.surql",
       "statement_hash": "708167b4e2ab588ed7e088d2e051ea20406237f861c34297186f5237172930e6",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
@@ -919,15 +895,15 @@
       "name": "fn::service::valid_state",
       "source_path": "database/schema/service/functions.surql",
       "statement_hash": "9a18a187c61a6bd644385f083796fb7adb5b22c1f80a6fe24adba872bfb8cc6c",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
       "scope": null,
       "name": "fn::service::valid_supported_engine",
       "source_path": "database/schema/service/functions.surql",
-      "statement_hash": "38bcc9a397eea6889c04868af4f8c4fd81cd938dc2d6adce131a03907daeda64",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "statement_hash": "52dc10246ce7c53a22f1644724f0acbc4880d7d57a7d38d76203c7ff6dd04cef",
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "function",
@@ -935,7 +911,7 @@
       "name": "fn::service::valid_supported_engines",
       "source_path": "database/schema/service/functions.surql",
       "statement_hash": "7e6ffd744fa87a6fd3e8aad9bfa6665a7bf3d6e4542ccd4f216d80348d9155be",
-      "file_hash": "b3ec71e7977b0ef29e7a37bcb4ef53d669afada951da9f5622cb067d5a7292cf"
+      "file_hash": "b493f6df8991e91445baf1dd0d27121c9141a5cbf841e4792f7765eca243daac"
     },
     {
       "kind": "index",
@@ -943,7 +919,7 @@
       "name": "engine_instance_by_owner",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "95511dcfc0e4e814187295da0d8ac1f2e48464ae0f1189c6ef74382e683feb65",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "index",
@@ -951,7 +927,7 @@
       "name": "engine_instance_by_realm",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "43ba7d6e3cead78831822202d93c63b7a8b6226ea0e03f026c59a406969b4853",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "index",
@@ -1015,7 +991,7 @@
       "name": "realm_instance_by_owner",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "7b80d03d36cc058e90b8b5ce140b5ea4a688e45cc3f65f21b0fd4246ee99ad33",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "index",
@@ -1039,7 +1015,7 @@
       "name": "service_by_organization",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "dc327b06d805a46530c46289fd53a641923eda2fd906948613581ccb95104ede",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "index",
@@ -1047,7 +1023,7 @@
       "name": "service_registration_token",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "75ee222faba05221a001f900d390b7fe105589966857731c13b3852dc46eb87f",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "index",
@@ -1055,7 +1031,7 @@
       "name": "service_host_by_service",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "d34673b51240b391275cac7988455ec423195046b12dd707708f99e7f86262d7",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "index",
@@ -1087,7 +1063,7 @@
       "name": "engine_instance",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "f4c25c23d1a6a3bb496648da6c80d2b2b61d3a91f922adb28d8794ad0ce51abb",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "table",
@@ -1127,7 +1103,7 @@
       "name": "realm_instance",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "1d0ddeb597dc70d12bb5ffb25764a74002528dc07602d620a2e95ca666cc7f1f",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "table",
@@ -1143,7 +1119,7 @@
       "name": "service",
       "source_path": "database/schema/service/service.surql",
       "statement_hash": "88bf0d8facddfc9ef782b0a492dca9182f258bf89bf5c94339f22a4a8e889766",
-      "file_hash": "752450d3743c0bd1dbafa0b48712c0ecdf88b02bdb5697db8529e05af7730317"
+      "file_hash": "de4af2a53a7359cf148896371d92bf70ea3e73763a0ccb7f0b64fb0711a45910"
     },
     {
       "kind": "table",
@@ -1151,7 +1127,7 @@
       "name": "service_host",
       "source_path": "database/schema/service/topology.surql",
       "statement_hash": "0c9eee261befc42e1025537827908efc36255ad9bb5146111446913c05aa0bcd",
-      "file_hash": "54a562e76d67adbd588423fecbdd875e374075c4d6c6e01595dfa9dfd9d07a2c"
+      "file_hash": "20989ffbbcc712aa95a4728e97d5e46a5212dd3e9f7a051b817039793be13170"
     },
     {
       "kind": "table",

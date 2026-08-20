@@ -21,8 +21,7 @@ skir.ServiceHost _host({String id = "host1", int revision = 1}) =>
       supportedEngines: [
         skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
       ],
-      desiredTopologyRevision: 1,
-      appliedTopologyRevision: 1,
+      topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
       state: skir.HostRuntimeState.defaultInstance,
     );
 
@@ -31,8 +30,7 @@ skir.RealmInstance _realm() => skir.RealmInstance(
   ownerHostId: _host().hostId,
   revision: 1,
   targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-  desiredManifestRevision: 1,
-  appliedManifestRevision: 1,
+  manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
   state: skir.ChildRuntimeState.defaultInstance,
 );
 

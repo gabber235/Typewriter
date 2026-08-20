@@ -14,42 +14,41 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct SemanticVersion
+// struct ReconciledRevision
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct SemanticVersion {
-    pub major: i32,
-    pub minor: i32,
-    pub patch: i32,
+pub struct ReconciledRevision {
+    pub desired: i64,
+    pub applied: i64,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SemanticVersion>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReconciledRevision>>,
 }
 
-impl SemanticVersion {
-    pub fn default_ref() -> &'static SemanticVersion {
-        static D: std::sync::LazyLock<SemanticVersion> = std::sync::LazyLock::new(SemanticVersion::default);
+impl ReconciledRevision {
+    pub fn default_ref() -> &'static ReconciledRevision {
+        static D: std::sync::LazyLock<ReconciledRevision> = std::sync::LazyLock::new(ReconciledRevision::default);
         &D
     }
 }
 
-impl SemanticVersion {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SemanticVersion> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SemanticVersion>> =
+impl ReconciledRevision {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReconciledRevision> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReconciledRevision>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "service/v1/topology.skir",
-                    "SemanticVersion",
+                    "ReconciledRevision",
                     "",
-                    |x: &SemanticVersion| &x._unrecognized,
-                    |x: &mut SemanticVersion, u| x._unrecognized = u,
+                    |x: &ReconciledRevision| &x._unrecognized,
+                    |x: &mut ReconciledRevision, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<SemanticVersion> {
+    pub fn serializer() -> crate::skir_client::Serializer<ReconciledRevision> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(SemanticVersion::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter())
     }
 }
 
@@ -331,7 +330,7 @@ impl ChildRuntimeStatus {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ChildRuntimeState {
     pub status: ChildRuntimeStatus,
-    pub active_artifact_version: Option<SemanticVersion>,
+    pub active_artifact_version: Option<String>,
     pub message: Option<String>,
     pub updated_at: std::time::SystemTime,
     /// Set this to None when you're creating a struct.
@@ -389,8 +388,7 @@ pub struct ServiceHost {
     pub entrypoint: HostEntrypoint,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngine>,
-    pub desired_topology_revision: i64,
-    pub applied_topology_revision: i64,
+    pub topology_revision: ReconciledRevision,
     pub state: HostRuntimeState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ServiceHost>>,
@@ -433,8 +431,7 @@ pub struct RealmInstance {
     pub owner_host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub revision: i64,
     pub target_engine: EngineTarget,
-    pub desired_manifest_revision: i64,
-    pub applied_manifest_revision: i64,
+    pub manifest_revision: ReconciledRevision,
     pub state: ChildRuntimeState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmInstance>>,
@@ -478,8 +475,7 @@ pub struct EngineInstance {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub revision: i64,
     pub target: EngineTarget,
-    pub desired_manifest_revision: i64,
-    pub applied_manifest_revision: i64,
+    pub manifest_revision: ReconciledRevision,
     pub state: ChildRuntimeState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EngineInstance>>,
@@ -952,6 +948,7 @@ pub enum ConfigureServiceHostResponse {
     InvalidConfigurationError(Box<ConfigureServiceHostResponse_InvalidConfigurationError>),
     IncompatibleEngineError(Box<ConfigureServiceHostResponse_IncompatibleEngineError>),
     RealmNotFoundError(Box<ConfigureServiceHostResponse_RealmNotFoundError>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -973,7 +970,8 @@ impl ConfigureServiceHostResponse {
                         ConfigureServiceHostResponse::InvalidConfigurationError(_) => 3,
                         ConfigureServiceHostResponse::IncompatibleEngineError(_) => 4,
                         ConfigureServiceHostResponse::RealmNotFoundError(_) => 5,
-                        ConfigureServiceHostResponse::InternalError(_) => 6,
+                        ConfigureServiceHostResponse::InvalidRecordIdError(_) => 6,
+                        ConfigureServiceHostResponse::InternalError(_) => 7,
                     },
                     |u| ConfigureServiceHostResponse::Unknown(Some(u)),
                     |x: &ConfigureServiceHostResponse| match x { ConfigureServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1203,6 +1201,7 @@ impl WatchHostExecutionResponse_Desired {
 pub enum WatchHostExecutionResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchHostExecutionResponse>>),
     Desired(Box<WatchHostExecutionResponse_Desired>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1220,7 +1219,8 @@ impl WatchHostExecutionResponse {
                     |x: &WatchHostExecutionResponse| match x {
                         WatchHostExecutionResponse::Unknown(_) => 0,
                         WatchHostExecutionResponse::Desired(_) => 1,
-                        WatchHostExecutionResponse::InternalError(_) => 2,
+                        WatchHostExecutionResponse::InvalidRecordIdError(_) => 2,
+                        WatchHostExecutionResponse::InternalError(_) => 3,
                     },
                     |u| WatchHostExecutionResponse::Unknown(Some(u)),
                     |x: &WatchHostExecutionResponse| match x { WatchHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1361,6 +1361,7 @@ pub enum ReportHostExecutionResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ReportHostExecutionResponse>>),
     Success(Box<ReportHostExecutionResponse_Success>),
     StaleRevisionError(Box<ReportHostExecutionResponse_StaleRevisionError>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1379,7 +1380,8 @@ impl ReportHostExecutionResponse {
                         ReportHostExecutionResponse::Unknown(_) => 0,
                         ReportHostExecutionResponse::Success(_) => 1,
                         ReportHostExecutionResponse::StaleRevisionError(_) => 2,
-                        ReportHostExecutionResponse::InternalError(_) => 3,
+                        ReportHostExecutionResponse::InvalidRecordIdError(_) => 3,
+                        ReportHostExecutionResponse::InternalError(_) => 4,
                     },
                     |u| ReportHostExecutionResponse::Unknown(Some(u)),
                     |x: &ReportHostExecutionResponse| match x { ReportHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1404,10 +1406,9 @@ fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> =
         std::sync::LazyLock::new(|| {
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SemanticVersion> = SemanticVersion::_adapter() as *const _ as *mut _;
-                (*a).add_field("major", 0, crate::skir_client::Serializer::int32(), "", |x: &SemanticVersion| &x.major, |x: &mut SemanticVersion, v| x.major = v);
-                (*a).add_field("minor", 1, crate::skir_client::Serializer::int32(), "", |x: &SemanticVersion| &x.minor, |x: &mut SemanticVersion, v| x.minor = v);
-                (*a).add_field("patch", 2, crate::skir_client::Serializer::int32(), "", |x: &SemanticVersion| &x.patch, |x: &mut SemanticVersion, v| x.patch = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ReconciledRevision> = ReconciledRevision::_adapter() as *const _ as *mut _;
+                (*a).add_field("desired", 0, crate::skir_client::Serializer::int64(), "", |x: &ReconciledRevision| &x.desired, |x: &mut ReconciledRevision, v| x.desired = v);
+                (*a).add_field("applied", 1, crate::skir_client::Serializer::int64(), "", |x: &ReconciledRevision| &x.applied, |x: &mut ReconciledRevision, v| x.applied = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1458,7 +1459,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ChildRuntimeState> = ChildRuntimeState::_adapter() as *const _ as *mut _;
                 (*a).add_field("status", 0, crate::skir_client::internal::enum_serializer_from_static(ChildRuntimeStatus::_adapter()), "", |x: &ChildRuntimeState| &x.status, |x: &mut ChildRuntimeState, v| x.status = v);
-                (*a).add_field("active_artifact_version", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(SemanticVersion::_adapter())), "", |x: &ChildRuntimeState| &x.active_artifact_version, |x: &mut ChildRuntimeState, v| x.active_artifact_version = v);
+                (*a).add_field("active_artifact_version", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ChildRuntimeState| &x.active_artifact_version, |x: &mut ChildRuntimeState, v| x.active_artifact_version = v);
                 (*a).add_field("message", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ChildRuntimeState| &x.message, |x: &mut ChildRuntimeState, v| x.message = v);
                 (*a).add_field("updated_at", 3, crate::skir_client::Serializer::timestamp(), "", |x: &ChildRuntimeState| &x.updated_at, |x: &mut ChildRuntimeState, v| x.updated_at = v);
                 (*a).finalize();
@@ -1471,9 +1472,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("entrypoint", 3, crate::skir_client::internal::enum_serializer_from_static(HostEntrypoint::_adapter()), "", |x: &ServiceHost| &x.entrypoint, |x: &mut ServiceHost, v| x.entrypoint = v);
                 (*a).add_field("can_host_realm", 4, crate::skir_client::Serializer::bool(), "", |x: &ServiceHost| &x.can_host_realm, |x: &mut ServiceHost, v| x.can_host_realm = v);
                 (*a).add_field("supported_engines", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SupportedEngine::_adapter())), "", |x: &ServiceHost| &x.supported_engines, |x: &mut ServiceHost, v| x.supported_engines = v);
-                (*a).add_field("desired_topology_revision", 6, crate::skir_client::Serializer::int64(), "", |x: &ServiceHost| &x.desired_topology_revision, |x: &mut ServiceHost, v| x.desired_topology_revision = v);
-                (*a).add_field("applied_topology_revision", 7, crate::skir_client::Serializer::int64(), "", |x: &ServiceHost| &x.applied_topology_revision, |x: &mut ServiceHost, v| x.applied_topology_revision = v);
-                (*a).add_field("state", 8, crate::skir_client::internal::struct_serializer_from_static(HostRuntimeState::_adapter()), "", |x: &ServiceHost| &x.state, |x: &mut ServiceHost, v| x.state = v);
+                (*a).add_field("topology_revision", 6, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &ServiceHost| &x.topology_revision, |x: &mut ServiceHost, v| x.topology_revision = v);
+                (*a).add_field("state", 7, crate::skir_client::internal::struct_serializer_from_static(HostRuntimeState::_adapter()), "", |x: &ServiceHost| &x.state, |x: &mut ServiceHost, v| x.state = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1482,9 +1482,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("owner_host_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInstance| &x.owner_host_id, |x: &mut RealmInstance, v| x.owner_host_id = v);
                 (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.revision, |x: &mut RealmInstance, v| x.revision = v);
                 (*a).add_field("target_engine", 3, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &RealmInstance| &x.target_engine, |x: &mut RealmInstance, v| x.target_engine = v);
-                (*a).add_field("desired_manifest_revision", 4, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.desired_manifest_revision, |x: &mut RealmInstance, v| x.desired_manifest_revision = v);
-                (*a).add_field("applied_manifest_revision", 5, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.applied_manifest_revision, |x: &mut RealmInstance, v| x.applied_manifest_revision = v);
-                (*a).add_field("state", 6, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &RealmInstance| &x.state, |x: &mut RealmInstance, v| x.state = v);
+                (*a).add_field("manifest_revision", 4, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &RealmInstance| &x.manifest_revision, |x: &mut RealmInstance, v| x.manifest_revision = v);
+                (*a).add_field("state", 5, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &RealmInstance| &x.state, |x: &mut RealmInstance, v| x.state = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1494,9 +1493,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("realm_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineInstance| &x.realm_id, |x: &mut EngineInstance, v| x.realm_id = v);
                 (*a).add_field("revision", 3, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.revision, |x: &mut EngineInstance, v| x.revision = v);
                 (*a).add_field("target", 4, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &EngineInstance| &x.target, |x: &mut EngineInstance, v| x.target = v);
-                (*a).add_field("desired_manifest_revision", 5, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.desired_manifest_revision, |x: &mut EngineInstance, v| x.desired_manifest_revision = v);
-                (*a).add_field("applied_manifest_revision", 6, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.applied_manifest_revision, |x: &mut EngineInstance, v| x.applied_manifest_revision = v);
-                (*a).add_field("state", 7, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &EngineInstance| &x.state, |x: &mut EngineInstance, v| x.state = v);
+                (*a).add_field("manifest_revision", 5, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &EngineInstance| &x.manifest_revision, |x: &mut EngineInstance, v| x.manifest_revision = v);
+                (*a).add_field("state", 6, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &EngineInstance| &x.state, |x: &mut EngineInstance, v| x.state = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1568,7 +1566,8 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("invalid_configuration_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_InvalidConfigurationError::_adapter()), "", |v| ConfigureServiceHostResponse::InvalidConfigurationError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InvalidConfigurationError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("incompatible_engine_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_IncompatibleEngineError::_adapter()), "", |v| ConfigureServiceHostResponse::IncompatibleEngineError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::IncompatibleEngineError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("realm_not_found_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_RealmNotFoundError::_adapter()), "", |v| ConfigureServiceHostResponse::RealmNotFoundError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::RealmNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 6, 6, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ConfigureServiceHostResponse::InternalError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 6, 6, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ConfigureServiceHostResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 7, 7, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ConfigureServiceHostResponse::InternalError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1607,7 +1606,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse> = WatchHostExecutionResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("desired", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchHostExecutionResponse_Desired::_adapter()), "", |v| WatchHostExecutionResponse::Desired(Box::new(v)), |x| match x { WatchHostExecutionResponse::Desired(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchHostExecutionResponse::InternalError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 2, 2, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| WatchHostExecutionResponse::InvalidRecordIdError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchHostExecutionResponse::InternalError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1630,7 +1630,8 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse> = ReportHostExecutionResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_Success::_adapter()), "", |v| ReportHostExecutionResponse::Success(Box::new(v)), |x| match x { ReportHostExecutionResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("stale_revision_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_StaleRevisionError::_adapter()), "", |v| ReportHostExecutionResponse::StaleRevisionError(Box::new(v)), |x| match x { ReportHostExecutionResponse::StaleRevisionError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 3, 3, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ReportHostExecutionResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

@@ -1,10 +1,9 @@
-import { InternalError } from "kernel/v1/errors.skir";
+import { InternalError, InvalidRecordIdError } from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
-struct SemanticVersion {
-  major: int32;
-  minor: int32;
-  patch: int32;
+struct ReconciledRevision {
+  desired: int64;
+  applied: int64;
 }
 
 struct EngineTarget {
@@ -48,7 +47,7 @@ enum ChildRuntimeStatus {
 
 struct ChildRuntimeState {
   status: ChildRuntimeStatus;
-  active_artifact_version: SemanticVersion?;
+  active_artifact_version: string?;
   message: string?;
   updated_at: timestamp;
 }
@@ -60,8 +59,7 @@ struct ServiceHost {
   entrypoint: HostEntrypoint;
   can_host_realm: bool;
   supported_engines: [SupportedEngine];
-  desired_topology_revision: int64;
-  applied_topology_revision: int64;
+  topology_revision: ReconciledRevision;
   state: HostRuntimeState;
 }
 
@@ -70,8 +68,7 @@ struct RealmInstance {
   owner_host_id: RecordId;
   revision: int64;
   target_engine: EngineTarget;
-  desired_manifest_revision: int64;
-  applied_manifest_revision: int64;
+  manifest_revision: ReconciledRevision;
   state: ChildRuntimeState;
 }
 
@@ -81,8 +78,7 @@ struct EngineInstance {
   realm_id: RecordId;
   revision: int64;
   target: EngineTarget;
-  desired_manifest_revision: int64;
-  applied_manifest_revision: int64;
+  manifest_revision: ReconciledRevision;
   state: ChildRuntimeState;
 }
 
@@ -136,6 +132,7 @@ method ConfigureServiceHost(
     realm_id: RecordId;
   };
 
+  invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934201;
 
@@ -166,6 +163,7 @@ method WatchHostExecution(
     engine: EngineInstance?;
   };
 
+  invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934203;
 
@@ -179,5 +177,6 @@ method ReportHostExecution(
 ): enum {
   success: struct {};
   stale_revision_error: struct {};
+  invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934204;

@@ -40,7 +40,7 @@ async fn unbound_service_receives_persisted_registration_token(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1' }]",
+            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1.0.0' }]",
         )
         .execute()
         .await?;
@@ -84,7 +84,7 @@ async fn expiring_registration_token_is_reused_and_lease_is_renewed(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
+            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
         )
         .execute()
         .await?;
@@ -116,7 +116,7 @@ async fn healthy_registration_lease_is_not_rewritten(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 3m }",
+            "CREATE service:unbound SET name = 'unbound', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 3m }",
         )
         .execute()
         .await?;
@@ -147,7 +147,7 @@ async fn bound_service_returns_organization_without_registration_token(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', roles = [{ type: 'engine', version: '1' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
         )
         .execute()
         .await?;

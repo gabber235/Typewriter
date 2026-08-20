@@ -24,8 +24,7 @@ OrganizationTopology topologyScenario({bool distributed = true}) {
     ownerHostId: realmHost.hostId,
     revision: 3,
     targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    desiredManifestRevision: 12,
-    appliedManifestRevision: 12,
+    manifestRevision: skir.ReconciledRevision(desired: 12, applied: 12),
     state: _childState(skir.ChildRuntimeStatus.active),
   );
   final engine = skir.EngineInstance(
@@ -34,8 +33,10 @@ OrganizationTopology topologyScenario({bool distributed = true}) {
     realmId: realm.realmId,
     revision: 5,
     target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    desiredManifestRevision: 12,
-    appliedManifestRevision: distributed ? 11 : 12,
+    manifestRevision: skir.ReconciledRevision(
+      desired: 12,
+      applied: distributed ? 11 : 12,
+    ),
     state: _childState(
       distributed
           ? skir.ChildRuntimeStatus.drifted
@@ -61,13 +62,18 @@ skir.ServiceHost _host({
   revision: desiredRevision,
   entrypoint: entrypoint,
   canHostRealm: true,
-  supportedEngines: entrypoint == skir.HostEntrypoint.paper
-      ? [
-          skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
-        ]
-      : [],
-  desiredTopologyRevision: desiredRevision,
-  appliedTopologyRevision: appliedRevision,
+  supportedEngines: [
+    skir.SupportedEngine(
+      engineId: entrypoint == skir.HostEntrypoint.paper
+          ? "paper"
+          : "conformance",
+      supportedMajorVersions: [1],
+    ),
+  ],
+  topologyRevision: skir.ReconciledRevision(
+    desired: desiredRevision,
+    applied: appliedRevision,
+  ),
   state: skir.HostRuntimeState(
     status: desiredRevision == appliedRevision
         ? skir.HostRuntimeStatus.active
@@ -80,7 +86,7 @@ skir.ServiceHost _host({
 skir.ChildRuntimeState _childState(skir.ChildRuntimeStatus status) =>
     skir.ChildRuntimeState(
       status: status,
-      activeArtifactVersion: skir.SemanticVersion(major: 1, minor: 4, patch: 2),
+      activeArtifactVersion: "1.4.2",
       message: null,
       updatedAt: DateTime.utc(2026, 8, 19),
     );

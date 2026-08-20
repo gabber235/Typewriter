@@ -61,11 +61,11 @@ pub async fn handle_configure(
         "host.expected_revision" = request.expected_revision,
     );
 
-    if request.host_id.table != "service_host" {
-        return Ok(invalid_configuration(
-            "Host id must reference a service host",
-        ));
-    }
+    wasmcloud_utils::validate_record_ids!(
+        ConfigureServiceHostResponse,
+        request.host_id,
+        "service_host"
+    );
     let realm_target = request
         .execution
         .realm
@@ -95,11 +95,11 @@ pub async fn handle_configure(
     {
         Some(EngineRealmSelection::HostedRealm) | None => None,
         Some(EngineRealmSelection::ExistingRealm(selection)) => {
-            if selection.realm_id.table != "realm_instance" {
-                return Ok(invalid_configuration(
-                    "Realm id must reference a Realm instance",
-                ));
-            }
+            wasmcloud_utils::validate_record_ids!(
+                ConfigureServiceHostResponse,
+                selection.realm_id,
+                "realm_instance"
+            );
             Some(RecordId::from(&selection.realm_id))
         }
         Some(EngineRealmSelection::Unknown(_)) => {
@@ -146,12 +146,6 @@ pub async fn handle_configure(
                     message: 'Host cannot run a Realm',
                 }
             };
-            IF $has_engine AND $host.entrypoint != 'PAPER' {
-                RETURN {
-                    outcome: 'invalid-configuration',
-                    message: 'Only Paper hosts can run an execution engine',
-                }
-            };
             IF $has_realm AND !array::any(
                 $host.supported_engines,
                 |$supported| $supported.engine_id = $realm_target.engine_id
@@ -179,7 +173,7 @@ pub async fn handle_configure(
                     UPDATE ONLY $current_realm.id SET
                         target_engine = $realm_target,
                         revision += 1,
-                        desired_manifest_revision += 1,
+                        manifest_revision.desired += 1,
                         state = { status: 'STAGING', updated_at: time::now() }
                 } ELSE {
                     $current_realm
@@ -216,7 +210,7 @@ pub async fn handle_configure(
                         realm_id = $assigned_realm.id,
                         target = $engine_target,
                         revision += 1,
-                        desired_manifest_revision += 1,
+                        manifest_revision.desired += 1,
                         state = { status: 'STAGING', updated_at: time::now() }
                 } ELSE {
                     $current_engine
@@ -252,7 +246,7 @@ pub async fn handle_configure(
 
             LET $updated_host = UPDATE ONLY $host_id SET
                 revision += 1,
-                desired_topology_revision += 1,
+                topology_revision.desired += 1,
                 state = { status: 'RECONCILING', updated_at: time::now() }
             RETURN AFTER;
 
@@ -344,7 +338,7 @@ async fn publish_configuration(
     wasmcloud_utils::skir_subjects::host_execution(&host.service_id.key.to_string())
         .publish(WatchHostExecutionResponse::Desired(Box::new(
             WatchHostExecutionResponse_Desired {
-                topology_revision: host.desired_topology_revision,
+                topology_revision: host.topology_revision.desired,
                 realm,
                 engine,
                 _unrecognized: None,
@@ -409,7 +403,7 @@ fn invalid_configuration(message: impl Into<String>) -> ConfigureServiceHostResp
 }
 
 fn valid_target(target: &EngineTarget) -> bool {
-    target.major_version >= 1
+    target.major_version >= 0
         && target.engine_id.len() >= 3
         && target.engine_id.split('_').all(|part| {
             !part.is_empty()

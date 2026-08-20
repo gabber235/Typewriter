@@ -36,7 +36,7 @@ class _TopologyLayout {
               ? "Paper host"
               : "Standalone host",
           subtitle: host.hostId.id,
-          status: host.desiredTopologyRevision == host.appliedTopologyRevision
+          status: host.topologyRevision.desired == host.topologyRevision.applied
               ? "Reconciled"
               : "Reconciling",
           position: Offset(48, y),

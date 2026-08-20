@@ -10,7 +10,7 @@ file = "../fixtures/organization_seed.surql"
 name = "host_defaults_are_reconcilable"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE service_host:paper SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; RETURN service_host:paper.revision = 1 AND service_host:paper.desired_topology_revision = 0 AND service_host:paper.applied_topology_revision = 0 AND service_host:paper.state.status = 'OFFLINE'; };"
+sql = "RETURN { CREATE service_host:paper SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; RETURN service_host:paper.revision = 1 AND service_host:paper.topology_revision = { desired: 0, applied: 0 } AND service_host:paper.state.status = 'OFFLINE'; };"
 allow = true
 [[cases.assertions]]
 path = ""
@@ -25,12 +25,29 @@ allow = false
 error_contains = "service_host_by_service"
 
 [[cases]]
-name = "supported_engine_versions_are_positive_and_unique"
+name = "supported_engine_versions_are_unique"
 kind = "sql_expect"
 actor = "root"
 sql = "CREATE service_host:invalid SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1, 1] }];"
 allow = false
 error_contains = "supported-engine-version-duplicate-error"
+
+[[cases]]
+name = "supported_engine_versions_must_be_nonnegative"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:invalid SET service_id = service:engine_acme, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [-1] }];"
+allow = false
+
+[[cases]]
+name = "prerelease_artifact_versions_are_supported"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service_host:prerelease SET service_id = service:prerelease_engine, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'custom_engine', supported_major_versions: [0] }]; CREATE realm_instance:prerelease SET owner_host_id = service_host:prerelease, target_engine = { engine_id: 'custom_engine', major_version: 0 }, state = { status: 'ACTIVE', active_artifact_version: '0.4.0-alpha.2+local.7', updated_at: time::now() }; RETURN realm_instance:prerelease.state.active_artifact_version = '0.4.0-alpha.2+local.7'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
 
 [[cases]]
 name = "one_realm_and_engine_are_allowed_per_host"

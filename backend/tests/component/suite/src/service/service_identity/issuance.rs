@@ -15,7 +15,7 @@ use super::{Authentik, ServiceIdentity};
 
 fn engine_role() -> ServiceRole {
     skir_variant!(ServiceRole::Engine {
-        version: "1".into(),
+        version: "1.0.0".into(),
     })
 }
 
@@ -113,7 +113,7 @@ async fn built_in_custom_role_name_is_rejected(
         context,
         &request(vec![ServiceRole::Custom(Box::new(ServiceRole_Custom {
             name: "engine".into(),
-            version: "1".into(),
+            version: "1.0.0".into(),
             _unrecognized: None,
         }))]),
     )
@@ -225,7 +225,7 @@ async fn persistence_failure_deletes_provisioned_account(
         .ok_or_else(|| anyhow::anyhow!("database handle missing"))?;
     database
         .seed(
-            "CREATE service:duplicate_uid SET name = 'existing', roles = [{ type: 'engine', version: '1' }]",
+            "CREATE service:duplicate_uid SET name = 'existing', roles = [{ type: 'engine', version: '1.0.0' }]",
         )
         .execute()
         .await?;

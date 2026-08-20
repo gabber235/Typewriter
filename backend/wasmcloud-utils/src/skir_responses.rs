@@ -98,6 +98,7 @@ wasmcloud_utils_macros::skir_response! {
     ConfigureServiceHostResponse {
         success: Success,
         errors {
+            InvalidRecordIdError,
             ConflictError => "Host changed elsewhere",
             InvalidConfigurationError => "Host configuration is invalid",
             IncompatibleEngineError => "Engine target is incompatible",
@@ -116,7 +117,9 @@ wasmcloud_utils_macros::skir_response! {
 wasmcloud_utils_macros::skir_response! {
     WatchHostExecutionResponse {
         success: Desired,
-        errors {}
+        errors {
+            InvalidRecordIdError,
+        }
     }
 }
 
@@ -124,6 +127,7 @@ wasmcloud_utils_macros::skir_response! {
     ReportHostExecutionResponse {
         success: Success,
         errors {
+            InvalidRecordIdError,
             StaleRevisionError => "Host topology revision is stale",
         }
     }
