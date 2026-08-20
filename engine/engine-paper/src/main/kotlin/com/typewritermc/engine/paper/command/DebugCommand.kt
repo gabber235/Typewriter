@@ -11,23 +11,23 @@ import com.typewritermc.engine.paper.command.dsl.withPermission
 import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.ui.CommunicationHandler
 import com.typewritermc.engine.paper.ui.PanelHost
-import com.typewritermc.engine.paper.utils.sendMini
+import com.typewritermc.engine.paper.utils.sendMiniWithResolvers
 import com.typewritermc.engine.paper.utils.server
 import com.typewritermc.loader.ExtensionLoader
-import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.koin.java.KoinJavaComponent.get
 import java.lang.management.ManagementFactory
-
-private val miniMessage = MiniMessage.miniMessage()
 
 internal fun CommandTree.debugCommand() = literal("debug") {
     withPermission("typewriter.debug")
     executes {
-        sender.sendMini(createDebugMessage())
+        val message = createDebugMessage()
+        sender.sendMiniWithResolvers(message.text, *message.resolvers)
     }
 }
 
-private fun createDebugMessage(): String {
+private fun createDebugMessage(): DebugMessage {
     val runtime = Runtime.getRuntime()
     val extensionLoader = get<ExtensionLoader>(ExtensionLoader::class.java)
     val communicationHandler = get<CommunicationHandler>(CommunicationHandler::class.java)
@@ -37,14 +37,17 @@ private fun createDebugMessage(): String {
     val entries = Query.find<Entry>().count()
     val usedMemory = (runtime.totalMemory() - runtime.freeMemory()).toMebibytes()
     val maxMemory = runtime.maxMemory().toMebibytes()
+    val resolvers = mutableListOf<TagResolver>()
 
-    return buildString {
+    val text = buildString {
         append(createSection("Debug Information"))
-        append("<#5ba3d0>Version:</#5ba3d0> ${plugin.pluginMeta.version.escapeMiniMessageTags()}\n")
-        append(
-            "<#5ba3d0>Server:</#5ba3d0> ${server.name.escapeMiniMessageTags()} " +
-                    "(${server.minecraftVersion.escapeMiniMessageTags()})\n"
-        )
+        append("<#5ba3d0>Version:</#5ba3d0> ")
+        appendUnparsed(plugin.pluginMeta.version, resolvers)
+        append("\n<#5ba3d0>Server:</#5ba3d0> ")
+        appendUnparsed(server.name, resolvers)
+        append(" (")
+        appendUnparsed(server.minecraftVersion, resolvers)
+        append(")\n")
         append("<#5ba3d0>Uptime:</#5ba3d0> ${formatDuration(ManagementFactory.getRuntimeMXBean().uptime)}\n")
         append("<#5ba3d0>Memory:</#5ba3d0> $usedMemory / $maxMemory MiB\n")
         append("<#5ba3d0>Players:</#5ba3d0> ${server.onlinePlayers.size} / ${server.maxPlayers}\n")
@@ -59,17 +62,25 @@ private fun createDebugMessage(): String {
         }
 
         extensionLoader.loadedExtensions.sortedBy { it.info.name }.forEach {
-            append("  <#7ed957>✓</#7ed957> <white>${it.info.name.escapeMiniMessageTags()}Extension</white>")
-            append(" <gray>${it.info.version.escapeMiniMessageTags()}</gray>\n")
+            append("  <#7ed957>✓</#7ed957> <white>")
+            appendUnparsed("${it.info.name}Extension", resolvers)
+            append("</white> <gray>")
+            appendUnparsed(it.info.version, resolvers)
+            append("</gray>\n")
         }
         extensionLoader.failedExtensions.sortedBy { it.info?.name ?: it.jarName }.forEach {
             val name = it.info?.name?.let { name -> "${name}Extension" } ?: it.jarName
-            append("  <red>✕ ${name.escapeMiniMessageTags()}</red>")
-            append(" <#ff8888>(${it.reason.message.escapeMiniMessageTags()})</#ff8888>\n")
+            append("  <red>✕ ")
+            appendUnparsed(name, resolvers)
+            append("</red> <#ff8888>(")
+            appendUnparsed(it.reason.message, resolvers)
+            append(")</#ff8888>\n")
         }
 
         append(createFooter())
     }
+
+    return DebugMessage(text, resolvers.toTypedArray())
 }
 
 private fun startedState(started: Boolean): String =
@@ -95,4 +106,13 @@ internal fun formatDuration(milliseconds: Long): String {
 
 private fun Long.toMebibytes(): Long = this / (1024 * 1024)
 
-internal fun String.escapeMiniMessageTags(): String = miniMessage.escapeTags(this)
+private data class DebugMessage(
+    val text: String,
+    val resolvers: Array<TagResolver>,
+)
+
+internal fun StringBuilder.appendUnparsed(value: String, resolvers: MutableList<TagResolver>) {
+    val name = "debug_value_${resolvers.size}"
+    append("<$name>")
+    resolvers += Placeholder.unparsed(name, value)
+}
