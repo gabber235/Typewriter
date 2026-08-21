@@ -5,6 +5,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.typewritermc.engine.paper.command.dsl.*
 import com.typewritermc.engine.paper.command.register
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.property.Arb
@@ -43,6 +45,31 @@ class CommandTest : FunSpec({
             dispatcher.execute("test:test2", sender)
 
             verify(exactly = 4) { sender.run() }
+        }
+
+        test("Additional requirements apply to commands and aliases") {
+            val allowed = mockk<Sender>()
+            val commandDenied = mockk<Sender>()
+            val additionalDenied = mockk<Sender>()
+            every { allowed.run(*anyVararg()) } just Runs
+
+            dispatcher.register(command("test", "alias") {
+                requires { it !== commandDenied }
+                testExecutes()
+            }, "namespace") { it !== additionalDenied }
+
+            listOf("test", "alias", "namespace:test", "namespace:alias").forEach { label ->
+                dispatcher.root.getChild(label).canUse(allowed).shouldBeTrue()
+                listOf(commandDenied, additionalDenied).forEach { denied ->
+                    dispatcher.root.getChild(label).canUse(denied).shouldBeFalse()
+                    shouldThrow<CommandSyntaxException> {
+                        dispatcher.execute(label, denied)
+                    }
+                }
+            }
+
+            dispatcher.execute("test", allowed)
+            verify(exactly = 1) { allowed.run() }
         }
     }
 

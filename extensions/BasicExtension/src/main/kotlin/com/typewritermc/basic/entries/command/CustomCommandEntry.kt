@@ -8,6 +8,7 @@ import com.typewritermc.core.extension.annotations.Help
 import com.typewritermc.core.extension.annotations.Tags
 import com.typewritermc.core.interaction.InteractionContextBuilder
 import com.typewritermc.engine.paper.command.dsl.*
+import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.ManifestEntry
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
@@ -34,6 +35,7 @@ import kotlin.reflect.KClass
 class CustomCommandEntry(
     override val id: String = "",
     override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
     @Help("The command to register. Do not include the leading slash.")
     val command: String = "",
     val aliases: List<String> = emptyList(),

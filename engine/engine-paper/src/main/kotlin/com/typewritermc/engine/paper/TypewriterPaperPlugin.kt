@@ -145,6 +145,7 @@ class TypewriterPaperPlugin : KotlinPlugin(), KoinComponent {
         get<FactDatabase>().initialize()
         get<AssetManager>().initialize()
         get<PlayerSessionManager>().initialize()
+        get<TypewriterCommandManager>().initialize()
         get<ChatHistoryHandler>().initialize()
         get<ActionBarBlockerHandler>().initialize()
         get<PacketInterceptor>().initialize()

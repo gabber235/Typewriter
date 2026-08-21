@@ -8,6 +8,7 @@ import com.typewritermc.core.interaction.context
 import com.typewritermc.engine.paper.command.dsl.playersResolver
 import com.typewritermc.engine.paper.command.dsl.sender
 import com.typewritermc.engine.paper.command.dsl.withPermission
+import com.typewritermc.engine.paper.entry.Criteria
 import com.typewritermc.engine.paper.entry.TriggerableEntry
 import com.typewritermc.engine.paper.entry.entries.CustomCommandEntry
 import com.typewritermc.engine.paper.entry.entries.EventEntry
@@ -30,6 +31,7 @@ import org.bukkit.entity.Player
 class RunCommandEventEntry(
     override val id: String = "",
     override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
     override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
     @Help("The command to register. Do not include the leading slash.")
     val command: String = "",
@@ -60,4 +62,3 @@ class RunCommandEventEntry(
         }
     }
 }
-
