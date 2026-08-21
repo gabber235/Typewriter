@@ -50,6 +50,43 @@ OrganizationTopology topologyScenario({bool distributed = true}) {
   );
 }
 
+/// Creates service records that own every host in [topology].
+///
+/// The records stay online so Widgetbook can exercise Realm navigation and
+/// host inspectors without depending on a live registration connection.
+List<Service> topologyScenarioServices(OrganizationTopology topology) => [
+  for (final host in topology.hosts)
+    Service(
+      serviceId: host.serviceId,
+      revision: host.revision,
+      name: host.hostId.id.replaceAll("`", "").replaceAll("-", "_"),
+      roles: [
+        if (topology.realmOwnedBy(host.hostId) != null)
+          RealmServiceRole(version: "1.0.0"),
+        if (topology.engineOwnedBy(host.hostId) != null)
+          EngineServiceRole(version: "1.0.0"),
+      ],
+      createdAt: DateTime.utc(2026, 8, 19),
+      organization: recordId("organization:story"),
+      state: ServiceState(
+        status: ServiceStateStatus.online,
+        lastSeen: DateTime.now(),
+      ),
+    ),
+  Service(
+    serviceId: recordId("service:discord"),
+    revision: 1,
+    name: "discord_bridge",
+    roles: [CustomServiceRole(name: "Discord", version: "1.0.0")],
+    createdAt: DateTime.utc(2026, 8, 19),
+    organization: recordId("organization:story"),
+    state: ServiceState(
+      status: ServiceStateStatus.online,
+      lastSeen: DateTime.now(),
+    ),
+  ),
+];
+
 skir.ServiceHost _host({
   required String id,
   required String serviceId,

@@ -55,7 +55,12 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
     );
   }
 
-  Future<void> configureHost({
+  /// Applies one complete execution configuration with optimistic concurrency.
+  ///
+  /// The canonical backend result is returned so editor callers can adopt its
+  /// revision immediately. Protocol failures are translated to [ApiException]
+  /// and do not mutate the watched topology locally.
+  Future<skir.ConfigureServiceHostResponse_Success> configureHost({
     required skir.ServiceHost host,
     required skir.HostExecutionConfiguration execution,
   }) async {
@@ -74,8 +79,8 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
       skir.ConfigureServiceHostResponse.serializer,
     );
     switch (response) {
-      case skir.ConfigureServiceHostResponse_successWrapper():
-        return;
+      case skir.ConfigureServiceHostResponse_successWrapper(:final value):
+        return value;
       case skir.ConfigureServiceHostResponse_conflictErrorWrapper():
         throw ApiException.conflict(
           "The host changed while it was being configured",

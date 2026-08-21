@@ -37,7 +37,9 @@ Widget servicesPageStory({
         topology == null ? _EmptyTopology.new : () => _StoryTopology(topology),
       ),
       servicesProvider.overrideWith(
-        () => _StoryServices(displayState: servicesState),
+        topology == null
+            ? () => _StoryServices(displayState: servicesState)
+            : () => _TopologyServices(topology),
       ),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.fewItems),
@@ -55,11 +57,23 @@ class _StoryServices extends ServicesMock {
   Stream<List<Service>> build() async* {
     await for (final services in super.build()) {
       yield [
-        ...services.where((service) => service.isRealm),
-        ...services.where((service) => !service.isRealm),
+        for (final service in services)
+          service.copyWith(
+            roles: [CustomServiceRole(name: "Integration", version: "1.0.0")],
+          ),
       ];
     }
   }
+}
+
+class _TopologyServices extends Services {
+  _TopologyServices(this.topology);
+
+  final OrganizationTopology topology;
+
+  @override
+  Stream<List<Service>> build() =>
+      Stream.value(topologyScenarioServices(topology));
 }
 
 class _EmptyTopology extends OrganizationTopologyStream {

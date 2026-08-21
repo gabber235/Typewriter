@@ -12,6 +12,11 @@ part "service_models.dart";
 part "service_inspector_presentation.dart";
 part "service_selection.dart";
 part "topology.dart";
+part "topology_inspector_presentations.dart";
+part "topology_inspector_types.dart";
+part "topology_selection.dart";
+part "topology_host_selection.dart";
+part "topology_runtime_selection.dart";
 
 @riverpod
 class Services extends _$Services {
