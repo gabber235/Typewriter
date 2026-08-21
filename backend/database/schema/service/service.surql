@@ -18,7 +18,12 @@ DEFINE FIELD OVERWRITE roles.*.type ON service
     TYPE "engine" | "realm" | "custom";
 
 DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
-    ASSERT string::is_semver($value);
+    ASSERT {
+        IF !string::is_semver($value) {
+            THROW "role-version-invalid-error"
+        };
+        RETURN true;
+    };
 
 DEFINE FIELD OVERWRITE roles.*.name ON service TYPE option<string>;
 
