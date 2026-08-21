@@ -4328,37 +4328,23 @@ final class WatchOrganizationTopologyResponse_internalErrorWrapper extends _Watc
 // -----------------------------------------------------------------------------
 
 sealed class WatchHostExecutionRequest_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable get hostId;
-
   WatchHostExecutionRequest toFrozen();
 }
 
 /// Deeply immutable.
 final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMutable {
-  @_core.override
-  final _lib_kernel_v1_record_id.RecordId hostId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchHostExecutionRequest({
-    required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
-  }) => WatchHostExecutionRequest._(
-    hostId.toFrozen(),
-  );
+  factory WatchHostExecutionRequest() => WatchHostExecutionRequest._();
 
-  WatchHostExecutionRequest._(
-    this.hostId,
-  );
+  WatchHostExecutionRequest._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchHostExecutionRequest._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static final defaultInstance = WatchHostExecutionRequest._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchHostExecutionRequest_mutable mutable() => WatchHostExecutionRequest_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static WatchHostExecutionRequest_mutable mutable() => WatchHostExecutionRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4366,9 +4352,7 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
   WatchHostExecutionRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchHostExecutionRequest_mutable toMutable() => WatchHostExecutionRequest_mutable._(
-    this.hostId,
-  );
+  WatchHostExecutionRequest_mutable toMutable() => WatchHostExecutionRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
@@ -4380,9 +4364,7 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.hostId,
-  ];
+  _core.List get _equality_proxy => [];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -4390,15 +4372,6 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
   /// Serializer for `WatchHostExecutionRequest` instances.
   static _skir.StructSerializer<WatchHostExecutionRequest, WatchHostExecutionRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "host_id",
-        "hostId",
-        0,
-        _lib_kernel_v1_record_id.RecordId.serializer,
-        "",
-        (it) => it.hostId,
-        (it, v) => it.hostId = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -4417,29 +4390,13 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
 
 /// Mutable version of [WatchHostExecutionRequest].
 final class WatchHostExecutionRequest_mutable implements WatchHostExecutionRequest_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable hostId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchHostExecutionRequest_mutable._(
-    this.hostId,
-  );
-
-  /// If the value of [hostId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableHostId {
-    final value = this.hostId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
-      return value;
-    } else {
-      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
-    }
-  }
+  WatchHostExecutionRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchHostExecutionRequest toFrozen() => WatchHostExecutionRequest(
-    hostId: this.hostId,
-  ).._u = this._u;
+  WatchHostExecutionRequest toFrozen() => WatchHostExecutionRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4607,7 +4564,6 @@ final class WatchHostExecutionResponse_Desired_mutable implements WatchHostExecu
 ///   switch (e) {
 ///     case WatchHostExecutionResponse_unknown(): { ... }
 ///     case WatchHostExecutionResponse_desired(:var value): { ... }
-///     case WatchHostExecutionResponse_invalidRecordIdError(:var value): { ... }
 ///     case WatchHostExecutionResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -4633,22 +4589,6 @@ sealed class WatchHostExecutionResponse {
       topologyRevision: topologyRevision,
       realm: realm,
       engine: engine,
-    )
-  );
-
-  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
-  factory WatchHostExecutionResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
-  ) => WatchHostExecutionResponse_invalidRecordIdErrorWrapper._(value);
-
-  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
-  factory WatchHostExecutionResponse.createInvalidRecordIdError({
-    required _core.String expectedTable,
-    required _core.Iterable<_core.String> givenTables,
-  }) => WatchHostExecutionResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError(
-      expectedTable: expectedTable,
-      givenTables: givenTables,
     )
   );
 
@@ -4680,16 +4620,6 @@ sealed class WatchHostExecutionResponse {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "invalid_record_id_error",
-        "wrapInvalidRecordIdError",
-        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
-        WatchHostExecutionResponse_invalidRecordIdErrorWrapper._,
-        (it) => it.value,
-        ordinal: WatchHostExecutionResponse_kind.invalidRecordIdErrorWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -4718,8 +4648,7 @@ sealed class WatchHostExecutionResponse {
 enum WatchHostExecutionResponse_kind {
   unknown(0),
   desiredWrapper(1),
-  invalidRecordIdErrorWrapper(2),
-  internalErrorWrapper(3);
+  internalErrorWrapper(2);
 
   final _core.int _ordinal;
 
@@ -4769,15 +4698,6 @@ final class WatchHostExecutionResponse_desiredWrapper extends _WatchHostExecutio
   WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.desiredWrapper;
 }
 
-final class WatchHostExecutionResponse_invalidRecordIdErrorWrapper extends _WatchHostExecutionResponse_wrapper {
-  final _lib_kernel_v1_errors.InvalidRecordIdError value;
-
-  WatchHostExecutionResponse_invalidRecordIdErrorWrapper._(this.value);
-
-  @_core.override
-  WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.invalidRecordIdErrorWrapper;
-}
-
 final class WatchHostExecutionResponse_internalErrorWrapper extends _WatchHostExecutionResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
@@ -4792,7 +4712,6 @@ final class WatchHostExecutionResponse_internalErrorWrapper extends _WatchHostEx
 // -----------------------------------------------------------------------------
 
 sealed class ReportHostExecutionRequest_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable get hostId;
   _core.int get topologyRevision;
   ChildRuntimeState_orMutable? get realmState;
   ChildRuntimeState_orMutable? get engineState;
@@ -4803,8 +4722,6 @@ sealed class ReportHostExecutionRequest_orMutable {
 /// Deeply immutable.
 final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orMutable {
   @_core.override
-  final _lib_kernel_v1_record_id.RecordId hostId;
-  @_core.override
   final _core.int topologyRevision;
   @_core.override
   final ChildRuntimeState? realmState;
@@ -4813,19 +4730,16 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   _skir.internal__UnrecognizedFields? _u;
 
   factory ReportHostExecutionRequest({
-    required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
     required _core.int topologyRevision,
     required ChildRuntimeState_orMutable? realmState,
     required ChildRuntimeState_orMutable? engineState,
   }) => ReportHostExecutionRequest._(
-    hostId.toFrozen(),
     topologyRevision,
     (realmState != null) ? realmState.toFrozen() : null,
     (engineState != null) ? engineState.toFrozen() : null,
   );
 
   ReportHostExecutionRequest._(
-    this.hostId,
     this.topologyRevision,
     this.realmState,
     this.engineState,
@@ -4833,7 +4747,6 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ReportHostExecutionRequest._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     null,
     null,
@@ -4842,7 +4755,6 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ReportHostExecutionRequest_mutable mutable() => ReportHostExecutionRequest_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     null,
     null,
@@ -4855,7 +4767,6 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
 
   /// Returns a mutable shallow copy of this instance.
   ReportHostExecutionRequest_mutable toMutable() => ReportHostExecutionRequest_mutable._(
-    this.hostId,
     this.topologyRevision,
     this.realmState,
     this.engineState,
@@ -4872,7 +4783,6 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.hostId,
     this.topologyRevision,
     this.realmState,
     this.engineState,
@@ -4885,18 +4795,9 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   static _skir.StructSerializer<ReportHostExecutionRequest, ReportHostExecutionRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "host_id",
-        "hostId",
-        0,
-        _lib_kernel_v1_record_id.RecordId.serializer,
-        "",
-        (it) => it.hostId,
-        (it, v) => it.hostId = v,
-      );
-      _serializerBuilder.addField(
         "topology_revision",
         "topologyRevision",
-        1,
+        0,
         _skir.Serializers.int64,
         "",
         (it) => it.topologyRevision,
@@ -4905,7 +4806,7 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
       _serializerBuilder.addField(
         "realm_state",
         "realmState",
-        2,
+        1,
         _skir.Serializers.optional(
           ChildRuntimeState.serializer,
         ),
@@ -4916,7 +4817,7 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
       _serializerBuilder.addField(
         "engine_state",
         "engineState",
-        3,
+        2,
         _skir.Serializers.optional(
           ChildRuntimeState.serializer,
         ),
@@ -4942,34 +4843,20 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
 
 /// Mutable version of [ReportHostExecutionRequest].
 final class ReportHostExecutionRequest_mutable implements ReportHostExecutionRequest_orMutable {
-  _lib_kernel_v1_record_id.RecordId_orMutable hostId;
   _core.int topologyRevision;
   ChildRuntimeState_orMutable? realmState;
   ChildRuntimeState_orMutable? engineState;
   _skir.internal__UnrecognizedFields? _u;
 
   ReportHostExecutionRequest_mutable._(
-    this.hostId,
     this.topologyRevision,
     this.realmState,
     this.engineState,
   );
 
-  /// If the value of [hostId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableHostId {
-    final value = this.hostId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
-      return value;
-    } else {
-      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ReportHostExecutionRequest toFrozen() => ReportHostExecutionRequest(
-    hostId: this.hostId,
     topologyRevision: this.topologyRevision,
     realmState: this.realmState,
     engineState: this.engineState,
@@ -5138,7 +5025,6 @@ final class ReportHostExecutionResponse_StaleRevisionError_mutable implements Re
 ///     case ReportHostExecutionResponse_unknown(): { ... }
 ///     case ReportHostExecutionResponse_success(:var value): { ... }
 ///     case ReportHostExecutionResponse_staleRevisionError(:var value): { ... }
-///     case ReportHostExecutionResponse_invalidRecordIdError(:var value): { ... }
 ///     case ReportHostExecutionResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
@@ -5167,22 +5053,6 @@ sealed class ReportHostExecutionResponse {
   /// Same as `wrapStaleRevisionError(ReportHostExecutionResponse_StaleRevisionError(...))`.
   factory ReportHostExecutionResponse.createStaleRevisionError() => ReportHostExecutionResponse.wrapStaleRevisionError(
     ReportHostExecutionResponse_StaleRevisionError()
-  );
-
-  /// Create a 'invalid_record_id_error' variant wrapping around the given value.
-  factory ReportHostExecutionResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
-  ) => ReportHostExecutionResponse_invalidRecordIdErrorWrapper._(value);
-
-  /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
-  factory ReportHostExecutionResponse.createInvalidRecordIdError({
-    required _core.String expectedTable,
-    required _core.Iterable<_core.String> givenTables,
-  }) => ReportHostExecutionResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError(
-      expectedTable: expectedTable,
-      givenTables: givenTables,
-    )
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
@@ -5223,16 +5093,6 @@ sealed class ReportHostExecutionResponse {
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "invalid_record_id_error",
-        "wrapInvalidRecordIdError",
-        _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
-        "",
-        ReportHostExecutionResponse_invalidRecordIdErrorWrapper._,
-        (it) => it.value,
-        ordinal: ReportHostExecutionResponse_kind.invalidRecordIdErrorWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -5262,8 +5122,7 @@ enum ReportHostExecutionResponse_kind {
   unknown(0),
   successWrapper(1),
   staleRevisionErrorWrapper(2),
-  invalidRecordIdErrorWrapper(3),
-  internalErrorWrapper(4);
+  internalErrorWrapper(3);
 
   final _core.int _ordinal;
 
@@ -5320,15 +5179,6 @@ final class ReportHostExecutionResponse_staleRevisionErrorWrapper extends _Repor
 
   @_core.override
   ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.staleRevisionErrorWrapper;
-}
-
-final class ReportHostExecutionResponse_invalidRecordIdErrorWrapper extends _ReportHostExecutionResponse_wrapper {
-  final _lib_kernel_v1_errors.InvalidRecordIdError value;
-
-  ReportHostExecutionResponse_invalidRecordIdErrorWrapper._(this.value);
-
-  @_core.override
-  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 final class ReportHostExecutionResponse_internalErrorWrapper extends _ReportHostExecutionResponse_wrapper {

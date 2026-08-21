@@ -1079,7 +1079,6 @@ impl WatchOrganizationTopologyResponse {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WatchHostExecutionRequest {
-    pub host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchHostExecutionRequest>>,
 }
@@ -1159,7 +1158,6 @@ impl WatchHostExecutionResponse_Desired {
 pub enum WatchHostExecutionResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchHostExecutionResponse>>),
     Desired(Box<WatchHostExecutionResponse_Desired>),
-    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1177,8 +1175,7 @@ impl WatchHostExecutionResponse {
                     |x: &WatchHostExecutionResponse| match x {
                         WatchHostExecutionResponse::Unknown(_) => 0,
                         WatchHostExecutionResponse::Desired(_) => 1,
-                        WatchHostExecutionResponse::InvalidRecordIdError(_) => 2,
-                        WatchHostExecutionResponse::InternalError(_) => 3,
+                        WatchHostExecutionResponse::InternalError(_) => 2,
                     },
                     |u| WatchHostExecutionResponse::Unknown(Some(u)),
                     |x: &WatchHostExecutionResponse| match x { WatchHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1201,7 +1198,6 @@ impl WatchHostExecutionResponse {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ReportHostExecutionRequest {
-    pub host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub topology_revision: i64,
     pub realm_state: Option<ChildRuntimeState>,
     pub engine_state: Option<ChildRuntimeState>,
@@ -1319,7 +1315,6 @@ pub enum ReportHostExecutionResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ReportHostExecutionResponse>>),
     Success(Box<ReportHostExecutionResponse_Success>),
     StaleRevisionError(Box<ReportHostExecutionResponse_StaleRevisionError>),
-    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
@@ -1338,8 +1333,7 @@ impl ReportHostExecutionResponse {
                         ReportHostExecutionResponse::Unknown(_) => 0,
                         ReportHostExecutionResponse::Success(_) => 1,
                         ReportHostExecutionResponse::StaleRevisionError(_) => 2,
-                        ReportHostExecutionResponse::InvalidRecordIdError(_) => 3,
-                        ReportHostExecutionResponse::InternalError(_) => 4,
+                        ReportHostExecutionResponse::InternalError(_) => 3,
                     },
                     |u| ReportHostExecutionResponse::Unknown(Some(u)),
                     |x: &ReportHostExecutionResponse| match x { ReportHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1545,7 +1539,6 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest> = WatchHostExecutionRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("host_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &WatchHostExecutionRequest| &x.host_id, |x: &mut WatchHostExecutionRequest, v| x.host_id = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1558,16 +1551,14 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse> = WatchHostExecutionResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("desired", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchHostExecutionResponse_Desired::_adapter()), "", |v| WatchHostExecutionResponse::Desired(Box::new(v)), |x| match x { WatchHostExecutionResponse::Desired(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 2, 2, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| WatchHostExecutionResponse::InvalidRecordIdError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchHostExecutionResponse::InternalError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchHostExecutionResponse::InternalError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest> = ReportHostExecutionRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("host_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ReportHostExecutionRequest| &x.host_id, |x: &mut ReportHostExecutionRequest, v| x.host_id = v);
-                (*a).add_field("topology_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &ReportHostExecutionRequest| &x.topology_revision, |x: &mut ReportHostExecutionRequest, v| x.topology_revision = v);
-                (*a).add_field("realm_state", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.realm_state, |x: &mut ReportHostExecutionRequest, v| x.realm_state = v);
-                (*a).add_field("engine_state", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.engine_state, |x: &mut ReportHostExecutionRequest, v| x.engine_state = v);
+                (*a).add_field("topology_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &ReportHostExecutionRequest| &x.topology_revision, |x: &mut ReportHostExecutionRequest, v| x.topology_revision = v);
+                (*a).add_field("realm_state", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.realm_state, |x: &mut ReportHostExecutionRequest, v| x.realm_state = v);
+                (*a).add_field("engine_state", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.engine_state, |x: &mut ReportHostExecutionRequest, v| x.engine_state = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1582,8 +1573,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse> = ReportHostExecutionResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_Success::_adapter()), "", |v| ReportHostExecutionResponse::Success(Box::new(v)), |x| match x { ReportHostExecutionResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("stale_revision_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_StaleRevisionError::_adapter()), "", |v| ReportHostExecutionResponse::StaleRevisionError(Box::new(v)), |x| match x { ReportHostExecutionResponse::StaleRevisionError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 3, 3, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ReportHostExecutionResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

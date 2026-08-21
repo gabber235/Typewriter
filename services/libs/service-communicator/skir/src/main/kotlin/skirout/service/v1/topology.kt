@@ -5214,26 +5214,21 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 }
 
 sealed interface WatchHostExecutionRequest_OrMutable {
-    val hostId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
     fun toFrozen(): skirout.service.v1.topology.WatchHostExecutionRequest;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchHostExecutionRequest private constructor(
-    override val hostId: skirout.kernel.v1.record_id.RecordId,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionRequest>? =
         null,
 ): skirout.service.v1.topology.WatchHostExecutionRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionRequest>? =
             null,
     ): this(
-        hostId.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -5241,30 +5236,14 @@ class WatchHostExecutionRequest private constructor(
     override fun toFrozen() = this;
 
     /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        hostId = this.hostId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.hostId,
-    ) = skirout.service.v1.topology.WatchHostExecutionRequest(
-        hostId.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    fun toMutable() = Mutable();
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.WatchHostExecutionRequest && this.hostId == other.hostId);
+        return this === other || (other is skirout.service.v1.topology.WatchHostExecutionRequest);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.hostId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -5278,39 +5257,18 @@ class WatchHostExecutionRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionRequest>? =
             null,
     ): skirout.service.v1.topology.WatchHostExecutionRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.WatchHostExecutionRequest(
-            hostId = this.hostId,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [hostId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
-         */
-        val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.hostId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.hostId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
-            skirout.service.v1.topology.WatchHostExecutionRequest(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            );
+            skirout.service.v1.topology.WatchHostExecutionRequest();
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
@@ -5323,10 +5281,7 @@ class WatchHostExecutionRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
         ) = skirout.service.v1.topology.WatchHostExecutionRequest(
-            hostId = hostId,
             _unrecognizedFields = null,
         );
 
@@ -5347,15 +5302,6 @@ class WatchHostExecutionRequest private constructor(
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
-            serializerImpl.addField(
-                "host_id",
-                "hostId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.hostId },
-                { mut, v -> mut.hostId = v },
-            );
             serializerImpl.finalizeStruct();
         }
     }
@@ -5367,7 +5313,6 @@ sealed class WatchHostExecutionResponse private constructor() {
     enum class Kind {
         UNKNOWN,
         DESIRED_WRAPPER,
-        INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5401,24 +5346,6 @@ sealed class WatchHostExecutionResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1557044890;
-        }
-    }
-
-    class InvalidRecordIdErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
-    ) : skirout.service.v1.topology.WatchHostExecutionResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchHostExecutionResponse.InvalidRecordIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -908768310;
         }
     }
 
@@ -5474,20 +5401,6 @@ sealed class WatchHostExecutionResponse private constructor() {
             )
         );
 
-        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidRecordIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedTable: kotlin.String,
-            givenTables: kotlin.collections.Iterable<kotlin.String>,
-        ) = InvalidRecordIdErrorWrapper(
-            skirout.kernel.v1.errors.InvalidRecordIdError(
-                expectedTable = expectedTable,
-                givenTables = givenTables,
-            )
-        );
-
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -5534,15 +5447,6 @@ sealed class WatchHostExecutionResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     2,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InternalError.serializer,
@@ -5741,7 +5645,6 @@ sealed class WatchHostExecutionResponse private constructor() {
 }
 
 sealed interface ReportHostExecutionRequest_OrMutable {
-    val hostId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val topologyRevision: kotlin.Long;
     val realmState: skirout.service.v1.topology.ChildRuntimeState_OrMutable?;
     val engineState: skirout.service.v1.topology.ChildRuntimeState_OrMutable?;
@@ -5752,7 +5655,6 @@ sealed interface ReportHostExecutionRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ReportHostExecutionRequest private constructor(
-    override val hostId: skirout.kernel.v1.record_id.RecordId,
     override val topologyRevision: kotlin.Long,
     override val realmState: skirout.service.v1.topology.ChildRuntimeState?,
     override val engineState: skirout.service.v1.topology.ChildRuntimeState?,
@@ -5762,14 +5664,12 @@ class ReportHostExecutionRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         topologyRevision: kotlin.Long,
         realmState: skirout.service.v1.topology.ChildRuntimeState_OrMutable?,
         engineState: skirout.service.v1.topology.ChildRuntimeState_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionRequest>? =
             null,
     ): this(
-        hostId.toFrozen(),
         topologyRevision,
         if (realmState != null) realmState.toFrozen() else null,
         if (engineState != null) engineState.toFrozen() else null,
@@ -5781,7 +5681,6 @@ class ReportHostExecutionRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        hostId = this.hostId,
         topologyRevision = this.topologyRevision,
         realmState = this.realmState,
         engineState = this.engineState,
@@ -5791,8 +5690,6 @@ class ReportHostExecutionRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.hostId,
         topologyRevision: kotlin.Long =
             this.topologyRevision,
         realmState: skirout.service.v1.topology.ChildRuntimeState_OrMutable? =
@@ -5800,7 +5697,6 @@ class ReportHostExecutionRequest private constructor(
         engineState: skirout.service.v1.topology.ChildRuntimeState_OrMutable? =
             this.engineState,
     ) = skirout.service.v1.topology.ReportHostExecutionRequest(
-        hostId.toFrozen(),
         topologyRevision,
         if (realmState != null) realmState.toFrozen() else null,
         if (engineState != null) engineState.toFrozen() else null,
@@ -5811,11 +5707,11 @@ class ReportHostExecutionRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.ReportHostExecutionRequest && this.hostId == other.hostId && this.topologyRevision == other.topologyRevision && this.realmState == other.realmState && this.engineState == other.engineState);
+        return this === other || (other is skirout.service.v1.topology.ReportHostExecutionRequest && this.topologyRevision == other.topologyRevision && this.realmState == other.realmState && this.engineState == other.engineState);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.hostId, this.topologyRevision, this.realmState, this.engineState).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.topologyRevision, this.realmState, this.engineState).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -5829,8 +5725,6 @@ class ReportHostExecutionRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
         override var topologyRevision: kotlin.Long =
             0L,
         override var realmState: skirout.service.v1.topology.ChildRuntimeState_OrMutable? =
@@ -5842,34 +5736,16 @@ class ReportHostExecutionRequest private constructor(
     ): skirout.service.v1.topology.ReportHostExecutionRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.ReportHostExecutionRequest(
-            hostId = this.hostId,
             topologyRevision = this.topologyRevision,
             realmState = this.realmState,
             engineState = this.engineState,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [hostId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
-         */
-        val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.hostId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.hostId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.service.v1.topology.ReportHostExecutionRequest(
-                skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
                 null,
                 null,
@@ -5886,8 +5762,6 @@ class ReportHostExecutionRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
             topologyRevision: kotlin.Long =
                 0L,
             realmState: skirout.service.v1.topology.ChildRuntimeState_OrMutable? =
@@ -5895,7 +5769,6 @@ class ReportHostExecutionRequest private constructor(
             engineState: skirout.service.v1.topology.ChildRuntimeState_OrMutable? =
                 null,
         ) = skirout.service.v1.topology.ReportHostExecutionRequest(
-            hostId = hostId,
             topologyRevision = topologyRevision,
             realmState = realmState,
             engineState = engineState,
@@ -5920,18 +5793,9 @@ class ReportHostExecutionRequest private constructor(
 
         init {
             serializerImpl.addField(
-                "host_id",
-                "hostId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.hostId },
-                { mut, v -> mut.hostId = v },
-            );
-            serializerImpl.addField(
                 "topology_revision",
                 "topologyRevision",
-                1,
+                0,
                 build.skir.Serializers.int64,
                 "",
                 { it.topologyRevision },
@@ -5940,7 +5804,7 @@ class ReportHostExecutionRequest private constructor(
             serializerImpl.addField(
                 "realm_state",
                 "realmState",
-                2,
+                1,
                 build.skir.Serializers.optional(
                     skirout.service.v1.topology.ChildRuntimeState.serializer,
                 ),
@@ -5951,7 +5815,7 @@ class ReportHostExecutionRequest private constructor(
             serializerImpl.addField(
                 "engine_state",
                 "engineState",
-                3,
+                2,
                 build.skir.Serializers.optional(
                     skirout.service.v1.topology.ChildRuntimeState.serializer,
                 ),
@@ -5971,7 +5835,6 @@ sealed class ReportHostExecutionResponse private constructor() {
         UNKNOWN,
         SUCCESS_WRAPPER,
         STALE_REVISION_ERROR_WRAPPER,
-        INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -6023,24 +5886,6 @@ sealed class ReportHostExecutionResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 1601585674;
-        }
-    }
-
-    class InvalidRecordIdErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
-    ) : skirout.service.v1.topology.ReportHostExecutionResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.ReportHostExecutionResponse.InvalidRecordIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -908768310;
         }
     }
 
@@ -6098,20 +5943,6 @@ sealed class ReportHostExecutionResponse private constructor() {
             skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError()
         );
 
-        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidRecordIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedTable: kotlin.String,
-            givenTables: kotlin.collections.Iterable<kotlin.String>,
-        ) = InvalidRecordIdErrorWrapper(
-            skirout.kernel.v1.errors.InvalidRecordIdError(
-                expectedTable = expectedTable,
-                givenTables = givenTables,
-            )
-        );
-
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -6167,15 +5998,6 @@ sealed class ReportHostExecutionResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     3,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
                     "internal_error",
                     Kind.INTERNAL_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InternalError.serializer,

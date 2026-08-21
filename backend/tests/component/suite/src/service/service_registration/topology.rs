@@ -307,7 +307,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     let database = database(context)?;
     database
         .seed(
-            "UPDATE service_host:host SET topology_revision.desired = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }, manifest_revision.desired = 2",
+            "UPDATE service_host:host SET topology_revision.desired = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }, manifest_revision.desired = 2; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }], topology_revision.desired = 9",
         )
         .execute()
         .await?;
@@ -315,10 +315,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     let desired: WatchHostExecutionResponse = request(
         context,
         "typewriter.from.service.host_service.execution.watch",
-        &WatchHostExecutionRequest {
-            host_id: skir_record_id("service_host", "host"),
-            _unrecognized: None,
-        },
+        &WatchHostExecutionRequest::default(),
         WatchHostExecutionRequest::serializer(),
         WatchHostExecutionResponse::serializer(),
     )
@@ -343,9 +340,9 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     ));
     assert_jm!(
         database
-            .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.manifest_revision.applied, realm_instance:realm.state.status]")
+            .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.manifest_revision.applied, realm_instance:realm.state.status, service_host:other_host.topology_revision.applied, service_host:other_host.state.status]")
             .await?,
-        [4, "ACTIVE", 2, "ACTIVE"]
+        [4, "ACTIVE", 2, "ACTIVE", 0, "OFFLINE"]
     );
     Ok(())
 }
@@ -379,7 +376,6 @@ async fn report(
         context,
         "typewriter.from.service.host_service.execution.report",
         &ReportHostExecutionRequest {
-            host_id: skir_record_id("service_host", "host"),
             topology_revision,
             realm_state: Some(state),
             engine_state: None,

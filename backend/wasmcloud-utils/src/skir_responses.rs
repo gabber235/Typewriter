@@ -112,9 +112,7 @@ wasmcloud_utils_macros::skir_response! {
 wasmcloud_utils_macros::skir_response! {
     WatchHostExecutionResponse {
         success: Desired,
-        errors {
-            InvalidRecordIdError,
-        }
+        errors {}
     }
 }
 
@@ -122,7 +120,6 @@ wasmcloud_utils_macros::skir_response! {
     ReportHostExecutionResponse {
         success: Success,
         errors {
-            InvalidRecordIdError,
             StaleRevisionError => "Host topology revision is stale",
         }
     }

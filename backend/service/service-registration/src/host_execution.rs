@@ -16,6 +16,7 @@ use wasmcloud_utils::{
         ReportHostExecutionResponse_StaleRevisionError, ReportHostExecutionResponse_Success,
         WatchHostExecutionRequest, WatchHostExecutionResponse, WatchHostExecutionResponse_Desired,
     },
+    skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -45,24 +46,18 @@ pub async fn handle_watch(
     params: HashMap<String, String>,
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;
-    let request = decode_skir!(WatchHostExecutionRequest, &msg.body)?;
-    wasmcloud_utils::validate_record_ids!(
-        WatchHostExecutionResponse,
-        request.host_id,
-        "service_host"
-    );
-    let host_id = RecordId::from(&request.host_id);
+    let _ = decode_skir!(WatchHostExecutionRequest, &msg.body)?;
     let service_id = RecordId::new("service", service_id);
     let desired = read_query!(
         r#"
+        LET $host = array::first(SELECT * FROM service_host WHERE service_id = $service_id);
         RETURN {
-            host: array::first((SELECT * FROM $host_id WHERE service_id = $service_id)),
-            realm: array::first((SELECT * FROM realm_instance WHERE owner_host_id = $host_id)),
-            engine: array::first((SELECT * FROM engine_instance WHERE owner_host_id = $host_id)),
+            host: $host,
+            realm: array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host.id),
+            engine: array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host.id),
         };
         "#,
     )
-    .bind("host_id", host_id)
     .bind("service_id", service_id)
     .execute()
     .await
@@ -75,14 +70,11 @@ pub async fn handle_watch(
             "host was not found for service"
         ));
     };
-    Ok(WatchHostExecutionResponse::Desired(Box::new(
-        WatchHostExecutionResponse_Desired {
-            topology_revision: host.topology_revision.desired,
-            realm: desired.realm.map(Into::into),
-            engine: desired.engine.map(Into::into),
-            _unrecognized: None,
-        },
-    )))
+    Ok(skir_variant!(WatchHostExecutionResponse::Desired {
+        topology_revision: host.topology_revision.desired,
+        realm: desired.realm.map(Into::into),
+        engine: desired.engine.map(Into::into),
+    }))
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -92,11 +84,6 @@ pub async fn handle_report(
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
     let service_id = extract_params!(params, service_id)?;
     let request = decode_skir!(ReportHostExecutionRequest, &msg.body)?;
-    wasmcloud_utils::validate_record_ids!(
-        ReportHostExecutionResponse,
-        request.host_id,
-        "service_host"
-    );
     let realm_state = request
         .realm_state
         .as_ref()
@@ -115,11 +102,12 @@ pub async fn handle_report(
         BEGIN TRANSACTION;
 
         RETURN {
-            LET $hosts = SELECT * FROM $host_id WHERE service_id = $service_id;
+            LET $hosts = SELECT * FROM service_host WHERE service_id = $service_id;
             IF array::is_empty($hosts) {
                 RETURN { outcome: 'host-not-found' }
             };
             LET $host = array::first($hosts);
+            LET $host_id = $host.id;
             IF $host.topology_revision.desired != $topology_revision {
                 RETURN { outcome: 'stale-revision' }
             };
@@ -221,7 +209,6 @@ pub async fn handle_report(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("host_id", RecordId::from(&request.host_id))
     .bind("service_id", RecordId::new("service", service_id))
     .bind("topology_revision", request.topology_revision)
     .bind("realm_state", realm_state)
@@ -251,15 +238,11 @@ pub async fn handle_report(
             engine,
         } => {
             publish_report(&organization_id, &host, realm.as_ref(), engine.as_ref()).await?;
-            ReportHostExecutionResponse::Success(Box::new(ReportHostExecutionResponse_Success {
-                _unrecognized: None,
-            }))
+            skir_variant!(ReportHostExecutionResponse::Success)
         }
-        ReportExecutionOutcome::StaleRevision => ReportHostExecutionResponse::StaleRevisionError(
-            Box::new(ReportHostExecutionResponse_StaleRevisionError {
-                _unrecognized: None,
-            }),
-        ),
+        ReportExecutionOutcome::StaleRevision => {
+            skir_variant!(ReportHostExecutionResponse::StaleRevisionError)
+        }
         ReportExecutionOutcome::HostNotFound => {
             return Err(wasi_error!(
                 "host-not-found",

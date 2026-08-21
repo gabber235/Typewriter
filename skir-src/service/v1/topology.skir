@@ -1,4 +1,7 @@
-import { InternalError, InvalidRecordIdError } from "kernel/v1/errors.skir";
+import {
+  InternalError,
+  InvalidRecordIdError,
+} from "kernel/v1/errors.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
 
 struct ReconciledRevision {
@@ -148,9 +151,7 @@ method WatchOrganizationTopology(
 } = 934202;
 
 method WatchHostExecution(
-  struct {
-    host_id: RecordId;
-  }
+  struct {}
 ): enum {
   desired: struct {
     topology_revision: int64;
@@ -158,13 +159,11 @@ method WatchHostExecution(
     engine: EngineInstance?;
   };
 
-  invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934203;
 
 method ReportHostExecution(
   struct {
-    host_id: RecordId;
     topology_revision: int64;
     realm_state: ChildRuntimeState?;
     engine_state: ChildRuntimeState?;
@@ -172,6 +171,5 @@ method ReportHostExecution(
 ): enum {
   success: struct {};
   stale_revision_error: struct {};
-  invalid_record_id_error: InvalidRecordIdError;
   internal_error: InternalError;
 } = 934204;
