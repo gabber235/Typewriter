@@ -9,7 +9,7 @@ use wasmcloud_utils::{
         GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
         ServiceBinding, ServiceBinding_Bound, ServiceBinding_Unbound,
     },
-    skir_domain_result,
+    skir_domain_result, skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -86,22 +86,15 @@ pub async fn handle_status(
     let status = skir_domain_result!(GetServiceStatusResponse, result);
 
     let binding = if let Some(organization) = status.organization {
-        ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
+        skir_variant!(ServiceBinding::Bound {
             organization_id: organization.id.key.to_string(),
             organization_name: Some(organization.name),
-            _unrecognized: None,
-        }))
+        })
     } else {
-        ServiceBinding::Unbound(Box::new(ServiceBinding_Unbound {
+        skir_variant!(ServiceBinding::Unbound {
             registration_token: status.token,
-            _unrecognized: None,
-        }))
+        })
     };
 
-    Ok(GetServiceStatusResponse::Status(Box::new(
-        GetServiceStatusResponse_Status {
-            binding,
-            _unrecognized: None,
-        },
-    )))
+    Ok(skir_variant!(GetServiceStatusResponse::Status { binding }))
 }

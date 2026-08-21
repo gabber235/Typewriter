@@ -9,10 +9,12 @@ use wasmcloud_utils::{
         organization::{
             ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
             UpdateOrganizationServiceResponse, UpdateOrganizationServiceResponse_ConflictError,
+            UpdateOrganizationServiceResponse_ServiceNotFoundError,
             WatchOrganizationServicesResponse,
         },
         service::Service,
     },
+    skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -110,17 +112,16 @@ pub async fn handle_update(
     let service = match result {
         ServiceUpdateOutcome::Updated { service } => Service::try_from(service)?,
         ServiceUpdateOutcome::ConflictError { actual } => {
-            return Ok(UpdateOrganizationServiceResponse::ConflictError(Box::new(
-                UpdateOrganizationServiceResponse_ConflictError {
+            return Ok(skir_variant!(
+                UpdateOrganizationServiceResponse::ConflictError {
                     expected_revision: request.expected_revision,
                     actual: Service::try_from(actual)?,
-                    _unrecognized: None,
-                },
-            )));
+                }
+            ));
         }
         ServiceUpdateOutcome::ServiceNotFoundError => {
-            return Ok(UpdateOrganizationServiceResponse::ServiceNotFoundError(
-                Box::default(),
+            return Ok(skir_variant!(
+                UpdateOrganizationServiceResponse::ServiceNotFoundError
             ));
         }
         ServiceUpdateOutcome::NameInvalid => {

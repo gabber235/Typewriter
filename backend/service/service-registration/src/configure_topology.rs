@@ -20,6 +20,7 @@ use wasmcloud_utils::{
         EngineRealmSelection, EngineTarget, WatchHostExecutionResponse,
         WatchHostExecutionResponse_Desired, WatchOrganizationTopologyResponse,
     },
+    skir_transaction_outcome, skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -33,16 +34,16 @@ enum ConfigureTopologyOutcome {
         removed_realm: Option<RecordId>,
         removed_engine: Option<RecordId>,
     },
-    Conflict {
+    ConflictError {
         host: ServiceHostRecord,
     },
-    InvalidConfiguration {
+    InvalidConfigurationError {
         message: String,
     },
-    IncompatibleEngine {
+    IncompatibleEngineError {
         target: EngineTargetRecord,
     },
-    RealmNotFound {
+    RealmNotFoundError {
         realm_id: RecordId,
     },
 }
@@ -132,17 +133,17 @@ pub async fn handle_configure(
                 WHERE service_id.organization = $organization_id;
             IF array::is_empty($hosts) {
                 RETURN {
-                    outcome: 'invalid-configuration',
+                    outcome: 'invalid-configuration-error',
                     message: 'Host was not found in this organization',
                 }
             };
             LET $host = array::first($hosts);
             IF $host.revision != $expected_revision {
-                RETURN { outcome: 'conflict', host: $host }
+                RETURN { outcome: 'conflict-error', host: $host }
             };
             IF $has_realm AND !$host.can_host_realm {
                 RETURN {
-                    outcome: 'invalid-configuration',
+                    outcome: 'invalid-configuration-error',
                     message: 'Host cannot run a Realm',
                 }
             };
@@ -151,14 +152,14 @@ pub async fn handle_configure(
                 |$supported| $supported.engine_id = $realm_target.engine_id
                     AND $realm_target.major_version IN $supported.supported_major_versions,
             ) {
-                RETURN { outcome: 'incompatible-engine', target: $realm_target }
+                RETURN { outcome: 'incompatible-engine-error', target: $realm_target }
             };
             IF $has_engine AND !array::any(
                 $host.supported_engines,
                 |$supported| $supported.engine_id = $engine_target.engine_id
                     AND $engine_target.major_version IN $supported.supported_major_versions,
             ) {
-                RETURN { outcome: 'incompatible-engine', target: $engine_target }
+                RETURN { outcome: 'incompatible-engine-error', target: $engine_target }
             };
 
             LET $current_realm = array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id);
@@ -191,11 +192,11 @@ pub async fn handle_configure(
                 NONE
             };
             IF $has_engine AND !$uses_hosted_realm AND $external_realm = NONE {
-                RETURN { outcome: 'realm-not-found', realm_id: $existing_realm_id }
+                RETURN { outcome: 'realm-not-found-error', realm_id: $existing_realm_id }
             };
             LET $assigned_realm = IF $uses_hosted_realm { $realm } ELSE { $external_realm };
             IF $has_engine AND $assigned_realm.target_engine != $engine_target {
-                RETURN { outcome: 'incompatible-engine', target: $engine_target }
+                RETURN { outcome: 'incompatible-engine-error', target: $engine_target }
             };
 
             LET $engine = IF $has_engine {
@@ -237,7 +238,7 @@ pub async fn handle_configure(
                 LET $dependents = SELECT id FROM engine_instance WHERE realm_id = $removed_realm;
                 IF !array::is_empty($dependents) {
                     RETURN {
-                        outcome: 'invalid-configuration',
+                        outcome: 'invalid-configuration-error',
                         message: 'Realm is still assigned to an execution engine',
                     }
                 };
@@ -286,7 +287,37 @@ pub async fn handle_configure(
         ),
     };
     publish_configuration(org_id, &outcome).await?;
-    map_outcome(outcome)
+    let (host, realm, engine) = skir_transaction_outcome!(
+        ConfigureServiceHostResponse,
+        outcome,
+        success ConfigureTopologyOutcome::Configured {
+            host,
+            realm,
+            engine,
+            removed_realm: _,
+            removed_engine: _,
+        } => (host, realm, engine),
+        errors {
+            ConfigureTopologyOutcome::ConflictError { host } => {
+                actual: host.into()
+            },
+            ConfigureTopologyOutcome::InvalidConfigurationError { message } => {
+                message
+            },
+            ConfigureTopologyOutcome::IncompatibleEngineError { target } => {
+                target: target.into()
+            },
+            ConfigureTopologyOutcome::RealmNotFoundError { realm_id } => {
+                realm_id: realm_id.into()
+            },
+        }
+    );
+
+    Ok(skir_variant!(ConfigureServiceHostResponse::Success {
+        host: host.into(),
+        realm: realm.map(Into::into),
+        engine: engine.map(Into::into),
+    }))
 }
 
 async fn publish_configuration(
@@ -336,70 +367,18 @@ async fn publish_configuration(
             .await?;
     }
     wasmcloud_utils::skir_subjects::host_execution(&host.service_id.key.to_string())
-        .publish(WatchHostExecutionResponse::Desired(Box::new(
-            WatchHostExecutionResponse_Desired {
-                topology_revision: host.topology_revision.desired,
-                realm,
-                engine,
-                _unrecognized: None,
-            },
-        )))
+        .publish(skir_variant!(WatchHostExecutionResponse::Desired {
+            topology_revision: host.topology_revision.desired,
+            realm,
+            engine,
+        }))
         .await
 }
 
-fn map_outcome(
-    outcome: ConfigureTopologyOutcome,
-) -> Result<ConfigureServiceHostResponse, otel_wasi::Error> {
-    Ok(match outcome {
-        ConfigureTopologyOutcome::Configured {
-            host,
-            realm,
-            engine,
-            removed_realm: _,
-            removed_engine: _,
-        } => {
-            ConfigureServiceHostResponse::Success(Box::new(ConfigureServiceHostResponse_Success {
-                host: host.into(),
-                realm: realm.map(Into::into),
-                engine: engine.map(Into::into),
-                _unrecognized: None,
-            }))
-        }
-        ConfigureTopologyOutcome::Conflict { host } => ConfigureServiceHostResponse::ConflictError(
-            Box::new(ConfigureServiceHostResponse_ConflictError {
-                actual: host.into(),
-                _unrecognized: None,
-            }),
-        ),
-        ConfigureTopologyOutcome::InvalidConfiguration { message } => {
-            invalid_configuration(message)
-        }
-        ConfigureTopologyOutcome::IncompatibleEngine { target } => {
-            ConfigureServiceHostResponse::IncompatibleEngineError(Box::new(
-                ConfigureServiceHostResponse_IncompatibleEngineError {
-                    target: target.into(),
-                    _unrecognized: None,
-                },
-            ))
-        }
-        ConfigureTopologyOutcome::RealmNotFound { realm_id } => {
-            ConfigureServiceHostResponse::RealmNotFoundError(Box::new(
-                ConfigureServiceHostResponse_RealmNotFoundError {
-                    realm_id: realm_id.into(),
-                    _unrecognized: None,
-                },
-            ))
-        }
-    })
-}
-
 fn invalid_configuration(message: impl Into<String>) -> ConfigureServiceHostResponse {
-    ConfigureServiceHostResponse::InvalidConfigurationError(Box::new(
-        ConfigureServiceHostResponse_InvalidConfigurationError {
-            message: message.into(),
-            _unrecognized: None,
-        },
-    ))
+    skir_variant!(ConfigureServiceHostResponse::InvalidConfigurationError {
+        message: message.into(),
+    })
 }
 
 fn valid_target(target: &EngineTarget) -> bool {

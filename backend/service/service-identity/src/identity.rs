@@ -164,15 +164,12 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
             "identity.outcome" = "success",
             "identity.service.id" = account.user_uid.clone(),
         );
-        return Ok(IssueServiceIdentityResponse::Success(Box::new(
-            IssueServiceIdentityResponse_Success {
-                service_id: account.user_uid,
-                display_name: names.display_name,
-                username: account.username,
-                token: account.token,
-                _unrecognized: None,
-            },
-        )));
+        return Ok(skir_variant!(IssueServiceIdentityResponse::Success {
+            service_id: account.user_uid,
+            display_name: names.display_name,
+            username: account.username,
+            token: account.token,
+        }));
     }
 
     if let Ok(Err(slug)) = &created {

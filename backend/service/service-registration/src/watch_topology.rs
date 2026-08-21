@@ -12,6 +12,7 @@ use wasmcloud_utils::{
         WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
         WatchOrganizationTopologyResponse_List,
     },
+    skir_variant,
     wasmcloud::messaging::types::BrokerMessage,
 };
 
@@ -60,12 +61,9 @@ pub async fn handle_watch(
         "topology.realm_count" = topology.realms.len() as i64,
         "topology.engine_count" = topology.engines.len() as i64,
     );
-    Ok(WatchOrganizationTopologyResponse::List(Box::new(
-        WatchOrganizationTopologyResponse_List {
-            hosts: topology.hosts.into_iter().map(Into::into).collect(),
-            realms: topology.realms.into_iter().map(Into::into).collect(),
-            engines: topology.engines.into_iter().map(Into::into).collect(),
-            _unrecognized: None,
-        },
-    )))
+    Ok(skir_variant!(WatchOrganizationTopologyResponse::List {
+        hosts: topology.hosts.into_iter().map(Into::into).collect(),
+        realms: topology.realms.into_iter().map(Into::into).collect(),
+        engines: topology.engines.into_iter().map(Into::into).collect(),
+    }))
 }
