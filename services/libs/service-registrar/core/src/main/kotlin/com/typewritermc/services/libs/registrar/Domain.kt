@@ -4,15 +4,7 @@ package com.typewritermc.services.libs.registrar
 sealed interface ServiceRole {
     val version: String
 
-    data class Engine(
-        override val version: String,
-    ) : ServiceRole {
-        init {
-            requireTrimmedNonblank(version, "version")
-        }
-    }
-
-    data class Realm(
+    data class Host(
         override val version: String,
     ) : ServiceRole {
         init {
@@ -37,15 +29,12 @@ class ServiceIdentity(
     val serviceId: String,
     val displayName: String,
     val username: String,
-    roles: List<ServiceRole>,
+    val role: ServiceRole,
 ) {
-    val roles: List<ServiceRole> = roles.toList()
-
     init {
         requireTrimmedNonblank(serviceId, "serviceId")
         requireTrimmedNonblank(displayName, "displayName")
         requireTrimmedNonblank(username, "username")
-        validateRoles(this.roles)
     }
 
     override fun equals(other: Any?): Boolean =
@@ -53,16 +42,16 @@ class ServiceIdentity(
             serviceId == other.serviceId &&
             displayName == other.displayName &&
             username == other.username &&
-            roles == other.roles
+            role == other.role
 
     override fun hashCode(): Int {
         var result = serviceId.hashCode()
         result = 31 * result + displayName.hashCode()
         result = 31 * result + username.hashCode()
-        return 31 * result + roles.hashCode()
+        return 31 * result + role.hashCode()
     }
 
-    override fun toString(): String = "ServiceIdentity(serviceId=$serviceId, displayName=$displayName, username=$username, roles=$roles)"
+    override fun toString(): String = "ServiceIdentity(serviceId=$serviceId, displayName=$displayName, username=$username, role=$role)"
 }
 
 /** Organization associated with a service. */
@@ -138,22 +127,6 @@ class RegistrationToken(
     override fun hashCode(): Int = value.hashCode()
 
     override fun toString(): String = "[REDACTED]"
-}
-
-internal fun validateRoles(roles: List<ServiceRole>) {
-    require(roles.isNotEmpty()) { "at least one role is required" }
-    require(roles.all { it.version.isNotBlank() && it.version == it.version.trim() }) {
-        "role versions must be trimmed and nonblank"
-    }
-    require(roles.count { it is ServiceRole.Engine } <= 1) { "at most one engine role is allowed" }
-    require(roles.count { it is ServiceRole.Realm } <= 1) { "at most one realm role is allowed" }
-    val customs = roles.filterIsInstance<ServiceRole.Custom>()
-    require(customs.map { it.name }.distinct().size == customs.size) {
-        "custom role names must be unique"
-    }
-    require(customs.all { CUSTOM_ROLE.matches(it.name) }) {
-        "custom role names must be backend identifiers"
-    }
 }
 
 private fun requireTrimmedNonblank(

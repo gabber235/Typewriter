@@ -14,7 +14,7 @@ class RegistrarConfiguration(
     val oauthClientId: String,
     oauthScopes: Set<String>,
     val natsServerUri: URI,
-    roles: List<ServiceRole>,
+    val role: ServiceRole,
     val bindingRefreshInterval: Duration = 2.minutes,
     val heartbeatInterval: Duration = 30.seconds,
     val accessTokenRefreshSkew: Duration = 1.minutes,
@@ -23,14 +23,12 @@ class RegistrarConfiguration(
     val shutdownTimeout: Duration = 30.seconds,
 ) {
     val oauthScopes: Set<String> = oauthScopes.toSet()
-    val roles: List<ServiceRole> = roles.toList()
 
     init {
         listOf(identityIssueUri, sentinelCredentialsUri, oauthTokenUri).forEach { requireUri(it, setOf("http", "https")) }
         requireUri(natsServerUri, setOf("nats", "tls", "ws", "wss"))
         require(oauthClientId.isNotBlank() && oauthClientId == oauthClientId.trim())
         require(this.oauthScopes.isNotEmpty() && this.oauthScopes.all { it.isNotBlank() && it == it.trim() })
-        validateRoles(this.roles)
         listOf(
             bindingRefreshInterval,
             heartbeatInterval,

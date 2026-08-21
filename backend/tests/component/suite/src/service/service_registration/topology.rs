@@ -25,7 +25,7 @@ async fn watch_returns_first_class_topology_for_one_organization(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', major_version: 1 }; CREATE service:other_service SET name = 'other_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]",
+            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', major_version: 1 }; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]",
         )
         .execute()
         .await?;
@@ -145,7 +145,7 @@ async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:realm_service SET name = 'realm_service', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', major_version: 1 }",
+            "CREATE service:realm_service SET name = 'realm_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', major_version: 1 }",
         )
         .execute()
         .await?;
@@ -280,7 +280,7 @@ async fn configure_blocks_realm_removal_while_another_host_depends_on_it(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE service:paper_service SET name = 'paper_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', major_version: 1 }",
+            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE service:paper_service SET name = 'paper_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', major_version: 1 }",
         )
         .execute()
         .await?;
@@ -448,7 +448,7 @@ async fn seed_host(
 ) -> anyhow::Result<()> {
     database(context)?
         .seed(format!(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', roles = [{{ type: 'engine', version: '1.0.0' }}], organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper', supported_major_versions: [1] }}]",
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', role = {{ type: 'host', version: '1.0.0' }}, organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper', supported_major_versions: [1] }}]",
         ))
         .execute()
         .await?;

@@ -1,6 +1,8 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.loader.LoaderServiceResult
+import com.typewritermc.loader.LoaderServiceSnapshot
 import com.typewritermc.realm.deployment.CompatibleNoOperationCheckpoint
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmUpgradeCheckpoint
@@ -18,7 +20,6 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.registrar.RegistrarResult
-import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
@@ -40,7 +41,7 @@ import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 
 /**
- * Owns Realm storage, communication routes, registrar monitoring, and outbox publication for one child deployment.
+ * Owns Realm storage, communication routes, loader connection monitoring, and outbox publication for one child deployment.
  *
  * [start] and [stop] define one lifecycle and are serialized internally. The current scaffold exposes a compatible no
  * operation upgrade checkpoint, so replacement restarts the Realm without migrating in memory state.
@@ -61,15 +62,16 @@ class Realm(
     private var router: CommunicatorRouter? = null
     private var outboxPublisher: RealmOutboxPublisher? = null
     private var routerSession: RouterSession? = null
-    private var registrarMonitor: Job? = null
+    private var serviceMonitor: Job? = null
 
     context(main: MainSpanScope)
     suspend fun start(
-        states: StateFlow<RegistrarSnapshot>,
-        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
+        realmId: String,
+        serviceStates: StateFlow<LoaderServiceSnapshot>,
+        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
     ) {
         check(database == null) { "Realm is already started" }
-        val snapshot = states.value
+        val snapshot = serviceStates.value
         val ready =
             snapshot.state as? RegistrarState.Ready
                 ?: error("Registrar must be ready before Realm starts")
@@ -86,13 +88,13 @@ class Realm(
                     editorCatalog,
                     presentationSearch,
                 )
-            replaceRouter(snapshot.attempt, ready, communicatorFor)
-            registrarMonitor =
+            replaceRouter(realmId, snapshot.attempt, ready, communicatorFor)
+            serviceMonitor =
                 scope.launch {
-                    states.collectLatest { snapshot ->
+                    serviceStates.collectLatest { snapshot ->
                         val state = snapshot.state
                         if (state is RegistrarState.Ready) {
-                            replaceRouterWithRetry(snapshot.attempt, state, communicatorFor)
+                            replaceRouterWithRetry(realmId, snapshot.attempt, state, communicatorFor)
                         }
                     }
                 }
@@ -120,8 +122,8 @@ class Realm(
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
         ) {
             val failures = mutableListOf<Throwable>()
-            runCatching { registrarMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-            registrarMonitor = null
+            runCatching { serviceMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
+            serviceMonitor = null
             runCatching { outboxPublisher?.stop() }.exceptionOrNull()?.let(failures::add)
             outboxPublisher = null
             runCatching {
@@ -152,9 +154,10 @@ class Realm(
 
     context(main: MainSpanScope)
     private suspend fun replaceRouterWithRetry(
+        realmId: String,
         attempt: Long,
         ready: RegistrarState.Ready,
-        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
+        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
     ) {
         var retryAttempt = 0L
         while (true) {
@@ -163,7 +166,7 @@ class Realm(
                     name = "realm.routes.replace",
                     unhandledFailureSlug = ErrorSlug.of("realm-routes-replace-failed"),
                 ) {
-                    replaceRouter(attempt, ready, communicatorFor)
+                    replaceRouter(realmId, attempt, ready, communicatorFor)
                 }
                 return
             } catch (failure: Throwable) {
@@ -176,9 +179,10 @@ class Realm(
 
     context(main: MainSpanScope)
     private suspend fun replaceRouter(
+        realmId: String,
         attempt: Long,
         ready: RegistrarState.Ready,
-        communicatorFor: suspend (Long) -> RegistrarResult<Communicator>,
+        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
     ) = lifecycle.withLock {
         val session = RouterSession(attempt, ready.connectionGeneration)
         if (routerSession == session) return@withLock
@@ -189,13 +193,13 @@ class Realm(
         previous?.stop()?.requireSuccess("replace")
         val address =
             RealmAddress(
-                realmId = ready.session.identity.serviceId,
+                realmId = realmId,
                 organizationId = ready.session.binding.organizationId,
             )
         val communicator =
             when (val result = communicatorFor(ready.connectionGeneration)) {
                 is RegistrarResult.Success -> result.value
-                is RegistrarResult.Failure -> error("Registrar communicator unavailable: ${result.failure}")
+                is RegistrarResult.Failure -> error("Loader communicator unavailable: ${result.failure}")
             }
         val routes = checkNotNull(routeFactory) { "Realm routes are not initialized" }
         val replacement = communicator.createRouter(routes.create(address), scope)

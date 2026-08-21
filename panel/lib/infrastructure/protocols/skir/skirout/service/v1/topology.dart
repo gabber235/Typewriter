@@ -278,106 +278,6 @@ final class EngineTarget_mutable implements EngineTarget_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum HostEntrypoint
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case HostEntrypoint_unknown(): { ... }
-///     case HostEntrypoint.standalone: { ... }
-///     case HostEntrypoint.paper: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class HostEntrypoint {
-  /// Constant indicating an unknown `HostEntrypoint`.
-  /// Default value for fields of type `HostEntrypoint`.
-  static const HostEntrypoint unknown = HostEntrypoint_unknown._instance;
-
-  static const standalone = _HostEntrypoint_consts.standaloneConst;
-  static const paper = _HostEntrypoint_consts.paperConst;
-
-  /// Returns the kind of variant held by this HostEntrypoint.
-  HostEntrypoint_kind get kind;
-
-  /// Serializer for `HostEntrypoint` instances.
-  static _skir.EnumSerializer<HostEntrypoint> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "standalone",
-        "standalone",
-        "",
-        standalone,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "paper",
-        "paper",
-        "",
-        paper,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:HostEntrypoint",
-    doc: "",
-    unknownInstance: HostEntrypoint_unknown._instance,
-    enumInstance: HostEntrypoint.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HostEntrypoint_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `HostEntrypoint`.
-enum HostEntrypoint_kind {
-  unknown(0),
-  standaloneConst(1),
-  paperConst(2);
-
-  final _core.int _ordinal;
-
-  const HostEntrypoint_kind(this._ordinal);
-}
-
-final class HostEntrypoint_unknown implements HostEntrypoint {
-  static const _instance = HostEntrypoint_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const HostEntrypoint_unknown._() : _u = null;
-  HostEntrypoint_unknown._unrecognized(this._u);
-
-  @_core.override
-  HostEntrypoint_kind get kind => HostEntrypoint_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is HostEntrypoint_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HostEntrypoint.serializer);
-}
-
-enum _HostEntrypoint_consts implements HostEntrypoint {
-  standaloneConst(HostEntrypoint_kind.standaloneConst),
-  paperConst(HostEntrypoint_kind.paperConst);
-
-  @_core.override
-  final HostEntrypoint_kind kind;
-
-  const _HostEntrypoint_consts(this.kind);
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HostEntrypoint.serializer);
-}
-
-// -----------------------------------------------------------------------------
 // struct SupportedEngine
 // -----------------------------------------------------------------------------
 
@@ -1148,7 +1048,7 @@ sealed class ServiceHost_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get hostId;
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
   _core.int get revision;
-  HostEntrypoint get entrypoint;
+  _core.String get entrypoint;
   _core.bool get canHostRealm;
   _core.Iterable<SupportedEngine_orMutable> get supportedEngines;
   ReconciledRevision_orMutable get topologyRevision;
@@ -1166,7 +1066,7 @@ final class ServiceHost implements ServiceHost_orMutable {
   @_core.override
   final _core.int revision;
   @_core.override
-  final HostEntrypoint entrypoint;
+  final _core.String entrypoint;
   @_core.override
   final _core.bool canHostRealm;
   @_core.override
@@ -1181,7 +1081,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
     required _core.int revision,
-    required HostEntrypoint entrypoint,
+    required _core.String entrypoint,
     required _core.bool canHostRealm,
     required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
     required ReconciledRevision_orMutable topologyRevision,
@@ -1213,7 +1113,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
-    HostEntrypoint.unknown,
+    "",
     false,
     _skir.KeyedIterable.empty,
     ReconciledRevision.defaultInstance,
@@ -1226,7 +1126,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
-    HostEntrypoint.unknown,
+    "",
     false,
     _skir.KeyedIterable.empty,
     ReconciledRevision.defaultInstance,
@@ -1308,7 +1208,7 @@ final class ServiceHost implements ServiceHost_orMutable {
         "entrypoint",
         "entrypoint",
         3,
-        HostEntrypoint.serializer,
+        _skir.Serializers.string,
         "",
         (it) => it.entrypoint,
         (it, v) => it.entrypoint = v,
@@ -1372,7 +1272,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable hostId;
   _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
   _core.int revision;
-  HostEntrypoint entrypoint;
+  _core.String entrypoint;
   _core.bool canHostRealm;
   _core.Iterable<SupportedEngine_orMutable> supportedEngines;
   ReconciledRevision_orMutable topologyRevision;
@@ -4144,7 +4044,7 @@ sealed class WatchOrganizationTopologyResponse {
     required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
     required _core.int revision,
-    required HostEntrypoint entrypoint,
+    required _core.String entrypoint,
     required _core.bool canHostRealm,
     required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
     required ReconciledRevision_orMutable topologyRevision,

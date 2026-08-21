@@ -1,4 +1,4 @@
-package com.typewritermc.realm.shell
+package com.typewritermc.loader.standalone.shell
 
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.parse
@@ -8,7 +8,7 @@ import com.github.ajalt.mordant.terminal.PrintRequest
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.terminal.TerminalInfo
 import com.github.ajalt.mordant.terminal.TerminalInterface
-import com.typewritermc.realm.shell.commands.RealmRootCommand
+import com.typewritermc.loader.standalone.shell.commands.LoaderRootCommand
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.EventProjection
 import com.typewritermc.services.libs.telemetry.LogSeverity
@@ -20,10 +20,10 @@ import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.terminal.TerminalBuilder
 
-class RealmShell(
-    private val context: RealmShellContext,
+class LoaderShell(
+    private val context: LoaderShellContext,
     private val telemetry: ServiceTelemetry,
-    private val console: RealmConsoleLogOutput = RealmConsoleLogOutput(),
+    private val console: LoaderConsoleLogOutput = LoaderConsoleLogOutput(),
 ) {
     fun run() {
         val terminal =
@@ -32,7 +32,7 @@ class RealmShell(
                 .system(true)
                 .build()
 
-        val completer = RealmShellCompleter(RealmRootCommand(context))
+        val completer = LoaderShellCompleter(LoaderRootCommand(context))
 
         val reader =
             LineReaderBuilder
@@ -44,7 +44,7 @@ class RealmShell(
         console.attach(reader)
 
         try {
-            reader.printAbove("Realm shell started. Type 'help' for available commands.")
+            reader.printAbove("Loader shell started. Type 'help' for available commands.")
             recordShellExit(runLoop(reader))
         } catch (failure: Throwable) {
             recordShellFailure(failure)
@@ -58,7 +58,7 @@ class RealmShell(
         while (!context.isStopRequested()) {
             val line =
                 try {
-                    reader.readLine("realm> ")
+                    reader.readLine("loader> ")
                 } catch (_: UserInterruptException) {
                     reader.printAbove("Interrupted by user (Ctrl+C)")
                     return ShellExitReason.INTERRUPTED
@@ -80,14 +80,14 @@ class RealmShell(
     ) {
         try {
             telemetry.mainSpanBlocking(
-                name = "realm.shell.command",
-                unhandledFailureSlug = ErrorSlug.of("realm-shell-command-failed"),
+                name = "loader.shell.command",
+                unhandledFailureSlug = ErrorSlug.of("loader-shell-command-failed"),
                 parent = Context.root(),
             ) { main ->
-                val rootCommand = RealmRootCommand(context, reader.asCliktTerminal())
+                val rootCommand = LoaderRootCommand(context, reader.asCliktTerminal())
                 try {
-                    val argv = tokenizeRealmCommand(line)
-                    main.annotate { attribute("realm.shell.command.name", argv.firstOrNull() ?: "empty") }
+                    val argv = tokenizeLoaderCommand(line)
+                    main.annotate { attribute("loader.shell.command.name", argv.firstOrNull() ?: "empty") }
                     rootCommand.parse(argv)
                     main.annotate { operationOutcome("completed") }
                 } catch (failure: CliktError) {
@@ -104,8 +104,8 @@ class RealmShell(
 
     internal fun recordShellExit(reason: ShellExitReason) {
         telemetry.mainSpanBlocking(
-            name = "realm.shell.exit",
-            unhandledFailureSlug = ErrorSlug.of("realm-shell-exit-failed"),
+            name = "loader.shell.exit",
+            unhandledFailureSlug = ErrorSlug.of("loader-shell-exit-failed"),
             parent = Context.root(),
         ) { main ->
             main.annotate { operationOutcome(reason.attributeValue) }
@@ -114,23 +114,23 @@ class RealmShell(
 
     private fun recordShellFailure(failure: Throwable): Nothing =
         telemetry.mainSpanBlocking(
-            name = "realm.shell.exit",
-            unhandledFailureSlug = realmShellFailureSlug,
+            name = "loader.shell.exit",
+            unhandledFailureSlug = loaderShellFailureSlug,
             parent = Context.root(),
         ) { main ->
             main.annotate { operationOutcome("failed") }
             main.event(
                 name = "operation.failed",
-                projection = EventProjection.log(LogSeverity.ERROR, "Realm shell failed"),
+                projection = EventProjection.log(LogSeverity.ERROR, "Loader shell failed"),
             ) {
-                attribute("exception.slug", realmShellFailureSlug.value)
+                attribute("exception.slug", loaderShellFailureSlug.value)
                 exception(failure)
             }
             throw failure
         }
 }
 
-private val realmShellFailureSlug = ErrorSlug.of("realm-shell-failed")
+private val loaderShellFailureSlug = ErrorSlug.of("loader-shell-failed")
 
 internal enum class ShellExitReason(
     val attributeValue: String,
@@ -140,7 +140,7 @@ internal enum class ShellExitReason(
     END_OF_INPUT("end_of_input"),
 }
 
-internal fun tokenizeRealmCommand(line: String): List<String> = CommandLineParser.tokenize(line.trim())
+internal fun tokenizeLoaderCommand(line: String): List<String> = CommandLineParser.tokenize(line.trim())
 
 private fun org.jline.reader.LineReader.asCliktTerminal(): Terminal =
     Terminal(

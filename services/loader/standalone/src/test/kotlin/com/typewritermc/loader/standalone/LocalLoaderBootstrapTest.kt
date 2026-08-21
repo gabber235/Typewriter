@@ -16,7 +16,7 @@ val LocalLoaderBootstrapTest by testSuite {
     test("local standalone mode persists its host identity") {
         runTest {
             val directory = Files.createTempDirectory("typewriter-local-host")
-            val application = localLoaderApplication()
+            val application = localLoaderApplicationWithoutService()
             val host = application.bootstrap.start(HostEntrypoint.STANDALONE, directory, backgroundScope)
 
             HostIdentityStore(directory.resolve("state/host-id")).load() shouldBe "local-standalone"

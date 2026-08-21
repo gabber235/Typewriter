@@ -59,7 +59,7 @@ class _StoryServices extends ServicesMock {
       yield [
         for (final service in services)
           service.copyWith(
-            roles: [CustomServiceRole(name: "Integration", version: "1.0.0")],
+            role: CustomServiceRole(name: "integration", version: "1.0.0"),
           ),
       ];
     }

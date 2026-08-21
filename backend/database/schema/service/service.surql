@@ -6,18 +6,20 @@ DEFINE FIELD OVERWRITE name ON service TYPE string
 
 DEFINE FIELD OVERWRITE revision ON service TYPE int
     DEFAULT 1
-    ASSERT $value >= 1;
+    ASSERT {
+        IF $value <= 0 {
+            THROW "service-revision-invalid-error"
+        };
+        RETURN true;
+    };
 
-DEFINE FIELD OVERWRITE roles ON service TYPE array<object>
-    ASSERT fn::service::valid_roles($value);
-
-DEFINE FIELD OVERWRITE roles.* ON service TYPE object
+DEFINE FIELD OVERWRITE role ON service TYPE object
     ASSERT fn::service::valid_role($value);
 
-DEFINE FIELD OVERWRITE roles.*.type ON service
-    TYPE "engine" | "realm" | "custom";
+DEFINE FIELD OVERWRITE role.type ON service
+    TYPE "host" | "custom";
 
-DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
+DEFINE FIELD OVERWRITE role.version ON service TYPE string
     ASSERT {
         IF !string::is_semver($value) {
             THROW "role-version-invalid-error"
@@ -25,7 +27,7 @@ DEFINE FIELD OVERWRITE roles.*.version ON service TYPE string
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE roles.*.name ON service TYPE option<string>;
+DEFINE FIELD OVERWRITE role.name ON service TYPE option<string>;
 
 DEFINE FIELD OVERWRITE created_at ON service TYPE datetime
     DEFAULT time::now()

@@ -1,14 +1,14 @@
-package com.typewritermc.realm.shell
+package com.typewritermc.loader.standalone.shell
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.mockk.mockk
 import io.mockk.verify
 import org.jline.reader.LineReader
 
-val RealmConsoleLogOutputTest by testSuite {
+val LoaderConsoleLogOutputTest by testSuite {
     test("prints above an attached interactive prompt") {
         val reader = mockk<LineReader>(relaxed = true)
-        val output = RealmConsoleLogOutput()
+        val output = LoaderConsoleLogOutput()
 
         output.attach(reader)
         output.write("Realm is ready")
@@ -18,7 +18,7 @@ val RealmConsoleLogOutputTest by testSuite {
 
     test("stops using the prompt after detachment") {
         val reader = mockk<LineReader>(relaxed = true)
-        val output = RealmConsoleLogOutput()
+        val output = LoaderConsoleLogOutput()
 
         output.attach(reader)
         output.detach()

@@ -182,7 +182,7 @@ Service _realm({
   serviceId: recordId("service:test"),
   revision: 1,
   name: "test_realm",
-  roles: [RealmServiceRole(version: "1")],
+  role: CustomServiceRole(name: "realm", version: "1"),
   createdAt: DateTime.utc(2026),
   state: ServiceState(status: status, lastSeen: lastSeen ?? DateTime.now()),
 );

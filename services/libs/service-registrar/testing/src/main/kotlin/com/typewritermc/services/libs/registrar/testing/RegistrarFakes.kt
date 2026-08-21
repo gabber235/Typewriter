@@ -39,7 +39,7 @@ sealed interface RegistrarAction {
     ) : RegistrarAction
 
     data class IssueIdentity(
-        val roles: List<ServiceRole>,
+        val role: ServiceRole,
     ) : RegistrarAction
 
     data class CreateRuntime(
@@ -127,9 +127,9 @@ class FakeIdentityIssuer(
         results += result
     }
 
-    override suspend fun issue(roles: List<ServiceRole>): IdentityIssueResult =
+    override suspend fun issue(role: ServiceRole): IdentityIssueResult =
         synchronized(this) {
-            ledger.record(RegistrarAction.IssueIdentity(roles.toList()))
+            ledger.record(RegistrarAction.IssueIdentity(role))
             checkNotNull(results.removeFirstOrNull()) { "No identity result scripted" }
         }
 }

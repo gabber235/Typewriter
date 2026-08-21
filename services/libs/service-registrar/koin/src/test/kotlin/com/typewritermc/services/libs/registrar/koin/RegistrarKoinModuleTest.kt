@@ -84,5 +84,5 @@ private fun configuration() =
         oauthClientId = "typewriter-services",
         oauthScopes = setOf("openid"),
         natsServerUri = URI("nats://nats.example.test:4222"),
-        roles = listOf(ServiceRole.Realm("1.0.0")),
+        role = ServiceRole.Custom("realm", "1.0.0"),
     )

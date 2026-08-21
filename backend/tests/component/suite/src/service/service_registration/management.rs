@@ -23,7 +23,7 @@ async fn watch_lists_only_organization_services_in_name_order(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:zeta SET name = 'zeta', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org; CREATE service:alpha SET name = 'alpha', roles = [{ type: 'realm', version: '1.0.0' }], organization = organization:test_org; CREATE service:hidden SET name = 'hidden', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:other_org",
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:zeta SET name = 'zeta', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service:alpha SET name = 'alpha', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service:hidden SET name = 'hidden', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org",
         )
         .execute()
         .await?;
@@ -64,7 +64,7 @@ async fn update_renames_owned_service_and_publishes_new_value(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'old_name', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'old_name', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
         )
         .execute()
         .await?;
@@ -118,7 +118,7 @@ async fn update_cannot_modify_service_from_another_organization(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:managed SET name = 'old_name', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:other_org",
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:managed SET name = 'old_name', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org",
         )
         .execute()
         .await?;
@@ -157,7 +157,7 @@ async fn stale_update_returns_canonical_conflict_without_writing(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'current_name', revision = 4, roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'current_name', revision = 4, role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
         )
         .execute()
         .await?;
@@ -204,7 +204,7 @@ async fn update_rejects_noncanonical_snake_case_name(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'managed', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:managed SET name = 'managed', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
         )
         .execute()
         .await?;

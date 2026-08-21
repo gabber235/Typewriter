@@ -20,16 +20,18 @@ enum class ChildKind {
 /**
  * Requests one exact child deployment revision for a host slot.
  *
- * [runtimeId] selects the runtime implementation and [manifestRevision] selects immutable deployment content. Reusing
- * both values is idempotent during reconciliation.
+ * [instanceId] identifies the hosted Realm or engine. [runtimeId] selects its runtime implementation and
+ * [manifestRevision] selects immutable deployment content. Reusing all three values is idempotent during reconciliation.
  */
 @Serializable
 data class DesiredChild(
     val kind: ChildKind,
+    val instanceId: String,
     val runtimeId: String,
     val manifestRevision: Long,
 ) {
     init {
+        require(instanceId.isNotBlank()) { "Instance id must not be blank." }
         require(runtimeId.isNotBlank()) { "Runtime id must not be blank." }
         require(manifestRevision >= 1) { "Manifest revision must be positive." }
     }

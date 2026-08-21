@@ -6,8 +6,7 @@ const _serviceInspectorPresentationId = PresentationId(
 );
 const _serviceRoleRepresentationBindingId = BindingId(57);
 
-final _engineRoleColor = engineServiceRoleColor.asColorLiteral;
-final _realmRoleColor = realmServiceRoleColor.asColorLiteral;
+final _hostRoleColor = standaloneServiceColor.asColorLiteral;
 final _customRoleColor = customServiceRoleColor.asColorLiteral;
 
 PresentationDefinition serviceInspectorPresentation(Service service) =>
@@ -58,20 +57,11 @@ PresentationNode _serviceRoleListRow() => PresentationNode(
           scopeBindingId: _serviceRoleRepresentationBindingId,
           cases: [
             PolymorphicMatchCase(
-              type: engineRoleTypeRef,
+              type: hostRoleTypeRef,
               child: _serviceRoleSection(
-                id: "service.roles.engine",
-                title: "Engine",
-                color: _engineRoleColor,
-                fields: const ["version"],
-              ),
-            ),
-            PolymorphicMatchCase(
-              type: realmRoleTypeRef,
-              child: _serviceRoleSection(
-                id: "service.roles.realm",
-                title: "Realm",
-                color: _realmRoleColor,
+                id: "service.roles.host",
+                title: "Host",
+                color: _hostRoleColor,
                 fields: const ["version"],
               ),
             ),

@@ -1,30 +1,24 @@
 # Realm
 
-Realm has explicit local and production launch profiles, following the panel configuration model.
+Realm is a loader managed deployment and does not expose a process entry point. The standalone and Paper loaders own
+its startup, replacement, and shutdown lifecycle.
 
-## Local
-
-```shell
-./gradlew runLocal
-```
-
-This loads `config/local.properties`.
-
-## Production
+## Development
 
 ```shell
-./gradlew runProduction
+build-logic/gradlew devStandalone
 ```
 
-This loads `config/production.properties`.
+Run this command from the `services` directory. It builds the Realm artifact and starts the standalone loader. The local
+loader requires a deployment source before it can select and start child runtimes.
 
-System properties and environment variables override values from the selected profile. For example:
+Realm and loader settings use separate properties files through the loader process environment:
 
 ```shell
-API_BASE_URL=https://api.example.test ./gradlew runLocal
+LOADER_CONFIG_FILE=loader/standalone/config/local.properties REALM_CONFIG_FILE=realm/config/local.properties build-logic/gradlew devStandalone
 ```
 
-Plain `./gradlew run` remains available and uses the application defaults.
+System properties and environment variables override values from that file.
 
 ## Database
 

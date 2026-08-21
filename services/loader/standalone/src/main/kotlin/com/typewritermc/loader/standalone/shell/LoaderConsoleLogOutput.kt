@@ -1,11 +1,11 @@
 @file:Suppress("ForbiddenMethodCall")
 
-package com.typewritermc.realm.shell
+package com.typewritermc.loader.standalone.shell
 
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
 import org.jline.reader.LineReader
 
-class RealmConsoleLogOutput : ConsoleLogOutput {
+class LoaderConsoleLogOutput : ConsoleLogOutput {
     @Volatile
     private var reader: LineReader? = null
 

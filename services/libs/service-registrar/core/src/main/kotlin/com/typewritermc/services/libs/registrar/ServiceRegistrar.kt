@@ -377,7 +377,7 @@ class ServiceRegistrar(
             }
         }
         transition(RegistrarState.IssuingIdentity, events)
-        return when (val issued = identityIssuer.issue(configuration.roles)) {
+        return when (val issued = identityIssuer.issue(configuration.role)) {
             is IdentityIssueResult.Failure -> {
                 val failure = RegistrarFailure.IdentityIssuance(issued.error)
                 val state =

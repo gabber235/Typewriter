@@ -24,7 +24,7 @@ sealed interface Service_OrMutable {
     val serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val revision: kotlin.Long;
     val name: kotlin.String;
-    val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>;
+    val role: skirout.service.v1.service.ServiceRole;
     val createdAt: java.time.Instant;
     val organization: skirout.kernel.v1.record_id.RecordId_OrMutable?;
     val registration: skirout.service.v1.service.ServiceRegistration_OrMutable?;
@@ -39,7 +39,7 @@ class Service private constructor(
     override val serviceId: skirout.kernel.v1.record_id.RecordId,
     override val revision: kotlin.Long,
     override val name: kotlin.String,
-    override val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>,
+    override val role: skirout.service.v1.service.ServiceRole,
     override val createdAt: java.time.Instant,
     override val organization: skirout.kernel.v1.record_id.RecordId?,
     override val registration: skirout.service.v1.service.ServiceRegistration?,
@@ -53,7 +53,7 @@ class Service private constructor(
         serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         revision: kotlin.Long,
         name: kotlin.String,
-        roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole>,
+        role: skirout.service.v1.service.ServiceRole,
         createdAt: java.time.Instant,
         organization: skirout.kernel.v1.record_id.RecordId_OrMutable?,
         registration: skirout.service.v1.service.ServiceRegistration_OrMutable?,
@@ -64,7 +64,7 @@ class Service private constructor(
         serviceId.toFrozen(),
         revision,
         name,
-        build.skir.internal.toFrozenList(roles),
+        role,
         createdAt,
         if (organization != null) organization.toFrozen() else null,
         if (registration != null) registration.toFrozen() else null,
@@ -80,7 +80,7 @@ class Service private constructor(
         serviceId = this.serviceId,
         revision = this.revision,
         name = this.name,
-        roles = this.roles,
+        role = this.role,
         createdAt = this.createdAt,
         organization = this.organization,
         registration = this.registration,
@@ -97,8 +97,8 @@ class Service private constructor(
             this.revision,
         name: kotlin.String =
             this.name,
-        roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-            this.roles,
+        role: skirout.service.v1.service.ServiceRole =
+            this.role,
         createdAt: java.time.Instant =
             this.createdAt,
         organization: skirout.kernel.v1.record_id.RecordId_OrMutable? =
@@ -111,7 +111,7 @@ class Service private constructor(
         serviceId.toFrozen(),
         revision,
         name,
-        build.skir.internal.toFrozenList(roles),
+        role,
         createdAt,
         if (organization != null) organization.toFrozen() else null,
         if (registration != null) registration.toFrozen() else null,
@@ -123,11 +123,11 @@ class Service private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.revision == other.revision && this.name == other.name && this.roles == other.roles && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state);
+        return this === other || (other is skirout.service.v1.service.Service && this.serviceId == other.serviceId && this.revision == other.revision && this.name == other.name && this.role == other.role && this.createdAt == other.createdAt && this.organization == other.organization && this.registration == other.registration && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.revision, this.name, this.roles, this.createdAt, this.organization, this.registration, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.revision, this.name, this.role, this.createdAt, this.organization, this.registration, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -147,8 +147,8 @@ class Service private constructor(
             0L,
         override var name: kotlin.String =
             "",
-        override var roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole> =
-            build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+        override var role: skirout.service.v1.service.ServiceRole =
+            skirout.service.v1.service.ServiceRole.UNKNOWN,
         override var createdAt: java.time.Instant =
             java.time.Instant.EPOCH,
         override var organization: skirout.kernel.v1.record_id.RecordId_OrMutable? =
@@ -165,7 +165,7 @@ class Service private constructor(
             serviceId = this.serviceId,
             revision = this.revision,
             name = this.name,
-            roles = this.roles,
+            role = this.role,
             createdAt = this.createdAt,
             organization = this.organization,
             registration = this.registration,
@@ -188,22 +188,6 @@ class Service private constructor(
                 is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [roles] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
-         */
-        val mutableRoles: kotlin.collections.MutableList<skirout.service.v1.service.ServiceRole> get() {
-            var value = this.roles;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.roles = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
@@ -212,7 +196,7 @@ class Service private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
                 "",
-                build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+                skirout.service.v1.service.ServiceRole.UNKNOWN,
                 java.time.Instant.EPOCH,
                 null,
                 null,
@@ -236,8 +220,8 @@ class Service private constructor(
                 0L,
             name: kotlin.String =
                 "",
-            roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+            role: skirout.service.v1.service.ServiceRole =
+                skirout.service.v1.service.ServiceRole.UNKNOWN,
             createdAt: java.time.Instant =
                 java.time.Instant.EPOCH,
             organization: skirout.kernel.v1.record_id.RecordId_OrMutable? =
@@ -250,7 +234,7 @@ class Service private constructor(
             serviceId = serviceId,
             revision = revision,
             name = name,
-            roles = roles,
+            role = role,
             createdAt = createdAt,
             organization = organization,
             registration = registration,
@@ -303,15 +287,13 @@ class Service private constructor(
                 { mut, v -> mut.name = v },
             );
             serializerImpl.addField(
-                "roles",
-                "roles",
+                "role",
+                "role",
                 3,
-                build.skir.Serializers.list(
-                    skirout.service.v1.service.ServiceRole.serializer,
-                ),
+                skirout.service.v1.service.ServiceRole.serializer,
                 "",
-                { it.roles },
-                { mut, v -> mut.roles = v },
+                { it.role },
+                { mut, v -> mut.role = v },
             );
             serializerImpl.addField(
                 "created_at",
@@ -365,8 +347,7 @@ sealed class ServiceRole private constructor() {
     /** The kind of variant held by a `ServiceRole`. */
     enum class Kind {
         UNKNOWN,
-        ENGINE_WRAPPER,
-        REALM_WRAPPER,
+        HOST_WRAPPER,
         CUSTOM_WRAPPER,
     }
 
@@ -385,39 +366,21 @@ sealed class ServiceRole private constructor() {
         }
     }
 
-    class EngineWrapper private constructor (
-        val value: skirout.service.v1.service.ServiceRole.Engine,
+    class HostWrapper private constructor (
+        val value: skirout.service.v1.service.ServiceRole.Host,
     ) : skirout.service.v1.service.ServiceRole() {
         constructor(
-            value: skirout.service.v1.service.ServiceRole.Engine_OrMutable,
+            value: skirout.service.v1.service.ServiceRole.Host_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.ENGINE_WRAPPER;
+        override val kind get() = Kind.HOST_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.service.ServiceRole.EngineWrapper && value == other.value;
+            return other is skirout.service.v1.service.ServiceRole.HostWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1298662846;
-        }
-    }
-
-    class RealmWrapper private constructor (
-        val value: skirout.service.v1.service.ServiceRole.Realm,
-    ) : skirout.service.v1.service.ServiceRole() {
-        constructor(
-            value: skirout.service.v1.service.ServiceRole.Realm_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REALM_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.service.ServiceRole.RealmWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 108386959;
+            return this.value.hashCode() + 3208616;
         }
     }
 
@@ -457,26 +420,14 @@ sealed class ServiceRole private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `EngineWrapper(skirout.service.v1.service.ServiceRole.Engine(...))`. */
+        /** Shortcut for `HostWrapper(skirout.service.v1.service.ServiceRole.Host(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createEngine(
+        fun createHost(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             version: kotlin.String,
-        ) = EngineWrapper(
-            skirout.service.v1.service.ServiceRole.Engine(
-                version = version,
-            )
-        );
-
-        /** Shortcut for `RealmWrapper(skirout.service.v1.service.ServiceRole.Realm(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealm(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            version: kotlin.String,
-        ) = RealmWrapper(
-            skirout.service.v1.service.ServiceRole.Realm(
+        ) = HostWrapper(
+            skirout.service.v1.service.ServiceRole.Host(
                 version = version,
             )
         );
@@ -523,24 +474,15 @@ sealed class ServiceRole private constructor() {
             if (_finalizationCounter == 1) {
                 _serializerImpl.addWrapperVariant(
                     1,
-                    "engine",
-                    Kind.ENGINE_WRAPPER.ordinal,
-                    skirout.service.v1.service.ServiceRole.Engine.serializer,
+                    "host",
+                    Kind.HOST_WRAPPER.ordinal,
+                    skirout.service.v1.service.ServiceRole.Host.serializer,
                     "",
-                    { EngineWrapper(it) },
+                    { HostWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
                     2,
-                    "realm",
-                    Kind.REALM_WRAPPER.ordinal,
-                    skirout.service.v1.service.ServiceRole.Realm.serializer,
-                    "",
-                    { RealmWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
                     "custom",
                     Kind.CUSTOM_WRAPPER.ordinal,
                     skirout.service.v1.service.ServiceRole.Custom.serializer,
@@ -553,24 +495,24 @@ sealed class ServiceRole private constructor() {
         }
     }
 
-    sealed interface Engine_OrMutable {
+    sealed interface Host_OrMutable {
         val version: kotlin.String;
 
-        fun toFrozen(): skirout.service.v1.service.ServiceRole.Engine;
+        fun toFrozen(): skirout.service.v1.service.ServiceRole.Host;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
-    class Engine private constructor(
+    class Host private constructor(
         override val version: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Engine>? =
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Host>? =
             null,
-    ): skirout.service.v1.service.ServiceRole.Engine_OrMutable {
+    ): skirout.service.v1.service.ServiceRole.Host_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             version: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Engine>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Host>? =
                 null,
         ): this(
             version,
@@ -591,7 +533,7 @@ sealed class ServiceRole private constructor() {
                 _MustNameArguments,
             version: kotlin.String =
                 this.version,
-        ) = skirout.service.v1.service.ServiceRole.Engine(
+        ) = skirout.service.v1.service.ServiceRole.Host(
             version,
             this._unrecognizedFields,
         );
@@ -600,7 +542,7 @@ sealed class ServiceRole private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.service.ServiceRole.Engine && this.version == other.version);
+            return this === other || (other is skirout.service.v1.service.ServiceRole.Host && this.version == other.version);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -610,21 +552,21 @@ sealed class ServiceRole private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.service.ServiceRole.Engine.serializerImpl,
+                skirout.service.v1.service.ServiceRole.Host.serializerImpl,
             )
         }
 
-        /** Mutable version of [Engine]. */
+        /** Mutable version of [Host]. */
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             override var version: kotlin.String =
                 "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Engine>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Host>? =
                 null,
-        ): skirout.service.v1.service.ServiceRole.Engine_OrMutable {
+        ): skirout.service.v1.service.ServiceRole.Host_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.service.ServiceRole.Engine(
+            override fun toFrozen() = skirout.service.v1.service.ServiceRole.Host(
                 version = this.version,
                 _unrecognizedFields = this._unrecognizedFields,
             );
@@ -632,7 +574,7 @@ sealed class ServiceRole private constructor() {
 
         companion object {
             private val default =
-                skirout.service.v1.service.ServiceRole.Engine(
+                skirout.service.v1.service.ServiceRole.Host(
                     "",
                 );
 
@@ -640,7 +582,7 @@ sealed class ServiceRole private constructor() {
             fun partial() = default;
 
             /**
-             * Creates a new instance of [Engine].
+             * Creates a new instance of [Host].
              * Unlike the constructor, does not require all fields to be specified.
              * Missing fields will be set to their default values.
              */
@@ -649,13 +591,13 @@ sealed class ServiceRole private constructor() {
                     _MustNameArguments,
                 version: kotlin.String =
                     "",
-            ) = skirout.service.v1.service.ServiceRole.Engine(
+            ) = skirout.service.v1.service.ServiceRole.Host(
                 version = version,
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/service.skir:ServiceRole.Engine",
+                recordId = "service/v1/service.skir:ServiceRole.Host",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -664,142 +606,10 @@ sealed class ServiceRole private constructor() {
                 setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
             );
 
-            /** Serializer for [Engine] instances. */
+            /** Serializer for [Host] instances. */
             val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-            /** Describes the [Engine] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "version",
-                    "version",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.version },
-                    { mut, v -> mut.version = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface Realm_OrMutable {
-        val version: kotlin.String;
-
-        fun toFrozen(): skirout.service.v1.service.ServiceRole.Realm;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Realm private constructor(
-        override val version: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Realm>? =
-            null,
-    ): skirout.service.v1.service.ServiceRole.Realm_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            version: kotlin.String,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Realm>? =
-                null,
-        ): this(
-            version,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            version = this.version,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            version: kotlin.String =
-                this.version,
-        ) = skirout.service.v1.service.ServiceRole.Realm(
-            version,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.service.ServiceRole.Realm && this.version == other.version);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.version).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.service.ServiceRole.Realm.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [Realm]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var version: kotlin.String =
-                "",
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Realm>? =
-                null,
-        ): skirout.service.v1.service.ServiceRole.Realm_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.service.ServiceRole.Realm(
-                version = this.version,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.service.ServiceRole.Realm(
-                    "",
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Realm].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                version: kotlin.String =
-                    "",
-            ) = skirout.service.v1.service.ServiceRole.Realm(
-                version = version,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/service.skir:ServiceRole.Realm",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [Realm] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [Realm] type. Provides runtime introspection capabilities. */
+            /** Describes the [Host] type. Provides runtime introspection capabilities. */
             val typeDescriptor get() = serializerImpl.typeDescriptor;
 
             init {

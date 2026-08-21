@@ -104,22 +104,19 @@ class _Fixture {
       id: "paper-eu",
       name: "paper_eu",
       connected: connected,
-      roles: [
-        RealmServiceRole(version: "1.0.0"),
-        EngineServiceRole(version: "1.0.0"),
-      ],
+      role: HostServiceRole(version: "1.0.0"),
     );
     customService = _service(
       id: "discord",
       name: "discord_bridge",
       connected: true,
-      roles: [CustomServiceRole(name: "Discord", version: "1.0.0")],
+      role: CustomServiceRole(name: "discord", version: "1.0.0"),
     );
     host = skir.ServiceHost(
       hostId: recordId("service_host:paper-eu"),
       serviceId: hostService.serviceId,
       revision: 2,
-      entrypoint: skir.HostEntrypoint.paper,
+      entrypoint: "PAPER",
       canHostRealm: true,
       supportedEngines: [
         skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
@@ -194,12 +191,12 @@ Service _service({
   required String id,
   required String name,
   required bool connected,
-  required List<ServiceRole> roles,
+  required ServiceRole role,
 }) => Service(
   serviceId: recordId("service:$id"),
   revision: 1,
   name: name,
-  roles: roles,
+  role: role,
   createdAt: DateTime.utc(2026, 8, 20),
   organization: recordId("organization:test"),
   state: ServiceState(

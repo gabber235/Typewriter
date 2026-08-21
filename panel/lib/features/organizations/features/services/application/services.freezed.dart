@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Service {
 
- skir.RecordId get serviceId; int get revision; String get name; List<ServiceRole> get roles; DateTime get createdAt; skir.RecordId? get organization; ServiceRegistration? get registration; ServiceState? get state;
+ skir.RecordId get serviceId; int get revision; String get name; ServiceRole get role; DateTime get createdAt; skir.RecordId? get organization; ServiceRegistration? get registration; ServiceState? get state;
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ServiceCopyWith<Service> get copyWith => _$ServiceCopyWithImpl<Service>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.roles, roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(roles),createdAt,organization,registration,state);
+int get hashCode => Object.hash(runtimeType,serviceId,revision,name,role,createdAt,organization,registration,state);
 
 @override
 String toString() {
-  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
+  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, role: $role, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $ServiceCopyWith<$Res>  {
   factory $ServiceCopyWith(Service value, $Res Function(Service) _then) = _$ServiceCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
+ skir.RecordId serviceId, int revision, String name, ServiceRole role, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
 });
 
 
-$ServiceRegistrationCopyWith<$Res>? get registration;$ServiceStateCopyWith<$Res>? get state;
+$ServiceRoleCopyWith<$Res> get role;$ServiceRegistrationCopyWith<$Res>? get registration;$ServiceStateCopyWith<$Res>? get state;
 
 }
 /// @nodoc
@@ -62,13 +62,13 @@ class _$ServiceCopyWithImpl<$Res>
 
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? role = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
   return _then(_self.copyWith(
 serviceId: null == serviceId ? _self.serviceId : serviceId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
-as List<ServiceRole>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ServiceRole,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
 as skir.RecordId?,registration: freezed == registration ? _self.registration : registration // ignore: cast_nullable_to_non_nullable
 as ServiceRegistration?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
@@ -76,6 +76,15 @@ as ServiceState?,
   ));
 }
 /// Create a copy of Service
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ServiceRoleCopyWith<$Res> get role {
+
+  return $ServiceRoleCopyWith<$Res>(_self.role, (value) {
+    return _then(_self.copyWith(role: value));
+  });
+}/// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -181,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  ServiceRole role,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Service() when $default != null:
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.role,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   return orElse();
 
 }
@@ -202,10 +211,10 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId serviceId,  int revision,  String name,  ServiceRole role,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)  $default,) {final _that = this;
 switch (_that) {
 case _Service():
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.role,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -222,10 +231,10 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId serviceId,  int revision,  String name,  List<ServiceRole> roles,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId serviceId,  int revision,  String name,  ServiceRole role,  DateTime createdAt,  skir.RecordId? organization,  ServiceRegistration? registration,  ServiceState? state)?  $default,) {final _that = this;
 switch (_that) {
 case _Service() when $default != null:
-return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
+return $default(_that.serviceId,_that.revision,_that.name,_that.role,_that.createdAt,_that.organization,_that.registration,_that.state);case _:
   return null;
 
 }
@@ -237,19 +246,13 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.roles,_that.crea
 
 
 class _Service extends Service {
-   _Service({required this.serviceId, required this.revision, required this.name, required final  List<ServiceRole> roles, required this.createdAt, this.organization, this.registration, this.state}): assert(name.isNotEmpty, 'Name must not be empty.'),assert(roles.isNotEmpty, 'Roles must not be empty.'),_roles = roles,super._();
+   _Service({required this.serviceId, required this.revision, required this.name, required this.role, required this.createdAt, this.organization, this.registration, this.state}): assert(name.isNotEmpty, 'Name must not be empty.'),super._();
 
 
 @override final  skir.RecordId serviceId;
 @override final  int revision;
 @override final  String name;
- final  List<ServiceRole> _roles;
-@override List<ServiceRole> get roles {
-  if (_roles is EqualUnmodifiableListView) return _roles;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_roles);
-}
-
+@override final  ServiceRole role;
 @override final  DateTime createdAt;
 @override final  skir.RecordId? organization;
 @override final  ServiceRegistration? registration;
@@ -265,16 +268,16 @@ _$ServiceCopyWith<_Service> get copyWith => __$ServiceCopyWithImpl<_Service>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._roles, _roles)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Service&&(identical(other.serviceId, serviceId) || other.serviceId == serviceId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&(identical(other.role, role) || other.role == role)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serviceId,revision,name,const DeepCollectionEquality().hash(_roles),createdAt,organization,registration,state);
+int get hashCode => Object.hash(runtimeType,serviceId,revision,name,role,createdAt,organization,registration,state);
 
 @override
 String toString() {
-  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, roles: $roles, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
+  return 'Service(serviceId: $serviceId, revision: $revision, name: $name, role: $role, createdAt: $createdAt, organization: $organization, registration: $registration, state: $state)';
 }
 
 
@@ -285,11 +288,11 @@ abstract mixin class _$ServiceCopyWith<$Res> implements $ServiceCopyWith<$Res> {
   factory _$ServiceCopyWith(_Service value, $Res Function(_Service) _then) = __$ServiceCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId serviceId, int revision, String name, List<ServiceRole> roles, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
+ skir.RecordId serviceId, int revision, String name, ServiceRole role, DateTime createdAt, skir.RecordId? organization, ServiceRegistration? registration, ServiceState? state
 });
 
 
-@override $ServiceRegistrationCopyWith<$Res>? get registration;@override $ServiceStateCopyWith<$Res>? get state;
+@override $ServiceRoleCopyWith<$Res> get role;@override $ServiceRegistrationCopyWith<$Res>? get registration;@override $ServiceStateCopyWith<$Res>? get state;
 
 }
 /// @nodoc
@@ -302,13 +305,13 @@ class __$ServiceCopyWithImpl<$Res>
 
 /// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? roles = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? serviceId = null,Object? revision = null,Object? name = null,Object? role = null,Object? createdAt = null,Object? organization = freezed,Object? registration = freezed,Object? state = freezed,}) {
   return _then(_Service(
 serviceId: null == serviceId ? _self.serviceId : serviceId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
-as List<ServiceRole>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as ServiceRole,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
 as skir.RecordId?,registration: freezed == registration ? _self.registration : registration // ignore: cast_nullable_to_non_nullable
 as ServiceRegistration?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
@@ -317,6 +320,15 @@ as ServiceState?,
 }
 
 /// Create a copy of Service
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ServiceRoleCopyWith<$Res> get role {
+
+  return $ServiceRoleCopyWith<$Res>(_self.role, (value) {
+    return _then(_self.copyWith(role: value));
+  });
+}/// Create a copy of Service
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -418,12 +430,11 @@ extension ServiceRolePatterns on ServiceRole {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( EngineServiceRole value)?  engine,TResult Function( RealmServiceRole value)?  realm,TResult Function( CustomServiceRole value)?  custom,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( HostServiceRole value)?  host,TResult Function( CustomServiceRole value)?  custom,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case EngineServiceRole() when engine != null:
-return engine(_that);case RealmServiceRole() when realm != null:
-return realm(_that);case CustomServiceRole() when custom != null:
+case HostServiceRole() when host != null:
+return host(_that);case CustomServiceRole() when custom != null:
 return custom(_that);case _:
   return orElse();
 
@@ -442,12 +453,11 @@ return custom(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( EngineServiceRole value)  engine,required TResult Function( RealmServiceRole value)  realm,required TResult Function( CustomServiceRole value)  custom,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( HostServiceRole value)  host,required TResult Function( CustomServiceRole value)  custom,}){
 final _that = this;
 switch (_that) {
-case EngineServiceRole():
-return engine(_that);case RealmServiceRole():
-return realm(_that);case CustomServiceRole():
+case HostServiceRole():
+return host(_that);case CustomServiceRole():
 return custom(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -462,12 +472,11 @@ return custom(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( EngineServiceRole value)?  engine,TResult? Function( RealmServiceRole value)?  realm,TResult? Function( CustomServiceRole value)?  custom,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( HostServiceRole value)?  host,TResult? Function( CustomServiceRole value)?  custom,}){
 final _that = this;
 switch (_that) {
-case EngineServiceRole() when engine != null:
-return engine(_that);case RealmServiceRole() when realm != null:
-return realm(_that);case CustomServiceRole() when custom != null:
+case HostServiceRole() when host != null:
+return host(_that);case CustomServiceRole() when custom != null:
 return custom(_that);case _:
   return null;
 
@@ -485,11 +494,10 @@ return custom(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String version)?  engine,TResult Function( String version)?  realm,TResult Function( String version,  String name)?  custom,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String version)?  host,TResult Function( String version,  String name)?  custom,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case EngineServiceRole() when engine != null:
-return engine(_that.version);case RealmServiceRole() when realm != null:
-return realm(_that.version);case CustomServiceRole() when custom != null:
+case HostServiceRole() when host != null:
+return host(_that.version);case CustomServiceRole() when custom != null:
 return custom(_that.version,_that.name);case _:
   return orElse();
 
@@ -508,11 +516,10 @@ return custom(_that.version,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String version)  engine,required TResult Function( String version)  realm,required TResult Function( String version,  String name)  custom,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String version)  host,required TResult Function( String version,  String name)  custom,}) {final _that = this;
 switch (_that) {
-case EngineServiceRole():
-return engine(_that.version);case RealmServiceRole():
-return realm(_that.version);case CustomServiceRole():
+case HostServiceRole():
+return host(_that.version);case CustomServiceRole():
 return custom(_that.version,_that.name);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -527,11 +534,10 @@ return custom(_that.version,_that.name);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String version)?  engine,TResult? Function( String version)?  realm,TResult? Function( String version,  String name)?  custom,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String version)?  host,TResult? Function( String version,  String name)?  custom,}) {final _that = this;
 switch (_that) {
-case EngineServiceRole() when engine != null:
-return engine(_that.version);case RealmServiceRole() when realm != null:
-return realm(_that.version);case CustomServiceRole() when custom != null:
+case HostServiceRole() when host != null:
+return host(_that.version);case CustomServiceRole() when custom != null:
 return custom(_that.version,_that.name);case _:
   return null;
 
@@ -543,9 +549,9 @@ return custom(_that.version,_that.name);case _:
 /// @nodoc
 
 
-class EngineServiceRole extends ServiceRole {
-   EngineServiceRole({required this.version}): assert(version.isNotEmpty, 'Version must not be empty.'),super._();
-  
+class HostServiceRole extends ServiceRole {
+   HostServiceRole({required this.version}): assert(version.isNotEmpty, 'Version must not be empty.'),super._();
+
 
 @override final  String version;
 
@@ -553,13 +559,13 @@ class EngineServiceRole extends ServiceRole {
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$EngineServiceRoleCopyWith<EngineServiceRole> get copyWith => _$EngineServiceRoleCopyWithImpl<EngineServiceRole>(this, _$identity);
+$HostServiceRoleCopyWith<HostServiceRole> get copyWith => _$HostServiceRoleCopyWithImpl<HostServiceRole>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EngineServiceRole&&(identical(other.version, version) || other.version == version));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HostServiceRole&&(identical(other.version, version) || other.version == version));
 }
 
 
@@ -568,15 +574,15 @@ int get hashCode => Object.hash(runtimeType,version);
 
 @override
 String toString() {
-  return 'ServiceRole.engine(version: $version)';
+  return 'ServiceRole.host(version: $version)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $EngineServiceRoleCopyWith<$Res> implements $ServiceRoleCopyWith<$Res> {
-  factory $EngineServiceRoleCopyWith(EngineServiceRole value, $Res Function(EngineServiceRole) _then) = _$EngineServiceRoleCopyWithImpl;
+abstract mixin class $HostServiceRoleCopyWith<$Res> implements $ServiceRoleCopyWith<$Res> {
+  factory $HostServiceRoleCopyWith(HostServiceRole value, $Res Function(HostServiceRole) _then) = _$HostServiceRoleCopyWithImpl;
 @override @useResult
 $Res call({
  String version
@@ -587,83 +593,17 @@ $Res call({
 
 }
 /// @nodoc
-class _$EngineServiceRoleCopyWithImpl<$Res>
-    implements $EngineServiceRoleCopyWith<$Res> {
-  _$EngineServiceRoleCopyWithImpl(this._self, this._then);
+class _$HostServiceRoleCopyWithImpl<$Res>
+    implements $HostServiceRoleCopyWith<$Res> {
+  _$HostServiceRoleCopyWithImpl(this._self, this._then);
 
-  final EngineServiceRole _self;
-  final $Res Function(EngineServiceRole) _then;
-
-/// Create a copy of ServiceRole
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? version = null,}) {
-  return _then(EngineServiceRole(
-version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class RealmServiceRole extends ServiceRole {
-   RealmServiceRole({required this.version}): assert(version.isNotEmpty, 'Version must not be empty.'),super._();
-  
-
-@override final  String version;
-
-/// Create a copy of ServiceRole
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmServiceRoleCopyWith<RealmServiceRole> get copyWith => _$RealmServiceRoleCopyWithImpl<RealmServiceRole>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmServiceRole&&(identical(other.version, version) || other.version == version));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,version);
-
-@override
-String toString() {
-  return 'ServiceRole.realm(version: $version)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmServiceRoleCopyWith<$Res> implements $ServiceRoleCopyWith<$Res> {
-  factory $RealmServiceRoleCopyWith(RealmServiceRole value, $Res Function(RealmServiceRole) _then) = _$RealmServiceRoleCopyWithImpl;
-@override @useResult
-$Res call({
- String version
-});
-
-
-
-
-}
-/// @nodoc
-class _$RealmServiceRoleCopyWithImpl<$Res>
-    implements $RealmServiceRoleCopyWith<$Res> {
-  _$RealmServiceRoleCopyWithImpl(this._self, this._then);
-
-  final RealmServiceRole _self;
-  final $Res Function(RealmServiceRole) _then;
+  final HostServiceRole _self;
+  final $Res Function(HostServiceRole) _then;
 
 /// Create a copy of ServiceRole
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? version = null,}) {
-  return _then(RealmServiceRole(
+  return _then(HostServiceRole(
 version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -677,7 +617,7 @@ as String,
 
 class CustomServiceRole extends ServiceRole {
    CustomServiceRole({required this.version, required this.name}): assert(version.isNotEmpty, 'Version must not be empty.'),assert(name.isNotEmpty, 'Name must not be empty.'),super._();
-  
+
 
 @override final  String version;
  final  String name;
@@ -937,7 +877,7 @@ return $default(_that.token,_that.expiresAt);case _:
 
 class _ServiceRegistration extends ServiceRegistration {
   const _ServiceRegistration({required this.token, required this.expiresAt}): super._();
-  
+
 
 @override final  String token;
 @override final  DateTime expiresAt;
@@ -1197,7 +1137,7 @@ return $default(_that.status,_that.lastSeen);case _:
 
 class _ServiceState extends ServiceState {
   const _ServiceState({required this.status, required this.lastSeen}): super._();
-  
+
 
 @override final  ServiceStateStatus status;
 @override final  DateTime lastSeen;

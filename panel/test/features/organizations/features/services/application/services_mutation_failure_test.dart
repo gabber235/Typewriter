@@ -14,7 +14,7 @@ Service _service({String name = "Original", int revision = 1}) => Service(
   serviceId: recordId("service:service1"),
   revision: revision,
   name: name,
-  roles: [RealmServiceRole(version: "1")],
+  role: HostServiceRole(version: "1"),
   createdAt: DateTime.utc(2025),
 );
 

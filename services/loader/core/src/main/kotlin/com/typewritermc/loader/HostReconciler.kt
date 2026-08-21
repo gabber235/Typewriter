@@ -16,6 +16,7 @@ class HostReconciler(
     private val workDirectory: Path,
     private val runtimeFactory: DeploymentRuntimeFactory,
     private val stateStore: HostStateStore,
+    private val service: LoaderServiceConnection,
     private val reporter: suspend (HostExecutionReport) -> Unit = {},
     private val clock: Clock = Clock.systemUTC(),
     private val quiesceTimeout: Duration = Duration.ofSeconds(60),
@@ -84,7 +85,7 @@ class HostReconciler(
             ChildKind.entries.forEach { kind ->
                 val child = desired.child(kind) ?: return@forEach
                 if (active[kind]?.child == child) return@forEach
-                val context = DeploymentContext(hostId, workDirectory.resolve(kind.name.lowercase()), child)
+                val context = DeploymentContext(hostId, workDirectory.resolve(kind.name.lowercase()), child, service)
                 staged[kind] = ActiveDeployment(child, runtimeFactory.stage(child, context))
             }
         } catch (failure: Throwable) {

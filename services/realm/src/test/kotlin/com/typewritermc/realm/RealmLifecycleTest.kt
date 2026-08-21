@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
-    test("registrar attempts replace routes even when the connection generation repeats") {
+    test("loader connection attempts replace routes even when the connection generation repeats") {
         runTest {
             RealmLifecycleFixture(this).use { fixture ->
                 val first = fixture.ready(attempt = 1, generation = 4)
@@ -116,7 +116,7 @@ private class RealmLifecycleFixture(
         val transport = FakeMessageTransport()
         transports += transport
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
-        val identity = ServiceIdentity("realm", "Realm", "realm", listOf(ServiceRole.Realm("1.0.0")))
+        val identity = ServiceIdentity("loader", "Loader", "loader", ServiceRole.Host("1.0.0"))
         communicators[generation] = communicator
         val session = ReadySession(identity, OrganizationBinding("organization", "Organization"))
         return ReadyState(
@@ -130,7 +130,7 @@ private class RealmLifecycleFixture(
             name = "test.realm.start",
             unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
         ) {
-            realm.start(states) { generation ->
+            realm.start("realm", states) { generation ->
                 lifecycleEvents += "communicator"
                 RegistrarResult.Success(communicators.getValue(generation))
             }

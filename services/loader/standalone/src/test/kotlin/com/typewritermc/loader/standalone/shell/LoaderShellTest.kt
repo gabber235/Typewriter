@@ -1,4 +1,4 @@
-package com.typewritermc.realm.shell
+package com.typewritermc.loader.standalone.shell
 
 import com.github.ajalt.clikt.core.CliktError
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
@@ -21,21 +21,21 @@ import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
 import kotlin.time.TestTimeSource
 
-val RealmShellTest by testSuite {
+val LoaderShellTest by testSuite {
     test("tokenization preserves quoted arguments") {
-        tokenizeRealmCommand("help 'status details'") shouldContainExactly listOf("help", "status details")
+        tokenizeLoaderCommand("help 'status details'") shouldContainExactly listOf("help", "status details")
     }
 
     test("malformed input is reported without preventing the next command") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
 
         TelemetryTestHarness.create().use { harness ->
-            val shell = RealmShell(context, harness.telemetry)
+            val shell = LoaderShell(context, harness.telemetry)
 
             shell.executeCommand("help 'status", reader)
             shell.executeCommand("stop", reader)
@@ -47,43 +47,43 @@ val RealmShellTest by testSuite {
 
     test("tokenization rejects an unclosed quote") {
         shouldThrow<CliktError> {
-            tokenizeRealmCommand("help 'status")
+            tokenizeLoaderCommand("help 'status")
         }
     }
 
     test("shell command is a bounded root span") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
 
         TelemetryTestHarness.create().use { harness ->
-            val shell = RealmShell(context, harness.telemetry)
+            val shell = LoaderShell(context, harness.telemetry)
             harness.telemetry.mainSpanBlocking("test.parent", ErrorSlug.of("test-parent-failed")) { _ ->
                 shell.executeCommand("stop", reader)
             }
 
-            val command = harness.finishedSpans().single { it.name == "realm.shell.command" }
+            val command = harness.finishedSpans().single { it.name == "loader.shell.command" }
             command.parentSpanId shouldBe SpanId.getInvalid()
-            harness.finishedSpans().none { it.name == "realm.shell" } shouldBe true
+            harness.finishedSpans().none { it.name == "loader.shell" } shouldBe true
             harness.assertNoActiveSpans()
         }
     }
 
     test("shell exit is a bounded root span with its outcome") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
 
         TelemetryTestHarness.create().use { harness ->
-            val shell = RealmShell(context, harness.telemetry)
+            val shell = LoaderShell(context, harness.telemetry)
             shell.recordShellExit(ShellExitReason.END_OF_INPUT)
 
-            val exit = harness.finishedSpans().single { it.name == "realm.shell.exit" }
+            val exit = harness.finishedSpans().single { it.name == "loader.shell.exit" }
             exit.parentSpanId shouldBe SpanId.getInvalid()
             exit.attributes[AttributeKey.stringKey("operation.outcome")] shouldBe "end_of_input"
             harness.assertNoActiveSpans()
@@ -92,15 +92,15 @@ val RealmShellTest by testSuite {
 
     test("end of input returns a bounded shell exit reason") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
         val reader = mockk<LineReader>(relaxed = true)
-        every { reader.readLine("realm> ") } throws EndOfFileException()
+        every { reader.readLine("loader> ") } throws EndOfFileException()
 
         TelemetryTestHarness.create().use { harness ->
-            RealmShell(context, harness.telemetry).runLoop(reader) shouldBe ShellExitReason.END_OF_INPUT
+            LoaderShell(context, harness.telemetry).runLoop(reader) shouldBe ShellExitReason.END_OF_INPUT
         }
     }
 }

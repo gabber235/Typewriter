@@ -5,6 +5,7 @@ import com.typewritermc.engine.SemanticVersion
 import com.typewritermc.loader.ChildKind
 import com.typewritermc.loader.DeploymentContext
 import com.typewritermc.loader.DesiredChild
+import com.typewritermc.loader.UnavailableLoaderServiceConnection
 import com.typewritermc.services.libs.filetransfer.FileChunk
 import com.typewritermc.services.libs.filetransfer.FileKey
 import com.typewritermc.services.libs.filetransfer.FileMetadata
@@ -187,8 +188,16 @@ val DeploymentManifestTest by testSuite {
                         }
                     }
                 }
-            val child = DesiredChild(ChildKind.REALM, "realm", 1)
-            val runtime = entrypoint.start(DeploymentContext("host", Files.createTempDirectory("realm-runtime"), child))
+            val child = DesiredChild(ChildKind.REALM, "realm", "realm", 1)
+            val runtime =
+                entrypoint.start(
+                    DeploymentContext(
+                        "host",
+                        Files.createTempDirectory("realm-runtime"),
+                        child,
+                        UnavailableLoaderServiceConnection,
+                    ),
+                )
 
             runtime.quiesce(Instant.now())
             runtime.stop()

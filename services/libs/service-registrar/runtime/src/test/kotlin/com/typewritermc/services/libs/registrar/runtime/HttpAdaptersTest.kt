@@ -16,7 +16,6 @@ import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import skirout.access.v1.sentinel.GetSentinelCredentialsResponse
 import skirout.service.v1.identity.IssueServiceIdentityRequest
@@ -26,7 +25,7 @@ import skirout.service.v1.service.ServiceRole as SkirRole
 
 private val httpCredentials =
     IdentityCredentials(
-        ServiceIdentity("service-id", "Service Name", "service-user", listOf(ServiceRole.Realm("1.0"))),
+        ServiceIdentity("service-id", "Service Name", "service-user", ServiceRole.Custom("realm", "1.0")),
         RedactedSecret.AppPassword("app-password"),
     )
 
@@ -62,7 +61,7 @@ private fun httpFixture(vararg outcomes: HttpResult): HttpFixture {
 }
 
 val HttpAdaptersTest by testSuite {
-    test("identity issuer sends canonical roles headers and maps success") {
+    test("identity issuer sends canonical role headers and maps success") {
         val response =
             IssueServiceIdentityResponse.createSuccess(
                 serviceId = "service-id",
@@ -72,26 +71,17 @@ val HttpAdaptersTest by testSuite {
             )
         val fixture = httpFixture(httpResponse(200, IssueServiceIdentityResponse.serializer.toBytes(response).toByteArray()))
         try {
-            val roles =
-                listOf(
-                    ServiceRole.Engine("1.0"),
-                    ServiceRole.Realm("2.0"),
-                    ServiceRole.Custom("custom_role", "3.0"),
-                )
+            val role = ServiceRole.Host("1.0")
             val result =
                 TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/service/identity/issue"))
-                    .issue(roles) as IdentityIssueResult.Success
+                    .issue(role) as IdentityIssueResult.Success
             result.credentials.identity.serviceId shouldBe "service-id"
             result.credentials.revealAppPassword() shouldBe "private-token"
             val action = fixture.transport.actions.single()
             action.headers.first("Content-Type") shouldBe "application/octet-stream"
             action.headers.first("X-Typewriter-Format") shouldBe "skir-binary"
             val request = IssueServiceIdentityRequest.serializer.fromBytes(action.body.toByteArray())
-            request.roles.map { it.kind }.shouldContainExactly(
-                SkirRole.Kind.ENGINE_WRAPPER,
-                SkirRole.Kind.REALM_WRAPPER,
-                SkirRole.Kind.CUSTOM_WRAPPER,
-            )
+            request.role.kind shouldBe SkirRole.Kind.HOST_WRAPPER
         } finally {
             fixture.close()
         }
@@ -103,7 +93,7 @@ val HttpAdaptersTest by testSuite {
         try {
             val result =
                 TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/issue"))
-                    .issue(listOf(ServiceRole.Realm("1.0"))) as IdentityIssueResult.Failure
+                    .issue(ServiceRole.Custom("realm", "1.0")) as IdentityIssueResult.Failure
             result.error shouldBe IdentityIssueError.Unavailable(false)
         } finally {
             fixture.close()
@@ -119,9 +109,9 @@ val HttpAdaptersTest by testSuite {
             )
         try {
             val issuer = TypewriterIdentityIssuer(fixture.client, URI("https://api.example.test/issue"))
-            (issuer.issue(listOf(ServiceRole.Realm("1.0"))) as IdentityIssueResult.Failure).error shouldBe
+            (issuer.issue(ServiceRole.Custom("realm", "1.0")) as IdentityIssueResult.Failure).error shouldBe
                 IdentityIssueError.Rejected(IdentityRejectionReason.UNKNOWN_ROLE)
-            val protocol = issuer.issue(listOf(ServiceRole.Realm("1.0"))) as IdentityIssueResult.Failure
+            val protocol = issuer.issue(ServiceRole.Custom("realm", "1.0")) as IdentityIssueResult.Failure
             protocol.error shouldBe IdentityIssueError.Protocol("unexpected_media_type", true)
         } finally {
             fixture.close()

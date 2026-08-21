@@ -1,4 +1,4 @@
-package com.typewritermc.realm
+package com.typewritermc.loader.standalone
 
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecordExporter
@@ -20,23 +20,23 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
 import java.util.concurrent.TimeUnit
 
-internal fun realmOpenTelemetry(
+internal fun loaderOpenTelemetry(
     console: ConsoleLogOutput,
-    configuration: RealmTelemetryConfiguration,
+    configuration: LoaderTelemetryConfiguration,
 ): OpenTelemetrySdk {
     val resource =
         Resource.getDefault().merge(
             Resource
                 .builder()
-                .put(ServiceAttributes.SERVICE_NAME, "realm")
-                .put(ServiceAttributes.SERVICE_VERSION, REALM_VERSION)
+                .put(ServiceAttributes.SERVICE_NAME, "loader")
+                .put(ServiceAttributes.SERVICE_VERSION, LOADER_VERSION)
                 .build(),
         )
     val tracerProvider =
         SdkTracerProvider
             .builder()
             .setResource(resource)
-            .setSampler(realmSampler(configuration.sampler))
+            .setSampler(loaderSampler(configuration.sampler))
     val loggerProvider =
         SdkLoggerProvider
             .builder()
@@ -62,31 +62,31 @@ internal fun realmOpenTelemetry(
         .setTracerProvider(tracerProvider.build())
         .setLoggerProvider(loggerProvider.build())
         .setPropagators(propagators)
-        .buildAndRegisterGlobal()
+        .build()
 }
 
-fun closeRealmOpenTelemetry(openTelemetry: OpenTelemetry) {
+fun closeLoaderOpenTelemetry(openTelemetry: OpenTelemetry) {
     val sdk = openTelemetry as? OpenTelemetrySdk ?: return
     sdk.sdkTracerProvider.forceFlush().join(10, TimeUnit.SECONDS)
     sdk.sdkLoggerProvider.forceFlush().join(10, TimeUnit.SECONDS)
     sdk.shutdown().join(10, TimeUnit.SECONDS)
 }
 
-private fun realmSampler(configuration: RealmSamplerConfiguration): Sampler =
+private fun loaderSampler(configuration: LoaderSamplerConfiguration): Sampler =
     when (configuration) {
-        RealmSamplerConfiguration.AlwaysOn -> {
+        LoaderSamplerConfiguration.AlwaysOn -> {
             Sampler.alwaysOn()
         }
 
-        RealmSamplerConfiguration.AlwaysOff -> {
+        LoaderSamplerConfiguration.AlwaysOff -> {
             Sampler.alwaysOff()
         }
 
-        is RealmSamplerConfiguration.TraceIdRatio -> {
+        is LoaderSamplerConfiguration.TraceIdRatio -> {
             Sampler.traceIdRatioBased(configuration.ratio)
         }
 
-        is RealmSamplerConfiguration.ParentBasedTraceIdRatio -> {
+        is LoaderSamplerConfiguration.ParentBasedTraceIdRatio -> {
             Sampler.parentBased(Sampler.traceIdRatioBased(configuration.ratio))
         }
     }

@@ -132,22 +132,20 @@ class _ServiceHostSelectable
     final realmTarget = realm?.targetEngine ?? _firstTarget(_realmTargets);
     final engineTarget = engine?.target ?? _firstTarget(_engineTargets);
     final localRealm = realm != null && engine?.realmId == realm.realmId;
+    final serviceRole = service?.role;
     return RecordValue({
       _HostInspectorFields.serviceName: StringValue(
         service?.displayName ?? "Unavailable",
       ),
       _HostInspectorFields.serviceId: StringValue(currentHost.serviceId.id),
       _HostInspectorFields.serviceRoles: ListValue(
-        service?.roles
-                .map((role) => StringValue("${role.label} ${role.version}"))
-                .toList() ??
-            const [],
+        serviceRole == null
+            ? const []
+            : [StringValue("${serviceRole.label} ${serviceRole.version}")],
       ),
       _HostInspectorFields.connected: BooleanValue(service?.isOnline ?? false),
       _HostInspectorFields.entrypoint: StringValue(
-        currentHost.entrypoint == skir.HostEntrypoint.paper
-            ? "Paper"
-            : "Standalone",
+        currentHost.entrypoint.formatted,
       ),
       _HostInspectorFields.runtimeStatus: StringValue(
         _hostStatus(currentHost.state.status),

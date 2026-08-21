@@ -14,7 +14,7 @@ private val identity =
         "service-id",
         "Service Name",
         "service-user",
-        listOf(ServiceRole.Realm("1.0.0")),
+        ServiceRole.Custom("realm", "1.0.0"),
     )
 
 val RegistrarConsoleObserverTest by testSuite {

@@ -93,14 +93,12 @@ class ServicesGrid extends ConsumerWidget {
   _GridItem _hostItem(skir.ServiceHost host, Service? service) => _GridItem(
     id: ServiceHostIdentifier(host.hostId),
     title: service?.displayName ?? host.hostId.id,
-    badge: host.entrypoint == skir.HostEntrypoint.paper
-        ? "Paper host"
-        : "Standalone host",
+    badge: host.entrypoint == "PAPER" ? "Paper host" : "Standalone host",
     status: host.topologyRevision.desired == host.topologyRevision.applied
         ? "${service?.isOnline ?? false ? "Connected" : "Offline"}, reconciled"
         : "Reconciling topology",
     color: service?.color ?? standaloneServiceColor,
-    icon: host.entrypoint == skir.HostEntrypoint.paper
+    icon: host.entrypoint == "PAPER"
         ? Icons.sports_esports_outlined
         : Icons.cloud_outlined,
     connected: service?.isOnline ?? false,

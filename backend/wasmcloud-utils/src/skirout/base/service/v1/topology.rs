@@ -92,48 +92,6 @@ impl EngineTarget {
 }
 
 // ==============================================================================
-// enum HostEntrypoint
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum HostEntrypoint {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<HostEntrypoint>>),
-    Standalone,
-    Paper,
-}
-
-impl Default for HostEntrypoint {
-    fn default() -> Self {
-        HostEntrypoint::Unknown(None)
-    }
-}
-
-impl HostEntrypoint {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<HostEntrypoint> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<HostEntrypoint>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &HostEntrypoint| match x {
-                        HostEntrypoint::Unknown(_) => 0,
-                        HostEntrypoint::Standalone => 1,
-                        HostEntrypoint::Paper => 2,
-                    },
-                    |u| HostEntrypoint::Unknown(Some(u)),
-                    |x: &HostEntrypoint| match x { HostEntrypoint::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "HostEntrypoint",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<HostEntrypoint> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(HostEntrypoint::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct SupportedEngine
 // ==============================================================================
 
@@ -385,7 +343,7 @@ pub struct ServiceHost {
     pub host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub revision: i64,
-    pub entrypoint: HostEntrypoint,
+    pub entrypoint: String,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngine>,
     pub topology_revision: ReconciledRevision,
@@ -1418,12 +1376,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<HostEntrypoint> = HostEntrypoint::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("standalone", 1, 1, "", HostEntrypoint::Standalone);
-                (*a).add_constant_variant("paper", 2, 2, "", HostEntrypoint::Paper);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SupportedEngine> = SupportedEngine::_adapter() as *const _ as *mut _;
                 (*a).add_field("engine_id", 0, crate::skir_client::Serializer::string(), "", |x: &SupportedEngine| &x.engine_id, |x: &mut SupportedEngine, v| x.engine_id = v);
                 (*a).add_field("supported_major_versions", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::int32()), "", |x: &SupportedEngine| &x.supported_major_versions, |x: &mut SupportedEngine, v| x.supported_major_versions = v);
@@ -1469,7 +1421,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("host_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ServiceHost| &x.host_id, |x: &mut ServiceHost, v| x.host_id = v);
                 (*a).add_field("service_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ServiceHost| &x.service_id, |x: &mut ServiceHost, v| x.service_id = v);
                 (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &ServiceHost| &x.revision, |x: &mut ServiceHost, v| x.revision = v);
-                (*a).add_field("entrypoint", 3, crate::skir_client::internal::enum_serializer_from_static(HostEntrypoint::_adapter()), "", |x: &ServiceHost| &x.entrypoint, |x: &mut ServiceHost, v| x.entrypoint = v);
+                (*a).add_field("entrypoint", 3, crate::skir_client::Serializer::string(), "", |x: &ServiceHost| &x.entrypoint, |x: &mut ServiceHost, v| x.entrypoint = v);
                 (*a).add_field("can_host_realm", 4, crate::skir_client::Serializer::bool(), "", |x: &ServiceHost| &x.can_host_realm, |x: &mut ServiceHost, v| x.can_host_realm = v);
                 (*a).add_field("supported_engines", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SupportedEngine::_adapter())), "", |x: &ServiceHost| &x.supported_engines, |x: &mut ServiceHost, v| x.supported_engines = v);
                 (*a).add_field("topology_revision", 6, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &ServiceHost| &x.topology_revision, |x: &mut ServiceHost, v| x.topology_revision = v);

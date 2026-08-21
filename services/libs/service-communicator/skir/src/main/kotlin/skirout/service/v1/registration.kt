@@ -284,12 +284,12 @@ sealed class BindServiceResponse private constructor() {
                 _MustNameArguments,
             serviceId: kotlin.String,
             serviceName: kotlin.String?,
-            serviceRoles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole>,
+            serviceRole: skirout.service.v1.service.ServiceRole,
         ) = SuccessWrapper(
             skirout.service.v1.registration.BindServiceResponse.Success(
                 serviceId = serviceId,
                 serviceName = serviceName,
-                serviceRoles = serviceRoles,
+                serviceRole = serviceRole,
             )
         );
 
@@ -381,7 +381,7 @@ sealed class BindServiceResponse private constructor() {
     sealed interface Success_OrMutable {
         val serviceId: kotlin.String;
         val serviceName: kotlin.String?;
-        val serviceRoles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>;
+        val serviceRole: skirout.service.v1.service.ServiceRole;
 
         fun toFrozen(): skirout.service.v1.registration.BindServiceResponse.Success;
     }
@@ -391,7 +391,7 @@ sealed class BindServiceResponse private constructor() {
     class Success private constructor(
         override val serviceId: kotlin.String,
         override val serviceName: kotlin.String?,
-        override val serviceRoles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>,
+        override val serviceRole: skirout.service.v1.service.ServiceRole,
         private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.Success>? =
             null,
     ): skirout.service.v1.registration.BindServiceResponse.Success_OrMutable {
@@ -400,13 +400,13 @@ sealed class BindServiceResponse private constructor() {
                 _MustNameArguments,
             serviceId: kotlin.String,
             serviceName: kotlin.String?,
-            serviceRoles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole>,
+            serviceRole: skirout.service.v1.service.ServiceRole,
             _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.Success>? =
                 null,
         ): this(
             serviceId,
             serviceName,
-            build.skir.internal.toFrozenList(serviceRoles),
+            serviceRole,
             _unrecognizedFields,
         ) {}
 
@@ -417,7 +417,7 @@ sealed class BindServiceResponse private constructor() {
         fun toMutable() = Mutable(
             serviceId = this.serviceId,
             serviceName = this.serviceName,
-            serviceRoles = this.serviceRoles,
+            serviceRole = this.serviceRole,
         );
 
         /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -428,12 +428,12 @@ sealed class BindServiceResponse private constructor() {
                 this.serviceId,
             serviceName: kotlin.String? =
                 this.serviceName,
-            serviceRoles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-                this.serviceRoles,
+            serviceRole: skirout.service.v1.service.ServiceRole =
+                this.serviceRole,
         ) = skirout.service.v1.registration.BindServiceResponse.Success(
             serviceId,
             serviceName,
-            build.skir.internal.toFrozenList(serviceRoles),
+            serviceRole,
             this._unrecognizedFields,
         );
 
@@ -441,11 +441,11 @@ sealed class BindServiceResponse private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.registration.BindServiceResponse.Success && this.serviceId == other.serviceId && this.serviceName == other.serviceName && this.serviceRoles == other.serviceRoles);
+            return this === other || (other is skirout.service.v1.registration.BindServiceResponse.Success && this.serviceId == other.serviceId && this.serviceName == other.serviceName && this.serviceRole == other.serviceRole);
         }
 
         override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.serviceName, this.serviceRoles).hashCode();
+            return kotlin.collections.listOf<kotlin.Any?>(this.serviceId, this.serviceName, this.serviceRole).hashCode();
         }
 
         override fun toString(): kotlin.String {
@@ -463,8 +463,8 @@ sealed class BindServiceResponse private constructor() {
                 "",
             override var serviceName: kotlin.String? =
                 null,
-            override var serviceRoles: kotlin.collections.List<skirout.service.v1.service.ServiceRole> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+            override var serviceRole: skirout.service.v1.service.ServiceRole =
+                skirout.service.v1.service.ServiceRole.UNKNOWN,
             internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.Success>? =
                 null,
         ): skirout.service.v1.registration.BindServiceResponse.Success_OrMutable {
@@ -472,25 +472,9 @@ sealed class BindServiceResponse private constructor() {
             override fun toFrozen() = skirout.service.v1.registration.BindServiceResponse.Success(
                 serviceId = this.serviceId,
                 serviceName = this.serviceName,
-                serviceRoles = this.serviceRoles,
+                serviceRole = this.serviceRole,
                 _unrecognizedFields = this._unrecognizedFields,
             );
-
-            /**
-             * If the value of [serviceRoles] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [serviceRoles] and returns it.
-             */
-            val mutableServiceRoles: kotlin.collections.MutableList<skirout.service.v1.service.ServiceRole> get() {
-                var value = this.serviceRoles;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.serviceRoles = value;
-                        value;
-                    }
-                }
-            }
         }
 
         companion object {
@@ -498,7 +482,7 @@ sealed class BindServiceResponse private constructor() {
                 skirout.service.v1.registration.BindServiceResponse.Success(
                     "",
                     null,
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+                    skirout.service.v1.service.ServiceRole.UNKNOWN,
                 );
 
             /** Returns an instance with all fields set to their default values. */
@@ -516,12 +500,12 @@ sealed class BindServiceResponse private constructor() {
                     "",
                 serviceName: kotlin.String? =
                     null,
-                serviceRoles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+                serviceRole: skirout.service.v1.service.ServiceRole =
+                    skirout.service.v1.service.ServiceRole.UNKNOWN,
             ) = skirout.service.v1.registration.BindServiceResponse.Success(
                 serviceId = serviceId,
                 serviceName = serviceName,
-                serviceRoles = serviceRoles,
+                serviceRole = serviceRole,
                 _unrecognizedFields = null,
             );
 
@@ -563,15 +547,13 @@ sealed class BindServiceResponse private constructor() {
                     { mut, v -> mut.serviceName = v },
                 );
                 serializerImpl.addField(
-                    "service_roles",
-                    "serviceRoles",
+                    "service_role",
+                    "serviceRole",
                     2,
-                    build.skir.Serializers.list(
-                        skirout.service.v1.service.ServiceRole.serializer,
-                    ),
+                    skirout.service.v1.service.ServiceRole.serializer,
                     "",
-                    { it.serviceRoles },
-                    { mut, v -> mut.serviceRoles = v },
+                    { it.serviceRole },
+                    { mut, v -> mut.serviceRole = v },
                 );
                 serializerImpl.finalizeStruct();
             }

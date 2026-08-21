@@ -6,14 +6,14 @@ pub struct SurrealIdentityRepository;
 
 impl IdentityRepository for SurrealIdentityRepository {
     #[tracing::instrument(skip_all)]
-    async fn validate_roles(
+    async fn validate_role(
         &self,
-        roles: &[ServiceRoleRecord],
+        role: &ServiceRoleRecord,
     ) -> Result<Result<bool, String>, RepositoryError> {
-        otel_wasi::attribute!("persistence.operation" = "validate_roles");
+        otel_wasi::attribute!("persistence.operation" = "validate_role");
 
-        read_query!("RETURN fn::service::valid_roles($roles);")
-            .bind("roles", roles.to_vec())
+        read_query!("RETURN fn::service::valid_role($role);")
+            .bind("role", role)
             .execute()
             .await
             .map_err(|error| RepositoryError(error.to_string()))?
@@ -41,7 +41,7 @@ impl IdentityRepository for SurrealIdentityRepository {
             LET $identity = CREATE ONLY $service_id
             SET
                 name = $display_name,
-                roles = $roles
+                role = $role
             RETURN VALUE id;
 
             RETURN $identity;
@@ -51,7 +51,7 @@ impl IdentityRepository for SurrealIdentityRepository {
         )
         .bind("service_id", service_id)
         .bind("display_name", &identity.display_name)
-        .bind("roles", &identity.roles)
+        .bind("role", &identity.role)
         .execute()
         .await
         .map_err(|error| RepositoryError(error.to_string()))?

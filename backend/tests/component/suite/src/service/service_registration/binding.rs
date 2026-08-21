@@ -41,7 +41,7 @@ async fn invalid_registration_token_does_not_bind_service(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bindable SET name = 'bindable', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bindable SET name = 'bindable', role = { type: 'host', version: '1.0.0' }, registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
         )
         .execute()
         .await?;
@@ -80,7 +80,7 @@ async fn missing_organization_does_not_consume_registration(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:bindable SET name = 'bindable', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
+            "CREATE service:bindable SET name = 'bindable', role = { type: 'host', version: '1.0.0' }, registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
         )
         .execute()
         .await?;
@@ -117,7 +117,7 @@ async fn valid_registration_binds_service_and_publishes_both_views(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bindable SET name = 'bindable', roles = [{ type: 'engine', version: '1.0.0' }], registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bindable SET name = 'bindable', role = { type: 'host', version: '1.0.0' }, registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
         )
         .execute()
         .await?;
@@ -146,7 +146,10 @@ async fn valid_registration_binds_service_and_publishes_both_views(
     };
     assert_eq!(success.service_id, "bindable");
     assert_eq!(success.service_name.as_deref(), Some("bindable"));
-    assert_eq!(success.service_roles.len(), 1);
+    assert!(matches!(
+        success.service_role,
+        wasmcloud_utils::skir::base::service::v1::service::ServiceRole::Host(_)
+    ));
     assert_jm!(
         database
             .query_json(
@@ -165,7 +168,7 @@ async fn unbind_removes_organization_and_publishes_removal(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
         )
         .execute()
         .await?;

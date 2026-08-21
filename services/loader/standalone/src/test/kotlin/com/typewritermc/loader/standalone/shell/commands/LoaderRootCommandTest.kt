@@ -1,7 +1,7 @@
-package com.typewritermc.realm.shell.commands
+package com.typewritermc.loader.standalone.shell.commands
 
 import com.github.ajalt.clikt.testing.test
-import com.typewritermc.realm.shell.RealmShellContext
+import com.typewritermc.loader.standalone.shell.LoaderShellContext
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarState
 import de.infix.testBalloon.framework.core.testSuite
@@ -10,15 +10,15 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.TestTimeSource
 
-val RealmRootCommandTest by testSuite {
+val LoaderRootCommandTest by testSuite {
     test("help displays the command catalog") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
 
-        val result = RealmRootCommand(context).test("help")
+        val result = LoaderRootCommand(context).test("help")
 
         result.output shouldContain "Commands:"
         result.output shouldContain "help"
@@ -28,14 +28,14 @@ val RealmRootCommandTest by testSuite {
 
     test("stop requests only local shell termination") {
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = TestTimeSource(),
             )
 
-        val result = RealmRootCommand(context).test("stop")
+        val result = LoaderRootCommand(context).test("stop")
 
-        result.output shouldContain "Exiting Realm shell"
+        result.output shouldContain "Stopping the loader"
         context.isStopRequested() shouldBe true
     }
 }

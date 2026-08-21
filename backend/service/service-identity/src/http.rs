@@ -190,17 +190,12 @@ fn status(value: &IssueServiceIdentityResponse) -> u16 {
         IssueServiceIdentityResponse::Success(_) => 200,
         IssueServiceIdentityResponse::MalformedRequestError(_)
         | IssueServiceIdentityResponse::UnknownRoleError(_)
-        | IssueServiceIdentityResponse::RolesRequiredError(_)
         | IssueServiceIdentityResponse::RoleUnknownPropertyError(_)
         | IssueServiceIdentityResponse::RoleTypeInvalidError(_)
-        | IssueServiceIdentityResponse::RoleVersionBlankError(_)
-        | IssueServiceIdentityResponse::RoleInvalidError(_)
+        | IssueServiceIdentityResponse::RoleVersionInvalidError(_)
         | IssueServiceIdentityResponse::CustomRoleNameRequiredError(_)
         | IssueServiceIdentityResponse::CustomRoleNameInvalidError(_)
-        | IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_)
-        | IssueServiceIdentityResponse::EngineRoleDuplicateError(_)
-        | IssueServiceIdentityResponse::RealmRoleDuplicateError(_)
-        | IssueServiceIdentityResponse::CustomRoleDuplicateError(_) => 400,
+        | IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 400,
         IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 503,
         IssueServiceIdentityResponse::InternalError(_)
         | IssueServiceIdentityResponse::Unknown(_) => 500,
@@ -267,17 +262,12 @@ mod tests {
         let bad_requests = [
             skir_variant!(IssueServiceIdentityResponse::MalformedRequestError {}),
             skir_variant!(IssueServiceIdentityResponse::UnknownRoleError {}),
-            skir_variant!(IssueServiceIdentityResponse::RolesRequiredError {}),
             skir_variant!(IssueServiceIdentityResponse::RoleUnknownPropertyError {}),
             skir_variant!(IssueServiceIdentityResponse::RoleTypeInvalidError {}),
-            skir_variant!(IssueServiceIdentityResponse::RoleVersionBlankError {}),
-            skir_variant!(IssueServiceIdentityResponse::RoleInvalidError {}),
+            skir_variant!(IssueServiceIdentityResponse::RoleVersionInvalidError {}),
             skir_variant!(IssueServiceIdentityResponse::CustomRoleNameRequiredError {}),
             skir_variant!(IssueServiceIdentityResponse::CustomRoleNameInvalidError {}),
             skir_variant!(IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError {}),
-            skir_variant!(IssueServiceIdentityResponse::EngineRoleDuplicateError {}),
-            skir_variant!(IssueServiceIdentityResponse::RealmRoleDuplicateError {}),
-            skir_variant!(IssueServiceIdentityResponse::CustomRoleDuplicateError {}),
         ];
         assert!(bad_requests.iter().all(|response| status(response) == 400));
         assert_eq!(

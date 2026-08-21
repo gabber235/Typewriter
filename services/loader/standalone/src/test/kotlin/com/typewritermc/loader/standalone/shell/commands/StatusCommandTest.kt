@@ -1,7 +1,7 @@
-package com.typewritermc.realm.shell.commands
+package com.typewritermc.loader.standalone.shell.commands
 
 import com.github.ajalt.clikt.testing.test
-import com.typewritermc.realm.shell.RealmShellContext
+import com.typewritermc.loader.standalone.shell.LoaderShellContext
 import com.typewritermc.services.libs.registrar.MessagingOperation
 import com.typewritermc.services.libs.registrar.OrganizationBinding
 import com.typewritermc.services.libs.registrar.ReadySession
@@ -25,7 +25,7 @@ val StatusCommandTest by testSuite {
     test("displays uptime from the injected monotonic time source") {
         val timeSource = TestTimeSource()
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Idle)),
                 timeSource = timeSource,
             )
@@ -49,7 +49,7 @@ val StatusCommandTest by testSuite {
 
         states.forEach { (state, expected) ->
             val context =
-                RealmShellContext(
+                LoaderShellContext(
                     registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
                     timeSource = TestTimeSource(),
                 )
@@ -60,7 +60,7 @@ val StatusCommandTest by testSuite {
     test("displays awaiting binding without revealing the registration token") {
         val state = RegistrarState.AwaitingBinding(identity, RegistrationToken("SECRET12345"))
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
                 timeSource = TestTimeSource(),
             )
@@ -76,7 +76,7 @@ val StatusCommandTest by testSuite {
     test("displays ready service and organization identity") {
         val state = RegistrarState.Ready(readySession(), connectionGeneration = 4)
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
                 timeSource = TestTimeSource(),
             )
@@ -99,7 +99,7 @@ val StatusCommandTest by testSuite {
                 retry = RetrySchedule(attempt = 7, delay = 5.seconds),
             )
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
                 timeSource = TestTimeSource(),
             )
@@ -117,7 +117,7 @@ val StatusCommandTest by testSuite {
         val state =
             RegistrarState.Failed(RegistrarFailure.Internal("registration_unavailable"))
         val context =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, state)),
                 timeSource = TestTimeSource(),
             )
@@ -130,7 +130,7 @@ val StatusCommandTest by testSuite {
 
     test("displays stopping and stopped states") {
         val stoppingContext =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, RegistrarState.Stopping)),
                 timeSource = TestTimeSource(),
             )
@@ -138,7 +138,7 @@ val StatusCommandTest by testSuite {
 
         val stopped = RegistrarState.Stopped(RegistrarStopResult.Success)
         val stoppedContext =
-            RealmShellContext(
+            LoaderShellContext(
                 registrarStates = MutableStateFlow(RegistrarSnapshot(12, 3, stopped)),
                 timeSource = TestTimeSource(),
             )
@@ -152,9 +152,9 @@ val StatusCommandTest by testSuite {
 private val identity =
     ServiceIdentity(
         serviceId = "service123",
-        displayName = "Realm Service",
-        username = "realm_service",
-        roles = listOf(ServiceRole.Realm("1.0.0")),
+        displayName = "Loader Service",
+        username = "loader_service",
+        role = ServiceRole.Host("1.0.0"),
     )
 
 private fun readySession() =

@@ -21,7 +21,7 @@ import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface IssueServiceIdentityRequest_OrMutable {
-    val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>;
+    val role: skirout.service.v1.service.ServiceRole;
 
     fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityRequest;
 }
@@ -29,18 +29,18 @@ sealed interface IssueServiceIdentityRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class IssueServiceIdentityRequest private constructor(
-    override val roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole>,
+    override val role: skirout.service.v1.service.ServiceRole,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityRequest>? =
         null,
 ): skirout.service.v1.identity.IssueServiceIdentityRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole>,
+        role: skirout.service.v1.service.ServiceRole,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityRequest>? =
             null,
     ): this(
-        build.skir.internal.toFrozenList(roles),
+        role,
         _unrecognizedFields,
     ) {}
 
@@ -49,17 +49,17 @@ class IssueServiceIdentityRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        roles = this.roles,
+        role = this.role,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-            this.roles,
+        role: skirout.service.v1.service.ServiceRole =
+            this.role,
     ) = skirout.service.v1.identity.IssueServiceIdentityRequest(
-        build.skir.internal.toFrozenList(roles),
+        role,
         this._unrecognizedFields,
     );
 
@@ -67,11 +67,11 @@ class IssueServiceIdentityRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityRequest && this.roles == other.roles);
+        return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityRequest && this.role == other.role);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.roles).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.role).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -85,38 +85,22 @@ class IssueServiceIdentityRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var roles: kotlin.collections.List<skirout.service.v1.service.ServiceRole> =
-            build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+        override var role: skirout.service.v1.service.ServiceRole =
+            skirout.service.v1.service.ServiceRole.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityRequest>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityRequest(
-            roles = this.roles,
+            role = this.role,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [roles] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
-         */
-        val mutableRoles: kotlin.collections.MutableList<skirout.service.v1.service.ServiceRole> get() {
-            var value = this.roles;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.roles = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.service.v1.identity.IssueServiceIdentityRequest(
-                build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+                skirout.service.v1.service.ServiceRole.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -130,10 +114,10 @@ class IssueServiceIdentityRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            roles: kotlin.collections.Iterable<skirout.service.v1.service.ServiceRole> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.service.ServiceRole>(),
+            role: skirout.service.v1.service.ServiceRole =
+                skirout.service.v1.service.ServiceRole.UNKNOWN,
         ) = skirout.service.v1.identity.IssueServiceIdentityRequest(
-            roles = roles,
+            role = role,
             _unrecognizedFields = null,
         );
 
@@ -155,15 +139,13 @@ class IssueServiceIdentityRequest private constructor(
 
         init {
             serializerImpl.addField(
-                "roles",
-                "roles",
+                "role",
+                "role",
                 0,
-                build.skir.Serializers.list(
-                    skirout.service.v1.service.ServiceRole.serializer,
-                ),
+                skirout.service.v1.service.ServiceRole.serializer,
                 "",
-                { it.roles },
-                { mut, v -> mut.roles = v },
+                { it.role },
+                { mut, v -> mut.role = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -179,17 +161,12 @@ sealed class IssueServiceIdentityResponse private constructor() {
         SUCCESS_WRAPPER,
         MALFORMED_REQUEST_ERROR_WRAPPER,
         UNKNOWN_ROLE_ERROR_WRAPPER,
-        ROLES_REQUIRED_ERROR_WRAPPER,
         ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER,
         ROLE_TYPE_INVALID_ERROR_WRAPPER,
-        ROLE_VERSION_BLANK_ERROR_WRAPPER,
-        ROLE_INVALID_ERROR_WRAPPER,
+        ROLE_VERSION_INVALID_ERROR_WRAPPER,
         CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER,
         CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER,
         BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER,
-        ENGINE_ROLE_DUPLICATE_ERROR_WRAPPER,
-        REALM_ROLE_DUPLICATE_ERROR_WRAPPER,
-        CUSTOM_ROLE_DUPLICATE_ERROR_WRAPPER,
         IDENTITY_PROVIDER_UNAVAILABLE_ERROR_WRAPPER,
     }
 
@@ -280,24 +257,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
-    class RolesRequiredErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError,
-    ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
-        constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ROLES_REQUIRED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1729747754;
-        }
-    }
-
     class RoleUnknownPropertyErrorWrapper private constructor (
         val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
@@ -334,39 +293,21 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
-    class RoleVersionBlankErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError,
+    class RoleVersionInvalidErrorWrapper private constructor (
+        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError,
     ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
         constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError_OrMutable,
+            value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.ROLE_VERSION_BLANK_ERROR_WRAPPER;
+        override val kind get() = Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankErrorWrapper && value == other.value;
+            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1895671085;
-        }
-    }
-
-    class RoleInvalidErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError,
-    ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
-        constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ROLE_INVALID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1100882505;
+            return this.value.hashCode() + -651064432;
         }
     }
 
@@ -421,60 +362,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1607631973;
-        }
-    }
-
-    class EngineRoleDuplicateErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError,
-    ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
-        constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ENGINE_ROLE_DUPLICATE_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1692338712;
-        }
-    }
-
-    class RealmRoleDuplicateErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError,
-    ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
-        constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REALM_ROLE_DUPLICATE_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1125632069;
-        }
-    }
-
-    class CustomRoleDuplicateErrorWrapper private constructor (
-        val value: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError,
-    ) : skirout.service.v1.identity.IssueServiceIdentityResponse() {
-        constructor(
-            value: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CUSTOM_ROLE_DUPLICATE_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1172027367;
         }
     }
 
@@ -559,15 +446,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
             skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError()
         );
 
-        /** Shortcut for `RolesRequiredErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRolesRequiredError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = RolesRequiredErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError()
-        );
-
         /** Shortcut for `RoleUnknownPropertyErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createRoleUnknownPropertyError(
@@ -586,22 +464,13 @@ sealed class IssueServiceIdentityResponse private constructor() {
             skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError()
         );
 
-        /** Shortcut for `RoleVersionBlankErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError(...))`. */
+        /** Shortcut for `RoleVersionInvalidErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRoleVersionBlankError(
+        fun createRoleVersionInvalidError(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-        ) = RoleVersionBlankErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError()
-        );
-
-        /** Shortcut for `RoleInvalidErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRoleInvalidError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = RoleInvalidErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError()
+        ) = RoleVersionInvalidErrorWrapper(
+            skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError()
         );
 
         /** Shortcut for `CustomRoleNameRequiredErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError(...))`. */
@@ -629,33 +498,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _MustNameArguments,
         ) = BuiltinRoleNameForbiddenErrorWrapper(
             skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError()
-        );
-
-        /** Shortcut for `EngineRoleDuplicateErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createEngineRoleDuplicateError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = EngineRoleDuplicateErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError()
-        );
-
-        /** Shortcut for `RealmRoleDuplicateErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealmRoleDuplicateError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = RealmRoleDuplicateErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError()
-        );
-
-        /** Shortcut for `CustomRoleDuplicateErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCustomRoleDuplicateError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = CustomRoleDuplicateErrorWrapper(
-            skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError()
         );
 
         /** Shortcut for `IdentityProviderUnavailableErrorWrapper(skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError(...))`. */
@@ -731,15 +573,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     5,
-                    "roles_required_error",
-                    Kind.ROLES_REQUIRED_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError.serializer,
-                    "",
-                    { RolesRequiredErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
                     "role_unknown_property_error",
                     Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError.serializer,
@@ -748,7 +581,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    7,
+                    6,
                     "role_type_invalid_error",
                     Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError.serializer,
@@ -757,25 +590,16 @@ sealed class IssueServiceIdentityResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
+                    7,
+                    "role_version_invalid_error",
+                    Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER.ordinal,
+                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.serializer,
+                    "",
+                    { RoleVersionInvalidErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
                     8,
-                    "role_version_blank_error",
-                    Kind.ROLE_VERSION_BLANK_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError.serializer,
-                    "",
-                    { RoleVersionBlankErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "role_invalid_error",
-                    Kind.ROLE_INVALID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError.serializer,
-                    "",
-                    { RoleInvalidErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    10,
                     "custom_role_name_required_error",
                     Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError.serializer,
@@ -784,7 +608,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    11,
+                    9,
                     "custom_role_name_invalid_error",
                     Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError.serializer,
@@ -793,7 +617,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    12,
+                    10,
                     "builtin_role_name_forbidden_error",
                     Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError.serializer,
@@ -802,34 +626,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    13,
-                    "engine_role_duplicate_error",
-                    Kind.ENGINE_ROLE_DUPLICATE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError.serializer,
-                    "",
-                    { EngineRoleDuplicateErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    14,
-                    "realm_role_duplicate_error",
-                    Kind.REALM_ROLE_DUPLICATE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError.serializer,
-                    "",
-                    { RealmRoleDuplicateErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    15,
-                    "custom_role_duplicate_error",
-                    Kind.CUSTOM_ROLE_DUPLICATE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError.serializer,
-                    "",
-                    { CustomRoleDuplicateErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    16,
+                    11,
                     "identity_provider_unavailable_error",
                     Kind.IDENTITY_PROVIDER_UNAVAILABLE_ERROR_WRAPPER.ordinal,
                     skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError.serializer,
@@ -1234,100 +1031,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
-    sealed interface RolesRequiredError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class RolesRequiredError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError>? =
-            null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [RolesRequiredError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError>? =
-                null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [RolesRequiredError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.RolesRequiredError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RolesRequiredError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [RolesRequiredError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [RolesRequiredError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
     sealed interface RoleUnknownPropertyError_OrMutable {
         fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError;
     }
@@ -1516,20 +1219,20 @@ sealed class IssueServiceIdentityResponse private constructor() {
         }
     }
 
-    sealed interface RoleVersionBlankError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError;
+    sealed interface RoleVersionInvalidError_OrMutable {
+        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
-    class RoleVersionBlankError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError>? =
+    class RoleVersionInvalidError private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError>? =
             null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError_OrMutable {
+    ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError>? =
                 null,
         ): this(
             _unrecognizedFields,
@@ -1542,7 +1245,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         fun toMutable() = Mutable();
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError);
+            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -1552,44 +1255,44 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError.serializerImpl,
+                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.serializerImpl,
             )
         }
 
-        /** Mutable version of [RoleVersionBlankError]. */
+        /** Mutable version of [RoleVersionInvalidError]. */
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError>? =
                 null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError_OrMutable {
+        ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError(
+            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError(
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
 
         companion object {
             private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError();
+                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError();
 
             /** Returns an instance with all fields set to their default values. */
             fun partial() = default;
 
             /**
-             * Creates a new instance of [RoleVersionBlankError].
+             * Creates a new instance of [RoleVersionInvalidError].
              * Unlike the constructor, does not require all fields to be specified.
              * Missing fields will be set to their default values.
              */
             fun partial(
                 _mustNameArguments: _MustNameArguments =
                     _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionBlankError(
+            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError(
                 _unrecognizedFields = null,
             );
 
             private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleVersionBlankError",
+                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleVersionInvalidError",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -1598,104 +1301,10 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
             );
 
-            /** Serializer for [RoleVersionBlankError] instances. */
+            /** Serializer for [RoleVersionInvalidError] instances. */
             val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-            /** Describes the [RoleVersionBlankError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface RoleInvalidError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class RoleInvalidError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError>? =
-            null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [RoleInvalidError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError>? =
-                null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [RoleInvalidError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleInvalidError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleInvalidError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [RoleInvalidError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [RoleInvalidError] type. Provides runtime introspection capabilities. */
+            /** Describes the [RoleVersionInvalidError] type. Provides runtime introspection capabilities. */
             val typeDescriptor get() = serializerImpl.typeDescriptor;
 
             init {
@@ -1978,288 +1587,6 @@ sealed class IssueServiceIdentityResponse private constructor() {
             val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
             /** Describes the [BuiltinRoleNameForbiddenError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface EngineRoleDuplicateError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class EngineRoleDuplicateError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError>? =
-            null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [EngineRoleDuplicateError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError>? =
-                null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [EngineRoleDuplicateError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.EngineRoleDuplicateError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.EngineRoleDuplicateError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [EngineRoleDuplicateError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [EngineRoleDuplicateError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface RealmRoleDuplicateError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class RealmRoleDuplicateError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError>? =
-            null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [RealmRoleDuplicateError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError>? =
-                null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [RealmRoleDuplicateError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.RealmRoleDuplicateError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RealmRoleDuplicateError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [RealmRoleDuplicateError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [RealmRoleDuplicateError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface CustomRoleDuplicateError_OrMutable {
-        fun toFrozen(): skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class CustomRoleDuplicateError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError>? =
-            null,
-    ): skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [CustomRoleDuplicateError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError>? =
-                null,
-        ): skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [CustomRoleDuplicateError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleDuplicateError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.CustomRoleDuplicateError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [CustomRoleDuplicateError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [CustomRoleDuplicateError] type. Provides runtime introspection capabilities. */
             val typeDescriptor get() = serializerImpl.typeDescriptor;
 
             init {

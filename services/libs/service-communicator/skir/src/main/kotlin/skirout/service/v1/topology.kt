@@ -332,128 +332,6 @@ class EngineTarget private constructor(
     }
 }
 
-/** Deeply immutable. */
-sealed class HostEntrypoint private constructor() {
-    /** The kind of variant held by a `HostEntrypoint`. */
-    enum class Kind {
-        UNKNOWN,
-        STANDALONE_CONST,
-        PAPER_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.HostEntrypoint.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.HostEntrypoint>?,
-    ) : skirout.service.v1.topology.HostEntrypoint() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.HostEntrypoint && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object STANDALONE : skirout.service.v1.topology.HostEntrypoint() {
-        override val kind get() = Kind.STANDALONE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.HostEntrypoint && other.kind == Kind.STANDALONE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.STANDALONE_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    object PAPER : skirout.service.v1.topology.HostEntrypoint() {
-        override val kind get() = Kind.PAPER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.HostEntrypoint && other.kind == Kind.PAPER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.PAPER_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.HostEntrypoint>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.service.v1.topology.HostEntrypoint._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [HostEntrypoint].
-         * Default value for fields of type [HostEntrypoint].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.HostEntrypoint, Unknown>(
-                recordId = "service/v1/topology.skir:HostEntrypoint",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [HostEntrypoint] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [HostEntrypoint] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            STANDALONE;
-            PAPER;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "standalone",
-                    Kind.STANDALONE_CONST.ordinal,
-                    "",
-                    STANDALONE,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "paper",
-                    Kind.PAPER_CONST.ordinal,
-                    "",
-                    PAPER,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-}
-
 sealed interface SupportedEngine_OrMutable {
     val engineId: kotlin.String;
     val supportedMajorVersions: kotlin.collections.List<kotlin.Int>;
@@ -1466,7 +1344,7 @@ sealed interface ServiceHost_OrMutable {
     val hostId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val revision: kotlin.Long;
-    val entrypoint: skirout.service.v1.topology.HostEntrypoint;
+    val entrypoint: kotlin.String;
     val canHostRealm: kotlin.Boolean;
     val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
     val topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
@@ -1481,7 +1359,7 @@ class ServiceHost private constructor(
     override val hostId: skirout.kernel.v1.record_id.RecordId,
     override val serviceId: skirout.kernel.v1.record_id.RecordId,
     override val revision: kotlin.Long,
-    override val entrypoint: skirout.service.v1.topology.HostEntrypoint,
+    override val entrypoint: kotlin.String,
     override val canHostRealm: kotlin.Boolean,
     override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
     override val topologyRevision: skirout.service.v1.topology.ReconciledRevision,
@@ -1495,7 +1373,7 @@ class ServiceHost private constructor(
         hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         revision: kotlin.Long,
-        entrypoint: skirout.service.v1.topology.HostEntrypoint,
+        entrypoint: kotlin.String,
         canHostRealm: kotlin.Boolean,
         supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
         topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
@@ -1539,7 +1417,7 @@ class ServiceHost private constructor(
             this.serviceId,
         revision: kotlin.Long =
             this.revision,
-        entrypoint: skirout.service.v1.topology.HostEntrypoint =
+        entrypoint: kotlin.String =
             this.entrypoint,
         canHostRealm: kotlin.Boolean =
             this.canHostRealm,
@@ -1589,8 +1467,8 @@ class ServiceHost private constructor(
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var revision: kotlin.Long =
             0L,
-        override var entrypoint: skirout.service.v1.topology.HostEntrypoint =
-            skirout.service.v1.topology.HostEntrypoint.UNKNOWN,
+        override var entrypoint: kotlin.String =
+            "",
         override var canHostRealm: kotlin.Boolean =
             false,
         override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
@@ -1702,7 +1580,7 @@ class ServiceHost private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
-                skirout.service.v1.topology.HostEntrypoint.UNKNOWN,
+                "",
                 false,
                 build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
                 skirout.service.v1.topology.ReconciledRevision.partial(),
@@ -1726,8 +1604,8 @@ class ServiceHost private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
             revision: kotlin.Long =
                 0L,
-            entrypoint: skirout.service.v1.topology.HostEntrypoint =
-                skirout.service.v1.topology.HostEntrypoint.UNKNOWN,
+            entrypoint: kotlin.String =
+                "",
             canHostRealm: kotlin.Boolean =
                 false,
             supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
@@ -1796,7 +1674,7 @@ class ServiceHost private constructor(
                 "entrypoint",
                 "entrypoint",
                 3,
-                skirout.service.v1.topology.HostEntrypoint.serializer,
+                build.skir.Serializers.string,
                 "",
                 { it.entrypoint },
                 { mut, v -> mut.entrypoint = v },
@@ -4928,7 +4806,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             revision: kotlin.Long,
-            entrypoint: skirout.service.v1.topology.HostEntrypoint,
+            entrypoint: kotlin.String,
             canHostRealm: kotlin.Boolean,
             supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
             topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,

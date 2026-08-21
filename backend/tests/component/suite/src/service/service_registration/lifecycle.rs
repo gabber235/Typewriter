@@ -31,7 +31,7 @@ async fn heartbeat_updates_unbound_service_without_organization_event(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:demo_service SET name = 'demo_service', roles = [{ type: 'engine', version: '1.0.0' }]",
+            "CREATE service:demo_service SET name = 'demo_service', role = { type: 'host', version: '1.0.0' }",
         )
         .execute()
         .await?;
@@ -66,7 +66,7 @@ async fn heartbeat_publishes_bound_service_state(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
         )
         .execute()
         .await?;
@@ -109,7 +109,7 @@ async fn shutdown_marks_bound_service_offline_and_publishes_update(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', roles = [{ type: 'engine', version: '1.0.0' }], organization = organization:test_org, state = { status: 'ONLINE', last_seen: time::now() }",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound_service SET name = 'bound_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org, state = { status: 'ONLINE', last_seen: time::now() }",
         )
         .execute()
         .await?;

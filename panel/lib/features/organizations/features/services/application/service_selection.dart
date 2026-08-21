@@ -10,13 +10,8 @@ const serviceRoleTypeRef = ResolvedTypeRef(
   revision: 1,
 );
 
-const engineRoleTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "EngineRole"),
-  revision: 1,
-);
-
-const realmRoleTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "RealmRole"),
+const hostRoleTypeRef = ResolvedTypeRef(
+  id: QualifiedTypeId(namespace: "panel", name: "HostRole"),
   revision: 1,
 );
 
@@ -46,15 +41,7 @@ final serviceRoleTypes = [
     kind: NominalTypeKind.sealedAbstract,
   ),
   TypeDefinition(
-    id: engineRoleTypeRef,
-    kind: NominalTypeKind.concrete,
-    parents: [serviceRoleTypeRef],
-    representation: const RecordType(
-      fields: {"version": TypeField(name: "version", type: StringType())},
-    ),
-  ),
-  TypeDefinition(
-    id: realmRoleTypeRef,
+    id: hostRoleTypeRef,
     kind: NominalTypeKind.concrete,
     parents: [serviceRoleTypeRef],
     representation: const RecordType(
@@ -220,18 +207,14 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 extension ServiceInspectorValue on Service {
   RecordValue get inspectorValue => RecordValue({
     "name": StringValue(name),
-    "roles": ListValue(roles.map((role) => role.inspectorValue).toList()),
+    "roles": ListValue([role.inspectorValue]),
   });
 }
 
 extension on ServiceRole {
   DataValue get inspectorValue => switch (this) {
-    EngineServiceRole(:final version) => PolymorphicValue(
-      concreteType: engineRoleTypeRef,
-      value: RecordValue({"version": StringValue(version)}),
-    ),
-    RealmServiceRole(:final version) => PolymorphicValue(
-      concreteType: realmRoleTypeRef,
+    HostServiceRole(:final version) => PolymorphicValue(
+      concreteType: hostRoleTypeRef,
       value: RecordValue({"version": StringValue(version)}),
     ),
     CustomServiceRole(:final name, :final version) => PolymorphicValue(

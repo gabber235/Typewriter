@@ -3,6 +3,7 @@ package com.typewritermc.realm.deployment
 import com.typewritermc.loader.DeploymentContext
 import com.typewritermc.loader.DeploymentEntrypoint
 import com.typewritermc.loader.DeploymentRuntime
+import com.typewritermc.realm.DefaultRealmRuntimeFactory
 import java.time.Instant
 
 /** Starts the complete Realm, panel engine, and Realm targeted extension scope for one deployment. */
@@ -35,7 +36,7 @@ sealed interface RealmUpgradeCheckpoint
  * Realm, preventing silent state loss during a future migration.
  */
 class RealmDeploymentEntrypoint(
-    private val factory: RealmRuntimeFactory,
+    private val factory: RealmRuntimeFactory = DefaultRealmRuntimeFactory(),
 ) : DeploymentEntrypoint {
     override suspend fun start(context: DeploymentContext): DeploymentRuntime = RealmDeploymentRuntime(factory.start(context))
 }

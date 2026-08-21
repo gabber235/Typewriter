@@ -17,7 +17,7 @@ pub struct ProvisionedAccount {
 pub struct NewIdentity {
     pub service_id: String,
     pub display_name: String,
-    pub roles: Vec<ServiceRoleRecord>,
+    pub role: ServiceRoleRecord,
 }
 
 #[derive(Debug)]
@@ -43,9 +43,9 @@ pub trait AccountProvider {
 }
 
 pub trait IdentityRepository {
-    async fn validate_roles(
+    async fn validate_role(
         &self,
-        roles: &[ServiceRoleRecord],
+        role: &ServiceRoleRecord,
     ) -> Result<Result<bool, String>, RepositoryError>;
 
     async fn create_identity(
@@ -58,11 +58,8 @@ pub trait NameSource {
     fn generate(&self) -> Result<crate::names::GeneratedNames, NamingError>;
 }
 
-pub fn role_records(roles: Vec<ServiceRole>) -> Result<Vec<ServiceRoleRecord>, ()> {
-    roles
-        .into_iter()
-        .map(|role| role.try_into().map_err(|_| ()))
-        .collect()
+pub fn role_record(role: ServiceRole) -> Result<ServiceRoleRecord, ()> {
+    role.try_into().map_err(|_| ())
 }
 
 #[tracing::instrument(skip_all)]
@@ -72,8 +69,8 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
     name_source: &N,
     request: IssueServiceIdentityRequest,
 ) -> Result<IssueServiceIdentityResponse, otel_wasi::Error> {
-    let roles = match role_records(request.roles) {
-        Ok(roles) => roles,
+    let role = match role_record(request.role) {
+        Ok(role) => role,
         Err(()) => {
             otel_wasi::main_attribute!("identity.outcome" = "unknown-role-error");
             return Ok(skir_variant!(
@@ -81,26 +78,14 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
             ));
         }
     };
-    let engine_roles = roles
-        .iter()
-        .filter(|r| r.role_type == ServiceRoleTypeRecord::Engine)
-        .count();
-    let realm_roles = roles
-        .iter()
-        .filter(|r| r.role_type == ServiceRoleTypeRecord::Realm)
-        .count();
-    let custom_roles = roles
-        .iter()
-        .filter(|r| r.role_type == ServiceRoleTypeRecord::Custom)
-        .count();
     otel_wasi::main_attribute!(
-        "identity.roles.count" = roles.len() as i64,
-        "identity.roles.engine.count" = engine_roles as i64,
-        "identity.roles.realm.count" = realm_roles as i64,
-        "identity.roles.custom.count" = custom_roles as i64,
+        "identity.role.type" = match role.role_type {
+            ServiceRoleTypeRecord::Host => "host",
+            ServiceRoleTypeRecord::Custom => "custom",
+        },
     );
 
-    let validated = match repository.validate_roles(&roles).await {
+    let validated = match repository.validate_role(&role).await {
         Ok(result) => result,
         Err(_) => {
             otel_wasi::main_attribute!(
@@ -168,7 +153,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
     let identity = NewIdentity {
         service_id: account.user_uid.clone(),
         display_name: names.display_name.clone(),
-        roles,
+        role,
     };
 
     let created = repository.create_identity(&identity).await;
@@ -249,13 +234,13 @@ mod tests {
         create_calls: RefCell<usize>,
     }
     impl IdentityRepository for MockRepo {
-        async fn validate_roles(
+        async fn validate_role(
             &self,
-            _: &[ServiceRoleRecord],
+            _: &ServiceRoleRecord,
         ) -> Result<Result<bool, String>, RepositoryError> {
             *self.validation_calls.borrow_mut() += 1;
             match self.mode {
-                RepoMode::ValidationDomain => Ok(Err("roles-required-error".into())),
+                RepoMode::ValidationDomain => Ok(Err("role-type-invalid-error".into())),
                 RepoMode::ValidationInfra => Err(RepositoryError("mock repository failure".into())),
                 RepoMode::ValidationUnknownDomain => Ok(Err("future-error".into())),
                 _ => Ok(Ok(true)),
@@ -267,7 +252,7 @@ mod tests {
         ) -> Result<Result<RecordId, String>, RepositoryError> {
             *self.create_calls.borrow_mut() += 1;
             match self.mode {
-                RepoMode::CreateDomain => Ok(Err("role-version-blank-error".into())),
+                RepoMode::CreateDomain => Ok(Err("role-version-invalid-error".into())),
                 RepoMode::CreateUnknownDomain => Ok(Err("future-error".into())),
                 RepoMode::CreateInfra => Err(RepositoryError("mock repository failure".into())),
                 _ => Ok(Ok(RecordId {
@@ -321,10 +306,10 @@ mod tests {
     }
     fn request() -> IssueServiceIdentityRequest {
         IssueServiceIdentityRequest {
-            roles: vec![ServiceRole::Engine(Box::new(ServiceRole_Engine {
-                version: "1".into(),
+            role: ServiceRole::Host(Box::new(ServiceRole_Host {
+                version: "1.0.0".into(),
                 _unrecognized: None,
-            }))],
+            })),
             _unrecognized: None,
         }
     }
@@ -378,7 +363,7 @@ mod tests {
                 &provider,
                 &names,
                 IssueServiceIdentityRequest {
-                    roles: vec![ServiceRole::Unknown(None)],
+                    role: ServiceRole::Unknown(None),
                     _unrecognized: None
                 }
             )
@@ -399,7 +384,7 @@ mod tests {
         let (repo, provider, names) = setup(RepoMode::ValidationDomain, ProviderMode::Valid);
         assert!(matches!(
             run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RolesRequiredError(_)
+            IssueServiceIdentityResponse::RoleTypeInvalidError(_)
         ));
         assert_eq!(
             (
@@ -458,7 +443,7 @@ mod tests {
         let (repo, provider, names) = setup(RepoMode::CreateDomain, ProviderMode::Valid);
         assert!(matches!(
             run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RoleVersionBlankError(_)
+            IssueServiceIdentityResponse::RoleVersionInvalidError(_)
         ));
         assert_eq!(*provider.deletes.borrow(), 1);
     }
@@ -484,7 +469,7 @@ mod tests {
         let (repo, provider, names) = setup(RepoMode::CreateDomain, ProviderMode::DeleteFails);
         assert!(matches!(
             run(&repo, &provider, &names, request()).unwrap(),
-            IssueServiceIdentityResponse::RoleVersionBlankError(_)
+            IssueServiceIdentityResponse::RoleVersionInvalidError(_)
         ));
         assert_eq!(*provider.deletes.borrow(), 1);
     }

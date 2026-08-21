@@ -31,17 +31,12 @@ wasmcloud_utils_macros::skir_response! {
         errors {
             MalformedRequestError => "Malformed request",
             UnknownRoleError => "Unknown role",
-            RolesRequiredError => "Roles required",
             RoleUnknownPropertyError => "Unknown role property",
             RoleTypeInvalidError => "Invalid role type",
-            RoleVersionBlankError => "Blank role version",
-            RoleInvalidError => "Invalid role",
+            RoleVersionInvalidError => "Invalid role version",
             CustomRoleNameRequiredError => "Custom role name required",
             CustomRoleNameInvalidError => "Invalid custom role name",
             BuiltinRoleNameForbiddenError => "Built-in role name forbidden",
-            EngineRoleDuplicateError => "Duplicate engine role",
-            RealmRoleDuplicateError => "Duplicate realm role",
-            CustomRoleDuplicateError => "Duplicate custom role",
             IdentityProviderUnavailableError => "Identity provider unavailable",
         }
     }

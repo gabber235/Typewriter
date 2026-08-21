@@ -2,9 +2,8 @@ use serde::{Deserialize, Serialize};
 use surrealdb_component_sdk::{Datetime, RecordId};
 
 use crate::skir::base::service::v1::topology::{
-    ChildRuntimeState, ChildRuntimeStatus, EngineInstance, EngineTarget, HostEntrypoint,
-    HostRuntimeState, HostRuntimeStatus, RealmInstance, ReconciledRevision, ServiceHost,
-    SupportedEngine,
+    ChildRuntimeState, ChildRuntimeStatus, EngineInstance, EngineTarget, HostRuntimeState,
+    HostRuntimeStatus, RealmInstance, ReconciledRevision, ServiceHost, SupportedEngine,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -60,22 +59,6 @@ impl From<SupportedEngineRecord> for SupportedEngine {
             engine_id: value.engine_id,
             supported_major_versions: value.supported_major_versions,
             _unrecognized: None,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum HostEntrypointRecord {
-    Standalone,
-    Paper,
-}
-
-impl From<HostEntrypointRecord> for HostEntrypoint {
-    fn from(value: HostEntrypointRecord) -> Self {
-        match value {
-            HostEntrypointRecord::Standalone => HostEntrypoint::Standalone,
-            HostEntrypointRecord::Paper => HostEntrypoint::Paper,
         }
     }
 }
@@ -194,7 +177,7 @@ pub struct ServiceHostRecord {
     pub id: RecordId,
     pub service_id: RecordId,
     pub revision: i64,
-    pub entrypoint: HostEntrypointRecord,
+    pub entrypoint: String,
     pub can_host_realm: bool,
     pub supported_engines: Vec<SupportedEngineRecord>,
     pub topology_revision: ReconciledRevisionRecord,

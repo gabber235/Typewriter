@@ -183,17 +183,12 @@ interface CredentialStorage {
 enum class IdentityRejectionReason {
     MALFORMED_REQUEST,
     UNKNOWN_ROLE,
-    ROLES_REQUIRED,
     ROLE_UNKNOWN_PROPERTY,
     ROLE_TYPE_INVALID,
-    ROLE_VERSION_BLANK,
-    ROLE_INVALID,
+    ROLE_VERSION_INVALID,
     CUSTOM_ROLE_NAME_REQUIRED,
     CUSTOM_ROLE_NAME_INVALID,
     BUILTIN_ROLE_NAME_FORBIDDEN,
-    ENGINE_ROLE_DUPLICATE,
-    REALM_ROLE_DUPLICATE,
-    CUSTOM_ROLE_DUPLICATE,
 }
 
 sealed interface IdentityIssueError {
@@ -226,7 +221,7 @@ sealed interface IdentityIssueResult {
 }
 
 fun interface IdentityIssuer {
-    suspend fun issue(roles: List<ServiceRole>): IdentityIssueResult
+    suspend fun issue(role: ServiceRole): IdentityIssueResult
 }
 
 enum class RuntimeConnectivity { DISCONNECTED, CONNECTING, CONNECTED }

@@ -317,17 +317,12 @@ private fun IdentityRejectionReason.wireValue(): String =
     when (this) {
         IdentityRejectionReason.MALFORMED_REQUEST -> "malformed_request"
         IdentityRejectionReason.UNKNOWN_ROLE -> "unknown_role"
-        IdentityRejectionReason.ROLES_REQUIRED -> "roles_required"
         IdentityRejectionReason.ROLE_UNKNOWN_PROPERTY -> "role_unknown_property"
         IdentityRejectionReason.ROLE_TYPE_INVALID -> "role_type_invalid"
-        IdentityRejectionReason.ROLE_VERSION_BLANK -> "role_version_blank"
-        IdentityRejectionReason.ROLE_INVALID -> "role_invalid"
+        IdentityRejectionReason.ROLE_VERSION_INVALID -> "role_version_invalid"
         IdentityRejectionReason.CUSTOM_ROLE_NAME_REQUIRED -> "custom_role_name_required"
         IdentityRejectionReason.CUSTOM_ROLE_NAME_INVALID -> "custom_role_name_invalid"
         IdentityRejectionReason.BUILTIN_ROLE_NAME_FORBIDDEN -> "builtin_role_name_forbidden"
-        IdentityRejectionReason.ENGINE_ROLE_DUPLICATE -> "engine_role_duplicate"
-        IdentityRejectionReason.REALM_ROLE_DUPLICATE -> "realm_role_duplicate"
-        IdentityRejectionReason.CUSTOM_ROLE_DUPLICATE -> "custom_role_duplicate"
     }
 
 private fun displayAttempt(attempt: Long): Long = if (attempt == Long.MAX_VALUE) attempt else attempt + 1

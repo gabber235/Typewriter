@@ -3,7 +3,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         THROW "role-unknown-property-error"
     };
 
-    IF $role.type NOT IN ["engine", "realm", "custom"] {
+    IF $role.type NOT IN ["host", "custom"] {
         THROW "role-type-invalid-error"
     };
 
@@ -18,7 +18,7 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
         IF !fn::is_id($role.name) {
             THROW "custom-role-name-invalid-error"
         };
-        IF $role.name IN ["engine", "realm"] {
+        IF $role.name IN ["host"] {
             THROW "builtin-role-name-forbidden-error"
         };
         RETURN true;
@@ -31,41 +31,8 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
     RETURN true;
 };
 
-DEFINE FUNCTION OVERWRITE fn::service::valid_roles($roles: array<object>) -> bool {
-    IF array::len($roles) < 1 {
-        THROW "roles-required-error"
-    };
-
-    IF !array::all($roles, |$role| fn::service::valid_role($role)) {
-        THROW "role-invalid-error"
-    };
-
-    LET $engines = $roles.filter(|$role| $role.type = "engine");
-    LET $realms = $roles.filter(|$role| $role.type = "realm");
-    LET $custom = $roles.filter(|$role| $role.type = "custom");
-
-    IF array::len($engines) > 1 {
-        THROW "engine-role-duplicate-error"
-    };
-
-    IF array::len($realms) > 1 {
-        THROW "realm-role-duplicate-error"
-    };
-
-    LET $custom_slugs = $custom.map(|$role| $role.name);
-    IF array::len(array::distinct($custom_slugs)) != array::len($custom_slugs) {
-        THROW "custom-role-duplicate-error"
-    };
-
-    RETURN true;
-};
-
-DEFINE FUNCTION OVERWRITE fn::service::has_role($service: object, $role_type: string) -> bool {
-    RETURN array::any($service.roles, |$role| $role.type = $role_type);
-};
-
 DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
-    fn::service::valid_roles($service.roles);
+    fn::service::valid_role($service.role);
     IF $service.organization != NONE AND $service.registration != NONE {
         THROW "service-organization-registration-conflict"
     };

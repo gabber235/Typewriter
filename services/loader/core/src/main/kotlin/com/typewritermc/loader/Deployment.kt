@@ -47,6 +47,7 @@ data class DeploymentContext(
     val hostId: String,
     val workDirectory: Path,
     val child: DesiredChild,
+    val service: LoaderServiceConnection,
 )
 
 /**

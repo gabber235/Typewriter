@@ -19,7 +19,7 @@
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IssueServiceIdentityRequest {
-    pub roles: Vec<crate::skirout::base::service::v1::service::ServiceRole>,
+    pub role: crate::skirout::base::service::v1::service::ServiceRole,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityRequest>>,
 }
@@ -167,43 +167,6 @@ impl IssueServiceIdentityResponse_UnknownRoleError {
 }
 
 // ==============================================================================
-// struct IssueServiceIdentityResponse.RolesRequiredError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_RolesRequiredError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RolesRequiredError>>,
-}
-
-impl IssueServiceIdentityResponse_RolesRequiredError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_RolesRequiredError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RolesRequiredError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RolesRequiredError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_RolesRequiredError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RolesRequiredError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RolesRequiredError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RolesRequiredError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RolesRequiredError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RolesRequiredError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RolesRequiredError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RolesRequiredError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct IssueServiceIdentityResponse.RoleUnknownPropertyError
 // ==============================================================================
 
@@ -278,76 +241,39 @@ impl IssueServiceIdentityResponse_RoleTypeInvalidError {
 }
 
 // ==============================================================================
-// struct IssueServiceIdentityResponse.RoleVersionBlankError
+// struct IssueServiceIdentityResponse.RoleVersionInvalidError
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_RoleVersionBlankError {
+pub struct IssueServiceIdentityResponse_RoleVersionInvalidError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleVersionBlankError>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleVersionInvalidError>>,
 }
 
-impl IssueServiceIdentityResponse_RoleVersionBlankError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleVersionBlankError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleVersionBlankError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleVersionBlankError::default);
+impl IssueServiceIdentityResponse_RoleVersionInvalidError {
+    pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleVersionInvalidError {
+        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleVersionInvalidError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleVersionInvalidError::default);
         &D
     }
 }
 
-impl IssueServiceIdentityResponse_RoleVersionBlankError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionBlankError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionBlankError>> =
+impl IssueServiceIdentityResponse_RoleVersionInvalidError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RoleVersionBlankError",
+                    "IssueServiceIdentityResponse.RoleVersionInvalidError",
                     "",
-                    |x: &IssueServiceIdentityResponse_RoleVersionBlankError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RoleVersionBlankError, u| x._unrecognized = u,
+                    |x: &IssueServiceIdentityResponse_RoleVersionInvalidError| &x._unrecognized,
+                    |x: &mut IssueServiceIdentityResponse_RoleVersionInvalidError, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleVersionBlankError> {
+    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleVersionInvalidError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionBlankError::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct IssueServiceIdentityResponse.RoleInvalidError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_RoleInvalidError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RoleInvalidError>>,
-}
-
-impl IssueServiceIdentityResponse_RoleInvalidError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_RoleInvalidError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RoleInvalidError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RoleInvalidError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_RoleInvalidError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleInvalidError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleInvalidError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RoleInvalidError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RoleInvalidError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RoleInvalidError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RoleInvalidError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleInvalidError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter())
     }
 }
 
@@ -463,117 +389,6 @@ impl IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError {
 }
 
 // ==============================================================================
-// struct IssueServiceIdentityResponse.EngineRoleDuplicateError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_EngineRoleDuplicateError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_EngineRoleDuplicateError>>,
-}
-
-impl IssueServiceIdentityResponse_EngineRoleDuplicateError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_EngineRoleDuplicateError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_EngineRoleDuplicateError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_EngineRoleDuplicateError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_EngineRoleDuplicateError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_EngineRoleDuplicateError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_EngineRoleDuplicateError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.EngineRoleDuplicateError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_EngineRoleDuplicateError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_EngineRoleDuplicateError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_EngineRoleDuplicateError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_EngineRoleDuplicateError::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct IssueServiceIdentityResponse.RealmRoleDuplicateError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_RealmRoleDuplicateError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_RealmRoleDuplicateError>>,
-}
-
-impl IssueServiceIdentityResponse_RealmRoleDuplicateError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_RealmRoleDuplicateError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_RealmRoleDuplicateError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_RealmRoleDuplicateError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_RealmRoleDuplicateError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RealmRoleDuplicateError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RealmRoleDuplicateError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.RealmRoleDuplicateError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_RealmRoleDuplicateError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_RealmRoleDuplicateError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_RealmRoleDuplicateError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RealmRoleDuplicateError::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct IssueServiceIdentityResponse.CustomRoleDuplicateError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct IssueServiceIdentityResponse_CustomRoleDuplicateError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IssueServiceIdentityResponse_CustomRoleDuplicateError>>,
-}
-
-impl IssueServiceIdentityResponse_CustomRoleDuplicateError {
-    pub fn default_ref() -> &'static IssueServiceIdentityResponse_CustomRoleDuplicateError {
-        static D: std::sync::LazyLock<IssueServiceIdentityResponse_CustomRoleDuplicateError> = std::sync::LazyLock::new(IssueServiceIdentityResponse_CustomRoleDuplicateError::default);
-        &D
-    }
-}
-
-impl IssueServiceIdentityResponse_CustomRoleDuplicateError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleDuplicateError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleDuplicateError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/identity.skir",
-                    "IssueServiceIdentityResponse.CustomRoleDuplicateError",
-                    "",
-                    |x: &IssueServiceIdentityResponse_CustomRoleDuplicateError| &x._unrecognized,
-                    |x: &mut IssueServiceIdentityResponse_CustomRoleDuplicateError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<IssueServiceIdentityResponse_CustomRoleDuplicateError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleDuplicateError::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct IssueServiceIdentityResponse.IdentityProviderUnavailableError
 // ==============================================================================
 
@@ -621,17 +436,12 @@ pub enum IssueServiceIdentityResponse {
     Success(Box<IssueServiceIdentityResponse_Success>),
     MalformedRequestError(Box<IssueServiceIdentityResponse_MalformedRequestError>),
     UnknownRoleError(Box<IssueServiceIdentityResponse_UnknownRoleError>),
-    RolesRequiredError(Box<IssueServiceIdentityResponse_RolesRequiredError>),
     RoleUnknownPropertyError(Box<IssueServiceIdentityResponse_RoleUnknownPropertyError>),
     RoleTypeInvalidError(Box<IssueServiceIdentityResponse_RoleTypeInvalidError>),
-    RoleVersionBlankError(Box<IssueServiceIdentityResponse_RoleVersionBlankError>),
-    RoleInvalidError(Box<IssueServiceIdentityResponse_RoleInvalidError>),
+    RoleVersionInvalidError(Box<IssueServiceIdentityResponse_RoleVersionInvalidError>),
     CustomRoleNameRequiredError(Box<IssueServiceIdentityResponse_CustomRoleNameRequiredError>),
     CustomRoleNameInvalidError(Box<IssueServiceIdentityResponse_CustomRoleNameInvalidError>),
     BuiltinRoleNameForbiddenError(Box<IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError>),
-    EngineRoleDuplicateError(Box<IssueServiceIdentityResponse_EngineRoleDuplicateError>),
-    RealmRoleDuplicateError(Box<IssueServiceIdentityResponse_RealmRoleDuplicateError>),
-    CustomRoleDuplicateError(Box<IssueServiceIdentityResponse_CustomRoleDuplicateError>),
     IdentityProviderUnavailableError(Box<IssueServiceIdentityResponse_IdentityProviderUnavailableError>),
 }
 
@@ -652,18 +462,13 @@ impl IssueServiceIdentityResponse {
                         IssueServiceIdentityResponse::Success(_) => 2,
                         IssueServiceIdentityResponse::MalformedRequestError(_) => 3,
                         IssueServiceIdentityResponse::UnknownRoleError(_) => 4,
-                        IssueServiceIdentityResponse::RolesRequiredError(_) => 5,
-                        IssueServiceIdentityResponse::RoleUnknownPropertyError(_) => 6,
-                        IssueServiceIdentityResponse::RoleTypeInvalidError(_) => 7,
-                        IssueServiceIdentityResponse::RoleVersionBlankError(_) => 8,
-                        IssueServiceIdentityResponse::RoleInvalidError(_) => 9,
-                        IssueServiceIdentityResponse::CustomRoleNameRequiredError(_) => 10,
-                        IssueServiceIdentityResponse::CustomRoleNameInvalidError(_) => 11,
-                        IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 12,
-                        IssueServiceIdentityResponse::EngineRoleDuplicateError(_) => 13,
-                        IssueServiceIdentityResponse::RealmRoleDuplicateError(_) => 14,
-                        IssueServiceIdentityResponse::CustomRoleDuplicateError(_) => 15,
-                        IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 16,
+                        IssueServiceIdentityResponse::RoleUnknownPropertyError(_) => 5,
+                        IssueServiceIdentityResponse::RoleTypeInvalidError(_) => 6,
+                        IssueServiceIdentityResponse::RoleVersionInvalidError(_) => 7,
+                        IssueServiceIdentityResponse::CustomRoleNameRequiredError(_) => 8,
+                        IssueServiceIdentityResponse::CustomRoleNameInvalidError(_) => 9,
+                        IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 10,
+                        IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 11,
                     },
                     |u| IssueServiceIdentityResponse::Unknown(Some(u)),
                     |x: &IssueServiceIdentityResponse| match x { IssueServiceIdentityResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -689,7 +494,7 @@ fn initialize_module_serializers() {
         std::sync::LazyLock::new(|| {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityRequest> = IssueServiceIdentityRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("roles", 0, crate::skir_client::Serializer::array(crate::skirout::base::service::v1::service::ServiceRole::serializer()), "", |x: &IssueServiceIdentityRequest| &x.roles, |x: &mut IssueServiceIdentityRequest, v| x.roles = v);
+                (*a).add_field("role", 0, crate::skirout::base::service::v1::service::ServiceRole::serializer(), "", |x: &IssueServiceIdentityRequest| &x.role, |x: &mut IssueServiceIdentityRequest, v| x.role = v);
                 (*a).finalize();
             }
             unsafe {
@@ -709,10 +514,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RolesRequiredError> = IssueServiceIdentityResponse_RolesRequiredError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleUnknownPropertyError> = IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -721,11 +522,7 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionBlankError> = IssueServiceIdentityResponse_RoleVersionBlankError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleInvalidError> = IssueServiceIdentityResponse_RoleInvalidError::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RoleVersionInvalidError> = IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
@@ -741,18 +538,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_EngineRoleDuplicateError> = IssueServiceIdentityResponse_EngineRoleDuplicateError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_RealmRoleDuplicateError> = IssueServiceIdentityResponse_RealmRoleDuplicateError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_CustomRoleDuplicateError> = IssueServiceIdentityResponse_CustomRoleDuplicateError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IssueServiceIdentityResponse_IdentityProviderUnavailableError> = IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -762,18 +547,13 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_Success::_adapter()), "", |v| IssueServiceIdentityResponse::Success(Box::new(v)), |x| match x { IssueServiceIdentityResponse::Success(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("malformed_request_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_MalformedRequestError::_adapter()), "", |v| IssueServiceIdentityResponse::MalformedRequestError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::MalformedRequestError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("unknown_role_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_UnknownRoleError::_adapter()), "", |v| IssueServiceIdentityResponse::UnknownRoleError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::UnknownRoleError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("roles_required_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RolesRequiredError::_adapter()), "", |v| IssueServiceIdentityResponse::RolesRequiredError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RolesRequiredError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_unknown_property_error", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleUnknownPropertyError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleUnknownPropertyError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_type_invalid_error", 7, 7, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleTypeInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleTypeInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_version_blank_error", 8, 8, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionBlankError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleVersionBlankError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleVersionBlankError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("role_invalid_error", 9, 9, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom_role_name_required_error", 10, 10, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameRequiredError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameRequiredError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom_role_name_invalid_error", 11, 11, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameInvalidError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("builtin_role_name_forbidden_error", 12, 12, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter()), "", |v| IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("engine_role_duplicate_error", 13, 13, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_EngineRoleDuplicateError::_adapter()), "", |v| IssueServiceIdentityResponse::EngineRoleDuplicateError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::EngineRoleDuplicateError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm_role_duplicate_error", 14, 14, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RealmRoleDuplicateError::_adapter()), "", |v| IssueServiceIdentityResponse::RealmRoleDuplicateError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RealmRoleDuplicateError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom_role_duplicate_error", 15, 15, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleDuplicateError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleDuplicateError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleDuplicateError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("identity_provider_unavailable_error", 16, 16, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter()), "", |v| IssueServiceIdentityResponse::IdentityProviderUnavailableError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::IdentityProviderUnavailableError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("role_unknown_property_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleUnknownPropertyError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleUnknownPropertyError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleUnknownPropertyError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("role_type_invalid_error", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleTypeInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleTypeInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleTypeInvalidError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("role_version_invalid_error", 7, 7, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_RoleVersionInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::RoleVersionInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::RoleVersionInvalidError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("custom_role_name_required_error", 8, 8, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameRequiredError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameRequiredError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameRequiredError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("custom_role_name_invalid_error", 9, 9, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_CustomRoleNameInvalidError::_adapter()), "", |v| IssueServiceIdentityResponse::CustomRoleNameInvalidError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::CustomRoleNameInvalidError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("builtin_role_name_forbidden_error", 10, 10, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenError::_adapter()), "", |v| IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("identity_provider_unavailable_error", 11, 11, crate::skir_client::internal::struct_serializer_from_static(IssueServiceIdentityResponse_IdentityProviderUnavailableError::_adapter()), "", |v| IssueServiceIdentityResponse::IdentityProviderUnavailableError(Box::new(v)), |x| match x { IssueServiceIdentityResponse::IdentityProviderUnavailableError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

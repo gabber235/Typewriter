@@ -22,7 +22,7 @@ pub struct Service {
     pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub revision: i64,
     pub name: String,
-    pub roles: Vec<ServiceRole>,
+    pub role: ServiceRole,
     pub created_at: std::time::SystemTime,
     pub organization: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
     pub registration: Option<ServiceRegistration>,
@@ -44,7 +44,7 @@ impl Default for Service {
             service_id: crate::skirout::base::kernel::v1::record_id::RecordId::default(),
             revision: 0_i64,
             name: String::new(),
-            roles: Vec::default(),
+            role: ServiceRole::default(),
             created_at: ::std::time::SystemTime::UNIX_EPOCH,
             organization: None,
             registration: None,
@@ -75,78 +75,40 @@ impl Service {
 }
 
 // ==============================================================================
-// struct ServiceRole.Engine
+// struct ServiceRole.Host
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ServiceRole_Engine {
+pub struct ServiceRole_Host {
     pub version: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ServiceRole_Engine>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ServiceRole_Host>>,
 }
 
-impl ServiceRole_Engine {
-    pub fn default_ref() -> &'static ServiceRole_Engine {
-        static D: std::sync::LazyLock<ServiceRole_Engine> = std::sync::LazyLock::new(ServiceRole_Engine::default);
+impl ServiceRole_Host {
+    pub fn default_ref() -> &'static ServiceRole_Host {
+        static D: std::sync::LazyLock<ServiceRole_Host> = std::sync::LazyLock::new(ServiceRole_Host::default);
         &D
     }
 }
 
-impl ServiceRole_Engine {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRole_Engine> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRole_Engine>> =
+impl ServiceRole_Host {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRole_Host> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRole_Host>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "service/v1/service.skir",
-                    "ServiceRole.Engine",
+                    "ServiceRole.Host",
                     "",
-                    |x: &ServiceRole_Engine| &x._unrecognized,
-                    |x: &mut ServiceRole_Engine, u| x._unrecognized = u,
+                    |x: &ServiceRole_Host| &x._unrecognized,
+                    |x: &mut ServiceRole_Host, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ServiceRole_Engine> {
+    pub fn serializer() -> crate::skir_client::Serializer<ServiceRole_Host> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Engine::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ServiceRole.Realm
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ServiceRole_Realm {
-    pub version: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ServiceRole_Realm>>,
-}
-
-impl ServiceRole_Realm {
-    pub fn default_ref() -> &'static ServiceRole_Realm {
-        static D: std::sync::LazyLock<ServiceRole_Realm> = std::sync::LazyLock::new(ServiceRole_Realm::default);
-        &D
-    }
-}
-
-impl ServiceRole_Realm {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRole_Realm> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRole_Realm>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/service.skir",
-                    "ServiceRole.Realm",
-                    "",
-                    |x: &ServiceRole_Realm| &x._unrecognized,
-                    |x: &mut ServiceRole_Realm, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ServiceRole_Realm> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Realm::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Host::_adapter())
     }
 }
 
@@ -196,8 +158,7 @@ impl ServiceRole_Custom {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ServiceRole {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ServiceRole>>),
-    Engine(Box<ServiceRole_Engine>),
-    Realm(Box<ServiceRole_Realm>),
+    Host(Box<ServiceRole_Host>),
     Custom(Box<ServiceRole_Custom>),
 }
 
@@ -214,9 +175,8 @@ impl ServiceRole {
                 crate::skir_client::internal::EnumAdapter::new(
                     |x: &ServiceRole| match x {
                         ServiceRole::Unknown(_) => 0,
-                        ServiceRole::Engine(_) => 1,
-                        ServiceRole::Realm(_) => 2,
-                        ServiceRole::Custom(_) => 3,
+                        ServiceRole::Host(_) => 1,
+                        ServiceRole::Custom(_) => 2,
                     },
                     |u| ServiceRole::Unknown(Some(u)),
                     |x: &ServiceRole| match x { ServiceRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -385,7 +345,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Service| &x.service_id, |x: &mut Service, v| x.service_id = v);
                 (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Service| &x.revision, |x: &mut Service, v| x.revision = v);
                 (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &Service| &x.name, |x: &mut Service, v| x.name = v);
-                (*a).add_field("roles", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter())), "", |x: &Service| &x.roles, |x: &mut Service, v| x.roles = v);
+                (*a).add_field("role", 3, crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter()), "", |x: &Service| &x.role, |x: &mut Service, v| x.role = v);
                 (*a).add_field("created_at", 4, crate::skir_client::Serializer::timestamp(), "", |x: &Service| &x.created_at, |x: &mut Service, v| x.created_at = v);
                 (*a).add_field("organization", 5, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.organization, |x: &mut Service, v| x.organization = v);
                 (*a).add_field("registration", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceRegistration::_adapter())), "", |x: &Service| &x.registration, |x: &mut Service, v| x.registration = v);
@@ -393,13 +353,8 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Engine> = ServiceRole_Engine::_adapter() as *const _ as *mut _;
-                (*a).add_field("version", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Engine| &x.version, |x: &mut ServiceRole_Engine, v| x.version = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Realm> = ServiceRole_Realm::_adapter() as *const _ as *mut _;
-                (*a).add_field("version", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Realm| &x.version, |x: &mut ServiceRole_Realm, v| x.version = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Host> = ServiceRole_Host::_adapter() as *const _ as *mut _;
+                (*a).add_field("version", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Host| &x.version, |x: &mut ServiceRole_Host, v| x.version = v);
                 (*a).finalize();
             }
             unsafe {
@@ -410,9 +365,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ServiceRole> = ServiceRole::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("engine", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Engine::_adapter()), "", |v| ServiceRole::Engine(Box::new(v)), |x| match x { ServiceRole::Engine(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Realm::_adapter()), "", |v| ServiceRole::Realm(Box::new(v)), |x| match x { ServiceRole::Realm(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Custom::_adapter()), "", |v| ServiceRole::Custom(Box::new(v)), |x| match x { ServiceRole::Custom(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("host", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Host::_adapter()), "", |v| ServiceRole::Host(Box::new(v)), |x| match x { ServiceRole::Host(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("custom", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Custom::_adapter()), "", |v| ServiceRole::Custom(Box::new(v)), |x| match x { ServiceRole::Custom(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

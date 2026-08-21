@@ -59,7 +59,7 @@ class FileHostStateStore(
     }
 
     private companion object {
-        const val FORMAT_VERSION = 1
+        const val FORMAT_VERSION = 2
 
         val cbor =
             Cbor {
@@ -71,6 +71,6 @@ class FileHostStateStore(
 
 @Serializable
 internal data class StoredHostState(
-    val format: Int = 1,
+    val format: Int = 2,
     val topology: DesiredTopology,
 )

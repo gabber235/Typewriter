@@ -19,8 +19,18 @@ class HostLoader(
     private val controlPlane: HostControlPlane,
     private val runtimeFactory: DeploymentRuntimeFactory,
     private val scope: CoroutineScope,
+    private val service: LoaderService? = null,
 ) {
-    suspend fun start(): RunningHost {
+    suspend fun start(): RunningHost =
+        try {
+            service?.start()?.requireSuccess("start")
+            startHost()
+        } catch (failure: Throwable) {
+            runCatching { service?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
+            throw failure
+        }
+
+    private suspend fun startHost(): RunningHost {
         val stateDirectory = workDirectory.resolve("state")
         val identityStore = HostIdentityStore(stateDirectory.resolve("host-id"))
         val stateStore = FileHostStateStore(stateDirectory.resolve("topology.bin"))
@@ -30,9 +40,16 @@ class HostLoader(
             } catch (failure: Throwable) {
                 if (failure is CancellationException) throw failure
                 val hostId = identityStore.load() ?: throw failure
-                val reconciler = HostReconciler(hostId, workDirectory, runtimeFactory, stateStore)
+                val reconciler =
+                    HostReconciler(
+                        hostId,
+                        workDirectory,
+                        runtimeFactory,
+                        stateStore,
+                        service ?: UnavailableLoaderServiceConnection,
+                    )
                 reconciler.restore()
-                return RunningHost(reconciler, null)
+                return RunningHost(reconciler, null, service)
             }
         val reconciler =
             HostReconciler(
@@ -40,6 +57,7 @@ class HostLoader(
                 workDirectory,
                 runtimeFactory,
                 stateStore,
+                service ?: UnavailableLoaderServiceConnection,
                 reporter = { report -> controlPlane.report(registration.hostId, report) },
             )
         reconciler.restore()
@@ -47,7 +65,7 @@ class HostLoader(
             scope.launch {
                 controlPlane.watchExecution(registration.hostId).collect(reconciler::reconcile)
             }
-        return RunningHost(reconciler, watch)
+        return RunningHost(reconciler, watch, service)
     }
 }
 
@@ -60,10 +78,29 @@ class HostLoader(
 class RunningHost internal constructor(
     private val reconciler: HostReconciler,
     private val watch: Job?,
+    private val ownedService: LoaderService? = null,
 ) {
+    val service: LoaderServiceConnection = ownedService ?: UnavailableLoaderServiceConnection
+
     suspend fun stop() {
-        watch?.cancel()
-        watch?.join()
-        reconciler.stop()
+        try {
+            watch?.cancel()
+            watch?.join()
+            reconciler.stop()
+        } finally {
+            ownedService?.stop()?.requireSuccess("stop")
+        }
+    }
+}
+
+private fun <Value> com.typewritermc.services.libs.registrar.RegistrarResult<Value>.requireSuccess(operation: String): Value =
+    when (this) {
+        is com.typewritermc.services.libs.registrar.RegistrarResult.Success -> value
+        is com.typewritermc.services.libs.registrar.RegistrarResult.Failure -> error("Loader registration $operation failed: $failure")
+    }
+
+private fun com.typewritermc.services.libs.registrar.RegistrarStopResult.requireSuccess(operation: String) {
+    if (this is com.typewritermc.services.libs.registrar.RegistrarStopResult.Failure) {
+        error("Loader registration $operation failed: $failures")
     }
 }

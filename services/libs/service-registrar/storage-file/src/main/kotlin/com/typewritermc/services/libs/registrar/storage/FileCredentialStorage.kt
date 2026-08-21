@@ -132,12 +132,12 @@ private data class StoredCredential(
     val serviceId: String,
     val displayName: String,
     val username: String,
-    val roles: List<StoredRole>,
+    val role: StoredRole,
     val token: String,
 ) {
     fun toCredentials(): IdentityCredentials =
         IdentityCredentials(
-            ServiceIdentity(serviceId, displayName, username, roles.map(StoredRole::toRole)),
+            ServiceIdentity(serviceId, displayName, username, role.toRole()),
             RedactedSecret.AppPassword(token),
         )
 
@@ -148,7 +148,7 @@ private data class StoredCredential(
                 credentials.identity.serviceId,
                 credentials.identity.displayName,
                 credentials.identity.username,
-                credentials.identity.roles.map(StoredRole::from),
+                StoredRole.from(credentials.identity.role),
                 credentials.revealAppPassword(),
             )
     }
@@ -162,8 +162,7 @@ private data class StoredRole(
 ) {
     fun toRole(): ServiceRole =
         when (type) {
-            "engine" -> ServiceRole.Engine(version)
-            "realm" -> ServiceRole.Realm(version)
+            "host" -> ServiceRole.Host(version)
             "custom" -> ServiceRole.Custom(requireNotNull(name), version)
             else -> throw IllegalArgumentException("Unknown stored role type")
         }
@@ -171,8 +170,7 @@ private data class StoredRole(
     companion object {
         fun from(role: ServiceRole): StoredRole =
             when (role) {
-                is ServiceRole.Engine -> StoredRole("engine", role.version)
-                is ServiceRole.Realm -> StoredRole("realm", role.version)
+                is ServiceRole.Host -> StoredRole("host", role.version)
                 is ServiceRole.Custom -> StoredRole("custom", role.version, role.name)
             }
     }
@@ -182,7 +180,7 @@ private fun corrupt() = CredentialLoadResult.Failure(CredentialStorageError.Corr
 
 private fun unavailable() = CredentialLoadResult.Failure(CredentialStorageError.Unavailable(STORAGE_READ_SLUG))
 
-private const val FORMAT_VERSION = 1
+private const val FORMAT_VERSION = 2
 private const val STORAGE_CORRUPT_SLUG = "credential_file_corrupt"
 private const val STORAGE_READ_SLUG = "credential_file_read_unavailable"
 private const val STORAGE_WRITE_SLUG = "credential_file_write_unavailable"

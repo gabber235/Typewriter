@@ -25,11 +25,11 @@ class TypewriterIdentityIssuer(
     private val client: ServiceHttpClient,
     private val uri: URI,
 ) : IdentityIssuer {
-    override suspend fun issue(roles: List<ServiceRole>): IdentityIssueResult {
+    override suspend fun issue(role: ServiceRole): IdentityIssueResult {
         val body =
             IssueServiceIdentityRequest.serializer
                 .toBytes(
-                    IssueServiceIdentityRequest(roles = roles.map(ServiceRole::toSkir)),
+                    IssueServiceIdentityRequest(role = role.toSkir()),
                 ).toByteArray()
         val result =
             client.execute(
@@ -66,14 +66,14 @@ class TypewriterIdentityIssuer(
                 rethrowExceptionalThrowable(failure)
                 return IdentityIssueResult.Failure(IdentityIssueError.Protocol("malformed_response", ambiguous))
             }
-        return mapIdentityResponse(status, response, roles)
+        return mapIdentityResponse(status, response, role)
     }
 }
 
 private fun mapIdentityResponse(
     status: Int,
     response: IssueServiceIdentityResponse,
-    roles: List<ServiceRole>,
+    role: ServiceRole,
 ): IdentityIssueResult {
     val expectedStatuses =
         when (response.kind) {
@@ -82,17 +82,12 @@ private fun mapIdentityResponse(
             IssueServiceIdentityResponse.Kind.MALFORMED_REQUEST_ERROR_WRAPPER -> setOf(400, 413, 415)
 
             IssueServiceIdentityResponse.Kind.UNKNOWN_ROLE_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.ROLES_REQUIRED_ERROR_WRAPPER,
             IssueServiceIdentityResponse.Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER,
             IssueServiceIdentityResponse.Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.ROLE_VERSION_BLANK_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.ROLE_INVALID_ERROR_WRAPPER,
+            IssueServiceIdentityResponse.Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER,
             IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER,
             IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER,
             IssueServiceIdentityResponse.Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.ENGINE_ROLE_DUPLICATE_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.REALM_ROLE_DUPLICATE_ERROR_WRAPPER,
-            IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_DUPLICATE_ERROR_WRAPPER,
             -> setOf(400)
 
             IssueServiceIdentityResponse.Kind.INTERNAL_ERROR_WRAPPER -> setOf(500)
@@ -111,7 +106,7 @@ private fun mapIdentityResponse(
             val value = response.value
             IdentityIssueResult.Success(
                 IdentityCredentials(
-                    ServiceIdentity(value.serviceId, value.displayName, value.username, roles),
+                    ServiceIdentity(value.serviceId, value.displayName, value.username, role),
                     RedactedSecret.AppPassword(value.token),
                 ),
             )
@@ -132,23 +127,17 @@ private fun IssueServiceIdentityResponse.rejectionReason(): IdentityRejectionRea
     when (kind) {
         IssueServiceIdentityResponse.Kind.MALFORMED_REQUEST_ERROR_WRAPPER -> IdentityRejectionReason.MALFORMED_REQUEST
         IssueServiceIdentityResponse.Kind.UNKNOWN_ROLE_ERROR_WRAPPER -> IdentityRejectionReason.UNKNOWN_ROLE
-        IssueServiceIdentityResponse.Kind.ROLES_REQUIRED_ERROR_WRAPPER -> IdentityRejectionReason.ROLES_REQUIRED
         IssueServiceIdentityResponse.Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER -> IdentityRejectionReason.ROLE_UNKNOWN_PROPERTY
         IssueServiceIdentityResponse.Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER -> IdentityRejectionReason.ROLE_TYPE_INVALID
-        IssueServiceIdentityResponse.Kind.ROLE_VERSION_BLANK_ERROR_WRAPPER -> IdentityRejectionReason.ROLE_VERSION_BLANK
-        IssueServiceIdentityResponse.Kind.ROLE_INVALID_ERROR_WRAPPER -> IdentityRejectionReason.ROLE_INVALID
+        IssueServiceIdentityResponse.Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER -> IdentityRejectionReason.ROLE_VERSION_INVALID
         IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER -> IdentityRejectionReason.CUSTOM_ROLE_NAME_REQUIRED
         IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER -> IdentityRejectionReason.CUSTOM_ROLE_NAME_INVALID
         IssueServiceIdentityResponse.Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER -> IdentityRejectionReason.BUILTIN_ROLE_NAME_FORBIDDEN
-        IssueServiceIdentityResponse.Kind.ENGINE_ROLE_DUPLICATE_ERROR_WRAPPER -> IdentityRejectionReason.ENGINE_ROLE_DUPLICATE
-        IssueServiceIdentityResponse.Kind.REALM_ROLE_DUPLICATE_ERROR_WRAPPER -> IdentityRejectionReason.REALM_ROLE_DUPLICATE
-        IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_DUPLICATE_ERROR_WRAPPER -> IdentityRejectionReason.CUSTOM_ROLE_DUPLICATE
         else -> error("Response is not an identity rejection: $kind")
     }
 
 private fun ServiceRole.toSkir(): SkirRole =
     when (this) {
-        is ServiceRole.Engine -> SkirRole.EngineWrapper(SkirRole.Engine(version = version))
-        is ServiceRole.Realm -> SkirRole.RealmWrapper(SkirRole.Realm(version = version))
+        is ServiceRole.Host -> SkirRole.HostWrapper(SkirRole.Host(version = version))
         is ServiceRole.Custom -> SkirRole.CustomWrapper(SkirRole.Custom(name = name, version = version))
     }

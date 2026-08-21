@@ -6,7 +6,7 @@ OrganizationTopology topologyScenario({bool distributed = true}) {
   final paperHost = _host(
     id: "paper-eu-1",
     serviceId: "minecraft-eu-1",
-    entrypoint: skir.HostEntrypoint.paper,
+    entrypoint: "PAPER",
     desiredRevision: distributed ? 4 : 3,
     appliedRevision: 3,
   );
@@ -14,7 +14,7 @@ OrganizationTopology topologyScenario({bool distributed = true}) {
       ? _host(
           id: "realm-control-1",
           serviceId: "realm-control-1",
-          entrypoint: skir.HostEntrypoint.standalone,
+          entrypoint: "STANDALONE",
           desiredRevision: 8,
           appliedRevision: 8,
         )
@@ -60,12 +60,7 @@ List<Service> topologyScenarioServices(OrganizationTopology topology) => [
       serviceId: host.serviceId,
       revision: host.revision,
       name: host.hostId.id.replaceAll("`", "").replaceAll("-", "_"),
-      roles: [
-        if (topology.realmOwnedBy(host.hostId) != null)
-          RealmServiceRole(version: "1.0.0"),
-        if (topology.engineOwnedBy(host.hostId) != null)
-          EngineServiceRole(version: "1.0.0"),
-      ],
+      role: HostServiceRole(version: "1.0.0"),
       createdAt: DateTime.utc(2026, 8, 19),
       organization: recordId("organization:story"),
       state: ServiceState(
@@ -77,7 +72,7 @@ List<Service> topologyScenarioServices(OrganizationTopology topology) => [
     serviceId: recordId("service:discord"),
     revision: 1,
     name: "discord_bridge",
-    roles: [CustomServiceRole(name: "Discord", version: "1.0.0")],
+    role: CustomServiceRole(name: "discord", version: "1.0.0"),
     createdAt: DateTime.utc(2026, 8, 19),
     organization: recordId("organization:story"),
     state: ServiceState(
@@ -90,7 +85,7 @@ List<Service> topologyScenarioServices(OrganizationTopology topology) => [
 skir.ServiceHost _host({
   required String id,
   required String serviceId,
-  required skir.HostEntrypoint entrypoint,
+  required String entrypoint,
   required int desiredRevision,
   required int appliedRevision,
 }) => skir.ServiceHost(
@@ -101,9 +96,7 @@ skir.ServiceHost _host({
   canHostRealm: true,
   supportedEngines: [
     skir.SupportedEngine(
-      engineId: entrypoint == skir.HostEntrypoint.paper
-          ? "paper"
-          : "conformance",
+      engineId: entrypoint == "PAPER" ? "paper" : "conformance",
       supportedMajorVersions: [1],
     ),
   ],

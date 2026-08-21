@@ -1,4 +1,4 @@
-package com.typewritermc.realm.shell
+package com.typewritermc.loader.standalone.shell
 
 import com.github.ajalt.clikt.core.BaseCliktCommand
 import org.jline.reader.Candidate
@@ -6,7 +6,7 @@ import org.jline.reader.Completer
 import org.jline.reader.LineReader
 import org.jline.reader.ParsedLine
 
-class RealmShellCompleter(
+class LoaderShellCompleter(
     private val rootCommand: BaseCliktCommand<*>,
 ) : Completer {
     override fun complete(

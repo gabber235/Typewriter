@@ -17,6 +17,24 @@ path = ""
 equals = true
 
 [[cases]]
+name = "host_entrypoint_is_open_and_normalized"
+kind = "sql_expect"
+actor = "root"
+sql = "RETURN { CREATE service:entrypoint_test SET name = 'entrypoint_test', role = { type: 'host', version: '1.0.0' }; CREATE service_host:custom SET service_id = service:entrypoint_test, entrypoint = 'velocity', can_host_realm = false, supported_engines = []; RETURN service_host:custom.entrypoint = 'VELOCITY'; };"
+allow = true
+[[cases.assertions]]
+path = ""
+equals = true
+
+[[cases]]
+name = "host_entrypoint_must_not_be_blank"
+kind = "sql_expect"
+actor = "root"
+sql = "CREATE service_host:blank SET service_id = service:engine_unbound, entrypoint = '   ', can_host_realm = false, supported_engines = [];"
+allow = false
+error_contains = "service-host-entrypoint-invalid-error"
+
+[[cases]]
 name = "one_service_owns_at_most_one_host"
 kind = "sql_expect"
 actor = "root"
@@ -71,7 +89,7 @@ error_contains = "realm_instance_by_owner"
 name = "engine_prevents_assigned_realm_deletion"
 kind = "sql_expect"
 actor = "root"
-sql = "CREATE service:reject_service SET name = 'reject_service', roles = [{ type: 'engine', version: '1.0.0' }]; CREATE service_host:reject_host SET service_id = service:reject_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:reject_realm SET owner_host_id = service_host:reject_host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:reject_engine SET owner_host_id = service_host:reject_host, realm_id = realm_instance:reject_realm, target = { engine_id: 'paper', major_version: 1 }; DELETE realm_instance:reject_realm;"
+sql = "CREATE service:reject_service SET name = 'reject_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:reject_host SET service_id = service:reject_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:reject_realm SET owner_host_id = service_host:reject_host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:reject_engine SET owner_host_id = service_host:reject_host, realm_id = realm_instance:reject_realm, target = { engine_id: 'paper', major_version: 1 }; DELETE realm_instance:reject_realm;"
 allow = false
 error_contains = "referenced"
 
@@ -79,7 +97,7 @@ error_contains = "referenced"
 name = "deleting_host_cascades_local_children"
 kind = "sql_expect"
 actor = "root"
-sql = "RETURN { CREATE service:cascade_service SET name = 'cascade_service', roles = [{ type: 'engine', version: '1.0.0' }]; CREATE service_host:cascade_host SET service_id = service:cascade_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:cascade_realm SET owner_host_id = service_host:cascade_host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:cascade_engine SET owner_host_id = service_host:cascade_host, realm_id = realm_instance:cascade_realm, target = { engine_id: 'paper', major_version: 1 }; DELETE service_host:cascade_host; RETURN array::is_empty(SELECT * FROM service_host:cascade_host) AND array::is_empty(SELECT * FROM realm_instance:cascade_realm) AND array::is_empty(SELECT * FROM engine_instance:cascade_engine); };"
+sql = "RETURN { CREATE service:cascade_service SET name = 'cascade_service', role = { type: 'host', version: '1.0.0' }; CREATE service_host:cascade_host SET service_id = service:cascade_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:cascade_realm SET owner_host_id = service_host:cascade_host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:cascade_engine SET owner_host_id = service_host:cascade_host, realm_id = realm_instance:cascade_realm, target = { engine_id: 'paper', major_version: 1 }; DELETE service_host:cascade_host; RETURN array::is_empty(SELECT * FROM service_host:cascade_host) AND array::is_empty(SELECT * FROM realm_instance:cascade_realm) AND array::is_empty(SELECT * FROM engine_instance:cascade_engine); };"
 allow = true
 [[cases.assertions]]
 path = ""

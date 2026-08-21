@@ -1,58 +1,25 @@
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+
 plugins {
     id("com.typewritermc.basic-conventions")
-    application
-    alias(libs.plugins.kotlin.serialize)
     alias(libs.plugins.gradle.buildconfig)
 }
 
 version = "1000.0.0"
-
-application {
-    mainClass.set("com.typewritermc.realm.RealmMain")
-}
-
-fun registerRealmRunProfile(profile: String) {
-    val profileName = profile.replaceFirstChar(Char::uppercase)
-    val configurationFile = layout.projectDirectory.file("config/$profile.properties")
-    tasks.register<JavaExec>("run$profileName") {
-        group = "application"
-        description = "Runs Realm with the $profile configuration"
-        dependsOn(tasks.named("classes"))
-        classpath = sourceSets.main.get().runtimeClasspath
-        mainClass.set(application.mainClass)
-        standardInput = System.`in`
-        environment("REALM_CONFIG_FILE", configurationFile.asFile.absolutePath)
-        inputs.file(configurationFile)
-    }
-}
-
-registerRealmRunProfile("local")
-registerRealmRunProfile("production")
 
 dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.kotlin.coroutines.core)
     implementation(libs.logback)
-    implementation(libs.kotlin.serialize.cbor)
-    implementation(libs.kotlin.serialize.json)
     implementation("com.typewritermc:service-utils")
-    implementation("com.typewritermc:service-telemetry-koin")
     implementation("com.typewritermc:service-telemetry-console")
-    implementation("com.typewritermc:service-registrar-koin")
-    implementation("com.typewritermc:service-registrar-console")
     implementation("com.typewritermc:service-communicator-skir")
     implementation("com.typewritermc:service-file-transfer-core")
     implementation("com.typewritermc:service-file-transfer-storage-file")
     implementation("com.typewritermc:loader-core")
     implementation("com.typewritermc:engine-types")
-    implementation(platform(libs.opentelemetry.bom))
-    implementation(libs.opentelemetry.sdk)
-    implementation(libs.opentelemetry.exporter.otlp)
-    implementation(libs.opentelemetry.semconv)
-
-    implementation(libs.jline)
-    implementation(libs.clikt)
     implementation(libs.surrealdb.java.sdk)
 
     testImplementation("com.typewritermc:service-communicator-testing")
@@ -127,6 +94,33 @@ val verifyRealmSchemaIndex =
 
 tasks.processResources {
     dependsOn(verifyPatchIndex, verifyRealmSchemaIndex)
+}
+
+val verifyLoaderManagedArtifact =
+    tasks.register("verifyLoaderManagedArtifact") {
+        group = "verification"
+        description = "Verifies that Realm is packaged only as a loader managed deployment"
+        val realmJar = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+        dependsOn(realmJar)
+        inputs.file(realmJar)
+
+        doLast {
+            JarFile(realmJar.get().asFile).use { archive ->
+                check(archive.manifest?.mainAttributes?.getValue(Attributes.Name.MAIN_CLASS) == null) {
+                    "Realm must not declare a process entry point"
+                }
+                check(archive.getEntry("com/typewritermc/realm/RealmMain.class") == null) {
+                    "Realm must not package a direct main class"
+                }
+                check(archive.getEntry("com/typewritermc/realm/DefaultRealmRuntimeFactory.class") != null) {
+                    "Realm must package its loader managed runtime factory"
+                }
+            }
+        }
+    }
+
+tasks.check {
+    dependsOn(verifyLoaderManagedArtifact)
 }
 
 tasks.register<Copy>("publishDevArtifacts") {

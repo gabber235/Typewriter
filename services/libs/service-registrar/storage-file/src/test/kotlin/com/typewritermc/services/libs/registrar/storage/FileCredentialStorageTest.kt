@@ -8,7 +8,6 @@ import com.typewritermc.services.libs.registrar.RedactedSecret
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -20,11 +19,7 @@ private fun credentials(id: String = "service-id") =
             id,
             "Service Name",
             "service-user",
-            listOf(
-                ServiceRole.Engine("1.2.3"),
-                ServiceRole.Realm("4.5.6"),
-                ServiceRole.Custom("custom_role", "7.8.9"),
-            ),
+            ServiceRole.Custom("custom_role", "7.8.9"),
         ),
         RedactedSecret.AppPassword("private-password"),
     )
@@ -56,11 +51,7 @@ val FileCredentialStorageTest by testSuite {
                 loaded.credentials.identity.serviceId shouldBe "service-id"
                 loaded.credentials.identity.displayName shouldBe "Service Name"
                 loaded.credentials.identity.username shouldBe "service-user"
-                loaded.credentials.identity.roles.shouldContainExactly(
-                    ServiceRole.Engine("1.2.3"),
-                    ServiceRole.Realm("4.5.6"),
-                    ServiceRole.Custom("custom_role", "7.8.9"),
-                )
+                loaded.credentials.identity.role shouldBe ServiceRole.Custom("custom_role", "7.8.9")
                 loaded.credentials.revealAppPassword() shouldBe "private-password"
             }
         } finally {
@@ -108,11 +99,11 @@ val FileCredentialStorageTest by testSuite {
             val path = directory.resolve("identity.json")
             Files.writeString(
                 path,
-                """{"version":2,"serviceId":"id","displayName":"name","username":"user","roles":[],"token":"token"}""",
+                """{"version":3,"serviceId":"id","displayName":"name","username":"user","role":{"type":"host","version":"1.0.0"},"token":"token"}""",
             )
             runTest {
                 val result = FileCredentialStorage(path, dispatcher = StandardTestDispatcher(testScheduler)).load()
-                (result as CredentialLoadResult.Failure).error shouldBe CredentialStorageError.UnsupportedVersion(2)
+                (result as CredentialLoadResult.Failure).error shouldBe CredentialStorageError.UnsupportedVersion(3)
             }
         } finally {
             directory.toFile().deleteRecursively()

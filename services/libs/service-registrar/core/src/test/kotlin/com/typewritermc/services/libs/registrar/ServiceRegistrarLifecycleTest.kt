@@ -589,7 +589,7 @@ private fun fixture(
     initial: CredentialLoadResult = CredentialLoadResult.Missing,
 ) = Fixture(scope, initial)
 
-private fun identity() = ServiceIdentity("service", "Service", "user", listOf(ServiceRole.Engine("1")))
+private fun identity() = ServiceIdentity("service", "Service", "user", ServiceRole.Host("1"))
 
 private fun credentials() = IdentityCredentials(identity(), RedactedSecret.AppPassword("password"))
 
@@ -603,7 +603,7 @@ private fun configuration() =
         "client",
         setOf("openid"),
         URI("nats://example.test"),
-        listOf(ServiceRole.Engine("1")),
+        ServiceRole.Host("1"),
         bindingRefreshInterval = 100.milliseconds,
         heartbeatInterval = 100.milliseconds,
         shutdownTimeout = 100.milliseconds,

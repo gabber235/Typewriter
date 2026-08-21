@@ -48,7 +48,7 @@ import kotlin.time.TestTimeSource
 
 private val runtimeCredentials =
     IdentityCredentials(
-        ServiceIdentity("service-id", "Service Name", "service-user", listOf(ServiceRole.Realm("1.0.0"))),
+        ServiceIdentity("service-id", "Service Name", "service-user", ServiceRole.Custom("realm", "1.0.0")),
         RedactedSecret.AppPassword("app-password"),
     )
 

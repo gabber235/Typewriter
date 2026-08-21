@@ -1,8 +1,8 @@
-package com.typewritermc.realm.shell.commands
+package com.typewritermc.loader.standalone.shell.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.typewritermc.realm.shell.RealmShellContext
+import com.typewritermc.loader.standalone.shell.LoaderShellContext
 import com.typewritermc.services.libs.registrar.AccessTokenFailureReason
 import com.typewritermc.services.libs.registrar.CredentialStorageError
 import com.typewritermc.services.libs.registrar.IdentityIssueError
@@ -15,14 +15,14 @@ import com.typewritermc.services.libs.registrar.SentinelFailureReason
 import kotlin.time.Duration
 
 class StatusCommand(
-    private val context: RealmShellContext,
+    private val context: LoaderShellContext,
 ) : CliktCommand(name = "status") {
-    override fun help(context: Context) = "Show the current status of the Realm service"
+    override fun help(context: Context) = "Show the current status of the loader service"
 
     override fun run() {
         val uptimeFormatted = formatDuration(context.uptime)
 
-        echo("Realm Service Status")
+        echo("Loader Service Status")
         echo("Version: ${context.version}")
         echo("Uptime:  $uptimeFormatted")
 

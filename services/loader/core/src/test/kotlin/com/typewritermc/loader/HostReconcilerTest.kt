@@ -91,6 +91,7 @@ val HostReconcilerTest by testSuite {
                             ReplaceableRecordingRuntime(child.manifestRevision, events, child.manifestRevision == 2L)
                         },
                     stateStore = store,
+                    service = UnavailableLoaderServiceConnection,
                 )
             reconciler.reconcile(topology(1, null, 1))
             events.clear()
@@ -116,7 +117,7 @@ val HostReconcilerTest by testSuite {
     test("rejects unsupported file state formats") {
         val directory = Files.createTempDirectory("typewriter-loader-state-format")
         val path = directory.resolve("topology.cbor")
-        Files.write(path, Cbor.Default.encodeToByteArray(StoredHostState(format = 2, topology = topology(1, null, null))))
+        Files.write(path, Cbor.Default.encodeToByteArray(StoredHostState(format = 3, topology = topology(1, null, null))))
 
         shouldThrow<IllegalArgumentException> { FileHostStateStore(path).load() }
     }
@@ -139,6 +140,7 @@ private fun reconciler(
             RecordingRuntime(child, events)
         },
     stateStore = store,
+    service = UnavailableLoaderServiceConnection,
     reporter = reports::add,
 )
 
@@ -194,6 +196,6 @@ private fun topology(
     engineRevision: Long?,
 ) = DesiredTopology(
     revision,
-    realmRevision?.let { DesiredChild(ChildKind.REALM, "realm", it) },
-    engineRevision?.let { DesiredChild(ChildKind.ENGINE, "engine", it) },
+    realmRevision?.let { DesiredChild(ChildKind.REALM, "realm", "realm", it) },
+    engineRevision?.let { DesiredChild(ChildKind.ENGINE, "engine", "engine", it) },
 )

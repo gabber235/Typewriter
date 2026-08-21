@@ -16,7 +16,7 @@ skir.ServiceHost _host({String id = "host1", int revision = 1}) =>
       hostId: recordId("service_host:$id"),
       serviceId: recordId("service:$id"),
       revision: revision,
-      entrypoint: skir.HostEntrypoint.paper,
+      entrypoint: "PAPER",
       canHostRealm: true,
       supportedEngines: [
         skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),

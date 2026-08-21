@@ -6,8 +6,8 @@ use surrealdb_component_sdk::{Datetime, RecordId};
 
 use crate::{
     skir::base::service::v1::service::{
-        Service, ServiceRegistration, ServiceRole, ServiceRole_Custom, ServiceRole_Engine,
-        ServiceRole_Realm, ServiceState, ServiceStatus,
+        Service, ServiceRegistration, ServiceRole, ServiceRole_Custom, ServiceRole_Host,
+        ServiceState, ServiceStatus,
     },
     skir_variant,
 };
@@ -21,8 +21,7 @@ pub struct ServiceRegistrationRecord {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum ServiceRoleTypeRecord {
-    Engine,
-    Realm,
+    Host,
     Custom,
 }
 
@@ -62,7 +61,7 @@ pub struct ServiceRecord {
     pub id: RecordId,
     pub revision: i64,
     pub name: String,
-    pub roles: Vec<ServiceRoleRecord>,
+    pub role: ServiceRoleRecord,
     pub created_at: Datetime,
     pub organization: Option<RecordId>,
     pub registration: Option<ServiceRegistrationRecord>,
@@ -76,10 +75,7 @@ impl TryFrom<ServiceRoleRecord> for ServiceRole {
     type Error = otel_wasi::Error;
     fn try_from(value: ServiceRoleRecord) -> Result<Self, Self::Error> {
         Ok(match value.role_type {
-            ServiceRoleTypeRecord::Engine => skir_variant!(ServiceRole::Engine {
-                version: value.version
-            }),
-            ServiceRoleTypeRecord::Realm => skir_variant!(ServiceRole::Realm {
+            ServiceRoleTypeRecord::Host => skir_variant!(ServiceRole::Host {
                 version: value.version
             }),
             ServiceRoleTypeRecord::Custom => skir_variant!(ServiceRole::Custom {
@@ -97,13 +93,8 @@ impl TryFrom<ServiceRole> for ServiceRoleRecord {
     type Error = UnknownServiceRoleError;
     fn try_from(value: ServiceRole) -> Result<Self, Self::Error> {
         match value {
-            ServiceRole::Engine(role) => Ok(Self {
-                role_type: ServiceRoleTypeRecord::Engine,
-                version: role.version,
-                name: None,
-            }),
-            ServiceRole::Realm(role) => Ok(Self {
-                role_type: ServiceRoleTypeRecord::Realm,
+            ServiceRole::Host(role) => Ok(Self {
+                role_type: ServiceRoleTypeRecord::Host,
                 version: role.version,
                 name: None,
             }),
@@ -145,11 +136,7 @@ impl TryFrom<ServiceRecord> for Service {
             service_id: value.id.into(),
             revision: value.revision,
             name: value.name,
-            roles: value
-                .roles
-                .into_iter()
-                .map(TryInto::try_into)
-                .collect::<Result<_, _>>()?,
+            role: value.role.try_into()?,
             created_at: value.created_at.into(),
             organization: value.organization.map(Into::into),
             registration: value.registration.map(Into::into),
@@ -162,54 +149,39 @@ impl TryFrom<ServiceRecord> for Service {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::skir::base::service::v1::service::{
-        ServiceRole_Custom, ServiceRole_Engine, ServiceRole_Realm,
-    };
+    use crate::skir::base::service::v1::service::{ServiceRole_Custom, ServiceRole_Host};
 
     #[test]
     fn maps_all_known_roles_in_both_directions() {
         let roles = [
             ServiceRoleRecord {
-                role_type: ServiceRoleTypeRecord::Engine,
+                role_type: ServiceRoleTypeRecord::Host,
                 version: "1".into(),
                 name: None,
             },
             ServiceRoleRecord {
-                role_type: ServiceRoleTypeRecord::Realm,
-                version: "2".into(),
-                name: None,
-            },
-            ServiceRoleRecord {
                 role_type: ServiceRoleTypeRecord::Custom,
-                version: "3".into(),
+                version: "2".into(),
                 name: Some("voice".into()),
             },
         ];
         assert!(matches!(
             ServiceRole::try_from(roles[0].clone()).unwrap(),
-            ServiceRole::Engine(_)
+            ServiceRole::Host(_)
         ));
         assert!(matches!(
             ServiceRole::try_from(roles[1].clone()).unwrap(),
-            ServiceRole::Realm(_)
-        ));
-        assert!(matches!(
-            ServiceRole::try_from(roles[2].clone()).unwrap(),
             ServiceRole::Custom(_)
         ));
 
         let skir_roles = [
-            ServiceRole::Engine(Box::new(ServiceRole_Engine {
+            ServiceRole::Host(Box::new(ServiceRole_Host {
                 version: "1".into(),
-                _unrecognized: None,
-            })),
-            ServiceRole::Realm(Box::new(ServiceRole_Realm {
-                version: "2".into(),
                 _unrecognized: None,
             })),
             ServiceRole::Custom(Box::new(ServiceRole_Custom {
                 name: "voice".into(),
-                version: "3".into(),
+                version: "2".into(),
                 _unrecognized: None,
             })),
         ];
@@ -222,18 +194,13 @@ mod tests {
             records,
             vec![
                 ServiceRoleRecord {
-                    role_type: ServiceRoleTypeRecord::Engine,
+                    role_type: ServiceRoleTypeRecord::Host,
                     version: "1".into(),
                     name: None,
                 },
                 ServiceRoleRecord {
-                    role_type: ServiceRoleTypeRecord::Realm,
-                    version: "2".into(),
-                    name: None,
-                },
-                ServiceRoleRecord {
                     role_type: ServiceRoleTypeRecord::Custom,
-                    version: "3".into(),
+                    version: "2".into(),
                     name: Some("voice".into()),
                 },
             ]
@@ -241,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_invalid_roles() {
+    fn rejects_invalid_role() {
         let unnamed = ServiceRoleRecord {
             role_type: ServiceRoleTypeRecord::Custom,
             version: "1".into(),
@@ -259,14 +226,14 @@ mod tests {
 
     #[test]
     fn serializes_role_and_status_database_shapes() {
-        let engine = ServiceRoleRecord {
-            role_type: ServiceRoleTypeRecord::Engine,
+        let host = ServiceRoleRecord {
+            role_type: ServiceRoleTypeRecord::Host,
             version: "1".into(),
             name: None,
         };
         assert_eq!(
-            serde_json::to_value(engine).unwrap(),
-            serde_json::json!({ "type": "engine", "version": "1" })
+            serde_json::to_value(host).unwrap(),
+            serde_json::json!({ "type": "host", "version": "1" })
         );
 
         let custom = ServiceRoleRecord {
