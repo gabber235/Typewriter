@@ -11,7 +11,7 @@ class HostReconciler(
     private val stateStore: HostStateStore,
     private val reporter: suspend (HostExecutionReport) -> Unit = {},
     private val clock: Clock = Clock.systemUTC(),
-    private val quiesceTimeout: Duration = Duration.ofSeconds(30),
+    private val quiesceTimeout: Duration = Duration.ofSeconds(60),
 ) {
     private val active = mutableMapOf<ChildKind, ActiveDeployment>()
     private var applied: DesiredTopology? = null

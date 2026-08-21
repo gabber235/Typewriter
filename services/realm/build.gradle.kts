@@ -128,3 +128,12 @@ val verifyRealmSchemaIndex =
 tasks.processResources {
     dependsOn(verifyPatchIndex, verifyRealmSchemaIndex)
 }
+
+tasks.register<Copy>("publishDevArtifacts") {
+    group = "development"
+    description = "Publishes the Realm artifact for local development."
+    val realmJar = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+    val realmApiVersion = providers.gradleProperty("typewriter.realm.api.version").orElse("1.0.0")
+    from(realmJar) { rename { "typewritermc:realm__${realmApiVersion.get()}__realm.jar" } }
+    into(rootProject.layout.projectDirectory.dir("../build/development/artifacts"))
+}

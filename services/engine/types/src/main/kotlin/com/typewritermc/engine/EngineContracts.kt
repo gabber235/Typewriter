@@ -1,5 +1,8 @@
 package com.typewritermc.engine
 
+import io.github.z4kn4fein.semver.Version
+import io.github.z4kn4fein.semver.toVersion
+
 @JvmInline
 value class EngineId private constructor(
     val value: String,
@@ -24,42 +27,38 @@ value class EngineLayerId private constructor(
     }
 }
 
-@ConsistentCopyVisibility
-data class SemanticVersion private constructor(
-    val major: Int,
-    val minor: Int,
-    val patch: Int,
+class SemanticVersion private constructor(
+    private val version: Version,
 ) : Comparable<SemanticVersion> {
-    override fun compareTo(other: SemanticVersion): Int =
-        compareValuesBy(this, other, SemanticVersion::major, SemanticVersion::minor, SemanticVersion::patch)
+    val major: Int get() = version.major
+    val minor: Int get() = version.minor
+    val patch: Int get() = version.patch
+    val preRelease: String get() = version.preRelease.orEmpty()
+    val buildMetadata: String get() = version.buildMetadata.orEmpty()
 
-    override fun toString(): String = "$major.$minor.$patch"
+    override fun compareTo(other: SemanticVersion): Int = version.compareTo(other.version)
+
+    override fun equals(other: Any?): Boolean = other is SemanticVersion && version == other.version
+
+    override fun hashCode(): Int = version.hashCode()
+
+    override fun toString(): String = version.toString()
 
     companion object {
-        private val pattern = Regex("(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)")
-
         fun of(
             major: Int,
             minor: Int,
             patch: Int,
+            preRelease: String = "",
+            buildMetadata: String = "",
         ): SemanticVersion {
             require(major >= 0) { "Major version must not be negative." }
             require(minor >= 0) { "Minor version must not be negative." }
             require(patch >= 0) { "Patch version must not be negative." }
-            return SemanticVersion(major, minor, patch)
+            return SemanticVersion(Version(major, minor, patch, preRelease, buildMetadata))
         }
 
-        fun parse(value: String): SemanticVersion {
-            val match =
-                requireNotNull(pattern.matchEntire(value)) {
-                    "Version must use canonical major.minor.patch syntax: $value"
-                }
-            return of(
-                match.groupValues[1].toInt(),
-                match.groupValues[2].toInt(),
-                match.groupValues[3].toInt(),
-            )
-        }
+        fun parse(value: String): SemanticVersion = SemanticVersion(value.toVersion(strict = true))
     }
 }
 

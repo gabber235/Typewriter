@@ -113,7 +113,27 @@ val ImprintPluginTest by testSuite {
                 expectFailure = true,
             )
 
-        result shouldContain "version must use canonical major.minor.patch syntax"
+        result shouldContain "version must use valid semantic version syntax"
+    }
+
+    test("versions support prerelease and build metadata") {
+        val result =
+            runBuild(
+                """
+                plugins {
+                    id("com.typewritermc.imprint")
+                }
+
+                typewriter {
+                    engineLayer {
+                        id = "typewritermc:minecraft"
+                        version = "1.2.3-rc.1+local.4"
+                    }
+                }
+                """.trimIndent(),
+            )
+
+        result shouldContain "Typewriter engine layer typewritermc:minecraft 1.2.3-rc.1+local.4"
     }
 
     test("extension engine targets derive their transitive layer source sets") {

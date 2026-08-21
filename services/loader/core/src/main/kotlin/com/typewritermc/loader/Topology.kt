@@ -1,17 +1,21 @@
 package com.typewritermc.loader
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class HostEntrypoint {
     STANDALONE,
     PAPER,
 }
 
+@Serializable
 enum class ChildKind {
     REALM,
     ENGINE,
 }
 
+@Serializable
 data class DesiredChild(
     val kind: ChildKind,
     val runtimeId: String,
@@ -23,6 +27,7 @@ data class DesiredChild(
     }
 }
 
+@Serializable
 data class DesiredTopology(
     val revision: Long,
     val realm: DesiredChild? = null,
@@ -67,4 +72,8 @@ interface HostControlPlane {
         hostId: String,
         report: HostExecutionReport,
     )
+}
+
+fun interface HostControlPlaneFactory {
+    fun create(entrypoint: HostEntrypoint): HostControlPlane
 }

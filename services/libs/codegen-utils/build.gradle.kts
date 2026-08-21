@@ -4,5 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.semver)
+    api(libs.ksp.api)
+    api(libs.kotlinpoet)
+    api(libs.kotlinpoet.ksp)
 }

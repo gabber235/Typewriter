@@ -14,7 +14,6 @@ dependencies {
 
 tasks.shadowJar {
     archiveFileName.set("typewriter-loader-${project.version}.jar")
-    mergeServiceFiles()
     manifest {
         attributes["Main-Class"] = "com.typewritermc.loader.standalone.StandaloneLoader"
     }
@@ -22,6 +21,11 @@ tasks.shadowJar {
 
 tasks.assemble {
     dependsOn(tasks.shadowJar)
+}
+
+configurations.named("runtimeElements") {
+    outgoing.artifacts.clear()
+    outgoing.artifact(tasks.shadowJar)
 }
 
 val verifyDistribution =
@@ -46,7 +50,6 @@ val verifyDistribution =
                 check("com/typewritermc/loader/standalone/StandaloneLoader.class" in entries)
                 check("com/typewritermc/loader/paper/TypewriterLoaderPlugin.class" in entries)
                 check("plugin.yml" in entries)
-                check("META-INF/services/com.typewritermc.loader.LoaderBootstrap" in entries)
                 val manifest = archive.getInputStream(archive.getEntry("META-INF/MANIFEST.MF")).bufferedReader().readText()
                 check("Main-Class: com.typewritermc.loader.standalone.StandaloneLoader" in manifest)
             }

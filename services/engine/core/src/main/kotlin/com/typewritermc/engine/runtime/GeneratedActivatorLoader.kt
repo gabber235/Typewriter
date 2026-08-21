@@ -1,9 +1,14 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.extensions.ExtensionActivator
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import com.typewritermc.imprint.TypewriterExtensionManifest
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
+import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.isSubclassOf
 
+@OptIn(ExperimentalSerializationApi::class)
 class GeneratedActivatorLoader {
     fun load(
         classLoader: ClassLoader,
@@ -14,24 +19,24 @@ class GeneratedActivatorLoader {
         classLoader: ClassLoader,
         target: String,
     ): List<ExtensionActivator> {
-        val resourceName = "META-INF/typewriter/activators/$target.index"
+        val resourceName = "META-INF/typewriter/extension.cbor"
         return classLoader
             .getResources(resourceName)
-            .toList()
+            .asSequence()
             .sortedBy { it.toExternalForm() }
             .flatMap { resource ->
                 resource.openStream().use { input ->
-                    BufferedReader(InputStreamReader(input)).readLines()
+                    Cbor.Default.decodeFromByteArray<TypewriterExtensionManifest>(input.readBytes()).activators
                 }
-            }.filter(String::isNotBlank)
-            .distinct()
-            .sorted()
-            .map { className ->
-                val type = classLoader.loadClass(className)
-                require(ExtensionActivator::class.java.isAssignableFrom(type)) {
-                    "Generated activator does not implement ExtensionActivator: $className"
+            }.filter { it.sourceSet == target }
+            .distinctBy { it.className }
+            .sortedBy { it.className }
+            .map { activator ->
+                val type = classLoader.loadClass(activator.className).kotlin
+                require(type.isSubclassOf(ExtensionActivator::class)) {
+                    "Generated activator does not implement ExtensionActivator: ${activator.className}"
                 }
-                type.getDeclaredConstructor().newInstance() as ExtensionActivator
-            }
+                type.createInstance() as ExtensionActivator
+            }.toList()
     }
 }

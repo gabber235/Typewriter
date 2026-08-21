@@ -5,6 +5,7 @@ pluginManagement {
 
 includeBuild("../loader")
 includeBuild("../extensions")
+includeBuild("../imprint")
 
 plugins {
     id("com.typewritermc.settings-conventions")

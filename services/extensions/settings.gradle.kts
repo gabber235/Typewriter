@@ -3,6 +3,9 @@ pluginManagement {
     includeBuild("../imprint")
 }
 
+includeBuild("../libs/codegen-utils")
+includeBuild("../imprint")
+
 plugins {
     id("com.typewritermc.settings-conventions")
 }

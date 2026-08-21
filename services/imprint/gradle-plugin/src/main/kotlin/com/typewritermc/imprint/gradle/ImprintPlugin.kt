@@ -5,10 +5,13 @@ import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterProjectKind
 import com.typewritermc.imprint.TypewriterRuntimeTarget
 import com.typewritermc.imprint.TypewriterRuntimeTargetKind
+import io.github.z4kn4fein.semver.toVersionOrNull
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Copy
+import org.gradle.jvm.tasks.Jar
 
 class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -34,8 +37,28 @@ class ImprintPlugin : Plugin<Project> {
         }
 
         project.afterEvaluate {
-            typewriter.declaration()
+            val declaration = typewriter.declaration()
+            project.pluginManager.withPlugin("java") {
+                project.registerDevelopmentArtifact(declaration)
+            }
         }
+    }
+}
+
+private fun Project.registerDevelopmentArtifact(declaration: TypewriterProjectDeclaration) {
+    val artifactType =
+        when (declaration.kind) {
+            TypewriterProjectKind.ENGINE -> if (declaration.id == "panel") "panel_engine" else "execution_engine"
+            TypewriterProjectKind.ENGINE_LAYER -> "engine_layer"
+            TypewriterProjectKind.EXTENSION -> "extension"
+        }
+    val publishedName = "${declaration.id}__${declaration.version}__$artifactType.jar"
+    val jar = tasks.named("jar", Jar::class.java)
+    tasks.register("publishDevArtifact", Copy::class.java) { task ->
+        task.group = "development"
+        task.description = "Publishes this Typewriter artifact for local development."
+        task.from(jar.flatMap(Jar::getArchiveFile)) { copy -> copy.rename { publishedName } }
+        task.into(rootProject.layout.projectDirectory.dir("../build/development/artifacts"))
     }
 }
 
@@ -175,13 +198,11 @@ open class EngineLayers {
     }
 }
 
-private val semanticVersionPattern = Regex("(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)")
-
 private fun validateVersion(
     version: String,
     subject: String,
 ) {
-    if (!semanticVersionPattern.matches(version)) {
-        throw GradleException("$subject version must use canonical major.minor.patch syntax.")
+    if (version.toVersionOrNull(strict = true) == null) {
+        throw GradleException("$subject version must use valid semantic version syntax.")
     }
 }

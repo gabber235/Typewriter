@@ -1,13 +1,18 @@
 package com.typewritermc.loader
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 import java.nio.file.Files
 import java.time.Instant
 
+@OptIn(ExperimentalSerializationApi::class)
 val HostReconcilerTest by testSuite {
     test("stages every replacement before quiescing the active deployment") {
         runTest {
@@ -106,6 +111,14 @@ val HostReconcilerTest by testSuite {
         FileHostStateStore(path).save(expected)
 
         FileHostStateStore(path).load() shouldBe expected
+    }
+
+    test("rejects unsupported file state formats") {
+        val directory = Files.createTempDirectory("typewriter-loader-state-format")
+        val path = directory.resolve("topology.cbor")
+        Files.write(path, Cbor.Default.encodeToByteArray(StoredHostState(format = 2, topology = topology(1, null, null))))
+
+        shouldThrow<IllegalArgumentException> { FileHostStateStore(path).load() }
     }
 }
 

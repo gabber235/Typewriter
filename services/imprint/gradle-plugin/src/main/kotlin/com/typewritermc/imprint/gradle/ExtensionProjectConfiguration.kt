@@ -3,6 +3,7 @@ package com.typewritermc.imprint.gradle
 import com.typewritermc.imprint.TypewriterEngineLayerReference
 import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterRuntimeTargetKind
+import io.github.z4kn4fein.semver.toVersion
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
@@ -74,7 +75,7 @@ private fun Project.configureExtensionManifest(
         files(
             sourceSets.map { sourceSet ->
                 layout.buildDirectory.file(
-                    "generated/ksp/${sourceSet.name}/resources/META-INF/typewriter/activators/${sourceSet.name}.index",
+                    "generated/ksp/${sourceSet.name}/resources/META-INF/typewriter/activators/${sourceSet.name}.cbor",
                 )
             },
         ).filter {
@@ -97,7 +98,7 @@ private fun Project.configureExtensionManifest(
     }
     sourceSets.forEach { sourceSet ->
         tasks.named(sourceSet.processResourcesTaskName, ProcessResources::class.java) { task ->
-            task.exclude("META-INF/typewriter/activators/*.index")
+            task.exclude("META-INF/typewriter/activators/*.cbor")
         }
     }
 }
@@ -178,7 +179,10 @@ private fun resolveLayers(
         val definition = builtInLayers[requirement.id] ?: throw GradleException("Unknown engine layer: ${requirement.id}")
         requireCompatible(requirement.version, definition.version, "engine layer ${requirement.id}")
         val existing = resolved[requirement.id]
-        if (existing != null && major(existing.version) != major(requirement.version)) {
+        if (
+            existing != null &&
+            existing.version.toVersion(strict = true).major != requirement.version.toVersion(strict = true).major
+        ) {
             throw GradleException("Incompatible major versions requested for engine layer ${requirement.id}.")
         }
         if (requirement.id in visiting) {
@@ -202,27 +206,12 @@ private fun requireCompatible(
     available: String,
     subject: String,
 ) {
-    val requiredParts = semanticParts(required)
-    val availableParts = semanticParts(available)
-    val older =
-        compareValuesBy(
-            availableParts,
-            requiredParts,
-            Triple<Int, Int, Int>::first,
-            Triple<Int, Int, Int>::second,
-            Triple<Int, Int, Int>::third,
-        ) < 0
-    if (major(required) != major(available) || older) {
+    val requiredVersion = required.toVersion(strict = true)
+    val availableVersion = available.toVersion(strict = true)
+    if (requiredVersion.major != availableVersion.major || availableVersion < requiredVersion) {
         throw GradleException("$subject $available does not satisfy version $required.")
     }
 }
-
-private fun semanticParts(version: String): Triple<Int, Int, Int> {
-    val parts = version.split('.').map(String::toInt)
-    return Triple(parts[0], parts[1], parts[2])
-}
-
-private fun major(version: String): Int = version.substringBefore('.').toInt()
 
 private fun layer(id: String) = TypewriterEngineLayerReference(id, "1.0.0")
 

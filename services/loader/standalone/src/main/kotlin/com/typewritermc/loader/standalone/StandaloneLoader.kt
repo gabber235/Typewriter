@@ -13,7 +13,7 @@ object StandaloneLoader {
     fun main(args: Array<String>) {
         runBlocking {
             val workDirectory = args.firstOrNull()?.let(::Path) ?: Path.of("typewriter")
-            run(workDirectory, LoaderBootstrap.discover())
+            localLoaderApplication().use { application -> run(workDirectory, application.bootstrap) }
         }
     }
 

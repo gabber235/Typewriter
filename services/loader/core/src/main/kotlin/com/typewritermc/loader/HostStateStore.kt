@@ -1,7 +1,10 @@
 package com.typewritermc.loader
 
-import java.io.DataInputStream
-import java.io.DataOutputStream
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,31 +22,21 @@ interface HostStateStore :
     HostStateReader,
     HostStateWriter
 
+@OptIn(ExperimentalSerializationApi::class)
 class FileHostStateStore(
     private val path: Path,
 ) : HostStateStore {
     override fun load(): DesiredTopology? {
         if (!Files.exists(path)) return null
-        return DataInputStream(Files.newInputStream(path)).use { input ->
-            val format = input.readInt()
-            require(format == FORMAT_VERSION) { "Unsupported host state format: $format" }
-            DesiredTopology(
-                revision = input.readLong(),
-                realm = input.readChild(ChildKind.REALM),
-                engine = input.readChild(ChildKind.ENGINE),
-            )
-        }
+        val stored = cbor.decodeFromByteArray<StoredHostState>(Files.readAllBytes(path))
+        require(stored.format == FORMAT_VERSION) { "Unsupported host state format: ${stored.format}" }
+        return stored.topology
     }
 
     override fun save(topology: DesiredTopology) {
         Files.createDirectories(path.parent)
         val temporary = path.resolveSibling("${path.fileName}.tmp")
-        DataOutputStream(Files.newOutputStream(temporary)).use { output ->
-            output.writeInt(FORMAT_VERSION)
-            output.writeLong(topology.revision)
-            output.writeChild(topology.realm)
-            output.writeChild(topology.engine)
-        }
+        Files.write(temporary, cbor.encodeToByteArray(StoredHostState(topology = topology)))
         try {
             Files.move(
                 temporary,
@@ -56,20 +49,19 @@ class FileHostStateStore(
         }
     }
 
-    private fun DataInputStream.readChild(kind: ChildKind): DesiredChild? {
-        if (!readBoolean()) return null
-        return DesiredChild(kind, readUTF(), readLong())
-    }
-
-    private fun DataOutputStream.writeChild(child: DesiredChild?) {
-        writeBoolean(child != null)
-        if (child != null) {
-            writeUTF(child.runtimeId)
-            writeLong(child.manifestRevision)
-        }
-    }
-
     private companion object {
         const val FORMAT_VERSION = 1
+
+        val cbor =
+            Cbor {
+                encodeDefaults = true
+                ignoreUnknownKeys = true
+            }
     }
 }
+
+@Serializable
+internal data class StoredHostState(
+    val format: Int = 1,
+    val topology: DesiredTopology,
+)

@@ -8,6 +8,7 @@ data class ServiceBuild(
 
 val serviceBuilds =
     listOf(
+        ServiceBuild("codegen-utils", "libs/codegen-utils", listOf(":")),
         ServiceBuild("service-utils", "libs/service-utils", listOf(":")),
         ServiceBuild(
             "service-telemetry",
@@ -99,7 +100,6 @@ val serviceBuilds =
             "extensions",
             listOf(":extension-types", ":extension-codegen", ":conformance-extension"),
         ),
-        ServiceBuild("dev-paper", "dev-paper", emptyList()),
     )
 
 val declaredPaths = serviceBuilds.map(ServiceBuild::path).toSet()

@@ -3,6 +3,7 @@ package com.typewritermc.loader.standalone
 import com.typewritermc.loader.DeploymentRuntimeFactory
 import com.typewritermc.loader.DesiredTopology
 import com.typewritermc.loader.HostControlPlane
+import com.typewritermc.loader.HostControlPlaneFactory
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.HostExecutionReport
 import com.typewritermc.loader.HostLoader
@@ -12,9 +13,15 @@ import com.typewritermc.loader.RunningHost
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.core.KoinApplication
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import java.nio.file.Path
 
-class LocalLoaderBootstrap : LoaderBootstrap {
+class LocalLoaderBootstrap(
+    private val controlPlaneFactory: HostControlPlaneFactory,
+    private val runtimeFactory: DeploymentRuntimeFactory,
+) : LoaderBootstrap {
     override suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
@@ -23,12 +30,37 @@ class LocalLoaderBootstrap : LoaderBootstrap {
         HostLoader(
             entrypoint,
             workDirectory,
-            LocalHostControlPlane(entrypoint),
-            DeploymentRuntimeFactory { child, _ ->
-                error("Local loader mode cannot stage ${child.runtimeId} without a deployment source.")
-            },
+            controlPlaneFactory.create(entrypoint),
+            runtimeFactory,
             scope,
         ).start()
+}
+
+class LoaderApplication internal constructor(
+    private val application: KoinApplication,
+    val bootstrap: LoaderBootstrap,
+) : AutoCloseable {
+    override fun close() {
+        application.close()
+    }
+}
+
+fun localLoaderApplication(): LoaderApplication {
+    val application =
+        koinApplication {
+            modules(
+                module {
+                    single<HostControlPlaneFactory> { HostControlPlaneFactory(::LocalHostControlPlane) }
+                    single<DeploymentRuntimeFactory> {
+                        DeploymentRuntimeFactory { child, _ ->
+                            error("Local loader mode cannot stage ${child.runtimeId} without a deployment source.")
+                        }
+                    }
+                    single<LoaderBootstrap> { LocalLoaderBootstrap(get(), get()) }
+                },
+            )
+        }
+    return LoaderApplication(application, application.koin.get())
 }
 
 private class LocalHostControlPlane(

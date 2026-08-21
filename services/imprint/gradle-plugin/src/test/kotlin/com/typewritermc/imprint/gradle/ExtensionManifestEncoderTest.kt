@@ -1,33 +1,40 @@
 package com.typewritermc.imprint.gradle
 
+import com.typewritermc.imprint.TypewriterActivatorReference
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 
+@OptIn(ExperimentalSerializationApi::class)
 val ExtensionManifestEncoderTest by testSuite {
     test("manifest bytes are independent of discovery order") {
         val first =
-            ExtensionManifestEncoder.encode(
-                "typewritermc:fixture",
-                "1.0.0",
-                listOf("REALM|realm|1.0.0", "ENGINE|paper|1.0.0"),
-                listOf("typewritermc:minecraft|1.0.0"),
-                listOf(
-                    ActivatorIndexEntry("common", "first", "fixture.First"),
-                    ActivatorIndexEntry("enginePaper", "second", "fixture.Second"),
-                ),
+            canonicalExtensionManifest(
+                id = "typewritermc:fixture",
+                version = "1.0.0",
+                targets = listOf("REALM|realm|1.0.0", "ENGINE|paper|1.0.0"),
+                layers = listOf("typewritermc:minecraft|1.0.0"),
+                activators =
+                    listOf(
+                        TypewriterActivatorReference("common", "first", "fixture.First"),
+                        TypewriterActivatorReference("enginePaper", "second", "fixture.Second"),
+                    ),
             )
         val second =
-            ExtensionManifestEncoder.encode(
-                "typewritermc:fixture",
-                "1.0.0",
-                listOf("REALM|realm|1.0.0", "ENGINE|paper|1.0.0"),
-                listOf("typewritermc:minecraft|1.0.0"),
-                listOf(
-                    ActivatorIndexEntry("common", "first", "fixture.First"),
-                    ActivatorIndexEntry("enginePaper", "second", "fixture.Second"),
-                ).reversed(),
+            canonicalExtensionManifest(
+                id = "typewritermc:fixture",
+                version = "1.0.0",
+                targets = listOf("ENGINE|paper|1.0.0", "REALM|realm|1.0.0"),
+                layers = listOf("typewritermc:minecraft|1.0.0"),
+                activators =
+                    listOf(
+                        TypewriterActivatorReference("common", "first", "fixture.First"),
+                        TypewriterActivatorReference("enginePaper", "second", "fixture.Second"),
+                    ).reversed(),
             )
 
-        first shouldBe second
+        Cbor.Default.encodeToByteArray(first) shouldBe Cbor.Default.encodeToByteArray(second)
     }
 }

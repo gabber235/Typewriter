@@ -1,6 +1,5 @@
 package com.typewritermc.extensions.codegen
 
-import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -10,16 +9,37 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.joinToCode
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.annotation
+import com.typewritermc.codegen.getSymbolsWithAnnotation
+import com.typewritermc.codegen.implements
+import com.typewritermc.codegen.stringArgument
+import com.typewritermc.codegen.toUpperCamelIdentifier
+import com.typewritermc.extensions.ExtensionActivator
+import com.typewritermc.extensions.TypewriterActivator
+import com.typewritermc.imprint.TypewriterActivatorIndex
+import com.typewritermc.imprint.TypewriterActivatorReference
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.cbor.Cbor
+import kotlinx.serialization.encodeToByteArray
 
 class ExtensionActivatorProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         ExtensionActivatorProcessor(environment.codeGenerator, environment.logger)
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 private class ExtensionActivatorProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
@@ -28,7 +48,7 @@ private class ExtensionActivatorProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (generated) return emptyList()
-        val symbols = resolver.getSymbolsWithAnnotation(ACTIVATOR_ANNOTATION).toList()
+        val symbols = resolver.getSymbolsWithAnnotation(TypewriterActivator::class).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
 
@@ -51,14 +71,7 @@ private class ExtensionActivatorProcessor(
             logger.error("Typewriter activators must be concrete classes.", symbol)
             return null
         }
-        val className = declaration.qualifiedName?.asString()
-        if (className == null) {
-            logger.error("Typewriter activators must have a qualified name.", declaration)
-            return null
-        }
-        val implementsActivator =
-            declaration.getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == ACTIVATOR_INTERFACE }
-        if (!implementsActivator) {
+        if (!declaration.implements(ExtensionActivator::class)) {
             logger.error("Typewriter activators must implement ExtensionActivator.", declaration)
             return null
         }
@@ -71,15 +84,7 @@ private class ExtensionActivatorProcessor(
             logger.error("Typewriter activators must be visible to generated code.", declaration)
             return null
         }
-        val annotation =
-            declaration.annotations.single {
-                it.annotationType
-                    .resolve()
-                    .declaration.qualifiedName
-                    ?.asString() ==
-                    ACTIVATOR_ANNOTATION
-            }
-        val id = annotation.stringArgument("id")
+        val id = declaration.annotation(TypewriterActivator::class)?.stringArgument("id")
         if (id.isNullOrBlank()) {
             logger.error("Typewriter activator ids must not be blank.", declaration)
             return null
@@ -89,33 +94,40 @@ private class ExtensionActivatorProcessor(
             logger.error("Typewriter activators must be declared in a named source set.", declaration)
             return null
         }
-        return Activator(sourceSet, id, className, declaration)
+        return Activator(sourceSet, id, declaration)
     }
 
     private fun generateActivatorRegistry(
         sourceSet: String,
         activators: List<Activator>,
     ) {
-        val objectName = "${sourceSet.identifier()}ExtensionActivators"
-        val files = activators.mapNotNull { it.declaration.containingFile }.toTypedArray()
-        codeGenerator
-            .createNewFile(Dependencies(aggregating = true, *files), GENERATED_PACKAGE, objectName)
-            .bufferedWriter()
-            .use { writer ->
-                writer.appendLine("package $GENERATED_PACKAGE")
-                writer.appendLine()
-                writer.appendLine("import com.typewritermc.extensions.ExtensionActivator")
-                activators.forEachIndexed { index, activator ->
-                    writer.appendLine("import ${activator.className} as Activator$index")
-                }
-                writer.appendLine()
-                writer.appendLine("object $objectName {")
-                writer.appendLine("    val activators: List<ExtensionActivator> =")
-                writer.appendLine("        listOf(")
-                activators.forEachIndexed { index, _ -> writer.appendLine("            Activator$index(),") }
-                writer.appendLine("        )")
-                writer.appendLine("}")
-            }
+        val objectName = "${sourceSet.toUpperCamelIdentifier()}ExtensionActivators"
+        val initializer =
+            activators
+                .map { activator -> CodeBlock.of("%T()", activator.declaration.toClassName()) }
+                .joinToCode(separator = ",♢", prefix = "listOf(", suffix = ")")
+        val registry =
+            TypeSpec
+                .objectBuilder(objectName)
+                .addProperty(
+                    PropertySpec
+                        .builder(
+                            "activators",
+                            List::class.asClassName().parameterizedBy(ExtensionActivator::class.asClassName()),
+                        ).initializer(initializer)
+                        .build(),
+                ).build()
+
+        FileSpec
+            .builder(GENERATED_PACKAGE, objectName)
+            .indent("    ")
+            .addType(registry)
+            .build()
+            .writeTo(
+                codeGenerator,
+                aggregating = true,
+                originatingKSFiles = activators.mapNotNull { it.declaration.containingFile },
+            )
     }
 
     private fun generateActivatorIndex(
@@ -123,33 +135,32 @@ private class ExtensionActivatorProcessor(
         activators: List<Activator>,
     ) {
         val files = activators.mapNotNull { it.declaration.containingFile }.toTypedArray()
+        val index =
+            TypewriterActivatorIndex(
+                activators =
+                    activators.map { activator ->
+                        TypewriterActivatorReference(
+                            sourceSet = sourceSet,
+                            id = activator.id,
+                            className = requireNotNull(activator.declaration.qualifiedName).asString(),
+                        )
+                    },
+            )
         codeGenerator
             .createNewFileByPath(
                 Dependencies(aggregating = true, *files),
-                "META-INF/typewriter/activators/$sourceSet.index",
+                "META-INF/typewriter/activators/$sourceSet.cbor",
                 "",
-            ).bufferedWriter()
-            .use { writer ->
-                activators.forEach { writer.appendLine("$sourceSet|${it.id}|${it.className}") }
-            }
+            ).use { output -> output.write(Cbor.Default.encodeToByteArray(index)) }
     }
 }
 
 private data class Activator(
     val sourceSet: String,
     val id: String,
-    val className: String,
     val declaration: KSClassDeclaration,
 )
 
-private fun KSAnnotation.stringArgument(name: String): String? = arguments.singleOrNull { it.name?.asString() == name }?.value as? String
-
 private fun String.sourceSetName(): String? = replace('\\', '/').substringAfter("/src/", "").substringBefore('/').takeIf(String::isNotBlank)
 
-private fun String.identifier(): String =
-    split(Regex("[^A-Za-z0-9]+"))
-        .joinToString("") { it.replaceFirstChar(Char::uppercase) }
-
-private const val ACTIVATOR_ANNOTATION = "com.typewritermc.extensions.TypewriterActivator"
-private const val ACTIVATOR_INTERFACE = "com.typewritermc.extensions.ExtensionActivator"
 private const val GENERATED_PACKAGE = "com.typewritermc.extensions.generated"
