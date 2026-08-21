@@ -7,6 +7,12 @@ import com.typewritermc.services.libs.filetransfer.FileTransferResult
 import com.typewritermc.services.libs.filetransfer.TransferId
 import java.security.MessageDigest
 
+/**
+ * Resolves a manifest artifact through direct host storage or verified remote transfer.
+ *
+ * Matching host identities use the mounted host store without opening a messaging transfer. Different hosts download to
+ * the consumer cache. Both paths verify declared metadata and stream the complete content digest before success.
+ */
 class ArtifactResolver(
     private val providerHostId: String,
     private val consumerHostId: String,
@@ -75,12 +81,14 @@ class ArtifactResolver(
     }
 }
 
+/** Identifies the verified endpoint containing an artifact and whether resolution avoided remote transfer. */
 data class ResolvedArtifact(
     val reference: ArtifactReference,
     val endpoint: FileTransferEndpoint,
     val local: Boolean,
 )
 
+/** Makes transfer and verification failures explicit before an artifact reaches a child classloader. */
 sealed interface ArtifactResolutionResult {
     data class Success(
         val artifact: ResolvedArtifact,

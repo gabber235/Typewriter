@@ -3,6 +3,12 @@ package com.typewritermc.services.integration.client
 import com.typewritermc.services.integration.IntegrationId
 import com.typewritermc.services.integration.IntegrationRegistration
 
+/**
+ * Owns active integration registrations within one service process.
+ *
+ * Operations are synchronized. A registration identity is unique, and only the exact [IntegrationLease] returned during
+ * registration may remove it, preventing an old owner from unregistering a replacement.
+ */
 class IntegrationRegistry {
     private val registrations = linkedMapOf<IntegrationId, RegisteredIntegration>()
     private var nextLease = 1L
@@ -30,12 +36,14 @@ class IntegrationRegistry {
     fun registrations(): List<IntegrationRegistration> = registrations.values.map(RegisteredIntegration::registration)
 }
 
+/** Opaque ownership token required to unregister the corresponding integration registration. */
 @ConsistentCopyVisibility
 data class IntegrationLease internal constructor(
     val integrationId: IntegrationId,
     internal val sequence: Long,
 )
 
+/** Describes whether registration acquired ownership or found an active identity conflict. */
 sealed interface RegistrationResult {
     data class Registered(
         val lease: IntegrationLease,

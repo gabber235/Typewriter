@@ -6,8 +6,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 
+/** Extends the public extension scope with lifecycle ownership required by the engine runtime. */
 interface RuntimeScope : ExtensionRuntimeScope
 
+/**
+ * Owns coroutines and resources created during one engine activation.
+ *
+ * [close] is idempotent. It cancels child coroutines before running cleanup in reverse registration order. Cleanup
+ * continues after failures, then throws the first failure with later failures attached as suppressed causes.
+ */
 class ManagedRuntimeScope(
     parent: CoroutineScope,
 ) : RuntimeScope {

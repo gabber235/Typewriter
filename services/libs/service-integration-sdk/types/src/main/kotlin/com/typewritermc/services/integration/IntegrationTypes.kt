@@ -2,6 +2,7 @@ package com.typewritermc.services.integration
 
 import kotlinx.coroutines.flow.Flow
 
+/** Stable identity assigned to one independently deployed third party integration. */
 @JvmInline
 value class IntegrationId private constructor(
     val value: String,
@@ -14,6 +15,7 @@ value class IntegrationId private constructor(
     }
 }
 
+/** Identifies the Realm whose data and operations bound an integration session. */
 @JvmInline
 value class IntegrationRealmId private constructor(
     val value: String,
@@ -26,6 +28,7 @@ value class IntegrationRealmId private constructor(
     }
 }
 
+/** Stable generated identifier for a query, command, or event contract. */
 @JvmInline
 value class IntegrationOperationId private constructor(
     val value: String,
@@ -38,6 +41,12 @@ value class IntegrationOperationId private constructor(
     }
 }
 
+/**
+ * Holds the secret presented by an integration service for authentication.
+ *
+ * String conversion is always redacted. Callers must still avoid logging or persisting [value] outside their credential
+ * owner.
+ */
 @JvmInline
 value class IntegrationCredential private constructor(
     val value: String,
@@ -52,6 +61,7 @@ value class IntegrationCredential private constructor(
     }
 }
 
+/** Defines the Realm scoped authority that may be granted to an integration registration. */
 enum class IntegrationPermission {
     REALM_READ,
     REALM_WRITE,
@@ -60,30 +70,39 @@ enum class IntegrationPermission {
     FILE_TRANSFER,
 }
 
+/** Separates request response operations from subscription events for permission and dispatch checks. */
 enum class IntegrationOperationKind {
     QUERY,
     COMMAND,
     EVENT,
 }
 
+/** Captures the authoritative Realm scope and permissions granted to one integration identity. */
 data class IntegrationRegistration(
     val id: IntegrationId,
     val realmId: IntegrationRealmId,
     val permissions: Set<IntegrationPermission>,
 )
 
+/** Carries authenticated integration identity across a transport boundary. */
 data class IntegrationContext(
     val integrationId: IntegrationId,
     val realmId: IntegrationRealmId,
     val credential: IntegrationCredential,
 )
 
+/** Encodes one generated contract value without coupling the SDK core to a serialization format. */
 interface IntegrationCodec<Value : Any> {
     fun encode(value: Value): ByteArray
 
     fun decode(bytes: ByteArray): Value
 }
 
+/**
+ * Describes one generated query or command and the permission required to invoke it.
+ *
+ * Events use [IntegrationEvent]. Constructing a request operation with event kind fails immediately.
+ */
 class IntegrationOperation<Request : Any, Response : Any>(
     val id: IntegrationOperationId,
     val kind: IntegrationOperationKind,
@@ -96,12 +115,19 @@ class IntegrationOperation<Request : Any, Response : Any>(
     }
 }
 
+/** Describes one generated event stream or publication and its required permission. */
 class IntegrationEvent<Event : Any>(
     val id: IntegrationOperationId,
     val permission: IntegrationPermission,
     val codec: IntegrationCodec<Event>,
 )
 
+/**
+ * Indexes generated operations and events for consistent client and server authorization.
+ *
+ * Duplicate identifiers within the same operation kind are rejected during construction. Unknown identifiers return no
+ * permission and must never reach application dispatch.
+ */
 class GeneratedIntegrationContract(
     operations: Collection<IntegrationOperation<*, *>>,
     events: Collection<IntegrationEvent<*>>,
@@ -126,6 +152,7 @@ class GeneratedIntegrationContract(
     ): IntegrationPermission? = permissions[kind to id]
 }
 
+/** Makes authentication, authorization, contract lookup, and transport failures explicit to SDK callers. */
 sealed interface IntegrationResult<out Value> {
     data class Success<Value>(
         val value: Value,
@@ -148,6 +175,11 @@ sealed interface IntegrationResult<out Value> {
     ) : IntegrationResult<Nothing>
 }
 
+/**
+ * Carries authenticated integration operations through a transport without weakening generated contract checks.
+ *
+ * Implementations preserve typed failures and propagate event stream cancellation to the caller.
+ */
 interface IntegrationGateway {
     suspend fun request(
         context: IntegrationContext,

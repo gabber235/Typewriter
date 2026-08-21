@@ -9,7 +9,7 @@ dependencies {
 }
 
 typewriter {
-    engineLayer {
+    engineCapability {
         id = "typewritermc:minecraft"
         version = "1.0.0"
     }

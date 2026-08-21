@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.filetransfer
 
+/** Stable opaque identity for a logical file across immutable revisions. */
 @JvmInline
 value class FileId private constructor(
     val value: String,
@@ -12,6 +13,7 @@ value class FileId private constructor(
     }
 }
 
+/** Opaque immutable revision identity supplied by the file owner. */
 @JvmInline
 value class FileRevision private constructor(
     val value: String,
@@ -24,6 +26,7 @@ value class FileRevision private constructor(
     }
 }
 
+/** Identifies one resumable transfer session independently from the file being transferred. */
 @JvmInline
 value class TransferId private constructor(
     val value: String,
@@ -36,11 +39,17 @@ value class TransferId private constructor(
     }
 }
 
+/** Selects one immutable file revision without exposing provider filesystem paths. */
 data class FileKey(
     val id: FileId,
     val revision: FileRevision,
 )
 
+/**
+ * Carries a content digest used to verify immutable publication and transfer completion.
+ *
+ * The current contract accepts canonical lowercase SHA 256 values through [sha256].
+ */
 data class FileDigest private constructor(
     val algorithm: String,
     val value: String,
@@ -53,6 +62,7 @@ data class FileDigest private constructor(
     }
 }
 
+/** Declares the exact size in bytes and digest expected for one immutable file revision. */
 data class FileMetadata(
     val key: FileKey,
     val size: Long,
@@ -63,6 +73,11 @@ data class FileMetadata(
     }
 }
 
+/**
+ * Carries a bounded contiguous byte range beginning at [offset].
+ *
+ * The caller owns [bytes] and must not mutate it after passing the chunk across an endpoint boundary.
+ */
 data class FileChunk(
     val offset: Long,
     val bytes: ByteArray,
@@ -76,12 +91,19 @@ data class FileChunk(
     override fun hashCode(): Int = 31 * offset.hashCode() + bytes.contentHashCode()
 }
 
+/** Reports where a destination can resume a transfer after validating its immutable metadata. */
 data class FileWriteSession(
     val transferId: TransferId,
     val metadata: FileMetadata,
     val acceptedOffset: Long,
 )
 
+/**
+ * Provides resumable immutable file reads and writes without exposing storage or transport details.
+ *
+ * Offsets and returned byte counts are measured in bytes. Writes must be contiguous. [complete] verifies exact size and
+ * digest before publishing the revision, while [cancel] removes only temporary session state.
+ */
 interface FileTransferEndpoint {
     suspend fun metadata(key: FileKey): FileTransferResult<FileMetadata>
 
@@ -107,6 +129,7 @@ interface FileTransferEndpoint {
     suspend fun cancel(transferId: TransferId): FileTransferResult<Unit>
 }
 
+/** Makes every expected transfer outcome explicit without using exceptions for remote or validation failures. */
 sealed interface FileTransferResult<out Value> {
     data class Success<Value>(
         val value: Value,
@@ -117,6 +140,7 @@ sealed interface FileTransferResult<out Value> {
     ) : FileTransferResult<Nothing>
 }
 
+/** Describes stable file transfer failures that adapters preserve across process boundaries. */
 sealed interface FileTransferError {
     data class NotFound(
         val key: FileKey,

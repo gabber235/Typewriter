@@ -7,6 +7,12 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 
+/**
+ * Starts one official service host and keeps it reconciled with control plane topology snapshots.
+ *
+ * Registration establishes the stable host identity. When registration is unavailable, [start] restores the last
+ * applied topology from local storage and returns an offline host without a topology watch.
+ */
 class HostLoader(
     private val entrypoint: HostEntrypoint,
     private val workDirectory: Path,
@@ -45,6 +51,12 @@ class HostLoader(
     }
 }
 
+/**
+ * Owns the topology watch and active child runtimes created by [HostLoader].
+ *
+ * [stop] first ends the watch, then quiesces and stops children through the reconciler. It suspends until cleanup has
+ * completed.
+ */
 class RunningHost internal constructor(
     private val reconciler: HostReconciler,
     private val watch: Job?,

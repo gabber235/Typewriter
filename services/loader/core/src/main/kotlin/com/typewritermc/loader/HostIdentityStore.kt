@@ -4,6 +4,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+/**
+ * Persists the stable control plane identity of one host for offline startup.
+ *
+ * Saving replaces the previous value through a sibling temporary file. Blank identities are rejected before touching
+ * storage.
+ */
 class HostIdentityStore(
     private val path: Path,
 ) {

@@ -1,6 +1,6 @@
 package com.typewritermc.imprint.gradle
 
-import com.typewritermc.imprint.TypewriterEngineLayerReference
+import com.typewritermc.imprint.TypewriterEngineCapabilityReference
 import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterRuntimeTargetKind
 import io.github.z4kn4fein.semver.toVersion
@@ -20,7 +20,9 @@ internal fun Project.configureExtensionProject(declaration: TypewriterProjectDec
             task.description = "Prints the source sets derived from extension targets."
             task.doLast {
                 layout.sourceSets.forEach { task.logger.lifecycle("Typewriter source set ${it.name}") }
-                layout.layers.forEach { task.logger.lifecycle("Typewriter resolved layer ${it.id} ${it.version}") }
+                layout.capabilities.forEach {
+                    task.logger.lifecycle("Typewriter resolved capability ${it.id} ${it.version}")
+                }
             }
         }
         val sourceSets = extensions.getByType(SourceSetContainer::class.java)
@@ -86,7 +88,7 @@ private fun Project.configureExtensionManifest(
             task.extensionId.set(declaration.id)
             task.extensionVersion.set(declaration.version)
             task.targets.set(declaration.targets.map { "${it.kind.name}|${it.id}|${it.version}" })
-            task.layers.set(layout.layers.map { "${it.id}|${it.version}" })
+            task.capabilities.set(layout.capabilities.map { "${it.id}|${it.version}" })
             task.activatorIndexes.from(indexFiles)
             task.outputFile.set(generatedDirectory.map { it.file("META-INF/typewriter/extension.cbor") })
             task.dependsOn(sourceSets.map { tasks.named("ksp${it.name.capitalized()}Kotlin") })
@@ -105,7 +107,7 @@ private fun Project.configureExtensionManifest(
 
 private data class ExtensionLayout(
     val sourceSets: List<ExtensionSourceSet>,
-    val layers: List<TypewriterEngineLayerReference>,
+    val capabilities: List<TypewriterEngineCapabilityReference>,
     val buildDirectory: org.gradle.api.file.DirectoryProperty,
 )
 
@@ -120,85 +122,91 @@ private fun Project.extensionLayout(declaration: TypewriterProjectDeclaration): 
         .filter { it.kind != TypewriterRuntimeTargetKind.ENGINE }
         .forEach { target -> sourceSets += ExtensionSourceSet(target.id.sourceSetName(), listOf("common")) }
 
-    val resolvedLayers = linkedMapOf<String, TypewriterEngineLayerReference>()
+    val resolvedCapabilities = linkedMapOf<String, TypewriterEngineCapabilityReference>()
     declaration.targets
         .filter { it.kind == TypewriterRuntimeTargetKind.ENGINE }
         .forEach { target ->
             val engine = builtInEngines[target.id] ?: throw GradleException("Unknown engine target: ${target.id}")
             requireCompatible(target.version, engine.version, "engine ${target.id}")
-            resolveLayers(engine.layers, resolvedLayers, mutableListOf())
+            resolveCapabilities(engine.capabilities, resolvedCapabilities, mutableListOf())
             val parents =
                 listOf("common") +
-                    engine.layers
-                        .flatMap(::transitiveLayerIds)
+                    engine.capabilities
+                        .flatMap(::transitiveCapabilityIds)
                         .distinct()
-                        .map { it.sourceSetName("layer") }
+                        .map { it.sourceSetName("capability") }
             sourceSets += ExtensionSourceSet(target.id.sourceSetName("engine"), parents)
         }
 
-    val layerSourceSets =
-        resolvedLayers.values.map { layer ->
-            val definition = builtInLayers.getValue(layer.id)
-            val parents = listOf("common") + definition.requires.map { it.id.sourceSetName("layer") }
-            ExtensionSourceSet(layer.id.sourceSetName("layer"), parents)
+    val capabilitySourceSets =
+        resolvedCapabilities.values.map { capability ->
+            val definition = builtInCapabilities.getValue(capability.id)
+            val parents = listOf("common") + definition.requires.map { it.id.sourceSetName("capability") }
+            ExtensionSourceSet(capability.id.sourceSetName("capability"), parents)
         }
-    sourceSets.addAll(1, layerSourceSets)
-    return ExtensionLayout(sourceSets.distinctBy(ExtensionSourceSet::name), resolvedLayers.values.toList(), layout.buildDirectory)
+    sourceSets.addAll(1, capabilitySourceSets)
+    return ExtensionLayout(
+        sourceSets.distinctBy(ExtensionSourceSet::name),
+        resolvedCapabilities.values.toList(),
+        layout.buildDirectory,
+    )
 }
 
 private data class EngineDefinition(
     val version: String,
-    val layers: List<TypewriterEngineLayerReference>,
+    val capabilities: List<TypewriterEngineCapabilityReference>,
 )
 
-private data class LayerDefinition(
+private data class CapabilityDefinition(
     val version: String,
-    val requires: List<TypewriterEngineLayerReference> = emptyList(),
+    val requires: List<TypewriterEngineCapabilityReference> = emptyList(),
 )
 
 private val builtInEngines =
     mapOf(
-        "paper" to EngineDefinition("1.0.0", listOf(layer("typewritermc:minecraft"))),
-        "conformance" to EngineDefinition("1.0.0", listOf(layer("typewritermc:conformance-composite"))),
+        "paper" to EngineDefinition("1.0.0", listOf(capability("typewritermc:minecraft"))),
+        "conformance" to EngineDefinition("1.0.0", listOf(capability("typewritermc:conformance-composite"))),
     )
 
-private val builtInLayers =
+private val builtInCapabilities =
     mapOf(
-        "typewritermc:minecraft" to LayerDefinition("1.0.0"),
-        "typewritermc:conformance-base" to LayerDefinition("1.0.0"),
+        "typewritermc:minecraft" to CapabilityDefinition("1.0.0"),
+        "typewritermc:conformance-base" to CapabilityDefinition("1.0.0"),
         "typewritermc:conformance-composite" to
-            LayerDefinition("1.0.0", listOf(layer("typewritermc:conformance-base"))),
+            CapabilityDefinition("1.0.0", listOf(capability("typewritermc:conformance-base"))),
     )
 
-private fun resolveLayers(
-    requirements: List<TypewriterEngineLayerReference>,
-    resolved: LinkedHashMap<String, TypewriterEngineLayerReference>,
+private fun resolveCapabilities(
+    requirements: List<TypewriterEngineCapabilityReference>,
+    resolved: LinkedHashMap<String, TypewriterEngineCapabilityReference>,
     visiting: MutableList<String>,
 ) {
     requirements.forEach { requirement ->
-        val definition = builtInLayers[requirement.id] ?: throw GradleException("Unknown engine layer: ${requirement.id}")
-        requireCompatible(requirement.version, definition.version, "engine layer ${requirement.id}")
+        val definition =
+            builtInCapabilities[requirement.id]
+                ?: throw GradleException("Unknown engine capability: ${requirement.id}")
+        requireCompatible(requirement.version, definition.version, "engine capability ${requirement.id}")
         val existing = resolved[requirement.id]
         if (
             existing != null &&
             existing.version.toVersion(strict = true).major != requirement.version.toVersion(strict = true).major
         ) {
-            throw GradleException("Incompatible major versions requested for engine layer ${requirement.id}.")
+            throw GradleException("Incompatible major versions requested for engine capability ${requirement.id}.")
         }
         if (requirement.id in visiting) {
-            throw GradleException("Cyclic engine layer requirement: ${(visiting + requirement.id).joinToString(" -> ")}")
+            throw GradleException("Cyclic engine capability requirement: ${(visiting + requirement.id).joinToString(" -> ")}")
         }
         if (existing != null) return@forEach
         visiting += requirement.id
-        resolveLayers(definition.requires, resolved, visiting)
+        resolveCapabilities(definition.requires, resolved, visiting)
         visiting.removeLast()
         resolved[requirement.id] = requirement
     }
 }
 
-private fun transitiveLayerIds(reference: TypewriterEngineLayerReference): List<String> {
-    val definition = builtInLayers.getValue(reference.id)
-    return definition.requires.flatMap(::transitiveLayerIds) + reference.id
+private fun transitiveCapabilityIds(reference: TypewriterEngineCapabilityReference): List<String> {
+    val definition = builtInCapabilities.getValue(reference.id)
+    return definition.requires.flatMap(::transitiveCapabilityIds) + reference.id
 }
 
 private fun requireCompatible(
@@ -213,7 +221,7 @@ private fun requireCompatible(
     }
 }
 
-private fun layer(id: String) = TypewriterEngineLayerReference(id, "1.0.0")
+private fun capability(id: String) = TypewriterEngineCapabilityReference(id, "1.0.0")
 
 private fun String.sourceSetName(prefix: String = ""): String {
     val words = substringAfter(':').split(Regex("[^A-Za-z0-9]+"))

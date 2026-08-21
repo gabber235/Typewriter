@@ -1,5 +1,12 @@
 package com.typewritermc.services.libs.filetransfer
 
+/**
+ * Copies one immutable file revision between arbitrary endpoints using bounded resumable chunks.
+ *
+ * A transfer resumes from the destination accepted offset. The coordinator validates source and destination progress but
+ * delegates final size and digest verification to [FileTransferEndpoint.complete]. Cancellation propagates to the caller
+ * and does not implicitly cancel destination state, allowing a later retry to resume.
+ */
 class FileTransferCoordinator(
     val chunkSize: Int = DEFAULT_CHUNK_SIZE,
 ) {

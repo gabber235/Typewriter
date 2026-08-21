@@ -17,10 +17,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.cbor.Cbor
 
+/** Exchanges one encoded file transfer request and response through an authenticated messaging adapter. */
 fun interface FileTransferMessageChannel {
     suspend fun exchange(payload: ByteArray): MessageChannelResult
 }
 
+/** Separates transport availability failures from successful protocol payload delivery. */
 sealed interface MessageChannelResult {
     data class Success(
         val payload: ByteArray,
@@ -31,6 +33,12 @@ sealed interface MessageChannelResult {
     ) : MessageChannelResult
 }
 
+/**
+ * Adapts the generic file transfer endpoint to request and response messaging.
+ *
+ * Wire payloads never include filesystem paths. Malformed payloads, unexpected response variants, and channel failures
+ * become [FileTransferError.Unavailable], while coroutine cancellation is always propagated.
+ */
 class MessagingFileTransferEndpoint(
     private val channel: FileTransferMessageChannel,
 ) : FileTransferEndpoint {
@@ -111,6 +119,12 @@ class MessagingFileTransferEndpoint(
         }
 }
 
+/**
+ * Serves encoded file transfer requests against a local endpoint.
+ *
+ * Domain failures are preserved as typed wire failures. Invalid requests become channel failures without exposing local
+ * storage paths or exception types.
+ */
 class FileTransferMessageHandler(
     private val endpoint: FileTransferEndpoint,
 ) {

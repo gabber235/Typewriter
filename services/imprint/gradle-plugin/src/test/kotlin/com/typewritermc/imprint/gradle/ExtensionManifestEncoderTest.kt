@@ -15,7 +15,7 @@ val ExtensionManifestEncoderTest by testSuite {
                 id = "typewritermc:fixture",
                 version = "1.0.0",
                 targets = listOf("REALM|realm|1.0.0", "ENGINE|paper|1.0.0"),
-                layers = listOf("typewritermc:minecraft|1.0.0"),
+                capabilities = listOf("typewritermc:minecraft|1.0.0"),
                 activators =
                     listOf(
                         TypewriterActivatorReference("common", "first", "fixture.First"),
@@ -27,7 +27,7 @@ val ExtensionManifestEncoderTest by testSuite {
                 id = "typewritermc:fixture",
                 version = "1.0.0",
                 targets = listOf("ENGINE|paper|1.0.0", "REALM|realm|1.0.0"),
-                layers = listOf("typewritermc:minecraft|1.0.0"),
+                capabilities = listOf("typewritermc:minecraft|1.0.0"),
                 activators =
                     listOf(
                         TypewriterActivatorReference("common", "first", "fixture.First"),

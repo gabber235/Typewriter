@@ -21,6 +21,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Merges source set activator indexes into the canonical extension manifest embedded in the extension JAR.
+ *
+ * Inputs are sorted before encoding, making output reproducible across filesystem discovery order. Duplicate activator
+ * identifiers within one source set fail the build.
+ */
 @CacheableTask
 @OptIn(ExperimentalSerializationApi::class)
 abstract class GenerateExtensionManifestTask : DefaultTask() {
@@ -34,7 +40,7 @@ abstract class GenerateExtensionManifestTask : DefaultTask() {
     abstract val targets: ListProperty<String>
 
     @get:Input
-    abstract val layers: ListProperty<String>
+    abstract val capabilities: ListProperty<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -66,7 +72,7 @@ abstract class GenerateExtensionManifestTask : DefaultTask() {
                 id = extensionId.get(),
                 version = extensionVersion.get(),
                 targets = targets.get(),
-                layers = layers.get(),
+                capabilities = capabilities.get(),
                 activators = activators,
             )
         outputFile.get().asFile.apply {
@@ -80,14 +86,14 @@ internal fun canonicalExtensionManifest(
     id: String,
     version: String,
     targets: List<String>,
-    layers: List<String>,
+    capabilities: List<String>,
     activators: List<TypewriterActivatorReference>,
 ): TypewriterExtensionManifest =
     TypewriterExtensionManifest(
         id = id,
         version = version,
         targets = targets.sorted(),
-        layers = layers.sorted(),
+        capabilities = capabilities.sorted(),
         activators =
             activators.sortedWith(
                 compareBy(

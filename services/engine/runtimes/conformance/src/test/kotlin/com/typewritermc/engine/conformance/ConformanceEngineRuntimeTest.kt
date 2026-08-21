@@ -4,22 +4,22 @@ import com.typewritermc.engine.runtime.EngineActivationPlan
 import com.typewritermc.engine.runtime.EngineGatewayRegistry
 import com.typewritermc.engine.runtime.ReloadableEngineRuntime
 import com.typewritermc.extensions.conformance.ConformanceFailureActivator
+import com.typewritermc.extensions.generated.CapabilityConformanceBaseExtensionActivators
+import com.typewritermc.extensions.generated.CapabilityConformanceCompositeExtensionActivators
 import com.typewritermc.extensions.generated.CommonExtensionActivators
 import com.typewritermc.extensions.generated.EngineConformanceExtensionActivators
-import com.typewritermc.extensions.generated.LayerConformanceBaseExtensionActivators
-import com.typewritermc.extensions.generated.LayerConformanceCompositeExtensionActivators
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import java.net.URLClassLoader
 
 val ConformanceEngineRuntimeTest by testSuite {
-    test("activates common, transitive layer, and explicit engine registries") {
+    test("activates common, transitive capability, and explicit engine registries") {
         runTest {
             val activators =
                 CommonExtensionActivators.activators +
-                    LayerConformanceBaseExtensionActivators.activators +
-                    LayerConformanceCompositeExtensionActivators.activators +
+                    CapabilityConformanceBaseExtensionActivators.activators +
+                    CapabilityConformanceCompositeExtensionActivators.activators +
                     EngineConformanceExtensionActivators.activators
             val runtime =
                 ReloadableEngineRuntime(

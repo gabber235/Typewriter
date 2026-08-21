@@ -39,6 +39,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 
+/**
+ * Owns Realm storage, communication routes, registrar monitoring, and outbox publication for one child deployment.
+ *
+ * [start] and [stop] define one lifecycle and are serialized internally. The current scaffold exposes a compatible no
+ * operation upgrade checkpoint, so replacement restarts the Realm without migrating in memory state.
+ */
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,

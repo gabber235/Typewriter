@@ -4,6 +4,13 @@ import java.nio.file.Path
 import java.time.Clock
 import java.time.Duration
 
+/**
+ * Replaces a host Realm and execution engine as independently owned child deployments.
+ *
+ * Reconciliation stages every changed child before quiescing active work. Successful activation persists the complete
+ * topology. Any staging or activation failure keeps or resumes the previous deployment and reports rollback. Calls are
+ * expected to be serialized by the owning [HostLoader].
+ */
 class HostReconciler(
     private val hostId: String,
     private val workDirectory: Path,
@@ -119,6 +126,7 @@ class HostReconciler(
     )
 }
 
+/** Describes the observable result of reconciling one complete desired topology snapshot. */
 sealed interface ReconciliationResult {
     data class Applied(
         val revision: Long,

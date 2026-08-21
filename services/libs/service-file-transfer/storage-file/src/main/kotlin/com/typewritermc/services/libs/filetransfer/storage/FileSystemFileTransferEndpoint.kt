@@ -28,6 +28,13 @@ import java.nio.file.StandardOpenOption
 import java.security.MessageDigest
 import java.util.Base64
 
+/**
+ * Stores immutable file revisions and resumable transfer state below one host owned root directory.
+ *
+ * Operations are serialized within this endpoint instance. Completed objects are published atomically when supported and
+ * never overwritten with different content. Temporary state survives process restart, and completion verifies exact byte
+ * size plus SHA 256 before publication.
+ */
 class FileSystemFileTransferEndpoint(
     private val root: Path,
     private val maximumChunkSize: Int = FileTransferCoordinator.MAXIMUM_CHUNK_SIZE,

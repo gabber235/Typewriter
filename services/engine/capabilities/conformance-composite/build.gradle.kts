@@ -9,11 +9,11 @@ dependencies {
 }
 
 typewriter {
-    engineLayer {
+    engineCapability {
         id = "typewritermc:conformance-composite"
         version = "1.0.0"
         requires {
-            layer("typewritermc:conformance-base", version = "1.0.0")
+            capability("typewritermc:conformance-base", version = "1.0.0")
         }
     }
 }

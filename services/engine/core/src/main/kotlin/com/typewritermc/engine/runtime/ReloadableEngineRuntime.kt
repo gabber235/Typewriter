@@ -5,6 +5,13 @@ import kotlinx.coroutines.CoroutineScope
 import java.net.URLClassLoader
 import java.time.Instant
 
+/**
+ * Owns all extension activations and code for one engine deployment revision.
+ *
+ * [activate] is atomic from the caller perspective. Partial activation closes the replacement scope and preserves the
+ * failure cause. [quiesce] immediately closes active behavior, while [stop] also closes the child classloader. Content
+ * revisions are applied in ascending order without code replacement.
+ */
 class ReloadableEngineRuntime(
     classLoader: URLClassLoader,
     private val plan: EngineActivationPlan,
@@ -63,6 +70,7 @@ class ReloadableEngineRuntime(
     internal fun ownsClassLoader(): Boolean = classLoader != null
 }
 
+/** Describes whether a content revision changed the active engine deployment. */
 sealed interface ContentApplicationResult {
     data class Applied(
         val revision: Long,

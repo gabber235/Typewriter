@@ -27,7 +27,7 @@ val GeneratedActivatorLoaderTest by testSuite {
                         id = "typewritermc:test",
                         version = "1.0.0",
                         targets = listOf("common"),
-                        layers = emptyList(),
+                        capabilities = emptyList(),
                         activators =
                             listOf(
                                 TypewriterActivatorReference(

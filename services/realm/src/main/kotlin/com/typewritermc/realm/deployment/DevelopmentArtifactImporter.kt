@@ -11,6 +11,12 @@ import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import kotlin.time.Duration
 
+/**
+ * Watches a development import directory and publishes changed JAR files as immutable artifact revisions.
+ *
+ * Filenames encode artifact identity, exact Semantic Versioning value, and artifact kind. Invalid names and failed imports
+ * are ignored and retried on later scans. [watch] polls until its collecting coroutine is cancelled.
+ */
 class DevelopmentArtifactImporter(
     private val directory: Path,
     private val repository: ImmutableArtifactRepository,
@@ -49,6 +55,7 @@ class DevelopmentArtifactImporter(
     }
 }
 
+/** Records which local development file produced a newly imported immutable artifact. */
 data class DevelopmentArtifactRevision(
     val source: Path,
     val artifact: ArtifactReference,

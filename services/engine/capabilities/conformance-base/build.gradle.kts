@@ -9,7 +9,7 @@ dependencies {
 }
 
 typewriter {
-    engineLayer {
+    engineCapability {
         id = "typewritermc:conformance-base"
         version = "1.0.0"
     }

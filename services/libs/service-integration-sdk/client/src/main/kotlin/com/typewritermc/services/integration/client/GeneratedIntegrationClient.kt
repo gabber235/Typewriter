@@ -20,6 +20,12 @@ import com.typewritermc.services.libs.filetransfer.TransferId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
+/**
+ * Provides typed generated operations for one authenticated, Realm scoped integration registration.
+ *
+ * The client rejects undeclared operations and missing permissions before transport. Server authorization remains
+ * authoritative. Codec failures are returned as transport failures instead of escaping into integration code.
+ */
 class GeneratedIntegrationClient(
     private val registration: IntegrationRegistration,
     credential: IntegrationCredential,
@@ -100,6 +106,11 @@ class GeneratedIntegrationClient(
         }
 }
 
+/**
+ * Exposes generic file transfer only when the registration includes file transfer permission.
+ *
+ * Domain transfer failures remain nested [FileTransferResult] values, distinct from integration authorization failures.
+ */
 class IntegrationFileTransferClient internal constructor(
     private val registration: IntegrationRegistration,
     private val endpoint: FileTransferEndpoint,

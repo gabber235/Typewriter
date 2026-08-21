@@ -7,10 +7,12 @@ import com.typewritermc.services.integration.IntegrationResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
+/** Resolves a credential context to its authoritative current registration. */
 fun interface IntegrationAuthenticator {
     suspend fun authenticate(context: IntegrationContext): IntegrationRegistration?
 }
 
+/** Dispatches only messages already authenticated and authorized by the surrounding handler. */
 interface IntegrationDispatcher {
     suspend fun request(
         registration: IntegrationRegistration,
@@ -28,6 +30,12 @@ interface IntegrationDispatcher {
     ): Flow<IntegrationResult<ByteArray>>
 }
 
+/**
+ * Enforces generated contract permissions before integration messages reach application dispatch.
+ *
+ * Authentication must return the same integration and Realm identities carried by the message. Unknown operations and
+ * insufficient permissions produce typed failures for requests, publications, and event subscriptions alike.
+ */
 class AuthenticatedIntegrationMessageHandler(
     private val contract: GeneratedIntegrationContract,
     private val authenticator: IntegrationAuthenticator,

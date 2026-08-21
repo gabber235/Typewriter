@@ -7,6 +7,11 @@ import com.typewritermc.services.integration.IntegrationOperationKind
 import com.typewritermc.services.integration.IntegrationResult
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Carries one authenticated integration operation across a messaging boundary.
+ *
+ * The sender owns [payload] and must not mutate it while a custom channel handles the message.
+ */
 data class AuthenticatedIntegrationMessage(
     val context: IntegrationContext,
     val kind: IntegrationOperationKind,
@@ -24,6 +29,7 @@ data class AuthenticatedIntegrationMessage(
         31 * (31 * (31 * context.hashCode() + kind.hashCode()) + operationId.hashCode()) + payload.contentHashCode()
 }
 
+/** Sends authenticated request, publication, and event messages through an application messaging adapter. */
 interface IntegrationMessageChannel {
     suspend fun request(message: AuthenticatedIntegrationMessage): IntegrationResult<ByteArray>
 
@@ -32,6 +38,12 @@ interface IntegrationMessageChannel {
     fun events(message: AuthenticatedIntegrationMessage): Flow<IntegrationResult<ByteArray>>
 }
 
+/**
+ * Adapts an [IntegrationMessageChannel] to the transport independent integration gateway.
+ *
+ * Request and publication payloads are copied before ownership crosses the channel boundary. Events use an empty payload
+ * and preserve the channel flow lifecycle.
+ */
 class MessagingIntegrationGateway(
     private val channel: IntegrationMessageChannel,
 ) : IntegrationGateway {

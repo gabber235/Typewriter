@@ -7,6 +7,7 @@ import com.typewritermc.services.libs.filetransfer.FileRevision
 import com.typewritermc.services.libs.filetransfer.FileTransferResult
 import com.typewritermc.services.libs.filetransfer.storage.FileSystemFileTransferEndpoint
 
+/** Produces an optional authenticity signature after immutable artifact storage has verified content. */
 fun interface ArtifactSigner {
     suspend fun sign(
         key: FileKey,
@@ -14,6 +15,12 @@ fun interface ArtifactSigner {
     ): String?
 }
 
+/**
+ * Imports versioned runtime artifacts into the stable host store owned outside the replaceable Realm runtime.
+ *
+ * Artifact keys derive from logical identity and exact version. Reimporting identical content is idempotent, while
+ * different content for an existing key fails through the immutable file transfer contract.
+ */
 class ImmutableArtifactRepository(
     val endpoint: FileSystemFileTransferEndpoint,
     private val signer: ArtifactSigner,
@@ -47,6 +54,7 @@ class ImmutableArtifactRepository(
     }
 }
 
+/** Reports the published artifact reference or the exact storage failure that prevented import. */
 sealed interface ArtifactImportResult {
     data class Success(
         val reference: ArtifactReference,

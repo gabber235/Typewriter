@@ -3,4 +3,4 @@ package com.typewritermc.extensions.conformance
 import com.typewritermc.extensions.TypewriterActivator
 
 @TypewriterActivator("realm")
-class RealmConformanceActivator : ConformanceActivator()
+internal class RealmConformanceActivator : ConformanceActivator()

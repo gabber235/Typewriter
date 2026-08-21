@@ -3,6 +3,12 @@ package com.typewritermc.engine
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.toVersion
 
+/**
+ * Identifies an execution engine across manifests, extension targets, and runtime selection.
+ *
+ * Create identifiers at configuration or protocol boundaries with [of]. The factory rejects values that cannot remain
+ * stable in artifact names and metadata.
+ */
 @JvmInline
 value class EngineId private constructor(
     val value: String,
@@ -15,18 +21,30 @@ value class EngineId private constructor(
     }
 }
 
+/**
+ * Identifies a complete contract that an engine implements and extensions may compile against.
+ *
+ * Capabilities compose transitively. Selecting an engine selects its capabilities, so extension authors should not
+ * construct capability selections independently from an engine target.
+ */
 @JvmInline
-value class EngineLayerId private constructor(
+value class EngineCapabilityId private constructor(
     val value: String,
 ) {
     companion object {
-        fun of(value: String): EngineLayerId {
-            require(identifierPattern.matches(value)) { "Invalid engine layer id: $value" }
-            return EngineLayerId(value)
+        fun of(value: String): EngineCapabilityId {
+            require(identifierPattern.matches(value)) { "Invalid engine capability id: $value" }
+            return EngineCapabilityId(value)
         }
     }
 }
 
+/**
+ * Represents an API version used for runtime compatibility and exact artifact selection.
+ *
+ * Compatibility treats the major component as the breaking contract boundary. Ordering follows Semantic Versioning,
+ * including pre release precedence, while build metadata does not affect precedence.
+ */
 class SemanticVersion private constructor(
     private val version: Version,
 ) : Comparable<SemanticVersion> {
@@ -62,6 +80,12 @@ class SemanticVersion private constructor(
     }
 }
 
+/**
+ * Describes the compatible version range beginning at [minimum] and ending before the next major version.
+ *
+ * [merge] returns the narrowest compatible requirement. It returns `null` when requirements cross a breaking major
+ * version boundary.
+ */
 data class VersionRequirement(
     val minimum: SemanticVersion,
 ) {
@@ -73,21 +97,39 @@ data class VersionRequirement(
     }
 }
 
-data class EngineLayerRequirement(
-    val id: EngineLayerId,
+/**
+ * Requests one engine capability at a compatible API version.
+ *
+ * Requirements are resolved transitively from the selected engine and merged before an extension source layout or
+ * deployment manifest is produced.
+ */
+data class EngineCapabilityRequirement(
+    val id: EngineCapabilityId,
     val version: VersionRequirement,
 )
 
-data class EngineLayerDescriptor(
-    val id: EngineLayerId,
+/**
+ * Publishes the complete contract and transitive requirements of one engine capability artifact.
+ *
+ * An engine claiming this capability must implement the entire contract. Partial or optional implementations belong in
+ * separate capabilities.
+ */
+data class EngineCapabilityDescriptor(
+    val id: EngineCapabilityId,
     val version: SemanticVersion,
-    val requires: List<EngineLayerRequirement> = emptyList(),
+    val requires: List<EngineCapabilityRequirement> = emptyList(),
 )
 
+/**
+ * Declares an execution engine API and the capabilities it implements.
+ *
+ * Extension tooling uses this descriptor to derive capability source sets. Runtime manifests pin the exact engine and
+ * capability artifact versions separately.
+ */
 data class EngineDescriptor(
     val id: EngineId,
     val version: SemanticVersion,
-    val layers: List<EngineLayerRequirement> = emptyList(),
+    val capabilities: List<EngineCapabilityRequirement> = emptyList(),
 )
 
 private val identifierPattern = Regex("[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*(?::[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*)?")

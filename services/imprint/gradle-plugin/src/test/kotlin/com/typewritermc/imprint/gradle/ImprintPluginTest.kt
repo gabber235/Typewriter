@@ -69,10 +69,10 @@ val ImprintPluginTest by testSuite {
                 expectFailure = true,
             )
 
-        result shouldContain "must declare exactly one engine, engine layer, or extension"
+        result shouldContain "must declare exactly one engine, engine capability, or extension"
     }
 
-    test("engine projects expose implemented layers") {
+    test("engine projects expose implemented capabilities") {
         val result =
             runBuild(
                 """
@@ -85,14 +85,14 @@ val ImprintPluginTest by testSuite {
                         id = "paper"
                         version = "1.0.0"
                         implements {
-                            layer("typewritermc:minecraft", version = "1.2.0")
+                            capability("typewritermc:minecraft", version = "1.2.0")
                         }
                     }
                 }
                 """.trimIndent(),
             )
 
-        result shouldContain "Typewriter engine layer typewritermc:minecraft 1.2.0"
+        result shouldContain "Typewriter engine capability typewritermc:minecraft 1.2.0"
     }
 
     test("versions must use canonical semantic version syntax") {
@@ -104,7 +104,7 @@ val ImprintPluginTest by testSuite {
                 }
 
                 typewriter {
-                    engineLayer {
+                    engineCapability {
                         id = "typewritermc:minecraft"
                         version = "1"
                     }
@@ -125,7 +125,7 @@ val ImprintPluginTest by testSuite {
                 }
 
                 typewriter {
-                    engineLayer {
+                    engineCapability {
                         id = "typewritermc:minecraft"
                         version = "1.2.3-rc.1+local.4"
                     }
@@ -133,10 +133,10 @@ val ImprintPluginTest by testSuite {
                 """.trimIndent(),
             )
 
-        result shouldContain "Typewriter engine layer typewritermc:minecraft 1.2.3-rc.1+local.4"
+        result shouldContain "Typewriter engine capability typewritermc:minecraft 1.2.3-rc.1+local.4"
     }
 
-    test("extension engine targets derive their transitive layer source sets") {
+    test("extension engine targets derive their transitive capability source sets") {
         val result =
             runBuild(
                 extensionBuild(
@@ -150,9 +150,9 @@ val ImprintPluginTest by testSuite {
 
         result shouldContain "Typewriter source set enginePaper"
         result shouldContain "Typewriter source set engineConformance"
-        result shouldContain "Typewriter source set layerMinecraft"
-        result shouldContain "Typewriter source set layerConformanceBase"
-        result shouldContain "Typewriter source set layerConformanceComposite"
+        result shouldContain "Typewriter source set capabilityMinecraft"
+        result shouldContain "Typewriter source set capabilityConformanceBase"
+        result shouldContain "Typewriter source set capabilityConformanceComposite"
     }
 
     test("engine source sets may use common sources") {

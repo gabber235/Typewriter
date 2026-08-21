@@ -18,6 +18,7 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.nio.file.Path
 
+/** Assembles a [HostLoader] from explicit control plane and deployment runtime factories. */
 class LocalLoaderBootstrap(
     private val controlPlaneFactory: HostControlPlaneFactory,
     private val runtimeFactory: DeploymentRuntimeFactory,
@@ -36,6 +37,7 @@ class LocalLoaderBootstrap(
         ).start()
 }
 
+/** Owns the isolated Koin container and loader bootstrap for one standalone or Paper entrypoint lifetime. */
 class LoaderApplication internal constructor(
     private val application: KoinApplication,
     val bootstrap: LoaderBootstrap,
@@ -45,6 +47,12 @@ class LoaderApplication internal constructor(
     }
 }
 
+/**
+ * Creates the minimal local loader application used by scaffold development entrypoints.
+ *
+ * The local control plane requests no children. Runtime staging therefore fails explicitly until a deployment source is
+ * configured, rather than pretending an unavailable runtime started successfully.
+ */
 fun localLoaderApplication(): LoaderApplication {
     val application =
         koinApplication {

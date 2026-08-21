@@ -15,7 +15,7 @@ typewriter {
         id = "conformance"
         version = "1.0.0"
         implements {
-            layer("typewritermc:conformance-composite", version = "1.0.0")
+            capability("typewritermc:conformance-composite", version = "1.0.0")
         }
     }
 }

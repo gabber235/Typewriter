@@ -1,6 +1,6 @@
 package com.typewritermc.imprint.gradle
 
-import com.typewritermc.imprint.TypewriterEngineLayerReference
+import com.typewritermc.imprint.TypewriterEngineCapabilityReference
 import com.typewritermc.imprint.TypewriterProjectDeclaration
 import com.typewritermc.imprint.TypewriterProjectKind
 import com.typewritermc.imprint.TypewriterRuntimeTarget
@@ -13,6 +13,12 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.jvm.tasks.Jar
 
+/**
+ * Adds the `typewriter` DSL, target derived source sets, deterministic manifests, and development publication tasks.
+ *
+ * Each project must declare exactly one engine, engine capability, or extension. Configuration fails early when versions,
+ * transitive capabilities, or source relationships are invalid.
+ */
 class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply("com.google.devtools.ksp")
@@ -27,8 +33,8 @@ class ImprintPlugin : Plugin<Project> {
                 task.logger.lifecycle(
                     "Typewriter ${declaration.kind.displayName} ${declaration.id} ${declaration.version}",
                 )
-                declaration.layers.forEach { layer ->
-                    task.logger.lifecycle("Typewriter engine layer ${layer.id} ${layer.version}")
+                declaration.capabilities.forEach { capability ->
+                    task.logger.lifecycle("Typewriter engine capability ${capability.id} ${capability.version}")
                 }
                 declaration.targets.forEach { target ->
                     task.logger.lifecycle("Typewriter target ${target.kind.name.lowercase()} ${target.id} ${target.version}")
@@ -49,7 +55,7 @@ private fun Project.registerDevelopmentArtifact(declaration: TypewriterProjectDe
     val artifactType =
         when (declaration.kind) {
             TypewriterProjectKind.ENGINE -> if (declaration.id == "panel") "panel_engine" else "execution_engine"
-            TypewriterProjectKind.ENGINE_LAYER -> "engine_layer"
+            TypewriterProjectKind.ENGINE_CAPABILITY -> "engine_capability"
             TypewriterProjectKind.EXTENSION -> "extension"
         }
     val publishedName = "${declaration.id}__${declaration.version}__$artifactType.jar"
@@ -62,19 +68,23 @@ private fun Project.registerDevelopmentArtifact(declaration: TypewriterProjectDe
     }
 }
 
+/** Entry point for declaring the single Typewriter artifact produced by a Gradle project. */
 open class TypewriterProjectExtension(
     private val project: Project,
 ) {
     private val declarations = mutableListOf<ProjectDeclaration>()
 
+    /** Declares an execution engine and every capability it completely implements. */
     fun engine(action: Action<EngineDeclaration>) {
         add(EngineDeclaration(), action)
     }
 
-    fun engineLayer(action: Action<EngineLayerDeclaration>) {
-        add(EngineLayerDeclaration(), action)
+    /** Declares a composable engine capability and its transitive requirements. */
+    fun engineCapability(action: Action<EngineCapabilityDeclaration>) {
+        add(EngineCapabilityDeclaration(), action)
     }
 
+    /** Declares one extension release and the runtime targets it compiles against. */
     fun extension(action: Action<ExtensionDeclaration>) {
         val declaration = ExtensionDeclaration()
         add(declaration, action)
@@ -84,7 +94,7 @@ open class TypewriterProjectExtension(
     internal fun declaration(): TypewriterProjectDeclaration {
         if (declarations.size != 1) {
             throw GradleException(
-                "A project using Imprint must declare exactly one engine, engine layer, or extension.",
+                "A project using Imprint must declare exactly one engine, engine capability, or extension.",
             )
         }
 
@@ -100,17 +110,18 @@ open class TypewriterProjectExtension(
     }
 }
 
+/** Shared identifier and Semantic Versioning contract for Imprint declarations. */
 sealed class ProjectDeclaration(
     private val kind: TypewriterProjectKind,
 ) {
     var id: String = ""
     var version: String = ""
-    private val layers = mutableListOf<TypewriterEngineLayerReference>()
+    private val capabilities = mutableListOf<TypewriterEngineCapabilityReference>()
 
-    protected fun configureLayers(action: Action<EngineLayers>) {
-        val configuredLayers = EngineLayers()
-        action.execute(configuredLayers)
-        layers += configuredLayers.references
+    protected fun configureCapabilities(action: Action<EngineCapabilities>) {
+        val configuredCapabilities = EngineCapabilities()
+        action.execute(configuredCapabilities)
+        capabilities += configuredCapabilities.references
     }
 
     internal fun toModel(): TypewriterProjectDeclaration {
@@ -119,27 +130,33 @@ sealed class ProjectDeclaration(
         }
         validateVersion(version, "Typewriter project")
 
-        return TypewriterProjectDeclaration(kind, id, version, layers.toList(), targets())
+        return TypewriterProjectDeclaration(kind, id, version, capabilities.toList(), targets())
     }
 
     protected open fun targets(): List<TypewriterRuntimeTarget> = emptyList()
 }
 
+/** Configures an execution engine artifact and its complete capability set. */
 open class EngineDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE) {
-    fun implements(action: Action<EngineLayers>) {
-        configureLayers(action)
+    /** Selects capabilities implemented by this engine. Requirements resolve transitively. */
+    fun implements(action: Action<EngineCapabilities>) {
+        configureCapabilities(action)
     }
 }
 
-open class EngineLayerDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE_LAYER) {
-    fun requires(action: Action<EngineLayers>) {
-        configureLayers(action)
+/** Configures one independently versioned engine capability artifact. */
+open class EngineCapabilityDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE_CAPABILITY) {
+    /** Selects capabilities required for this capability contract to function. */
+    fun requires(action: Action<EngineCapabilities>) {
+        configureCapabilities(action)
     }
 }
 
+/** Configures one extension JAR that may contribute code to several runtime targets. */
 open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTENSION) {
     private val configuredTargets = mutableListOf<TypewriterRuntimeTarget>()
 
+    /** Selects actual runtime targets. Capability source sets are derived automatically from engine targets. */
     fun targets(action: Action<ExtensionTargets>) {
         val targets = ExtensionTargets()
         action.execute(targets)
@@ -149,17 +166,21 @@ open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTEN
     override fun targets(): List<TypewriterRuntimeTarget> = configuredTargets.toList()
 }
 
+/** Collects the Realm, panel, and explicit engine contracts supported by an extension. */
 open class ExtensionTargets {
     internal val targets = mutableListOf<TypewriterRuntimeTarget>()
 
+    /** Adds Realm owned code compatible from [version] until the next major Realm API version. */
     fun realm(version: String) {
         add(TypewriterRuntimeTargetKind.REALM, "realm", version)
     }
 
+    /** Adds panel engine code compatible from [version] until the next major panel API version. */
     fun panel(version: String) {
         add(TypewriterRuntimeTargetKind.PANEL, "panel", version)
     }
 
+    /** Adds code for one explicit execution engine and derives all of that engine's transitive capabilities. */
     fun engine(
         id: String,
         version: String,
@@ -183,18 +204,20 @@ open class ExtensionTargets {
     }
 }
 
-open class EngineLayers {
-    internal val references = mutableListOf<TypewriterEngineLayerReference>()
+/** Collects complete engine capability requirements for an engine or another capability. */
+open class EngineCapabilities {
+    internal val references = mutableListOf<TypewriterEngineCapabilityReference>()
 
-    fun layer(
+    /** Requires one capability at this minimum compatible version within the same major version. */
+    fun capability(
         id: String,
         version: String,
     ) {
         if (id.isBlank()) {
-            throw GradleException("The engine layer id must not be blank.")
+            throw GradleException("The engine capability id must not be blank.")
         }
-        validateVersion(version, "Engine layer $id")
-        references += TypewriterEngineLayerReference(id, version)
+        validateVersion(version, "Engine capability $id")
+        references += TypewriterEngineCapabilityReference(id, version)
     }
 }
 

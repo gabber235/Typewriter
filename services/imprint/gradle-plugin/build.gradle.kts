@@ -19,7 +19,7 @@ gradlePlugin {
             id = "com.typewritermc.imprint"
             implementationClass = "com.typewritermc.imprint.gradle.ImprintPlugin"
             displayName = "Typewriter Imprint"
-            description = "Configures Typewriter engine, engine layer, and extension projects"
+            description = "Configures Typewriter engine, engine capability, and extension projects"
         }
     }
 }

@@ -14,7 +14,7 @@ The requested plugin version 3.1.0 is not compatible with this repository's Grad
 
 ## Development artifacts
 
-Run `build-logic/gradlew publishDevArtifacts` from `services`. The task builds the Realm, panel engine, execution engines, engine layers, and ConformanceExtension. It publishes Realm import filenames into `services/build/development/artifacts`.
+Run `build-logic/gradlew publishDevArtifacts` from `services`. The task builds the Realm, panel engine, execution engines, engine capabilities, and ConformanceExtension. It publishes Realm import filenames into `services/build/development/artifacts`.
 
 Point a development Realm importer at that directory. Rebuilding an artifact replaces only the mutable import file. Realm imports its bytes under a new immutable file revision.
 
@@ -32,7 +32,7 @@ The source revision included all scaffold commits through `929206ad`. The workfl
 
 Local runtime results:
 
-1. `build-logic/gradlew publishDevArtifacts` published eight version 1.0.0 import files for Realm, panel, Paper, conformance, Minecraft, both fixture layers, and ConformanceExtension.
+1. `build-logic/gradlew publishDevArtifacts` published eight version 1.0.0 import files for Realm, panel, Paper, conformance, Minecraft, both fixture capabilities, and ConformanceExtension.
 2. `build-logic/gradlew devStandalone` started the combined loader with host identity `local-standalone`. It created persistent state in `services/build/development/standalone` and remained active until interrupted with Control C.
 3. `build-logic/gradlew devPaper` started Paper 1.21.11 build 132. Paper loaded and enabled `TypewriterLoader`, reached its ready state, then disabled the loader and stopped cleanly through the server console.
 

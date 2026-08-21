@@ -24,7 +24,7 @@ typewriter {
         id = "paper"
         version = "1.0.0"
         implements {
-            layer("typewritermc:minecraft", version = "1.0.0")
+            capability("typewritermc:minecraft", version = "1.0.0")
         }
     }
 }

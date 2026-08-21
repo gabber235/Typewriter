@@ -10,18 +10,27 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+/** Loads the last topology that completed local activation and persistence. */
 fun interface HostStateReader {
     fun load(): DesiredTopology?
 }
 
+/** Persists the topology that offline startup may safely restore. */
 fun interface HostStateWriter {
     fun save(topology: DesiredTopology)
 }
 
+/** Combines durable topology reads and writes behind the reconciliation boundary. */
 interface HostStateStore :
     HostStateReader,
     HostStateWriter
 
+/**
+ * Stores the last applied topology as versioned CBOR for offline recovery.
+ *
+ * Saves replace the previous file atomically when the filesystem supports it. Unknown object fields are accepted for
+ * compatible additions, while an unsupported format version fails before any runtime is restored.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 class FileHostStateStore(
     private val path: Path,

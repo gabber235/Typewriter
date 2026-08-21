@@ -8,6 +8,13 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.isSubclassOf
 
+/**
+ * Instantiates extension activators recorded by compile time discovery in extension manifests.
+ *
+ * Resources and activators are sorted deterministically. Duplicate class references across manifests are activated once.
+ * Every activator must be a Kotlin class implementing [ExtensionActivator] with a constructor supported by
+ * `createInstance`, otherwise loading fails before the deployment becomes active.
+ */
 @OptIn(ExperimentalSerializationApi::class)
 class GeneratedActivatorLoader {
     fun load(

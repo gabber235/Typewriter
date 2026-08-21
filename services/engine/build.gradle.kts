@@ -4,7 +4,7 @@ subprojects {
 
 val publishDevArtifacts = tasks.register("publishDevArtifacts") {
     group = "development"
-    description = "Publishes all engine and engine layer artifacts for local development."
+    description = "Publishes all engine and engine capability artifacts for local development."
 }
 
 subprojects {

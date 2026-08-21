@@ -14,11 +14,12 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.codegen.annotation
@@ -34,6 +35,12 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
 
+/**
+ * Creates the KSP processor that turns annotated activators into typed registries and deterministic CBOR indexes.
+ *
+ * Invalid constructors, visibility, duplicate identifiers, and source placement are reported during compilation. The
+ * processor generates once after all symbols validate, so deferred symbols cannot produce partial metadata.
+ */
 class ExtensionActivatorProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         ExtensionActivatorProcessor(environment.codeGenerator, environment.logger)
@@ -102,19 +109,31 @@ private class ExtensionActivatorProcessor(
         activators: List<Activator>,
     ) {
         val objectName = "${sourceSet.toUpperCamelIdentifier()}ExtensionActivators"
-        val initializer =
-            activators
-                .map { activator -> CodeBlock.of("%T()", activator.declaration.toClassName()) }
-                .joinToCode(separator = ",♢", prefix = "listOf(", suffix = ")")
+        val activatorListType = List::class.asClassName().parameterizedBy(ExtensionActivator::class.asClassName())
+        val createActivatorsBody =
+            CodeBlock
+                .builder()
+                .addStatement("val result = mutableListOf<%T>()", ExtensionActivator::class.asClassName())
+                .apply {
+                    activators.forEach { activator ->
+                        addStatement("result.add(%T())", activator.declaration.toClassName())
+                    }
+                }.addStatement("return result")
+                .build()
         val registry =
             TypeSpec
                 .objectBuilder(objectName)
                 .addProperty(
                     PropertySpec
-                        .builder(
-                            "activators",
-                            List::class.asClassName().parameterizedBy(ExtensionActivator::class.asClassName()),
-                        ).initializer(initializer)
+                        .builder("activators", activatorListType)
+                        .initializer("createActivators()")
+                        .build(),
+                ).addFunction(
+                    FunSpec
+                        .builder("createActivators")
+                        .addModifiers(KModifier.PRIVATE)
+                        .returns(activatorListType)
+                        .addCode(createActivatorsBody)
                         .build(),
                 ).build()
 

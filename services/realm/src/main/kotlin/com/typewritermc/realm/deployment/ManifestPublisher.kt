@@ -3,6 +3,7 @@ package com.typewritermc.realm.deployment
 import com.typewritermc.engine.EngineId
 import java.util.concurrent.atomic.AtomicLong
 
+/** Collects the Realm side artifacts and activators before a shared deployment revision is assigned. */
 data class RealmManifestDraft(
     val targetEngine: EngineId,
     val targetEngineMajor: Int,
@@ -12,19 +13,27 @@ data class RealmManifestDraft(
     val activators: List<ManifestActivator>,
 )
 
+/** Collects the execution side artifacts and activators before a shared deployment revision is assigned. */
 data class ExecutionManifestDraft(
     val targetEngine: EngineId,
     val engine: ArtifactReference,
-    val layers: List<ArtifactReference>,
+    val capabilities: List<ArtifactReference>,
     val extensions: List<ArtifactReference>,
     val activators: List<ManifestActivator>,
 )
 
+/** Returns the Realm and execution manifests that share one atomic logical deployment revision. */
 data class PublishedDeploymentManifests(
     val realm: RealmDeploymentManifest,
     val execution: ExecutionDeploymentManifest,
 )
 
+/**
+ * Publishes deterministic paired manifests for one compatible Realm and execution target.
+ *
+ * Publication assigns one strictly increasing revision to both manifests and sorts extensions, capabilities, and
+ * activators for reproducible output. Mismatched Realm and execution targets fail before advancing the revision.
+ */
 class ManifestPublisher(
     initialRevision: Long = 0,
 ) {
@@ -52,7 +61,7 @@ class ManifestPublisher(
                     revision = deploymentRevision,
                     targetEngine = execution.targetEngine,
                     engine = execution.engine,
-                    layers = execution.layers.sortedBy { it.key.id.value },
+                    capabilities = execution.capabilities.sortedBy { it.key.id.value },
                     extensions = execution.extensions.sortedBy { it.key.id.value },
                     activators = execution.activators.sortedWith(activatorOrder),
                 ),
