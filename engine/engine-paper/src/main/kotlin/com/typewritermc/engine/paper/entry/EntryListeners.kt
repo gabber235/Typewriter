@@ -18,6 +18,8 @@ import org.bukkit.event.Listener
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.java.KoinJavaComponent.get
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import kotlin.reflect.KClass
@@ -31,14 +33,34 @@ class EntryListeners : KoinComponent, Reloadable {
     private val listener = object : Listener {}
 
 
-    private fun onEvent(event: Event, info: EntryListenerInfo, generators: List<ParameterGenerator>, method: Method) {
-        val parameters = generators.map { it.generate(event, info) }
-        try {
-            method.invoke(null, *parameters.toTypedArray())
-        } catch (e: Exception) {
-            logger.severe("Failed to invoke entry listener ${method.name} for event ${event::class.simpleName}")
-            e.printStackTrace()
+    /**
+     * A listener declaration resolved into something directly callable.
+     *
+     * Holds everything that does not vary per event, so dispatch only supplies the event and
+     * invokes. Isolates its own failures: a listener that throws must not stop the event reaching
+     * the others, nor break dispatch for subsequent events.
+     */
+    private class BoundListener(
+        val method: Method,
+        private val handle: MethodHandle?,
+        private val arguments: List<ArgumentSupplier>,
+    ) {
+        fun invoke(event: Event) {
+            val values = arrayOfNulls<Any>(arguments.size)
+            for (index in arguments.indices) values[index] = arguments[index].supply(event)
+
+            try {
+                if (handle != null) handle.invokeWithArguments(*values) else method.invoke(null, *values)
+            } catch (e: Throwable) {
+                logger.severe("Failed to invoke entry listener ${method.name} for event ${event::class.simpleName}")
+                e.printStackTrace()
+            }
         }
+    }
+
+    /** Produces one argument of a bound listener, capturing everything constant up front. */
+    private fun interface ArgumentSupplier {
+        fun supply(event: Event): Any
     }
 
     /**
@@ -50,19 +72,86 @@ class EntryListeners : KoinComponent, Reloadable {
         val activeEventEntries = Query.find<EventEntry>().mapTo(mutableSetOf()) { it::class.java.name }
 
         val activeEntryListeners = entryListeners.filter { it.entryClassName in activeEventEntries }
-        activeEntryListeners.forEach {
-            val method = it.method
+
+        val registeredEntryListeners = activeEntryListeners.count { info ->
+            val method = info.method
             val eventClass =
                 findEventFromMethod(method).logErrorIfNull("Could not find bukkit event class for ${method.name}")
-                    ?: return@forEach
+                    ?: return@count false
 
-            listener.listen(plugin, eventClass, it.priority.toBukkitPriority(), it.ignoreCancelled) { event ->
-                onEvent(event, it, ParameterGenerator.getGenerators(method.parameters), method)
+            val bound = bind(info, method) ?: return@count false
+
+            listener.listen(plugin, eventClass, info.priority.toBukkitPriority(), info.ignoreCancelled) { event ->
+                bound.invoke(event)
             }
+            true
         }
 
-        logger.info("Loaded ${activeEntryListeners.size} entry listeners")
+        logger.info("Loaded $registeredEntryListeners entry listeners")
     }
+
+    /**
+     * Resolves a listener declaration into something callable, or null when it cannot be resolved.
+     *
+     * Reporting an unresolvable listener here, at load, is deliberate: an unsupported parameter or
+     * an unloadable entry class is a packaging mistake, and it should surface once at startup with
+     * the offending method named instead of throwing on every event for the life of the server.
+     */
+    private fun bind(info: EntryListenerInfo, method: Method): BoundListener? {
+        val arguments = bindArguments(info, method) ?: return null
+
+        return BoundListener(method, methodHandleOf(method), arguments)
+    }
+
+    private fun bindArguments(info: EntryListenerInfo, method: Method): List<ArgumentSupplier>? {
+        val generators =
+            try {
+                ParameterGenerator.getGenerators(method.parameters)
+            } catch (e: IllegalArgumentException) {
+                logger.severe("Could not bind entry listener ${method.name}: ${e.message}")
+                return null
+            }
+
+        return generators.map { generator ->
+            when (generator) {
+                ParameterGenerator.EventParameterGenerator -> ArgumentSupplier { event -> event }
+                ParameterGenerator.QueryParameterGenerator -> {
+                    val query =
+                        try {
+                            ParameterGenerator.QueryParameterGenerator.query(info)
+                        } catch (e: Exception) {
+                            logger.severe(
+                                "Could not resolve the query of entry listener ${method.name}: ${e.message}",
+                            )
+                            return null
+                        }
+                    ArgumentSupplier { query }
+                }
+            }
+        }
+    }
+
+    /**
+     * A handle bound to [method], or null when the extension class loader will not expose it.
+     *
+     * `unreflect` checks access against this class rather than against the eventual caller, and
+     * entry listeners live in extension jars with their own class loader, where the declaring class
+     * is often not public to the engine and `@EntryListener` never required the method to be
+     * public. Suppressing the check is therefore what lets a handle exist at all — the same
+     * suppression `Method.invoke` performs internally on every call, done once here instead, on a
+     * `Method` the engine obtained itself and keeps for the lifetime of the binding.
+     *
+     * A null result is not an error: dispatch falls back to `Method.invoke`, which only costs the
+     * per-call checks the handle avoids.
+     */
+    private fun methodHandleOf(method: Method): MethodHandle? =
+        try {
+            method.isAccessible = true
+            MethodHandles.lookup().unreflect(method)
+        } catch (e: Throwable) {
+            logger.warning("MethodHandle unavailable for entry listener ${method.name}; falling back to reflection")
+            null
+        }
 
     private fun findEventFromMethod(method: Method): KClass<out Event>? {
         @Suppress("UNCHECKED_CAST")
@@ -114,7 +203,15 @@ sealed interface ParameterGenerator {
             return parameter.type.isAssignableFrom(Query::class.java)
         }
 
-        override fun generate(event: Event, entryListenerInfo: EntryListenerInfo): Any {
+        override fun generate(event: Event, entryListenerInfo: EntryListenerInfo): Any = query(entryListenerInfo)
+
+        /**
+         * The query a listener receives, determined solely by [entryListenerInfo] and never by the
+         * event, so a caller may resolve it once and reuse it for every dispatch.
+         *
+         * @throws IllegalArgumentException when the declared entry class is not an [Entry].
+         */
+        fun query(entryListenerInfo: EntryListenerInfo): Query<out Entry> {
             val extensionLoader = get<ExtensionLoader>(ExtensionLoader::class.java)
             val entryClass = extensionLoader.loadClass(entryListenerInfo.entryClassName)
             if (!Entry::class.java.isAssignableFrom(entryClass)) {
