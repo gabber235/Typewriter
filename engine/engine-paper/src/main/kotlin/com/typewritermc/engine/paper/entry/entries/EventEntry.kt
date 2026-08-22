@@ -39,6 +39,7 @@ fun List<CancelableEventEntry>.shouldCancel(
 
 
 interface CustomCommandEntry : Entry {
+    /** Use these criteria to limit command discovery and execution to matching players. */
     @Help("The criteria that must be met for this command to be available")
     val criteria: List<Criteria>
         get() = emptyList()

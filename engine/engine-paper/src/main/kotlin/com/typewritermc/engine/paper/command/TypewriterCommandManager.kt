@@ -40,6 +40,7 @@ class TypewriterCommandManager : Listener {
     val labels: List<String>
         get() = commandsLabels
 
+    /** Call once during plugin startup, after player sessions initialize and before custom commands register. */
     fun initialize() {
         plugin.server.pluginManager.registerEvents(this, plugin)
     }
