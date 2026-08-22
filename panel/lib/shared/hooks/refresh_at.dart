@@ -4,12 +4,14 @@ import "package:flutter/widgets.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 
 /// Rebuilds the widget using this hook when a future [refreshAt] is reached.
-void useRefreshAt(DateTime refreshAt) => use(_RefreshAtHook(refreshAt));
+void useRefreshAt(DateTime refreshAt, {DateTime Function()? now}) =>
+    use(_RefreshAtHook(refreshAt, now ?? DateTime.now));
 
 class _RefreshAtHook extends Hook<void> {
-  const _RefreshAtHook(this.refreshAt);
+  const _RefreshAtHook(this.refreshAt, this.now);
 
   final DateTime refreshAt;
+  final DateTime Function() now;
 
   @override
   _RefreshAtHookState createState() => _RefreshAtHookState();
@@ -27,7 +29,7 @@ class _RefreshAtHookState extends HookState<void, _RefreshAtHook> {
   @override
   void didUpdateHook(_RefreshAtHook oldHook) {
     super.didUpdateHook(oldHook);
-    if (hook.refreshAt == oldHook.refreshAt) return;
+    if (hook.refreshAt == oldHook.refreshAt && hook.now == oldHook.now) return;
     _scheduleRefresh();
   }
 
@@ -35,7 +37,7 @@ class _RefreshAtHookState extends HookState<void, _RefreshAtHook> {
     _timer?.cancel();
     _timer = null;
 
-    final delay = hook.refreshAt.difference(DateTime.now());
+    final delay = hook.refreshAt.difference(hook.now());
     if (delay <= Duration.zero) return;
 
     _timer = Timer(delay, () => setState(() {}));

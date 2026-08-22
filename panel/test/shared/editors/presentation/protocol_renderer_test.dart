@@ -197,6 +197,154 @@ void main() {
     expect(chip.backgroundColor, entityColor.withValues(alpha: 0.18));
   });
 
+  testWidgets("renders semantic status shapes without enclosing chrome", (
+    tester,
+  ) async {
+    final cases = <(StatusTone, IconData)>[
+      (StatusTone.neutral, Icons.circle_outlined),
+      (StatusTone.unknown, Icons.help_outline),
+      (StatusTone.information, Icons.info_outline),
+      (StatusTone.success, Icons.check_circle_outline),
+      (StatusTone.warning, Icons.warning_amber_rounded),
+      (StatusTone.danger, Icons.error_outline),
+      (StatusTone.active, Icons.play_circle_outline),
+      (StatusTone.inactive, Icons.stop_circle_outlined),
+      (StatusTone.online, Icons.cloud_done_outlined),
+      (StatusTone.offline, Icons.cloud_off_outlined),
+      (StatusTone.pending, Icons.schedule_outlined),
+      (StatusTone.inProgress, Icons.sync),
+      (StatusTone.paused, Icons.pause_circle_outline),
+    ];
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "statuses",
+          element: ColumnElement(
+            children: [
+              for (final (index, entry) in cases.indexed)
+                PresentationNode(
+                  id: "status$index",
+                  element: StatusElement(
+                    value: "value$index".asStringLiteral,
+                    cases: [
+                      StatusCase(
+                        match: StringValue("value$index"),
+                        appearance: StatusAppearance(
+                          tone: entry.$1,
+                          label: "Status $index".asStringLiteral,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final (index, entry) in cases.indexed) {
+      expect(find.byIcon(entry.$2), findsOneWidget);
+      expect(find.bySemanticsLabel("Status $index"), findsOneWidget);
+      final icon = tester.widget<Icon>(find.byIcon(entry.$2));
+      final context = tester.element(find.byIcon(entry.$2));
+      final expectedColor = switch (entry.$1) {
+        StatusTone.neutral ||
+        StatusTone.unknown => context.colors.contentSecondary,
+        StatusTone.information ||
+        StatusTone.pending ||
+        StatusTone.inProgress => context.colors.info,
+        StatusTone.success => context.colors.success,
+        StatusTone.warning || StatusTone.paused => context.colors.warning,
+        StatusTone.danger => context.colors.danger,
+        StatusTone.active || StatusTone.online => context.colors.online,
+        StatusTone.inactive || StatusTone.offline => context.colors.offline,
+      };
+      expect(icon.color, expectedColor);
+    }
+    expect(find.byType(Chip), findsNothing);
+  });
+
+  testWidgets(
+    "uses the source label and unknown fallback for unmatched status",
+    (tester) async {
+      await tester.pumpTestApp(
+        child: _renderer(
+          type: const UnitType(),
+          value: const UnitValue(),
+          presentation: PresentationNode(
+            id: "status",
+            element: StatusElement(
+              value: "Unrecognized".asStringLiteral,
+              cases: const [],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text("Unrecognized"), findsOneWidget);
+      expect(find.byIcon(Icons.help_outline), findsOneWidget);
+    },
+  );
+
+  testWidgets("formats timestamp expressions with a dynamic ICU pattern", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        type: const UnitType(),
+        value: const UnitValue(),
+        presentation: PresentationNode(
+          id: "dateTime",
+          element: DateTimeElement(
+            value: TypedExpression(
+              resultType: const TimestampType(),
+              expression: LiteralExpression(
+                TimestampValue(DateTime.utc(2026, 8, 22, 12, 30, 45)),
+              ),
+            ),
+            format: "yyyy/MM/dd HH:mm:ss".asStringLiteral,
+            timeZone: DateTimeZone.utc,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text("2026/08/22 12:30:45"), findsOneWidget);
+  });
+
+  testWidgets(
+    "renders compact relative time with natural semantics and tooltip",
+    (tester) async {
+      final value = DateTime.now().subtract(
+        const Duration(minutes: 5, seconds: 5),
+      );
+      await tester.pumpTestApp(
+        child: _renderer(
+          type: const UnitType(),
+          value: const UnitValue(),
+          presentation: PresentationNode(
+            id: "relativeTime",
+            element: RelativeTimeElement(
+              value: TypedExpression(
+                resultType: const TimestampType(),
+                expression: LiteralExpression(TimestampValue(value)),
+              ),
+              timeZone: DateTimeZone.utc,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text("5m ago"), findsOneWidget);
+      expect(find.bySemanticsLabel("5 minutes ago"), findsOneWidget);
+      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      expect(tooltip.message, isNotEmpty);
+    },
+  );
+
   testWidgets("selecting an option updates its bound value", (tester) async {
     await tester.pumpTestApp(
       child: _renderer(

@@ -108,6 +108,49 @@ extension on PresentationElement {
         diagnostics.add(_invalid("Chip color must declare the Color type"));
       }
     }
+    if (element case StatusElement(
+      :final value,
+      :final cases,
+      :final fallback,
+    )) {
+      final matches = <DataValue>{};
+      for (final item in cases) {
+        diagnostics.addAll(
+          item.match.validateAgainst(value.resultType, registry: registry),
+        );
+        if (!matches.add(item.match)) {
+          diagnostics.add(_invalid("Status cases must have unique values"));
+        }
+        diagnostics.addAll(item.appearance._validateLabel());
+      }
+      diagnostics.addAll(fallback?._validateLabel() ?? const []);
+    }
+    if (element case DateTimeElement(:final value, :final format)) {
+      if (value.resultType is! TimestampType) {
+        diagnostics.add(
+          _invalid("Date time value must declare a timestamp result"),
+        );
+      }
+      if (format.resultType is! StringType) {
+        diagnostics.add(
+          _invalid("Date time format must declare a string result"),
+        );
+      } else if (format
+              .evaluate(context, registry: registry, budget: budget)
+              .valueOrNull
+          case StringValue(:final value)) {
+        if (dateTimePatternError(value) != null) {
+          diagnostics.add(_invalid("Date time format is malformed"));
+        }
+      }
+    }
+    if (element case RelativeTimeElement(
+      :final value,
+    ) when value.resultType is! TimestampType) {
+      diagnostics.add(
+        _invalid("Relative time value must declare a timestamp result"),
+      );
+    }
     final border = switch (element) {
       SectionElement(:final border) ||
       ContainerElement(:final border) => border,
@@ -365,6 +408,13 @@ extension on PresentationElement {
         maximum,
         ?label,
       ],
+      StatusElement(:final value, :final cases, :final fallback) => [
+        value,
+        for (final item in cases) ?item.appearance.label,
+        ?fallback?.label,
+      ],
+      DateTimeElement(:final value, :final format) => [value, format],
+      RelativeTimeElement(:final value) => [value],
       SectionElement(:final border?) => border.colors,
       ContainerElement(:final border, :final backgroundColor, :final radius) =>
         [...?border?.colors, ?backgroundColor, ...radius.expressions],
@@ -439,6 +489,13 @@ extension on PresentationElement {
     SelectInputElement() => true,
     _ => true,
   };
+}
+
+extension on StatusAppearance {
+  List<TypeDiagnostic> _validateLabel() =>
+      label != null && label!.resultType is! StringType
+      ? [_invalid("Status label must declare a string result")]
+      : const [];
 }
 
 extension on TextInputFormat {

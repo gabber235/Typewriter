@@ -7824,6 +7824,1601 @@ class ProgressContent private constructor(
     }
 }
 
+/** Deeply immutable. */
+sealed class StatusTone private constructor() {
+    /** The kind of variant held by a `StatusTone`. */
+    enum class Kind {
+        UNKNOWN,
+        NEUTRAL_CONST,
+        UNKNOWN_STATUS_CONST,
+        INFORMATION_CONST,
+        SUCCESS_CONST,
+        WARNING_CONST,
+        DANGER_CONST,
+        ACTIVE_CONST,
+        INACTIVE_CONST,
+        ONLINE_CONST,
+        OFFLINE_CONST,
+        PENDING_CONST,
+        IN_PROGRESS_CONST,
+        PAUSED_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.StatusTone.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.StatusTone>?,
+    ) : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object NEUTRAL : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.NEUTRAL_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.NEUTRAL_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.NEUTRAL_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object UNKNOWN_STATUS : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.UNKNOWN_STATUS_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.UNKNOWN_STATUS_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.UNKNOWN_STATUS_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object INFORMATION : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.INFORMATION_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.INFORMATION_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.INFORMATION_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object SUCCESS : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.SUCCESS_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.SUCCESS_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SUCCESS_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object WARNING : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.WARNING_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.WARNING_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.WARNING_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object DANGER : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.DANGER_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.DANGER_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DANGER_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object ACTIVE : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.ACTIVE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.ACTIVE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ACTIVE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object INACTIVE : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.INACTIVE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.INACTIVE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.INACTIVE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object ONLINE : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.ONLINE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.ONLINE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ONLINE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object OFFLINE : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.OFFLINE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.OFFLINE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.OFFLINE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object PENDING : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.PENDING_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.PENDING_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PENDING_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object IN_PROGRESS : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.IN_PROGRESS_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.IN_PROGRESS_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.IN_PROGRESS_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object PAUSED : skirout.editor.v1.presentation.StatusTone() {
+        override val kind get() = Kind.PAUSED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.StatusTone && other.kind == Kind.PAUSED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PAUSED_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.StatusTone>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.StatusTone._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [StatusTone].
+         * Default value for fields of type [StatusTone].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.StatusTone, Unknown>(
+                recordId = "editor/v1/presentation.skir:StatusTone",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [StatusTone] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [StatusTone] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            NEUTRAL;
+            UNKNOWN_STATUS;
+            INFORMATION;
+            SUCCESS;
+            WARNING;
+            DANGER;
+            ACTIVE;
+            INACTIVE;
+            ONLINE;
+            OFFLINE;
+            PENDING;
+            IN_PROGRESS;
+            PAUSED;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 14) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "neutral",
+                    Kind.NEUTRAL_CONST.ordinal,
+                    "",
+                    NEUTRAL,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "unknown_status",
+                    Kind.UNKNOWN_STATUS_CONST.ordinal,
+                    "",
+                    UNKNOWN_STATUS,
+                );
+                _serializerImpl.addConstantVariant(
+                    3,
+                    "information",
+                    Kind.INFORMATION_CONST.ordinal,
+                    "",
+                    INFORMATION,
+                );
+                _serializerImpl.addConstantVariant(
+                    4,
+                    "success",
+                    Kind.SUCCESS_CONST.ordinal,
+                    "",
+                    SUCCESS,
+                );
+                _serializerImpl.addConstantVariant(
+                    5,
+                    "warning",
+                    Kind.WARNING_CONST.ordinal,
+                    "",
+                    WARNING,
+                );
+                _serializerImpl.addConstantVariant(
+                    6,
+                    "danger",
+                    Kind.DANGER_CONST.ordinal,
+                    "",
+                    DANGER,
+                );
+                _serializerImpl.addConstantVariant(
+                    7,
+                    "active",
+                    Kind.ACTIVE_CONST.ordinal,
+                    "",
+                    ACTIVE,
+                );
+                _serializerImpl.addConstantVariant(
+                    8,
+                    "inactive",
+                    Kind.INACTIVE_CONST.ordinal,
+                    "",
+                    INACTIVE,
+                );
+                _serializerImpl.addConstantVariant(
+                    9,
+                    "online",
+                    Kind.ONLINE_CONST.ordinal,
+                    "",
+                    ONLINE,
+                );
+                _serializerImpl.addConstantVariant(
+                    10,
+                    "offline",
+                    Kind.OFFLINE_CONST.ordinal,
+                    "",
+                    OFFLINE,
+                );
+                _serializerImpl.addConstantVariant(
+                    11,
+                    "pending",
+                    Kind.PENDING_CONST.ordinal,
+                    "",
+                    PENDING,
+                );
+                _serializerImpl.addConstantVariant(
+                    12,
+                    "in_progress",
+                    Kind.IN_PROGRESS_CONST.ordinal,
+                    "",
+                    IN_PROGRESS,
+                );
+                _serializerImpl.addConstantVariant(
+                    13,
+                    "paused",
+                    Kind.PAUSED_CONST.ordinal,
+                    "",
+                    PAUSED,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface StatusAppearance_OrMutable {
+    val tone: skirout.editor.v1.presentation.StatusTone;
+    val label: skirout.editor.v1.expression.TypedExpression_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.StatusAppearance;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class StatusAppearance private constructor(
+    override val tone: skirout.editor.v1.presentation.StatusTone,
+    override val label: skirout.editor.v1.expression.TypedExpression?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusAppearance>? =
+        null,
+): skirout.editor.v1.presentation.StatusAppearance_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        tone: skirout.editor.v1.presentation.StatusTone,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusAppearance>? =
+            null,
+    ): this(
+        tone,
+        if (label != null) label.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        tone = this.tone,
+        label = this.label,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        tone: skirout.editor.v1.presentation.StatusTone =
+            this.tone,
+        label: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            this.label,
+    ) = skirout.editor.v1.presentation.StatusAppearance(
+        tone,
+        if (label != null) label.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.StatusAppearance && this.tone == other.tone && this.label == other.label);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.tone, this.label).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.StatusAppearance.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [StatusAppearance]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var tone: skirout.editor.v1.presentation.StatusTone =
+            skirout.editor.v1.presentation.StatusTone.UNKNOWN,
+        override var label: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusAppearance>? =
+            null,
+    ): skirout.editor.v1.presentation.StatusAppearance_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.StatusAppearance(
+            tone = this.tone,
+            label = this.label,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.StatusAppearance(
+                skirout.editor.v1.presentation.StatusTone.UNKNOWN,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [StatusAppearance].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            tone: skirout.editor.v1.presentation.StatusTone =
+                skirout.editor.v1.presentation.StatusTone.UNKNOWN,
+            label: skirout.editor.v1.expression.TypedExpression_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.StatusAppearance(
+            tone = tone,
+            label = label,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:StatusAppearance",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [StatusAppearance] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [StatusAppearance] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "tone",
+                "tone",
+                0,
+                skirout.editor.v1.presentation.StatusTone.serializer,
+                "",
+                { it.tone },
+                { mut, v -> mut.tone = v },
+            );
+            serializerImpl.addField(
+                "label",
+                "label",
+                1,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.expression.TypedExpression.serializer,
+                ),
+                "",
+                { it.label },
+                { mut, v -> mut.label = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface StatusCase_OrMutable {
+    val match: skirout.editor.v1.type_catalog.TypedValue;
+    val appearance: skirout.editor.v1.presentation.StatusAppearance_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.presentation.StatusCase;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class StatusCase private constructor(
+    override val match: skirout.editor.v1.type_catalog.TypedValue,
+    override val appearance: skirout.editor.v1.presentation.StatusAppearance,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusCase>? =
+        null,
+): skirout.editor.v1.presentation.StatusCase_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        match: skirout.editor.v1.type_catalog.TypedValue,
+        appearance: skirout.editor.v1.presentation.StatusAppearance_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusCase>? =
+            null,
+    ): this(
+        match,
+        appearance.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        match = this.match,
+        appearance = this.appearance,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        match: skirout.editor.v1.type_catalog.TypedValue =
+            this.match,
+        appearance: skirout.editor.v1.presentation.StatusAppearance_OrMutable =
+            this.appearance,
+    ) = skirout.editor.v1.presentation.StatusCase(
+        match,
+        appearance.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.StatusCase && this.match == other.match && this.appearance == other.appearance);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.match, this.appearance).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.StatusCase.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [StatusCase]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var match: skirout.editor.v1.type_catalog.TypedValue =
+            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        override var appearance: skirout.editor.v1.presentation.StatusAppearance_OrMutable =
+            skirout.editor.v1.presentation.StatusAppearance.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusCase>? =
+            null,
+    ): skirout.editor.v1.presentation.StatusCase_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.StatusCase(
+            match = this.match,
+            appearance = this.appearance,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [appearance] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [appearance] and returns it.
+         */
+        val mutableAppearance: skirout.editor.v1.presentation.StatusAppearance.Mutable get() {
+            var value = this.appearance;
+            return when (value) {
+                is skirout.editor.v1.presentation.StatusAppearance -> {
+                    value = value.toMutable();
+                    this.appearance = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.StatusAppearance.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.StatusCase(
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                skirout.editor.v1.presentation.StatusAppearance.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [StatusCase].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            match: skirout.editor.v1.type_catalog.TypedValue =
+                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            appearance: skirout.editor.v1.presentation.StatusAppearance_OrMutable =
+                skirout.editor.v1.presentation.StatusAppearance.partial(),
+        ) = skirout.editor.v1.presentation.StatusCase(
+            match = match,
+            appearance = appearance,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:StatusCase",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [StatusCase] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [StatusCase] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "match",
+                "match",
+                0,
+                skirout.editor.v1.type_catalog.TypedValue.serializer,
+                "",
+                { it.match },
+                { mut, v -> mut.match = v },
+            );
+            serializerImpl.addField(
+                "appearance",
+                "appearance",
+                1,
+                skirout.editor.v1.presentation.StatusAppearance.serializer,
+                "",
+                { it.appearance },
+                { mut, v -> mut.appearance = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface StatusContent_OrMutable {
+    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val cases: kotlin.collections.List<skirout.editor.v1.presentation.StatusCase_OrMutable>;
+    val fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.presentation.StatusContent;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class StatusContent private constructor(
+    override val value: skirout.editor.v1.expression.TypedExpression,
+    override val cases: kotlin.collections.List<skirout.editor.v1.presentation.StatusCase>,
+    override val fallback: skirout.editor.v1.presentation.StatusAppearance?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusContent>? =
+        null,
+): skirout.editor.v1.presentation.StatusContent_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.StatusCase_OrMutable>,
+        fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusContent>? =
+            null,
+    ): this(
+        value.toFrozen(),
+        build.skir.internal.toFrozenList(cases, { it.toFrozen() }),
+        if (fallback != null) fallback.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+        cases = this.cases,
+        fallback = this.fallback,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.value,
+        cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.StatusCase_OrMutable> =
+            this.cases,
+        fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable? =
+            this.fallback,
+    ) = skirout.editor.v1.presentation.StatusContent(
+        value.toFrozen(),
+        build.skir.internal.toFrozenList(cases, { it.toFrozen() }),
+        if (fallback != null) fallback.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.StatusContent && this.value == other.value && this.cases == other.cases && this.fallback == other.fallback);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.cases, this.fallback).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.StatusContent.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [StatusContent]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var cases: kotlin.collections.List<skirout.editor.v1.presentation.StatusCase_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.StatusCase>(),
+        override var fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.StatusContent>? =
+            null,
+    ): skirout.editor.v1.presentation.StatusContent_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.StatusContent(
+            value = this.value,
+            cases = this.cases,
+            fallback = this.fallback,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [value] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+         */
+        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.value;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.value = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [cases] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
+         */
+        val mutableCases: kotlin.collections.MutableList<skirout.editor.v1.presentation.StatusCase_OrMutable> get() {
+            var value = this.cases;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.cases = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.StatusContent(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.StatusCase>(),
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [StatusContent].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.StatusCase_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.StatusCase>(),
+            fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable? =
+                null,
+        ) = skirout.editor.v1.presentation.StatusContent(
+            value = value,
+            cases = cases,
+            fallback = fallback,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:StatusContent",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [StatusContent] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [StatusContent] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.addField(
+                "cases",
+                "cases",
+                1,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.presentation.StatusCase.serializer,
+                ),
+                "",
+                { it.cases },
+                { mut, v -> mut.cases = v },
+            );
+            serializerImpl.addField(
+                "fallback",
+                "fallback",
+                2,
+                build.skir.Serializers.optional(
+                    skirout.editor.v1.presentation.StatusAppearance.serializer,
+                ),
+                "",
+                { it.fallback },
+                { mut, v -> mut.fallback = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class DateTimeZone private constructor() {
+    /** The kind of variant held by a `DateTimeZone`. */
+    enum class Kind {
+        UNKNOWN,
+        LOCAL_CONST,
+        UTC_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.DateTimeZone.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.DateTimeZone>?,
+    ) : skirout.editor.v1.presentation.DateTimeZone() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.DateTimeZone && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object LOCAL : skirout.editor.v1.presentation.DateTimeZone() {
+        override val kind get() = Kind.LOCAL_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.DateTimeZone && other.kind == Kind.LOCAL_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.LOCAL_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object UTC : skirout.editor.v1.presentation.DateTimeZone() {
+        override val kind get() = Kind.UTC_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.DateTimeZone && other.kind == Kind.UTC_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.UTC_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.DateTimeZone>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DateTimeZone._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [DateTimeZone].
+         * Default value for fields of type [DateTimeZone].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.DateTimeZone, Unknown>(
+                recordId = "editor/v1/presentation.skir:DateTimeZone",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [DateTimeZone] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [DateTimeZone] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            LOCAL;
+            UTC;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 3) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "local",
+                    Kind.LOCAL_CONST.ordinal,
+                    "",
+                    LOCAL,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "utc",
+                    Kind.UTC_CONST.ordinal,
+                    "",
+                    UTC,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface DateTimeContent_OrMutable {
+    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val format: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val timeZone: skirout.editor.v1.presentation.DateTimeZone;
+
+    fun toFrozen(): skirout.editor.v1.presentation.DateTimeContent;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DateTimeContent private constructor(
+    override val value: skirout.editor.v1.expression.TypedExpression,
+    override val format: skirout.editor.v1.expression.TypedExpression,
+    override val timeZone: skirout.editor.v1.presentation.DateTimeZone,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeContent>? =
+        null,
+): skirout.editor.v1.presentation.DateTimeContent_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        format: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        timeZone: skirout.editor.v1.presentation.DateTimeZone,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeContent>? =
+            null,
+    ): this(
+        value.toFrozen(),
+        format.toFrozen(),
+        timeZone,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+        format = this.format,
+        timeZone = this.timeZone,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.value,
+        format: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.format,
+        timeZone: skirout.editor.v1.presentation.DateTimeZone =
+            this.timeZone,
+    ) = skirout.editor.v1.presentation.DateTimeContent(
+        value.toFrozen(),
+        format.toFrozen(),
+        timeZone,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.DateTimeContent && this.value == other.value && this.format == other.format && this.timeZone == other.timeZone);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.format, this.timeZone).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.DateTimeContent.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DateTimeContent]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var format: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var timeZone: skirout.editor.v1.presentation.DateTimeZone =
+            skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.DateTimeContent>? =
+            null,
+    ): skirout.editor.v1.presentation.DateTimeContent_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.DateTimeContent(
+            value = this.value,
+            format = this.format,
+            timeZone = this.timeZone,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [value] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+         */
+        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.value;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.value = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [format] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [format] and returns it.
+         */
+        val mutableFormat: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.format;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.format = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.DateTimeContent(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DateTimeContent].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            format: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            timeZone: skirout.editor.v1.presentation.DateTimeZone =
+                skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+        ) = skirout.editor.v1.presentation.DateTimeContent(
+            value = value,
+            format = format,
+            timeZone = timeZone,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:DateTimeContent",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DateTimeContent] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DateTimeContent] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.addField(
+                "format",
+                "format",
+                1,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.format },
+                { mut, v -> mut.format = v },
+            );
+            serializerImpl.addField(
+                "time_zone",
+                "timeZone",
+                2,
+                skirout.editor.v1.presentation.DateTimeZone.serializer,
+                "",
+                { it.timeZone },
+                { mut, v -> mut.timeZone = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class RelativeTimeStyle private constructor() {
+    /** The kind of variant held by a `RelativeTimeStyle`. */
+    enum class Kind {
+        UNKNOWN,
+        COMPACT_CONST,
+        NATURAL_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.RelativeTimeStyle.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.RelativeTimeStyle>?,
+    ) : skirout.editor.v1.presentation.RelativeTimeStyle() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.RelativeTimeStyle && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object COMPACT : skirout.editor.v1.presentation.RelativeTimeStyle() {
+        override val kind get() = Kind.COMPACT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.RelativeTimeStyle && other.kind == Kind.COMPACT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.COMPACT_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object NATURAL : skirout.editor.v1.presentation.RelativeTimeStyle() {
+        override val kind get() = Kind.NATURAL_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.RelativeTimeStyle && other.kind == Kind.NATURAL_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.NATURAL_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.RelativeTimeStyle>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.RelativeTimeStyle._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [RelativeTimeStyle].
+         * Default value for fields of type [RelativeTimeStyle].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.RelativeTimeStyle, Unknown>(
+                recordId = "editor/v1/presentation.skir:RelativeTimeStyle",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [RelativeTimeStyle] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [RelativeTimeStyle] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            COMPACT;
+            NATURAL;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 3) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "compact",
+                    Kind.COMPACT_CONST.ordinal,
+                    "",
+                    COMPACT,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "natural",
+                    Kind.NATURAL_CONST.ordinal,
+                    "",
+                    NATURAL,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface RelativeTimeContent_OrMutable {
+    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val style: skirout.editor.v1.presentation.RelativeTimeStyle;
+    val timeZone: skirout.editor.v1.presentation.DateTimeZone;
+
+    fun toFrozen(): skirout.editor.v1.presentation.RelativeTimeContent;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RelativeTimeContent private constructor(
+    override val value: skirout.editor.v1.expression.TypedExpression,
+    override val style: skirout.editor.v1.presentation.RelativeTimeStyle,
+    override val timeZone: skirout.editor.v1.presentation.DateTimeZone,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RelativeTimeContent>? =
+        null,
+): skirout.editor.v1.presentation.RelativeTimeContent_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        style: skirout.editor.v1.presentation.RelativeTimeStyle,
+        timeZone: skirout.editor.v1.presentation.DateTimeZone,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RelativeTimeContent>? =
+            null,
+    ): this(
+        value.toFrozen(),
+        style,
+        timeZone,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+        style = this.style,
+        timeZone = this.timeZone,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            this.value,
+        style: skirout.editor.v1.presentation.RelativeTimeStyle =
+            this.style,
+        timeZone: skirout.editor.v1.presentation.DateTimeZone =
+            this.timeZone,
+    ) = skirout.editor.v1.presentation.RelativeTimeContent(
+        value.toFrozen(),
+        style,
+        timeZone,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.RelativeTimeContent && this.value == other.value && this.style == other.style && this.timeZone == other.timeZone);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.style, this.timeZone).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.RelativeTimeContent.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [RelativeTimeContent]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var style: skirout.editor.v1.presentation.RelativeTimeStyle =
+            skirout.editor.v1.presentation.RelativeTimeStyle.UNKNOWN,
+        override var timeZone: skirout.editor.v1.presentation.DateTimeZone =
+            skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RelativeTimeContent>? =
+            null,
+    ): skirout.editor.v1.presentation.RelativeTimeContent_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.RelativeTimeContent(
+            value = this.value,
+            style = this.style,
+            timeZone = this.timeZone,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [value] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+         */
+        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
+            var value = this.value;
+            return when (value) {
+                is skirout.editor.v1.expression.TypedExpression -> {
+                    value = value.toMutable();
+                    this.value = value;
+                    return value;
+                }
+                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.RelativeTimeContent(
+                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.presentation.RelativeTimeStyle.UNKNOWN,
+                skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RelativeTimeContent].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+                skirout.editor.v1.expression.TypedExpression.partial(),
+            style: skirout.editor.v1.presentation.RelativeTimeStyle =
+                skirout.editor.v1.presentation.RelativeTimeStyle.UNKNOWN,
+            timeZone: skirout.editor.v1.presentation.DateTimeZone =
+                skirout.editor.v1.presentation.DateTimeZone.UNKNOWN,
+        ) = skirout.editor.v1.presentation.RelativeTimeContent(
+            value = value,
+            style = style,
+            timeZone = timeZone,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:RelativeTimeContent",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [RelativeTimeContent] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [RelativeTimeContent] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                skirout.editor.v1.expression.TypedExpression.serializer,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.addField(
+                "style",
+                "style",
+                1,
+                skirout.editor.v1.presentation.RelativeTimeStyle.serializer,
+                "",
+                { it.style },
+                { mut, v -> mut.style = v },
+            );
+            serializerImpl.addField(
+                "time_zone",
+                "timeZone",
+                2,
+                skirout.editor.v1.presentation.DateTimeZone.serializer,
+                "",
+                { it.timeZone },
+                { mut, v -> mut.timeZone = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface TypedFieldElement_OrMutable {
     val binding: skirout.editor.v1.binding.BindingRef_OrMutable;
     val expectedType: skirout.editor.v1.type_catalog.TypeExpression;
@@ -24872,6 +26467,9 @@ sealed class PresentationElement private constructor() {
         BADGE_WRAPPER,
         CHIP_WRAPPER,
         PROGRESS_WRAPPER,
+        STATUS_WRAPPER,
+        DATE_TIME_WRAPPER,
+        RELATIVE_TIME_WRAPPER,
         TYPED_FIELD_WRAPPER,
         CONDITIONAL_WRAPPER,
         REPEATED_WRAPPER,
@@ -25167,6 +26765,60 @@ sealed class PresentationElement private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1001078227;
+        }
+    }
+
+    class StatusWrapper private constructor (
+        val value: skirout.editor.v1.presentation.StatusContent,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.StatusContent_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.STATUS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.StatusWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -892481550;
+        }
+    }
+
+    class DateTimeWrapper private constructor (
+        val value: skirout.editor.v1.presentation.DateTimeContent,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.DateTimeContent_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.DATE_TIME_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.DateTimeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -248858434;
+        }
+    }
+
+    class RelativeTimeWrapper private constructor (
+        val value: skirout.editor.v1.presentation.RelativeTimeContent,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.RelativeTimeContent_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.RELATIVE_TIME_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.RelativeTimeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 2114318432;
         }
     }
 
@@ -25982,6 +27634,54 @@ sealed class PresentationElement private constructor() {
             )
         );
 
+        /** Shortcut for `StatusWrapper(skirout.editor.v1.presentation.StatusContent(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStatus(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            cases: kotlin.collections.Iterable<skirout.editor.v1.presentation.StatusCase_OrMutable>,
+            fallback: skirout.editor.v1.presentation.StatusAppearance_OrMutable?,
+        ) = StatusWrapper(
+            skirout.editor.v1.presentation.StatusContent(
+                value = value,
+                cases = cases,
+                fallback = fallback,
+            )
+        );
+
+        /** Shortcut for `DateTimeWrapper(skirout.editor.v1.presentation.DateTimeContent(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createDateTime(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            format: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            timeZone: skirout.editor.v1.presentation.DateTimeZone,
+        ) = DateTimeWrapper(
+            skirout.editor.v1.presentation.DateTimeContent(
+                value = value,
+                format = format,
+                timeZone = timeZone,
+            )
+        );
+
+        /** Shortcut for `RelativeTimeWrapper(skirout.editor.v1.presentation.RelativeTimeContent(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRelativeTime(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            style: skirout.editor.v1.presentation.RelativeTimeStyle,
+            timeZone: skirout.editor.v1.presentation.DateTimeZone,
+        ) = RelativeTimeWrapper(
+            skirout.editor.v1.presentation.RelativeTimeContent(
+                value = value,
+                style = style,
+                timeZone = timeZone,
+            )
+        );
+
         /** Shortcut for `TypedFieldWrapper(skirout.editor.v1.presentation.TypedFieldElement(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createTypedField(
@@ -26693,6 +28393,33 @@ sealed class PresentationElement private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     15,
+                    "status",
+                    Kind.STATUS_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.StatusContent.serializer,
+                    "",
+                    { StatusWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    16,
+                    "date_time",
+                    Kind.DATE_TIME_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.DateTimeContent.serializer,
+                    "",
+                    { DateTimeWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    17,
+                    "relative_time",
+                    Kind.RELATIVE_TIME_WRAPPER.ordinal,
+                    skirout.editor.v1.presentation.RelativeTimeContent.serializer,
+                    "",
+                    { RelativeTimeWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    18,
                     "typed_field",
                     Kind.TYPED_FIELD_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TypedFieldElement.serializer,
@@ -26701,7 +28428,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    16,
+                    19,
                     "conditional",
                     Kind.CONDITIONAL_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ConditionalElement.serializer,
@@ -26710,7 +28437,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    17,
+                    20,
                     "repeated",
                     Kind.REPEATED_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RepeatedElement.serializer,
@@ -26719,7 +28446,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    18,
+                    21,
                     "scoped_binding",
                     Kind.SCOPED_BINDING_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ScopedBindingElement.serializer,
@@ -26728,7 +28455,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    19,
+                    22,
                     "text_input",
                     Kind.TEXT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TextControl.serializer,
@@ -26737,7 +28464,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    20,
+                    23,
                     "numeric_input",
                     Kind.NUMERIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26746,7 +28473,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    21,
+                    24,
                     "toggle_input",
                     Kind.TOGGLE_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26755,7 +28482,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    22,
+                    25,
                     "select_input",
                     Kind.SELECT_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SelectControl.serializer,
@@ -26764,7 +28491,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    23,
+                    26,
                     "slider_input",
                     Kind.SLIDER_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SliderControl.serializer,
@@ -26773,7 +28500,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    24,
+                    27,
                     "date_time_input",
                     Kind.DATE_TIME_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.DateTimeControl.serializer,
@@ -26782,7 +28509,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    25,
+                    28,
                     "duration_input",
                     Kind.DURATION_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26791,7 +28518,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    26,
+                    29,
                     "color_input",
                     Kind.COLOR_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ColorControl.serializer,
@@ -26800,7 +28527,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    27,
+                    30,
                     "bytes_input",
                     Kind.BYTES_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26809,7 +28536,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    28,
+                    31,
                     "named_input",
                     Kind.NAMED_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26818,7 +28545,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    29,
+                    32,
                     "button",
                     Kind.BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ButtonElement.serializer,
@@ -26827,7 +28554,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    30,
+                    33,
                     "icon_button",
                     Kind.ICON_BUTTON_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.IconButtonElement.serializer,
@@ -26836,7 +28563,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    31,
+                    34,
                     "menu",
                     Kind.MENU_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MenuElement.serializer,
@@ -26845,7 +28572,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    32,
+                    35,
                     "tooltip",
                     Kind.TOOLTIP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.TooltipElement.serializer,
@@ -26854,7 +28581,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    33,
+                    36,
                     "list_input",
                     Kind.LIST_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ListControl.serializer,
@@ -26863,7 +28590,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    34,
+                    37,
                     "map_input",
                     Kind.MAP_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.MapControl.serializer,
@@ -26872,7 +28599,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    35,
+                    38,
                     "record_input",
                     Kind.RECORD_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.RecordControl.serializer,
@@ -26881,7 +28608,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    36,
+                    39,
                     "enum_input",
                     Kind.ENUM_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.BoundControl.serializer,
@@ -26890,7 +28617,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    37,
+                    40,
                     "polymorphic_input",
                     Kind.POLYMORPHIC_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PolymorphicControl.serializer,
@@ -26899,7 +28626,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    38,
+                    41,
                     "default_presentation",
                     Kind.DEFAULT_PRESENTATION_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.DefaultPresentationElement.serializer,
@@ -26908,7 +28635,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    39,
+                    42,
                     "search_input",
                     Kind.SEARCH_INPUT_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.SearchControl.serializer,
@@ -26917,7 +28644,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    40,
+                    43,
                     "collection_lookup",
                     Kind.COLLECTION_LOOKUP_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.CollectionLookupElement.serializer,
@@ -26926,7 +28653,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    41,
+                    44,
                     "collection_graph",
                     Kind.COLLECTION_GRAPH_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.CollectionGraphElement.serializer,
@@ -26935,7 +28662,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    42,
+                    45,
                     "container",
                     Kind.CONTAINER_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ContainerLayout.serializer,
@@ -26944,7 +28671,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    43,
+                    46,
                     "anchor",
                     Kind.ANCHOR_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PresentationAnchorLayout.serializer,
@@ -26953,7 +28680,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    44,
+                    47,
                     "connection_layer",
                     Kind.CONNECTION_LAYER_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.ConnectionLayerLayout.serializer,
@@ -26962,7 +28689,7 @@ sealed class PresentationElement private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    45,
+                    48,
                     "polymorphic_match",
                     Kind.POLYMORPHIC_MATCH_WRAPPER.ordinal,
                     skirout.editor.v1.presentation.PolymorphicMatchElement.serializer,

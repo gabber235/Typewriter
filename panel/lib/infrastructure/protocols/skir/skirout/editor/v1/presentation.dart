@@ -6677,6 +6677,1215 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// enum StatusTone
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case StatusTone_unknown(): { ... }
+///     case StatusTone.neutral: { ... }
+///     case StatusTone.unknownStatus: { ... }
+///     case StatusTone.information: { ... }
+///     case StatusTone.success: { ... }
+///     case StatusTone.warning: { ... }
+///     case StatusTone.danger: { ... }
+///     case StatusTone.active: { ... }
+///     case StatusTone.inactive: { ... }
+///     case StatusTone.online: { ... }
+///     case StatusTone.offline: { ... }
+///     case StatusTone.pending: { ... }
+///     case StatusTone.inProgress: { ... }
+///     case StatusTone.paused: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class StatusTone {
+  /// Constant indicating an unknown `StatusTone`.
+  /// Default value for fields of type `StatusTone`.
+  static const StatusTone unknown = StatusTone_unknown._instance;
+
+  static const neutral = _StatusTone_consts.neutralConst;
+  static const unknownStatus = _StatusTone_consts.unknownStatusConst;
+  static const information = _StatusTone_consts.informationConst;
+  static const success = _StatusTone_consts.successConst;
+  static const warning = _StatusTone_consts.warningConst;
+  static const danger = _StatusTone_consts.dangerConst;
+  static const active = _StatusTone_consts.activeConst;
+  static const inactive = _StatusTone_consts.inactiveConst;
+  static const online = _StatusTone_consts.onlineConst;
+  static const offline = _StatusTone_consts.offlineConst;
+  static const pending = _StatusTone_consts.pendingConst;
+  static const inProgress = _StatusTone_consts.inProgressConst;
+  static const paused = _StatusTone_consts.pausedConst;
+
+  /// Returns the kind of variant held by this StatusTone.
+  StatusTone_kind get kind;
+
+  /// Serializer for `StatusTone` instances.
+  static _skir.EnumSerializer<StatusTone> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "neutral",
+        "neutral",
+        "",
+        neutral,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "unknown_status",
+        "unknownStatus",
+        "",
+        unknownStatus,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "information",
+        "information",
+        "",
+        information,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "success",
+        "success",
+        "",
+        success,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
+        "warning",
+        "warning",
+        "",
+        warning,
+      );
+      _serializerBuilder.addConstantVariant(
+        6,
+        "danger",
+        "danger",
+        "",
+        danger,
+      );
+      _serializerBuilder.addConstantVariant(
+        7,
+        "active",
+        "active",
+        "",
+        active,
+      );
+      _serializerBuilder.addConstantVariant(
+        8,
+        "inactive",
+        "inactive",
+        "",
+        inactive,
+      );
+      _serializerBuilder.addConstantVariant(
+        9,
+        "online",
+        "online",
+        "",
+        online,
+      );
+      _serializerBuilder.addConstantVariant(
+        10,
+        "offline",
+        "offline",
+        "",
+        offline,
+      );
+      _serializerBuilder.addConstantVariant(
+        11,
+        "pending",
+        "pending",
+        "",
+        pending,
+      );
+      _serializerBuilder.addConstantVariant(
+        12,
+        "in_progress",
+        "inProgress",
+        "",
+        inProgress,
+      );
+      _serializerBuilder.addConstantVariant(
+        13,
+        "paused",
+        "paused",
+        "",
+        paused,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:StatusTone",
+    doc: "",
+    unknownInstance: StatusTone_unknown._instance,
+    enumInstance: StatusTone.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: StatusTone_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `StatusTone`.
+enum StatusTone_kind {
+  unknown(0),
+  neutralConst(1),
+  unknownStatusConst(2),
+  informationConst(3),
+  successConst(4),
+  warningConst(5),
+  dangerConst(6),
+  activeConst(7),
+  inactiveConst(8),
+  onlineConst(9),
+  offlineConst(10),
+  pendingConst(11),
+  inProgressConst(12),
+  pausedConst(13);
+
+  final _core.int _ordinal;
+
+  const StatusTone_kind(this._ordinal);
+}
+
+final class StatusTone_unknown implements StatusTone {
+  static const _instance = StatusTone_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const StatusTone_unknown._() : _u = null;
+  StatusTone_unknown._unrecognized(this._u);
+
+  @_core.override
+  StatusTone_kind get kind => StatusTone_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is StatusTone_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, StatusTone.serializer);
+}
+
+enum _StatusTone_consts implements StatusTone {
+  neutralConst(StatusTone_kind.neutralConst),
+  unknownStatusConst(StatusTone_kind.unknownStatusConst),
+  informationConst(StatusTone_kind.informationConst),
+  successConst(StatusTone_kind.successConst),
+  warningConst(StatusTone_kind.warningConst),
+  dangerConst(StatusTone_kind.dangerConst),
+  activeConst(StatusTone_kind.activeConst),
+  inactiveConst(StatusTone_kind.inactiveConst),
+  onlineConst(StatusTone_kind.onlineConst),
+  offlineConst(StatusTone_kind.offlineConst),
+  pendingConst(StatusTone_kind.pendingConst),
+  inProgressConst(StatusTone_kind.inProgressConst),
+  pausedConst(StatusTone_kind.pausedConst);
+
+  @_core.override
+  final StatusTone_kind kind;
+
+  const _StatusTone_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, StatusTone.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct StatusAppearance
+// -----------------------------------------------------------------------------
+
+sealed class StatusAppearance_orMutable {
+  StatusTone get tone;
+  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
+
+  StatusAppearance toFrozen();
+}
+
+/// Deeply immutable.
+final class StatusAppearance implements StatusAppearance_orMutable {
+  @_core.override
+  final StatusTone tone;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression? label;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory StatusAppearance({
+    required StatusTone tone,
+    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+  }) => StatusAppearance._(
+    tone,
+    (label != null) ? label.toFrozen() : null,
+  );
+
+  StatusAppearance._(
+    this.tone,
+    this.label,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = StatusAppearance._(
+    StatusTone.unknown,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static StatusAppearance_mutable mutable() => StatusAppearance_mutable._(
+    StatusTone.unknown,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  StatusAppearance toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  StatusAppearance_mutable toMutable() => StatusAppearance_mutable._(
+    this.tone,
+    this.label,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! StatusAppearance) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.tone,
+    this.label,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `StatusAppearance` instances.
+  static _skir.StructSerializer<StatusAppearance, StatusAppearance_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "tone",
+        "tone",
+        0,
+        StatusTone.serializer,
+        "",
+        (it) => it.tone,
+        (it, v) => it.tone = v,
+      );
+      _serializerBuilder.addField(
+        "label",
+        "label",
+        1,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.TypedExpression.serializer,
+        ),
+        "",
+        (it) => it.label,
+        (it, v) => it.label = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:StatusAppearance",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (StatusAppearance_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [StatusAppearance].
+final class StatusAppearance_mutable implements StatusAppearance_orMutable {
+  StatusTone tone;
+  _lib_editor_v1_expression.TypedExpression_orMutable? label;
+  _skir.internal__UnrecognizedFields? _u;
+
+  StatusAppearance_mutable._(
+    this.tone,
+    this.label,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  StatusAppearance toFrozen() => StatusAppearance(
+    tone: this.tone,
+    label: this.label,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct StatusCase
+// -----------------------------------------------------------------------------
+
+sealed class StatusCase_orMutable {
+  _lib_editor_v1_type_catalog.TypedValue get match;
+  StatusAppearance_orMutable get appearance;
+
+  StatusCase toFrozen();
+}
+
+/// Deeply immutable.
+final class StatusCase implements StatusCase_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypedValue match;
+  @_core.override
+  final StatusAppearance appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory StatusCase({
+    required _lib_editor_v1_type_catalog.TypedValue match,
+    required StatusAppearance_orMutable appearance,
+  }) => StatusCase._(
+    match,
+    appearance.toFrozen(),
+  );
+
+  StatusCase._(
+    this.match,
+    this.appearance,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = StatusCase._(
+    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    StatusAppearance.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static StatusCase_mutable mutable() => StatusCase_mutable._(
+    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    StatusAppearance.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  StatusCase toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  StatusCase_mutable toMutable() => StatusCase_mutable._(
+    this.match,
+    this.appearance,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! StatusCase) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.match,
+    this.appearance,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `StatusCase` instances.
+  static _skir.StructSerializer<StatusCase, StatusCase_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "match",
+        "match",
+        0,
+        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        "",
+        (it) => it.match,
+        (it, v) => it.match = v,
+      );
+      _serializerBuilder.addField(
+        "appearance",
+        "appearance",
+        1,
+        StatusAppearance.serializer,
+        "",
+        (it) => it.appearance,
+        (it, v) => it.appearance = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:StatusCase",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (StatusCase_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [StatusCase].
+final class StatusCase_mutable implements StatusCase_orMutable {
+  _lib_editor_v1_type_catalog.TypedValue match;
+  StatusAppearance_orMutable appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  StatusCase_mutable._(
+    this.match,
+    this.appearance,
+  );
+
+  /// If the value of [appearance] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [appearance] and returns it.
+  StatusAppearance_mutable get mutableAppearance {
+    final value = this.appearance;
+    if (value is StatusAppearance_mutable) {
+      return value;
+    } else {
+      return this.appearance = (value as StatusAppearance).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  StatusCase toFrozen() => StatusCase(
+    match: this.match,
+    appearance: this.appearance,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct StatusContent
+// -----------------------------------------------------------------------------
+
+sealed class StatusContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _core.Iterable<StatusCase_orMutable> get cases;
+  StatusAppearance_orMutable? get fallback;
+
+  StatusContent toFrozen();
+}
+
+/// Deeply immutable.
+final class StatusContent implements StatusContent_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression value;
+  @_core.override
+  final _core.Iterable<StatusCase> cases;
+  @_core.override
+  final StatusAppearance? fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory StatusContent({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _core.Iterable<StatusCase_orMutable> cases,
+    required StatusAppearance_orMutable? fallback,
+  }) => StatusContent._(
+    value.toFrozen(),
+    _skir.internal__frozenMappedCopy(cases, (it) => it.toFrozen()),
+    (fallback != null) ? fallback.toFrozen() : null,
+  );
+
+  StatusContent._(
+    this.value,
+    this.cases,
+    this.fallback,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = StatusContent._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _skir.KeyedIterable.empty,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static StatusContent_mutable mutable() => StatusContent_mutable._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _skir.KeyedIterable.empty,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  StatusContent toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  StatusContent_mutable toMutable() => StatusContent_mutable._(
+    this.value,
+    this.cases,
+    this.fallback,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! StatusContent) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+    this.cases,
+    this.fallback,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `StatusContent` instances.
+  static _skir.StructSerializer<StatusContent, StatusContent_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.addField(
+        "cases",
+        "cases",
+        1,
+        _skir.Serializers.iterable(
+          StatusCase.serializer,
+        ),
+        "",
+        (it) => it.cases,
+        (it, v) => it.cases = v,
+      );
+      _serializerBuilder.addField(
+        "fallback",
+        "fallback",
+        2,
+        _skir.Serializers.optional(
+          StatusAppearance.serializer,
+        ),
+        "",
+        (it) => it.fallback,
+        (it, v) => it.fallback = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:StatusContent",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (StatusContent_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [StatusContent].
+final class StatusContent_mutable implements StatusContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _core.Iterable<StatusCase_orMutable> cases;
+  StatusAppearance_orMutable? fallback;
+  _skir.internal__UnrecognizedFields? _u;
+
+  StatusContent_mutable._(
+    this.value,
+    this.cases,
+    this.fallback,
+  );
+
+  /// If the value of [value] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
+    final value = this.value;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// If the value of [cases] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
+  _core.List<StatusCase_orMutable> get mutableCases {
+    final value = this.cases;
+    if (value is _skir.internal__MutableList<StatusCase_orMutable>) {
+      return value;
+    } else {
+      return this.cases = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  StatusContent toFrozen() => StatusContent(
+    value: this.value,
+    cases: this.cases,
+    fallback: this.fallback,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum DateTimeZone
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case DateTimeZone_unknown(): { ... }
+///     case DateTimeZone.local: { ... }
+///     case DateTimeZone.utc: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class DateTimeZone {
+  /// Constant indicating an unknown `DateTimeZone`.
+  /// Default value for fields of type `DateTimeZone`.
+  static const DateTimeZone unknown = DateTimeZone_unknown._instance;
+
+  static const local = _DateTimeZone_consts.localConst;
+  static const utc = _DateTimeZone_consts.utcConst;
+
+  /// Returns the kind of variant held by this DateTimeZone.
+  DateTimeZone_kind get kind;
+
+  /// Serializer for `DateTimeZone` instances.
+  static _skir.EnumSerializer<DateTimeZone> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "local",
+        "local",
+        "",
+        local,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "utc",
+        "utc",
+        "",
+        utc,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:DateTimeZone",
+    doc: "",
+    unknownInstance: DateTimeZone_unknown._instance,
+    enumInstance: DateTimeZone.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: DateTimeZone_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `DateTimeZone`.
+enum DateTimeZone_kind {
+  unknown(0),
+  localConst(1),
+  utcConst(2);
+
+  final _core.int _ordinal;
+
+  const DateTimeZone_kind(this._ordinal);
+}
+
+final class DateTimeZone_unknown implements DateTimeZone {
+  static const _instance = DateTimeZone_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const DateTimeZone_unknown._() : _u = null;
+  DateTimeZone_unknown._unrecognized(this._u);
+
+  @_core.override
+  DateTimeZone_kind get kind => DateTimeZone_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is DateTimeZone_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, DateTimeZone.serializer);
+}
+
+enum _DateTimeZone_consts implements DateTimeZone {
+  localConst(DateTimeZone_kind.localConst),
+  utcConst(DateTimeZone_kind.utcConst);
+
+  @_core.override
+  final DateTimeZone_kind kind;
+
+  const _DateTimeZone_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, DateTimeZone.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct DateTimeContent
+// -----------------------------------------------------------------------------
+
+sealed class DateTimeContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _lib_editor_v1_expression.TypedExpression_orMutable get format;
+  DateTimeZone get timeZone;
+
+  DateTimeContent toFrozen();
+}
+
+/// Deeply immutable.
+final class DateTimeContent implements DateTimeContent_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression value;
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression format;
+  @_core.override
+  final DateTimeZone timeZone;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DateTimeContent({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.TypedExpression_orMutable format,
+    required DateTimeZone timeZone,
+  }) => DateTimeContent._(
+    value.toFrozen(),
+    format.toFrozen(),
+    timeZone,
+  );
+
+  DateTimeContent._(
+    this.value,
+    this.format,
+    this.timeZone,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DateTimeContent._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    DateTimeZone.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DateTimeContent_mutable mutable() => DateTimeContent_mutable._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    DateTimeZone.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DateTimeContent toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DateTimeContent_mutable toMutable() => DateTimeContent_mutable._(
+    this.value,
+    this.format,
+    this.timeZone,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DateTimeContent) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+    this.format,
+    this.timeZone,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DateTimeContent` instances.
+  static _skir.StructSerializer<DateTimeContent, DateTimeContent_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.addField(
+        "format",
+        "format",
+        1,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.format,
+        (it, v) => it.format = v,
+      );
+      _serializerBuilder.addField(
+        "time_zone",
+        "timeZone",
+        2,
+        DateTimeZone.serializer,
+        "",
+        (it) => it.timeZone,
+        (it, v) => it.timeZone = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:DateTimeContent",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DateTimeContent_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DateTimeContent].
+final class DateTimeContent_mutable implements DateTimeContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _lib_editor_v1_expression.TypedExpression_orMutable format;
+  DateTimeZone timeZone;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DateTimeContent_mutable._(
+    this.value,
+    this.format,
+    this.timeZone,
+  );
+
+  /// If the value of [value] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
+    final value = this.value;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// If the value of [format] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [format] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableFormat {
+    final value = this.format;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.format = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DateTimeContent toFrozen() => DateTimeContent(
+    value: this.value,
+    format: this.format,
+    timeZone: this.timeZone,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum RelativeTimeStyle
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case RelativeTimeStyle_unknown(): { ... }
+///     case RelativeTimeStyle.compact: { ... }
+///     case RelativeTimeStyle.natural: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class RelativeTimeStyle {
+  /// Constant indicating an unknown `RelativeTimeStyle`.
+  /// Default value for fields of type `RelativeTimeStyle`.
+  static const RelativeTimeStyle unknown = RelativeTimeStyle_unknown._instance;
+
+  static const compact = _RelativeTimeStyle_consts.compactConst;
+  static const natural = _RelativeTimeStyle_consts.naturalConst;
+
+  /// Returns the kind of variant held by this RelativeTimeStyle.
+  RelativeTimeStyle_kind get kind;
+
+  /// Serializer for `RelativeTimeStyle` instances.
+  static _skir.EnumSerializer<RelativeTimeStyle> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "compact",
+        "compact",
+        "",
+        compact,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "natural",
+        "natural",
+        "",
+        natural,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:RelativeTimeStyle",
+    doc: "",
+    unknownInstance: RelativeTimeStyle_unknown._instance,
+    enumInstance: RelativeTimeStyle.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: RelativeTimeStyle_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `RelativeTimeStyle`.
+enum RelativeTimeStyle_kind {
+  unknown(0),
+  compactConst(1),
+  naturalConst(2);
+
+  final _core.int _ordinal;
+
+  const RelativeTimeStyle_kind(this._ordinal);
+}
+
+final class RelativeTimeStyle_unknown implements RelativeTimeStyle {
+  static const _instance = RelativeTimeStyle_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const RelativeTimeStyle_unknown._() : _u = null;
+  RelativeTimeStyle_unknown._unrecognized(this._u);
+
+  @_core.override
+  RelativeTimeStyle_kind get kind => RelativeTimeStyle_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is RelativeTimeStyle_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, RelativeTimeStyle.serializer);
+}
+
+enum _RelativeTimeStyle_consts implements RelativeTimeStyle {
+  compactConst(RelativeTimeStyle_kind.compactConst),
+  naturalConst(RelativeTimeStyle_kind.naturalConst);
+
+  @_core.override
+  final RelativeTimeStyle_kind kind;
+
+  const _RelativeTimeStyle_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, RelativeTimeStyle.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct RelativeTimeContent
+// -----------------------------------------------------------------------------
+
+sealed class RelativeTimeContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  RelativeTimeStyle get style;
+  DateTimeZone get timeZone;
+
+  RelativeTimeContent toFrozen();
+}
+
+/// Deeply immutable.
+final class RelativeTimeContent implements RelativeTimeContent_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.TypedExpression value;
+  @_core.override
+  final RelativeTimeStyle style;
+  @_core.override
+  final DateTimeZone timeZone;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RelativeTimeContent({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required RelativeTimeStyle style,
+    required DateTimeZone timeZone,
+  }) => RelativeTimeContent._(
+    value.toFrozen(),
+    style,
+    timeZone,
+  );
+
+  RelativeTimeContent._(
+    this.value,
+    this.style,
+    this.timeZone,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RelativeTimeContent._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    RelativeTimeStyle.unknown,
+    DateTimeZone.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RelativeTimeContent_mutable mutable() => RelativeTimeContent_mutable._(
+    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    RelativeTimeStyle.unknown,
+    DateTimeZone.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RelativeTimeContent toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RelativeTimeContent_mutable toMutable() => RelativeTimeContent_mutable._(
+    this.value,
+    this.style,
+    this.timeZone,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RelativeTimeContent) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+    this.style,
+    this.timeZone,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RelativeTimeContent` instances.
+  static _skir.StructSerializer<RelativeTimeContent, RelativeTimeContent_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _lib_editor_v1_expression.TypedExpression.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.addField(
+        "style",
+        "style",
+        1,
+        RelativeTimeStyle.serializer,
+        "",
+        (it) => it.style,
+        (it, v) => it.style = v,
+      );
+      _serializerBuilder.addField(
+        "time_zone",
+        "timeZone",
+        2,
+        DateTimeZone.serializer,
+        "",
+        (it) => it.timeZone,
+        (it, v) => it.timeZone = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:RelativeTimeContent",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RelativeTimeContent_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RelativeTimeContent].
+final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable {
+  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  RelativeTimeStyle style;
+  DateTimeZone timeZone;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RelativeTimeContent_mutable._(
+    this.value,
+    this.style,
+    this.timeZone,
+  );
+
+  /// If the value of [value] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
+  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
+    final value = this.value;
+    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
+      return value;
+    } else {
+      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RelativeTimeContent toFrozen() => RelativeTimeContent(
+    value: this.value,
+    style: this.style,
+    timeZone: this.timeZone,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct TypedFieldElement
 // -----------------------------------------------------------------------------
 
@@ -21113,6 +22322,9 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_badge(:var value): { ... }
 ///     case PresentationElement_chip(:var value): { ... }
 ///     case PresentationElement_progress(:var value): { ... }
+///     case PresentationElement_status(:var value): { ... }
+///     case PresentationElement_dateTime(:var value): { ... }
+///     case PresentationElement_relativeTime(:var value): { ... }
 ///     case PresentationElement_typedField(:var value): { ... }
 ///     case PresentationElement_conditional(:var value): { ... }
 ///     case PresentationElement_repeated(:var value): { ... }
@@ -21414,6 +22626,60 @@ sealed class PresentationElement {
       value: value,
       maximum: maximum,
       label: label,
+    )
+  );
+
+  /// Create a 'status' variant wrapping around the given value.
+  factory PresentationElement.wrapStatus(
+    StatusContent value
+  ) => PresentationElement_statusWrapper._(value);
+
+  /// Same as `wrapStatus(StatusContent(...))`.
+  factory PresentationElement.createStatus({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _core.Iterable<StatusCase_orMutable> cases,
+    required StatusAppearance_orMutable? fallback,
+  }) => PresentationElement.wrapStatus(
+    StatusContent(
+      value: value,
+      cases: cases,
+      fallback: fallback,
+    )
+  );
+
+  /// Create a 'date_time' variant wrapping around the given value.
+  factory PresentationElement.wrapDateTime(
+    DateTimeContent value
+  ) => PresentationElement_dateTimeWrapper._(value);
+
+  /// Same as `wrapDateTime(DateTimeContent(...))`.
+  factory PresentationElement.createDateTime({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.TypedExpression_orMutable format,
+    required DateTimeZone timeZone,
+  }) => PresentationElement.wrapDateTime(
+    DateTimeContent(
+      value: value,
+      format: format,
+      timeZone: timeZone,
+    )
+  );
+
+  /// Create a 'relative_time' variant wrapping around the given value.
+  factory PresentationElement.wrapRelativeTime(
+    RelativeTimeContent value
+  ) => PresentationElement_relativeTimeWrapper._(value);
+
+  /// Same as `wrapRelativeTime(RelativeTimeContent(...))`.
+  factory PresentationElement.createRelativeTime({
+    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required RelativeTimeStyle style,
+    required DateTimeZone timeZone,
+  }) => PresentationElement.wrapRelativeTime(
+    RelativeTimeContent(
+      value: value,
+      style: style,
+      timeZone: timeZone,
     )
   );
 
@@ -22182,6 +23448,36 @@ sealed class PresentationElement {
       );
       _serializerBuilder.addWrapperVariant(
         15,
+        "status",
+        "wrapStatus",
+        StatusContent.serializer,
+        "",
+        PresentationElement_statusWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.statusWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        16,
+        "date_time",
+        "wrapDateTime",
+        DateTimeContent.serializer,
+        "",
+        PresentationElement_dateTimeWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.dateTimeWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        17,
+        "relative_time",
+        "wrapRelativeTime",
+        RelativeTimeContent.serializer,
+        "",
+        PresentationElement_relativeTimeWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.relativeTimeWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        18,
         "typed_field",
         "wrapTypedField",
         TypedFieldElement.serializer,
@@ -22191,7 +23487,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.typedFieldWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        16,
+        19,
         "conditional",
         "wrapConditional",
         ConditionalElement.serializer,
@@ -22201,7 +23497,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.conditionalWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        17,
+        20,
         "repeated",
         "wrapRepeated",
         RepeatedElement.serializer,
@@ -22211,7 +23507,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.repeatedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        18,
+        21,
         "scoped_binding",
         "wrapScopedBinding",
         ScopedBindingElement.serializer,
@@ -22221,7 +23517,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.scopedBindingWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        19,
+        22,
         "text_input",
         "wrapTextInput",
         TextControl.serializer,
@@ -22231,7 +23527,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.textInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        20,
+        23,
         "numeric_input",
         "wrapNumericInput",
         BoundControl.serializer,
@@ -22241,7 +23537,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.numericInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        21,
+        24,
         "toggle_input",
         "wrapToggleInput",
         BoundControl.serializer,
@@ -22251,7 +23547,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.toggleInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        22,
+        25,
         "select_input",
         "wrapSelectInput",
         SelectControl.serializer,
@@ -22261,7 +23557,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.selectInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        23,
+        26,
         "slider_input",
         "wrapSliderInput",
         SliderControl.serializer,
@@ -22271,7 +23567,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.sliderInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        24,
+        27,
         "date_time_input",
         "wrapDateTimeInput",
         DateTimeControl.serializer,
@@ -22281,7 +23577,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.dateTimeInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        25,
+        28,
         "duration_input",
         "wrapDurationInput",
         BoundControl.serializer,
@@ -22291,7 +23587,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.durationInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        26,
+        29,
         "color_input",
         "wrapColorInput",
         ColorControl.serializer,
@@ -22301,7 +23597,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.colorInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        27,
+        30,
         "bytes_input",
         "wrapBytesInput",
         BoundControl.serializer,
@@ -22311,7 +23607,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.bytesInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        28,
+        31,
         "named_input",
         "wrapNamedInput",
         BoundControl.serializer,
@@ -22321,7 +23617,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.namedInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        29,
+        32,
         "button",
         "wrapButton",
         ButtonElement.serializer,
@@ -22331,7 +23627,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.buttonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        30,
+        33,
         "icon_button",
         "wrapIconButton",
         IconButtonElement.serializer,
@@ -22341,7 +23637,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.iconButtonWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        31,
+        34,
         "menu",
         "wrapMenu",
         MenuElement.serializer,
@@ -22351,7 +23647,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.menuWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        32,
+        35,
         "tooltip",
         "wrapTooltip",
         TooltipElement.serializer,
@@ -22361,7 +23657,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.tooltipWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        33,
+        36,
         "list_input",
         "wrapListInput",
         ListControl.serializer,
@@ -22371,7 +23667,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.listInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        34,
+        37,
         "map_input",
         "wrapMapInput",
         MapControl.serializer,
@@ -22381,7 +23677,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.mapInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        35,
+        38,
         "record_input",
         "wrapRecordInput",
         RecordControl.serializer,
@@ -22391,7 +23687,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.recordInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        36,
+        39,
         "enum_input",
         "wrapEnumInput",
         BoundControl.serializer,
@@ -22401,7 +23697,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.enumInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        37,
+        40,
         "polymorphic_input",
         "wrapPolymorphicInput",
         PolymorphicControl.serializer,
@@ -22411,7 +23707,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.polymorphicInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        38,
+        41,
         "default_presentation",
         "wrapDefaultPresentation",
         DefaultPresentationElement.serializer,
@@ -22421,7 +23717,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.defaultPresentationWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        39,
+        42,
         "search_input",
         "wrapSearchInput",
         SearchControl.serializer,
@@ -22431,7 +23727,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.searchInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        40,
+        43,
         "collection_lookup",
         "wrapCollectionLookup",
         CollectionLookupElement.serializer,
@@ -22441,7 +23737,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collectionLookupWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        41,
+        44,
         "collection_graph",
         "wrapCollectionGraph",
         CollectionGraphElement.serializer,
@@ -22451,7 +23747,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.collectionGraphWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        42,
+        45,
         "container",
         "wrapContainer",
         ContainerLayout.serializer,
@@ -22461,7 +23757,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.containerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        43,
+        46,
         "anchor",
         "wrapAnchor",
         PresentationAnchorLayout.serializer,
@@ -22471,7 +23767,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.anchorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        44,
+        47,
         "connection_layer",
         "wrapConnectionLayer",
         ConnectionLayerLayout.serializer,
@@ -22481,7 +23777,7 @@ sealed class PresentationElement {
         ordinal: PresentationElement_kind.connectionLayerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        45,
+        48,
         "polymorphic_match",
         "wrapPolymorphicMatch",
         PolymorphicMatchElement.serializer,
@@ -22523,37 +23819,40 @@ enum PresentationElement_kind {
   badgeWrapper(12),
   chipWrapper(13),
   progressWrapper(14),
-  typedFieldWrapper(15),
-  conditionalWrapper(16),
-  repeatedWrapper(17),
-  scopedBindingWrapper(18),
-  textInputWrapper(19),
-  numericInputWrapper(20),
-  toggleInputWrapper(21),
-  selectInputWrapper(22),
-  sliderInputWrapper(23),
-  dateTimeInputWrapper(24),
-  durationInputWrapper(25),
-  colorInputWrapper(26),
-  bytesInputWrapper(27),
-  namedInputWrapper(28),
-  buttonWrapper(29),
-  iconButtonWrapper(30),
-  menuWrapper(31),
-  tooltipWrapper(32),
-  listInputWrapper(33),
-  mapInputWrapper(34),
-  recordInputWrapper(35),
-  enumInputWrapper(36),
-  polymorphicInputWrapper(37),
-  defaultPresentationWrapper(38),
-  searchInputWrapper(39),
-  collectionLookupWrapper(40),
-  collectionGraphWrapper(41),
-  containerWrapper(42),
-  anchorWrapper(43),
-  connectionLayerWrapper(44),
-  polymorphicMatchWrapper(45);
+  statusWrapper(15),
+  dateTimeWrapper(16),
+  relativeTimeWrapper(17),
+  typedFieldWrapper(18),
+  conditionalWrapper(19),
+  repeatedWrapper(20),
+  scopedBindingWrapper(21),
+  textInputWrapper(22),
+  numericInputWrapper(23),
+  toggleInputWrapper(24),
+  selectInputWrapper(25),
+  sliderInputWrapper(26),
+  dateTimeInputWrapper(27),
+  durationInputWrapper(28),
+  colorInputWrapper(29),
+  bytesInputWrapper(30),
+  namedInputWrapper(31),
+  buttonWrapper(32),
+  iconButtonWrapper(33),
+  menuWrapper(34),
+  tooltipWrapper(35),
+  listInputWrapper(36),
+  mapInputWrapper(37),
+  recordInputWrapper(38),
+  enumInputWrapper(39),
+  polymorphicInputWrapper(40),
+  defaultPresentationWrapper(41),
+  searchInputWrapper(42),
+  collectionLookupWrapper(43),
+  collectionGraphWrapper(44),
+  containerWrapper(45),
+  anchorWrapper(46),
+  connectionLayerWrapper(47),
+  polymorphicMatchWrapper(48);
 
   final _core.int _ordinal;
 
@@ -22721,6 +24020,33 @@ final class PresentationElement_progressWrapper extends _PresentationElement_wra
 
   @_core.override
   PresentationElement_kind get kind => PresentationElement_kind.progressWrapper;
+}
+
+final class PresentationElement_statusWrapper extends _PresentationElement_wrapper {
+  final StatusContent value;
+
+  PresentationElement_statusWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.statusWrapper;
+}
+
+final class PresentationElement_dateTimeWrapper extends _PresentationElement_wrapper {
+  final DateTimeContent value;
+
+  PresentationElement_dateTimeWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.dateTimeWrapper;
+}
+
+final class PresentationElement_relativeTimeWrapper extends _PresentationElement_wrapper {
+  final RelativeTimeContent value;
+
+  PresentationElement_relativeTimeWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.relativeTimeWrapper;
 }
 
 final class PresentationElement_typedFieldWrapper extends _PresentationElement_wrapper {

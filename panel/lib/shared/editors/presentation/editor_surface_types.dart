@@ -178,6 +178,10 @@ Iterable<PresentationNode> _presentationChildren(PresentationElement element) {
       PolymorphicInputElement(:final concreteTypes) => [
         for (final type in concreteTypes) ?type.presentation,
       ],
+      PolymorphicMatchElement(:final cases, :final fallback) => [
+        for (final item in cases) item.child,
+        ?fallback,
+      ],
       TabsElement(:final tabs) => [for (final tab in tabs) tab.child],
       TooltipElement(:final child) => [child],
       _ => const [],

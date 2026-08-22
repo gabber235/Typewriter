@@ -13,6 +13,8 @@ part "presentation_interaction.dart";
 part "presentation_layout.dart";
 part "presentation_search.dart";
 part "presentation_search_composition.dart";
+part "presentation_status.dart";
+part "presentation_time.dart";
 
 @freezed
 sealed class PresentationElement with _$PresentationElement {
@@ -66,6 +68,21 @@ sealed class PresentationElement with _$PresentationElement {
     required TypedExpression maximum,
     TypedExpression? label,
   }) = ProgressElement;
+  const factory PresentationElement.status({
+    required TypedExpression value,
+    required List<StatusCase> cases,
+    StatusAppearance? fallback,
+  }) = StatusElement;
+  const factory PresentationElement.dateTime({
+    required TypedExpression value,
+    required TypedExpression format,
+    @Default(DateTimeZone.local) DateTimeZone timeZone,
+  }) = DateTimeElement;
+  const factory PresentationElement.relativeTime({
+    required TypedExpression value,
+    @Default(RelativeTimeStyle.compact) RelativeTimeStyle style,
+    @Default(DateTimeZone.local) DateTimeZone timeZone,
+  }) = RelativeTimeElement;
 
   const factory PresentationElement.typedField({
     required BindingReference binding,
