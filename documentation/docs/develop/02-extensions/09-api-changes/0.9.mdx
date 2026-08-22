@@ -433,6 +433,62 @@ entry keeps the key it was saved with, and the other three become available to i
 `CinematicSkippableEvent.confirmationKey` is a `ConfirmationKey` with it, and carries the key the
 player was actually offered rather than the one the entry asked for.
 
+## Hiding Players Goes Through `PlayerHides`
+
+Bukkit records a hide against the plugin that asked for it rather than against the caller, so two
+Typewriter features hiding the same player from the same viewer share a single flag. Whichever of
+them finishes first reveals the player while the other still wants them hidden.
+
+`PlayerHides` counts the features that want a pair hidden and reveals the pair only once the last
+one has released it. Every call carries an owner, compared by identity, so pass whatever object
+lives as long as the feature does, usually the display, bound or action that took the hide.
+
+```kotlin showLineNumbers
+// highlight-red-start
+server.onlinePlayers.forEach {
+    it.hidePlayer(plugin, player)
+    player.hidePlayer(plugin, it)
+}
+// highlight-red-end
+// highlight-green-start
+server.onlinePlayers.forEach {
+    playerHides.hide(this@MyCinematicAction, it, player)
+    playerHides.hide(this@MyCinematicAction, player, it)
+}
+// highlight-green-end
+```
+
+Give back a single pair with `show`, or everything an owner still holds with `release`:
+
+```kotlin showLineNumbers
+playerHides.show(this@MyCinematicAction, viewerId, targetId)
+playerHides.release(this@MyCinematicAction)
+```
+
+Hiding and revealing both call Bukkit, so both have to happen on the server thread. A player who
+disconnects is forgotten automatically, so an owner never has to clean up after one.
+
+### `VISIBLE_PLAYERS` and `SHOWING_PLAYER` No Longer Compile
+
+Both player state providers are deprecated at `DeprecationLevel.ERROR` and are scheduled for
+removal.
+
+```kotlin showLineNumbers
+// highlight-red
+playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT, VISIBLE_PLAYERS, SHOWING_PLAYER)
+// highlight-green
+playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
+```
+
+They captured who could see whom at a single moment and replayed that on restore, which cancels any
+hide another feature took in the meantime. There is no snapshot that replaces them: take the hides
+you want through `PlayerHides` and release them by owner instead.
+
+:::warning[Restoring is not the same as releasing]
+Release the hides after the player is restored rather than before, otherwise everyone watches them
+reappear at whatever position the feature had moved them to.
+:::
+
 ## Questing Extension Changes
 The Questing extension has undergone several changes in its API and structure. Below are the key updates:
 

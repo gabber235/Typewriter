@@ -49,6 +49,12 @@ enum class GenericPlayerStateProvider(private val store: Player.() -> Any, priva
     VELOCITY({ velocity.toVector() }, { velocity = (it as Vector).toBukkitVector() }),
 
     // All Players that are visible to the player
+    @Deprecated(
+        "Scheduled for removal. Restoring this shows every player that was visible when the state " +
+                "was captured, which also cancels a hide another feature took in the meantime. Take " +
+                "hides through PlayerHides and release them by owner instead.",
+        level = DeprecationLevel.ERROR
+    )
     VISIBLE_PLAYERS({
         server.onlinePlayers.filter { it != this && canSee(it) }.map { it.uniqueId.toString() }.toList()
     }, { data ->
@@ -58,6 +64,12 @@ enum class GenericPlayerStateProvider(private val store: Player.() -> Any, priva
     }),
 
     // All Players that can see the player
+    @Deprecated(
+        "Scheduled for removal. Restoring this shows the player to everyone that could see them when " +
+                "the state was captured, which also cancels a hide another feature took in the " +
+                "meantime. Take hides through PlayerHides and release them by owner instead.",
+        level = DeprecationLevel.ERROR
+    )
     SHOWING_PLAYER({
         server.onlinePlayers.filter { it != this && it.canSee(this) }.map { it.uniqueId.toString() }.toList()
     }, { data ->

@@ -27,7 +27,6 @@ import com.typewritermc.engine.paper.extensions.packetevents.meta
 import com.typewritermc.engine.paper.extensions.packetevents.spectateEntity
 import com.typewritermc.engine.paper.extensions.packetevents.stopSpectatingEntity
 import com.typewritermc.engine.paper.interaction.*
-import com.typewritermc.engine.paper.plugin
 import com.typewritermc.engine.paper.utils.*
 import com.typewritermc.engine.paper.utils.GenericPlayerStateProvider.*
 import kotlinx.coroutines.Dispatchers
@@ -109,7 +108,7 @@ class LockInteractionBound(
 
     private suspend fun setup() {
         require(playerState == null)
-        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT, VISIBLE_PLAYERS, SHOWING_PLAYER)
+        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
         player.allowFlight = true
         player.isFlying = true
         // For bedrock players we don't need to fake the inventory as we already hide the hotbar and item.
@@ -118,9 +117,12 @@ class LockInteractionBound(
         }
 
         Dispatchers.Sync.switchContext {
+            // TODO: Remove this and the release in teardown once the visibility extension is
+            // released. Hiding the other players becomes opt in through a visibility rule, because
+            // opting out of it here is not possible.
             server.onlinePlayers.forEach {
-                it.hidePlayer(plugin, player)
-                player.hidePlayer(plugin, it)
+                playerHides.hide(this@LockInteractionBound, it, player)
+                playerHides.hide(this@LockInteractionBound, player, it)
             }
         }
 
@@ -191,7 +193,10 @@ class LockInteractionBound(
             player.restoreInventory()
         }
         Dispatchers.Sync.switchContext {
+            // Revealed only after the player is restored, so nobody sees them reappear at the
+            // position the bound moved them to.
             player.restore(playerState)
+            playerHides.release(this@LockInteractionBound)
             playerState = null
         }
     }
