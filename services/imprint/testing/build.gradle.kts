@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":imprint-model"))
+    api(project(":imprint-model"))
 }

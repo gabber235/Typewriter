@@ -1,231 +1,293 @@
 package com.typewritermc.imprint.gradle
 
-import com.typewritermc.imprint.TypewriterEngineCapabilityReference
-import com.typewritermc.imprint.TypewriterProjectDeclaration
-import com.typewritermc.imprint.TypewriterProjectKind
-import com.typewritermc.imprint.TypewriterRuntimeTarget
-import com.typewritermc.imprint.TypewriterRuntimeTargetKind
-import io.github.z4kn4fein.semver.toVersionOrNull
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ArtifactKind
+import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.COMMON_SOURCE_PART
+import com.typewritermc.imprint.VersionConstraint
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.Copy
-import org.gradle.jvm.tasks.Jar
 
-/**
- * Adds the `typewriter` DSL, target derived source sets, deterministic manifests, and development publication tasks.
- *
- * Each project must declare exactly one engine, engine capability, or extension. Configuration fails early when versions,
- * transitive capabilities, or source relationships are invalid.
- */
+const val ENGINE_CORE_CONFIGURATION = "imprintEngineCore"
+const val EXTENSION_API_CONFIGURATION = "imprintExtensionApi"
+const val PROCESSORS_CONFIGURATION = "imprintProcessors"
+
+/** Configures one canonical engine, capability, or extension artifact. */
 class ImprintPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.pluginManager.apply("java-library")
         project.pluginManager.apply("com.google.devtools.ksp")
+        project.createDependencyBuckets()
+
         val typewriter =
             project.extensions.create("typewriter", TypewriterProjectExtension::class.java, project)
-
         project.tasks.register("typewriterInfo") { task ->
             task.group = "typewriter"
-            task.description = "Prints the configured Typewriter project declaration."
+            task.description = "Prints the configured Typewriter artifact declaration."
             task.doLast {
                 val declaration = typewriter.declaration()
                 task.logger.lifecycle(
-                    "Typewriter ${declaration.kind.displayName} ${declaration.id} ${declaration.version}",
+                    "Typewriter ${declaration.kind.name.lowercase()} ${declaration.id} ${declaration.version}",
                 )
-                declaration.capabilities.forEach { capability ->
-                    task.logger.lifecycle("Typewriter engine capability ${capability.id} ${capability.version}")
-                }
-                declaration.targets.forEach { target ->
-                    task.logger.lifecycle("Typewriter target ${target.kind.name.lowercase()} ${target.id} ${target.version}")
-                }
-            }
-        }
-
-        project.afterEvaluate {
-            val declaration = typewriter.declaration()
-            project.pluginManager.withPlugin("java") {
-                project.registerDevelopmentArtifact(declaration)
             }
         }
     }
 }
 
-private fun Project.registerDevelopmentArtifact(declaration: TypewriterProjectDeclaration) {
-    val artifactType =
-        when (declaration.kind) {
-            TypewriterProjectKind.ENGINE -> if (declaration.id == "panel") "panel_engine" else "execution_engine"
-            TypewriterProjectKind.ENGINE_CAPABILITY -> "engine_capability"
-            TypewriterProjectKind.EXTENSION -> "extension"
+private fun Project.createDependencyBuckets() {
+    listOf(ENGINE_CORE_CONFIGURATION, EXTENSION_API_CONFIGURATION, PROCESSORS_CONFIGURATION).forEach { name ->
+        configurations.maybeCreate(name).apply {
+            isCanBeConsumed = false
+            isCanBeResolved = false
+            description = "Dependencies supplied to Imprint through $name."
         }
-    val publishedName = "${declaration.id}__${declaration.version}__$artifactType.jar"
-    val jar = tasks.named("jar", Jar::class.java)
-    tasks.register("publishDevArtifact", Copy::class.java) { task ->
-        task.group = "development"
-        task.description = "Publishes this Typewriter artifact for local development."
-        task.from(jar.flatMap(Jar::getArchiveFile)) { copy -> copy.rename { publishedName } }
-        task.into(rootProject.layout.projectDirectory.dir("../build/development/artifacts"))
     }
 }
 
-/** Entry point for declaring the single Typewriter artifact produced by a Gradle project. */
+/** Entry point for declaring the single artifact produced by one Gradle project. */
 open class TypewriterProjectExtension(
     private val project: Project,
 ) {
-    private val declarations = mutableListOf<ProjectDeclaration>()
+    private val declarations = mutableListOf<ArtifactDeclaration>()
 
-    /** Declares an execution engine and every capability it completely implements. */
     fun engine(action: Action<EngineDeclaration>) {
-        add(EngineDeclaration(), action)
+        val declaration = EngineDeclaration()
+        add(declaration, action)
+        project.configureEngineProject(declaration.toModel())
     }
 
-    /** Declares a composable engine capability and its transitive requirements. */
     fun engineCapability(action: Action<EngineCapabilityDeclaration>) {
-        add(EngineCapabilityDeclaration(), action)
+        val declaration = EngineCapabilityDeclaration()
+        add(declaration, action)
+        project.configureCapabilityProject(declaration.toModel())
     }
 
-    /** Declares one extension release and the runtime targets it compiles against. */
     fun extension(action: Action<ExtensionDeclaration>) {
         val declaration = ExtensionDeclaration()
         add(declaration, action)
         project.configureExtensionProject(declaration.toModel())
     }
 
-    internal fun declaration(): TypewriterProjectDeclaration {
+    internal fun declaration(): DeclaredArtifact {
         if (declarations.size != 1) {
             throw GradleException(
                 "A project using Imprint must declare exactly one engine, engine capability, or extension.",
             )
         }
-
         return declarations.single().toModel()
     }
 
-    private fun <T : ProjectDeclaration> add(
+    private fun <T : ArtifactDeclaration> add(
         declaration: T,
         action: Action<T>,
     ) {
         action.execute(declaration)
+        if (declarations.isNotEmpty()) {
+            throw GradleException(
+                "A project using Imprint must declare exactly one engine, engine capability, or extension.",
+            )
+        }
         declarations += declaration
     }
 }
 
-/** Shared identifier and Semantic Versioning contract for Imprint declarations. */
-sealed class ProjectDeclaration(
-    private val kind: TypewriterProjectKind,
+sealed class ArtifactDeclaration(
+    private val kind: ArtifactKind,
 ) {
     var id: String = ""
     var version: String = ""
-    private val capabilities = mutableListOf<TypewriterEngineCapabilityReference>()
 
-    protected fun configureCapabilities(action: Action<EngineCapabilities>) {
-        val configuredCapabilities = EngineCapabilities()
-        action.execute(configuredCapabilities)
-        capabilities += configuredCapabilities.references
+    internal open fun relationships(): List<DeclaredRelationship> = emptyList()
+
+    internal open fun sourceParts(): List<DeclaredSourcePart> = emptyList()
+
+    internal fun toModel(): DeclaredArtifact {
+        val artifactId = validated("Typewriter artifact id") { ArtifactId(id) }
+        val artifactVersion = validated("Typewriter artifact version") { ArtifactVersion(version) }
+        return DeclaredArtifact(kind, artifactId, artifactVersion, relationships(), sourceParts())
     }
-
-    internal fun toModel(): TypewriterProjectDeclaration {
-        if (id.isBlank()) {
-            throw GradleException("The Typewriter project id must not be blank.")
-        }
-        validateVersion(version, "Typewriter project")
-
-        return TypewriterProjectDeclaration(kind, id, version, capabilities.toList(), targets())
-    }
-
-    protected open fun targets(): List<TypewriterRuntimeTarget> = emptyList()
 }
 
-/** Configures an execution engine artifact and its complete capability set. */
-open class EngineDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE) {
-    /** Selects capabilities implemented by this engine. Requirements resolve transitively. */
+open class EngineDeclaration : ArtifactDeclaration(ArtifactKind.ENGINE) {
+    private val capabilities = mutableListOf<DeclaredRelationship>()
+
     fun implements(action: Action<EngineCapabilities>) {
-        configureCapabilities(action)
+        capabilities += EngineCapabilities.configured(action).relationships
     }
+
+    internal override fun relationships(): List<DeclaredRelationship> = capabilities.toList()
 }
 
-/** Configures one independently versioned engine capability artifact. */
-open class EngineCapabilityDeclaration : ProjectDeclaration(TypewriterProjectKind.ENGINE_CAPABILITY) {
-    /** Selects capabilities required for this capability contract to function. */
+open class EngineCapabilityDeclaration : ArtifactDeclaration(ArtifactKind.CAPABILITY) {
+    private val capabilities = mutableListOf<DeclaredRelationship>()
+
     fun requires(action: Action<EngineCapabilities>) {
-        configureCapabilities(action)
+        capabilities += EngineCapabilities.configured(action).relationships
     }
+
+    internal override fun relationships(): List<DeclaredRelationship> = capabilities.toList()
 }
 
-/** Configures one extension JAR that may contribute code to several runtime targets. */
-open class ExtensionDeclaration : ProjectDeclaration(TypewriterProjectKind.EXTENSION) {
-    private val configuredTargets = mutableListOf<TypewriterRuntimeTarget>()
+open class ExtensionDeclaration : ArtifactDeclaration(ArtifactKind.EXTENSION) {
+    private val configuredSourceParts = mutableListOf<DeclaredSourcePart>()
 
-    /** Selects actual runtime targets. Capability source sets are derived automatically from engine targets. */
-    fun targets(action: Action<ExtensionTargets>) {
-        val targets = ExtensionTargets()
-        action.execute(targets)
-        configuredTargets += targets.targets
-    }
-
-    override fun targets(): List<TypewriterRuntimeTarget> = configuredTargets.toList()
-}
-
-/** Collects the Realm, panel, and explicit engine contracts supported by an extension. */
-open class ExtensionTargets {
-    internal val targets = mutableListOf<TypewriterRuntimeTarget>()
-
-    /** Adds Realm owned code compatible from [version] until the next major Realm API version. */
-    fun realm(version: String) {
-        add(TypewriterRuntimeTargetKind.REALM, "realm", version)
-    }
-
-    /** Adds panel engine code compatible from [version] until the next major panel API version. */
-    fun panel(version: String) {
-        add(TypewriterRuntimeTargetKind.PANEL, "panel", version)
-    }
-
-    /** Adds code for one explicit execution engine and derives all of that engine's transitive capabilities. */
-    fun engine(
-        id: String,
-        version: String,
+    fun sourceSet(
+        name: String,
+        action: Action<ExtensionSourceSetDeclaration>,
     ) {
-        add(TypewriterRuntimeTargetKind.ENGINE, id, version)
+        validateSourcePartName(name)
+        if (configuredSourceParts.any { it.name == name }) {
+            throw GradleException("Extension source set $name is declared more than once.")
+        }
+        val declaration = ExtensionSourceSetDeclaration(name)
+        action.execute(declaration)
+        configuredSourceParts += declaration.toModel()
     }
 
-    private fun add(
-        kind: TypewriterRuntimeTargetKind,
-        id: String,
-        version: String,
-    ) {
-        if (id.isBlank()) {
-            throw GradleException("The runtime target id must not be blank.")
-        }
-        validateVersion(version, "Runtime target $id")
-        if (targets.any { it.kind == kind && it.id == id }) {
-            throw GradleException("Runtime target $id is declared more than once.")
-        }
-        targets += TypewriterRuntimeTarget(kind, id, version)
-    }
+    internal override fun sourceParts(): List<DeclaredSourcePart> = configuredSourceParts.toList().also(::validateDeclaredIncludes)
 }
 
-/** Collects complete engine capability requirements for an engine or another capability. */
-open class EngineCapabilities {
-    internal val references = mutableListOf<TypewriterEngineCapabilityReference>()
-
-    /** Requires one capability at this minimum compatible version within the same major version. */
-    fun capability(
-        id: String,
-        version: String,
-    ) {
-        if (id.isBlank()) {
-            throw GradleException("The engine capability id must not be blank.")
-        }
-        validateVersion(version, "Engine capability $id")
-        references += TypewriterEngineCapabilityReference(id, version)
-    }
-}
-
-private fun validateVersion(
-    version: String,
-    subject: String,
+open class ExtensionSourceSetDeclaration internal constructor(
+    private val name: String,
 ) {
-    if (version.toVersionOrNull(strict = true) == null) {
-        throw GradleException("$subject version must use valid semantic version syntax.")
+    private var engine: DeclaredRelationship? = null
+    private val capabilities = mutableListOf<DeclaredRelationship>()
+    private val includedSourceParts = mutableListOf<String>()
+
+    /** Makes code from the named source parts available when this source part is selected. */
+    fun includes(vararg sourceSets: String) {
+        sourceSets.forEach { sourceSet ->
+            validateSourcePartName(sourceSet)
+            if (sourceSet == name) throw GradleException("Extension source set $name cannot include itself.")
+            if (sourceSet in includedSourceParts) {
+                throw GradleException("Extension source set $name includes $sourceSet more than once.")
+            }
+            includedSourceParts += sourceSet
+        }
+    }
+
+    fun engine(
+        dependency: Any,
+        version: String,
+    ) {
+        if (engine != null) throw GradleException("Extension source set $name may target only one engine.")
+        if (capabilities.isNotEmpty()) {
+            throw GradleException("Extension source set $name cannot target an engine and capabilities.")
+        }
+        engine = DeclaredRelationship(dependency, validatedConstraint(version, "Engine target"))
+    }
+
+    fun capabilities(action: Action<EngineCapabilities>) {
+        if (engine != null) {
+            throw GradleException("Extension source set $name cannot target an engine and capabilities.")
+        }
+        capabilities += EngineCapabilities.configured(action).relationships
+    }
+
+    internal fun toModel(): DeclaredSourcePart {
+        val selectedEngine = engine
+        if (selectedEngine != null) return DeclaredEngineSourcePart(name, selectedEngine, includedSourceParts.toList())
+        if (capabilities.isNotEmpty()) {
+            return DeclaredCapabilitySourcePart(name, capabilities.toList(), includedSourceParts.toList())
+        }
+        throw GradleException("Extension source set $name must target one engine or at least one capability.")
     }
 }
+
+open class EngineCapabilities {
+    internal val relationships = mutableListOf<DeclaredRelationship>()
+
+    fun capability(
+        dependency: Any,
+        version: String,
+    ) {
+        relationships += DeclaredRelationship(dependency, validatedConstraint(version, "Capability requirement"))
+    }
+
+    internal companion object {
+        fun configured(action: Action<EngineCapabilities>): EngineCapabilities = EngineCapabilities().also(action::execute)
+    }
+}
+
+internal data class DeclaredArtifact(
+    val kind: ArtifactKind,
+    val id: ArtifactId,
+    val version: ArtifactVersion,
+    val relationships: List<DeclaredRelationship>,
+    val sourceParts: List<DeclaredSourcePart>,
+)
+
+internal data class DeclaredRelationship(
+    val dependency: Any,
+    val version: VersionConstraint,
+)
+
+internal sealed interface DeclaredSourcePart {
+    val name: String
+    val relationships: List<DeclaredRelationship>
+    val includes: List<String>
+}
+
+internal data class DeclaredEngineSourcePart(
+    override val name: String,
+    val engine: DeclaredRelationship,
+    override val includes: List<String>,
+) : DeclaredSourcePart {
+    override val relationships: List<DeclaredRelationship> = listOf(engine)
+}
+
+internal data class DeclaredCapabilitySourcePart(
+    override val name: String,
+    override val relationships: List<DeclaredRelationship>,
+    override val includes: List<String>,
+) : DeclaredSourcePart
+
+private fun validateSourcePartName(name: String) {
+    if (name == COMMON_SOURCE_PART) throw GradleException("Extension source set common is reserved by Imprint.")
+    if (!name.matches(Regex("[A-Za-z][A-Za-z0-9_]*"))) {
+        throw GradleException("Extension source set $name must be a valid Gradle source set name.")
+    }
+}
+
+private fun validateDeclaredIncludes(sourceParts: List<DeclaredSourcePart>) {
+    val partsByName = sourceParts.associateBy(DeclaredSourcePart::name)
+    sourceParts.forEach { sourcePart ->
+        sourcePart.includes.forEach { includedName ->
+            if (includedName !in partsByName) {
+                throw GradleException("Extension source set ${sourcePart.name} includes unknown source set $includedName.")
+            }
+        }
+    }
+
+    val visiting = mutableListOf<String>()
+    val visited = mutableSetOf<String>()
+
+    fun visit(name: String) {
+        if (name in visiting) {
+            throw GradleException("Cyclic extension source set inclusion: ${(visiting + name).joinToString(" > ")}.")
+        }
+        if (!visited.add(name)) return
+
+        visiting += name
+        partsByName.getValue(name).includes.forEach(::visit)
+        visiting.removeLast()
+    }
+    sourceParts.forEach { visit(it.name) }
+}
+
+private fun validatedConstraint(
+    value: String,
+    subject: String,
+): VersionConstraint = validated("$subject version") { VersionConstraint(value) }
+
+private fun <T> validated(
+    subject: String,
+    create: () -> T,
+): T =
+    try {
+        create()
+    } catch (exception: IllegalArgumentException) {
+        throw GradleException("$subject is invalid: ${exception.message}", exception)
+    }

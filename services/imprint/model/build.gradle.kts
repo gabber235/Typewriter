@@ -5,4 +5,6 @@ plugins {
 
 dependencies {
     api(libs.kotlin.serialize.core)
+    api(libs.kotlin.serialize.cbor)
+    api(libs.semver)
 }
