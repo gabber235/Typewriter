@@ -7,7 +7,7 @@ There are four base interfaces that all entries extend one of. These are:
 1. **StaticEntry**: Represents static pages. These are used for content that does not change dynamically or trigger any actions. Examples include static text or images.
 2. **TriggerEntry**: Designed for entries that initiate other actions or events. These entries can trigger one or more additional entries, making them crucial for interactive sequences.
 3. **CinematicEntry**: Used for cinematic experiences. These entries are ideal for creating immersive story-driven sequences that engage players in a more visually dynamic way.
-4. **ManifestEntry**: Used for creating manifest pages, which are used to display statful content to the player.
+4. **ManifestEntry**: Used for creating manifest pages, which are used to display stateful content to the player.
 
 
 ### 1. StaticEntry
@@ -46,7 +46,7 @@ The following are the sub-types of `AudienceEntry`:
     - **LinesEntry**: Displays lines of text in things like sidebars or tablist.
 
 A whole nother category of `ManifestEntry` is meant for **Entities**.
-This has it's seperate page in the documentation.
+This has its separate page in the documentation.
 
 
 ## Implementation and Usage
@@ -57,7 +57,7 @@ For instance, a TriggerableEntry can be used to set up a quest that only activat
 Similarly, an ActionEntry can be used to create dynamic effects that change based on player actions, and a CinematicEntry can be used to create a visually dynamic story sequence.
 
 
-### Defining a Entry
+### Defining an Entry
 Typewriter takes care of the heavy lifting when it comes to creating and using entries.
 Developers only need to define the entry's class and its fields (and sometimes additional methods). 
 The rest is handled by Typewriter. 
@@ -77,7 +77,7 @@ The `@Entry` annotation is used to define the entry's type, name, and other prop
 To find out specific requirements for each entry type, check the documentation for the entry's interface.
 
 :::caution
-Enties are not allowed to have any state. This means that there can't be any fields that are not final.
+Entries are not allowed to have any state. This means that there can't be any fields that are not final.
 If you need to have state, use a `AudienceEntry`.
 :::
 
