@@ -11,6 +11,8 @@ import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.io.File
 import java.util.logging.Logger
+import kotlin.reflect.KClass
+import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.findAnnotations
 
 class Library : KoinComponent, Reloadable {
@@ -20,6 +22,18 @@ class Library : KoinComponent, Reloadable {
         private set
 
     internal var entriesById: Map<String, Entry> = emptyMap()
+        private set
+
+    /**
+     * Entries grouped by every type they are assignable to, their own class included.
+     *
+     * Derived from [entries] and owned by this library: rebuilt on every load, never mutated
+     * afterwards, and published by a single volatile write so a reader sees either the whole
+     * previous catalogue or the whole new one. Values keep catalogue order. An absent key means no
+     * loaded entry answers to that type.
+     */
+    @Volatile
+    internal var entriesByType: Map<KClass<*>, List<Entry>> = emptyMap()
         private set
 
     internal var entryPriority = emptyMap<Ref<out Entry>, Int>()
@@ -44,6 +58,7 @@ class Library : KoinComponent, Reloadable {
 
         entries = pages.flatMap { it.entries }
         entriesById = entries.associateBy { it.id }
+        entriesByType = entries.groupByType()
         entryPriority = pages.flatMap { page ->
             page.entries.map { entry ->
                 if (entry !is PriorityEntry) return@map entry.ref() to page.priority
@@ -58,6 +73,7 @@ class Library : KoinComponent, Reloadable {
         pages = emptyList()
         entries = emptyList()
         entriesById = emptyMap()
+        entriesByType = emptyMap()
         entryPriority = emptyMap()
     }
 
@@ -110,6 +126,21 @@ class Library : KoinComponent, Reloadable {
         return this
     }
 }
+
+/**
+ * Groups the entries under every type each one is assignable to, keeping their order.
+ *
+ * Indexing supertypes and interfaces, and not only the concrete class, is what makes a query for an
+ * interface or for [Entry] itself return the entries implementing it.
+ */
+internal fun List<Entry>.groupByType(): Map<KClass<*>, List<Entry>> {
+    val assignableTypes = distinctBy { it::class }.associate { it::class to it::class.assignableTypes }
+
+    return flatMap { entry -> assignableTypes.getValue(entry::class).map { type -> type to entry } }
+        .groupBy({ (type, _) -> type }, { (_, entry) -> entry })
+}
+
+private val KClass<*>.assignableTypes: List<KClass<*>> get() = allSuperclasses + this
 
 val Entry.priority: Int get() = ref().priority
 val Ref<out Entry>.priority: Int

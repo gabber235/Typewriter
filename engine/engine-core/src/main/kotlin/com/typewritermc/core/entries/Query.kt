@@ -117,11 +117,15 @@ class Query<E : Entry>(private val klass: KClass<E>) {
          * @param filter The filter to apply to the entries.
          */
         fun <E : Entry> findWhere(klass: KClass<E>, filter: (E) -> Boolean): Sequence<E> {
-            return get<Library>(Library::class.java).entries
+            return entriesOfType(klass)
                 .asSequence()
-                .filterIsInstance(klass.java)
                 .filter(filter)
         }
+
+        /** Entries assignable to [klass], in catalogue order, or empty when none is loaded. */
+        @Suppress("UNCHECKED_CAST")
+        private fun <E : Entry> entriesOfType(klass: KClass<E>): List<E> =
+            get<Library>(Library::class.java).entriesByType[klass].orEmpty() as List<E>
 
         /**
          * Find the first entry that matches the given a filter
@@ -136,11 +140,7 @@ class Query<E : Entry>(private val klass: KClass<E>) {
          * @see findWhere
          */
         fun <E : Entry> firstWhere(klass: KClass<E>, filter: (E) -> Boolean): E? {
-            return get<Library>(Library::class.java).entries
-                .asSequence()
-                .filterIsInstance(klass.java)
-                .filter(filter)
-                .firstOrNull()
+            return entriesOfType(klass).firstOrNull(filter)
         }
 
 
