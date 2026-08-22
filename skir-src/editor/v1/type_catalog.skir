@@ -150,22 +150,23 @@ struct EnumType(810100017) {
 }
 
 enum TypeExpression(810100018) {
-  unit = 1;
-  boolean = 2;
-  string: StringConstraints = 3;
-  bytes: CollectionConstraints = 4;
-  signed_integer: IntegerType = 5;
-  unsigned_integer: IntegerType = 6;
-  float: FloatType = 7;
-  decimal: NumericConstraints = 8;
-  timestamp = 9;
-  duration = 10;
-  list: ListType = 11;
-  map: MapType = 12;
-  record: RecordType = 13;
-  enum_type: EnumType = 14;
-  parameter: string = 15;
-  named: ResolvedTypeRef = 16;
+  any = 1;
+  unit = 2;
+  boolean = 3;
+  string: StringConstraints = 4;
+  bytes: CollectionConstraints = 5;
+  signed_integer: IntegerType = 6;
+  unsigned_integer: IntegerType = 7;
+  float: FloatType = 8;
+  decimal: NumericConstraints = 9;
+  timestamp = 10;
+  duration = 11;
+  list: ListType = 12;
+  map: MapType = 13;
+  record: RecordType = 14;
+  enum_type: EnumType = 15;
+  parameter: string = 16;
+  named: ResolvedTypeRef = 17;
 }
 
 struct TypeParameter(810100019) {

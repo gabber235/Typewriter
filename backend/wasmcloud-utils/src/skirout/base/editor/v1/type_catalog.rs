@@ -1060,6 +1060,7 @@ impl EnumType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeExpression {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeExpression>>),
+    Any,
     Unit,
     Boolean,
     String(Box<StringConstraints>),
@@ -1091,22 +1092,23 @@ impl TypeExpression {
                 crate::skir_client::internal::EnumAdapter::new(
                     |x: &TypeExpression| match x {
                         TypeExpression::Unknown(_) => 0,
-                        TypeExpression::Unit => 1,
-                        TypeExpression::Boolean => 2,
-                        TypeExpression::String(_) => 3,
-                        TypeExpression::Bytes(_) => 4,
-                        TypeExpression::SignedInteger(_) => 5,
-                        TypeExpression::UnsignedInteger(_) => 6,
-                        TypeExpression::Float(_) => 7,
-                        TypeExpression::Decimal(_) => 8,
-                        TypeExpression::Timestamp => 9,
-                        TypeExpression::Duration => 10,
-                        TypeExpression::List(_) => 11,
-                        TypeExpression::Map(_) => 12,
-                        TypeExpression::Record(_) => 13,
-                        TypeExpression::EnumType(_) => 14,
-                        TypeExpression::Parameter(_) => 15,
-                        TypeExpression::Named(_) => 16,
+                        TypeExpression::Any => 1,
+                        TypeExpression::Unit => 2,
+                        TypeExpression::Boolean => 3,
+                        TypeExpression::String(_) => 4,
+                        TypeExpression::Bytes(_) => 5,
+                        TypeExpression::SignedInteger(_) => 6,
+                        TypeExpression::UnsignedInteger(_) => 7,
+                        TypeExpression::Float(_) => 8,
+                        TypeExpression::Decimal(_) => 9,
+                        TypeExpression::Timestamp => 10,
+                        TypeExpression::Duration => 11,
+                        TypeExpression::List(_) => 12,
+                        TypeExpression::Map(_) => 13,
+                        TypeExpression::Record(_) => 14,
+                        TypeExpression::EnumType(_) => 15,
+                        TypeExpression::Parameter(_) => 16,
+                        TypeExpression::Named(_) => 17,
                     },
                     |u| TypeExpression::Unknown(Some(u)),
                     |x: &TypeExpression| match x { TypeExpression::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1664,22 +1666,23 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypeExpression> = TypeExpression::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("unit", 1, 1, "", TypeExpression::Unit);
-                (*a).add_constant_variant("boolean", 2, 2, "", TypeExpression::Boolean);
-                (*a).add_wrapper_variant("string", 3, 3, crate::skir_client::internal::struct_serializer_from_static(StringConstraints::_adapter()), "", |v| TypeExpression::String(Box::new(v)), |x| match x { TypeExpression::String(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("bytes", 4, 4, crate::skir_client::internal::struct_serializer_from_static(CollectionConstraints::_adapter()), "", |v| TypeExpression::Bytes(Box::new(v)), |x| match x { TypeExpression::Bytes(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("signed_integer", 5, 5, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::SignedInteger(Box::new(v)), |x| match x { TypeExpression::SignedInteger(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unsigned_integer", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::UnsignedInteger(Box::new(v)), |x| match x { TypeExpression::UnsignedInteger(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("float", 7, 7, crate::skir_client::internal::struct_serializer_from_static(FloatType::_adapter()), "", |v| TypeExpression::Float(Box::new(v)), |x| match x { TypeExpression::Float(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("decimal", 8, 8, crate::skir_client::internal::struct_serializer_from_static(NumericConstraints::_adapter()), "", |v| TypeExpression::Decimal(Box::new(v)), |x| match x { TypeExpression::Decimal(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_constant_variant("timestamp", 9, 9, "", TypeExpression::Timestamp);
-                (*a).add_constant_variant("duration", 10, 10, "", TypeExpression::Duration);
-                (*a).add_wrapper_variant("list", 11, 11, crate::skir_client::internal::struct_serializer_from_static(ListType::_adapter()), "", |v| TypeExpression::List(Box::new(v)), |x| match x { TypeExpression::List(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("map", 12, 12, crate::skir_client::internal::struct_serializer_from_static(MapType::_adapter()), "", |v| TypeExpression::Map(Box::new(v)), |x| match x { TypeExpression::Map(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("record", 13, 13, crate::skir_client::internal::struct_serializer_from_static(RecordType::_adapter()), "", |v| TypeExpression::Record(Box::new(v)), |x| match x { TypeExpression::Record(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("enum_type", 14, 14, crate::skir_client::internal::struct_serializer_from_static(EnumType::_adapter()), "", |v| TypeExpression::EnumType(Box::new(v)), |x| match x { TypeExpression::EnumType(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("parameter", 15, 15, crate::skir_client::Serializer::string(), "", |v| TypeExpression::Parameter(v), |x| match x { TypeExpression::Parameter(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("named", 16, 16, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |v| TypeExpression::Named(Box::new(v)), |x| match x { TypeExpression::Named(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_constant_variant("any", 1, 1, "", TypeExpression::Any);
+                (*a).add_constant_variant("unit", 2, 2, "", TypeExpression::Unit);
+                (*a).add_constant_variant("boolean", 3, 3, "", TypeExpression::Boolean);
+                (*a).add_wrapper_variant("string", 4, 4, crate::skir_client::internal::struct_serializer_from_static(StringConstraints::_adapter()), "", |v| TypeExpression::String(Box::new(v)), |x| match x { TypeExpression::String(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("bytes", 5, 5, crate::skir_client::internal::struct_serializer_from_static(CollectionConstraints::_adapter()), "", |v| TypeExpression::Bytes(Box::new(v)), |x| match x { TypeExpression::Bytes(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("signed_integer", 6, 6, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::SignedInteger(Box::new(v)), |x| match x { TypeExpression::SignedInteger(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("unsigned_integer", 7, 7, crate::skir_client::internal::struct_serializer_from_static(IntegerType::_adapter()), "", |v| TypeExpression::UnsignedInteger(Box::new(v)), |x| match x { TypeExpression::UnsignedInteger(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("float", 8, 8, crate::skir_client::internal::struct_serializer_from_static(FloatType::_adapter()), "", |v| TypeExpression::Float(Box::new(v)), |x| match x { TypeExpression::Float(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("decimal", 9, 9, crate::skir_client::internal::struct_serializer_from_static(NumericConstraints::_adapter()), "", |v| TypeExpression::Decimal(Box::new(v)), |x| match x { TypeExpression::Decimal(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_constant_variant("timestamp", 10, 10, "", TypeExpression::Timestamp);
+                (*a).add_constant_variant("duration", 11, 11, "", TypeExpression::Duration);
+                (*a).add_wrapper_variant("list", 12, 12, crate::skir_client::internal::struct_serializer_from_static(ListType::_adapter()), "", |v| TypeExpression::List(Box::new(v)), |x| match x { TypeExpression::List(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("map", 13, 13, crate::skir_client::internal::struct_serializer_from_static(MapType::_adapter()), "", |v| TypeExpression::Map(Box::new(v)), |x| match x { TypeExpression::Map(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("record", 14, 14, crate::skir_client::internal::struct_serializer_from_static(RecordType::_adapter()), "", |v| TypeExpression::Record(Box::new(v)), |x| match x { TypeExpression::Record(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("enum_type", 15, 15, crate::skir_client::internal::struct_serializer_from_static(EnumType::_adapter()), "", |v| TypeExpression::EnumType(Box::new(v)), |x| match x { TypeExpression::EnumType(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("parameter", 16, 16, crate::skir_client::Serializer::string(), "", |v| TypeExpression::Parameter(v), |x| match x { TypeExpression::Parameter(v) => v, _ => unreachable!() });
+                (*a).add_wrapper_variant("named", 17, 17, crate::skir_client::internal::struct_serializer_from_static(ResolvedTypeRef::_adapter()), "", |v| TypeExpression::Named(Box::new(v)), |x| match x { TypeExpression::Named(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

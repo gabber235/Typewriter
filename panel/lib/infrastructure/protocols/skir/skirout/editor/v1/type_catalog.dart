@@ -3850,6 +3850,7 @@ final class EnumType_mutable implements EnumType_orMutable {
 ///   ```
 ///   switch (e) {
 ///     case TypeExpression_unknown(): { ... }
+///     case TypeExpression.any: { ... }
 ///     case TypeExpression.unit: { ... }
 ///     case TypeExpression.boolean: { ... }
 ///     case TypeExpression.timestamp: { ... }
@@ -3875,6 +3876,7 @@ sealed class TypeExpression {
   /// Default value for fields of type `TypeExpression`.
   static const TypeExpression unknown = TypeExpression_unknown._instance;
 
+  static const any = _TypeExpression_consts.anyConst;
   static const unit = _TypeExpression_consts.unitConst;
   static const boolean = _TypeExpression_consts.booleanConst;
   static const timestamp = _TypeExpression_consts.timestampConst;
@@ -4085,34 +4087,41 @@ sealed class TypeExpression {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
+        "any",
+        "any",
+        "",
+        any,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
         "unit",
         "unit",
         "",
         unit,
       );
       _serializerBuilder.addConstantVariant(
-        2,
+        3,
         "boolean",
         "boolean",
         "",
         boolean,
       );
       _serializerBuilder.addConstantVariant(
-        9,
+        10,
         "timestamp",
         "timestamp",
         "",
         timestamp,
       );
       _serializerBuilder.addConstantVariant(
-        10,
+        11,
         "duration",
         "duration",
         "",
         duration,
       );
       _serializerBuilder.addWrapperVariant(
-        3,
+        4,
         "string",
         "wrapString",
         StringConstraints.serializer,
@@ -4122,7 +4131,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.stringWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        4,
+        5,
         "bytes",
         "wrapBytes",
         CollectionConstraints.serializer,
@@ -4132,7 +4141,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.bytesWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        5,
+        6,
         "signed_integer",
         "wrapSignedInteger",
         IntegerType.serializer,
@@ -4142,7 +4151,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.signedIntegerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        6,
+        7,
         "unsigned_integer",
         "wrapUnsignedInteger",
         IntegerType.serializer,
@@ -4152,7 +4161,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.unsignedIntegerWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        7,
+        8,
         "float",
         "wrapFloat",
         FloatType.serializer,
@@ -4162,7 +4171,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.floatWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        8,
+        9,
         "decimal",
         "wrapDecimal",
         NumericConstraints.serializer,
@@ -4172,7 +4181,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.decimalWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        11,
+        12,
         "list",
         "wrapList",
         ListType.serializer,
@@ -4182,7 +4191,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.listWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        12,
+        13,
         "map",
         "wrapMap",
         MapType.serializer,
@@ -4192,7 +4201,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.mapWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        13,
+        14,
         "record",
         "wrapRecord",
         RecordType.serializer,
@@ -4202,7 +4211,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.recordWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        14,
+        15,
         "enum_type",
         "wrapEnumType",
         EnumType.serializer,
@@ -4212,7 +4221,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.enumTypeWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        15,
+        16,
         "parameter",
         "wrapParameter",
         _skir.Serializers.string,
@@ -4222,7 +4231,7 @@ sealed class TypeExpression {
         ordinal: TypeExpression_kind.parameterWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        16,
+        17,
         "named",
         "wrapNamed",
         ResolvedTypeRef.serializer,
@@ -4250,22 +4259,23 @@ sealed class TypeExpression {
 /// The kind of variant held by a `TypeExpression`.
 enum TypeExpression_kind {
   unknown(0),
-  unitConst(1),
-  booleanConst(2),
-  timestampConst(3),
-  durationConst(4),
-  stringWrapper(5),
-  bytesWrapper(6),
-  signedIntegerWrapper(7),
-  unsignedIntegerWrapper(8),
-  floatWrapper(9),
-  decimalWrapper(10),
-  listWrapper(11),
-  mapWrapper(12),
-  recordWrapper(13),
-  enumTypeWrapper(14),
-  parameterWrapper(15),
-  namedWrapper(16);
+  anyConst(1),
+  unitConst(2),
+  booleanConst(3),
+  timestampConst(4),
+  durationConst(5),
+  stringWrapper(6),
+  bytesWrapper(7),
+  signedIntegerWrapper(8),
+  unsignedIntegerWrapper(9),
+  floatWrapper(10),
+  decimalWrapper(11),
+  listWrapper(12),
+  mapWrapper(13),
+  recordWrapper(14),
+  enumTypeWrapper(15),
+  parameterWrapper(16),
+  namedWrapper(17);
 
   final _core.int _ordinal;
 
@@ -4291,6 +4301,7 @@ final class TypeExpression_unknown implements TypeExpression {
 }
 
 enum _TypeExpression_consts implements TypeExpression {
+  anyConst(TypeExpression_kind.anyConst),
   unitConst(TypeExpression_kind.unitConst),
   booleanConst(TypeExpression_kind.booleanConst),
   timestampConst(TypeExpression_kind.timestampConst),

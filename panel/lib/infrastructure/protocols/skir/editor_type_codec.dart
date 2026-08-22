@@ -53,7 +53,7 @@ final class SkirTypeCodec {
 
   TypeResult<wire.TypeExpression> encodeExpression(TypeExpression value) =>
       switch (value) {
-        AnyType() => invalidWire("Any type has no wire representation"),
+        AnyType() => const TypeResult.success(wire.TypeExpression.any),
         UnitType() => const TypeResult.success(wire.TypeExpression.unit),
         BooleanType() => const TypeResult.success(wire.TypeExpression.boolean),
         StringType() => SkirTypeScalarCodec.encodeString(value),
@@ -93,6 +93,7 @@ final class SkirTypeCodec {
       wire.TypeExpression_unknown() => invalidWire(
         "Unknown wire type expression",
       ),
+      wire.TypeExpression.any => const TypeResult.success(AnyType()),
       wire.TypeExpression.unit => const TypeResult.success(UnitType()),
       wire.TypeExpression.boolean => const TypeResult.success(BooleanType()),
       wire.TypeExpression.timestamp => const TypeResult.success(

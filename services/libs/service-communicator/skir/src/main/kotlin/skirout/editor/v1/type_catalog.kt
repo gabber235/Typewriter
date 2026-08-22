@@ -4482,6 +4482,7 @@ sealed class TypeExpression private constructor() {
     /** The kind of variant held by a `TypeExpression`. */
     enum class Kind {
         UNKNOWN,
+        ANY_CONST,
         UNIT_CONST,
         BOOLEAN_CONST,
         TIMESTAMP_CONST,
@@ -4512,6 +4513,22 @@ sealed class TypeExpression private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
+        }
+    }
+
+    object ANY : skirout.editor.v1.type_catalog.TypeExpression() {
+        override val kind get() = Kind.ANY_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.TypeExpression && other.kind == Kind.ANY_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ANY_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
         }
     }
 
@@ -4997,6 +5014,7 @@ sealed class TypeExpression private constructor() {
         val typeDescriptor get() = _serializerImpl.typeDescriptor;
 
         init {
+            ANY;
             UNIT;
             BOOLEAN;
             TIMESTAMP;
@@ -5008,37 +5026,44 @@ sealed class TypeExpression private constructor() {
 
         private fun _maybeFinalizeSerializer() {
             _finalizationCounter += 1;
-            if (_finalizationCounter == 5) {
+            if (_finalizationCounter == 6) {
                 _serializerImpl.addConstantVariant(
                     1,
+                    "any",
+                    Kind.ANY_CONST.ordinal,
+                    "",
+                    ANY,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
                     "unit",
                     Kind.UNIT_CONST.ordinal,
                     "",
                     UNIT,
                 );
                 _serializerImpl.addConstantVariant(
-                    2,
+                    3,
                     "boolean",
                     Kind.BOOLEAN_CONST.ordinal,
                     "",
                     BOOLEAN,
                 );
                 _serializerImpl.addConstantVariant(
-                    9,
+                    10,
                     "timestamp",
                     Kind.TIMESTAMP_CONST.ordinal,
                     "",
                     TIMESTAMP,
                 );
                 _serializerImpl.addConstantVariant(
-                    10,
+                    11,
                     "duration",
                     Kind.DURATION_CONST.ordinal,
                     "",
                     DURATION,
                 );
                 _serializerImpl.addWrapperVariant(
-                    3,
+                    4,
                     "string",
                     Kind.STRING_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.StringConstraints.serializer,
@@ -5047,7 +5072,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    4,
+                    5,
                     "bytes",
                     Kind.BYTES_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.CollectionConstraints.serializer,
@@ -5056,7 +5081,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    5,
+                    6,
                     "signed_integer",
                     Kind.SIGNED_INTEGER_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.IntegerType.serializer,
@@ -5065,7 +5090,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    6,
+                    7,
                     "unsigned_integer",
                     Kind.UNSIGNED_INTEGER_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.IntegerType.serializer,
@@ -5074,7 +5099,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    7,
+                    8,
                     "float",
                     Kind.FLOAT_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.FloatType.serializer,
@@ -5083,7 +5108,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    8,
+                    9,
                     "decimal",
                     Kind.DECIMAL_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.NumericConstraints.serializer,
@@ -5092,7 +5117,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    11,
+                    12,
                     "list",
                     Kind.LIST_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.ListType.serializer,
@@ -5101,7 +5126,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    12,
+                    13,
                     "map",
                     Kind.MAP_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.MapType.serializer,
@@ -5110,7 +5135,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    13,
+                    14,
                     "record",
                     Kind.RECORD_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.RecordType.serializer,
@@ -5119,7 +5144,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    14,
+                    15,
                     "enum_type",
                     Kind.ENUM_TYPE_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.EnumType.serializer,
@@ -5128,7 +5153,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    15,
+                    16,
                     "parameter",
                     Kind.PARAMETER_WRAPPER.ordinal,
                     build.skir.Serializers.string,
@@ -5137,7 +5162,7 @@ sealed class TypeExpression private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    16,
+                    17,
                     "named",
                     Kind.NAMED_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,

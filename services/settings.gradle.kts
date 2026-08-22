@@ -11,6 +11,11 @@ val serviceBuilds =
         ServiceBuild("codegen-utils", "libs/codegen-utils", listOf(":")),
         ServiceBuild("service-utils", "libs/service-utils", listOf(":")),
         ServiceBuild(
+            "typewriter-types",
+            "libs/typewriter-types",
+            listOf(":typewriter-types-core", ":typewriter-types-ksp", ":typewriter-types-skir"),
+        ),
+        ServiceBuild(
             "service-telemetry",
             "libs/service-telemetry",
             listOf(
