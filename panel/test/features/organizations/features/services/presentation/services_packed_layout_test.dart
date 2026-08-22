@@ -3,7 +3,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  const layout = ServicesSpiralLayout();
+  const layout = ServicesPackedLayout();
 
   test("empty and single topologies are supported", () {
     final empty = layout.layout(cellSize: 40, nodes: [], connections: []);
@@ -45,16 +45,74 @@ void main() {
     expect(first.edges, second.edges);
   });
 
+  test("one child is centered directly below its host", () {
+    final data = layout.layout(
+      cellSize: 40,
+      nodes: [_node("host"), _node("engine")],
+      connections: [_connection("host.engine", "host", "engine")],
+    );
+    final elements = _elementsById(data);
+    final host = elements["host"]!;
+    final engine = elements["engine"]!;
+
+    expect(_centerX(engine), _centerX(host));
+    expect(engine.y, host.y + host.height + 1);
+    expect(data.edges.single.sourceSide, EdgeSide.bottom);
+    expect(data.edges.single.targetSide, EdgeSide.top);
+  });
+
+  test("two children share a balanced row below their host", () {
+    final data = layout.layout(
+      cellSize: 40,
+      nodes: [_node("host"), _node("engine"), _node("realm")],
+      connections: [
+        _connection("host.engine", "host", "engine"),
+        _connection("host.realm", "host", "realm"),
+      ],
+    );
+    final elements = _elementsById(data);
+    final host = elements["host"]!;
+    final engine = elements["engine"]!;
+    final realm = elements["realm"]!;
+
+    expect(engine.y, host.y + host.height + 1);
+    expect(realm.y, engine.y);
+    expect(_centerX(engine) + _centerX(realm), _centerX(host) * 2);
+  });
+
+  test("disconnected components pack across both axes", () {
+    final data = layout.layout(
+      cellSize: 32,
+      nodes: [for (var index = 0; index < 12; index++) _node("node.$index")],
+      connections: [],
+    );
+    final width = data.elements
+        .map((element) => element.x + element.width)
+        .reduce((left, right) => left > right ? left : right);
+    final height = data.elements
+        .map((element) => element.y + element.height)
+        .reduce((left, right) => left > right ? left : right);
+
+    expect(
+      data.elements.map((element) => element.x).toSet().length,
+      greaterThan(1),
+    );
+    expect(
+      data.elements.map((element) => element.y).toSet().length,
+      greaterThan(1),
+    );
+    expect((width - height).abs(), lessThanOrEqualTo(5));
+  });
+
   test("variable nodes and packed components never overlap", () {
     final nodes = [
       for (var index = 0; index < 24; index++)
         _node("node.$index", width: 2 + index % 5, height: 2 + index % 4),
     ];
     final connections = [
-      for (var index = 1; index < 12; index++)
-        _connection("edge.$index", "node.0", "node.$index"),
+      _connection("host.engine", "node.0", "node.1"),
+      _connection("host.realm", "node.0", "node.2"),
     ];
-
     final data = layout.layout(
       cellSize: 32,
       nodes: nodes,
@@ -71,10 +129,6 @@ void main() {
         );
       }
     }
-    final xs = data.elements.map((element) => element.x).toSet();
-    final ys = data.elements.map((element) => element.y).toSet();
-    expect(xs.length, greaterThan(2));
-    expect(ys.length, greaterThan(2));
   });
 
   test("dangling relationships stay absent while orphan nodes remain", () {
@@ -89,26 +143,32 @@ void main() {
   });
 }
 
-ServicesSpiralNode _node(String id, {int width = 4, int height = 4}) =>
-    ServicesSpiralNode(
+ServicesPackedNode _node(String id, {int width = 4, int height = 4}) =>
+    ServicesPackedNode(
       id: GraphIdentifier(id),
       width: width,
       height: height,
       builder: (_) => const SizedBox.shrink(),
     );
 
-ServicesSpiralConnection _connection(String id, String source, String target) =>
-    ServicesSpiralConnection(
+ServicesPackedConnection _connection(String id, String source, String target) =>
+    ServicesPackedConnection(
       id: id,
       source: GraphIdentifier(source),
       target: GraphIdentifier(target),
       color: Colors.blue,
     );
 
+Map<String, GraphElement> _elementsById(GraphData data) => {
+  for (final element in data.elements) element.id.id: element,
+};
+
 Map<String, (int, int, int, int)> _placements(GraphData data) => {
   for (final element in data.elements)
     element.id.id: (element.x, element.y, element.width, element.height),
 };
+
+int _centerX(GraphElement element) => element.x * 2 + element.width;
 
 bool _overlapsWithGap(GraphElement left, GraphElement right) {
   const gap = 1;

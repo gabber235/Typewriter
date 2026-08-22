@@ -34,7 +34,7 @@ class ServicesGraph extends ConsumerWidget {
         ),
       );
     }
-    final data = const ServicesSpiralLayout().layout(
+    final data = const ServicesPackedLayout().layout(
       cellSize: servicesGraphCellSize,
       nodes: projection.nodes,
       connections: projection.connections,
@@ -72,7 +72,7 @@ class ServicesGraph extends ConsumerWidget {
     ];
     final nodes = [
       for (final item in items)
-        ServicesSpiralNode(
+        ServicesPackedNode(
           id: item.graphId,
           width: _nodeWidth,
           height: _nodeHeight,
@@ -80,7 +80,7 @@ class ServicesGraph extends ConsumerWidget {
         ),
     ];
     final nodeIds = nodes.map((node) => node.id).toSet();
-    final connections = <ServicesSpiralConnection?>[
+    final connections = <ServicesPackedConnection?>[
       for (final realm in topology.realmInstances)
         if (hostsById.containsKey(realm.ownerHost.id))
           _connection(
@@ -102,11 +102,11 @@ class ServicesGraph extends ConsumerWidget {
     ];
     return _ServicesGraphProjection(
       nodes: nodes,
-      connections: connections.whereType<ServicesSpiralConnection>().toList(),
+      connections: connections.whereType<ServicesPackedConnection>().toList(),
     );
   }
 
-  ServicesSpiralConnection? _connection({
+  ServicesPackedConnection? _connection({
     required String id,
     required SelectableIdentifier source,
     required SelectableIdentifier target,
@@ -116,7 +116,7 @@ class ServicesGraph extends ConsumerWidget {
     final sourceId = GraphIdentifier(source.id);
     final targetId = GraphIdentifier(target.id);
     if (!nodeIds.contains(sourceId) || !nodeIds.contains(targetId)) return null;
-    return ServicesSpiralConnection(
+    return ServicesPackedConnection(
       id: id,
       source: sourceId,
       target: targetId,
@@ -139,7 +139,7 @@ class ServicesGraph extends ConsumerWidget {
 
   _ServiceGraphItem _hostItem(
     BuildContext context,
-    skir.ServiceHost host,
+    TopologyHost host,
     Service? service,
   ) {
     final connected = service?.isOnline ?? false;
@@ -164,8 +164,8 @@ class ServicesGraph extends ConsumerWidget {
   _ServiceGraphItem _realmItem(
     BuildContext context,
     WidgetRef ref,
-    skir.RealmInstance realm,
-    skir.ServiceHost? host,
+    TopologyRealm realm,
+    TopologyHost? host,
     Map<skir.RecordId, Service> services,
   ) {
     final service = host == null ? null : services[host.serviceId];
@@ -190,8 +190,8 @@ class ServicesGraph extends ConsumerWidget {
 
   _ServiceGraphItem _engineItem(
     BuildContext context,
-    skir.EngineInstance engine,
-    skir.ServiceHost? host,
+    TopologyEngine engine,
+    TopologyHost? host,
     Map<skir.RecordId, Service> services,
   ) {
     final service = host == null ? null : services[host.serviceId];
@@ -245,19 +245,24 @@ class _ServiceGraphNode extends HookWidget {
         label: "${item.badge}, ${item.title}, ${item.status}",
         selected: isSelected,
         button: true,
-        child: Opacity(
-          opacity: item.available || isSelected ? 1 : 0.58,
-          child: GridSelectableCard(
-            title: item.title,
-            baseColor: item.color,
-            onBaseColor: item.color.on(context),
-            badgeOnColor: item.color.on(context),
-            isSelected: isSelected,
-            isFocused: isFocused,
-            isHovered: isHovered,
-            badgeLabel: item.badge,
-            header: Icon(item.icon, size: 30),
-            footer: _NodeStatus(item: item, isSelected: isSelected),
+        child: ColoredBox(
+          color: Surface.colorOf(context),
+          child: Opacity(
+            opacity: item.available || isSelected ? 1 : 0.58,
+            child: GridSelectableCard(
+              title: item.title,
+              baseColor: item.color,
+              onBaseColor: item.color.on(context),
+              badgeOnColor: item.color.on(context),
+              isSelected: isSelected,
+              isFocused: isFocused,
+              isHovered: isHovered,
+              badgeLabel: item.badge,
+              header: Icon(item.icon, size: 30),
+              footer: _NodeStatus(item: item, isSelected: isSelected),
+              width: _nodeWidth * servicesGraphCellSize,
+              height: _nodeHeight * servicesGraphCellSize,
+            ),
           ),
         ),
       ),
@@ -312,8 +317,8 @@ class _ServicesGraphProjection {
     required this.connections,
   });
 
-  final List<ServicesSpiralNode> nodes;
-  final List<ServicesSpiralConnection> connections;
+  final List<ServicesPackedNode> nodes;
+  final List<ServicesPackedConnection> connections;
 }
 
 class _ServiceGraphItem {
@@ -346,24 +351,24 @@ class _ServiceGraphItem {
 
 enum _StatusTone { active, warning, error, offline }
 
-_StatusTone _hostTone(skir.HostRuntimeStatus status) => switch (status) {
-  skir.HostRuntimeStatus.active => _StatusTone.active,
-  skir.HostRuntimeStatus.reconciling ||
-  skir.HostRuntimeStatus.drifted => _StatusTone.warning,
-  skir.HostRuntimeStatus.failed => _StatusTone.error,
-  skir.HostRuntimeStatus.offline ||
-  skir.HostRuntimeStatus_unknown() => _StatusTone.offline,
+_StatusTone _hostTone(TopologyHostStatus status) => switch (status) {
+  TopologyHostStatus.active => _StatusTone.active,
+  TopologyHostStatus.reconciling ||
+  TopologyHostStatus.drifted => _StatusTone.warning,
+  TopologyHostStatus.failed => _StatusTone.error,
+  TopologyHostStatus.offline ||
+  TopologyHostStatus.unknown => _StatusTone.offline,
 };
 
-_StatusTone _childTone(skir.ChildRuntimeStatus status) => switch (status) {
-  skir.ChildRuntimeStatus.active => _StatusTone.active,
-  skir.ChildRuntimeStatus.staging ||
-  skir.ChildRuntimeStatus.quiescing ||
-  skir.ChildRuntimeStatus.drifted => _StatusTone.warning,
-  skir.ChildRuntimeStatus.failed => _StatusTone.error,
-  skir.ChildRuntimeStatus.absent ||
-  skir.ChildRuntimeStatus.rolledBack ||
-  skir.ChildRuntimeStatus_unknown() => _StatusTone.offline,
+_StatusTone _childTone(TopologyRuntimeStatus status) => switch (status) {
+  TopologyRuntimeStatus.active => _StatusTone.active,
+  TopologyRuntimeStatus.staging ||
+  TopologyRuntimeStatus.quiescing ||
+  TopologyRuntimeStatus.drifted => _StatusTone.warning,
+  TopologyRuntimeStatus.failed => _StatusTone.error,
+  TopologyRuntimeStatus.absent ||
+  TopologyRuntimeStatus.rolledBack ||
+  TopologyRuntimeStatus.unknown => _StatusTone.offline,
 };
 
 String _recordLabel(skir.RecordId id) {

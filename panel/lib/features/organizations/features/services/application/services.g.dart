@@ -153,7 +153,7 @@ final class OrganizationTopologyStreamProvider
 }
 
 String _$organizationTopologyStreamHash() =>
-    r'3da194807cb31b02084b44a0228559d662fd5bde';
+    r'87197ebbb36f66ac841a9ed6b5ae03dab829d433';
 
 abstract class _$OrganizationTopologyStream
     extends $StreamNotifier<OrganizationTopology> {

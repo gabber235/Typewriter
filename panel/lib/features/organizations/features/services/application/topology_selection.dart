@@ -139,7 +139,7 @@ AsyncValue<Selectable> _topologySelectable(
 }
 
 Map<String, List<int>> _engineTargetCatalog(
-  Iterable<skir.SupportedEngine> engines,
+  Iterable<TopologySupportedEngine> engines,
 ) {
   final versions = <String, Set<int>>{};
   for (final engine in engines) {
@@ -153,36 +153,35 @@ Map<String, List<int>> _engineTargetCatalog(
   };
 }
 
-String hostRuntimeStatusLabel(skir.HostRuntimeStatus status) =>
-    switch (status) {
-      skir.HostRuntimeStatus.offline => "Offline",
-      skir.HostRuntimeStatus.reconciling => "Reconciling",
-      skir.HostRuntimeStatus.active => "Active",
-      skir.HostRuntimeStatus.failed => "Failed",
-      skir.HostRuntimeStatus.drifted => "Drifted",
-      skir.HostRuntimeStatus_unknown() => "Unknown",
-    };
+String hostRuntimeStatusLabel(TopologyHostStatus status) => switch (status) {
+  TopologyHostStatus.offline => "Offline",
+  TopologyHostStatus.reconciling => "Reconciling",
+  TopologyHostStatus.active => "Active",
+  TopologyHostStatus.failed => "Failed",
+  TopologyHostStatus.drifted => "Drifted",
+  TopologyHostStatus.unknown => "Unknown",
+};
 
 /// Gives topology cards and inspectors one stable child lifecycle label.
 ///
 /// Unknown wire values remain visible so forward compatibility does not hide
 /// runtime state from operators.
-String childRuntimeStatusLabel(skir.ChildRuntimeStatus status) =>
+String childRuntimeStatusLabel(TopologyRuntimeStatus status) =>
     switch (status) {
-      skir.ChildRuntimeStatus.absent => "Absent",
-      skir.ChildRuntimeStatus.staging => "Staging",
-      skir.ChildRuntimeStatus.active => "Active",
-      skir.ChildRuntimeStatus.quiescing => "Quiescing",
-      skir.ChildRuntimeStatus.failed => "Failed",
-      skir.ChildRuntimeStatus.rolledBack => "Rolled back",
-      skir.ChildRuntimeStatus.drifted => "Drifted",
-      skir.ChildRuntimeStatus_unknown() => "Unknown",
+      TopologyRuntimeStatus.absent => "Absent",
+      TopologyRuntimeStatus.staging => "Staging",
+      TopologyRuntimeStatus.active => "Active",
+      TopologyRuntimeStatus.quiescing => "Quiescing",
+      TopologyRuntimeStatus.failed => "Failed",
+      TopologyRuntimeStatus.rolledBack => "Rolled back",
+      TopologyRuntimeStatus.drifted => "Drifted",
+      TopologyRuntimeStatus.unknown => "Unknown",
     };
 
-String _revisionLabel(skir.ReconciledRevision revision) =>
+String _revisionLabel(TopologyRevision revision) =>
     "${revision.applied} of ${revision.desired}";
 
-String _targetLabel(skir.EngineTarget target) =>
+String _targetLabel(TopologyEngineTarget target) =>
     "${target.engineId.formatted} ${target.majorVersion}.x";
 
 String _encodeTarget(String engineId, int majorVersion) =>

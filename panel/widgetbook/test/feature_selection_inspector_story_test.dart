@@ -95,9 +95,7 @@ void main() {
     "Services page story opens the Service inspector",
     (tester) async {
       await _prepareStory(tester);
-      await tester.pumpWidget(
-        servicesPageStory(servicesState: DisplayState.fewItems),
-      );
+      await tester.pumpWidget(servicesPageStory());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(GridSelectableCard).first);
@@ -105,7 +103,10 @@ void main() {
 
       expect(find.text("Name"), findsOneWidget);
       expect(find.text("Version"), findsOneWidget);
-      expect(find.text("State"), findsWidgets);
+      expect(find.text("Service"), findsOneWidget);
+      expect(find.text("Identity and connection"), findsOneWidget);
+      expect(find.text("CONNECTION"), findsOneWidget);
+      expect(find.text("Connected"), findsWidgets);
       expect(find.text("Expected a record"), findsNothing);
       expect(find.text("Last seen"), findsOneWidget);
     },

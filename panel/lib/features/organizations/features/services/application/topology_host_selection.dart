@@ -13,12 +13,12 @@ class _ServiceHostSelectable
   final Ref ref;
   @override
   final ServiceHostIdentifier id;
-  final skir.ServiceHost host;
+  final TopologyHost host;
   final Service? service;
   final OrganizationTopology topology;
 
-  skir.RealmInstance? get _realm => topology.realmOwnedBy(host.hostId);
-  skir.EngineInstance? get _engine => topology.engineOwnedBy(host.hostId);
+  TopologyRealm? get _realm => topology.realmOwnedBy(host.hostId);
+  TopologyEngine? get _engine => topology.engineOwnedBy(host.hostId);
 
   Map<String, List<int>> get _realmTargets {
     final catalog = _engineTargetCatalog(
@@ -59,12 +59,20 @@ class _ServiceHostSelectable
         engineTargets: _engineTargets,
         realms: topology.realmInstances,
         canHostRealm: host.canHostRealm,
+        color: service?.color ?? standaloneServiceColor,
       ),
     ],
   );
 
   @override
-  List<SelectionCapability> get capabilities => [];
+  List<SelectionCapability> get capabilities => [
+    if (service case final backingService?)
+      UnbindSelectionCapability(
+        onUnbind: () => ref
+            .read(servicesProvider.notifier)
+            .deleteService(backingService.serviceId),
+      ),
+  ];
 
   @override
   Widget? buildInspectorHeader() => ServiceHeader(
@@ -181,16 +189,14 @@ class _ServiceHostSelectable
     }
   }
 
-  int _combinedRevision(
-    Service? currentService,
-    skir.ServiceHost currentHost,
-  ) => (currentService?.revision ?? 0) + currentHost.revision;
+  int _combinedRevision(Service? currentService, TopologyHost currentHost) =>
+      (currentService?.revision ?? 0) + currentHost.revision;
 
   RecordValue _hostInspectorValue(
-    skir.ServiceHost currentHost,
+    TopologyHost currentHost,
     Service? currentService,
-    skir.RealmInstance? realm,
-    skir.EngineInstance? engine,
+    TopologyRealm? realm,
+    TopologyEngine? engine,
   ) {
     final realmTarget = realm?.targetEngine ?? _firstTarget(_realmTargets);
     final engineTarget = engine?.target ?? _firstTarget(_engineTargets);
@@ -206,8 +212,8 @@ class _ServiceHostSelectable
         _HostInspectorFields.state: StringValue(
           currentService?.isOnline ?? false ? "Connected" : "Offline",
         ),
-        _HostInspectorFields.lastSeen: StringValue(
-          currentService?.lastSeenLabel ?? "Never",
+        _HostInspectorFields.lastSeen: _optionalTimestamp(
+          currentService?.lastSeen,
         ),
       }),
       _HostInspectorFields.host: RecordValue({
@@ -232,8 +238,8 @@ class _ServiceHostSelectable
         _HostInspectorFields.message: StringValue(
           currentHost.state.message ?? "None",
         ),
-        _HostInspectorFields.updatedAt: StringValue(
-          currentHost.state.updatedAt.toLocal().toIso8601String(),
+        _HostInspectorFields.updatedAt: TimestampValue(
+          currentHost.state.updatedAt,
         ),
       }),
       _HostInspectorFields.configuration: RecordValue({
@@ -258,11 +264,11 @@ class _ServiceHostSelectable
     });
   }
 
-  skir.EngineTarget? _firstTarget(Map<String, List<int>> targets) {
+  TopologyEngineTarget? _firstTarget(Map<String, List<int>> targets) {
     final id = targets.keys.firstOrNull;
     final major = id == null ? null : targets[id]?.firstOrNull;
     if (id == null || major == null) return null;
-    return skir.EngineTarget(engineId: id, majorVersion: major);
+    return TopologyEngineTarget(engineId: id, majorVersion: major);
   }
 
   skir.HostExecutionConfiguration? _decodeExecution(DataValue value) {
@@ -301,11 +307,11 @@ class _ServiceHostSelectable
     }
     return skir.HostExecutionConfiguration(
       realm: realmEnabled
-          ? skir.HostedRealmConfiguration(targetEngine: realmTarget!)
+          ? skir.HostedRealmConfiguration(targetEngine: realmTarget!.toSkir())
           : null,
       engine: engineEnabled
           ? skir.HostedEngineConfiguration(
-              target: engineTarget!,
+              target: engineTarget!.toSkir(),
               realm: assignment == "hosted"
                   ? skir.EngineRealmSelection.hostedRealm
                   : skir.EngineRealmSelection.createExistingRealm(
@@ -316,7 +322,7 @@ class _ServiceHostSelectable
     );
   }
 
-  skir.EngineTarget? _decodeTarget(
+  TopologyEngineTarget? _decodeTarget(
     String? value,
     Map<String, List<int>> targets,
   ) {
@@ -326,7 +332,7 @@ class _ServiceHostSelectable
     final id = value.substring(0, separator);
     final major = int.tryParse(value.substring(separator + 1));
     if (major == null || !(targets[id]?.contains(major) ?? false)) return null;
-    return skir.EngineTarget(engineId: id, majorVersion: major);
+    return TopologyEngineTarget(engineId: id, majorVersion: major);
   }
 }
 

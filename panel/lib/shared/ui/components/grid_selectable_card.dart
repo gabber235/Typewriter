@@ -88,14 +88,15 @@ class GridSelectableCard extends StatelessWidget {
   /// Optional custom footer placed at the bottom of the card, below the title.
   final Widget? footer;
 
-  Color _backgroundColor() {
+  Color _backgroundColor(BuildContext context) {
+    final surface = Surface.colorOf(context);
     if (isSelected) {
       if (isFocused) {
-        return baseColor.withValues(alpha: 0.70);
+        return Color.alphaBlend(baseColor.withValues(alpha: 0.70), surface);
       }
       return baseColor;
     }
-    return baseColor.withValues(alpha: 0.15);
+    return Color.alphaBlend(baseColor.withValues(alpha: 0.15), surface);
   }
 
   @override
@@ -111,13 +112,15 @@ class GridSelectableCard extends StatelessWidget {
                 ))
             .copyWith(color: isSelected ? onBase : baseColor);
 
+    final backgroundColor = _backgroundColor(context);
+
     final card = AnimatedContainer(
       duration: animationDuration,
       curve: animationCurve,
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: _backgroundColor(),
+        color: backgroundColor,
         borderRadius: .circular(borderRadius),
         border: .all(
           width: 2,
@@ -158,7 +161,7 @@ class GridSelectableCard extends StatelessWidget {
       ),
     ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
 
-    return Surface(color: _backgroundColor(), child: card);
+    return Surface(color: backgroundColor, child: card);
   }
 }
 

@@ -11,42 +11,71 @@ PresentationDefinition serviceInspectorPresentation(Service service) =>
       target: NamedType(serviceInspectorTypeRef),
       root: PresentationNode(
         id: "service.inspector",
-        header: PresentationHeader(
-          title: "Service Details".asStringLiteral.asHeaderTitle,
-        ),
         element: ColumnElement(
-          spacing: 12,
-          crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+          spacing: _dashboardSectionSpacing,
+          crossAxisAlignment: PresentationCrossAxisAlignment.start,
           children: [
-            PresentationNode(
-              id: "service.name",
-              element: TextInputElement(
-                control: BoundControl(
-                  binding: serviceInspectorField("name"),
-                  label: "Name".asStringLiteral,
+            _dashboardSection(
+              id: "service.details",
+              title: "Service",
+              description: "Identity and connection",
+              color: service.color,
+              children: [
+                PresentationNode(
+                  id: "service.name",
+                  element: TextInputElement(
+                    control: BoundControl(
+                      binding: serviceInspectorField("name"),
+                      label: "Name".asStringLiteral,
+                    ),
+                    multiline: false,
+                    inputFormatters: identifierInputFormats,
+                  ),
                 ),
-                multiline: false,
-                inputFormatters: identifierInputFormats,
-              ),
+                _dashboardCard(
+                  id: "service.connection",
+                  label: "CONNECTION",
+                  color: service.color,
+                  children: [
+                    _statusElement(
+                      id: "service.state",
+                      value: serviceInspectorExpression(
+                        "state",
+                        const StringType(),
+                      ),
+                      tones: const {
+                        "Connected": StatusTone.online,
+                        "Offline": StatusTone.offline,
+                      },
+                    ),
+                    _dashboardGrid(
+                      id: "service.facts",
+                      children: [
+                        _serviceReadOnlyField("version", "Version"),
+                        _readOnlyField(
+                          id: "service.lastSeen",
+                          label: "Last seen",
+                          content: _optionalRelativeTimeContent(
+                            binding: serviceInspectorField("lastSeen"),
+                            scopeBindingId: const BindingId(73),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-            for (final field in const [
-              ("version", "Version"),
-              ("state", "State"),
-              ("lastSeen", "Last seen"),
-            ])
-              PresentationNode(
-                id: "service.${field.$1}",
-                properties: const PresentationProperties(readOnly: true),
-                header: PresentationHeader(
-                  title: field.$2.asStringLiteral.asHeaderTitle,
-                ),
-                element: TextElement(
-                  serviceInspectorExpression(field.$1, const StringType()),
-                ),
-              ),
           ],
         ),
       ),
+    );
+
+PresentationNode _serviceReadOnlyField(String field, String label) =>
+    _readOnlyField(
+      id: "service.$field",
+      label: label,
+      value: serviceInspectorExpression(field, const StringType()),
     );
 
 BindingReference serviceInspectorField(String name) => BindingReference(

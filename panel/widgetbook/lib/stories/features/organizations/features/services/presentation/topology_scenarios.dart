@@ -1,182 +1,270 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-OrganizationTopology topologyScenario({bool distributed = true}) {
-  final paperHost = _host(
-    id: "paper-eu-1",
-    serviceId: "minecraft-eu-1",
+typedef CompleteTopologyScenario = ({
+  OrganizationTopology topology,
+  List<Service> services,
+});
+
+CompleteTopologyScenario completeTopologyScenario() {
+  final paperAlpha = _host(
+    id: "paper-alpha",
     entrypoint: "PAPER",
-    desiredRevision: distributed ? 4 : 3,
+    status: TopologyHostStatus.active,
+  );
+  final paperBeta = _host(
+    id: "paper-beta",
+    entrypoint: "PAPER",
+    status: TopologyHostStatus.reconciling,
     appliedRevision: 3,
+    canHostRealm: false,
   );
-  final realmHost = distributed
-      ? _host(
-          id: "realm-control-1",
-          serviceId: "realm-control-1",
-          entrypoint: "STANDALONE",
-          desiredRevision: 8,
-          appliedRevision: 8,
-        )
-      : paperHost;
-  final realm = skir.RealmInstance(
-    realmId: recordId("realm_instance:adventure"),
-    ownerHost: _ownerHost(realmHost),
-    revision: 3,
-    targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    manifestRevision: skir.ReconciledRevision(desired: 12, applied: 12),
-    state: _childState(skir.ChildRuntimeStatus.active),
+  final realmControl = _host(
+    id: "realm-control",
+    entrypoint: "STANDALONE",
+    status: TopologyHostStatus.drifted,
+    appliedRevision: 2,
   );
-  final engine = skir.EngineInstance(
-    engineId: recordId("engine_instance:paper-eu-1"),
-    ownerHost: _ownerHost(paperHost),
-    realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
-    revision: 5,
-    target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-    manifestRevision: skir.ReconciledRevision(
-      desired: 12,
-      applied: distributed ? 11 : 12,
-    ),
-    state: _childState(
-      distributed
-          ? skir.ChildRuntimeStatus.drifted
-          : skir.ChildRuntimeStatus.active,
-    ),
+  final paperOffline = _host(
+    id: "paper-offline",
+    entrypoint: "PAPER",
+    status: TopologyHostStatus.offline,
+    canHostRealm: false,
   );
-  return OrganizationTopology(
-    hosts: distributed ? [realmHost, paperHost] : [paperHost],
-    realmInstances: [realm],
-    engineInstances: [engine],
+  final standaloneFailed = _host(
+    id: "standalone-failed",
+    entrypoint: "STANDALONE",
+    status: TopologyHostStatus.failed,
+    message: "Realm process exited unexpectedly",
   );
-}
+  final standaloneQuiescing = _host(
+    id: "standalone-quiescing",
+    entrypoint: "STANDALONE",
+    status: TopologyHostStatus.active,
+  );
+  final paperRollback = _host(
+    id: "paper-rollback",
+    entrypoint: "PAPER",
+    status: TopologyHostStatus.active,
+    canHostRealm: false,
+  );
+  final standaloneAbsent = _host(
+    id: "standalone-absent",
+    entrypoint: "STANDALONE",
+    status: TopologyHostStatus.active,
+  );
 
-/// Creates service records that own every host in [topology].
-///
-/// The records stay online so Widgetbook can exercise Realm navigation and
-/// host inspectors without depending on a live registration connection.
-List<Service> topologyScenarioServices(
-  OrganizationTopology topology, {
-  bool connected = true,
-}) => [
-  for (final host in topology.hosts)
-    Service(
-      serviceId: host.serviceId,
-      revision: host.revision,
-      name: host.hostId.id.replaceAll("`", "").replaceAll("-", "_"),
-      role: HostServiceRole(version: "1.0.0"),
-      createdAt: DateTime.utc(2026, 8, 19),
-      organization: recordId("organization:story"),
-      state: ServiceState(
-        status: connected
-            ? ServiceStateStatus.online
-            : ServiceStateStatus.offline,
-        lastSeen: DateTime.now(),
-      ),
-    ),
-  Service(
-    serviceId: recordId("service:discord"),
-    revision: 1,
-    name: "discord_bridge",
-    role: CustomServiceRole(name: "discord", version: "1.0.0"),
-    createdAt: DateTime.utc(2026, 8, 19),
-    organization: recordId("organization:story"),
-    state: ServiceState(
-      status: connected
-          ? ServiceStateStatus.online
-          : ServiceStateStatus.offline,
-      lastSeen: DateTime.now(),
-    ),
-  ),
-];
+  final alphaRealm = _realm(
+    id: "adventure",
+    host: paperAlpha,
+    status: TopologyRuntimeStatus.active,
+  );
+  final stagingRealm = _realm(
+    id: "creative",
+    host: realmControl,
+    status: TopologyRuntimeStatus.staging,
+  );
+  final failedRealm = _realm(
+    id: "survival",
+    host: standaloneFailed,
+    status: TopologyRuntimeStatus.failed,
+    message: "Manifest activation failed",
+  );
+  final quiescingRealm = _realm(
+    id: "events",
+    host: standaloneQuiescing,
+    status: TopologyRuntimeStatus.quiescing,
+  );
+  final absentRealm = _realm(
+    id: "minigames",
+    host: standaloneAbsent,
+    status: TopologyRuntimeStatus.absent,
+  );
 
-OrganizationTopology denseTopologyScenario() {
-  final hosts = [
-    for (var index = 0; index < 7; index++)
-      _host(
-        id: "paper-$index",
-        serviceId: "paper-$index",
-        entrypoint: "PAPER",
-        desiredRevision: index + 1,
-        appliedRevision: index + 1,
-      ),
-  ];
-  return OrganizationTopology(
-    hosts: hosts,
+  final topology = OrganizationTopology(
+    hosts: [
+      paperAlpha,
+      paperBeta,
+      realmControl,
+      paperOffline,
+      standaloneFailed,
+      standaloneQuiescing,
+      paperRollback,
+      standaloneAbsent,
+    ],
     realmInstances: [
-      for (var index = 0; index < hosts.length; index++)
-        skir.RealmInstance(
-          realmId: recordId("realm_instance:realm-$index"),
-          ownerHost: _ownerHost(hosts[index]),
-          revision: index + 1,
-          targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-          manifestRevision: skir.ReconciledRevision(
-            desired: index + 1,
-            applied: index + 1,
-          ),
-          state: _childState(skir.ChildRuntimeStatus.active),
-        ),
+      alphaRealm,
+      stagingRealm,
+      failedRealm,
+      quiescingRealm,
+      absentRealm,
     ],
     engineInstances: [
-      for (var index = 0; index < hosts.length; index++)
-        skir.EngineInstance(
-          engineId: recordId("engine_instance:engine-$index"),
-          ownerHost: _ownerHost(hosts[index]),
-          realm: skir.RealmInfo(
-            realmId: recordId("realm_instance:realm-$index"),
-            ownerHost: _ownerHost(hosts[index]),
-          ),
-          revision: index + 1,
-          target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-          manifestRevision: skir.ReconciledRevision(
-            desired: index + 1,
-            applied: index + 1,
-          ),
-          state: _childState(skir.ChildRuntimeStatus.active),
-        ),
+      _engine(
+        id: "paper-alpha",
+        host: paperAlpha,
+        realm: alphaRealm,
+        status: TopologyRuntimeStatus.active,
+      ),
+      _engine(
+        id: "paper-beta",
+        host: paperBeta,
+        realm: alphaRealm,
+        status: TopologyRuntimeStatus.drifted,
+      ),
+      _engine(
+        id: "paper-rollback",
+        host: paperRollback,
+        realm: quiescingRealm,
+        status: TopologyRuntimeStatus.rolledBack,
+      ),
+    ],
+  );
+
+  return (
+    topology: topology,
+    services: [
+      for (final host in topology.hosts)
+        _hostService(host, online: host != paperOffline),
+      _customService(
+        id: "discord",
+        name: "discord_bridge",
+        role: "discord",
+        version: "2.4.0",
+        online: true,
+      ),
+      _customService(
+        id: "analytics",
+        name: "quest_analytics",
+        role: "analytics",
+        version: "1.8.2",
+        online: true,
+      ),
+      _customService(
+        id: "backups",
+        name: "realm_backups",
+        role: "backups",
+        version: "3.1.0",
+        online: false,
+      ),
+      _customService(
+        id: "webhooks",
+        name: "webhook_gateway",
+        role: "webhooks",
+        version: "1.2.1",
+        online: false,
+      ),
     ],
   );
 }
 
-skir.ServiceHost _host({
+TopologyHost _host({
   required String id,
-  required String serviceId,
   required String entrypoint,
-  required int desiredRevision,
-  required int appliedRevision,
-}) => skir.ServiceHost(
+  required TopologyHostStatus status,
+  int desiredRevision = 4,
+  int? appliedRevision,
+  bool canHostRealm = true,
+  String? message,
+}) => TopologyHost(
   hostId: recordId("service_host:$id"),
-  serviceId: recordId("service:$serviceId"),
+  serviceId: recordId("service:$id"),
   revision: desiredRevision,
   entrypoint: entrypoint,
-  canHostRealm: true,
+  canHostRealm: canHostRealm,
   supportedEngines: [
-    skir.SupportedEngine(
+    TopologySupportedEngine(
       engineId: entrypoint == "PAPER" ? "paper" : "conformance",
-      supportedMajorVersions: [1],
+      supportedMajorVersions: const [1],
     ),
   ],
-  topologyRevision: skir.ReconciledRevision(
+  topologyRevision: TopologyRevision(
     desired: desiredRevision,
-    applied: appliedRevision,
+    applied: appliedRevision ?? desiredRevision,
   ),
-  state: skir.HostRuntimeState(
-    status: desiredRevision == appliedRevision
-        ? skir.HostRuntimeStatus.active
-        : skir.HostRuntimeStatus.reconciling,
-    message: null,
-    updatedAt: DateTime.utc(2026, 8, 19),
+  state: TopologyHostState(
+    status: status,
+    message: message,
+    updatedAt: DateTime.utc(2026, 8, 22, 10, 30),
   ),
 );
 
-skir.OwnerHost _ownerHost(skir.ServiceHost host) => skir.OwnerHost(
+TopologyRealm _realm({
+  required String id,
+  required TopologyHost host,
+  required TopologyRuntimeStatus status,
+  String? message,
+}) => TopologyRealm(
+  realmId: recordId("realm_instance:$id"),
+  ownerHost: _ownerHost(host),
+  revision: 3,
+  targetEngine: const TopologyEngineTarget(engineId: "paper", majorVersion: 1),
+  manifestRevision: const TopologyRevision(desired: 12, applied: 12),
+  state: _runtimeState(status, message: message),
+);
+
+TopologyEngine _engine({
+  required String id,
+  required TopologyHost host,
+  required TopologyRealm realm,
+  required TopologyRuntimeStatus status,
+}) => TopologyEngine(
+  engineId: recordId("engine_instance:$id"),
+  ownerHost: _ownerHost(host),
+  realm: TopologyRealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
+  revision: 5,
+  target: const TopologyEngineTarget(engineId: "paper", majorVersion: 1),
+  manifestRevision: TopologyRevision(
+    desired: 12,
+    applied: status == TopologyRuntimeStatus.drifted ? 11 : 12,
+  ),
+  state: _runtimeState(status),
+);
+
+TopologyOwnerHost _ownerHost(TopologyHost host) => TopologyOwnerHost(
   id: host.hostId,
   name: host.serviceId.id.replaceAll("-", "_"),
 );
 
-skir.ChildRuntimeState _childState(skir.ChildRuntimeStatus status) =>
-    skir.ChildRuntimeState(
-      status: status,
-      activeArtifactVersion: "1.4.2",
-      message: null,
-      updatedAt: DateTime.utc(2026, 8, 19),
-    );
+TopologyRuntimeState _runtimeState(
+  TopologyRuntimeStatus status, {
+  String? message,
+}) => TopologyRuntimeState(
+  status: status,
+  activeArtifactVersion: status == TopologyRuntimeStatus.absent
+      ? null
+      : "1.4.2",
+  message: message,
+  updatedAt: DateTime.utc(2026, 8, 22, 10, 30),
+);
+
+Service _hostService(TopologyHost host, {required bool online}) => Service(
+  serviceId: host.serviceId,
+  revision: host.revision,
+  name: host.hostId.id.replaceAll("-", "_"),
+  role: HostServiceRole(version: "1.0.0"),
+  createdAt: DateTime.utc(2026, 8, 19),
+  organization: recordId("organization:story"),
+  state: ServiceState(
+    status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
+    lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 21),
+  ),
+);
+
+Service _customService({
+  required String id,
+  required String name,
+  required String role,
+  required String version,
+  required bool online,
+}) => Service(
+  serviceId: recordId("service:$id"),
+  revision: 1,
+  name: name,
+  role: CustomServiceRole(name: role, version: version),
+  createdAt: DateTime.utc(2026, 8, 19),
+  organization: recordId("organization:story"),
+  state: ServiceState(
+    status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
+    lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 20),
+  ),
+);

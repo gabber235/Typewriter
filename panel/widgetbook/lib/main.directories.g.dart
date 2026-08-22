@@ -733,24 +733,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
                                     .servicesPageUseCase,
                           ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Dense topology',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
-                                    .servicesPageDenseTopologyUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Offline topology',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
-                                    .servicesPageOfflineTopologyUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Runtime topology',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
-                                    .servicesPageTopologyUseCase,
-                          ),
                         ],
                       ),
                     ],
@@ -1024,6 +1006,18 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         .chipRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
+                                name: 'Date formats',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .dateFormatsRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Date time',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .dateTimeRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
                                 name: 'Icon',
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
@@ -1046,6 +1040,30 @@ final directories = <_widgetbook.WidgetbookNode>[
                                 builder:
                                     _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
                                         .progressRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Relative styles',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .relativeStylesRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Relative time',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .relativeTimeRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Status',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .statusRendererUseCase,
+                              ),
+                              _widgetbook.WidgetbookUseCase(
+                                name: 'Status tones',
+                                builder:
+                                    _widgetbook_workspace_stories_shared_editors_presentation_protocol_renderers_content_content_renderer_stories
+                                        .statusTonesRendererUseCase,
                               ),
                               _widgetbook.WidgetbookUseCase(
                                 name: 'Text',

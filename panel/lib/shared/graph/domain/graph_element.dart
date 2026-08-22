@@ -1,24 +1,24 @@
 import "package:flutter/material.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-class GraphElement implements Comparable<GraphElement> {
-  const GraphElement({
-    required this.id,
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-    required this.builder,
-    this.priority = 0,
-  });
+part "graph_element.freezed.dart";
 
-  final GraphIdentifier id;
-  final int x;
-  final int y;
-  final int width;
-  final int height;
-  final int priority;
-  final WidgetBuilder builder;
+@Freezed(equal: false, toStringOverride: false)
+abstract class GraphElement
+    with _$GraphElement
+    implements Comparable<GraphElement> {
+  const factory GraphElement({
+    required GraphIdentifier id,
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required WidgetBuilder builder,
+    @Default(0) int priority,
+  }) = _GraphElement;
+
+  const GraphElement._();
 
   bool inside(GraphElement other) {
     return x >= other.x &&
@@ -26,24 +26,6 @@ class GraphElement implements Comparable<GraphElement> {
         y >= other.y &&
         y + height <= other.y + other.height;
   }
-
-  GraphElement copyWith({
-    GraphIdentifier? id,
-    int? x,
-    int? y,
-    int? width,
-    int? height,
-    int? priority,
-    WidgetBuilder? builder,
-  }) => GraphElement(
-    id: id ?? this.id,
-    x: x ?? this.x,
-    y: y ?? this.y,
-    width: width ?? this.width,
-    height: height ?? this.height,
-    priority: priority ?? this.priority,
-    builder: builder ?? this.builder,
-  );
 
   @override
   String toString() =>

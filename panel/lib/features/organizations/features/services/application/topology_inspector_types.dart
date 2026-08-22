@@ -46,15 +46,15 @@ const _engineInstanceInspectorPresentationId = PresentationId(
 
 const _hostInspectorTypeRef = ResolvedTypeRef(
   id: QualifiedTypeId(namespace: "panel", name: "ServiceHost"),
-  revision: 1,
+  revision: 2,
 );
 const _realmInstanceInspectorTypeRef = ResolvedTypeRef(
   id: QualifiedTypeId(namespace: "panel", name: "RealmInstance"),
-  revision: 1,
+  revision: 2,
 );
 const _engineInstanceInspectorTypeRef = ResolvedTypeRef(
   id: QualifiedTypeId(namespace: "panel", name: "EngineInstance"),
-  revision: 1,
+  revision: 2,
 );
 const _stringListType = ListType(element: StringType());
 
@@ -75,8 +75,9 @@ final _hostInspectorType = TypeDefinition(
             _HostInspectorFields.state: _stringField(
               _HostInspectorFields.state,
             ),
-            _HostInspectorFields.lastSeen: _stringField(
-              _HostInspectorFields.lastSeen,
+            _HostInspectorFields.lastSeen: TypeField(
+              name: _HostInspectorFields.lastSeen,
+              type: NamedType(standardTypeRefs.optionOf(const TimestampType())),
             ),
           },
         ),
@@ -102,8 +103,9 @@ final _hostInspectorType = TypeDefinition(
             _HostInspectorFields.message: _stringField(
               _HostInspectorFields.message,
             ),
-            _HostInspectorFields.updatedAt: _stringField(
-              _HostInspectorFields.updatedAt,
+            _HostInspectorFields.updatedAt: const TypeField(
+              name: _HostInspectorFields.updatedAt,
+              type: TimestampType(),
             ),
           },
         ),
@@ -185,8 +187,9 @@ RecordType _runtimeInstanceRecord({
     _RuntimeInspectorFields.runtimeMessage: _stringField(
       _RuntimeInspectorFields.runtimeMessage,
     ),
-    _RuntimeInspectorFields.updatedAt: _stringField(
-      _RuntimeInspectorFields.updatedAt,
+    _RuntimeInspectorFields.updatedAt: const TypeField(
+      name: _RuntimeInspectorFields.updatedAt,
+      type: TimestampType(),
     ),
   },
 );

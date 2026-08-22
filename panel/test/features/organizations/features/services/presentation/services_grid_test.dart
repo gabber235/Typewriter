@@ -95,12 +95,94 @@ void main() {
     await tester.tap(find.text("PAPER HOST"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Service Details"), findsOneWidget);
-    expect(find.text("Service Host Details"), findsOneWidget);
+    expect(find.text("Service"), findsOneWidget);
+    expect(find.text("Identity and connection"), findsOneWidget);
+    expect(find.text("CONNECTION"), findsOneWidget);
+    expect(find.text("Host"), findsOneWidget);
+    expect(find.text("Capabilities and runtime health"), findsOneWidget);
+    expect(find.text("CAPABILITIES"), findsOneWidget);
+    expect(find.text("RUNTIME HEALTH"), findsOneWidget);
     expect(find.text("Configuration"), findsOneWidget);
+    expect(find.text("REALM HOSTING"), findsOneWidget);
+    expect(find.text("EXECUTION ENGINE"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
+    expect(find.text("Assigned Realm"), findsNothing);
+    expect(find.text("Hosted Realm"), findsNothing);
+    expect(find.text("Message"), findsNothing);
     expect(find.byType(TypedEditor), findsOneWidget);
+    expect(find.text("Unbind"), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.play_circle_outline), findsWidgets);
+
+    await tester.ensureVisible(find.text("Host a Realm"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pump();
+
+    expect(find.text("Assigned Realm"), findsOneWidget);
+    expect(find.text("Hosted Realm"), findsNothing);
+  });
+
+  testWidgets("custom service selection exposes unbind without open", (
+    tester,
+  ) async {
+    final fixture = _Fixture(connected: true);
+    await tester.pumpTestApp(
+      child: SizedBox(
+        width: 1200,
+        height: 720,
+        child: InspectorScaffold(
+          child: ServicesGraph(
+            services: fixture.services,
+            topology: fixture.topology,
+          ),
+        ),
+      ),
+      overrides: fixture.overrides,
+    );
+
+    await tester.tap(find.text("Discord Bridge"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Unbind"), findsOneWidget);
+    expect(find.text("Open"), findsNothing);
+  });
+
+  testWidgets("runtime selection groups health and placement details", (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = _Fixture(
+      connected: true,
+      childMessage: "Deployment needs attention",
+    );
+    await tester.pumpTestApp(
+      child: InspectorScaffold(
+        child: ServicesGraph(
+          services: fixture.services,
+          topology: fixture.topology,
+        ),
+      ),
+      overrides: fixture.overrides,
+    );
+
+    await tester.tap(find.text("ENGINE"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Runtime"), findsOneWidget);
+    expect(find.text("Current deployment health"), findsOneWidget);
+    expect(find.text("STATUS"), findsOneWidget);
+    expect(find.text("Placement"), findsOneWidget);
+    expect(find.text("Where this runtime executes"), findsOneWidget);
+    expect(find.text("ASSIGNMENT"), findsOneWidget);
+    expect(find.text("Assigned Realm"), findsOneWidget);
+    expect(find.text("Message"), findsOneWidget);
+    expect(find.text("Deployment needs attention"), findsOneWidget);
+    expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
   });
 
   testWidgets("offline Realm selection does not expose open", (tester) async {
@@ -128,7 +210,7 @@ void main() {
 }
 
 class _Fixture {
-  _Fixture({required bool connected}) {
+  _Fixture({required bool connected, String? childMessage}) {
     hostService = _service(
       id: "paper-eu",
       name: "paper_eu",
@@ -163,7 +245,7 @@ class _Fixture {
       revision: 3,
       targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
       manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),
-      state: _childState(),
+      state: _childState(message: childMessage),
     );
     engine = skir.EngineInstance(
       engineId: recordId("engine_instance:paper-eu"),
@@ -172,12 +254,12 @@ class _Fixture {
       revision: 4,
       target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
       manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),
-      state: _childState(),
+      state: _childState(message: childMessage),
     );
     topology = OrganizationTopology(
-      hosts: [host],
-      realmInstances: [realm],
-      engineInstances: [engine],
+      hosts: [TopologyHost.fromSkir(host)],
+      realmInstances: [TopologyRealm.fromSkir(realm)],
+      engineInstances: [TopologyEngine.fromSkir(engine)],
     );
   }
 
@@ -234,9 +316,9 @@ Service _service({
   ),
 );
 
-skir.ChildRuntimeState _childState() => skir.ChildRuntimeState(
+skir.ChildRuntimeState _childState({String? message}) => skir.ChildRuntimeState(
   status: skir.ChildRuntimeStatus.active,
   activeArtifactVersion: "1.0.0",
-  message: null,
+  message: message,
   updatedAt: DateTime.utc(2026, 8, 20),
 );

@@ -1,36 +1,36 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-class GraphInteractionPreview {
-  const GraphInteractionPreview({
-    this.movingIds = const {},
-    this.moveDelta = (0, 0),
-    this.resize,
-  });
+part "graph_layout.freezed.dart";
 
-  final Set<GraphIdentifier> movingIds;
-  final (int, int) moveDelta;
-  final GraphResizePreview? resize;
+@freezed
+abstract class GraphInteractionPreview with _$GraphInteractionPreview {
+  const factory GraphInteractionPreview({
+    @Default(<GraphIdentifier>{}) Set<GraphIdentifier> movingIds,
+    @Default((0, 0)) (int, int) moveDelta,
+    GraphResizePreview? resize,
+  }) = _GraphInteractionPreview;
 }
 
-class GraphResizePreview {
-  const GraphResizePreview({
-    required this.id,
-    required this.width,
-    required this.height,
-  });
-
-  final GraphIdentifier id;
-  final int width;
-  final int height;
+@freezed
+abstract class GraphResizePreview with _$GraphResizePreview {
+  const factory GraphResizePreview({
+    required GraphIdentifier id,
+    required int width,
+    required int height,
+  }) = _GraphResizePreview;
 }
 
-class GraphPlacedElement {
-  const GraphPlacedElement({required this.element, required this.bounds});
+@freezed
+abstract class GraphPlacedElement with _$GraphPlacedElement {
+  const factory GraphPlacedElement({
+    required GraphElement element,
+    required Rect bounds,
+  }) = _GraphPlacedElement;
 
-  final GraphElement element;
-  final Rect bounds;
+  const GraphPlacedElement._();
 
   GraphIdentifier get id => element.id;
   Offset get position => bounds.topLeft;
@@ -38,20 +38,15 @@ class GraphPlacedElement {
   bool isVisibleIn(Rect viewport) => bounds.overlaps(viewport);
 }
 
-class GraphPlacedEdge {
-  const GraphPlacedEdge({
-    required this.edge,
-    required this.source,
-    required this.target,
-    required this.sourcePoint,
-    required this.targetPoint,
-  });
-
-  final GraphEdge edge;
-  final GraphPlacedElement source;
-  final GraphPlacedElement target;
-  final Offset sourcePoint;
-  final Offset targetPoint;
+@freezed
+abstract class GraphPlacedEdge with _$GraphPlacedEdge {
+  const factory GraphPlacedEdge({
+    required GraphEdge edge,
+    required GraphPlacedElement source,
+    required GraphPlacedElement target,
+    required Offset sourcePoint,
+    required Offset targetPoint,
+  }) = _GraphPlacedEdge;
 }
 
 class GraphLayoutResult {

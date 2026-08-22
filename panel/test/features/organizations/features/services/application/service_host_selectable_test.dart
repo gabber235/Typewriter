@@ -24,6 +24,15 @@ void main() {
       final root = selectable.document.confirmedValue as RecordValue;
 
       expect(root.fields.keys, {"service", "host", "configuration"});
+      final service = root.fields["service"]! as RecordValue;
+      final lastSeen = service.fields["lastSeen"]! as PolymorphicValue;
+      expect(lastSeen.concreteType.id, const TypeId.some());
+      expect(
+        (lastSeen.value as RecordValue).fields["value"],
+        isA<TimestampValue>(),
+      );
+      final host = root.fields["host"]! as RecordValue;
+      expect(host.fields["updatedAt"], isA<TimestampValue>());
       expect(selectable.document.revision, 2);
       expect(selectable.document.commitGroups.values, {
         "service",
@@ -177,7 +186,7 @@ class _Harness {
       state: skir.ChildRuntimeState.defaultInstance,
     );
     final topology = OrganizationTopology(
-      hosts: [host],
+      hosts: [TopologyHost.fromSkir(host)],
       realmInstances: [],
       engineInstances: [],
     );

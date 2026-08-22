@@ -18,8 +18,8 @@ class _RealmInstanceSelectable
   final Ref ref;
   @override
   final RealmInstanceIdentifier id;
-  final skir.RealmInstance realm;
-  final skir.ServiceHost? host;
+  final TopologyRealm realm;
+  final TopologyHost? host;
   final Service? service;
 
   bool get canOpen => host != null && (service?.isOnline ?? false);
@@ -93,8 +93,8 @@ class _EngineInstanceSelectable
 
   @override
   final EngineInstanceIdentifier id;
-  final skir.EngineInstance engine;
-  final skir.ServiceHost? host;
+  final TopologyEngine engine;
+  final TopologyHost? host;
   final Service? service;
 
   @override
@@ -136,9 +136,9 @@ class _EngineInstanceSelectable
 
 RecordValue _runtimeValue({
   required String ownerHost,
-  required skir.EngineTarget target,
-  required skir.ReconciledRevision revision,
-  required skir.ChildRuntimeState state,
+  required TopologyEngineTarget target,
+  required TopologyRevision revision,
+  required TopologyRuntimeState state,
   String? assignedRealm,
 }) => RecordValue({
   _RuntimeInspectorFields.ownerHost: StringValue(ownerHost),
@@ -155,9 +155,7 @@ RecordValue _runtimeValue({
     state.activeArtifactVersion ?? "None",
   ),
   _RuntimeInspectorFields.runtimeMessage: StringValue(state.message ?? "None"),
-  _RuntimeInspectorFields.updatedAt: StringValue(
-    state.updatedAt.toLocal().toIso8601String(),
-  ),
+  _RuntimeInspectorFields.updatedAt: TimestampValue(state.updatedAt),
 });
 
 EditorMutationResult _readOnlyRuntimeMutation(DataPath path) =>

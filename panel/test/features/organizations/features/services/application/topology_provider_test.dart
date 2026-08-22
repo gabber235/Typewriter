@@ -113,8 +113,14 @@ void main() {
         engines: [_engine()],
       ),
     );
-    expect(listed.hosts, [_host(), _host(id: "host2")]);
-    expect(listed.realmOwnedBy(_host().hostId), _realm());
+    expect(listed.hosts, [
+      TopologyHost.fromSkir(_host()),
+      TopologyHost.fromSkir(_host(id: "host2")),
+    ]);
+    expect(
+      listed.realmOwnedBy(_host().hostId),
+      TopologyRealm.fromSkir(_realm()),
+    );
     expect(listed.realmInstances.single.ownerHost.name, "host_1");
     expect(listed.engineInstances.single.ownerHost.name, "paper_eu");
     expect(listed.engineInstances.single.realm.ownerHost.name, "host_1");
@@ -166,7 +172,10 @@ void main() {
 
       await container
           .read(organizationTopologyStreamProvider.notifier)
-          .configureHost(host: _host(), execution: execution);
+          .configureHost(
+            host: TopologyHost.fromSkir(_host()),
+            execution: execution,
+          );
 
       expect(nats.requests.single.subject, _configureSubject);
       expect(decoded!.hostId, _host().hostId);

@@ -1,36 +1,5 @@
 part of "services.dart";
 
-@freezed
-abstract class OrganizationTopology with _$OrganizationTopology {
-  const factory OrganizationTopology({
-    required List<skir.ServiceHost> hosts,
-    required List<skir.RealmInstance> realmInstances,
-    required List<skir.EngineInstance> engineInstances,
-  }) = _OrganizationTopology;
-
-  const OrganizationTopology._();
-
-  static const empty = OrganizationTopology(
-    hosts: [],
-    realmInstances: [],
-    engineInstances: [],
-  );
-
-  skir.RealmInstance? realmOwnedBy(skir.RecordId hostId) {
-    for (final realm in realmInstances) {
-      if (realm.ownerHost.id == hostId) return realm;
-    }
-    return null;
-  }
-
-  skir.EngineInstance? engineOwnedBy(skir.RecordId hostId) {
-    for (final engine in engineInstances) {
-      if (engine.ownerHost.id == hostId) return engine;
-    }
-    return null;
-  }
-}
-
 @riverpod
 class OrganizationTopologyStream extends _$OrganizationTopologyStream {
   @override
@@ -60,8 +29,8 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
   /// The canonical backend result is returned so editor callers can adopt its
   /// revision immediately. Protocol failures are translated to [ApiException]
   /// and do not mutate the watched topology locally.
-  Future<skir.ConfigureServiceHostResponse_Success> configureHost({
-    required skir.ServiceHost host,
+  Future<TopologyConfigurationResult> configureHost({
+    required TopologyHost host,
     required skir.HostExecutionConfiguration execution,
   }) async {
     final userId = await ref.read(userIdProvider.future);
@@ -80,9 +49,9 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
     );
     switch (response) {
       case skir.ConfigureServiceHostResponse_successWrapper(:final value):
-        return value;
+        return TopologyConfigurationResult.fromSkir(value);
       case skir.ConfigureServiceHostResponse_conflictErrorWrapper(:final value):
-        throw _HostConfigurationConflict(value.actual);
+        throw _HostConfigurationConflict(TopologyHost.fromSkir(value.actual));
       case skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
         :final value,
       ):
@@ -108,7 +77,7 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
 class _HostConfigurationConflict implements Exception {
   const _HostConfigurationConflict(this.actual);
 
-  final skir.ServiceHost actual;
+  final TopologyHost actual;
 }
 
 OrganizationTopology _reduceTopology(
@@ -119,19 +88,23 @@ OrganizationTopology _reduceTopology(
   return switch (response) {
     skir.WatchOrganizationTopologyResponse_listWrapper(:final value) =>
       OrganizationTopology(
-        hosts: value.hosts.toList(),
-        realmInstances: value.realms.toList(),
-        engineInstances: value.engines.toList(),
+        hosts: value.hosts.map(TopologyHost.fromSkir).toList(),
+        realmInstances: value.realms.map(TopologyRealm.fromSkir).toList(),
+        engineInstances: value.engines.map(TopologyEngine.fromSkir).toList(),
       ),
     skir.WatchOrganizationTopologyResponse_hostUpdatedWrapper(:final value) =>
       current.copyWith(
-        hosts: _upsertById(current.hosts, value, (it) => it.hostId),
+        hosts: _upsertById(
+          current.hosts,
+          TopologyHost.fromSkir(value),
+          (it) => it.hostId,
+        ),
       ),
     skir.WatchOrganizationTopologyResponse_realmUpdatedWrapper(:final value) =>
       current.copyWith(
         realmInstances: _upsertById(
           current.realmInstances,
-          value,
+          TopologyRealm.fromSkir(value),
           (it) => it.realmId,
         ),
       ),
@@ -139,7 +112,7 @@ OrganizationTopology _reduceTopology(
       current.copyWith(
         engineInstances: _upsertById(
           current.engineInstances,
-          value,
+          TopologyEngine.fromSkir(value),
           (it) => it.engineId,
         ),
       ),

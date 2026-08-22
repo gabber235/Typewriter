@@ -53,7 +53,6 @@ abstract class Service with _$Service {
   bool get isOnline => state?.isOnline ?? false;
 
   DateTime? get lastSeen => state?.lastSeen;
-  String get lastSeenLabel => state?.lastSeenLabel ?? "Never";
 
   String get label => role.label;
 
@@ -171,14 +170,6 @@ abstract class ServiceState with _$ServiceState {
   DateTime get nextTimeout {
     if (status == ServiceStateStatus.offline) return lastSeen;
     return lastSeen.add(_serviceStateTimeout);
-  }
-
-  String get lastSeenLabel {
-    final difference = DateTime.now().difference(lastSeen);
-    if (difference.inSeconds < 60) return "Just now";
-    if (difference.inMinutes < 60) return "${difference.inMinutes}m ago";
-    if (difference.inHours < 24) return "${difference.inHours}h ago";
-    return "${difference.inDays}d ago";
   }
 }
 

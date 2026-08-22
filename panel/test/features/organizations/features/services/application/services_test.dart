@@ -53,7 +53,7 @@ void main() {
   test("formats display name and missing state", () {
     final value = service();
     expect(value.displayName, "Test Service");
-    expect(value.lastSeenLabel, "Never");
+    expect(value.lastSeen, isNull);
     expect(value.label, "Host");
   });
 }

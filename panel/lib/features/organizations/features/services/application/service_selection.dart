@@ -2,7 +2,7 @@ part of "services.dart";
 
 const serviceInspectorTypeRef = ResolvedTypeRef(
   id: QualifiedTypeId(namespace: "panel", name: "Service"),
-  revision: 1,
+  revision: 2,
 );
 
 final _serviceInspectorType = TypeDefinition(
@@ -14,7 +14,10 @@ final _serviceInspectorType = TypeDefinition(
       "name": TypeField(name: "name", type: identifierStringType),
       "version": const TypeField(name: "version", type: StringType()),
       "state": const TypeField(name: "state", type: StringType()),
-      "lastSeen": const TypeField(name: "lastSeen", type: StringType()),
+      "lastSeen": TypeField(
+        name: "lastSeen",
+        type: NamedType(standardTypeRefs.optionOf(const TimestampType())),
+      ),
     },
   ),
 );
@@ -77,18 +80,6 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   List<SelectionCapability> get capabilities => [
-    if (service.isOnline && service.organization != null)
-      OpenSelectionCapability(
-        onOpen: () => ref
-            .read(appRouterProvider)
-            .navigate(
-              OrganizationRoute(
-                organizationId: service.organization!.id,
-                children: [RealmRoute(realmId: service.serviceId.id)],
-              ),
-            ),
-        allowMultiSelect: false,
-      ),
     UnbindSelectionCapability(
       onUnbind: () =>
           ref.read(servicesProvider.notifier).deleteService(service.serviceId),
@@ -164,6 +155,6 @@ extension ServiceInspectorValue on Service {
     "name": StringValue(name),
     "version": StringValue(role.version),
     "state": StringValue(isOnline ? "Connected" : "Offline"),
-    "lastSeen": StringValue(lastSeenLabel),
+    "lastSeen": _optionalTimestamp(lastSeen),
   });
 }

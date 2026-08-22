@@ -1,51 +1,24 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-class GraphMoveCommitPayload {
-  const GraphMoveCommitPayload({
-    required this.id,
-    required this.x,
-    required this.y,
-  });
+part "graph_commit.freezed.dart";
 
-  final GraphIdentifier id;
-  final int x;
-  final int y;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is GraphMoveCommitPayload &&
-            other.id == id &&
-            other.x == x &&
-            other.y == y;
-  }
-
-  @override
-  int get hashCode => Object.hash(id, x, y);
+@freezed
+abstract class GraphMoveCommitPayload with _$GraphMoveCommitPayload {
+  const factory GraphMoveCommitPayload({
+    required GraphIdentifier id,
+    required int x,
+    required int y,
+  }) = _GraphMoveCommitPayload;
 }
 
-class GraphResizeCommitPayload {
-  const GraphResizeCommitPayload({
-    required this.id,
-    required this.width,
-    required this.height,
-  });
-
-  final GraphIdentifier id;
-  final int width;
-  final int height;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is GraphResizeCommitPayload &&
-            other.id == id &&
-            other.width == width &&
-            other.height == height;
-  }
-
-  @override
-  int get hashCode => Object.hash(id, width, height);
+@freezed
+abstract class GraphResizeCommitPayload with _$GraphResizeCommitPayload {
+  const factory GraphResizeCommitPayload({
+    required GraphIdentifier id,
+    required int width,
+    required int height,
+  }) = _GraphResizeCommitPayload;
 }
 
 typedef GraphMoveCommit = void Function(List<GraphMoveCommitPayload> changes);
