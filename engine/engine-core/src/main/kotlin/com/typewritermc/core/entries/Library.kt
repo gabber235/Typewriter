@@ -57,6 +57,7 @@ class Library : KoinComponent, Reloadable {
     override suspend fun unload() {
         pages = emptyList()
         entries = emptyList()
+        entriesById = emptyMap()
         entryPriority = emptyMap()
     }
 
