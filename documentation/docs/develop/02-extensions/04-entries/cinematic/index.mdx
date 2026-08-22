@@ -2,11 +2,15 @@ import CodeSnippet from "@site/src/components/CodeSnippet";
 
 # CinematicEntry
 
-The `CinematicEntry` does not have any descendants, but is very customizable. When an entry is needed in a cinematic page, it needs to inherit this.
+The `CinematicEntry` does not have any descendants, but is very customizable. When an entry is needed in a
+cinematic page, it needs to inherit this.
 
-`CinematicEntry` works by having at least 1 list of `Segment`s. Segments are the parts of the cinematic and may have sub-properties defined. A segment needs to have at least a `startFrame` and `endFrame` which are the integers of the frames.
+`CinematicEntry` works by having at least 1 list of `Segment`s. Segments are the parts of the cinematic and may
+have sub-properties defined. A segment needs to have at least a `startFrame` and `endFrame` which are the integers
+of the frames.
 
-Frames are the ticks in a second. So there are 20 frames in a second. A cinematic takes as long as the latest `endFrame` of a segment from all its entries.
+Frames are the ticks in a second. So there are 20 frames in a second. A cinematic takes as long as the latest
+`endFrame` of a segment from all its entries.
 
 Segments are defined in the entry using the `@Segments` annotation. And it needs to be a list of `Segment`s.
 
@@ -19,7 +23,8 @@ Though this is supported in the plugin, it is not yet implemented in the cinemat
 If you need this, reach out to me on [Discord](https://discord.gg/HtbKyuDDBw).
 :::
 
-As entries are not allowed to have any state, we create a `CinematicAction` every time an entry is used in a cinematic for a player.
+As entries are not allowed to have any state, we create a `CinematicAction` every time an entry is used in a
+cinematic for a player.
 
 ## Usage
 <CodeSnippet tag="cinematic_entry" json={require("../../../snippets.json")} />
@@ -48,7 +53,8 @@ If you need all the customization, you can implement the `CinematicAction` direc
 <CodeSnippet tag="cinematic_action" json={require("../../../snippets.json")} />
 
 ### SimpleCinematicAction
-Sometimes you don't need all the customization and flexibility. If you only care about 1 segment track, and only need to do something when a segment starts or ends, you can use the `SimpleCinematicAction`.
+Sometimes you don't need all the customization and flexibility. If you only care about 1 segment track, and only
+need to do something when a segment starts or ends, you can use the `SimpleCinematicAction`.
 
 <CodeSnippet tag="cinematic_simple_action" json={require("../../../snippets.json")} />
 

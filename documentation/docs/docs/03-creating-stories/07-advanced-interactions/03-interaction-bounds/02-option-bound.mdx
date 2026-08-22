@@ -17,7 +17,8 @@ This guide is made for advanced users. It is recommended to have a good understa
 The story of this guide will be a waiter who is asking at which table the player would like to sit.
 :::
 
-In this guide, you will learn how to create an option that has an interaction bound applied to it. This means that while scrolling through the options, the player's bound location can change.
+In this guide, you will learn how to create an option that has an interaction bound applied to it. This means that
+while scrolling through the options, the player's bound location can change.
 
 ## Creating the option
 :::info[Entity Extension]
@@ -79,7 +80,8 @@ For our restaurant scenario:
 <Image img={require("../../../assets/interactions/option-bound-case-variables.png")} width="400" />
 
 ### Adding an Interaction Context Variable
-Now when the player scrolls through the options, nothing happens yet. To do this, we need to add an `Interaction Context Variable` to the `Case Variable` inside the `Lock Interaction Bound` entry.
+Now when the player scrolls through the options, nothing happens yet. To do this, we need to add an
+`Interaction Context Variable` to the `Case Variable` inside the `Lock Interaction Bound` entry.
 
 To do this, click on the <ActionButton button='dynamic-variable'/> icon at the `Selection` field inside the `Case Variable` entry and search for `Interaction Context Variable`.
 
@@ -118,7 +120,8 @@ When players interact with the waiter NPC, they'll see the option menu. As they 
 <Player url={require("../../../assets/interactions/option-bound-result.webm").default} />
 
 :::warning[Confirmation Key]
-While writing these docs, a bug was found with the confirmation key. If your confirmation key is `SWAP_HANDS` (F), then while inside an interaction bound the dialogue will not continue. You need to press SPACE to do this!
+While writing these docs, a bug was found with the confirmation key. If your confirmation key is `SWAP_HANDS` (F),
+then while inside an interaction bound the dialogue will not continue. You need to press SPACE to do this!
 :::
 
 ## How it Works
