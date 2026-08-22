@@ -17,6 +17,15 @@ import org.bukkit.entity.Player
 import org.koin.java.KoinJavaComponent.get
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * How many ticks a full sweep of the quests is spread over.
+ *
+ * A quest status therefore lands at most this many ticks late, half a second at 20 TPS, while the
+ * polling cost is divided by the same factor. Raising it trades responsiveness for CPU; lowering it
+ * does the opposite.
+ */
+private const val REFRESH_INTERVAL_TICKS = 10
+
 @Factory
 class QuestTracker(
     @Parameter
@@ -24,13 +33,17 @@ class QuestTracker(
 ) : SessionTracker {
     private val quests = ConcurrentHashMap<Ref<QuestEntry>, QuestStatus>()
     private var trackedQuest: Ref<QuestEntry>? = null
+    private var tickCounter = 0
 
     override fun setup() {
         Query.find<QuestEntry>().forEach { refresh(it.ref()) }
     }
 
     override fun tick() {
-        Query.find<QuestEntry>().forEach { refresh(it.ref()) }
+        val slice = tickCounter++ % REFRESH_INTERVAL_TICKS
+        Query.find<QuestEntry>()
+            .filterIndexed { index, _ -> index % REFRESH_INTERVAL_TICKS == slice }
+            .forEach { refresh(it.ref()) }
     }
 
     override fun teardown() {}
