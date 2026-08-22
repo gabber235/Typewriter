@@ -14,10 +14,11 @@ import TabItem from "@theme/TabItem";
 This guide is made for advanced users. It is recommended to have a good understanding of how [Interactions](../../01-interactions/index.mdx) and [Interaction Bounds](./) work.
 :::
 :::info[Story]
-The story of this guide will be a waiter that is asking at wich table the player would like to sit.
+The story of this guide will be a waiter who is asking at which table the player would like to sit.
 :::
 
-In this guide, you will learn how to create an option that has a interaction bound applied to it. This means that while scrolling thrue the options the players bound location can change.
+In this guide, you will learn how to create an option that has an interaction bound applied to it. This means that
+while scrolling through the options, the player's bound location can change.
 
 ## Creating the option
 :::info[Entity Extension]
@@ -78,8 +79,9 @@ For our restaurant scenario:
 4. Your `Case Variable` should look like this:
 <Image img={require("../../../assets/interactions/option-bound-case-variables.png")} width="400" />
 
-### Adding a Interaction Context Variable
-Now when the player scrolls thrue the options nothing happens yet. To do this we need to add a `Interaction Context Variable` to the `Case Variable` inside the `Lock Interaction Bound` entry.
+### Adding an Interaction Context Variable
+Now when the player scrolls through the options, nothing happens yet. To do this, we need to add an
+`Interaction Context Variable` to the `Case Variable` inside the `Lock Interaction Bound` entry.
 
 To do this, click on the <ActionButton button='dynamic-variable'/> icon at the `Selection` field inside the `Case Variable` entry and search for `Interaction Context Variable`.
 
@@ -90,7 +92,7 @@ To do this, click on the <ActionButton button='dynamic-variable'/> icon at the `
 This variable automatically provides the currently selected option index:
 
 1. Select the `Interaction Context Variable` entry
-2. In the inspector, click on `Select a Entry`
+2. In the inspector, click on `Select an Entry`
 3. Choose the `Option` entry we created earlier
 4. Your `Interaction Context Variable` should look like this:
 <Image img={require("../../../assets/interactions/option-bound-target-position.png")} width="400" />
@@ -118,7 +120,8 @@ When players interact with the waiter NPC, they'll see the option menu. As they 
 <Player url={require("../../../assets/interactions/option-bound-result.webm").default} />
 
 :::warning[Confirmation Key]
-While writing these docs a bug was found with the confirmation key. If your confirmation key is `SWAP_HANDS`(F) than while inside a interaction bound the dialogue will not continue. You need to press SPACE to do this!
+While writing these docs, a bug was found with the confirmation key. If your confirmation key is `SWAP_HANDS` (F),
+then while inside an interaction bound the dialogue will not continue. You need to press SPACE to do this!
 :::
 
 ## How it Works

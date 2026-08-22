@@ -40,7 +40,7 @@ and use the `<CodeSnippet tag="some_tag" json={require('../snippets.json')} />`
 component to embed them. This applies to every code snippet, especially pages
 under `develop`.
 
-Never write directly to the `snippets.json` file. It will be automcatically generated during the build.
+Never write directly to the `snippets.json` file. It will be automatically generated during the build.
 
 ## Common Components
 
