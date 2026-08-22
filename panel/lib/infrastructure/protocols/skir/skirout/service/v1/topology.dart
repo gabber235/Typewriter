@@ -1360,12 +1360,153 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct OwnerHost
+// -----------------------------------------------------------------------------
+
+sealed class OwnerHost_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get id;
+  _core.String get name;
+
+  OwnerHost toFrozen();
+}
+
+/// Deeply immutable.
+final class OwnerHost implements OwnerHost_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId id;
+  @_core.override
+  final _core.String name;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory OwnerHost({
+    required _lib_kernel_v1_record_id.RecordId_orMutable id,
+    required _core.String name,
+  }) => OwnerHost._(
+    id.toFrozen(),
+    name,
+  );
+
+  OwnerHost._(
+    this.id,
+    this.name,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = OwnerHost._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static OwnerHost_mutable mutable() => OwnerHost_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  OwnerHost toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  OwnerHost_mutable toMutable() => OwnerHost_mutable._(
+    this.id,
+    this.name,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! OwnerHost) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.name,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `OwnerHost` instances.
+  static _skir.StructSerializer<OwnerHost, OwnerHost_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:OwnerHost",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (OwnerHost_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [OwnerHost].
+final class OwnerHost_mutable implements OwnerHost_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable id;
+  _core.String name;
+  _skir.internal__UnrecognizedFields? _u;
+
+  OwnerHost_mutable._(
+    this.id,
+    this.name,
+  );
+
+  /// If the value of [id] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  OwnerHost toFrozen() => OwnerHost(
+    id: this.id,
+    name: this.name,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct RealmInstance
 // -----------------------------------------------------------------------------
 
 sealed class RealmInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
-  _lib_kernel_v1_record_id.RecordId_orMutable get ownerHostId;
+  OwnerHost_orMutable get ownerHost;
   _core.int get revision;
   EngineTarget_orMutable get targetEngine;
   ReconciledRevision_orMutable get manifestRevision;
@@ -1379,7 +1520,7 @@ final class RealmInstance implements RealmInstance_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId realmId;
   @_core.override
-  final _lib_kernel_v1_record_id.RecordId ownerHostId;
+  final OwnerHost ownerHost;
   @_core.override
   final _core.int revision;
   @_core.override
@@ -1392,14 +1533,14 @@ final class RealmInstance implements RealmInstance_orMutable {
 
   factory RealmInstance({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
+    required OwnerHost_orMutable ownerHost,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
     required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => RealmInstance._(
     realmId.toFrozen(),
-    ownerHostId.toFrozen(),
+    ownerHost.toFrozen(),
     revision,
     targetEngine.toFrozen(),
     manifestRevision.toFrozen(),
@@ -1408,7 +1549,7 @@ final class RealmInstance implements RealmInstance_orMutable {
 
   RealmInstance._(
     this.realmId,
-    this.ownerHostId,
+    this.ownerHost,
     this.revision,
     this.targetEngine,
     this.manifestRevision,
@@ -1418,7 +1559,7 @@ final class RealmInstance implements RealmInstance_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmInstance._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
     0,
     EngineTarget.defaultInstance,
     ReconciledRevision.defaultInstance,
@@ -1429,7 +1570,7 @@ final class RealmInstance implements RealmInstance_orMutable {
   /// Fields are initialized to their default values.
   static RealmInstance_mutable mutable() => RealmInstance_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
     0,
     EngineTarget.defaultInstance,
     ReconciledRevision.defaultInstance,
@@ -1444,7 +1585,7 @@ final class RealmInstance implements RealmInstance_orMutable {
   /// Returns a mutable shallow copy of this instance.
   RealmInstance_mutable toMutable() => RealmInstance_mutable._(
     this.realmId,
-    this.ownerHostId,
+    this.ownerHost,
     this.revision,
     this.targetEngine,
     this.manifestRevision,
@@ -1463,7 +1604,7 @@ final class RealmInstance implements RealmInstance_orMutable {
 
   _core.List get _equality_proxy => [
     this.realmId,
-    this.ownerHostId,
+    this.ownerHost,
     this.revision,
     this.targetEngine,
     this.manifestRevision,
@@ -1486,13 +1627,13 @@ final class RealmInstance implements RealmInstance_orMutable {
         (it, v) => it.realmId = v,
       );
       _serializerBuilder.addField(
-        "owner_host_id",
-        "ownerHostId",
+        "owner_host",
+        "ownerHost",
         1,
-        _lib_kernel_v1_record_id.RecordId.serializer,
+        OwnerHost.serializer,
         "",
-        (it) => it.ownerHostId,
-        (it, v) => it.ownerHostId = v,
+        (it) => it.ownerHost,
+        (it, v) => it.ownerHost = v,
       );
       _serializerBuilder.addField(
         "revision",
@@ -1549,7 +1690,7 @@ final class RealmInstance implements RealmInstance_orMutable {
 /// Mutable version of [RealmInstance].
 final class RealmInstance_mutable implements RealmInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
-  _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId;
+  OwnerHost_orMutable ownerHost;
   _core.int revision;
   EngineTarget_orMutable targetEngine;
   ReconciledRevision_orMutable manifestRevision;
@@ -1558,7 +1699,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
 
   RealmInstance_mutable._(
     this.realmId,
-    this.ownerHostId,
+    this.ownerHost,
     this.revision,
     this.targetEngine,
     this.manifestRevision,
@@ -1576,14 +1717,14 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
-  /// If the value of [ownerHostId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [ownerHostId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableOwnerHostId {
-    final value = this.ownerHostId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
+  OwnerHost_mutable get mutableOwnerHost {
+    final value = this.ownerHost;
+    if (value is OwnerHost_mutable) {
       return value;
     } else {
-      return this.ownerHostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.ownerHost = (value as OwnerHost).toMutable();
     }
   }
 
@@ -1624,11 +1765,163 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
   @_core.override
   RealmInstance toFrozen() => RealmInstance(
     realmId: this.realmId,
-    ownerHostId: this.ownerHostId,
+    ownerHost: this.ownerHost,
     revision: this.revision,
     targetEngine: this.targetEngine,
     manifestRevision: this.manifestRevision,
     state: this.state,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct RealmInfo
+// -----------------------------------------------------------------------------
+
+sealed class RealmInfo_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
+  OwnerHost_orMutable get ownerHost;
+
+  RealmInfo toFrozen();
+}
+
+/// Deeply immutable.
+final class RealmInfo implements RealmInfo_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId realmId;
+  @_core.override
+  final OwnerHost ownerHost;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RealmInfo({
+    required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
+    required OwnerHost_orMutable ownerHost,
+  }) => RealmInfo._(
+    realmId.toFrozen(),
+    ownerHost.toFrozen(),
+  );
+
+  RealmInfo._(
+    this.realmId,
+    this.ownerHost,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RealmInfo._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RealmInfo_mutable mutable() => RealmInfo_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RealmInfo toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RealmInfo_mutable toMutable() => RealmInfo_mutable._(
+    this.realmId,
+    this.ownerHost,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RealmInfo) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.realmId,
+    this.ownerHost,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RealmInfo` instances.
+  static _skir.StructSerializer<RealmInfo, RealmInfo_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "realm_id",
+        "realmId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.realmId,
+        (it, v) => it.realmId = v,
+      );
+      _serializerBuilder.addField(
+        "owner_host",
+        "ownerHost",
+        1,
+        OwnerHost.serializer,
+        "",
+        (it) => it.ownerHost,
+        (it, v) => it.ownerHost = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:RealmInfo",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RealmInfo_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RealmInfo].
+final class RealmInfo_mutable implements RealmInfo_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable realmId;
+  OwnerHost_orMutable ownerHost;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RealmInfo_mutable._(
+    this.realmId,
+    this.ownerHost,
+  );
+
+  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
+    final value = this.realmId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+    }
+  }
+
+  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
+  OwnerHost_mutable get mutableOwnerHost {
+    final value = this.ownerHost;
+    if (value is OwnerHost_mutable) {
+      return value;
+    } else {
+      return this.ownerHost = (value as OwnerHost).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RealmInfo toFrozen() => RealmInfo(
+    realmId: this.realmId,
+    ownerHost: this.ownerHost,
   ).._u = this._u;
 }
 
@@ -1638,8 +1931,8 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
 
 sealed class EngineInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get engineId;
-  _lib_kernel_v1_record_id.RecordId_orMutable get ownerHostId;
-  _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
+  OwnerHost_orMutable get ownerHost;
+  RealmInfo_orMutable get realm;
   _core.int get revision;
   EngineTarget_orMutable get target;
   ReconciledRevision_orMutable get manifestRevision;
@@ -1653,9 +1946,9 @@ final class EngineInstance implements EngineInstance_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId engineId;
   @_core.override
-  final _lib_kernel_v1_record_id.RecordId ownerHostId;
+  final OwnerHost ownerHost;
   @_core.override
-  final _lib_kernel_v1_record_id.RecordId realmId;
+  final RealmInfo realm;
   @_core.override
   final _core.int revision;
   @_core.override
@@ -1668,16 +1961,16 @@ final class EngineInstance implements EngineInstance_orMutable {
 
   factory EngineInstance({
     required _lib_kernel_v1_record_id.RecordId_orMutable engineId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
+    required OwnerHost_orMutable ownerHost,
+    required RealmInfo_orMutable realm,
     required _core.int revision,
     required EngineTarget_orMutable target,
     required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => EngineInstance._(
     engineId.toFrozen(),
-    ownerHostId.toFrozen(),
-    realmId.toFrozen(),
+    ownerHost.toFrozen(),
+    realm.toFrozen(),
     revision,
     target.toFrozen(),
     manifestRevision.toFrozen(),
@@ -1686,8 +1979,8 @@ final class EngineInstance implements EngineInstance_orMutable {
 
   EngineInstance._(
     this.engineId,
-    this.ownerHostId,
-    this.realmId,
+    this.ownerHost,
+    this.realm,
     this.revision,
     this.target,
     this.manifestRevision,
@@ -1697,8 +1990,8 @@ final class EngineInstance implements EngineInstance_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EngineInstance._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
+    RealmInfo.defaultInstance,
     0,
     EngineTarget.defaultInstance,
     ReconciledRevision.defaultInstance,
@@ -1709,8 +2002,8 @@ final class EngineInstance implements EngineInstance_orMutable {
   /// Fields are initialized to their default values.
   static EngineInstance_mutable mutable() => EngineInstance_mutable._(
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    OwnerHost.defaultInstance,
+    RealmInfo.defaultInstance,
     0,
     EngineTarget.defaultInstance,
     ReconciledRevision.defaultInstance,
@@ -1725,8 +2018,8 @@ final class EngineInstance implements EngineInstance_orMutable {
   /// Returns a mutable shallow copy of this instance.
   EngineInstance_mutable toMutable() => EngineInstance_mutable._(
     this.engineId,
-    this.ownerHostId,
-    this.realmId,
+    this.ownerHost,
+    this.realm,
     this.revision,
     this.target,
     this.manifestRevision,
@@ -1745,8 +2038,8 @@ final class EngineInstance implements EngineInstance_orMutable {
 
   _core.List get _equality_proxy => [
     this.engineId,
-    this.ownerHostId,
-    this.realmId,
+    this.ownerHost,
+    this.realm,
     this.revision,
     this.target,
     this.manifestRevision,
@@ -1769,22 +2062,22 @@ final class EngineInstance implements EngineInstance_orMutable {
         (it, v) => it.engineId = v,
       );
       _serializerBuilder.addField(
-        "owner_host_id",
-        "ownerHostId",
+        "owner_host",
+        "ownerHost",
         1,
-        _lib_kernel_v1_record_id.RecordId.serializer,
+        OwnerHost.serializer,
         "",
-        (it) => it.ownerHostId,
-        (it, v) => it.ownerHostId = v,
+        (it) => it.ownerHost,
+        (it, v) => it.ownerHost = v,
       );
       _serializerBuilder.addField(
-        "realm_id",
-        "realmId",
+        "realm",
+        "realm",
         2,
-        _lib_kernel_v1_record_id.RecordId.serializer,
+        RealmInfo.serializer,
         "",
-        (it) => it.realmId,
-        (it, v) => it.realmId = v,
+        (it) => it.realm,
+        (it, v) => it.realm = v,
       );
       _serializerBuilder.addField(
         "revision",
@@ -1841,8 +2134,8 @@ final class EngineInstance implements EngineInstance_orMutable {
 /// Mutable version of [EngineInstance].
 final class EngineInstance_mutable implements EngineInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable engineId;
-  _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId;
-  _lib_kernel_v1_record_id.RecordId_orMutable realmId;
+  OwnerHost_orMutable ownerHost;
+  RealmInfo_orMutable realm;
   _core.int revision;
   EngineTarget_orMutable target;
   ReconciledRevision_orMutable manifestRevision;
@@ -1851,8 +2144,8 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
 
   EngineInstance_mutable._(
     this.engineId,
-    this.ownerHostId,
-    this.realmId,
+    this.ownerHost,
+    this.realm,
     this.revision,
     this.target,
     this.manifestRevision,
@@ -1870,25 +2163,25 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [ownerHostId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [ownerHostId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableOwnerHostId {
-    final value = this.ownerHostId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
+  OwnerHost_mutable get mutableOwnerHost {
+    final value = this.ownerHost;
+    if (value is OwnerHost_mutable) {
       return value;
     } else {
-      return this.ownerHostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.ownerHost = (value as OwnerHost).toMutable();
     }
   }
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
-  _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
-    final value = this.realmId;
-    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+  /// If the value of [realm] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [realm] and returns it.
+  RealmInfo_mutable get mutableRealm {
+    final value = this.realm;
+    if (value is RealmInfo_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realm = (value as RealmInfo).toMutable();
     }
   }
 
@@ -1929,8 +2222,8 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
   @_core.override
   EngineInstance toFrozen() => EngineInstance(
     engineId: this.engineId,
-    ownerHostId: this.ownerHostId,
-    realmId: this.realmId,
+    ownerHost: this.ownerHost,
+    realm: this.realm,
     revision: this.revision,
     target: this.target,
     manifestRevision: this.manifestRevision,
@@ -4070,7 +4363,7 @@ sealed class WatchOrganizationTopologyResponse {
   /// Same as `wrapRealmUpdated(RealmInstance(...))`.
   factory WatchOrganizationTopologyResponse.createRealmUpdated({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
+    required OwnerHost_orMutable ownerHost,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
     required ReconciledRevision_orMutable manifestRevision,
@@ -4078,7 +4371,7 @@ sealed class WatchOrganizationTopologyResponse {
   }) => WatchOrganizationTopologyResponse.wrapRealmUpdated(
     RealmInstance(
       realmId: realmId,
-      ownerHostId: ownerHostId,
+      ownerHost: ownerHost,
       revision: revision,
       targetEngine: targetEngine,
       manifestRevision: manifestRevision,
@@ -4094,8 +4387,8 @@ sealed class WatchOrganizationTopologyResponse {
   /// Same as `wrapEngineUpdated(EngineInstance(...))`.
   factory WatchOrganizationTopologyResponse.createEngineUpdated({
     required _lib_kernel_v1_record_id.RecordId_orMutable engineId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable ownerHostId,
-    required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
+    required OwnerHost_orMutable ownerHost,
+    required RealmInfo_orMutable realm,
     required _core.int revision,
     required EngineTarget_orMutable target,
     required ReconciledRevision_orMutable manifestRevision,
@@ -4103,8 +4396,8 @@ sealed class WatchOrganizationTopologyResponse {
   }) => WatchOrganizationTopologyResponse.wrapEngineUpdated(
     EngineInstance(
       engineId: engineId,
-      ownerHostId: ownerHostId,
-      realmId: realmId,
+      ownerHost: ownerHost,
+      realm: realm,
       revision: revision,
       target: target,
       manifestRevision: manifestRevision,

@@ -380,13 +380,52 @@ impl ServiceHost {
 }
 
 // ==============================================================================
+// struct OwnerHost
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct OwnerHost {
+    pub id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub name: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OwnerHost>>,
+}
+
+impl OwnerHost {
+    pub fn default_ref() -> &'static OwnerHost {
+        static D: std::sync::LazyLock<OwnerHost> = std::sync::LazyLock::new(OwnerHost::default);
+        &D
+    }
+}
+
+impl OwnerHost {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OwnerHost> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OwnerHost>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "OwnerHost",
+                    "",
+                    |x: &OwnerHost| &x._unrecognized,
+                    |x: &mut OwnerHost, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OwnerHost> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct RealmInstance
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmInstance {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub owner_host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub owner_host: OwnerHost,
     pub revision: i64,
     pub target_engine: EngineTarget,
     pub manifest_revision: ReconciledRevision,
@@ -423,14 +462,53 @@ impl RealmInstance {
 }
 
 // ==============================================================================
+// struct RealmInfo
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RealmInfo {
+    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub owner_host: OwnerHost,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmInfo>>,
+}
+
+impl RealmInfo {
+    pub fn default_ref() -> &'static RealmInfo {
+        static D: std::sync::LazyLock<RealmInfo> = std::sync::LazyLock::new(RealmInfo::default);
+        &D
+    }
+}
+
+impl RealmInfo {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmInfo> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmInfo>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "RealmInfo",
+                    "",
+                    |x: &RealmInfo| &x._unrecognized,
+                    |x: &mut RealmInfo, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RealmInfo> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RealmInfo::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct EngineInstance
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EngineInstance {
     pub engine_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub owner_host_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub owner_host: OwnerHost,
+    pub realm: RealmInfo,
     pub revision: i64,
     pub target: EngineTarget,
     pub manifest_revision: ReconciledRevision,
@@ -1423,9 +1501,15 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<OwnerHost> = OwnerHost::_adapter() as *const _ as *mut _;
+                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &OwnerHost| &x.id, |x: &mut OwnerHost, v| x.id = v);
+                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &OwnerHost| &x.name, |x: &mut OwnerHost, v| x.name = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmInstance> = RealmInstance::_adapter() as *const _ as *mut _;
                 (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInstance| &x.realm_id, |x: &mut RealmInstance, v| x.realm_id = v);
-                (*a).add_field("owner_host_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInstance| &x.owner_host_id, |x: &mut RealmInstance, v| x.owner_host_id = v);
+                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &RealmInstance| &x.owner_host, |x: &mut RealmInstance, v| x.owner_host = v);
                 (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.revision, |x: &mut RealmInstance, v| x.revision = v);
                 (*a).add_field("target_engine", 3, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &RealmInstance| &x.target_engine, |x: &mut RealmInstance, v| x.target_engine = v);
                 (*a).add_field("manifest_revision", 4, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &RealmInstance| &x.manifest_revision, |x: &mut RealmInstance, v| x.manifest_revision = v);
@@ -1433,10 +1517,16 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RealmInfo> = RealmInfo::_adapter() as *const _ as *mut _;
+                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInfo| &x.realm_id, |x: &mut RealmInfo, v| x.realm_id = v);
+                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &RealmInfo| &x.owner_host, |x: &mut RealmInfo, v| x.owner_host = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<EngineInstance> = EngineInstance::_adapter() as *const _ as *mut _;
                 (*a).add_field("engine_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineInstance| &x.engine_id, |x: &mut EngineInstance, v| x.engine_id = v);
-                (*a).add_field("owner_host_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineInstance| &x.owner_host_id, |x: &mut EngineInstance, v| x.owner_host_id = v);
-                (*a).add_field("realm_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineInstance| &x.realm_id, |x: &mut EngineInstance, v| x.realm_id = v);
+                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &EngineInstance| &x.owner_host, |x: &mut EngineInstance, v| x.owner_host = v);
+                (*a).add_field("realm", 2, crate::skir_client::internal::struct_serializer_from_static(RealmInfo::_adapter()), "", |x: &EngineInstance| &x.realm, |x: &mut EngineInstance, v| x.realm = v);
                 (*a).add_field("revision", 3, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.revision, |x: &mut EngineInstance, v| x.revision = v);
                 (*a).add_field("target", 4, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &EngineInstance| &x.target, |x: &mut EngineInstance, v| x.target = v);
                 (*a).add_field("manifest_revision", 5, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &EngineInstance| &x.manifest_revision, |x: &mut EngineInstance, v| x.manifest_revision = v);

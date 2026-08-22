@@ -3,7 +3,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../../../../../../../../../support/test_utils.dart";
+import "../../../support/test_utils.dart";
 
 BuildContext _graphActionsContext(WidgetTester tester) {
   final actions = find.byWidgetPredicate(

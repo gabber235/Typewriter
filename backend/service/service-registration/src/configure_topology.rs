@@ -6,7 +6,8 @@ use wasmcloud_utils::{
     database::{
         RecordId, TransactionOutcome,
         topology::{
-            EngineInstanceRecord, EngineTargetRecord, RealmInstanceRecord, ServiceHostRecord,
+            EngineInstanceViewRecord, EngineTargetRecord, RealmInstanceViewRecord,
+            ServiceHostRecord,
         },
         transaction_query,
     },
@@ -29,8 +30,8 @@ use wasmcloud_utils::{
 enum ConfigureTopologyOutcome {
     Configured {
         host: ServiceHostRecord,
-        realm: Option<RealmInstanceRecord>,
-        engine: Option<EngineInstanceRecord>,
+        realm: Option<RealmInstanceViewRecord>,
+        engine: Option<EngineInstanceViewRecord>,
         removed_realm: Option<RecordId>,
         removed_engine: Option<RecordId>,
     },
@@ -254,8 +255,37 @@ pub async fn handle_configure(
             RETURN {
                 outcome: 'configured',
                 host: $updated_host,
-                realm: IF $has_realm { $realm } ELSE { NONE },
-                engine: IF $has_engine { $engine } ELSE { NONE },
+                realm: array::first(SELECT
+                        id,
+                        revision,
+                        target_engine,
+                        manifest_revision,
+                        state,
+                        {
+                            id: owner_host_id,
+                            name: owner_host_id.service_id.name,
+                        } AS owner_host
+                    FROM realm_instance
+                    WHERE owner_host_id = $host_id),
+                engine: array::first(SELECT
+                        id,
+                        revision,
+                        target,
+                        manifest_revision,
+                        state,
+                        {
+                            id: owner_host_id,
+                            name: owner_host_id.service_id.name,
+                        } AS owner_host,
+                        {
+                            realm_id: realm_id,
+                            owner_host: {
+                                id: realm_id.owner_host_id,
+                                name: realm_id.owner_host_id.service_id.name,
+                            },
+                        } AS realm
+                    FROM engine_instance
+                    WHERE owner_host_id = $host_id),
                 removed_realm: $removed_realm,
                 removed_engine: $removed_engine,
             };

@@ -41,7 +41,7 @@ class ServicesPage extends ConsumerWidget {
                 builder: (services) => topologyAsync(
                   name: "Runtime topology",
                   builder: (topology) =>
-                      ServicesGrid(services: services, topology: topology),
+                      ServicesGraph(services: services, topology: topology),
                 ),
               ),
             ),

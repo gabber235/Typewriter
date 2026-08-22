@@ -4,6 +4,7 @@ PresentationDefinition _hostInspectorPresentation({
   required Map<String, List<int>> realmTargets,
   required Map<String, List<int>> engineTargets,
   required List<skir.RealmInstance> realms,
+  required bool canHostRealm,
 }) => PresentationDefinition(
   id: _hostInspectorPresentationId,
   target: NamedType(_hostInspectorTypeRef),
@@ -13,71 +14,129 @@ PresentationDefinition _hostInspectorPresentation({
       spacing: 16,
       crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
       children: [
-        _inspectorSection(
-          id: "serviceHost.service",
-          title: "Service",
-          fields: const [
-            (_HostInspectorFields.serviceName, "Name"),
-            (_HostInspectorFields.serviceId, "Identifier"),
-            (_HostInspectorFields.serviceRoles, "Roles"),
-            (_HostInspectorFields.connected, "Connected"),
-          ],
-        ),
-        _inspectorSection(
-          id: "serviceHost.runtime",
-          title: "Host",
-          fields: const [
-            (_HostInspectorFields.entrypoint, "Entrypoint"),
-            (_HostInspectorFields.runtimeStatus, "Status"),
-            (_HostInspectorFields.runtimeMessage, "Message"),
-            (_HostInspectorFields.topologyRevision, "Topology revision"),
-            (_HostInspectorFields.supportedEngines, "Supported engines"),
-          ],
-        ),
         PresentationNode(
-          id: "serviceHost.execution",
+          id: "serviceHost.service",
           header: PresentationHeader(
-            title: "Execution".asStringLiteral.asHeaderTitle,
+            title: "Service Details".asStringLiteral.asHeaderTitle,
           ),
           element: ColumnElement(
             spacing: 12,
             crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
             children: [
               PresentationNode(
-                id: "serviceHost.realmEnabled",
-                element: ToggleInputElement(
-                  _control(_HostInspectorFields.realmEnabled, "Host a Realm"),
+                id: "serviceHost.service.name",
+                element: TextInputElement(
+                  control: _hostControl(
+                    _hostPath(
+                      _HostInspectorFields.service,
+                      _HostInspectorFields.name,
+                    ),
+                    "Name",
+                  ),
+                  multiline: false,
+                  inputFormatters: identifierInputFormats,
                 ),
               ),
-              PresentationNode(
-                id: "serviceHost.realmConfiguration",
-                element: ConditionalElement(
-                  condition: _fieldExpression(
-                    _HostInspectorFields.realmEnabled,
-                    const BooleanType(),
-                  ),
-                  whenTrue: PresentationNode(
-                    id: "serviceHost.realmConfiguration.fields",
-                    element: ColumnElement(
-                      spacing: 12,
-                      crossAxisAlignment:
-                          PresentationCrossAxisAlignment.stretch,
-                      children: [
-                        _engineTargetSelect(
-                          id: "serviceHost.realmTarget",
-                          field: _HostInspectorFields.realmTarget,
-                          label: "Realm target",
-                          targets: realmTargets,
-                        ),
-                      ],
+              for (final field in const [
+                (_HostInspectorFields.version, "Version"),
+                (_HostInspectorFields.state, "State"),
+                (_HostInspectorFields.lastSeen, "Last seen"),
+              ])
+                _hostReadOnlyField(
+                  id: "serviceHost.service.${field.$1}",
+                  path: _hostPath(_HostInspectorFields.service, field.$1),
+                  label: field.$2,
+                ),
+            ],
+          ),
+        ),
+        PresentationNode(
+          id: "serviceHost.host",
+          header: PresentationHeader(
+            title: "Service Host Details".asStringLiteral.asHeaderTitle,
+          ),
+          element: ColumnElement(
+            spacing: 12,
+            crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+            children: [
+              _hostReadOnlyField(
+                id: "serviceHost.host.entrypoint",
+                path: _hostPath(
+                  _HostInspectorFields.host,
+                  _HostInspectorFields.entrypoint,
+                ),
+                label: "Entry point",
+              ),
+              _hostReadOnlyField(
+                id: "serviceHost.host.canHostRealm",
+                path: _hostPath(
+                  _HostInspectorFields.host,
+                  _HostInspectorFields.canHostRealm,
+                ),
+                label: "Can host a Realm",
+                boolean: true,
+              ),
+              _hostReadOnlyField(
+                id: "serviceHost.host.supportedEngines",
+                path: _hostPath(
+                  _HostInspectorFields.host,
+                  _HostInspectorFields.supportedEngines,
+                ),
+                label: "Supported engines",
+                list: true,
+              ),
+              for (final field in const [
+                (_HostInspectorFields.state, "State"),
+                (_HostInspectorFields.message, "Message"),
+                (_HostInspectorFields.updatedAt, "Updated at"),
+              ])
+                _hostReadOnlyField(
+                  id: "serviceHost.host.${field.$1}",
+                  path: _hostPath(_HostInspectorFields.host, field.$1),
+                  label: field.$2,
+                ),
+            ],
+          ),
+        ),
+        PresentationNode(
+          id: "serviceHost.configuration",
+          header: PresentationHeader(
+            title: "Configuration".asStringLiteral.asHeaderTitle,
+          ),
+          element: ColumnElement(
+            spacing: 12,
+            crossAxisAlignment: PresentationCrossAxisAlignment.stretch,
+            children: [
+              if (canHostRealm) ...[
+                PresentationNode(
+                  id: "serviceHost.realmEnabled",
+                  element: ToggleInputElement(
+                    _configurationControl(
+                      _HostInspectorFields.realmEnabled,
+                      "Host a Realm",
                     ),
                   ),
                 ),
-              ),
+                PresentationNode(
+                  id: "serviceHost.realmConfiguration",
+                  element: ConditionalElement(
+                    condition: _configurationExpression(
+                      _HostInspectorFields.realmEnabled,
+                      const BooleanType(),
+                    ),
+                    whenTrue: _engineTargetSelect(
+                      id: "serviceHost.realmTarget",
+                      field: _HostInspectorFields.realmTarget,
+                      label: "Realm target",
+                      targets: realmTargets,
+                    ),
+                  ),
+                ),
+              ],
               PresentationNode(
                 id: "serviceHost.engineEnabled",
                 element: ToggleInputElement(
-                  _control(
+                  _configurationControl(
                     _HostInspectorFields.engineEnabled,
                     "Run an execution engine",
                   ),
@@ -86,7 +145,7 @@ PresentationDefinition _hostInspectorPresentation({
               PresentationNode(
                 id: "serviceHost.engineConfiguration",
                 element: ConditionalElement(
-                  condition: _fieldExpression(
+                  condition: _configurationExpression(
                     _HostInspectorFields.engineEnabled,
                     const BooleanType(),
                   ),
@@ -105,35 +164,26 @@ PresentationDefinition _hostInspectorPresentation({
                         ),
                         PresentationNode(
                           id: "serviceHost.realmAssignment",
-                          element: SelectInputElement(
-                            control: _control(
-                              _HostInspectorFields.realmAssignment,
-                              "Assigned Realm",
-                            ),
-                            options: [
-                              const SelectOption(
-                                id: "hosted",
-                                label: TypedExpression(
-                                  resultType: StringType(),
-                                  expression: LiteralExpression(
-                                    StringValue("Hosted Realm"),
+                          element: canHostRealm
+                              ? ConditionalElement(
+                                  condition: _configurationExpression(
+                                    _HostInspectorFields.realmEnabled,
+                                    const BooleanType(),
                                   ),
-                                ),
-                                value: TypedExpression(
-                                  resultType: StringType(),
-                                  expression: LiteralExpression(
-                                    StringValue("hosted"),
+                                  whenTrue: _realmAssignmentSelect(
+                                    id: "serviceHost.realmAssignment.hosted",
+                                    realms: realms,
+                                    includeHosted: true,
                                   ),
-                                ),
-                              ),
-                              for (final realm in realms)
-                                SelectOption(
-                                  id: realm.realmId.id,
-                                  label: realm.realmId.id.asStringLiteral,
-                                  value: realm.realmId.id.asStringLiteral,
-                                ),
-                            ],
-                          ),
+                                  whenFalse: _realmAssignmentSelect(
+                                    id: "serviceHost.realmAssignment.remote",
+                                    realms: realms,
+                                  ),
+                                )
+                              : _realmAssignmentSelect(
+                                  id: "serviceHost.realmAssignment.remote",
+                                  realms: realms,
+                                ).element,
                         ),
                       ],
                     ),
@@ -145,6 +195,40 @@ PresentationDefinition _hostInspectorPresentation({
         ),
       ],
     ),
+  ),
+);
+
+PresentationNode _realmAssignmentSelect({
+  required String id,
+  required List<skir.RealmInstance> realms,
+  bool includeHosted = false,
+}) => PresentationNode(
+  id: id,
+  element: SelectInputElement(
+    control: _configurationControl(
+      _HostInspectorFields.realmAssignment,
+      "Assigned Realm",
+    ),
+    options: [
+      if (includeHosted)
+        const SelectOption(
+          id: "hosted",
+          label: TypedExpression(
+            resultType: StringType(),
+            expression: LiteralExpression(StringValue("Hosted Realm")),
+          ),
+          value: TypedExpression(
+            resultType: StringType(),
+            expression: LiteralExpression(StringValue("hosted")),
+          ),
+        ),
+      for (final realm in realms)
+        SelectOption(
+          id: realm.realmId.id,
+          label: realm.ownerHost.name.formatted.asStringLiteral,
+          value: realm.realmId.id.asStringLiteral,
+        ),
+    ],
   ),
 );
 
@@ -208,52 +292,57 @@ PresentationNode _inspectorSection({
           header: PresentationHeader(
             title: label.asStringLiteral.asHeaderTitle,
           ),
-          element: _readOnlyInspectorValue(field),
+          element: TextElement(_fieldExpression(field, const StringType())),
         ),
     ],
   ),
 );
 
-PresentationElement _readOnlyInspectorValue(String field) {
-  if (field == _HostInspectorFields.connected) {
-    return ConditionalElement(
-      condition: _fieldExpression(field, const BooleanType()),
-      whenTrue: PresentationNode(
-        id: "$field.connected",
-        element: TextElement("Connected".asStringLiteral),
-      ),
-      whenFalse: PresentationNode(
-        id: "$field.offline",
-        element: TextElement("Offline".asStringLiteral),
-      ),
-    );
-  }
-  if (field == _HostInspectorFields.serviceRoles ||
-      field == _HostInspectorFields.supportedEngines) {
-    const itemBinding = BindingId(71);
-    return RepeatedElement(
-      source: _fieldExpression(field, _stringListType),
-      itemBindingId: itemBinding,
-      presentation: SequencePresentation(
-        layout: PresentationSequenceLayout.children(
-          PresentationChildrenLayout.column(spacing: 4),
-        ),
-        item: PresentationNode(
-          id: "$field.item",
-          element: TextElement(
-            const TypedExpression(
-              resultType: StringType(),
-              expression: BindingExpression(
-                BindingReference(bindingId: itemBinding),
+PresentationNode _hostReadOnlyField({
+  required String id,
+  required DataPath path,
+  required String label,
+  bool boolean = false,
+  bool list = false,
+}) => PresentationNode(
+  id: id,
+  properties: const PresentationProperties(readOnly: true),
+  header: PresentationHeader(title: label.asStringLiteral.asHeaderTitle),
+  element: boolean
+      ? ConditionalElement(
+          condition: _hostExpression(path, const BooleanType()),
+          whenTrue: PresentationNode(
+            id: "$id.yes",
+            element: TextElement("Yes".asStringLiteral),
+          ),
+          whenFalse: PresentationNode(
+            id: "$id.no",
+            element: TextElement("No".asStringLiteral),
+          ),
+        )
+      : list
+      ? RepeatedElement(
+          source: _hostExpression(path, _stringListType),
+          itemBindingId: const BindingId(71),
+          presentation: SequencePresentation(
+            layout: PresentationSequenceLayout.children(
+              PresentationChildrenLayout.column(spacing: 4),
+            ),
+            item: PresentationNode(
+              id: "$id.item",
+              element: TextElement(
+                const TypedExpression(
+                  resultType: StringType(),
+                  expression: BindingExpression(
+                    BindingReference(bindingId: BindingId(71)),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-  return TextElement(_fieldExpression(field, const StringType()));
-}
+        )
+      : TextElement(_hostExpression(path, const StringType())),
+);
 
 PresentationNode _engineTargetSelect({
   required String id,
@@ -263,7 +352,7 @@ PresentationNode _engineTargetSelect({
 }) => PresentationNode(
   id: id,
   element: SelectInputElement(
-    control: _control(field, label),
+    control: _configurationControl(field, label),
     options: [
       for (final entry in targets.entries)
         for (final version in entry.value)
@@ -276,16 +365,38 @@ PresentationNode _engineTargetSelect({
   ),
 );
 
-BoundControl _control(String field, String label) =>
-    BoundControl(binding: _hostField(field), label: label.asStringLiteral);
+DataPath _hostPath(String section, String field) =>
+    DataPath.root.field(section).field(field);
 
-BindingReference _hostField(String name) => BindingReference(
-  bindingId: const BindingId(0),
-  path: DataPath.root.field(name),
+DataPath _configurationPath(String field) =>
+    _hostPath(_HostInspectorFields.configuration, field);
+
+BoundControl _configurationControl(String field, String label) =>
+    _hostControl(_configurationPath(field), label);
+
+TypedExpression _configurationExpression(String field, TypeExpression type) =>
+    _hostExpression(_configurationPath(field), type);
+
+BoundControl _hostControl(DataPath path, String label) => BoundControl(
+  binding: BindingReference(bindingId: const BindingId(0), path: path),
+  label: label.asStringLiteral,
 );
+
+TypedExpression _hostExpression(DataPath path, TypeExpression type) =>
+    TypedExpression(
+      resultType: type,
+      expression: BindingExpression(
+        BindingReference(bindingId: const BindingId(0), path: path),
+      ),
+    );
 
 TypedExpression _fieldExpression(String name, TypeExpression type) =>
     TypedExpression(
       resultType: type,
-      expression: BindingExpression(_hostField(name)),
+      expression: BindingExpression(
+        BindingReference(
+          bindingId: const BindingId(0),
+          path: DataPath.root.field(name),
+        ),
+      ),
     );

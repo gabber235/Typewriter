@@ -12,6 +12,7 @@ final class EditorDocument {
     this.presentations = const [],
     this.collections = const [],
     this.mergePolicies = const {},
+    this.commitGroups = const {},
     this.rootPresentation,
     this.diagnostics = const [],
     this.readOnly = false,
@@ -24,6 +25,7 @@ final class EditorDocument {
   final List<PresentationDefinition> presentations;
   final List<PresentationCollectionSource> collections;
   final Map<DataPath, EditorMergePolicy> mergePolicies;
+  final Map<DataPath, String> commitGroups;
   final PresentationNode? rootPresentation;
   final List<TypeDiagnostic> diagnostics;
   final bool readOnly;
@@ -39,6 +41,7 @@ final class EditorDocument {
       listEquals(presentations, other.presentations) &&
       listEquals(collections, other.collections) &&
       mapEquals(mergePolicies, other.mergePolicies) &&
+      mapEquals(commitGroups, other.commitGroups) &&
       rootPresentation == other.rootPresentation &&
       listEquals(diagnostics, other.diagnostics) &&
       readOnly == other.readOnly;
@@ -51,6 +54,7 @@ final class EditorDocument {
     List<PresentationDefinition>? presentations,
     List<PresentationCollectionSource>? collections,
     Map<DataPath, EditorMergePolicy>? mergePolicies,
+    Map<DataPath, String>? commitGroups,
     PresentationNode? rootPresentation,
     bool clearRootPresentation = false,
     List<TypeDiagnostic>? diagnostics,
@@ -63,6 +67,7 @@ final class EditorDocument {
     presentations: presentations ?? this.presentations,
     collections: collections ?? this.collections,
     mergePolicies: mergePolicies ?? this.mergePolicies,
+    commitGroups: commitGroups ?? this.commitGroups,
     rootPresentation: clearRootPresentation
         ? null
         : rootPresentation ?? this.rootPresentation,
@@ -77,6 +82,7 @@ final class EditorCommit {
     required this.localRevision,
     required this.rootValue,
     required this.changedPaths,
+    this.group,
   }) : assert(expectedRevision >= 0, "Expected revision must not be negative."),
        assert(localRevision >= 0, "Local revision must not be negative.");
 
@@ -84,4 +90,5 @@ final class EditorCommit {
   final int localRevision;
   final DataValue rootValue;
   final Set<DataPath> changedPaths;
+  final String? group;
 }

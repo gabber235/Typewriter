@@ -27,9 +27,25 @@ skir.ServiceHost _host({String id = "host1", int revision = 1}) =>
 
 skir.RealmInstance _realm() => skir.RealmInstance(
   realmId: recordId("realm_instance:realm1"),
-  ownerHostId: _host().hostId,
+  ownerHost: skir.OwnerHost(id: _host().hostId, name: "host_1"),
   revision: 1,
   targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
+  manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+  state: skir.ChildRuntimeState.defaultInstance,
+);
+
+skir.EngineInstance _engine() => skir.EngineInstance(
+  engineId: recordId("engine_instance:engine1"),
+  ownerHost: skir.OwnerHost(
+    id: _host(id: "host2").hostId,
+    name: "paper_eu",
+  ),
+  realm: skir.RealmInfo(
+    realmId: _realm().realmId,
+    ownerHost: _realm().ownerHost,
+  ),
+  revision: 1,
+  target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
   manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
   state: skir.ChildRuntimeState.defaultInstance,
 );
@@ -94,11 +110,14 @@ void main() {
           _host(id: "host2"),
         ],
         realms: [_realm()],
-        engines: [],
+        engines: [_engine()],
       ),
     );
     expect(listed.hosts, [_host(), _host(id: "host2")]);
     expect(listed.realmOwnedBy(_host().hostId), _realm());
+    expect(listed.realmInstances.single.ownerHost.name, "host_1");
+    expect(listed.engineInstances.single.ownerHost.name, "paper_eu");
+    expect(listed.engineInstances.single.realm.ownerHost.name, "host_1");
 
     final updated = await emit(
       skir.WatchOrganizationTopologyResponse.wrapHostUpdated(

@@ -20,29 +20,58 @@ void main() {
     expect(buttonTop, greaterThan(inputTop));
   });
 
-  testWidgets("shows custom services and every topology resource in one grid", (
+  testWidgets(
+    "shows custom services and every topology resource in one graph",
+    (tester) async {
+      final fixture = _Fixture(connected: true);
+      await tester.pumpTestApp(
+        child: SizedBox(
+          width: 1200,
+          height: 720,
+          child: ServicesGraph(
+            services: fixture.services,
+            topology: fixture.topology,
+          ),
+        ),
+        overrides: fixture.overrides,
+      );
+
+      expect(find.text("DISCORD SERVICE"), findsOneWidget);
+      expect(find.text("PAPER HOST"), findsOneWidget);
+      expect(find.text("REALM"), findsOneWidget);
+      expect(find.text("ENGINE"), findsOneWidget);
+      expect(find.text("Discord Bridge"), findsOneWidget);
+      expect(find.text("Paper Eu"), findsNWidgets(2));
+      expect(find.byType(Graph), findsOneWidget);
+      final graph = tester.widget<Graph>(find.byType(Graph));
+      expect(graph.data.elements, hasLength(4));
+      expect(graph.data.edges, hasLength(2));
+      expect(find.byTooltip("Zoom to fit"), findsNothing);
+    },
+  );
+
+  testWidgets("keeps orphan runtimes visible without topology edges", (
     tester,
   ) async {
     final fixture = _Fixture(connected: true);
+    final orphaned = fixture.topology.copyWith(hosts: []);
     await tester.pumpTestApp(
       child: SizedBox(
         width: 1200,
         height: 720,
-        child: ServicesGrid(
-          services: fixture.services,
-          topology: fixture.topology,
+        child: ServicesGraph(
+          services: [fixture.customService],
+          topology: orphaned,
         ),
       ),
       overrides: fixture.overrides,
     );
 
-    expect(find.text("SERVICE"), findsOneWidget);
-    expect(find.text("PAPER HOST"), findsOneWidget);
+    final graph = tester.widget<Graph>(find.byType(Graph));
+    expect(graph.data.elements, hasLength(3));
+    expect(graph.data.edges, isEmpty);
     expect(find.text("REALM"), findsOneWidget);
     expect(find.text("ENGINE"), findsOneWidget);
-    expect(find.text("Discord Bridge"), findsOneWidget);
-    expect(find.text("Paper Eu"), findsNWidgets(2));
-    expect(find.byTooltip("Zoom to fit"), findsNothing);
   });
 
   testWidgets("host selection uses the shared presentation inspector", (
@@ -55,7 +84,7 @@ void main() {
     final fixture = _Fixture(connected: true);
     await tester.pumpTestApp(
       child: InspectorScaffold(
-        child: ServicesGrid(
+        child: ServicesGraph(
           services: fixture.services,
           topology: fixture.topology,
         ),
@@ -66,9 +95,9 @@ void main() {
     await tester.tap(find.text("PAPER HOST"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Service"), findsWidgets);
-    expect(find.text("Host"), findsOneWidget);
-    expect(find.text("Execution"), findsOneWidget);
+    expect(find.text("Service Details"), findsOneWidget);
+    expect(find.text("Service Host Details"), findsOneWidget);
+    expect(find.text("Configuration"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
     expect(find.byType(TypedEditor), findsOneWidget);
@@ -81,7 +110,7 @@ void main() {
         width: 1200,
         height: 720,
         child: InspectorScaffold(
-          child: ServicesGrid(
+          child: ServicesGraph(
             services: fixture.services,
             topology: fixture.topology,
           ),
@@ -130,7 +159,7 @@ class _Fixture {
     );
     realm = skir.RealmInstance(
       realmId: recordId("realm_instance:adventure"),
-      ownerHostId: host.hostId,
+      ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       revision: 3,
       targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
       manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),
@@ -138,8 +167,8 @@ class _Fixture {
     );
     engine = skir.EngineInstance(
       engineId: recordId("engine_instance:paper-eu"),
-      ownerHostId: host.hostId,
-      realmId: realm.realmId,
+      ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
+      realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
       revision: 4,
       target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
       manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),

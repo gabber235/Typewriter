@@ -1,15 +1,18 @@
 part of "services.dart";
 
 abstract final class _HostInspectorFields {
-  static const serviceName = "serviceName";
-  static const serviceId = "serviceId";
-  static const serviceRoles = "serviceRoles";
-  static const connected = "connected";
+  static const service = "service";
+  static const host = "host";
+  static const configuration = "configuration";
+  static const name = "name";
+  static const version = "version";
+  static const state = "state";
+  static const lastSeen = "lastSeen";
   static const entrypoint = "entrypoint";
-  static const runtimeStatus = "runtimeStatus";
-  static const runtimeMessage = "runtimeMessage";
-  static const topologyRevision = "topologyRevision";
+  static const canHostRealm = "canHostRealm";
   static const supportedEngines = "supportedEngines";
+  static const message = "message";
+  static const updatedAt = "updatedAt";
   static const realmEnabled = "realmEnabled";
   static const realmTarget = "realmTarget";
   static const engineEnabled = "engineEnabled";
@@ -61,52 +64,73 @@ final _hostInspectorType = TypeDefinition(
   defaultPresentationId: _hostInspectorPresentationId,
   representation: RecordType(
     fields: {
-      _HostInspectorFields.serviceName: _stringField(
-        _HostInspectorFields.serviceName,
+      _HostInspectorFields.service: TypeField(
+        name: _HostInspectorFields.service,
+        type: RecordType(
+          fields: {
+            _HostInspectorFields.name: _stringField(_HostInspectorFields.name),
+            _HostInspectorFields.version: _stringField(
+              _HostInspectorFields.version,
+            ),
+            _HostInspectorFields.state: _stringField(
+              _HostInspectorFields.state,
+            ),
+            _HostInspectorFields.lastSeen: _stringField(
+              _HostInspectorFields.lastSeen,
+            ),
+          },
+        ),
       ),
-      _HostInspectorFields.serviceId: _stringField(
-        _HostInspectorFields.serviceId,
+      _HostInspectorFields.host: TypeField(
+        name: _HostInspectorFields.host,
+        type: RecordType(
+          fields: {
+            _HostInspectorFields.entrypoint: _stringField(
+              _HostInspectorFields.entrypoint,
+            ),
+            _HostInspectorFields.canHostRealm: const TypeField(
+              name: _HostInspectorFields.canHostRealm,
+              type: BooleanType(),
+            ),
+            _HostInspectorFields.supportedEngines: const TypeField(
+              name: _HostInspectorFields.supportedEngines,
+              type: _stringListType,
+            ),
+            _HostInspectorFields.state: _stringField(
+              _HostInspectorFields.state,
+            ),
+            _HostInspectorFields.message: _stringField(
+              _HostInspectorFields.message,
+            ),
+            _HostInspectorFields.updatedAt: _stringField(
+              _HostInspectorFields.updatedAt,
+            ),
+          },
+        ),
       ),
-      _HostInspectorFields.serviceRoles: const TypeField(
-        name: _HostInspectorFields.serviceRoles,
-        type: _stringListType,
-      ),
-      _HostInspectorFields.connected: const TypeField(
-        name: _HostInspectorFields.connected,
-        type: BooleanType(),
-      ),
-      _HostInspectorFields.entrypoint: _stringField(
-        _HostInspectorFields.entrypoint,
-      ),
-      _HostInspectorFields.runtimeStatus: _stringField(
-        _HostInspectorFields.runtimeStatus,
-      ),
-      _HostInspectorFields.runtimeMessage: _stringField(
-        _HostInspectorFields.runtimeMessage,
-      ),
-      _HostInspectorFields.topologyRevision: _stringField(
-        _HostInspectorFields.topologyRevision,
-      ),
-      _HostInspectorFields.supportedEngines: const TypeField(
-        name: _HostInspectorFields.supportedEngines,
-        type: _stringListType,
-      ),
-      _HostInspectorFields.realmEnabled: const TypeField(
-        name: _HostInspectorFields.realmEnabled,
-        type: BooleanType(),
-      ),
-      _HostInspectorFields.realmTarget: _stringField(
-        _HostInspectorFields.realmTarget,
-      ),
-      _HostInspectorFields.engineEnabled: const TypeField(
-        name: _HostInspectorFields.engineEnabled,
-        type: BooleanType(),
-      ),
-      _HostInspectorFields.engineTarget: _stringField(
-        _HostInspectorFields.engineTarget,
-      ),
-      _HostInspectorFields.realmAssignment: _stringField(
-        _HostInspectorFields.realmAssignment,
+      _HostInspectorFields.configuration: TypeField(
+        name: _HostInspectorFields.configuration,
+        type: RecordType(
+          fields: {
+            _HostInspectorFields.realmEnabled: const TypeField(
+              name: _HostInspectorFields.realmEnabled,
+              type: BooleanType(),
+            ),
+            _HostInspectorFields.realmTarget: _stringField(
+              _HostInspectorFields.realmTarget,
+            ),
+            _HostInspectorFields.engineEnabled: const TypeField(
+              name: _HostInspectorFields.engineEnabled,
+              type: BooleanType(),
+            ),
+            _HostInspectorFields.engineTarget: _stringField(
+              _HostInspectorFields.engineTarget,
+            ),
+            _HostInspectorFields.realmAssignment: _stringField(
+              _HostInspectorFields.realmAssignment,
+            ),
+          },
+        ),
       ),
     },
   ),

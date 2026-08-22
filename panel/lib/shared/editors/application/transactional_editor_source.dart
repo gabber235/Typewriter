@@ -106,6 +106,7 @@ final class TransactionalEditorSource extends ChangeNotifier
       presentations: document.presentations,
       collections: document.collections,
       mergePolicies: document.mergePolicies,
+      commitGroups: document.commitGroups,
       rootPresentation: document.rootPresentation,
       clearRootPresentation: document.rootPresentation == null,
       diagnostics: document.diagnostics,
@@ -149,16 +150,53 @@ final class TransactionalEditorSource extends ChangeNotifier
     if (_disposed) return _unavailable("Editor is disposed");
     if (_deleted) return _unavailable("Deleted elsewhere");
 
-    while (_activeCommit != null) {
-      final result = await _activeCommit!;
-      if (_disposed) return _unavailable("Editor is disposed");
-      if (_deleted) return _unavailable("Deleted elsewhere");
-      if (_states.flushCandidates(paths).isEmpty) return result;
-    }
+    var result = _settledResult();
+    final processedGroups = <String?>{};
+    while (true) {
+      while (_activeCommit != null) {
+        result = await _activeCommit!;
+        if (_disposed) return _unavailable("Editor is disposed");
+        if (_deleted) return _unavailable("Deleted elsewhere");
+      }
 
-    final selected = _states.flushCandidates(paths);
-    if (selected.isEmpty) return _settledResult();
-    return _runCommit(selected);
+      final selected = _states
+          .flushCandidates(paths)
+          .where((path) => !processedGroups.contains(_commitGroupFor(path)))
+          .toSet();
+      if (selected.isEmpty) return result;
+      final commitPaths = _firstCommitGroup(selected);
+      processedGroups.add(_commitGroupFor(commitPaths.first));
+      result = await _runCommit(commitPaths);
+      if (_disposed) return _unavailable("Editor is disposed");
+      if (_deleted) {
+        return result is MutationConflict
+            ? result
+            : _unavailable("Deleted elsewhere");
+      }
+      if (result is! MutationSuccess) return result;
+    }
+  }
+
+  Set<DataPath> _firstCommitGroup(Set<DataPath> paths) {
+    final ordered = paths.toList()
+      ..sort((left, right) => left.toString().compareTo(right.toString()));
+    final group = _commitGroupFor(ordered.first);
+    return {
+      for (final path in ordered)
+        if (_commitGroupFor(path) == group) path,
+    };
+  }
+
+  String? _commitGroupFor(DataPath path) {
+    MapEntry<DataPath, String>? closest;
+    for (final entry in _document.commitGroups.entries) {
+      if (!path.isAtOrBelow(entry.key)) continue;
+      if (closest == null ||
+          entry.key.segments.length > closest.key.segments.length) {
+        closest = entry;
+      }
+    }
+    return closest?.value;
   }
 
   TypedMutationResult _settledResult() {
@@ -200,6 +238,7 @@ final class TransactionalEditorSource extends ChangeNotifier
             localRevision: _localRevision,
             rootValue: rootValue,
             changedPaths: activePaths,
+            group: _commitGroupFor(activePaths.first),
           ),
         );
         if (_disposed || _deleted || generation != _generation) {

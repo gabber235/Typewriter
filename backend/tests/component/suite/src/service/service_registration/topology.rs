@@ -46,6 +46,11 @@ async fn watch_returns_first_class_topology_for_one_organization(
     assert_eq!(topology.realms.len(), 1);
     assert_eq!(topology.engines.len(), 1);
     assert_eq!(topology.hosts[0].host_id.key.to_string(), "host");
+    assert_eq!(topology.realms[0].owner_host.id.key.to_string(), "host");
+    assert_eq!(topology.realms[0].owner_host.name, "host_service");
+    assert_eq!(topology.engines[0].owner_host.name, "host_service");
+    assert_eq!(topology.engines[0].realm.realm_id, topology.realms[0].realm_id);
+    assert_eq!(topology.engines[0].realm.owner_host.name, "host_service");
     Ok(())
 }
 
@@ -81,7 +86,10 @@ async fn configure_creates_local_realm_and_engine_transactionally(
     let engine = configured.engine.as_ref().expect("engine must be returned");
     assert_eq!(configured.host.revision, 2);
     assert_eq!(configured.host.topology_revision.desired, 1);
-    assert_eq!(engine.realm_id, realm.realm_id);
+    assert_eq!(engine.realm.realm_id, realm.realm_id);
+    assert_eq!(realm.owner_host.name, "host_service");
+    assert_eq!(engine.owner_host.name, "host_service");
+    assert_eq!(engine.realm.owner_host.name, "host_service");
     assert_eq!(realm.target_engine, paper_target());
     assert_eq!(engine.target, paper_target());
     assert_jm!(
@@ -185,6 +193,7 @@ async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
         configured
             .engine
             .expect("engine must exist")
+            .realm
             .realm_id
             .key
             .to_string(),
@@ -320,11 +329,15 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
         WatchHostExecutionResponse::serializer(),
     )
     .await?;
-    assert!(matches!(
-        desired,
-        WatchHostExecutionResponse::Desired(value)
-            if value.topology_revision == 4 && value.realm.is_some() && value.engine.is_none()
-    ));
+    let WatchHostExecutionResponse::Desired(desired) = desired else {
+        anyhow::bail!("expected desired host execution");
+    };
+    assert_eq!(desired.topology_revision, 4);
+    assert_eq!(
+        desired.realm.expect("Realm must exist").owner_host.name,
+        "host_service"
+    );
+    assert!(desired.engine.is_none());
 
     let stale = report(context, 3, active_state()).await?;
     assert!(matches!(

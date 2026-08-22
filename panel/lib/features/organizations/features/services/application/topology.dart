@@ -18,14 +18,14 @@ abstract class OrganizationTopology with _$OrganizationTopology {
 
   skir.RealmInstance? realmOwnedBy(skir.RecordId hostId) {
     for (final realm in realmInstances) {
-      if (realm.ownerHostId == hostId) return realm;
+      if (realm.ownerHost.id == hostId) return realm;
     }
     return null;
   }
 
   skir.EngineInstance? engineOwnedBy(skir.RecordId hostId) {
     for (final engine in engineInstances) {
-      if (engine.ownerHostId == hostId) return engine;
+      if (engine.ownerHost.id == hostId) return engine;
     }
     return null;
   }
@@ -81,10 +81,8 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
     switch (response) {
       case skir.ConfigureServiceHostResponse_successWrapper(:final value):
         return value;
-      case skir.ConfigureServiceHostResponse_conflictErrorWrapper():
-        throw ApiException.conflict(
-          "The host changed while it was being configured",
-        );
+      case skir.ConfigureServiceHostResponse_conflictErrorWrapper(:final value):
+        throw _HostConfigurationConflict(value.actual);
       case skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
         :final value,
       ):
@@ -105,6 +103,12 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
         throw ApiException.unknownResponseMessage();
     }
   }
+}
+
+class _HostConfigurationConflict implements Exception {
+  const _HostConfigurationConflict(this.actual);
+
+  final skir.ServiceHost actual;
 }
 
 OrganizationTopology _reduceTopology(

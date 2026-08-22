@@ -60,7 +60,7 @@ class RealmInstanceIdentifier extends SelectableIdentifier {
         );
         if (realm == null) throw SelectableNotFoundException(this);
         final host = topology.hosts.firstWhereOrNull(
-          (candidate) => candidate.hostId == realm.ownerHostId,
+          (candidate) => candidate.hostId == realm.ownerHost.id,
         );
         return _RealmInstanceSelectable(
           ref: ref,
@@ -99,7 +99,7 @@ class EngineInstanceIdentifier extends SelectableIdentifier {
         );
         if (engine == null) throw SelectableNotFoundException(this);
         final host = topology.hosts.firstWhereOrNull(
-          (candidate) => candidate.hostId == engine.ownerHostId,
+          (candidate) => candidate.hostId == engine.ownerHost.id,
         );
         return _EngineInstanceSelectable(
           id: this,
@@ -153,14 +153,15 @@ Map<String, List<int>> _engineTargetCatalog(
   };
 }
 
-String _hostStatus(skir.HostRuntimeStatus status) => switch (status) {
-  skir.HostRuntimeStatus.offline => "Offline",
-  skir.HostRuntimeStatus.reconciling => "Reconciling",
-  skir.HostRuntimeStatus.active => "Active",
-  skir.HostRuntimeStatus.failed => "Failed",
-  skir.HostRuntimeStatus.drifted => "Drifted",
-  skir.HostRuntimeStatus_unknown() => "Unknown",
-};
+String hostRuntimeStatusLabel(skir.HostRuntimeStatus status) =>
+    switch (status) {
+      skir.HostRuntimeStatus.offline => "Offline",
+      skir.HostRuntimeStatus.reconciling => "Reconciling",
+      skir.HostRuntimeStatus.active => "Active",
+      skir.HostRuntimeStatus.failed => "Failed",
+      skir.HostRuntimeStatus.drifted => "Drifted",
+      skir.HostRuntimeStatus_unknown() => "Unknown",
+    };
 
 /// Gives topology cards and inspectors one stable child lifecycle label.
 ///

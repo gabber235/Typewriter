@@ -5,21 +5,6 @@ const serviceInspectorTypeRef = ResolvedTypeRef(
   revision: 1,
 );
 
-const serviceRoleTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "ServiceRole"),
-  revision: 1,
-);
-
-const hostRoleTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "HostRole"),
-  revision: 1,
-);
-
-const customRoleTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "CustomRole"),
-  revision: 1,
-);
-
 final _serviceInspectorType = TypeDefinition(
   id: serviceInspectorTypeRef,
   kind: NominalTypeKind.concrete,
@@ -27,44 +12,14 @@ final _serviceInspectorType = TypeDefinition(
   representation: RecordType(
     fields: {
       "name": TypeField(name: "name", type: identifierStringType),
-      "roles": TypeField(
-        name: "roles",
-        type: ListType(element: NamedType(serviceRoleTypeRef)),
-      ),
+      "version": const TypeField(name: "version", type: StringType()),
+      "state": const TypeField(name: "state", type: StringType()),
+      "lastSeen": const TypeField(name: "lastSeen", type: StringType()),
     },
   ),
 );
 
-final serviceRoleTypes = [
-  const TypeDefinition(
-    id: serviceRoleTypeRef,
-    kind: NominalTypeKind.sealedAbstract,
-  ),
-  TypeDefinition(
-    id: hostRoleTypeRef,
-    kind: NominalTypeKind.concrete,
-    parents: [serviceRoleTypeRef],
-    representation: const RecordType(
-      fields: {"version": TypeField(name: "version", type: StringType())},
-    ),
-  ),
-  TypeDefinition(
-    id: customRoleTypeRef,
-    kind: NominalTypeKind.concrete,
-    parents: [serviceRoleTypeRef],
-    representation: const RecordType(
-      fields: {
-        "name": TypeField(name: "name", type: StringType()),
-        "version": TypeField(name: "version", type: StringType()),
-      },
-    ),
-  ),
-];
-
-final _serviceInspectorCatalog = TypeCatalog([
-  _serviceInspectorType,
-  ...serviceRoleTypes,
-]);
+final _serviceInspectorCatalog = TypeCatalog([_serviceInspectorType]);
 
 class ServiceIdentifier extends SelectableIdentifier {
   ServiceIdentifier(this.serviceId);
@@ -149,7 +104,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 
   @override
   EditorMutationResult validate(DataPath path, DataValue value) {
-    final readOnlyFields = {"roles"};
+    const readOnlyFields = {"version", "state", "lastSeen"};
     if (path.segments.firstOrNull case FieldPathSegment(
       :final name,
     ) when readOnlyFields.contains(name)) {
@@ -207,22 +162,8 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
 extension ServiceInspectorValue on Service {
   RecordValue get inspectorValue => RecordValue({
     "name": StringValue(name),
-    "roles": ListValue([role.inspectorValue]),
+    "version": StringValue(role.version),
+    "state": StringValue(isOnline ? "Connected" : "Offline"),
+    "lastSeen": StringValue(lastSeenLabel),
   });
-}
-
-extension on ServiceRole {
-  DataValue get inspectorValue => switch (this) {
-    HostServiceRole(:final version) => PolymorphicValue(
-      concreteType: hostRoleTypeRef,
-      value: RecordValue({"version": StringValue(version)}),
-    ),
-    CustomServiceRole(:final name, :final version) => PolymorphicValue(
-      concreteType: customRoleTypeRef,
-      value: RecordValue({
-        "name": StringValue(name),
-        "version": StringValue(version),
-      }),
-    ),
-  };
 }

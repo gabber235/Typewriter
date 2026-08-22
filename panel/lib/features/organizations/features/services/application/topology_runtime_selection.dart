@@ -25,14 +25,14 @@ class _RealmInstanceSelectable
   bool get canOpen => host != null && (service?.isOnline ?? false);
 
   @override
-  String get name => service?.displayName ?? realm.realmId.id;
+  String get name => realm.ownerHost.name.formatted;
 
   @override
   EditorDocument get document => EditorDocument(
     rootType: NamedType(_realmInstanceInspectorTypeRef),
     typeCatalog: _realmInstanceInspectorCatalog,
     confirmedValue: _runtimeValue(
-      ownerHost: realm.ownerHostId,
+      ownerHost: realm.ownerHost.name.formatted,
       target: realm.targetEngine,
       revision: realm.manifestRevision,
       state: realm.state,
@@ -105,11 +105,11 @@ class _EngineInstanceSelectable
     rootType: NamedType(_engineInstanceInspectorTypeRef),
     typeCatalog: _engineInstanceInspectorCatalog,
     confirmedValue: _runtimeValue(
-      ownerHost: engine.ownerHostId,
+      ownerHost: engine.ownerHost.name.formatted,
       target: engine.target,
       revision: engine.manifestRevision,
       state: engine.state,
-      assignedRealm: engine.realmId,
+      assignedRealm: engine.realm.ownerHost.name.formatted,
     ),
     revision: engine.revision,
     presentations: [_engineInstanceInspectorPresentation],
@@ -135,15 +135,15 @@ class _EngineInstanceSelectable
 }
 
 RecordValue _runtimeValue({
-  required skir.RecordId ownerHost,
+  required String ownerHost,
   required skir.EngineTarget target,
   required skir.ReconciledRevision revision,
   required skir.ChildRuntimeState state,
-  skir.RecordId? assignedRealm,
+  String? assignedRealm,
 }) => RecordValue({
-  _RuntimeInspectorFields.ownerHost: StringValue(ownerHost.id),
+  _RuntimeInspectorFields.ownerHost: StringValue(ownerHost),
   if (assignedRealm != null)
-    _RuntimeInspectorFields.assignedRealm: StringValue(assignedRealm.id),
+    _RuntimeInspectorFields.assignedRealm: StringValue(assignedRealm),
   _RuntimeInspectorFields.target: StringValue(_targetLabel(target)),
   _RuntimeInspectorFields.manifestRevision: StringValue(
     _revisionLabel(revision),

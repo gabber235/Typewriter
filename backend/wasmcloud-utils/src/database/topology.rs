@@ -3,7 +3,8 @@ use surrealdb_component_sdk::{Datetime, RecordId};
 
 use crate::skir::base::service::v1::topology::{
     ChildRuntimeState, ChildRuntimeStatus, EngineInstance, EngineTarget, HostRuntimeState,
-    HostRuntimeStatus, RealmInstance, ReconciledRevision, ServiceHost, SupportedEngine,
+    HostRuntimeStatus, OwnerHost, RealmInfo, RealmInstance, ReconciledRevision, ServiceHost,
+    SupportedEngine,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -214,11 +215,37 @@ pub struct RealmInstanceRecord {
     pub state: ChildRuntimeStateRecord,
 }
 
-impl From<RealmInstanceRecord> for RealmInstance {
-    fn from(value: RealmInstanceRecord) -> Self {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OwnerHostRecord {
+    pub id: RecordId,
+    pub name: String,
+}
+
+impl From<OwnerHostRecord> for OwnerHost {
+    fn from(value: OwnerHostRecord) -> Self {
+        Self {
+            id: value.id.into(),
+            name: value.name,
+            _unrecognized: None,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RealmInstanceViewRecord {
+    pub id: RecordId,
+    pub owner_host: OwnerHostRecord,
+    pub revision: i64,
+    pub target_engine: EngineTargetRecord,
+    pub manifest_revision: ReconciledRevisionRecord,
+    pub state: ChildRuntimeStateRecord,
+}
+
+impl From<RealmInstanceViewRecord> for RealmInstance {
+    fn from(value: RealmInstanceViewRecord) -> Self {
         Self {
             realm_id: value.id.into(),
-            owner_host_id: value.owner_host_id.into(),
+            owner_host: value.owner_host.into(),
             revision: value.revision,
             target_engine: value.target_engine.into(),
             manifest_revision: value.manifest_revision.into(),
@@ -239,12 +266,39 @@ pub struct EngineInstanceRecord {
     pub state: ChildRuntimeStateRecord,
 }
 
-impl From<EngineInstanceRecord> for EngineInstance {
-    fn from(value: EngineInstanceRecord) -> Self {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RealmInfoRecord {
+    pub realm_id: RecordId,
+    pub owner_host: OwnerHostRecord,
+}
+
+impl From<RealmInfoRecord> for RealmInfo {
+    fn from(value: RealmInfoRecord) -> Self {
+        Self {
+            realm_id: value.realm_id.into(),
+            owner_host: value.owner_host.into(),
+            _unrecognized: None,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EngineInstanceViewRecord {
+    pub id: RecordId,
+    pub owner_host: OwnerHostRecord,
+    pub realm: RealmInfoRecord,
+    pub revision: i64,
+    pub target: EngineTargetRecord,
+    pub manifest_revision: ReconciledRevisionRecord,
+    pub state: ChildRuntimeStateRecord,
+}
+
+impl From<EngineInstanceViewRecord> for EngineInstance {
+    fn from(value: EngineInstanceViewRecord) -> Self {
         Self {
             engine_id: value.id.into(),
-            owner_host_id: value.owner_host_id.into(),
-            realm_id: value.realm_id.into(),
+            owner_host: value.owner_host.into(),
+            realm: value.realm.into(),
             revision: value.revision,
             target: value.target.into(),
             manifest_revision: value.manifest_revision.into(),

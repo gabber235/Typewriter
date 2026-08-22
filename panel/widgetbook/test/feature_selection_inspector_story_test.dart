@@ -104,9 +104,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Name"), findsOneWidget);
-      expect(find.text("Roles"), findsOneWidget);
+      expect(find.text("Version"), findsOneWidget);
+      expect(find.text("State"), findsWidgets);
       expect(find.text("Expected a record"), findsNothing);
-      expect(find.text("Realm"), findsOneWidget);
+      expect(find.text("Last seen"), findsOneWidget);
     },
   );
 

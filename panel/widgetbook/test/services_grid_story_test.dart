@@ -25,7 +25,7 @@ void main() {
           width: 1180,
           height: 720,
           child: InspectorScaffold(
-            child: ServicesGrid(services: services, topology: topology),
+            child: ServicesGraph(services: services, topology: topology),
           ),
         ),
       ),
@@ -35,7 +35,7 @@ void main() {
     await tester.tap(find.text("PAPER HOST"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Execution"), findsOneWidget);
+    expect(find.text("Configuration"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
     expect(find.byTooltip("Zoom to fit"), findsNothing);
   });

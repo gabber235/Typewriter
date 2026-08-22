@@ -80,7 +80,7 @@ final exemptions = <Exemption>[
     "color value conversion",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph.dart",
+    "lib/shared/graph/presentation/graph.dart",
     RegExp(r"Colors\.grey"),
     "custom graph painter geometry",
   ),
@@ -119,7 +119,7 @@ final exemptions = <Exemption>[
     "lib/app/presentation/shell/sidebar.dart",
     "lib/app/presentation/shell/sidebar_links.dart",
     "lib/shared/editors/presentation/header.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/resizable_element.dart",
+    "lib/shared/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/scene.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
@@ -150,7 +150,7 @@ final exemptions = <Exemption>[
   for (final path in [
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/panes.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/graph/presentation/graph_group.dart",
+    "lib/shared/graph/presentation/graph_group.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_segment_surface.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",

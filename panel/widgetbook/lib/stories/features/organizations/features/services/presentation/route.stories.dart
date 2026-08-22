@@ -27,9 +27,25 @@ Widget servicesPageTopologyUseCase(BuildContext context) {
   );
 }
 
+@widgetbook.UseCase(name: "Offline topology", type: ServicesPage)
+Widget servicesPageOfflineTopologyUseCase(BuildContext context) {
+  final topology = topologyScenario();
+  return servicesPageStory(
+    topology: topology,
+    topologyServices: topologyScenarioServices(topology, connected: false),
+  );
+}
+
+@widgetbook.UseCase(name: "Dense topology", type: ServicesPage)
+Widget servicesPageDenseTopologyUseCase(BuildContext context) {
+  final topology = denseTopologyScenario();
+  return servicesPageStory(topology: topology);
+}
+
 Widget servicesPageStory({
   DisplayState servicesState = DisplayState.fewItems,
   OrganizationTopology? topology,
+  List<Service>? topologyServices,
 }) {
   return FakeApp(
     overrides: [
@@ -39,7 +55,9 @@ Widget servicesPageStory({
       servicesProvider.overrideWith(
         topology == null
             ? () => _StoryServices(displayState: servicesState)
-            : () => _TopologyServices(topology),
+            : () => _TopologyServices(
+                topologyServices ?? topologyScenarioServices(topology),
+              ),
       ),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.fewItems),
@@ -67,13 +85,12 @@ class _StoryServices extends ServicesMock {
 }
 
 class _TopologyServices extends Services {
-  _TopologyServices(this.topology);
+  _TopologyServices(this.services);
 
-  final OrganizationTopology topology;
+  final List<Service> services;
 
   @override
-  Stream<List<Service>> build() =>
-      Stream.value(topologyScenarioServices(topology));
+  Stream<List<Service>> build() => Stream.value(services);
 }
 
 class _EmptyTopology extends OrganizationTopologyStream {

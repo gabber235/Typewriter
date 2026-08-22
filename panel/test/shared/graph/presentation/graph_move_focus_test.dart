@@ -7,7 +7,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../../../../../../../../../support/test_utils.dart";
+import "../../../support/test_utils.dart";
 
 void main() {
   group("Graph move focus", () {

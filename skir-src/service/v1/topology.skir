@@ -61,19 +61,29 @@ struct ServiceHost {
   state: HostRuntimeState;
 }
 
+struct OwnerHost {
+  id: RecordId;
+  name: string;
+}
+
 struct RealmInstance {
   realm_id: RecordId;
-  owner_host_id: RecordId;
+  owner_host: OwnerHost;
   revision: int64;
   target_engine: EngineTarget;
   manifest_revision: ReconciledRevision;
   state: ChildRuntimeState;
 }
 
+struct RealmInfo {
+  realm_id: RecordId;
+  owner_host: OwnerHost;
+}
+
 struct EngineInstance {
   engine_id: RecordId;
-  owner_host_id: RecordId;
-  realm_id: RecordId;
+  owner_host: OwnerHost;
+  realm: RealmInfo;
   revision: int64;
   target: EngineTarget;
   manifest_revision: ReconciledRevision;

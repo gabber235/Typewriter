@@ -6,7 +6,8 @@ use wasmcloud_utils::{
     database::{
         RecordId, TransactionOutcome, read_query,
         topology::{
-            ChildRuntimeStateRecord, EngineInstanceRecord, RealmInstanceRecord, ServiceHostRecord,
+            ChildRuntimeStateRecord, EngineInstanceViewRecord, RealmInstanceViewRecord,
+            ServiceHostRecord,
         },
         transaction_query,
     },
@@ -23,8 +24,8 @@ use wasmcloud_utils::{
 #[derive(Debug, Deserialize)]
 struct DesiredExecutionRecord {
     host: Option<ServiceHostRecord>,
-    realm: Option<RealmInstanceRecord>,
-    engine: Option<EngineInstanceRecord>,
+    realm: Option<RealmInstanceViewRecord>,
+    engine: Option<EngineInstanceViewRecord>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,8 +34,8 @@ enum ReportExecutionOutcome {
     Updated {
         organization_id: RecordId,
         host: ServiceHostRecord,
-        realm: Option<RealmInstanceRecord>,
-        engine: Option<EngineInstanceRecord>,
+        realm: Option<RealmInstanceViewRecord>,
+        engine: Option<EngineInstanceViewRecord>,
     },
     StaleRevision,
     HostNotFound,
@@ -53,8 +54,37 @@ pub async fn handle_watch(
         LET $host = array::first(SELECT * FROM service_host WHERE service_id = $service_id);
         RETURN {
             host: $host,
-            realm: array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host.id),
-            engine: array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host.id),
+            realm: array::first(SELECT
+                    id,
+                    revision,
+                    target_engine,
+                    manifest_revision,
+                    state,
+                    {
+                        id: owner_host_id,
+                        name: owner_host_id.service_id.name,
+                    } AS owner_host
+                FROM realm_instance
+                WHERE owner_host_id = $host.id),
+            engine: array::first(SELECT
+                    id,
+                    revision,
+                    target,
+                    manifest_revision,
+                    state,
+                    {
+                        id: owner_host_id,
+                        name: owner_host_id.service_id.name,
+                    } AS owner_host,
+                    {
+                        realm_id: realm_id,
+                        owner_host: {
+                            id: realm_id.owner_host_id,
+                            name: realm_id.owner_host_id.service_id.name,
+                        },
+                    } AS realm
+                FROM engine_instance
+                WHERE owner_host_id = $host.id),
         };
         "#,
     )
@@ -201,8 +231,37 @@ pub async fn handle_report(
                 outcome: 'updated',
                 organization_id: $host.service_id.organization,
                 host: $updated_host,
-                realm: array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id),
-                engine: array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host_id),
+                realm: array::first(SELECT
+                        id,
+                        revision,
+                        target_engine,
+                        manifest_revision,
+                        state,
+                        {
+                            id: owner_host_id,
+                            name: owner_host_id.service_id.name,
+                        } AS owner_host
+                    FROM realm_instance
+                    WHERE owner_host_id = $host_id),
+                engine: array::first(SELECT
+                        id,
+                        revision,
+                        target,
+                        manifest_revision,
+                        state,
+                        {
+                            id: owner_host_id,
+                            name: owner_host_id.service_id.name,
+                        } AS owner_host,
+                        {
+                            realm_id: realm_id,
+                            owner_host: {
+                                id: realm_id.owner_host_id,
+                                name: realm_id.owner_host_id.service_id.name,
+                            },
+                        } AS realm
+                    FROM engine_instance
+                    WHERE owner_host_id = $host_id),
             };
         };
 
@@ -255,8 +314,8 @@ pub async fn handle_report(
 async fn publish_report(
     organization_id: &RecordId,
     host: &ServiceHostRecord,
-    realm: Option<&RealmInstanceRecord>,
-    engine: Option<&EngineInstanceRecord>,
+    realm: Option<&RealmInstanceViewRecord>,
+    engine: Option<&EngineInstanceViewRecord>,
 ) -> Result<(), otel_wasi::Error> {
     let topology =
         wasmcloud_utils::skir_subjects::organization_topology(&organization_id.key.to_string());

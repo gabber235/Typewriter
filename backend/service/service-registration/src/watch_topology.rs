@@ -5,7 +5,7 @@ use serde::Deserialize;
 use wasmcloud_utils::{
     database::{
         RecordId, read_query,
-        topology::{EngineInstanceRecord, RealmInstanceRecord, ServiceHostRecord},
+        topology::{EngineInstanceViewRecord, RealmInstanceViewRecord, ServiceHostRecord},
     },
     decode_skir, extract_params,
     skir::base::service::v1::topology::{
@@ -19,8 +19,8 @@ use wasmcloud_utils::{
 #[derive(Debug, Deserialize)]
 struct TopologyListRecord {
     hosts: Vec<ServiceHostRecord>,
-    realms: Vec<RealmInstanceRecord>,
-    engines: Vec<EngineInstanceRecord>,
+    realms: Vec<RealmInstanceViewRecord>,
+    engines: Vec<EngineInstanceViewRecord>,
 }
 
 #[tracing::instrument(skip(msg, params))]
@@ -41,10 +41,37 @@ pub async fn handle_watch(
             hosts: (SELECT * FROM service_host
                 WHERE service_id.organization = $organization_id
                 ORDER BY id),
-            realms: (SELECT * FROM realm_instance
+            realms: (SELECT
+                    id,
+                    revision,
+                    target_engine,
+                    manifest_revision,
+                    state,
+                    {
+                        id: owner_host_id,
+                        name: owner_host_id.service_id.name,
+                    } AS owner_host
+                FROM realm_instance
                 WHERE owner_host_id.service_id.organization = $organization_id
                 ORDER BY id),
-            engines: (SELECT * FROM engine_instance
+            engines: (SELECT
+                    id,
+                    revision,
+                    target,
+                    manifest_revision,
+                    state,
+                    {
+                        id: owner_host_id,
+                        name: owner_host_id.service_id.name,
+                    } AS owner_host,
+                    {
+                        realm_id: realm_id,
+                        owner_host: {
+                            id: realm_id.owner_host_id,
+                            name: realm_id.owner_host_id.service_id.name,
+                        },
+                    } AS realm
+                FROM engine_instance
                 WHERE owner_host_id.service_id.organization = $organization_id
                 ORDER BY id),
         };
