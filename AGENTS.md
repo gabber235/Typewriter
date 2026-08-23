@@ -11,7 +11,7 @@ Minecraft Paper plugin for interactive quests, NPC dialogues, and cinematics. Po
 - **Resubmit plan** when current plan is not working. Research first, then resubmit. No decision changes without a new approved plan.
 - **Research first** before making structural changes
 - **Ask permission** before destructive operations, ugly hacks, or changing build system
-- **Never touch `app/`**: legacy, outdated, do not modify
+- **Use current code only**: Work in `services/`, `backend/`, `panel/`, and `skir-src/`. The `engine/`, `extensions/`, `module-plugin/`, and `app/` directories are legacy references and must not be modified.
 - **Never edit `docs/adapters/`**: auto-generated
 
 ## ANTI-PATTERNS
