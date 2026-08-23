@@ -6,5 +6,6 @@ plugins {
 
 dependencies {
     api(libs.kotlin.serialize.core)
+    implementation(libs.kotlin.serialize.cbor)
     testImplementation(libs.kotlin.serialize.cbor)
 }

@@ -22,6 +22,9 @@ abstract class RealmEditorCatalogRoute with _$RealmEditorCatalogRoute {
 
   String get invalidationSubject =>
       "service.from.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.catalog.invalidate";
+
+  String get elementsFetchSubject =>
+      "service.to.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.elements.fetch";
 }
 
 @freezed
@@ -34,25 +37,22 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default({}) Map<RealmActionId, RealmActionDefinition> realmActions,
     @Default({}) Map<String, RealmEditorSubtypeResult> subtypeResults,
     @Default([]) List<TypeDiagnostic> diagnostics,
+    @Default({}) Map<String, RealmElementCatalogEntry> elements,
   }) = _RealmEditorCatalogSnapshot;
 
   const RealmEditorCatalogSnapshot._();
 
   RealmEditorCatalogSnapshot merge(RealmEditorCatalogSnapshot other) {
     if (generation != other.generation) return other;
-    final definitions = <ResolvedTypeRef, TypeDefinition>{
-      for (final definition in catalog.definitions) definition.id: definition,
-      for (final definition in other.catalog.definitions)
-        definition.id: definition,
-    };
     return RealmEditorCatalogSnapshot(
-      catalog: TypeCatalog(definitions.values.toList()),
+      catalog: other.catalog,
       generation: generation,
       presentations: {...presentations, ...other.presentations},
       conversions: {...conversions, ...other.conversions},
       realmActions: {...realmActions, ...other.realmActions},
       subtypeResults: {...subtypeResults, ...other.subtypeResults},
       diagnostics: [...diagnostics, ...other.diagnostics],
+      elements: {...elements, ...other.elements},
     );
   }
 }

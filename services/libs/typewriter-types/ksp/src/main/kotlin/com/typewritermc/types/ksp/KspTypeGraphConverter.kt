@@ -270,11 +270,11 @@ private class ConversionContext(
         path: List<String>,
     ): TypeExpression {
         val fields =
-            declaration.declarations
-                .filterIsInstance<KSPropertyDeclaration>()
-                .filter { it.extensionReceiver == null && Modifier.PRIVATE !in it.modifiers && Modifier.PROTECTED !in it.modifiers }
+            declaration
+                .getAllProperties()
+                .filter(KSPropertyDeclaration::isSerializedProperty)
                 .mapNotNull { property ->
-                    val name = property.simpleName.asString()
+                    val name = property.serialName ?: property.simpleName.asString()
                     expression(property.type.resolve(), path + name)?.let { TypeField(name, it) }
                 }.sortedBy(TypeField::name)
                 .toList()
@@ -293,7 +293,7 @@ private class ConversionContext(
             declaration.declarations
                 .filterIsInstance<KSClassDeclaration>()
                 .filter { it.classKind == ClassKind.ENUM_ENTRY }
-                .map { DataValue.StringValue(it.simpleName.asString()) }
+                .map { DataValue.StringValue(it.serialName ?: it.simpleName.asString()) }
                 .toList()
         if (values.isEmpty()) failure(path, "Enum declarations must contain at least one entry.")
         return TypeExpression.Enumeration(TypeExpression.StringType(), values.ifEmpty { listOf(DataValue.StringValue("UNKNOWN")) })
@@ -314,6 +314,7 @@ private class ConversionContext(
             "kotlin.UShort" -> TypeExpression.Integer(IntegerWidth.UNSIGNED_16)
             "kotlin.UInt" -> TypeExpression.Integer(IntegerWidth.UNSIGNED_32)
             "kotlin.ULong" -> TypeExpression.Integer(IntegerWidth.UNSIGNED_64)
+            "java.math.BigInteger" -> TypeExpression.Integer(IntegerWidth.SIGNED_64)
             "kotlin.Float" -> TypeExpression.Float(FloatWidth.FLOAT_32)
             "kotlin.Double" -> TypeExpression.Float(FloatWidth.FLOAT_64)
             "kotlin.time.Instant", "java.time.Instant" -> TypeExpression.Timestamp()
@@ -341,12 +342,39 @@ private val KSClassDeclaration.nominalKind: NominalTypeKind
 private val KSType.displayName: String
     get() = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
 
+private val KSDeclaration.serialName: String?
+    get() =
+        annotations
+            .firstOrNull {
+                it.annotationType
+                    .resolve()
+                    .declaration.qualifiedName
+                    ?.asString() == "kotlinx.serialization.SerialName"
+            }?.arguments
+            ?.firstOrNull { it.name?.asString() == "value" }
+            ?.value as? String
+
+private fun KSDeclaration.hasAnnotation(qualifiedName: String): Boolean =
+    annotations.any {
+        it.annotationType
+            .resolve()
+            .declaration
+            .qualifiedName
+            ?.asString() == qualifiedName
+    }
+
+private val KSPropertyDeclaration.isSerializedProperty: Boolean
+    get() =
+        extensionReceiver == null &&
+            hasBackingField &&
+            !isDelegated() &&
+            !hasAnnotation("kotlinx.serialization.Transient")
+
 private val ResolvedTypeRef.sortKey: String
     get() =
         when (val typeId = id) {
-            TypeId.None -> "builtin::None@$revision"
-            TypeId.Option -> "builtin::Option@$revision"
-            TypeId.Some -> "builtin::Some@$revision"
+            is TypeId.Builtin -> "builtin::${typeId.id}@$revision"
+            is TypeId.Declared -> "declared::${typeId.id}@$revision"
             is TypeId.Qualified -> "${typeId.namespace}::${typeId.name}@$revision"
         }
 

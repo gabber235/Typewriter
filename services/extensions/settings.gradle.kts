@@ -4,6 +4,10 @@ pluginManagement {
 }
 
 includeBuild("../libs/codegen-utils")
+includeBuild("../libs/typewriter-types")
+includeBuild("../discovery")
+includeBuild("../elements")
+includeBuild("../engine")
 includeBuild("../imprint")
 
 plugins {
@@ -12,7 +16,6 @@ plugins {
 
 rootProject.name = "extensions"
 
-include(":extension-types", ":extension-codegen", ":conformance-extension")
+include(":extension-types", ":conformance-extension")
 project(":extension-types").projectDir = file("types")
-project(":extension-codegen").projectDir = file("codegen")
 project(":conformance-extension").projectDir = file("conformance")

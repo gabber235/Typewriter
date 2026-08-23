@@ -13,6 +13,7 @@ import com.typewritermc.realm.repository.SurrealPageRepository
 import com.typewritermc.realm.repository.SurrealTagRepository
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
+import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.schema.RealmDatabaseProvider
@@ -49,12 +50,14 @@ import java.time.Clock
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,
+    private val elementCatalog: RealmElementCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
     private val retryPolicy: RetryPolicy,
     private val delayScheduler: DelayScheduler,
     private val clock: Clock,
+    private val catalogInvalidations: RealmCatalogInvalidationProcess,
 ) : ManagedRealmRuntime {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
@@ -86,6 +89,7 @@ class Realm(
                     SurrealPageRepository(connected, outbox),
                     SurrealTagRepository(connected, outbox),
                     editorCatalog,
+                    elementCatalog,
                     presentationSearch,
                 )
             replaceRouter(realmId, snapshot.attempt, ready, communicatorFor)
@@ -99,6 +103,7 @@ class Realm(
                     }
                 }
         } catch (failure: Throwable) {
+            runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { outboxPublisher?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
             outboxPublisher = null
             runCatching {
@@ -116,7 +121,8 @@ class Realm(
         }
     }
 
-    suspend fun shutdown() =
+    suspend fun shutdown() {
+        if (database == null && router == null && serviceMonitor == null) return
         telemetry.mainSpan(
             name = "realm.routes.shutdown",
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
@@ -124,6 +130,7 @@ class Realm(
             val failures = mutableListOf<Throwable>()
             runCatching { serviceMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
             serviceMonitor = null
+            runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)
             runCatching { outboxPublisher?.stop() }.exceptionOrNull()?.let(failures::add)
             outboxPublisher = null
             runCatching {
@@ -145,6 +152,7 @@ class Realm(
             }
             it.annotate { operationOutcome("completed") }
         }
+    }
 
     override suspend fun prepareUpgradeCheckpoint(): RealmUpgradeCheckpoint = CompatibleNoOperationCheckpoint
 
@@ -189,6 +197,7 @@ class Realm(
         val previous = router
         router = null
         routerSession = null
+        catalogInvalidations.stop()
         outboxPublisher?.stop()
         previous?.stop()?.requireSuccess("replace")
         val address =
@@ -206,6 +215,7 @@ class Realm(
         replacement.start().requireSuccess("start")
         router = replacement
         routerSession = session
+        catalogInvalidations.replaceCommunicator(communicator, address)
         checkNotNull(outboxPublisher) { "Realm outbox publisher is not initialized" }.replaceCommunicator(communicator)
     }
 }

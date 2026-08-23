@@ -65,9 +65,15 @@ Stream<PageElementTypesState> pageElementTypes(Ref ref, PageType pageType) {
 
 extension on RealmEditorCatalogState {
   PageElementTypesState _pageElementTypes(String queryId) {
-    final result = snapshot?.subtypeResults[queryId];
+    final current = snapshot;
+    final result = current?.subtypeResults[queryId];
     if (result != null) {
-      return PageElementTypesReady(result.matches.toSet());
+      final registry = TypeRegistry(current!.catalog);
+      final concrete = result.matches.where((reference) {
+        final resolved = registry.resolveExact(reference).valueOrNull;
+        return resolved?.isConcrete ?? false;
+      });
+      return PageElementTypesReady(concrete.toSet());
     }
     return switch (this) {
       RealmEditorCatalogUnavailable(:final diagnostics) =>

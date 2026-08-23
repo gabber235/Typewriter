@@ -7,21 +7,55 @@ import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.time.Duration
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
+
+/** Stable identity of a concrete Typewriter type whose values may be persisted. */
+@JvmInline
+@Serializable(with = DeclaredTypeIdSerializer::class)
+value class DeclaredTypeId(
+    val value: Uuid,
+) {
+    companion object {
+        fun parse(value: String): DeclaredTypeId {
+            require(value.matches(Regex("[0-9a-fA-F]{32}"))) {
+                "Declared type ids must contain exactly 32 hexadecimal characters."
+            }
+            return DeclaredTypeId(Uuid.parseHex(value))
+        }
+    }
+
+    override fun toString(): String = value.toHexString()
+}
+
+/** Marks a concrete serializable type whose values may be stored and resolved across deployments. */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class TypewriterType(
+    val id: String,
+    val revision: Int = 1,
+)
+
+@Serializable
+enum class BuiltinTypeId {
+    OPTION,
+    SOME,
+    NONE,
+}
 
 /** Stable nominal identity shared by compile time metadata, manifests, Realm, engines, and Skir transport. */
 @Serializable
 sealed interface TypeId {
     @Serializable
-    @SerialName("option")
-    data object Option : TypeId
+    @SerialName("builtin")
+    data class Builtin(
+        val id: BuiltinTypeId,
+    ) : TypeId
 
     @Serializable
-    @SerialName("some")
-    data object Some : TypeId
-
-    @Serializable
-    @SerialName("none")
-    data object None : TypeId
+    @SerialName("declared")
+    data class Declared(
+        val id: DeclaredTypeId,
+    ) : TypeId
 
     @Serializable
     @SerialName("qualified")
@@ -33,6 +67,12 @@ sealed interface TypeId {
             require(namespace.isNotBlank()) { "Type namespace must not be blank." }
             require(name.isNotBlank()) { "Type name must not be blank." }
         }
+    }
+
+    companion object {
+        val Option: TypeId = Builtin(BuiltinTypeId.OPTION)
+        val Some: TypeId = Builtin(BuiltinTypeId.SOME)
+        val None: TypeId = Builtin(BuiltinTypeId.NONE)
     }
 }
 
@@ -331,10 +371,21 @@ data class TypeDefinition(
 private val ResolvedTypeRef.displayName: String
     get() =
         when (val typeId = id) {
-            TypeId.Option -> "Option"
-            TypeId.Some -> "Some"
-            TypeId.None -> "None"
-            is TypeId.Qualified -> typeId.name
+            is TypeId.Builtin -> {
+                when (typeId.id) {
+                    BuiltinTypeId.OPTION -> "Option"
+                    BuiltinTypeId.SOME -> "Some"
+                    BuiltinTypeId.NONE -> "None"
+                }
+            }
+
+            is TypeId.Declared -> {
+                typeId.id.toString()
+            }
+
+            is TypeId.Qualified -> {
+                typeId.name
+            }
         }
 
 @Serializable
@@ -346,7 +397,32 @@ data class TypeCatalog(
             "Type definition identities must be unique."
         }
     }
+
+    /** Returns every direct and transitive subtype while retaining abstract descendants. */
+    fun subtypesOf(target: ResolvedTypeRef): List<TypeDefinition> {
+        val definitionsById = definitions.associateBy { it.id }
+        return definitions
+            .filter { it.isSubtypeOf(target, definitionsById, emptySet()) }
+            .sortedBy { it.id.stableSortKey }
+    }
 }
+
+private fun TypeDefinition.isSubtypeOf(
+    target: ResolvedTypeRef,
+    definitions: Map<ResolvedTypeRef, TypeDefinition>,
+    visited: Set<ResolvedTypeRef>,
+): Boolean {
+    if (id in visited) return false
+    if (parents.any { it.id == target.id && it.revision == target.revision }) return true
+    val nextVisited = visited + id
+    return parents.any { parent ->
+        definitions[parent.copy(arguments = emptyList())]
+            ?.isSubtypeOf(target, definitions, nextVisited) == true
+    }
+}
+
+private val ResolvedTypeRef.stableSortKey: String
+    get() = "$id:$revision:${arguments.joinToString()}"
 
 /** A closed catalog graph rooted at one expression and containing every nominal definition needed to interpret it. */
 @Serializable
@@ -360,6 +436,13 @@ data class TypeGraph(
         }
     }
 }
+
+/** Carries a portable value together with the structural type needed to interpret it. */
+@Serializable
+data class TypedValueEnvelope(
+    val rootType: TypeExpression,
+    val rootValue: DataValue,
+)
 
 private fun validateLengths(
     minimum: Int?,

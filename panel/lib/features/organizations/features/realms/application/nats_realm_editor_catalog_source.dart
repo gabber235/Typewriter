@@ -4,8 +4,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as wire_catalog;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
     as wire_diagnostic;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/element_catalog.dart"
+    as wire_element;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as wire_type;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/icon.dart"
+    as wire_icon;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "nats_realm_editor_catalog_source.freezed.dart";
@@ -40,7 +44,28 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
       wire_catalog.CatalogFetchRequest.serializer.toBytes(request),
       wire_catalog.CatalogFetchResult.serializer,
     );
-    return response._decodeDomain();
+    final decoded = response._decodeDomain();
+    if (decoded case RealmEditorCatalogFetched(:final snapshot)) {
+      return _fetchElements(route, snapshot);
+    }
+    return decoded;
+  }
+
+  Future<RealmEditorCatalogFetchResult> _fetchElements(
+    RealmEditorCatalogRoute route,
+    RealmEditorCatalogSnapshot snapshot,
+  ) async {
+    final request = wire_element.ElementCatalogRequest(
+      expectedGeneration: wire_catalog.CatalogGeneration(
+        value: snapshot.generation.value,
+      ),
+    );
+    final response = await ref.requestSkir(
+      route.elementsFetchSubject,
+      wire_element.ElementCatalogRequest.serializer.toBytes(request),
+      wire_element.ElementCatalogResult.serializer,
+    );
+    return response._decodeDomain(snapshot);
   }
 
   @override
@@ -58,6 +83,129 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
       transformer: (previous, response) => response._decodeDomain(),
     );
   }
+}
+
+extension on wire_element.ElementCatalogResult {
+  RealmEditorCatalogFetchResult _decodeDomain(
+    RealmEditorCatalogSnapshot snapshot,
+  ) => switch (this) {
+    wire_element.ElementCatalogResult_successWrapper(:final value) =>
+      value._decodeDomain(snapshot),
+    wire_element.ElementCatalogResult_generationMismatchWrapper(:final value) =>
+      RealmEditorCatalogGenerationMismatch(CatalogGeneration(value.value)),
+    wire_element.ElementCatalogResult_unavailableWrapper(:final value) =>
+      RealmEditorCatalogFetchUnavailable([
+        realmEditorCatalogUnavailableDiagnostic(value.join("; ")),
+      ]),
+    wire_element.ElementCatalogResult_unknown() =>
+      RealmEditorCatalogFetchUnavailable([
+        realmEditorCatalogUnavailableDiagnostic(
+          "Realm returned an unknown element catalog response",
+        ),
+      ]),
+  };
+}
+
+extension on wire_element.ElementCatalogSuccess {
+  RealmEditorCatalogFetchResult _decodeDomain(
+    RealmEditorCatalogSnapshot snapshot,
+  ) {
+    if (generation.value != snapshot.generation.value) {
+      return RealmEditorCatalogGenerationMismatch(
+        CatalogGeneration(generation.value),
+      );
+    }
+    final registry = TypeRegistry(snapshot.catalog);
+    final codec = SkirTypeCodec(registry);
+    final entries = <String, RealmElementCatalogEntry>{};
+    for (final entry in this.entries) {
+      final decodedType = codec.decodeReference(entry.descriptor.type);
+      final type = decodedType.valueOrNull;
+      if (type == null) {
+        return RealmEditorCatalogFetchUnavailable(decodedType.diagnostics);
+      }
+      if (registry.resolveExact(type).valueOrNull == null) {
+        return RealmEditorCatalogFetchUnavailable([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Realm protocol inconsistency: element type '$type' is absent from the authoritative catalog",
+          ),
+        ]);
+      }
+      final id = entry.descriptor.elementTypeId.value.value;
+      if (type.id != DeclaredTypeId(id)) {
+        return RealmEditorCatalogFetchUnavailable([
+          realmEditorCatalogUnavailableDiagnostic(
+            "Element descriptor identity does not match its structural type",
+          ),
+        ]);
+      }
+      final eligibility = entry.eligibility._decodeDomain();
+      entries[id] = RealmElementCatalogEntry(
+        originArtifactId: entry.originArtifactId,
+        sourcePart: entry.sourcePart,
+        definition: DiscoveredElementDefinition(
+          id: id,
+          kind: switch (entry.descriptor.kind) {
+            wire_element.ElementKind.entry => ElementKind.entry,
+            wire_element.ElementKind.cue => ElementKind.cue,
+            _ => throw StateError("Unknown element kind"),
+          },
+          type: type,
+          name: entry.descriptor.name,
+          description: entry.descriptor.description,
+          icon: switch (entry.descriptor.icon) {
+            wire_icon.Icon_iconifyWrapper(:final value) => IconValue.iconify(
+              value,
+            ),
+            wire_icon.Icon_svgWrapper(:final value) => IconValue.svg(value),
+            _ => throw StateError("Unknown element icon"),
+          },
+          color: entry.descriptor.color.toFlutterColor(),
+          availability: entry.descriptor.availability._decodeDomain(),
+        ),
+        eligible: eligibility.$1,
+        available: entry.available,
+        ineligibilityReasons: eligibility.$2,
+      );
+    }
+    return RealmEditorCatalogFetched(snapshot.copyWith(elements: entries));
+  }
+}
+
+extension on wire_element.ElementEligibility {
+  (bool, List<String>) _decodeDomain() => switch (this) {
+    wire_element.ElementEligibility_eligibleWrapper() => (true, const []),
+    wire_element.ElementEligibility_ineligibleWrapper(:final value) => (
+      false,
+      value.reasons.toList(),
+    ),
+    wire_element.ElementEligibility_unknown() => (
+      false,
+      const ["Unknown eligibility"],
+    ),
+  };
+}
+
+extension on wire_element.AvailabilityExpression {
+  ElementAvailability _decodeDomain() => switch (this) {
+    wire_element.AvailabilityExpression_alwaysWrapper() =>
+      const ElementAvailability.always(),
+    wire_element.AvailabilityExpression_factWrapper(:final value) =>
+      ElementAvailability.fact(key: value.key, expected: value.expected),
+    wire_element.AvailabilityExpression_allWrapper(:final value) =>
+      ElementAvailability.all(
+        value.expressions.map((item) => item._decodeDomain()).toList(),
+      ),
+    wire_element.AvailabilityExpression_anyWrapper(:final value) =>
+      ElementAvailability.any(
+        value.expressions.map((item) => item._decodeDomain()).toList(),
+      ),
+    wire_element.AvailabilityExpression_notWrapper(:final value) =>
+      ElementAvailability.not(value.expression._decodeDomain()),
+    wire_element.AvailabilityExpression_unknown() => throw StateError(
+      "Unknown element availability",
+    ),
+  };
 }
 
 extension on wire_catalog.CatalogFetchResult {

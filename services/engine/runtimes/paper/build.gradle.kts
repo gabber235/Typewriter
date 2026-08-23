@@ -21,10 +21,10 @@ tasks.runServer {
 
 typewriter {
     engine {
-        id = "paper"
+        id = "typewritermc:paper"
         version = "1.0.0"
         implements {
-            capability("typewritermc:minecraft", version = "1.0.0")
+            capability(project(":engine-minecraft"), version = "1.0.0")
         }
     }
 }

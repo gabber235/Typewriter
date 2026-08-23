@@ -5,7 +5,7 @@ part "realm_editor_catalog_provider.g.dart";
 
 @Riverpod(keepAlive: true)
 RealmEditorCatalogSource realmEditorCatalogSource(Ref ref) =>
-    const UnavailableRealmEditorCatalogSource();
+    NatsRealmEditorCatalogSource(ref);
 
 @riverpod
 RealmEditorCatalogCache? realmEditorCatalogCache(Ref ref) {
@@ -76,6 +76,25 @@ Stream<RealmEditorCatalogState> realmEditorCatalogForType(
 
 void requestRealmEditorCatalog(Ref ref, RealmEditorCatalogRequest request) =>
     ref.read(realmEditorCatalogCacheProvider)?.request(request);
+
+@riverpod
+List<ElementDefinition> availableElementDefinitions(Ref ref) {
+  final state = ref.watch(realmEditorCatalogProvider).value;
+  final snapshot = state?.snapshot;
+  if (snapshot == null) return const [];
+  return snapshot.elements.values
+      .where((entry) => entry.eligible && entry.available)
+      .map(
+        (entry) => ElementDefinition(
+          rootType: entry.definition.type,
+          name: entry.definition.name,
+          description: entry.definition.description,
+          icon: entry.definition.icon,
+          color: entry.definition.color,
+        ),
+      )
+      .toList(growable: false);
+}
 
 extension RealmEditorCatalogElementResolution
     on AsyncValue<RealmEditorCatalogState> {

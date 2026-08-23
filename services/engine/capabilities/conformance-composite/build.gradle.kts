@@ -13,7 +13,7 @@ typewriter {
         id = "typewritermc:conformance-composite"
         version = "1.0.0"
         requires {
-            capability("typewritermc:conformance-base", version = "1.0.0")
+            capability(project(":engine-conformance-base"), version = "1.0.0")
         }
     }
 }

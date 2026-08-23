@@ -9,7 +9,7 @@ dependencies {
 
 typewriter {
     engine {
-        id = "panel"
+        id = "typewritermc:panel"
         version = "1.0.0"
     }
 }

@@ -20,34 +20,3 @@ tasks.register("ktlintCheck") {
     description = "Runs Kotlin formatting checks for every service Gradle root."
     dependsOn(includedTasks("ktlintCheck"))
 }
-
-val publishDevArtifacts =
-    tasks.register("publishDevArtifacts") {
-        group = "development"
-        description = "Builds and publishes all runtime artifacts for local development."
-        dependsOn(gradle.includedBuild("realm").task(":publishDevArtifacts"))
-        dependsOn(gradle.includedBuild("engine").task(":publishDevArtifacts"))
-        dependsOn(gradle.includedBuild("extensions").task(":publishDevArtifacts"))
-    }
-
-val loaderRuntime = configurations.create("loaderRuntime") {
-    isTransitive = false
-}
-dependencies.add(loaderRuntime.name, "com.typewritermc:loader:development")
-
-tasks.register<JavaExec>("devStandalone") {
-    group = "development"
-    description = "Runs the combined loader as a local standalone host."
-    dependsOn(publishDevArtifacts)
-    classpath(loaderRuntime)
-    mainClass.set("com.typewritermc.loader.standalone.StandaloneLoader")
-    args(layout.buildDirectory.dir("development/standalone").get().asFile.absolutePath)
-}
-
-tasks.register<GradleBuild>("devPaper") {
-    group = "development"
-    description = "Runs a disposable Paper server with the combined loader."
-    dependsOn(publishDevArtifacts)
-    dir = layout.projectDirectory.dir("engine").asFile
-    tasks = listOf(":engine-paper:runServer")
-}

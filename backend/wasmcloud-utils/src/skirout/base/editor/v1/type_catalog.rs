@@ -58,6 +58,44 @@ impl BuiltinTypeId {
 }
 
 // ==============================================================================
+// struct DeclaredTypeId
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeclaredTypeId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeclaredTypeId>>,
+}
+
+impl DeclaredTypeId {
+    pub fn default_ref() -> &'static DeclaredTypeId {
+        static D: std::sync::LazyLock<DeclaredTypeId> = std::sync::LazyLock::new(DeclaredTypeId::default);
+        &D
+    }
+}
+
+impl DeclaredTypeId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeclaredTypeId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeclaredTypeId>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "DeclaredTypeId",
+                    "",
+                    |x: &DeclaredTypeId| &x._unrecognized,
+                    |x: &mut DeclaredTypeId, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeclaredTypeId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeclaredTypeId::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct QualifiedTypeId
 // ==============================================================================
 
@@ -104,7 +142,8 @@ impl QualifiedTypeId {
 pub enum TypeId {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeId>>),
     Builtin(Box<BuiltinTypeId>),
-    Realm(Box<QualifiedTypeId>),
+    Declared(Box<DeclaredTypeId>),
+    Qualified(Box<QualifiedTypeId>),
 }
 
 impl Default for TypeId {
@@ -121,7 +160,8 @@ impl TypeId {
                     |x: &TypeId| match x {
                         TypeId::Unknown(_) => 0,
                         TypeId::Builtin(_) => 1,
-                        TypeId::Realm(_) => 2,
+                        TypeId::Declared(_) => 2,
+                        TypeId::Qualified(_) => 3,
                     },
                     |u| TypeId::Unknown(Some(u)),
                     |x: &TypeId| match x { TypeId::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1499,6 +1539,11 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DeclaredTypeId> = DeclaredTypeId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &DeclaredTypeId| &x.value, |x: &mut DeclaredTypeId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<QualifiedTypeId> = QualifiedTypeId::_adapter() as *const _ as *mut _;
                 (*a).add_field("namespace", 0, crate::skir_client::Serializer::string(), "", |x: &QualifiedTypeId| &x.namespace, |x: &mut QualifiedTypeId, v| x.namespace = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &QualifiedTypeId| &x.name, |x: &mut QualifiedTypeId, v| x.name = v);
@@ -1507,7 +1552,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TypeId> = TypeId::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("builtin", 1, 1, crate::skir_client::internal::enum_serializer_from_static(BuiltinTypeId::_adapter()), "", |v| TypeId::Builtin(Box::new(v)), |x| match x { TypeId::Builtin(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm", 2, 2, crate::skir_client::internal::struct_serializer_from_static(QualifiedTypeId::_adapter()), "", |v| TypeId::Realm(Box::new(v)), |x| match x { TypeId::Realm(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("declared", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeclaredTypeId::_adapter()), "", |v| TypeId::Declared(Box::new(v)), |x| match x { TypeId::Declared(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("qualified", 3, 3, crate::skir_client::internal::struct_serializer_from_static(QualifiedTypeId::_adapter()), "", |v| TypeId::Qualified(Box::new(v)), |x| match x { TypeId::Qualified(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

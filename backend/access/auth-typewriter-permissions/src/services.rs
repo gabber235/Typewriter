@@ -168,6 +168,7 @@ fn handle_bound_binding(
     for suffix in [
         "editor.catalog.fetch",
         "editor.catalog.invalidate",
+        "editor.elements.fetch",
         "editor.presentation.search",
         "book.watch",
         "book.resource.watch",

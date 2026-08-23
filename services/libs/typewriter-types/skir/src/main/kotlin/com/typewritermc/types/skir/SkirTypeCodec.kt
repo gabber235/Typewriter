@@ -2,8 +2,10 @@
 
 package com.typewritermc.types.skir
 
+import com.typewritermc.types.BuiltinTypeId
 import com.typewritermc.types.ConversionId
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.NominalTypeKind
@@ -445,24 +447,42 @@ private fun ConversionScope.decode(reference: SkirResolvedTypeRef): ResolvedType
 
 private fun encode(id: TypeId): SkirTypeId =
     when (id) {
-        TypeId.Option -> SkirTypeId.BuiltinWrapper(SkirBuiltinTypeId.OPTION)
-        TypeId.Some -> SkirTypeId.BuiltinWrapper(SkirBuiltinTypeId.SOME)
-        TypeId.None -> SkirTypeId.BuiltinWrapper(SkirBuiltinTypeId.NONE)
-        is TypeId.Qualified -> SkirTypeId.createRealm(namespace = id.namespace, name = id.name)
+        is TypeId.Builtin -> {
+            SkirTypeId.BuiltinWrapper(
+                when (id.id) {
+                    BuiltinTypeId.OPTION -> SkirBuiltinTypeId.OPTION
+                    BuiltinTypeId.SOME -> SkirBuiltinTypeId.SOME
+                    BuiltinTypeId.NONE -> SkirBuiltinTypeId.NONE
+                },
+            )
+        }
+
+        is TypeId.Declared -> {
+            SkirTypeId.createDeclared(value = id.id.toString())
+        }
+
+        is TypeId.Qualified -> {
+            SkirTypeId.createQualified(namespace = id.namespace, name = id.name)
+        }
     }
 
 private fun ConversionScope.decode(id: SkirTypeId): TypeId =
     when (id) {
         is SkirTypeId.BuiltinWrapper -> {
             when (id.value) {
-                SkirBuiltinTypeId.OPTION -> TypeId.Option
-                SkirBuiltinTypeId.SOME -> TypeId.Some
-                SkirBuiltinTypeId.NONE -> TypeId.None
+                SkirBuiltinTypeId.OPTION -> TypeId.Builtin(BuiltinTypeId.OPTION)
+                SkirBuiltinTypeId.SOME -> TypeId.Builtin(BuiltinTypeId.SOME)
+                SkirBuiltinTypeId.NONE -> TypeId.Builtin(BuiltinTypeId.NONE)
                 else -> fail("Unknown Skir builtin type id.")
             }
         }
 
-        is SkirTypeId.RealmWrapper -> {
+        is SkirTypeId.DeclaredWrapper -> {
+            val declared = runCatching { DeclaredTypeId.parse(id.value.value) }.getOrElse { fail("Invalid declared type UUID.") }
+            TypeId.Declared(declared)
+        }
+
+        is SkirTypeId.QualifiedWrapper -> {
             TypeId.Qualified(id.value.namespace, id.value.name)
         }
 
@@ -482,10 +502,21 @@ private fun decode(id: SkirConversionId) = ConversionId(namespace = id.namespace
 private val ResolvedTypeRef.displayName: String
     get() =
         when (val typeId = id) {
-            TypeId.Option -> "Option"
-            TypeId.Some -> "Some"
-            TypeId.None -> "None"
-            is TypeId.Qualified -> typeId.name
+            is TypeId.Builtin -> {
+                when (typeId.id) {
+                    BuiltinTypeId.OPTION -> "Option"
+                    BuiltinTypeId.SOME -> "Some"
+                    BuiltinTypeId.NONE -> "None"
+                }
+            }
+
+            is TypeId.Declared -> {
+                typeId.id.toString()
+            }
+
+            is TypeId.Qualified -> {
+                typeId.name
+            }
         }
 
 private fun ConversionScope.invalidInteger(source: String?): BigInteger? {

@@ -258,6 +258,7 @@ final class TypeRegistry {
 extension on TypeId {
   String get _owner => switch (this) {
     OptionTypeId() || SomeTypeId() || NoneTypeId() => "builtin",
+    DeclaredTypeId(:final uuid) => uuid,
     QualifiedTypeId(:final namespace) => namespace,
   };
 }

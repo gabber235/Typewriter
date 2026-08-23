@@ -58,6 +58,15 @@ val TypeModelTest by testSuite {
         StandardTypes.dateTime.id shouldBe TypeId.Qualified("kernel/v1", "DateTime")
     }
 
+    test("declared identities require canonical UUID text") {
+        DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281").toString() shouldBe
+            "019d1c2a8f7b7cc18c2a4a7b2fd1e281"
+
+        shouldThrow<IllegalArgumentException> {
+            DeclaredTypeId.parse("019d1c2a-8f7b-7cc1-8c2a-4a7b2fd1e281")
+        }
+    }
+
     test("model rejects contradictory collection constraints") {
         shouldThrow<IllegalArgumentException> {
             TypeExpression.ListType(TypeExpression.StringType(), minimumLength = 2, maximumLength = 1)

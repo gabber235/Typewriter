@@ -25,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
     editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
+    elementCatalog: RealmElementCatalogSource = UnavailableRealmElementCatalogSource(),
     presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
     decorateBooks: (BookRepository) -> BookRepository = { it },
 ) : AutoCloseable {
@@ -40,6 +41,7 @@ internal class RouteFixture(
                 repositories.pages,
                 repositories.tags,
                 editorCatalog,
+                elementCatalog,
                 presentationSearch,
             ).create(RealmAddress("realm", "organization")),
             scope,

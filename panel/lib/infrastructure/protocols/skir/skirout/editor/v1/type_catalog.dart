@@ -13,7 +13,6 @@
 
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
-
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
 
 // -----------------------------------------------------------------------------
@@ -125,6 +124,114 @@ enum _BuiltinTypeId_consts implements BuiltinTypeId {
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, BuiltinTypeId.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct DeclaredTypeId
+// -----------------------------------------------------------------------------
+
+sealed class DeclaredTypeId_orMutable {
+  _core.String get value;
+
+  DeclaredTypeId toFrozen();
+}
+
+/// Deeply immutable.
+final class DeclaredTypeId implements DeclaredTypeId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DeclaredTypeId({
+    required _core.String value,
+  }) => DeclaredTypeId._(
+    value,
+  );
+
+  DeclaredTypeId._(
+    this.value,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DeclaredTypeId._(
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DeclaredTypeId_mutable mutable() => DeclaredTypeId_mutable._(
+    "",
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DeclaredTypeId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DeclaredTypeId_mutable toMutable() => DeclaredTypeId_mutable._(
+    this.value,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DeclaredTypeId) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DeclaredTypeId` instances.
+  static _skir.StructSerializer<DeclaredTypeId, DeclaredTypeId_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/type_catalog.skir:DeclaredTypeId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DeclaredTypeId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DeclaredTypeId].
+final class DeclaredTypeId_mutable implements DeclaredTypeId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DeclaredTypeId_mutable._(
+    this.value,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DeclaredTypeId toFrozen() => DeclaredTypeId(
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -266,7 +373,8 @@ final class QualifiedTypeId_mutable implements QualifiedTypeId_orMutable {
 ///   switch (e) {
 ///     case TypeId_unknown(): { ... }
 ///     case TypeId_builtin(:var value): { ... }
-///     case TypeId_realm(:var value): { ... }
+///     case TypeId_declared(:var value): { ... }
+///     case TypeId_qualified(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -281,16 +389,30 @@ sealed class TypeId {
     BuiltinTypeId value
   ) => TypeId_builtinWrapper._(value);
 
-  /// Create a 'realm' variant wrapping around the given value.
-  factory TypeId.wrapRealm(
-    QualifiedTypeId value
-  ) => TypeId_realmWrapper._(value);
+  /// Create a 'declared' variant wrapping around the given value.
+  factory TypeId.wrapDeclared(
+    DeclaredTypeId value
+  ) => TypeId_declaredWrapper._(value);
 
-  /// Same as `wrapRealm(QualifiedTypeId(...))`.
-  factory TypeId.createRealm({
+  /// Same as `wrapDeclared(DeclaredTypeId(...))`.
+  factory TypeId.createDeclared({
+    required _core.String value,
+  }) => TypeId.wrapDeclared(
+    DeclaredTypeId(
+      value: value,
+    )
+  );
+
+  /// Create a 'qualified' variant wrapping around the given value.
+  factory TypeId.wrapQualified(
+    QualifiedTypeId value
+  ) => TypeId_qualifiedWrapper._(value);
+
+  /// Same as `wrapQualified(QualifiedTypeId(...))`.
+  factory TypeId.createQualified({
     required _core.String namespace,
     required _core.String name,
-  }) => TypeId.wrapRealm(
+  }) => TypeId.wrapQualified(
     QualifiedTypeId(
       namespace: namespace,
       name: name,
@@ -315,13 +437,23 @@ sealed class TypeId {
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "realm",
-        "wrapRealm",
+        "declared",
+        "wrapDeclared",
+        DeclaredTypeId.serializer,
+        "",
+        TypeId_declaredWrapper._,
+        (it) => it.value,
+        ordinal: TypeId_kind.declaredWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "qualified",
+        "wrapQualified",
         QualifiedTypeId.serializer,
         "",
-        TypeId_realmWrapper._,
+        TypeId_qualifiedWrapper._,
         (it) => it.value,
-        ordinal: TypeId_kind.realmWrapper._ordinal,
+        ordinal: TypeId_kind.qualifiedWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -343,7 +475,8 @@ sealed class TypeId {
 enum TypeId_kind {
   unknown(0),
   builtinWrapper(1),
-  realmWrapper(2);
+  declaredWrapper(2),
+  qualifiedWrapper(3);
 
   final _core.int _ordinal;
 
@@ -393,13 +526,22 @@ final class TypeId_builtinWrapper extends _TypeId_wrapper {
   TypeId_kind get kind => TypeId_kind.builtinWrapper;
 }
 
-final class TypeId_realmWrapper extends _TypeId_wrapper {
-  final QualifiedTypeId value;
+final class TypeId_declaredWrapper extends _TypeId_wrapper {
+  final DeclaredTypeId value;
 
-  TypeId_realmWrapper._(this.value);
+  TypeId_declaredWrapper._(this.value);
 
   @_core.override
-  TypeId_kind get kind => TypeId_kind.realmWrapper;
+  TypeId_kind get kind => TypeId_kind.declaredWrapper;
+}
+
+final class TypeId_qualifiedWrapper extends _TypeId_wrapper {
+  final QualifiedTypeId value;
+
+  TypeId_qualifiedWrapper._(this.value);
+
+  @_core.override
+  TypeId_kind get kind => TypeId_kind.qualifiedWrapper;
 }
 
 // -----------------------------------------------------------------------------

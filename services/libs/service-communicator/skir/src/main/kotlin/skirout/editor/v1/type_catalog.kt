@@ -167,6 +167,138 @@ sealed class BuiltinTypeId private constructor() {
     }
 }
 
+sealed interface DeclaredTypeId_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.DeclaredTypeId;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DeclaredTypeId private constructor(
+    override val value: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.DeclaredTypeId>? =
+        null,
+): skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.DeclaredTypeId>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.type_catalog.DeclaredTypeId(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.DeclaredTypeId && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.DeclaredTypeId.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DeclaredTypeId]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.DeclaredTypeId>? =
+            null,
+    ): skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.DeclaredTypeId(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.DeclaredTypeId(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DeclaredTypeId].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.type_catalog.DeclaredTypeId(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:DeclaredTypeId",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DeclaredTypeId] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DeclaredTypeId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "value",
+                "value",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.value },
+                { mut, v -> mut.value = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
 sealed interface QualifiedTypeId_OrMutable {
     val namespace: kotlin.String;
     val name: kotlin.String;
@@ -329,7 +461,8 @@ sealed class TypeId private constructor() {
     enum class Kind {
         UNKNOWN,
         BUILTIN_WRAPPER,
-        REALM_WRAPPER,
+        DECLARED_WRAPPER,
+        QUALIFIED_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.type_catalog.TypeId.UNKNOWN")) internal constructor(
@@ -361,21 +494,39 @@ sealed class TypeId private constructor() {
         }
     }
 
-    class RealmWrapper private constructor (
+    class DeclaredWrapper private constructor (
+        val value: skirout.editor.v1.type_catalog.DeclaredTypeId,
+    ) : skirout.editor.v1.type_catalog.TypeId() {
+        constructor(
+            value: skirout.editor.v1.type_catalog.DeclaredTypeId_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.DECLARED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.type_catalog.TypeId.DeclaredWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 567961658;
+        }
+    }
+
+    class QualifiedWrapper private constructor (
         val value: skirout.editor.v1.type_catalog.QualifiedTypeId,
     ) : skirout.editor.v1.type_catalog.TypeId() {
         constructor(
             value: skirout.editor.v1.type_catalog.QualifiedTypeId_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.REALM_WRAPPER;
+        override val kind get() = Kind.QUALIFIED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.type_catalog.TypeId.RealmWrapper && value == other.value;
+            return other is skirout.editor.v1.type_catalog.TypeId.QualifiedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 108386959;
+            return this.value.hashCode() + -1247940452;
         }
     }
 
@@ -397,14 +548,26 @@ sealed class TypeId private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `RealmWrapper(skirout.editor.v1.type_catalog.QualifiedTypeId(...))`. */
+        /** Shortcut for `DeclaredWrapper(skirout.editor.v1.type_catalog.DeclaredTypeId(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealm(
+        fun createDeclared(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String,
+        ) = DeclaredWrapper(
+            skirout.editor.v1.type_catalog.DeclaredTypeId(
+                value = value,
+            )
+        );
+
+        /** Shortcut for `QualifiedWrapper(skirout.editor.v1.type_catalog.QualifiedTypeId(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createQualified(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             namespace: kotlin.String,
             name: kotlin.String,
-        ) = RealmWrapper(
+        ) = QualifiedWrapper(
             skirout.editor.v1.type_catalog.QualifiedTypeId(
                 namespace = namespace,
                 name = name,
@@ -448,11 +611,20 @@ sealed class TypeId private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     2,
-                    "realm",
-                    Kind.REALM_WRAPPER.ordinal,
+                    "declared",
+                    Kind.DECLARED_WRAPPER.ordinal,
+                    skirout.editor.v1.type_catalog.DeclaredTypeId.serializer,
+                    "",
+                    { DeclaredWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "qualified",
+                    Kind.QUALIFIED_WRAPPER.ordinal,
                     skirout.editor.v1.type_catalog.QualifiedTypeId.serializer,
                     "",
-                    { RealmWrapper(it) },
+                    { QualifiedWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

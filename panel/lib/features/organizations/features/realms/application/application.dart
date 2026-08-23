@@ -7,3 +7,4 @@ export "realm_editor_catalog.dart";
 export "realm_editor_catalog_cache.dart";
 export "realm_editor_catalog_provider.dart";
 export "realm_editor_catalog_request.dart";
+export "realm_element_catalog.dart";

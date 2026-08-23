@@ -5,6 +5,29 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("RealmEditorCatalogCache", () {
+    test("replaces the authoritative type catalog within one generation", () {
+      final oldType = _type("old");
+      final currentType = _type("current");
+      final previous = RealmEditorCatalogSnapshot(
+        catalog: TypeCatalog([
+          TypeDefinition(id: oldType, kind: NominalTypeKind.concrete),
+        ]),
+        generation: const CatalogGeneration("1"),
+      );
+      final current = RealmEditorCatalogSnapshot(
+        catalog: TypeCatalog([
+          TypeDefinition(id: currentType, kind: NominalTypeKind.concrete),
+        ]),
+        generation: const CatalogGeneration("1"),
+      );
+
+      final merged = previous.merge(current);
+
+      expect(merged.catalog.definitions.map((value) => value.id), [
+        currentType,
+      ]);
+    });
+
     test("publishes a fetched catalog with partial diagnostics", () async {
       final diagnostic = _diagnostic("One definition was rejected");
       final source = _FakeSource()

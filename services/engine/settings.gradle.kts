@@ -4,7 +4,9 @@ pluginManagement {
 }
 
 includeBuild("../loader")
-includeBuild("../extensions")
+includeBuild("../discovery")
+includeBuild("../elements")
+includeBuild("../libs/typewriter-types")
 includeBuild("../imprint")
 
 plugins {

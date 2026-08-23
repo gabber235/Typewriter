@@ -20,6 +20,9 @@ dependencies {
     implementation("com.typewritermc:service-file-transfer-storage-file")
     implementation("com.typewritermc:loader-core")
     implementation("com.typewritermc:engine-types")
+    implementation("com.typewritermc:discovery-model")
+    implementation("com.typewritermc:element-types")
+    implementation("com.typewritermc:typewriter-types-skir")
     implementation(libs.surrealdb.java.sdk)
 
     testImplementation("com.typewritermc:service-communicator-testing")
@@ -121,13 +124,4 @@ val verifyLoaderManagedArtifact =
 
 tasks.check {
     dependsOn(verifyLoaderManagedArtifact)
-}
-
-tasks.register<Copy>("publishDevArtifacts") {
-    group = "development"
-    description = "Publishes the Realm artifact for local development."
-    val realmJar = tasks.named<Jar>("jar").flatMap { it.archiveFile }
-    val realmApiVersion = providers.gradleProperty("typewriter.realm.api.version").orElse("1.0.0")
-    from(realmJar) { rename { "typewritermc:realm__${realmApiVersion.get()}__realm.jar" } }
-    into(rootProject.layout.projectDirectory.dir("../build/development/artifacts"))
 }

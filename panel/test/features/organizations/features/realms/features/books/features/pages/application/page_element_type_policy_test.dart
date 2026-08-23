@@ -20,8 +20,12 @@ void main() {
   test("subtype provider exposes all returned concrete descendants", () async {
     final direct = _type("DirectTrigger");
     final indirect = _type("IndirectTrigger");
+    final abstract = _type("AbstractTrigger");
     final unrelated = _type("Unrelated");
-    final source = _SubtypeSource(matches: [direct, indirect]);
+    final source = _SubtypeSource(
+      matches: [direct, abstract, indirect],
+      abstractMatches: {abstract},
+    );
     final container = _container(source);
     addTearDown(container.dispose);
 
@@ -36,6 +40,7 @@ void main() {
     expect(state, isA<PageElementTypesReady>());
     final types = (state as PageElementTypesReady).types;
     expect(types, containsAll([direct, indirect]));
+    expect(types, isNot(contains(abstract)));
     expect(types, isNot(contains(unrelated)));
     expect(source.requestedTarget, _type("TriggerEntry"));
   });
@@ -95,11 +100,13 @@ Future<void> _waitFor(bool Function() condition) async {
 final class _SubtypeSource implements RealmEditorCatalogSource {
   _SubtypeSource({
     this.matches = const [],
+    this.abstractMatches = const {},
     this.unavailable = false,
     this.holdFetch = false,
   });
 
   final List<ResolvedTypeRef> matches;
+  final Set<ResolvedTypeRef> abstractMatches;
   final bool unavailable;
   final bool holdFetch;
   ResolvedTypeRef? requestedTarget;
@@ -127,7 +134,15 @@ final class _SubtypeSource implements RealmEditorCatalogSource {
     }
     return RealmEditorCatalogFetchResult.fetched(
       RealmEditorCatalogSnapshot(
-        catalog: TypeCatalog([]),
+        catalog: TypeCatalog([
+          for (final type in matches)
+            TypeDefinition(
+              id: type,
+              kind: abstractMatches.contains(type)
+                  ? NominalTypeKind.openAbstract
+                  : NominalTypeKind.concrete,
+            ),
+        ]),
         generation: const CatalogGeneration("1"),
         subtypeResults: subtypeResults,
       ),

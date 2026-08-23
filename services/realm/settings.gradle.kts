@@ -7,6 +7,10 @@ pluginManagement {
     }
 }
 
+includeBuild("../discovery")
+includeBuild("../elements")
+includeBuild("../libs/typewriter-types")
+
 plugins {
     id("com.typewritermc.settings-conventions")
 }

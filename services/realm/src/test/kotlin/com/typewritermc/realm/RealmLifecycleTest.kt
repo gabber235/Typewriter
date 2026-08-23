@@ -2,6 +2,7 @@ package com.typewritermc.realm
 
 import com.surrealdb.Surreal
 import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
+import com.typewritermc.realm.routes.UnavailableRealmElementCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.schema.SchemaMigrator
@@ -80,7 +81,7 @@ val RealmLifecycleTest by testSuite {
     }
 }
 
-private const val ROUTE_COUNT = 18
+private const val ROUTE_COUNT = 19
 
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
@@ -101,12 +102,19 @@ private class RealmLifecycleFixture(
                     },
                 ),
             editorCatalog = UnavailableRealmEditorCatalogSource(),
+            elementCatalog = UnavailableRealmElementCatalogSource(),
             presentationSearch = UnavailableRealmPresentationSearchSource(),
             scope = scope,
             telemetry = telemetry.telemetry,
             retryPolicy = RetryPolicy.fixed(1.seconds),
             delayScheduler = delayScheduler,
             clock = java.time.Clock.systemUTC(),
+            catalogInvalidations =
+                RealmCatalogInvalidationProcess(
+                    snapshots = RealmDiscoverySnapshotStore(),
+                    scope = scope,
+                    telemetry = telemetry.telemetry,
+                ),
         )
 
     fun ready(

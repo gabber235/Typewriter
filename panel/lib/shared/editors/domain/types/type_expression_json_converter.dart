@@ -187,6 +187,7 @@ extension on Map<String, Object?> {
       "none" => const TypeId.none(),
       _ => throw const FormatException("Unknown builtin type ID"),
     },
+    "declared" => TypeId.declared(this["uuid"]! as String),
     "qualified" => QualifiedTypeId(
       namespace: this["namespace"]! as String,
       name: this["name"]! as String,
@@ -200,6 +201,7 @@ extension on TypeId {
     OptionTypeId() => {"kind": "builtin", "name": "option"},
     SomeTypeId() => {"kind": "builtin", "name": "some"},
     NoneTypeId() => {"kind": "builtin", "name": "none"},
+    DeclaredTypeId(:final uuid) => {"kind": "declared", "uuid": uuid},
     QualifiedTypeId(:final namespace, :final name) => {
       "kind": "qualified",
       "namespace": namespace,

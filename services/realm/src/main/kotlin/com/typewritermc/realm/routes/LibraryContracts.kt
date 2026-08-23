@@ -21,6 +21,8 @@ import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.FetchEditorCatalog
 import skirout.editor.v1.catalog.WatchEditorCatalog
+import skirout.editor.v1.element_catalog.ElementCatalogResult
+import skirout.editor.v1.element_catalog.FetchElementCatalog
 import skirout.library.v1.book.CreateBook
 import skirout.library.v1.book.CreateBookResponse
 import skirout.library.v1.book.UpdateBook
@@ -78,6 +80,13 @@ internal class LibraryContracts(
             "editor.catalog.invalidate",
             CatalogWatchUpdate.createInitial(value = "unavailable"),
             catalogWatchResponseClassifier(),
+        )
+    val fetchElementCatalog =
+        unary(
+            FetchElementCatalog,
+            "editor.elements.fetch",
+            ElementCatalogResult.UnavailableWrapper(listOf("Realm element catalog fetch failed")),
+            elementCatalogResponseClassifier(),
         )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
 
@@ -177,6 +186,24 @@ internal class LibraryContracts(
             updateFilter = updateFilter,
         )
 }
+
+private fun elementCatalogResponseClassifier(): ResponseClassifier<ElementCatalogResult> =
+    ResponseClassifier { response ->
+        val outcome =
+            when (response) {
+                is ElementCatalogResult.SuccessWrapper -> ResponseOutcome.SUCCESS
+                is ElementCatalogResult.UnavailableWrapper -> ResponseOutcome.INTERNAL_ERROR
+                else -> ResponseOutcome.DOMAIN_ERROR
+            }
+        ResponseClassification(
+            outcome,
+            ResponseVariant.of(
+                response.kind.name
+                    .lowercase()
+                    .replace('_', '-'),
+            ),
+        )
+    }
 
 internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
     realmAddress(

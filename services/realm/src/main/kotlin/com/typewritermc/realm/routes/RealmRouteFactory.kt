@@ -11,6 +11,7 @@ class RealmRouteFactory(
     private val pages: PageRepository,
     private val tags: TagRepository,
     private val editorCatalog: RealmEditorCatalogSource,
+    private val elementCatalog: RealmElementCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
 ) {
     fun create(address: RealmAddress): CommunicatorRoutes {
@@ -18,7 +19,7 @@ class RealmRouteFactory(
         val bookRoutes = BookRoutes(books, tags, contracts, address)
         val pageRoutes = PageRoutes(pages, books, contracts, address)
         val tagRoutes = TagRoutes(tags, contracts, address)
-        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)
+        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, elementCatalog, contracts, address)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         return communicatorRoutes {
             bookRoutes.register(this)

@@ -145,6 +145,7 @@ async fn member_receives_all_organization_capabilities(
         "cloud.to.organization.writers.realm.create",
         "service.to.*.organization.writers.realm.editor.catalog.fetch",
         "service.to.*.organization.writers.realm.editor.catalog.invalidate",
+        "service.to.*.organization.writers.realm.editor.elements.fetch",
         "service.to.*.organization.writers.realm.editor.presentation.search",
         "service.to.*.organization.writers.realm.book.create",
         "service.to.*.organization.writers.realm.pages.chapters",

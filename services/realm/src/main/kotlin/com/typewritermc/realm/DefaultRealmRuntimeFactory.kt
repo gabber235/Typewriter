@@ -9,8 +9,10 @@ import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
 import com.typewritermc.realm.deployment.RealmUpgradeCheckpoint
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
+import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
-import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
+import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
+import com.typewritermc.realm.routes.SnapshotRealmElementCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.DatabaseEndpoint
 import com.typewritermc.realm.schema.DatabaseProvider
@@ -59,9 +61,12 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 single { applicationScope } onClose { it?.cancel() }
                 single { configuration.database }
                 single<RealmDatabaseProvider> { DatabaseProvider(get()) }
-                single<RealmEditorCatalogSource> { UnavailableRealmEditorCatalogSource() }
+                single { RealmDiscoverySnapshotStore() }
+                single<RealmEditorCatalogSource> { SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().discovery() } }
+                single<RealmElementCatalogSource> { SnapshotRealmElementCatalogSource { get<RealmDiscoverySnapshotStore>().elements() } }
                 single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
-                single { Realm(get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler, clock) }
+                single { RealmCatalogInvalidationProcess(get(), get(), get()) }
+                single { Realm(get(), get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler, clock, get()) }
             }
 
         val application =

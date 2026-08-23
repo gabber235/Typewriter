@@ -13,7 +13,22 @@ val serviceBuilds =
         ServiceBuild(
             "typewriter-types",
             "libs/typewriter-types",
-            listOf(":typewriter-types-core", ":typewriter-types-ksp", ":typewriter-types-skir"),
+            listOf(
+                ":typewriter-types-core",
+                ":typewriter-types-ksp",
+                ":typewriter-types-codegen",
+                ":typewriter-types-skir",
+            ),
+        ),
+        ServiceBuild(
+            "discovery",
+            "discovery",
+            listOf(":discovery-model", ":discovery-runtime", ":discovery-codegen", ":discovery-testing"),
+        ),
+        ServiceBuild(
+            "elements",
+            "elements",
+            listOf(":element-types", ":element-codegen", ":element-testing"),
         ),
         ServiceBuild(
             "service-telemetry",
@@ -103,7 +118,7 @@ val serviceBuilds =
         ServiceBuild(
             "extensions",
             "extensions",
-            listOf(":extension-types", ":extension-codegen", ":conformance-extension"),
+            listOf(":extension-types", ":conformance-extension"),
         ),
     )
 

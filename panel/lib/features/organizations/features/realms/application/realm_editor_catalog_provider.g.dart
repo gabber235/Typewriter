@@ -55,7 +55,7 @@ final class RealmEditorCatalogSourceProvider
 }
 
 String _$realmEditorCatalogSourceHash() =>
-    r'0e74125192df1c16e74a0cd988bc2e68d72b81b8';
+    r'4c919983889dddf4d34eb24e95e09953663d68a1';
 
 @ProviderFor(realmEditorCatalogCache)
 final realmEditorCatalogCacheProvider = RealmEditorCatalogCacheProvider._();
@@ -229,3 +229,52 @@ final class RealmEditorCatalogForTypeFamily extends $Family
   @override
   String toString() => r'realmEditorCatalogForTypeProvider';
 }
+
+@ProviderFor(availableElementDefinitions)
+final availableElementDefinitionsProvider =
+    AvailableElementDefinitionsProvider._();
+
+final class AvailableElementDefinitionsProvider
+    extends
+        $FunctionalProvider<
+          List<ElementDefinition>,
+          List<ElementDefinition>,
+          List<ElementDefinition>
+        >
+    with $Provider<List<ElementDefinition>> {
+  AvailableElementDefinitionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'availableElementDefinitionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$availableElementDefinitionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<ElementDefinition>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ElementDefinition> create(Ref ref) {
+    return availableElementDefinitions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<ElementDefinition> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<ElementDefinition>>(value),
+    );
+  }
+}
+
+String _$availableElementDefinitionsHash() =>
+    r'6b65727c2c4228ceeb9b2f73db1eb1ffd12cdc1c';

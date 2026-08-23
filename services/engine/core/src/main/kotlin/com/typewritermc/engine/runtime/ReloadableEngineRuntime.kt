@@ -1,36 +1,30 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.discovery.runtime.DiscoveryDeployment
+import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.loader.ReplaceableDeploymentRuntime
 import kotlinx.coroutines.CoroutineScope
-import java.net.URLClassLoader
 import java.time.Instant
 
-/**
- * Owns all extension activations and code for one engine deployment revision.
- *
- * [activate] is atomic from the caller perspective. Partial activation closes the replacement scope and preserves the
- * failure cause. [quiesce] immediately closes active behavior, while [stop] also closes the child classloader. Content
- * revisions are applied in ascending order without code replacement.
- */
 class ReloadableEngineRuntime(
-    classLoader: URLClassLoader,
-    private val plan: EngineActivationPlan,
+    deployment: DiscoveryDeployment,
+    private val registrars: List<RuntimeRegistrar>,
     private val parentScope: CoroutineScope,
+    private val contentGateway: EngineContentGateway? = null,
 ) : ReplaceableDeploymentRuntime {
-    private var classLoader: URLClassLoader? = classLoader
+    private var deployment: DiscoveryDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
     private var lastContentRevision: ContentRevision? = null
 
     override suspend fun activate() {
-        check(classLoader != null) { "Engine deployment is stopped." }
+        val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
         check(scope == null) { "Engine deployment is already active." }
-        val replacement = ManagedRuntimeScope(parentScope)
+        val replacement = ManagedRuntimeScope(parentScope, currentDeployment.prototypes, currentDeployment.facts)
         try {
-            val context = DefaultExtensionActivationContext(replacement, plan.gateways)
-            plan.activators.forEach { activator ->
-                replacement.own(activator.activate(context))
+            with(replacement) {
+                registrars.forEach { it.register() }
             }
-            lastContentRevision?.let { revision -> plan.contentGateway?.apply(revision) }
+            lastContentRevision?.let { revision -> contentGateway?.apply(revision) }
             scope = replacement
         } catch (failure: Throwable) {
             runCatching { replacement.close() }.exceptionOrNull()?.let(failure::addSuppressed)
@@ -44,7 +38,7 @@ class ReloadableEngineRuntime(
         if (current != null && revision.revision <= current.revision) {
             return ContentApplicationResult.Ignored(current.revision)
         }
-        val gateway = plan.contentGateway ?: return ContentApplicationResult.Unsupported
+        val gateway = contentGateway ?: return ContentApplicationResult.Unsupported
         gateway.apply(revision)
         lastContentRevision = revision
         return ContentApplicationResult.Applied(revision.revision)
@@ -62,23 +56,10 @@ class ReloadableEngineRuntime(
 
     override suspend fun stop() {
         quiesce(Instant.MAX)
-        val activeClassLoader = classLoader
-        classLoader = null
-        activeClassLoader?.close()
+        val activeDeployment = deployment
+        deployment = null
+        activeDeployment?.close()
     }
 
-    internal fun ownsClassLoader(): Boolean = classLoader != null
-}
-
-/** Describes whether a content revision changed the active engine deployment. */
-sealed interface ContentApplicationResult {
-    data class Applied(
-        val revision: Long,
-    ) : ContentApplicationResult
-
-    data class Ignored(
-        val currentRevision: Long,
-    ) : ContentApplicationResult
-
-    data object Unsupported : ContentApplicationResult
+    internal fun ownsDeployment(): Boolean = deployment != null
 }

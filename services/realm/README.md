@@ -5,20 +5,7 @@ its startup, replacement, and shutdown lifecycle.
 
 ## Development
 
-```shell
-build-logic/gradlew devStandalone
-```
-
-Run this command from the `services` directory. It builds the Realm artifact and starts the standalone loader. The local
-loader requires a deployment source before it can select and start child runtimes.
-
-Realm and loader settings use separate properties files through the loader process environment:
-
-```shell
-LOADER_CONFIG_FILE=loader/standalone/config/local.properties REALM_CONFIG_FILE=realm/config/local.properties build-logic/gradlew devStandalone
-```
-
-System properties and environment variables override values from that file.
+Run `./gradlew check` from this directory to verify Realm. Realm catalog routes are backed by deployment discovery snapshots. Production artifact staging and deployment selection remain intentionally incomplete.
 
 ## Database
 

@@ -3,6 +3,7 @@
 package com.typewritermc.types
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -10,6 +11,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.math.BigInteger
+import kotlin.uuid.Uuid
 
 object BigIntegerAsStringSerializer : KSerializer<BigInteger> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("BigInteger", PrimitiveKind.STRING)
@@ -22,6 +24,23 @@ object BigIntegerAsStringSerializer : KSerializer<BigInteger> {
     }
 
     override fun deserialize(decoder: Decoder): BigInteger = decoder.decodeString().toBigInteger()
+}
+
+object DeclaredTypeIdSerializer : KSerializer<DeclaredTypeId> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("DeclaredTypeId", PrimitiveKind.STRING)
+
+    override fun serialize(
+        encoder: Encoder,
+        value: DeclaredTypeId,
+    ) {
+        encoder.encodeString(value.value.toHexString())
+    }
+
+    override fun deserialize(decoder: Decoder): DeclaredTypeId =
+        DeclaredTypeId(
+            runCatching { Uuid.parseHex(decoder.decodeString()) }
+                .getOrElse { throw SerializationException("Declared type id must be a 32 character hexadecimal UUID.", it) },
+        )
 }
 
 object NullableBigIntegerAsStringSerializer : KSerializer<BigInteger?> {

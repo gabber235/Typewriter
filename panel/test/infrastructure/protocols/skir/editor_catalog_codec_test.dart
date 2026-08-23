@@ -47,7 +47,7 @@ void main() {
   test("maps all direct catalogue definition shapes and fields", () {
     final encodedCatalog = catalog.encodeWire().valueOrNull!;
     final encodedType = encodedCatalog.definitions.single;
-    expect(encodedType.typeId.kind, wire_type.TypeId_kind.realmWrapper);
+    expect(encodedType.typeId.kind, wire_type.TypeId_kind.qualifiedWrapper);
     expect(encodedType.revision, 1);
     expect(
       encodedType.kind.kind,

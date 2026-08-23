@@ -74,6 +74,10 @@ internal fun Project.configureExtensionProject(declaration: DeclaredArtifact) {
             it.extendsFrom(configurations.getByName(PROCESSORS_CONFIGURATION))
         }
     }
+    configureKspContext(
+        declaration,
+        created.keys.associate { sourcePart -> "ksp${sourcePart.capitalized()}Kotlin" to sourcePart },
+    )
 
     val test = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
     created.values.forEach { sourceSet ->

@@ -360,7 +360,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield page.chapter;
       yield book.bookId.id;
       yield book.title;
-      yield elementDefinition.typeId.name;
+      yield elementDefinition.typeId.uuid;
       yield elementDefinition.qualifiedName;
       yield elementDefinition.name;
       yield elementDefinition.namespace;
@@ -368,7 +368,7 @@ Iterable<String> _searchableValuesForResult(SearchResult result) sync* {
       yield* book.tagIds.map((tagId) => tagId.id);
     case ElementDefinition():
       yield "elementDefinition";
-      yield payload.typeId.name;
+      yield payload.typeId.uuid;
       yield payload.qualifiedName;
       yield payload.name;
       yield payload.namespace;
@@ -484,7 +484,7 @@ Map<String, String> _previewFieldsForPayload(Object payload) {
       "namespace": payload.entry.elementDefinition.namespace,
     },
     ElementDefinition() => {
-      "id": payload.typeId.name,
+      "id": payload.typeId.uuid,
       "name": payload.name,
       "title": payload.name,
       "entryType": payload.name,
@@ -930,7 +930,7 @@ SearchNode _entrySearchNode(MockEntryRecord record, MockSearchIndex index) {
 
 SearchNode _elementDefinitionSearchNode(ElementDefinition elementDefinition) {
   return mockSearchResultNode(
-    id: "elementDefinition.${elementDefinition.typeId.name}",
+    id: "elementDefinition.${elementDefinition.typeId.uuid}",
     type: mockElementDefinitionSearchResultType,
     title: elementDefinition.name,
     subtitle: elementDefinition.namespace,

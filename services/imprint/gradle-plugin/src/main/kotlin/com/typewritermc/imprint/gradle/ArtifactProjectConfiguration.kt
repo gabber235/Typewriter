@@ -1,6 +1,7 @@
 package com.typewritermc.imprint.gradle
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.devtools.ksp.gradle.KspAATask
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
@@ -24,7 +25,7 @@ internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
         configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
-    configureMainCodegen()
+    configureMainCodegen(declaration)
     val manifest = registerManifestTask(declaration, relationships)
     configureEngineJar(manifest)
 }
@@ -36,7 +37,7 @@ internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
         configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
-    configureMainCodegen()
+    configureMainCodegen(declaration)
     val manifest = registerManifestTask(declaration, relationships)
     configureThinJar(manifest, emptyList())
 }
@@ -78,9 +79,13 @@ internal fun Project.configureRelationships(
                     view.componentFilter { identifier ->
                         when (dependency) {
                             is ExternalModuleDependency -> {
-                                identifier is ModuleComponentIdentifier &&
-                                    identifier.group == dependency.group &&
-                                    identifier.module == dependency.name
+                                (
+                                    identifier is ModuleComponentIdentifier &&
+                                        identifier.group == dependency.group &&
+                                        identifier.module == dependency.name
+                                ) || (
+                                    identifier is ProjectComponentIdentifier && identifier.projectName == dependency.name
+                                )
                             }
 
                             is ProjectDependency -> {
@@ -103,9 +108,21 @@ internal fun Project.configureRelationships(
         )
     }
 
-internal fun Project.configureMainCodegen() {
+internal fun Project.configureMainCodegen(declaration: DeclaredArtifact) {
     configurations.matching { it.name == "ksp" }.configureEach {
         it.extendsFrom(configurations.getByName(PROCESSORS_CONFIGURATION))
+    }
+    configureKspContext(declaration, mapOf("kspKotlin" to SourceSet.MAIN_SOURCE_SET_NAME))
+}
+
+internal fun Project.configureKspContext(
+    declaration: DeclaredArtifact,
+    sourcePartsByTask: Map<String, String>,
+) {
+    tasks.withType(KspAATask::class.java).configureEach { task ->
+        val sourcePart = sourcePartsByTask[task.name] ?: return@configureEach
+        task.kspConfig.processorOptions.put("typewriter.artifactId", declaration.id.value)
+        task.kspConfig.processorOptions.put("typewriter.sourcePart", sourcePart)
     }
 }
 

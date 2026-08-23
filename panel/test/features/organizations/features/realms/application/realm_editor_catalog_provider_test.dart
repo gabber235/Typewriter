@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -37,6 +38,52 @@ void main() {
       route.invalidationSubject,
       "service.from.beta.organization.alpha.realm.editor.catalog.invalidate",
     );
+    expect(
+      route.elementsFetchSubject,
+      "service.to.beta.organization.alpha.realm.editor.elements.fetch",
+    );
+  });
+
+  test("eligible discovered elements become available definitions", () async {
+    final source = _ElementSource();
+    addTearDown(source.close);
+    final container = ProviderContainer(
+      overrides: [
+        organizationIdProvider.overrideWithValue(recordId("organization:test")),
+        realmIdProvider.overrideWithValue(recordId("service:test")),
+        realmConnectionProvider.overrideWith(
+          (ref) => Stream.value(RealmConnectionState.online),
+        ),
+        realmEditorCatalogSourceProvider.overrideWithValue(source),
+      ],
+    );
+    addTearDown(container.dispose);
+    final subscription = container.listen(
+      realmEditorCatalogProvider,
+      (previous, next) {},
+    );
+    addTearDown(subscription.close);
+    final definitionsSubscription = container.listen(
+      availableElementDefinitionsProvider,
+      (previous, next) {},
+    );
+    addTearDown(definitionsSubscription.close);
+
+    await _waitFor(
+      () => container.read(availableElementDefinitionsProvider).isNotEmpty,
+    );
+    final definition = container
+        .read(availableElementDefinitionsProvider)
+        .single;
+
+    expect(definition.typeId.uuid, _elementId);
+    expect(definition.name, "Synthetic Entry");
+    expect(definition.description, "Verifies Typewriter discovery");
+    expect(
+      definition.icon,
+      const IconValue.iconify("material-symbols:science"),
+    );
+    expect(definition.color, const Color(0xFF7C4DFF));
   });
 
   test("provider disposes the realm watch on disconnect", () async {
@@ -163,4 +210,50 @@ final class _TrackingSource implements RealmEditorCatalogSource {
     );
     return controller.stream;
   }
+}
+
+const _elementId = "019d1c2a8f7b7cc18c2a4a7b2fd1e281";
+
+final class _ElementSource implements RealmEditorCatalogSource {
+  final _watch = StreamController<RealmEditorCatalogWatchEvent>();
+
+  @override
+  Future<RealmEditorCatalogFetchResult> fetch(
+    RealmEditorCatalogRoute route,
+    RealmEditorCatalogRequest request, {
+    CatalogGeneration? expectedGeneration,
+  }) async {
+    final type = ResolvedTypeRef(id: DeclaredTypeId(_elementId), revision: 1);
+    return RealmEditorCatalogFetched(
+      RealmEditorCatalogSnapshot(
+        catalog: const TypeCatalog([]),
+        generation: const CatalogGeneration("1"),
+        elements: {
+          _elementId: RealmElementCatalogEntry(
+            originArtifactId: "typewritermc:conformance",
+            sourcePart: "common",
+            definition: DiscoveredElementDefinition(
+              id: _elementId,
+              kind: ElementKind.entry,
+              type: type,
+              name: "Synthetic Entry",
+              description: "Verifies Typewriter discovery",
+              icon: const IconValue.iconify("material-symbols:science"),
+              color: const Color(0xFF7C4DFF),
+              availability: ElementAvailability.always(),
+            ),
+            eligible: true,
+            available: true,
+          ),
+        },
+      ),
+    );
+  }
+
+  @override
+  Stream<RealmEditorCatalogWatchEvent> watchInvalidations(
+    RealmEditorCatalogRoute route,
+  ) => _watch.stream;
+
+  Future<void> close() => _watch.close();
 }

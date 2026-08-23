@@ -7,10 +7,8 @@ plugins {
 dependencies {
     api(project(":engine-types"))
     api("com.typewritermc:loader-core")
-    api("com.typewritermc:extension-types")
+    api("com.typewritermc:discovery-runtime")
+    api("com.typewritermc:element-types")
     api(libs.kotlin.coroutines.core)
-    implementation("com.typewritermc:imprint-model")
-    implementation(libs.kotlin.reflect)
-    implementation(libs.kotlin.serialize.cbor)
     testImplementation(libs.kotlin.coroutines.test)
 }
