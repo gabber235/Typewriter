@@ -286,7 +286,10 @@ class Graph extends HookConsumerWidget {
                           key: graphKey,
                           layout: layout,
                           viewport: viewportRect,
-                          dotColor: Colors.grey.withValues(alpha: 0.8),
+                          dotColor: Color.alphaBlend(
+                            Colors.grey.withValues(alpha: 0.5),
+                            Surface.colorOf(context),
+                          ),
                           visibleElements: visibleElements,
                           buildChild: (placed) {
                             final element = placed.element;
