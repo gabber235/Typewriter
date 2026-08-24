@@ -24,7 +24,6 @@ abstract final class _RuntimeInspectorFields {
   static const ownerHost = "ownerHost";
   static const target = "target";
   static const assignedRealm = "assignedRealm";
-  static const manifestRevision = "manifestRevision";
   static const runtimeStatus = "runtimeStatus";
   static const artifactVersion = "artifactVersion";
   static const runtimeMessage = "runtimeMessage";
@@ -175,9 +174,6 @@ RecordType _runtimeInstanceRecord({
       _RuntimeInspectorFields.ownerHost,
     ),
     ...extraFields,
-    _RuntimeInspectorFields.manifestRevision: _stringField(
-      _RuntimeInspectorFields.manifestRevision,
-    ),
     _RuntimeInspectorFields.runtimeStatus: _stringField(
       _RuntimeInspectorFields.runtimeStatus,
     ),

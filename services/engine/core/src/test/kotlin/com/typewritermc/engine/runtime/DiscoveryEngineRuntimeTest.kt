@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.koin.dsl.koinApplication
 import java.net.URLClassLoader
-import java.time.Instant
 
 val DiscoveryEngineRuntimeTest by testSuite {
     test("registers discovered behavior and closes owned resources in reverse order") {
@@ -22,7 +21,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
             val fixture = runtime(listOf(RecordingRegistrar("first", events), RecordingRegistrar("second", events)))
 
             fixture.runtime.activate()
-            fixture.runtime.quiesce(Instant.now())
+            fixture.runtime.quiesce()
 
             events shouldContainExactly listOf("register:first", "register:second", "close:second", "close:first")
         }

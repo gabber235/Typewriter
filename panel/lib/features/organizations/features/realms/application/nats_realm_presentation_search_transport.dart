@@ -18,11 +18,12 @@ final class NatsRealmPresentationSearchTransport {
   final skir.RecordId realmId;
   final TypeRegistry registry;
 
-  String get _requestSubject =>
-      "service.to.${realmId.id}.organization.${organizationId.id}.realm.editor.presentation.search";
+  RealmServiceAddress get _address =>
+      RealmServiceAddress(organizationId: organizationId, realmId: realmId);
 
-  String get _updateSubject =>
-      "service.from.${realmId.id}.organization.${organizationId.id}.realm.editor.presentation.search";
+  String get _requestSubject => _address.request("editor.presentation.search");
+
+  String get _updateSubject => _address.event("editor.presentation.search");
 
   Stream<RealmPresentationSearchUpdate> watch(
     RealmPresentationSearchRequest request,

@@ -2,6 +2,9 @@ package com.typewritermc.realm.routes
 
 import build.skir.Serializer
 import build.skir.service.Method
+import com.typewritermc.loader.api.RealmServiceAddress
+import com.typewritermc.loader.api.realmEventAddress
+import com.typewritermc.loader.api.realmRequestAddress
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
@@ -57,10 +60,7 @@ import skirout.library.v1.tag.WatchTagResponse
 import skirout.library.v1.tag.WatchTags
 import skirout.library.v1.tag.WatchTagsResponse
 
-data class RealmAddress(
-    val realmId: String,
-    val organizationId: String,
-)
+typealias RealmAddress = RealmServiceAddress
 
 internal class LibraryContracts(
     private val address: RealmAddress,
@@ -205,27 +205,9 @@ private fun elementCatalogResponseClassifier(): ResponseClassifier<ElementCatalo
         )
     }
 
-internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> =
-    realmAddress(
-        "service.to.{realm}.organization.{organization}.realm.$suffix",
-    )
+internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> = realmRequestAddress(suffix)
 
-internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> =
-    realmAddress(
-        "service.from.{realm}.organization.{organization}.realm.$suffix",
-    )
-
-private fun realmAddress(pattern: String): AddressTemplate<RealmAddress> =
-    addressTemplate(
-        pattern,
-        { address ->
-            addressValuesOf(
-                "realm" to address.realmId,
-                "organization" to address.organizationId,
-            )
-        },
-        { values -> RealmAddress(values.require("realm"), values.require("organization")) },
-    )
+internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> = realmEventAddress(suffix)
 
 private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchResult> =
     ResponseClassifier { response ->
@@ -280,7 +262,7 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
         val words = wrapper.replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2").lowercase()
         val outcome =
             when (wrapper) {
-                "InternalError" -> ResponseOutcome.INTERNAL_ERROR
+                "InternalError", "Unavailable" -> ResponseOutcome.INTERNAL_ERROR
                 "Success", "List", "Initial", "Add", "Update", "Remove" -> ResponseOutcome.SUCCESS
                 else -> ResponseOutcome.DOMAIN_ERROR
             }

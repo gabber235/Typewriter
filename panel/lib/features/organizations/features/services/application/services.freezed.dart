@@ -1463,7 +1463,7 @@ as int,
 /// @nodoc
 mixin _$TopologyEngineTarget {
 
- String get engineId; int get majorVersion;
+ String get engineId; String get versionConstraint;
 /// Create a copy of TopologyEngineTarget
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1474,16 +1474,16 @@ $TopologyEngineTargetCopyWith<TopologyEngineTarget> get copyWith => _$TopologyEn
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyEngineTarget&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.majorVersion, majorVersion) || other.majorVersion == majorVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyEngineTarget&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.versionConstraint, versionConstraint) || other.versionConstraint == versionConstraint));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,majorVersion);
+int get hashCode => Object.hash(runtimeType,engineId,versionConstraint);
 
 @override
 String toString() {
-  return 'TopologyEngineTarget(engineId: $engineId, majorVersion: $majorVersion)';
+  return 'TopologyEngineTarget(engineId: $engineId, versionConstraint: $versionConstraint)';
 }
 
 
@@ -1494,7 +1494,7 @@ abstract mixin class $TopologyEngineTargetCopyWith<$Res>  {
   factory $TopologyEngineTargetCopyWith(TopologyEngineTarget value, $Res Function(TopologyEngineTarget) _then) = _$TopologyEngineTargetCopyWithImpl;
 @useResult
 $Res call({
- String engineId, int majorVersion
+ String engineId, String versionConstraint
 });
 
 
@@ -1511,11 +1511,11 @@ class _$TopologyEngineTargetCopyWithImpl<$Res>
 
 /// Create a copy of TopologyEngineTarget
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,Object? majorVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,Object? versionConstraint = null,}) {
   return _then(_self.copyWith(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
-as String,majorVersion: null == majorVersion ? _self.majorVersion : majorVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as String,versionConstraint: null == versionConstraint ? _self.versionConstraint : versionConstraint // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -1600,10 +1600,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String engineId,  int majorVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String engineId,  String versionConstraint)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopologyEngineTarget() when $default != null:
-return $default(_that.engineId,_that.majorVersion);case _:
+return $default(_that.engineId,_that.versionConstraint);case _:
   return orElse();
 
 }
@@ -1621,10 +1621,10 @@ return $default(_that.engineId,_that.majorVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String engineId,  int majorVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String engineId,  String versionConstraint)  $default,) {final _that = this;
 switch (_that) {
 case _TopologyEngineTarget():
-return $default(_that.engineId,_that.majorVersion);case _:
+return $default(_that.engineId,_that.versionConstraint);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1641,10 +1641,10 @@ return $default(_that.engineId,_that.majorVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String engineId,  int majorVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String engineId,  String versionConstraint)?  $default,) {final _that = this;
 switch (_that) {
 case _TopologyEngineTarget() when $default != null:
-return $default(_that.engineId,_that.majorVersion);case _:
+return $default(_that.engineId,_that.versionConstraint);case _:
   return null;
 
 }
@@ -1656,11 +1656,11 @@ return $default(_that.engineId,_that.majorVersion);case _:
 
 
 class _TopologyEngineTarget extends TopologyEngineTarget {
-  const _TopologyEngineTarget({required this.engineId, required this.majorVersion}): super._();
+  const _TopologyEngineTarget({required this.engineId, required this.versionConstraint}): super._();
 
 
 @override final  String engineId;
-@override final  int majorVersion;
+@override final  String versionConstraint;
 
 /// Create a copy of TopologyEngineTarget
 /// with the given fields replaced by the non-null parameter values.
@@ -1672,16 +1672,16 @@ _$TopologyEngineTargetCopyWith<_TopologyEngineTarget> get copyWith => __$Topolog
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyEngineTarget&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.majorVersion, majorVersion) || other.majorVersion == majorVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyEngineTarget&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.versionConstraint, versionConstraint) || other.versionConstraint == versionConstraint));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,majorVersion);
+int get hashCode => Object.hash(runtimeType,engineId,versionConstraint);
 
 @override
 String toString() {
-  return 'TopologyEngineTarget(engineId: $engineId, majorVersion: $majorVersion)';
+  return 'TopologyEngineTarget(engineId: $engineId, versionConstraint: $versionConstraint)';
 }
 
 
@@ -1692,7 +1692,7 @@ abstract mixin class _$TopologyEngineTargetCopyWith<$Res> implements $TopologyEn
   factory _$TopologyEngineTargetCopyWith(_TopologyEngineTarget value, $Res Function(_TopologyEngineTarget) _then) = __$TopologyEngineTargetCopyWithImpl;
 @override @useResult
 $Res call({
- String engineId, int majorVersion
+ String engineId, String versionConstraint
 });
 
 
@@ -1709,11 +1709,11 @@ class __$TopologyEngineTargetCopyWithImpl<$Res>
 
 /// Create a copy of TopologyEngineTarget
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,Object? majorVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,Object? versionConstraint = null,}) {
   return _then(_TopologyEngineTarget(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
-as String,majorVersion: null == majorVersion ? _self.majorVersion : majorVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as String,versionConstraint: null == versionConstraint ? _self.versionConstraint : versionConstraint // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -1723,7 +1723,7 @@ as int,
 /// @nodoc
 mixin _$TopologySupportedEngine {
 
- String get engineId; List<int> get supportedMajorVersions;
+ String get engineId;
 /// Create a copy of TopologySupportedEngine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1734,16 +1734,16 @@ $TopologySupportedEngineCopyWith<TopologySupportedEngine> get copyWith => _$Topo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologySupportedEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&const DeepCollectionEquality().equals(other.supportedMajorVersions, supportedMajorVersions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologySupportedEngine&&(identical(other.engineId, engineId) || other.engineId == engineId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,const DeepCollectionEquality().hash(supportedMajorVersions));
+int get hashCode => Object.hash(runtimeType,engineId);
 
 @override
 String toString() {
-  return 'TopologySupportedEngine(engineId: $engineId, supportedMajorVersions: $supportedMajorVersions)';
+  return 'TopologySupportedEngine(engineId: $engineId)';
 }
 
 
@@ -1754,7 +1754,7 @@ abstract mixin class $TopologySupportedEngineCopyWith<$Res>  {
   factory $TopologySupportedEngineCopyWith(TopologySupportedEngine value, $Res Function(TopologySupportedEngine) _then) = _$TopologySupportedEngineCopyWithImpl;
 @useResult
 $Res call({
- String engineId, List<int> supportedMajorVersions
+ String engineId
 });
 
 
@@ -1771,11 +1771,10 @@ class _$TopologySupportedEngineCopyWithImpl<$Res>
 
 /// Create a copy of TopologySupportedEngine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,Object? supportedMajorVersions = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,}) {
   return _then(_self.copyWith(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
-as String,supportedMajorVersions: null == supportedMajorVersions ? _self.supportedMajorVersions : supportedMajorVersions // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as String,
   ));
 }
 
@@ -1860,10 +1859,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String engineId,  List<int> supportedMajorVersions)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String engineId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopologySupportedEngine() when $default != null:
-return $default(_that.engineId,_that.supportedMajorVersions);case _:
+return $default(_that.engineId);case _:
   return orElse();
 
 }
@@ -1881,10 +1880,10 @@ return $default(_that.engineId,_that.supportedMajorVersions);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String engineId,  List<int> supportedMajorVersions)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String engineId)  $default,) {final _that = this;
 switch (_that) {
 case _TopologySupportedEngine():
-return $default(_that.engineId,_that.supportedMajorVersions);case _:
+return $default(_that.engineId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1901,10 +1900,10 @@ return $default(_that.engineId,_that.supportedMajorVersions);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String engineId,  List<int> supportedMajorVersions)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String engineId)?  $default,) {final _that = this;
 switch (_that) {
 case _TopologySupportedEngine() when $default != null:
-return $default(_that.engineId,_that.supportedMajorVersions);case _:
+return $default(_that.engineId);case _:
   return null;
 
 }
@@ -1916,17 +1915,10 @@ return $default(_that.engineId,_that.supportedMajorVersions);case _:
 
 
 class _TopologySupportedEngine implements TopologySupportedEngine {
-  const _TopologySupportedEngine({required this.engineId, required final  List<int> supportedMajorVersions}): _supportedMajorVersions = supportedMajorVersions;
+  const _TopologySupportedEngine({required this.engineId});
 
 
 @override final  String engineId;
- final  List<int> _supportedMajorVersions;
-@override List<int> get supportedMajorVersions {
-  if (_supportedMajorVersions is EqualUnmodifiableListView) return _supportedMajorVersions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_supportedMajorVersions);
-}
-
 
 /// Create a copy of TopologySupportedEngine
 /// with the given fields replaced by the non-null parameter values.
@@ -1938,16 +1930,16 @@ _$TopologySupportedEngineCopyWith<_TopologySupportedEngine> get copyWith => __$T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologySupportedEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&const DeepCollectionEquality().equals(other._supportedMajorVersions, _supportedMajorVersions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologySupportedEngine&&(identical(other.engineId, engineId) || other.engineId == engineId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,const DeepCollectionEquality().hash(_supportedMajorVersions));
+int get hashCode => Object.hash(runtimeType,engineId);
 
 @override
 String toString() {
-  return 'TopologySupportedEngine(engineId: $engineId, supportedMajorVersions: $supportedMajorVersions)';
+  return 'TopologySupportedEngine(engineId: $engineId)';
 }
 
 
@@ -1958,7 +1950,7 @@ abstract mixin class _$TopologySupportedEngineCopyWith<$Res> implements $Topolog
   factory _$TopologySupportedEngineCopyWith(_TopologySupportedEngine value, $Res Function(_TopologySupportedEngine) _then) = __$TopologySupportedEngineCopyWithImpl;
 @override @useResult
 $Res call({
- String engineId, List<int> supportedMajorVersions
+ String engineId
 });
 
 
@@ -1975,11 +1967,10 @@ class __$TopologySupportedEngineCopyWithImpl<$Res>
 
 /// Create a copy of TopologySupportedEngine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,Object? supportedMajorVersions = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,}) {
   return _then(_TopologySupportedEngine(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
-as String,supportedMajorVersions: null == supportedMajorVersions ? _self._supportedMajorVersions : supportedMajorVersions // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as String,
   ));
 }
 
@@ -3376,7 +3367,7 @@ $TopologyHostStateCopyWith<$Res> get state {
 /// @nodoc
 mixin _$TopologyRealm {
 
- skir.RecordId get realmId; TopologyOwnerHost get ownerHost; int get revision; TopologyEngineTarget get targetEngine; TopologyRevision get manifestRevision; TopologyRuntimeState get state;
+ skir.RecordId get realmId; TopologyOwnerHost get ownerHost; int get revision; TopologyEngineTarget get targetEngine; TopologyRuntimeState get state;
 /// Create a copy of TopologyRealm
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3387,16 +3378,16 @@ $TopologyRealmCopyWith<TopologyRealm> get copyWith => _$TopologyRealmCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyRealm&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.targetEngine, targetEngine) || other.targetEngine == targetEngine)&&(identical(other.manifestRevision, manifestRevision) || other.manifestRevision == manifestRevision)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyRealm&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.targetEngine, targetEngine) || other.targetEngine == targetEngine)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,realmId,ownerHost,revision,targetEngine,manifestRevision,state);
+int get hashCode => Object.hash(runtimeType,realmId,ownerHost,revision,targetEngine,state);
 
 @override
 String toString() {
-  return 'TopologyRealm(realmId: $realmId, ownerHost: $ownerHost, revision: $revision, targetEngine: $targetEngine, manifestRevision: $manifestRevision, state: $state)';
+  return 'TopologyRealm(realmId: $realmId, ownerHost: $ownerHost, revision: $revision, targetEngine: $targetEngine, state: $state)';
 }
 
 
@@ -3407,11 +3398,11 @@ abstract mixin class $TopologyRealmCopyWith<$Res>  {
   factory $TopologyRealmCopyWith(TopologyRealm value, $Res Function(TopologyRealm) _then) = _$TopologyRealmCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId realmId, TopologyOwnerHost ownerHost, int revision, TopologyEngineTarget targetEngine, TopologyRevision manifestRevision, TopologyRuntimeState state
+ skir.RecordId realmId, TopologyOwnerHost ownerHost, int revision, TopologyEngineTarget targetEngine, TopologyRuntimeState state
 });
 
 
-$TopologyOwnerHostCopyWith<$Res> get ownerHost;$TopologyEngineTargetCopyWith<$Res> get targetEngine;$TopologyRevisionCopyWith<$Res> get manifestRevision;$TopologyRuntimeStateCopyWith<$Res> get state;
+$TopologyOwnerHostCopyWith<$Res> get ownerHost;$TopologyEngineTargetCopyWith<$Res> get targetEngine;$TopologyRuntimeStateCopyWith<$Res> get state;
 
 }
 /// @nodoc
@@ -3424,14 +3415,13 @@ class _$TopologyRealmCopyWithImpl<$Res>
 
 /// Create a copy of TopologyRealm
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? realmId = null,Object? ownerHost = null,Object? revision = null,Object? targetEngine = null,Object? manifestRevision = null,Object? state = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? realmId = null,Object? ownerHost = null,Object? revision = null,Object? targetEngine = null,Object? state = null,}) {
   return _then(_self.copyWith(
 realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,ownerHost: null == ownerHost ? _self.ownerHost : ownerHost // ignore: cast_nullable_to_non_nullable
 as TopologyOwnerHost,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,targetEngine: null == targetEngine ? _self.targetEngine : targetEngine // ignore: cast_nullable_to_non_nullable
-as TopologyEngineTarget,manifestRevision: null == manifestRevision ? _self.manifestRevision : manifestRevision // ignore: cast_nullable_to_non_nullable
-as TopologyRevision,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as TopologyEngineTarget,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as TopologyRuntimeState,
   ));
 }
@@ -3452,15 +3442,6 @@ $TopologyEngineTargetCopyWith<$Res> get targetEngine {
 
   return $TopologyEngineTargetCopyWith<$Res>(_self.targetEngine, (value) {
     return _then(_self.copyWith(targetEngine: value));
-  });
-}/// Create a copy of TopologyRealm
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TopologyRevisionCopyWith<$Res> get manifestRevision {
-
-  return $TopologyRevisionCopyWith<$Res>(_self.manifestRevision, (value) {
-    return _then(_self.copyWith(manifestRevision: value));
   });
 }/// Create a copy of TopologyRealm
 /// with the given fields replaced by the non-null parameter values.
@@ -3553,10 +3534,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRevision manifestRevision,  TopologyRuntimeState state)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRuntimeState state)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopologyRealm() when $default != null:
-return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.manifestRevision,_that.state);case _:
+return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.state);case _:
   return orElse();
 
 }
@@ -3574,10 +3555,10 @@ return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRevision manifestRevision,  TopologyRuntimeState state)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRuntimeState state)  $default,) {final _that = this;
 switch (_that) {
 case _TopologyRealm():
-return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.manifestRevision,_that.state);case _:
+return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.state);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3594,10 +3575,10 @@ return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRevision manifestRevision,  TopologyRuntimeState state)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId realmId,  TopologyOwnerHost ownerHost,  int revision,  TopologyEngineTarget targetEngine,  TopologyRuntimeState state)?  $default,) {final _that = this;
 switch (_that) {
 case _TopologyRealm() when $default != null:
-return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.manifestRevision,_that.state);case _:
+return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,_that.state);case _:
   return null;
 
 }
@@ -3609,14 +3590,13 @@ return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,
 
 
 class _TopologyRealm implements TopologyRealm {
-  const _TopologyRealm({required this.realmId, required this.ownerHost, required this.revision, required this.targetEngine, required this.manifestRevision, required this.state});
+  const _TopologyRealm({required this.realmId, required this.ownerHost, required this.revision, required this.targetEngine, required this.state});
 
 
 @override final  skir.RecordId realmId;
 @override final  TopologyOwnerHost ownerHost;
 @override final  int revision;
 @override final  TopologyEngineTarget targetEngine;
-@override final  TopologyRevision manifestRevision;
 @override final  TopologyRuntimeState state;
 
 /// Create a copy of TopologyRealm
@@ -3629,16 +3609,16 @@ _$TopologyRealmCopyWith<_TopologyRealm> get copyWith => __$TopologyRealmCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyRealm&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.targetEngine, targetEngine) || other.targetEngine == targetEngine)&&(identical(other.manifestRevision, manifestRevision) || other.manifestRevision == manifestRevision)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyRealm&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.targetEngine, targetEngine) || other.targetEngine == targetEngine)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,realmId,ownerHost,revision,targetEngine,manifestRevision,state);
+int get hashCode => Object.hash(runtimeType,realmId,ownerHost,revision,targetEngine,state);
 
 @override
 String toString() {
-  return 'TopologyRealm(realmId: $realmId, ownerHost: $ownerHost, revision: $revision, targetEngine: $targetEngine, manifestRevision: $manifestRevision, state: $state)';
+  return 'TopologyRealm(realmId: $realmId, ownerHost: $ownerHost, revision: $revision, targetEngine: $targetEngine, state: $state)';
 }
 
 
@@ -3649,11 +3629,11 @@ abstract mixin class _$TopologyRealmCopyWith<$Res> implements $TopologyRealmCopy
   factory _$TopologyRealmCopyWith(_TopologyRealm value, $Res Function(_TopologyRealm) _then) = __$TopologyRealmCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId realmId, TopologyOwnerHost ownerHost, int revision, TopologyEngineTarget targetEngine, TopologyRevision manifestRevision, TopologyRuntimeState state
+ skir.RecordId realmId, TopologyOwnerHost ownerHost, int revision, TopologyEngineTarget targetEngine, TopologyRuntimeState state
 });
 
 
-@override $TopologyOwnerHostCopyWith<$Res> get ownerHost;@override $TopologyEngineTargetCopyWith<$Res> get targetEngine;@override $TopologyRevisionCopyWith<$Res> get manifestRevision;@override $TopologyRuntimeStateCopyWith<$Res> get state;
+@override $TopologyOwnerHostCopyWith<$Res> get ownerHost;@override $TopologyEngineTargetCopyWith<$Res> get targetEngine;@override $TopologyRuntimeStateCopyWith<$Res> get state;
 
 }
 /// @nodoc
@@ -3666,14 +3646,13 @@ class __$TopologyRealmCopyWithImpl<$Res>
 
 /// Create a copy of TopologyRealm
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? realmId = null,Object? ownerHost = null,Object? revision = null,Object? targetEngine = null,Object? manifestRevision = null,Object? state = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? realmId = null,Object? ownerHost = null,Object? revision = null,Object? targetEngine = null,Object? state = null,}) {
   return _then(_TopologyRealm(
 realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,ownerHost: null == ownerHost ? _self.ownerHost : ownerHost // ignore: cast_nullable_to_non_nullable
 as TopologyOwnerHost,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,targetEngine: null == targetEngine ? _self.targetEngine : targetEngine // ignore: cast_nullable_to_non_nullable
-as TopologyEngineTarget,manifestRevision: null == manifestRevision ? _self.manifestRevision : manifestRevision // ignore: cast_nullable_to_non_nullable
-as TopologyRevision,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as TopologyEngineTarget,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as TopologyRuntimeState,
   ));
 }
@@ -3700,15 +3679,6 @@ $TopologyEngineTargetCopyWith<$Res> get targetEngine {
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$TopologyRevisionCopyWith<$Res> get manifestRevision {
-
-  return $TopologyRevisionCopyWith<$Res>(_self.manifestRevision, (value) {
-    return _then(_self.copyWith(manifestRevision: value));
-  });
-}/// Create a copy of TopologyRealm
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
 $TopologyRuntimeStateCopyWith<$Res> get state {
 
   return $TopologyRuntimeStateCopyWith<$Res>(_self.state, (value) {
@@ -3720,7 +3690,7 @@ $TopologyRuntimeStateCopyWith<$Res> get state {
 /// @nodoc
 mixin _$TopologyEngine {
 
- skir.RecordId get engineId; TopologyOwnerHost get ownerHost; TopologyRealmInfo get realm; int get revision; TopologyEngineTarget get target; TopologyRevision get manifestRevision; TopologyRuntimeState get state;
+ skir.RecordId get engineId; TopologyOwnerHost get ownerHost; TopologyRealmInfo get realm; int get revision; TopologyEngineTarget get target; TopologyRuntimeState get state;
 /// Create a copy of TopologyEngine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3731,16 +3701,16 @@ $TopologyEngineCopyWith<TopologyEngine> get copyWith => _$TopologyEngineCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.realm, realm) || other.realm == realm)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.target, target) || other.target == target)&&(identical(other.manifestRevision, manifestRevision) || other.manifestRevision == manifestRevision)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopologyEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.realm, realm) || other.realm == realm)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.target, target) || other.target == target)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,ownerHost,realm,revision,target,manifestRevision,state);
+int get hashCode => Object.hash(runtimeType,engineId,ownerHost,realm,revision,target,state);
 
 @override
 String toString() {
-  return 'TopologyEngine(engineId: $engineId, ownerHost: $ownerHost, realm: $realm, revision: $revision, target: $target, manifestRevision: $manifestRevision, state: $state)';
+  return 'TopologyEngine(engineId: $engineId, ownerHost: $ownerHost, realm: $realm, revision: $revision, target: $target, state: $state)';
 }
 
 
@@ -3751,11 +3721,11 @@ abstract mixin class $TopologyEngineCopyWith<$Res>  {
   factory $TopologyEngineCopyWith(TopologyEngine value, $Res Function(TopologyEngine) _then) = _$TopologyEngineCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId engineId, TopologyOwnerHost ownerHost, TopologyRealmInfo realm, int revision, TopologyEngineTarget target, TopologyRevision manifestRevision, TopologyRuntimeState state
+ skir.RecordId engineId, TopologyOwnerHost ownerHost, TopologyRealmInfo realm, int revision, TopologyEngineTarget target, TopologyRuntimeState state
 });
 
 
-$TopologyOwnerHostCopyWith<$Res> get ownerHost;$TopologyRealmInfoCopyWith<$Res> get realm;$TopologyEngineTargetCopyWith<$Res> get target;$TopologyRevisionCopyWith<$Res> get manifestRevision;$TopologyRuntimeStateCopyWith<$Res> get state;
+$TopologyOwnerHostCopyWith<$Res> get ownerHost;$TopologyRealmInfoCopyWith<$Res> get realm;$TopologyEngineTargetCopyWith<$Res> get target;$TopologyRuntimeStateCopyWith<$Res> get state;
 
 }
 /// @nodoc
@@ -3768,15 +3738,14 @@ class _$TopologyEngineCopyWithImpl<$Res>
 
 /// Create a copy of TopologyEngine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,Object? ownerHost = null,Object? realm = null,Object? revision = null,Object? target = null,Object? manifestRevision = null,Object? state = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? engineId = null,Object? ownerHost = null,Object? realm = null,Object? revision = null,Object? target = null,Object? state = null,}) {
   return _then(_self.copyWith(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,ownerHost: null == ownerHost ? _self.ownerHost : ownerHost // ignore: cast_nullable_to_non_nullable
 as TopologyOwnerHost,realm: null == realm ? _self.realm : realm // ignore: cast_nullable_to_non_nullable
 as TopologyRealmInfo,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
-as TopologyEngineTarget,manifestRevision: null == manifestRevision ? _self.manifestRevision : manifestRevision // ignore: cast_nullable_to_non_nullable
-as TopologyRevision,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as TopologyEngineTarget,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as TopologyRuntimeState,
   ));
 }
@@ -3806,15 +3775,6 @@ $TopologyEngineTargetCopyWith<$Res> get target {
 
   return $TopologyEngineTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
-  });
-}/// Create a copy of TopologyEngine
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TopologyRevisionCopyWith<$Res> get manifestRevision {
-
-  return $TopologyRevisionCopyWith<$Res>(_self.manifestRevision, (value) {
-    return _then(_self.copyWith(manifestRevision: value));
   });
 }/// Create a copy of TopologyEngine
 /// with the given fields replaced by the non-null parameter values.
@@ -3907,10 +3867,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRevision manifestRevision,  TopologyRuntimeState state)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRuntimeState state)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopologyEngine() when $default != null:
-return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.manifestRevision,_that.state);case _:
+return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.state);case _:
   return orElse();
 
 }
@@ -3928,10 +3888,10 @@ return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRevision manifestRevision,  TopologyRuntimeState state)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRuntimeState state)  $default,) {final _that = this;
 switch (_that) {
 case _TopologyEngine():
-return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.manifestRevision,_that.state);case _:
+return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.state);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3948,10 +3908,10 @@ return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRevision manifestRevision,  TopologyRuntimeState state)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId engineId,  TopologyOwnerHost ownerHost,  TopologyRealmInfo realm,  int revision,  TopologyEngineTarget target,  TopologyRuntimeState state)?  $default,) {final _that = this;
 switch (_that) {
 case _TopologyEngine() when $default != null:
-return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.manifestRevision,_that.state);case _:
+return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.target,_that.state);case _:
   return null;
 
 }
@@ -3963,7 +3923,7 @@ return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.
 
 
 class _TopologyEngine implements TopologyEngine {
-  const _TopologyEngine({required this.engineId, required this.ownerHost, required this.realm, required this.revision, required this.target, required this.manifestRevision, required this.state});
+  const _TopologyEngine({required this.engineId, required this.ownerHost, required this.realm, required this.revision, required this.target, required this.state});
 
 
 @override final  skir.RecordId engineId;
@@ -3971,7 +3931,6 @@ class _TopologyEngine implements TopologyEngine {
 @override final  TopologyRealmInfo realm;
 @override final  int revision;
 @override final  TopologyEngineTarget target;
-@override final  TopologyRevision manifestRevision;
 @override final  TopologyRuntimeState state;
 
 /// Create a copy of TopologyEngine
@@ -3984,16 +3943,16 @@ _$TopologyEngineCopyWith<_TopologyEngine> get copyWith => __$TopologyEngineCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.realm, realm) || other.realm == realm)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.target, target) || other.target == target)&&(identical(other.manifestRevision, manifestRevision) || other.manifestRevision == manifestRevision)&&(identical(other.state, state) || other.state == state));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopologyEngine&&(identical(other.engineId, engineId) || other.engineId == engineId)&&(identical(other.ownerHost, ownerHost) || other.ownerHost == ownerHost)&&(identical(other.realm, realm) || other.realm == realm)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.target, target) || other.target == target)&&(identical(other.state, state) || other.state == state));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,engineId,ownerHost,realm,revision,target,manifestRevision,state);
+int get hashCode => Object.hash(runtimeType,engineId,ownerHost,realm,revision,target,state);
 
 @override
 String toString() {
-  return 'TopologyEngine(engineId: $engineId, ownerHost: $ownerHost, realm: $realm, revision: $revision, target: $target, manifestRevision: $manifestRevision, state: $state)';
+  return 'TopologyEngine(engineId: $engineId, ownerHost: $ownerHost, realm: $realm, revision: $revision, target: $target, state: $state)';
 }
 
 
@@ -4004,11 +3963,11 @@ abstract mixin class _$TopologyEngineCopyWith<$Res> implements $TopologyEngineCo
   factory _$TopologyEngineCopyWith(_TopologyEngine value, $Res Function(_TopologyEngine) _then) = __$TopologyEngineCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId engineId, TopologyOwnerHost ownerHost, TopologyRealmInfo realm, int revision, TopologyEngineTarget target, TopologyRevision manifestRevision, TopologyRuntimeState state
+ skir.RecordId engineId, TopologyOwnerHost ownerHost, TopologyRealmInfo realm, int revision, TopologyEngineTarget target, TopologyRuntimeState state
 });
 
 
-@override $TopologyOwnerHostCopyWith<$Res> get ownerHost;@override $TopologyRealmInfoCopyWith<$Res> get realm;@override $TopologyEngineTargetCopyWith<$Res> get target;@override $TopologyRevisionCopyWith<$Res> get manifestRevision;@override $TopologyRuntimeStateCopyWith<$Res> get state;
+@override $TopologyOwnerHostCopyWith<$Res> get ownerHost;@override $TopologyRealmInfoCopyWith<$Res> get realm;@override $TopologyEngineTargetCopyWith<$Res> get target;@override $TopologyRuntimeStateCopyWith<$Res> get state;
 
 }
 /// @nodoc
@@ -4021,15 +3980,14 @@ class __$TopologyEngineCopyWithImpl<$Res>
 
 /// Create a copy of TopologyEngine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,Object? ownerHost = null,Object? realm = null,Object? revision = null,Object? target = null,Object? manifestRevision = null,Object? state = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? engineId = null,Object? ownerHost = null,Object? realm = null,Object? revision = null,Object? target = null,Object? state = null,}) {
   return _then(_TopologyEngine(
 engineId: null == engineId ? _self.engineId : engineId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,ownerHost: null == ownerHost ? _self.ownerHost : ownerHost // ignore: cast_nullable_to_non_nullable
 as TopologyOwnerHost,realm: null == realm ? _self.realm : realm // ignore: cast_nullable_to_non_nullable
 as TopologyRealmInfo,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
-as TopologyEngineTarget,manifestRevision: null == manifestRevision ? _self.manifestRevision : manifestRevision // ignore: cast_nullable_to_non_nullable
-as TopologyRevision,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as TopologyEngineTarget,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as TopologyRuntimeState,
   ));
 }
@@ -4060,15 +4018,6 @@ $TopologyEngineTargetCopyWith<$Res> get target {
 
   return $TopologyEngineTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
-  });
-}/// Create a copy of TopologyEngine
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$TopologyRevisionCopyWith<$Res> get manifestRevision {
-
-  return $TopologyRevisionCopyWith<$Res>(_self.manifestRevision, (value) {
-    return _then(_self.copyWith(manifestRevision: value));
   });
 }/// Create a copy of TopologyEngine
 /// with the given fields replaced by the non-null parameter values.

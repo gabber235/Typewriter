@@ -77,11 +77,6 @@ PresentationDefinition _runtimeInspectorPresentation({
                     children: [
                       _runtimeField(
                         rootId,
-                        _RuntimeInspectorFields.manifestRevision,
-                        "Manifest",
-                      ),
-                      _runtimeField(
-                        rootId,
                         _RuntimeInspectorFields.artifactVersion,
                         "Artifact",
                       ),

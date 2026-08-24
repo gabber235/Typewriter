@@ -4,7 +4,11 @@ use wasmcloud_utils::{
     decode_skir,
     skir::base::{
         access::v1::permission::Permissions,
+        kernel::v1::record_id::{RecordId, RecordIdKey},
         service::v1::status::{GetServiceStatusRequest, GetServiceStatusResponse, ServiceBinding},
+        service::v1::topology::{
+            GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
+        },
     },
     wasmcloud::messaging::request,
 };
@@ -54,16 +58,22 @@ pub async fn handle_service(
     allow_subscribe.push(format!(
         "cloud.from.service.{service_id}.registration.bound"
     ));
+    allow_publish.push(format!("service.to.service.{service_id}.execution.watch"));
+    allow_publish.push(format!("service.to.service.{service_id}.execution.report"));
+    allow_subscribe.push(format!("service.from.service.{service_id}.execution.watch"));
     main_attribute!("auth.permissions.category.registration" = true);
 
     match status {
-        GetServiceStatusResponse::Status(status) => handle_service_status(
-            *status,
-            &service_id,
-            &mut allow_publish,
-            &mut allow_subscribe,
-            &mut tags,
-        )?,
+        GetServiceStatusResponse::Status(status) => {
+            handle_service_status(
+                *status,
+                &service_id,
+                &mut allow_publish,
+                &mut allow_subscribe,
+                &mut tags,
+            )
+            .await?
+        }
         GetServiceStatusResponse::ServiceNotFoundError(_) => {
             return Err(wasi_error!(
                 "permissions-service-not-found",
@@ -113,7 +123,7 @@ async fn query_service_status(
     decode_skir!(GetServiceStatusResponse, &response.body)
 }
 
-fn handle_service_status(
+async fn handle_service_status(
     status: wasmcloud_utils::skir::base::service::v1::status::GetServiceStatusResponse_Status,
     service_id: &str,
     allow_publish: &mut Vec<String>,
@@ -122,7 +132,7 @@ fn handle_service_status(
 ) -> Result<(), otel_wasi::Error> {
     match status.binding {
         ServiceBinding::Bound(bound) => {
-            handle_bound_binding(*bound, service_id, allow_publish, allow_subscribe, tags);
+            handle_bound_binding(*bound, service_id, allow_publish, allow_subscribe, tags).await?;
         }
         ServiceBinding::Unbound(_) => {
             handle_unbound_binding();
@@ -137,13 +147,13 @@ fn handle_service_status(
     Ok(())
 }
 
-fn handle_bound_binding(
+async fn handle_bound_binding(
     bound: wasmcloud_utils::skir::base::service::v1::status::ServiceBinding_Bound,
     service_id: &str,
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
     tags: &mut Vec<String>,
-) {
+) -> Result<(), otel_wasi::Error> {
     let org_id = bound.organization_id.clone();
     main_attribute!(
         "auth.permissions.service.binding" = "bound",
@@ -165,45 +175,109 @@ fn handle_bound_binding(
         ));
     }
 
-    for suffix in [
-        "editor.catalog.fetch",
-        "editor.catalog.invalidate",
-        "editor.elements.fetch",
-        "editor.presentation.search",
-        "book.watch",
-        "book.resource.watch",
-        "book.create",
-        "book.update",
-        "page.search",
-        "page.watch",
-        "page.create",
-        "page.update",
-        "page.delete",
-        "pages.chapters",
-        "tag.watch",
-        "tag.resource.watch",
-        "tag.create",
-        "tag.update",
-        "tag.delete",
-        "tag.move",
-        "tag.resize",
-    ] {
-        allow_subscribe.push(format!(
-            "service.to.{service_id}.organization.{org_id}.realm.{suffix}",
+    let scope = query_service_messaging_scope(service_id).await?;
+    if scope.organization_id != org_id {
+        return Err(wasi_error!(
+            "permissions-service-scope-organization-mismatch",
+            "Service messaging scope belongs to another organization",
         ));
     }
-    for suffix in [
-        "editor.catalog.invalidate",
-        "editor.presentation.search",
-        "book.watch",
-        "book.resource.watch",
-        "page.watch",
-        "tag.watch",
-        "tag.resource.watch",
-    ] {
-        allow_publish.push(format!(
-            "service.from.{service_id}.organization.{org_id}.realm.{suffix}",
+
+    if let Some(realm) = scope.owned_realm.as_ref().map(record_key).transpose()? {
+        allow_subscribe.push(format!("service.to.{realm}.organization.{org_id}.realm.>"));
+        allow_subscribe.push(format!(
+            "typewriter.organization.{org_id}.realm.{realm}.hosts.state"
         ));
+        allow_publish.push(format!(
+            "service.from.{realm}.organization.{org_id}.realm.>"
+        ));
+        for suffix in ["probe", "command", "status"] {
+            allow_publish.push(format!(
+                "typewriter.organization.{org_id}.realm.{realm}.hosts.{suffix}"
+            ));
+        }
+        allow_publish.push(format!(
+            "typewriter.organization.{org_id}.realm.{realm}.shared.changed"
+        ));
+    }
+
+    if let Some(realm) = scope.attached_realm.as_ref().map(record_key).transpose()? {
+        for suffix in ["probe", "command", "status"] {
+            allow_subscribe.push(format!(
+                "typewriter.organization.{org_id}.realm.{realm}.hosts.{suffix}"
+            ));
+        }
+        allow_subscribe.push(format!(
+            "typewriter.organization.{org_id}.realm.{realm}.shared.changed"
+        ));
+        allow_publish.push(format!(
+            "typewriter.organization.{org_id}.realm.{realm}.hosts.state"
+        ));
+        for suffix in SHARED_REQUEST_SUFFIXES {
+            allow_publish.push(format!(
+                "service.to.{realm}.organization.{org_id}.realm.{suffix}"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+const SHARED_REQUEST_SUFFIXES: &[&str] = &[
+    "shared.catalog.fetch",
+    "shared.publish",
+    "shared.blob.metadata",
+    "shared.blob.read",
+    "shared.blob.begin",
+    "shared.blob.write",
+    "shared.blob.complete",
+];
+
+async fn query_service_messaging_scope(
+    service_id: &str,
+) -> Result<
+    wasmcloud_utils::skir::base::service::v1::topology::ServiceMessagingScope,
+    otel_wasi::Error,
+> {
+    let subject = format!("service.{service_id}.messaging.scope");
+    let request_value = GetServiceMessagingScopeRequest {
+        service_id: RecordId {
+            table: "service".into(),
+            key: RecordIdKey::String(service_id.into()),
+            _unrecognized: None,
+        },
+        _unrecognized: None,
+    };
+    let response = request(
+        subject,
+        GetServiceMessagingScopeRequest::serializer().to_bytes(&request_value),
+    )
+    .await?;
+    let decoded = decode_skir!(GetServiceMessagingScopeResponse, &response.body)?;
+    match decoded {
+        GetServiceMessagingScopeResponse::Found(scope) => Ok(*scope),
+        GetServiceMessagingScopeResponse::NotFound(_) => Err(wasi_error!(
+            "permissions-service-messaging-scope-not-found",
+            "Service has no host messaging scope",
+        )),
+        GetServiceMessagingScopeResponse::InternalError(_) => Err(wasi_error!(
+            "permissions-service-messaging-scope-internal-error",
+            "Service messaging scope query failed",
+        )),
+        GetServiceMessagingScopeResponse::Unknown(_) => Err(wasi_error!(
+            "permissions-service-messaging-scope-unknown-response",
+            "Service messaging scope returned an unknown response",
+        )),
+    }
+}
+
+fn record_key(record: &RecordId) -> Result<String, otel_wasi::Error> {
+    match &record.key {
+        RecordIdKey::String(value) if !value.is_empty() => Ok(value.clone()),
+        _ => Err(wasi_error!(
+            "permissions-service-invalid-realm-id",
+            "Service messaging scope contains an invalid Realm identifier",
+        )),
     }
 }
 

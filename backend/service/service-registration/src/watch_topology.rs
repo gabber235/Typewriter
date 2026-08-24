@@ -45,7 +45,6 @@ pub async fn handle_watch(
                     id,
                     revision,
                     target_engine,
-                    manifest_revision,
                     state,
                     {
                         id: owner_host_id,
@@ -58,7 +57,6 @@ pub async fn handle_watch(
                     id,
                     revision,
                     target,
-                    manifest_revision,
                     state,
                     {
                         id: owner_host_id,

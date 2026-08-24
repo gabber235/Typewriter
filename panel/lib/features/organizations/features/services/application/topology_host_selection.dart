@@ -20,22 +20,26 @@ class _ServiceHostSelectable
   TopologyRealm? get _realm => topology.realmOwnedBy(host.hostId);
   TopologyEngine? get _engine => topology.engineOwnedBy(host.hostId);
 
-  Map<String, List<int>> get _realmTargets {
+  Map<String, List<String>> get _realmTargets {
     final catalog = _engineTargetCatalog(
       topology.hosts.expand((candidate) => candidate.supportedEngines),
     );
     final target = _realm?.targetEngine;
     if (target != null) {
-      catalog.putIfAbsent(target.engineId, () => []).add(target.majorVersion);
+      catalog
+          .putIfAbsent(target.engineId, () => [])
+          .add(target.versionConstraint);
     }
     return catalog;
   }
 
-  Map<String, List<int>> get _engineTargets {
+  Map<String, List<String>> get _engineTargets {
     final catalog = _engineTargetCatalog(host.supportedEngines);
     final target = _engine?.target;
     if (target != null) {
-      catalog.putIfAbsent(target.engineId, () => []).add(target.majorVersion);
+      catalog
+          .putIfAbsent(target.engineId, () => [])
+          .add(target.versionConstraint);
     }
     return catalog;
   }
@@ -225,11 +229,7 @@ class _ServiceHostSelectable
         ),
         _HostInspectorFields.supportedEngines: ListValue(
           currentHost.supportedEngines
-              .map(
-                (supported) => StringValue(
-                  "${supported.engineId.formatted} ${supported.supportedMajorVersions.join(", ")}",
-                ),
-              )
+              .map((supported) => StringValue(supported.engineId.formatted))
               .toList(),
         ),
         _HostInspectorFields.state: StringValue(
@@ -247,13 +247,19 @@ class _ServiceHostSelectable
         _HostInspectorFields.realmTarget: StringValue(
           realmTarget == null
               ? ""
-              : _encodeTarget(realmTarget.engineId, realmTarget.majorVersion),
+              : _encodeTarget(
+                  realmTarget.engineId,
+                  realmTarget.versionConstraint,
+                ),
         ),
         _HostInspectorFields.engineEnabled: BooleanValue(engine != null),
         _HostInspectorFields.engineTarget: StringValue(
           engineTarget == null
               ? ""
-              : _encodeTarget(engineTarget.engineId, engineTarget.majorVersion),
+              : _encodeTarget(
+                  engineTarget.engineId,
+                  engineTarget.versionConstraint,
+                ),
         ),
         _HostInspectorFields.realmAssignment: StringValue(
           localRealm
@@ -264,11 +270,11 @@ class _ServiceHostSelectable
     });
   }
 
-  TopologyEngineTarget? _firstTarget(Map<String, List<int>> targets) {
+  TopologyEngineTarget? _firstTarget(Map<String, List<String>> targets) {
     final id = targets.keys.firstOrNull;
-    final major = id == null ? null : targets[id]?.firstOrNull;
-    if (id == null || major == null) return null;
-    return TopologyEngineTarget(engineId: id, majorVersion: major);
+    final constraint = id == null ? null : targets[id]?.firstOrNull;
+    if (id == null || constraint == null) return null;
+    return TopologyEngineTarget(engineId: id, versionConstraint: constraint);
   }
 
   skir.HostExecutionConfiguration? _decodeExecution(DataValue value) {
@@ -307,9 +313,9 @@ class _ServiceHostSelectable
     }
     return skir.HostExecutionConfiguration(
       realm: realmEnabled
-          ? skir.HostedRealmConfiguration(targetEngine: realmTarget!.toSkir())
+          ? skir.HostedRealmConfiguration(primaryEngine: realmTarget!.toSkir())
           : null,
-      engine: engineEnabled
+      primaryEngine: engineEnabled
           ? skir.HostedEngineConfiguration(
               target: engineTarget!.toSkir(),
               realm: assignment == "hosted"
@@ -324,15 +330,15 @@ class _ServiceHostSelectable
 
   TopologyEngineTarget? _decodeTarget(
     String? value,
-    Map<String, List<int>> targets,
+    Map<String, List<String>> targets,
   ) {
     if (value == null) return null;
     final separator = value.lastIndexOf("@");
     if (separator <= 0) return null;
     final id = value.substring(0, separator);
-    final major = int.tryParse(value.substring(separator + 1));
-    if (major == null || !(targets[id]?.contains(major) ?? false)) return null;
-    return TopologyEngineTarget(engineId: id, majorVersion: major);
+    final constraint = value.substring(separator + 1);
+    if (!(targets[id]?.contains(constraint) ?? false)) return null;
+    return TopologyEngineTarget(engineId: id, versionConstraint: constraint);
   }
 }
 

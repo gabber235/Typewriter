@@ -9,6 +9,7 @@ import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
+import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.contract.operationOutcome
@@ -63,6 +64,12 @@ annotation class CommunicatorRoutesDsl
 fun interface UnaryHandler<Address : Any, Request : Any, Response : Any> {
     context(main: MainSpanScope)
     suspend fun handle(call: IncomingUnaryCall<Address, Request, Response>): Response
+}
+
+/** Handles a scatter call and may ignore it without replying. */
+fun interface ScatterHandler<Address : Any, Request : Any, Response : Any> {
+    context(main: MainSpanScope)
+    suspend fun handle(call: IncomingUnaryCall<Address, Request, Response>): Response?
 }
 
 /** Handles a typed event call. */
@@ -165,6 +172,15 @@ class CommunicatorRoutesBuilder internal constructor() {
         handler: UnaryHandler<A, Q, R>,
     ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup) { router, message ->
         router.unary(contract, handler, message)
+    }
+
+    /** Registers a fanout request route without a consumer group. */
+    fun <A : Any, Q : Any, R : Any> scatter(
+        contract: ScatterContract<A, Q, R>,
+        parallelism: Int? = null,
+        handler: ScatterHandler<A, Q, R>,
+    ) = add(parallelism, contract.requestAddress.subscriptionPattern, null) { router, message ->
+        router.scatter(contract, handler, message)
     }
 
     /** Registers an event route. */
@@ -487,6 +503,71 @@ class CommunicatorRouter internal constructor(
         }
     }
 
+    internal suspend fun <A : Any, Q : Any, R : Any> scatter(
+        contract: ScatterContract<A, Q, R>,
+        handler: ScatterHandler<A, Q, R>,
+        message: InboundMessage,
+    ) = scatterReplying(contract, message) { main, address, request ->
+        context(main) {
+            handler.handle(
+                IncomingUnaryCall(
+                    address,
+                    request,
+                    message.headers,
+                    message.address,
+                    contract.asUnaryContract(),
+                    communicator,
+                ),
+            )
+        }
+    }
+
+    private suspend fun <A : Any, Q : Any, R : Any> scatterReplying(
+        contract: ScatterContract<A, Q, R>,
+        message: InboundMessage,
+        handler: suspend (MainSpanScope, A, Q) -> R?,
+    ) = consume(contract.name, contract.requestAddress.template, contract.failureSlug, message) { main ->
+        val replyTo =
+            message.replyTo ?: throw SluggedException.wrap(
+                contract.failureSlug,
+                IllegalStateException("Missing reply address"),
+            )
+        val response =
+            try {
+                handler(
+                    main,
+                    requireNotNull(contract.requestAddress.match(message.address)),
+                    contract.requestCodec.decode(message.payload),
+                )
+            } catch (original: Throwable) {
+                rethrowExceptional(original)
+                sendInternalFailure(
+                    main,
+                    contract.name,
+                    null,
+                    contract.responseCodec,
+                    contract.responsePolicy,
+                    contract.failureSlug,
+                    replyTo,
+                    original,
+                )
+                throw original
+            }
+        if (response == null) return@consume Unit
+        val classification = contract.responsePolicy.classify(response)
+        annotateResponse(main, classification)
+        sendReply(
+            contract.name,
+            null,
+            contract.responseCodec,
+            contract.failureSlug,
+            replyTo,
+            response,
+            classification,
+        )
+        classification.operationOutcome(Unit)
+    }
+
     internal suspend fun <A : Any, Q : Any, I : Any, U : Any> watch(
         contract: WatchContract<A, Q, I, U>,
         handler: WatchHandler<A, Q, I, U>,
@@ -697,6 +778,16 @@ class CommunicatorRouter internal constructor(
         val ROUTE_TRANSPORT_SLUG: ErrorSlug = ErrorSlug.of("route-transport-failed")
     }
 }
+
+private fun <A : Any, Q : Any, R : Any> ScatterContract<A, Q, R>.asUnaryContract(): UnaryContract<A, Q, R> =
+    UnaryContract(
+        name = name,
+        requestAddress = requestAddress,
+        requestCodec = requestCodec,
+        responseCodec = responseCodec,
+        responsePolicy = responsePolicy,
+        failureSlug = failureSlug,
+    )
 
 private fun sluggedClose(
     route: Route,

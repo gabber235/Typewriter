@@ -108,6 +108,16 @@ class UnaryContract<Address : Any, Request : Any, Response : Any>(
     }
 }
 
+/** Typed request contract that permits every listener to reply to one inbox. */
+class ScatterContract<Address : Any, Request : Any, Response : Any>(
+    val name: OperationName,
+    val requestAddress: AddressTemplate<Address>,
+    val requestCodec: PayloadCodec<Request>,
+    val responseCodec: PayloadCodec<Response>,
+    val responsePolicy: ResponsePolicy<Response>,
+    val failureSlug: ErrorSlug,
+)
+
 /** Typed event publication contract. */
 class EventContract<Address : Any, Event : Any>(
     val name: OperationName,

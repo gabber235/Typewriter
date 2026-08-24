@@ -174,7 +174,6 @@ TopologyHost _host({
   supportedEngines: [
     TopologySupportedEngine(
       engineId: entrypoint == "PAPER" ? "paper" : "conformance",
-      supportedMajorVersions: const [1],
     ),
   ],
   topologyRevision: TopologyRevision(
@@ -197,8 +196,10 @@ TopologyRealm _realm({
   realmId: recordId("realm_instance:$id"),
   ownerHost: _ownerHost(host),
   revision: 3,
-  targetEngine: const TopologyEngineTarget(engineId: "paper", majorVersion: 1),
-  manifestRevision: const TopologyRevision(desired: 12, applied: 12),
+  targetEngine: const TopologyEngineTarget(
+    engineId: "paper",
+    versionConstraint: "^1",
+  ),
   state: _runtimeState(status, message: message),
 );
 
@@ -212,10 +213,9 @@ TopologyEngine _engine({
   ownerHost: _ownerHost(host),
   realm: TopologyRealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
   revision: 5,
-  target: const TopologyEngineTarget(engineId: "paper", majorVersion: 1),
-  manifestRevision: TopologyRevision(
-    desired: 12,
-    applied: status == TopologyRuntimeStatus.drifted ? 11 : 12,
+  target: const TopologyEngineTarget(
+    engineId: "paper",
+    versionConstraint: "^1",
   ),
   state: _runtimeState(status),
 );

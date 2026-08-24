@@ -34,7 +34,6 @@ class _RealmInstanceSelectable
     confirmedValue: _runtimeValue(
       ownerHost: realm.ownerHost.name.formatted,
       target: realm.targetEngine,
-      revision: realm.manifestRevision,
       state: realm.state,
     ),
     revision: realm.revision,
@@ -107,7 +106,6 @@ class _EngineInstanceSelectable
     confirmedValue: _runtimeValue(
       ownerHost: engine.ownerHost.name.formatted,
       target: engine.target,
-      revision: engine.manifestRevision,
       state: engine.state,
       assignedRealm: engine.realm.ownerHost.name.formatted,
     ),
@@ -137,7 +135,6 @@ class _EngineInstanceSelectable
 RecordValue _runtimeValue({
   required String ownerHost,
   required TopologyEngineTarget target,
-  required TopologyRevision revision,
   required TopologyRuntimeState state,
   String? assignedRealm,
 }) => RecordValue({
@@ -145,9 +142,6 @@ RecordValue _runtimeValue({
   if (assignedRealm != null)
     _RuntimeInspectorFields.assignedRealm: StringValue(assignedRealm),
   _RuntimeInspectorFields.target: StringValue(_targetLabel(target)),
-  _RuntimeInspectorFields.manifestRevision: StringValue(
-    _revisionLabel(revision),
-  ),
   _RuntimeInspectorFields.runtimeStatus: StringValue(
     childRuntimeStatusLabel(state.status),
   ),

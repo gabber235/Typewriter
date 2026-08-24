@@ -59,7 +59,7 @@ impl ReconciledRevision {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EngineTarget {
     pub engine_id: String,
-    pub major_version: i32,
+    pub version_constraint: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EngineTarget>>,
 }
@@ -98,7 +98,6 @@ impl EngineTarget {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SupportedEngine {
     pub engine_id: String,
-    pub supported_major_versions: Vec<i32>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SupportedEngine>>,
 }
@@ -428,7 +427,6 @@ pub struct RealmInstance {
     pub owner_host: OwnerHost,
     pub revision: i64,
     pub target_engine: EngineTarget,
-    pub manifest_revision: ReconciledRevision,
     pub state: ChildRuntimeState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmInstance>>,
@@ -511,7 +509,6 @@ pub struct EngineInstance {
     pub realm: RealmInfo,
     pub revision: i64,
     pub target: EngineTarget,
-    pub manifest_revision: ReconciledRevision,
     pub state: ChildRuntimeState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EngineInstance>>,
@@ -550,7 +547,7 @@ impl EngineInstance {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HostedRealmConfiguration {
-    pub target_engine: EngineTarget,
+    pub primary_engine: EngineTarget,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HostedRealmConfiguration>>,
 }
@@ -708,7 +705,7 @@ impl HostedEngineConfiguration {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HostExecutionConfiguration {
     pub realm: Option<HostedRealmConfiguration>,
-    pub engine: Option<HostedEngineConfiguration>,
+    pub primary_engine: Option<HostedEngineConfiguration>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HostExecutionConfiguration>>,
 }
@@ -1429,6 +1426,165 @@ impl ReportHostExecutionResponse {
 }
 
 // ==============================================================================
+// struct ServiceMessagingScope
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ServiceMessagingScope {
+    pub organization_id: String,
+    pub owned_realm: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    pub attached_realm: Option<crate::skirout::base::kernel::v1::record_id::RecordId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ServiceMessagingScope>>,
+}
+
+impl ServiceMessagingScope {
+    pub fn default_ref() -> &'static ServiceMessagingScope {
+        static D: std::sync::LazyLock<ServiceMessagingScope> = std::sync::LazyLock::new(ServiceMessagingScope::default);
+        &D
+    }
+}
+
+impl ServiceMessagingScope {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceMessagingScope> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceMessagingScope>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "ServiceMessagingScope",
+                    "",
+                    |x: &ServiceMessagingScope| &x._unrecognized,
+                    |x: &mut ServiceMessagingScope, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ServiceMessagingScope> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ServiceMessagingScope::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct GetServiceMessagingScopeRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GetServiceMessagingScopeRequest {
+    pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeRequest>>,
+}
+
+impl GetServiceMessagingScopeRequest {
+    pub fn default_ref() -> &'static GetServiceMessagingScopeRequest {
+        static D: std::sync::LazyLock<GetServiceMessagingScopeRequest> = std::sync::LazyLock::new(GetServiceMessagingScopeRequest::default);
+        &D
+    }
+}
+
+impl GetServiceMessagingScopeRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "GetServiceMessagingScopeRequest",
+                    "",
+                    |x: &GetServiceMessagingScopeRequest| &x._unrecognized,
+                    |x: &mut GetServiceMessagingScopeRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct GetServiceMessagingScopeResponse.NotFound
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct GetServiceMessagingScopeResponse_NotFound {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeResponse_NotFound>>,
+}
+
+impl GetServiceMessagingScopeResponse_NotFound {
+    pub fn default_ref() -> &'static GetServiceMessagingScopeResponse_NotFound {
+        static D: std::sync::LazyLock<GetServiceMessagingScopeResponse_NotFound> = std::sync::LazyLock::new(GetServiceMessagingScopeResponse_NotFound::default);
+        &D
+    }
+}
+
+impl GetServiceMessagingScopeResponse_NotFound {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "GetServiceMessagingScopeResponse.NotFound",
+                    "",
+                    |x: &GetServiceMessagingScopeResponse_NotFound| &x._unrecognized,
+                    |x: &mut GetServiceMessagingScopeResponse_NotFound, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse_NotFound> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeResponse_NotFound::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum GetServiceMessagingScopeResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum GetServiceMessagingScopeResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<GetServiceMessagingScopeResponse>>),
+    Found(Box<ServiceMessagingScope>),
+    NotFound(Box<GetServiceMessagingScopeResponse_NotFound>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for GetServiceMessagingScopeResponse {
+    fn default() -> Self {
+        GetServiceMessagingScopeResponse::Unknown(None)
+    }
+}
+
+impl GetServiceMessagingScopeResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &GetServiceMessagingScopeResponse| match x {
+                        GetServiceMessagingScopeResponse::Unknown(_) => 0,
+                        GetServiceMessagingScopeResponse::Found(_) => 1,
+                        GetServiceMessagingScopeResponse::NotFound(_) => 2,
+                        GetServiceMessagingScopeResponse::InternalError(_) => 3,
+                    },
+                    |u| GetServiceMessagingScopeResponse::Unknown(Some(u)),
+                    |x: &GetServiceMessagingScopeResponse| match x { GetServiceMessagingScopeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "service/v1/topology.skir",
+                    "GetServiceMessagingScopeResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(GetServiceMessagingScopeResponse::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -1444,13 +1600,12 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<EngineTarget> = EngineTarget::_adapter() as *const _ as *mut _;
                 (*a).add_field("engine_id", 0, crate::skir_client::Serializer::string(), "", |x: &EngineTarget| &x.engine_id, |x: &mut EngineTarget, v| x.engine_id = v);
-                (*a).add_field("major_version", 1, crate::skir_client::Serializer::int32(), "", |x: &EngineTarget| &x.major_version, |x: &mut EngineTarget, v| x.major_version = v);
+                (*a).add_field("version_constraint", 1, crate::skir_client::Serializer::string(), "", |x: &EngineTarget| &x.version_constraint, |x: &mut EngineTarget, v| x.version_constraint = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SupportedEngine> = SupportedEngine::_adapter() as *const _ as *mut _;
                 (*a).add_field("engine_id", 0, crate::skir_client::Serializer::string(), "", |x: &SupportedEngine| &x.engine_id, |x: &mut SupportedEngine, v| x.engine_id = v);
-                (*a).add_field("supported_major_versions", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::int32()), "", |x: &SupportedEngine| &x.supported_major_versions, |x: &mut SupportedEngine, v| x.supported_major_versions = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1512,8 +1667,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &RealmInstance| &x.owner_host, |x: &mut RealmInstance, v| x.owner_host = v);
                 (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.revision, |x: &mut RealmInstance, v| x.revision = v);
                 (*a).add_field("target_engine", 3, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &RealmInstance| &x.target_engine, |x: &mut RealmInstance, v| x.target_engine = v);
-                (*a).add_field("manifest_revision", 4, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &RealmInstance| &x.manifest_revision, |x: &mut RealmInstance, v| x.manifest_revision = v);
-                (*a).add_field("state", 5, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &RealmInstance| &x.state, |x: &mut RealmInstance, v| x.state = v);
+                (*a).add_field("state", 4, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &RealmInstance| &x.state, |x: &mut RealmInstance, v| x.state = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1529,13 +1683,12 @@ fn initialize_module_serializers() {
                 (*a).add_field("realm", 2, crate::skir_client::internal::struct_serializer_from_static(RealmInfo::_adapter()), "", |x: &EngineInstance| &x.realm, |x: &mut EngineInstance, v| x.realm = v);
                 (*a).add_field("revision", 3, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.revision, |x: &mut EngineInstance, v| x.revision = v);
                 (*a).add_field("target", 4, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &EngineInstance| &x.target, |x: &mut EngineInstance, v| x.target = v);
-                (*a).add_field("manifest_revision", 5, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &EngineInstance| &x.manifest_revision, |x: &mut EngineInstance, v| x.manifest_revision = v);
-                (*a).add_field("state", 6, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &EngineInstance| &x.state, |x: &mut EngineInstance, v| x.state = v);
+                (*a).add_field("state", 5, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &EngineInstance| &x.state, |x: &mut EngineInstance, v| x.state = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HostedRealmConfiguration> = HostedRealmConfiguration::_adapter() as *const _ as *mut _;
-                (*a).add_field("target_engine", 0, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &HostedRealmConfiguration| &x.target_engine, |x: &mut HostedRealmConfiguration, v| x.target_engine = v);
+                (*a).add_field("primary_engine", 0, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &HostedRealmConfiguration| &x.primary_engine, |x: &mut HostedRealmConfiguration, v| x.primary_engine = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1558,7 +1711,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HostExecutionConfiguration> = HostExecutionConfiguration::_adapter() as *const _ as *mut _;
                 (*a).add_field("realm", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HostedRealmConfiguration::_adapter())), "", |x: &HostExecutionConfiguration| &x.realm, |x: &mut HostExecutionConfiguration, v| x.realm = v);
-                (*a).add_field("engine", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HostedEngineConfiguration::_adapter())), "", |x: &HostExecutionConfiguration| &x.engine, |x: &mut HostExecutionConfiguration, v| x.engine = v);
+                (*a).add_field("primary_engine", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HostedEngineConfiguration::_adapter())), "", |x: &HostExecutionConfiguration| &x.primary_engine, |x: &mut HostExecutionConfiguration, v| x.primary_engine = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1666,6 +1819,29 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ServiceMessagingScope> = ServiceMessagingScope::_adapter() as *const _ as *mut _;
+                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceMessagingScope| &x.organization_id, |x: &mut ServiceMessagingScope, v| x.organization_id = v);
+                (*a).add_field("owned_realm", 1, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &ServiceMessagingScope| &x.owned_realm, |x: &mut ServiceMessagingScope, v| x.owned_realm = v);
+                (*a).add_field("attached_realm", 2, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &ServiceMessagingScope| &x.attached_realm, |x: &mut ServiceMessagingScope, v| x.attached_realm = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest> = GetServiceMessagingScopeRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &GetServiceMessagingScopeRequest| &x.service_id, |x: &mut GetServiceMessagingScopeRequest, v| x.service_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound> = GetServiceMessagingScopeResponse_NotFound::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse> = GetServiceMessagingScopeResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("found", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceMessagingScope::_adapter()), "", |v| GetServiceMessagingScopeResponse::Found(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::Found(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("not_found", 2, 2, crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeResponse_NotFound::_adapter()), "", |v| GetServiceMessagingScopeResponse::NotFound(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::NotFound(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| GetServiceMessagingScopeResponse::InternalError(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
         });
     let _ = *INIT;
 }
@@ -1720,6 +1896,19 @@ pub fn report_host_execution_method() -> &'static crate::skir_client::Method<Rep
             number: 934204_i64,
             request_serializer: ReportHostExecutionRequest::serializer(),
             response_serializer: ReportHostExecutionResponse::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn get_service_messaging_scope_method() -> &'static crate::skir_client::Method<GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "GetServiceMessagingScope".to_string(),
+            number: 934205_i64,
+            request_serializer: GetServiceMessagingScopeRequest::serializer(),
+            response_serializer: GetServiceMessagingScopeResponse::serializer(),
             doc: "".to_string(),
         }
     });

@@ -1,49 +1,94 @@
 package com.typewritermc.loader.standalone
 
-import com.typewritermc.loader.DeploymentRuntimeFactory
-import com.typewritermc.loader.DesiredTopology
-import com.typewritermc.loader.HostControlPlane
-import com.typewritermc.loader.HostControlPlaneFactory
+import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ArtifactRequirement
+import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.HostEntrypoint
-import com.typewritermc.loader.HostExecutionReport
-import com.typewritermc.loader.HostLoader
-import com.typewritermc.loader.HostRegistration
+import com.typewritermc.loader.HostIdentityStore
 import com.typewritermc.loader.LoaderBootstrap
 import com.typewritermc.loader.LoaderServiceFactory
 import com.typewritermc.loader.RunningHost
+import com.typewritermc.loader.api.RuntimePlacement
+import com.typewritermc.loader.deployment.HostId
+import com.typewritermc.loader.deployment.PrimaryEngineTarget
+import com.typewritermc.loader.deployment.RealmLoaderIntent
+import com.typewritermc.loader.rollout.ArtifactHost
+import com.typewritermc.loader.rollout.ArtifactHostAssignment
+import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
+import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
+import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.standalone.shell.LoaderConsoleLogOutput
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 import java.nio.file.Path
 
-/** Assembles a [HostLoader] from explicit control plane and deployment runtime factories. */
-class LocalLoaderBootstrap(
-    private val controlPlaneFactory: HostControlPlaneFactory,
-    private val runtimeFactory: DeploymentRuntimeFactory,
-    private val serviceFactory: LoaderServiceFactory? = null,
+internal class ArtifactLoaderBootstrap(
+    private val serviceFactory: LoaderServiceFactory,
+    private val settings: LoaderSettings,
 ) : LoaderBootstrap {
     override suspend fun start(
         entrypoint: HostEntrypoint,
         workDirectory: Path,
         scope: CoroutineScope,
     ): RunningHost {
-        val service = serviceFactory?.create(workDirectory, scope)
-        return HostLoader(
-            entrypoint,
-            workDirectory,
-            controlPlaneFactory.create(entrypoint),
-            runtimeFactory,
-            scope,
-            service,
-        ).start()
+        val service = serviceFactory.create(workDirectory, scope)
+        val identity = HostIdentityStore(workDirectory.resolve("state/host-id"))
+        val hostId = HostId(identity.load() ?: "local-${entrypoint.name.lowercase()}".also(identity::save))
+        val host =
+            ArtifactHost(
+                hostId,
+                workDirectory,
+                service,
+                assignments(entrypoint, service),
+                scope,
+            )
+        host.start()
+        return RunningHost(service, host::stop)
+    }
+
+    private fun assignments(
+        entrypoint: HostEntrypoint,
+        service: com.typewritermc.loader.LoaderService,
+    ): ArtifactHostAssignmentSource {
+        val panelEngine =
+            ArtifactRequirement(
+                ArtifactId(settings.get("TYPEWRITER_PANEL_ENGINE_ID", "typewritermc:panel")),
+                VersionConstraint(settings.get("TYPEWRITER_PANEL_ENGINE_VERSION", "^1")),
+            )
+        val localRealmId = settings.getOrNull("TYPEWRITER_LOCAL_REALM_ID")
+        if (entrypoint != HostEntrypoint.STANDALONE || localRealmId == null) {
+            return BackendArtifactHostAssignmentSource(service, panelEngine)
+        }
+        return ArtifactHostAssignmentSource {
+            if (entrypoint == HostEntrypoint.STANDALONE) {
+                val realmId = RealmId(localRealmId)
+                flowOf(
+                    ArtifactHostAssignment(
+                        realmId = realmId,
+                        roles = RuntimePlacement.entries.toSet(),
+                        primaryEngine =
+                            PrimaryEngineTarget(
+                                ArtifactId(settings.get("TYPEWRITER_PRIMARY_ENGINE_ID", "typewritermc:paper")),
+                                VersionConstraint(settings.get("TYPEWRITER_PRIMARY_ENGINE_VERSION", "^1")),
+                            ),
+                        intent =
+                            RealmLoaderIntent(
+                                panelEngine,
+                            ),
+                    ),
+                )
+            } else {
+                emptyFlow()
+            }
+        }
     }
 }
 
@@ -65,11 +110,9 @@ class LoaderApplication internal constructor(
  * The local control plane requests no children. Runtime staging therefore fails explicitly until a deployment source is
  * configured, rather than pretending an unavailable runtime started successfully.
  */
-fun localLoaderApplication(): LoaderApplication = localLoaderApplication(registerService = true)
+fun localLoaderApplication(): LoaderApplication = createLocalLoaderApplication()
 
-internal fun localLoaderApplicationWithoutService(): LoaderApplication = localLoaderApplication(registerService = false)
-
-private fun localLoaderApplication(registerService: Boolean): LoaderApplication {
+private fun createLocalLoaderApplication(): LoaderApplication {
     val settings = LoaderSettings.system()
     val console = LoaderConsoleLogOutput()
     val openTelemetry = loaderOpenTelemetry(console, settings.telemetryConfiguration())
@@ -80,39 +123,11 @@ private fun localLoaderApplication(registerService: Boolean): LoaderApplication 
                     single { console }
                     single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeLoaderOpenTelemetry) }
                     single { settings.registrarConfiguration() }
-                    single<HostControlPlaneFactory> { HostControlPlaneFactory(::LocalHostControlPlane) }
-                    single<DeploymentRuntimeFactory> {
-                        DeploymentRuntimeFactory { child, _ ->
-                            error("Local loader mode cannot stage ${child.runtimeId} without a deployment source.")
-                        }
-                    }
-                    if (registerService) {
-                        single<LoaderServiceFactory> { DefaultLoaderServiceFactory(get(), get(), get()) }
-                        single<LoaderBootstrap> { LocalLoaderBootstrap(get(), get(), get()) }
-                    } else {
-                        single<LoaderBootstrap> { LocalLoaderBootstrap(get(), get()) }
-                    }
+                    single<LoaderServiceFactory> { DefaultLoaderServiceFactory(get(), get(), get()) }
+                    single<LoaderBootstrap> { ArtifactLoaderBootstrap(get(), settings) }
                 },
                 serviceTelemetryModule("com.typewritermc.loader", LOADER_VERSION),
             )
         }
     return LoaderApplication(application, application.koin.get(), application.koin.get(), application.koin.get())
-}
-
-private class LocalHostControlPlane(
-    private val entrypoint: HostEntrypoint,
-) : HostControlPlane {
-    private val desired = MutableStateFlow(DesiredTopology(0))
-
-    override suspend fun register(entrypoint: HostEntrypoint): HostRegistration {
-        check(entrypoint == this.entrypoint)
-        return HostRegistration("local-${entrypoint.name.lowercase()}", entrypoint)
-    }
-
-    override fun watchExecution(hostId: String): Flow<DesiredTopology> = desired
-
-    override suspend fun report(
-        hostId: String,
-        report: HostExecutionReport,
-    ) = Unit
 }

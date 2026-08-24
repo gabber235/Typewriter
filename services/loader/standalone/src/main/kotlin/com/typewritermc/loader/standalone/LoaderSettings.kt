@@ -15,11 +15,12 @@ internal class LoaderSettings(
     fun get(
         name: String,
         default: String,
-    ): String =
+    ): String = getOrNull(name) ?: default
+
+    fun getOrNull(name: String): String? =
         properties[name]?.takeIf(String::isNotBlank)
             ?: environment[name]?.takeIf(String::isNotBlank)
             ?: configuration[name]?.takeIf(String::isNotBlank)
-            ?: default
 
     companion object {
         fun system(): LoaderSettings {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
@@ -49,12 +51,14 @@ class ServiceRegistrar(
     private val retryRandom: RetryRandom = RetryRandom { Random.nextDouble() },
 ) {
     private val commands = Channel<RegistrarCommand>(Channel.UNLIMITED)
+    private val reauthorizationRequests = Channel<ReauthorizationRequest>(Channel.UNLIMITED)
     private val mutableStates = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
     private var coordinator: Job? = null
     private var runtime: RegistrarRuntime? = null
     private var retainedIssuedCredentials: IdentityCredentials? = null
     private var activeCredentials: IdentityCredentials? = null
     private var stopResult: RegistrarStopResult? = null
+    private val retiredRuntimes = mutableMapOf<Long, RegistrarRuntime>()
 
     private var lifecycleState = LifecycleState.IDLE
     private var attempt = 0L
@@ -87,6 +91,15 @@ class ServiceRegistrar(
     suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
         request { RegistrarCommand.CommunicatorFor(connectionGeneration, it) }
 
+    suspend fun rotateAuthorization(): RegistrarResult<Long> {
+        val response = CompletableDeferred<RegistrarResult<Long>>()
+        reauthorizationRequests.send(ReauthorizationRequest(Context.current(), response))
+        return response.await()
+    }
+
+    suspend fun releaseAuthorizationRotation(connectionGeneration: Long): RegistrarResult<Unit> =
+        request { RegistrarCommand.ReleaseAuthorizationRotation(connectionGeneration, it) }
+
     suspend fun stop(): RegistrarStopResult = request { RegistrarCommand.Stop(it) }
 
     private suspend fun commandLoop() {
@@ -106,6 +119,10 @@ class ServiceRegistrar(
 
                 is RegistrarCommand.CommunicatorFor -> {
                     command.response.complete(communicatorForOwned(command.connectionGeneration))
+                }
+
+                is RegistrarCommand.ReleaseAuthorizationRotation -> {
+                    command.response.complete(releaseAuthorizationRotationOwned(command.connectionGeneration))
                 }
 
                 is RegistrarCommand.Transition -> {
@@ -169,6 +186,14 @@ class ServiceRegistrar(
         return RegistrarResult.Success(communicator)
     }
 
+    private suspend fun releaseAuthorizationRotationOwned(connectionGeneration: Long): RegistrarResult<Unit> {
+        val retired = retiredRuntimes.remove(connectionGeneration) ?: return RegistrarResult.Success(Unit)
+        return when (val result = retired.close()) {
+            RuntimeCloseResult.Success -> RegistrarResult.Success(Unit)
+            is RuntimeCloseResult.Failure -> RegistrarResult.Failure(RegistrarFailure.Internal("authorization_rotation_cleanup_failed"))
+        }
+    }
+
     private suspend fun stopOwned(): RegistrarStopResult =
         telemetry.mainSpan(
             "registrar.stop",
@@ -188,8 +213,12 @@ class ServiceRegistrar(
                 coordinator = null
                 try {
                     failures += cleanup(runtime, sendShutdown = true, deadline = deadline)
+                    retiredRuntimes.values.forEach { retired ->
+                        failures += cleanup(retired, sendShutdown = false, deadline = deadline)
+                    }
                 } finally {
                     runtime = null
+                    retiredRuntimes.clear()
                     retainedIssuedCredentials = null
                     activeCredentials = null
                 }
@@ -571,19 +600,113 @@ class ServiceRegistrar(
         }
 
     private suspend fun superviseReady(supervision: ReadySupervision) {
-        val active = supervision.runtime
-        val session = supervision.session
-        var generation = supervision.connectionGeneration
+        var current = supervision
         while (true) {
-            val degraded =
-                withTimeoutOrNull(configuration.heartbeatInterval) {
-                    active.connectivity.first { it != RuntimeConnectivity.CONNECTED }
+            val event = awaitReadyEvent(current.runtime)
+            when (event) {
+                ReadyEvent.Heartbeat -> {
+                    val generation = heartbeat(current.runtime, current.session, current.connectionGeneration) ?: return
+                    current = current.copy(connectionGeneration = generation)
                 }
-            if (degraded == null) {
-                generation = heartbeat(active, session, generation) ?: return
-                continue
+
+                ReadyEvent.Degraded -> {
+                    val generation = recoverReady(current.runtime, current.session, current.connectionGeneration) ?: return
+                    current = current.copy(connectionGeneration = generation)
+                }
+
+                is ReadyEvent.Reauthorize -> {
+                    current = rotateReadyRuntime(current, event.request) ?: current
+                }
             }
-            generation = recoverReady(active, session, generation) ?: return
+        }
+    }
+
+    private suspend fun awaitReadyEvent(active: RegistrarRuntime): ReadyEvent =
+        coroutineScope {
+            val degraded = async { active.connectivity.first { it != RuntimeConnectivity.CONNECTED } }
+            val requested = async { reauthorizationRequests.receive() }
+            val event: ReadyEvent =
+                withTimeoutOrNull<ReadyEvent>(configuration.heartbeatInterval) {
+                    select<ReadyEvent> {
+                        degraded.onAwait { ReadyEvent.Degraded }
+                        requested.onAwait { ReadyEvent.Reauthorize(it) }
+                    }
+                } ?: ReadyEvent.Heartbeat
+            degraded.cancel()
+            requested.cancel()
+            event
+        }
+
+    private suspend fun rotateReadyRuntime(
+        current: ReadySupervision,
+        request: ReauthorizationRequest,
+    ): ReadySupervision? =
+        telemetry.mainSpan(
+            "artifact.authorization.rotate",
+            ErrorSlug.of("registrar-authorization-rotate-failed"),
+            parent = request.parent,
+            attributes = readyAttributes(current.session, current.connectionGeneration),
+        ) { main ->
+            transition(RegistrarState.Reauthorizing(current.session.binding), main)
+            val credentials = activeCredentials
+            if (credentials == null) {
+                transition(RegistrarState.Ready(current.session, current.connectionGeneration), main)
+                request.response.complete(RegistrarResult.Failure(RegistrarFailure.Internal("active_credentials_unavailable")))
+                return@mainSpan null
+            }
+            val created =
+                when (val result = runtimeFactory.create(credentials, RuntimeSetupProgressSink {})) {
+                    is RuntimeCreateResult.Success -> {
+                        result.runtime
+                    }
+
+                    is RuntimeCreateResult.Failure -> {
+                        transition(RegistrarState.Ready(current.session, current.connectionGeneration), main)
+                        request.response.complete(RegistrarResult.Failure(result.failure))
+                        return@mainSpan null
+                    }
+                }
+            val failure = establishReplacement(created, current.session)
+            if (failure != null) {
+                created.close()
+                transition(RegistrarState.Ready(current.session, current.connectionGeneration), main)
+                request.response.complete(RegistrarResult.Failure(failure))
+                return@mainSpan null
+            }
+            val nextGeneration = saturatingIncrement(current.connectionGeneration)
+            retiredRuntimes[nextGeneration] = current.runtime
+            runtime = created
+            transition(RegistrarState.Ready(current.session, nextGeneration), main)
+            request.response.complete(RegistrarResult.Success(nextGeneration))
+            ReadySupervision(created, current.session, nextGeneration)
+        }
+
+    private suspend fun establishReplacement(
+        replacement: RegistrarRuntime,
+        expectedSession: ReadySession,
+    ): RegistrarFailure? {
+        when (val connected = replacement.connect()) {
+            is RuntimeResult.Failure -> return connected.failure
+            is RuntimeResult.Success -> Unit
+        }
+        replacement.connectivity.first { it == RuntimeConnectivity.CONNECTED }
+        when (val binding = replacement.queryBinding()) {
+            is RuntimeResult.Failure -> {
+                return binding.failure
+            }
+
+            is RuntimeResult.Success -> {
+                val actual =
+                    binding.value as? BindingStatus.Bound
+                        ?: return RegistrarFailure.Internal("authorization_rotation_unbound")
+                if (actual.binding != expectedSession.binding) {
+                    return RegistrarFailure.Internal("authorization_rotation_binding_changed")
+                }
+            }
+        }
+        return when (val heartbeat = replacement.sendHeartbeat()) {
+            is RuntimeResult.Failure -> heartbeat.failure
+            is RuntimeResult.Success -> null
         }
     }
 
@@ -898,6 +1021,11 @@ private sealed interface RegistrarCommand {
         val response: CompletableDeferred<RegistrarResult<Communicator>>,
     ) : RegistrarCommand
 
+    data class ReleaseAuthorizationRotation(
+        val connectionGeneration: Long,
+        val response: CompletableDeferred<RegistrarResult<Unit>>,
+    ) : RegistrarCommand
+
     data class Transition(
         val state: RegistrarState,
         val events: MainSpanScope?,
@@ -911,6 +1039,21 @@ private sealed interface RegistrarCommand {
     data class CurrentAttempt(
         val response: CompletableDeferred<Long>,
     ) : RegistrarCommand
+}
+
+private data class ReauthorizationRequest(
+    val parent: Context,
+    val response: CompletableDeferred<RegistrarResult<Long>>,
+)
+
+private sealed interface ReadyEvent {
+    data object Heartbeat : ReadyEvent
+
+    data object Degraded : ReadyEvent
+
+    data class Reauthorize(
+        val request: ReauthorizationRequest,
+    ) : ReadyEvent
 }
 
 private data class ReadySupervision(

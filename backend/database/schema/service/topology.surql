@@ -25,14 +25,6 @@ DEFINE FIELD OVERWRITE supported_engines ON service_host TYPE array<object>
 DEFINE FIELD OVERWRITE supported_engines.* ON service_host TYPE object
     ASSERT fn::service::valid_supported_engine($value);
 DEFINE FIELD OVERWRITE supported_engines.*.engine_id ON service_host TYPE string;
-DEFINE FIELD OVERWRITE supported_engines.*.supported_major_versions ON service_host TYPE array<int>;
-DEFINE FIELD OVERWRITE supported_engines.*.supported_major_versions.* ON service_host TYPE int
-    ASSERT {
-        IF $value < 0 {
-            THROW "supported-engine-major-invalid-error"
-        };
-        RETURN TRUE;
-    };
 DEFINE FIELD OVERWRITE topology_revision ON service_host TYPE object DEFAULT {
     desired: 0,
     applied: 0,
@@ -78,30 +70,10 @@ DEFINE FIELD OVERWRITE revision ON realm_instance TYPE int
 DEFINE FIELD OVERWRITE target_engine ON realm_instance TYPE object
     ASSERT fn::service::valid_engine_target($value);
 DEFINE FIELD OVERWRITE target_engine.engine_id ON realm_instance TYPE string;
-DEFINE FIELD OVERWRITE target_engine.major_version ON realm_instance TYPE int
+DEFINE FIELD OVERWRITE target_engine.version_constraint ON realm_instance TYPE string
     ASSERT {
-        IF $value < 0 {
-            THROW "engine-target-major-invalid-error"
-        };
-        RETURN TRUE;
-    };
-DEFINE FIELD OVERWRITE manifest_revision ON realm_instance TYPE object DEFAULT {
-    desired: 1,
-    applied: 0,
-};
-DEFINE FIELD OVERWRITE manifest_revision.desired ON realm_instance TYPE int
-    DEFAULT 1
-    ASSERT {
-        IF $value < 1 {
-            THROW "realm-manifest-desired-revision-invalid-error"
-        };
-        RETURN TRUE;
-    };
-DEFINE FIELD OVERWRITE manifest_revision.applied ON realm_instance TYPE int
-    DEFAULT 0
-    ASSERT {
-        IF $value < 0 {
-            THROW "realm-manifest-applied-revision-invalid-error"
+        IF string::len(string::trim($value)) == 0 {
+            THROW "engine-target-version-constraint-invalid-error"
         };
         RETURN TRUE;
     };
@@ -144,29 +116,13 @@ DEFINE FIELD OVERWRITE revision ON engine_instance TYPE int
 DEFINE FIELD OVERWRITE target ON engine_instance TYPE object
     ASSERT fn::service::valid_engine_target($value);
 DEFINE FIELD OVERWRITE target.engine_id ON engine_instance TYPE string;
-DEFINE FIELD OVERWRITE target.major_version ON engine_instance TYPE int
+DEFINE FIELD OVERWRITE target.version_constraint ON engine_instance TYPE string
     ASSERT {
-        IF $value < 0 {
-            THROW "engine-target-major-invalid-error"
+        IF string::len(string::trim($value)) == 0 {
+            THROW "engine-target-version-constraint-invalid-error"
         };
         RETURN TRUE;
     };
-DEFINE FIELD OVERWRITE manifest_revision ON engine_instance TYPE object DEFAULT {
-    desired: 1,
-    applied: 0,
-};
-DEFINE FIELD OVERWRITE manifest_revision.desired ON engine_instance TYPE int DEFAULT 1 ASSERT {
-    IF $value < 1 {
-        THROW "engine-manifest-desired-revision-invalid-error"
-    };
-    RETURN TRUE;
-};
-DEFINE FIELD OVERWRITE manifest_revision.applied ON engine_instance TYPE int DEFAULT 0 ASSERT {
-    IF $value < 0 {
-        THROW "engine-manifest-applied-revision-invalid-error"
-    };
-    RETURN TRUE;
-};
 DEFINE FIELD OVERWRITE state ON engine_instance TYPE object DEFAULT {
     status: "ABSENT",
     updated_at: time::now(),

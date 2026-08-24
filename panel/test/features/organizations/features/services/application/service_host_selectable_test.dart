@@ -167,9 +167,7 @@ class _Harness {
       revision: 1,
       entrypoint: "PAPER",
       canHostRealm: true,
-      supportedEngines: [
-        skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
-      ],
+      supportedEngines: [skir.SupportedEngine(engineId: "paper")],
       topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
       state: skir.HostRuntimeState(
         status: skir.HostRuntimeStatus.active,
@@ -181,8 +179,10 @@ class _Harness {
       realmId: recordId("realm_instance:paper"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: service.name),
       revision: 1,
-      targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-      manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+      targetEngine: skir.EngineTarget(
+        engineId: "paper",
+        versionConstraint: "^1",
+      ),
       state: skir.ChildRuntimeState.defaultInstance,
     );
     final topology = OrganizationTopology(

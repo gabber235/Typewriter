@@ -10,6 +10,7 @@ mod bind;
 mod configure_topology;
 mod heartbeat;
 mod host_execution;
+mod messaging_scope;
 mod shutdown;
 mod status;
 mod unbind;
@@ -55,6 +56,7 @@ async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi
         user_topology: "[typewriter.from.]user.<user_id>.organization.<org_id>.topology",
         host_execution: "[typewriter.from.]service.<service_id>.execution";
         "{services}.status" => async status::handle_status,
+        "{services}.messaging.scope" => async messaging_scope::handle,
         "{user_services}.bind" => async bind::handle_bind,
         "{user_services}.watch" => async watch::handle_watch,
         "{user_services}.update" => async update::handle_update,

@@ -17,6 +17,17 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 
+internal fun Project.configureRealmProject(declaration: DeclaredArtifact) {
+    configureArtifactVersion(declaration)
+    val main = productionSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    configurations.named(main.compileOnlyConfigurationName) { configuration ->
+        configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
+    }
+    configureMainCodegen(declaration)
+    val manifest = registerManifestTask(declaration, emptyList())
+    configureHostedJar(manifest)
+}
+
 internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val relationships = configureRelationships(declaration.relationships, "main", ArtifactKind.CAPABILITY)
@@ -25,9 +36,12 @@ internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
         configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
+    configurations.named(main.compileOnlyConfigurationName) { configuration ->
+        configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
+    }
     configureMainCodegen(declaration)
     val manifest = registerManifestTask(declaration, relationships)
-    configureEngineJar(manifest)
+    configureHostedJar(manifest)
 }
 
 internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
@@ -141,7 +155,7 @@ internal fun Project.configureThinJar(
     }
 }
 
-private fun Project.configureEngineJar(manifest: org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask>) {
+private fun Project.configureHostedJar(manifest: org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask>) {
     pluginManager.apply("com.gradleup.shadow")
     val shadow =
         tasks.named("shadowJar", ShadowJar::class.java) { jar ->

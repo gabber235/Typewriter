@@ -33,6 +33,7 @@ val ImprintPluginTest by testSuite {
                     engine {
                         id = "paper"
                         version = "1.2.3"
+                        hostApi = "^1"
                     }
                 }
                 """.trimIndent(),
@@ -46,6 +47,7 @@ val ImprintPluginTest by testSuite {
                     engine {
                         id = "paper"
                         version = "1"
+                        hostApi = "^1"
                     }
                 }
                 """.trimIndent(),
@@ -180,6 +182,7 @@ val ImprintPluginTest by testSuite {
                 engine {
                     id = "paper"
                     version = "1.0.0"
+                    hostApi = "^1"
                     implements {
                         capability(project(":capability"), version = "^1")
                     }
@@ -188,6 +191,7 @@ val ImprintPluginTest by testSuite {
             """.trimIndent(),
         )
         fixture.write("engine/src/main/java/fixture/paper/PaperEngine.java", javaType("fixture.paper", "PaperEngine"))
+        fixture.writeHostedProvider("engine")
 
         fixture.run(":engine:shadowJar")
         val jar = fixture.singleJar("engine/build/libs")
@@ -290,11 +294,13 @@ val ImprintPluginTest by testSuite {
                 engine {
                     id = "paper"
                     version = "1.0.0"
+                    hostApi = "^1"
                 }
             }
             """.trimIndent(),
         )
         incorrect.writeBuild("extension", extensionWithCapability("project(\":engine\")"))
+        incorrect.writeHostedProvider("engine")
 
         incorrect.run(":extension:jar", expectFailure = true).output shouldContain
             "requires CAPABILITY but paper is ENGINE"
@@ -381,6 +387,7 @@ val ImprintPluginTest by testSuite {
                 engine {
                     id = "paper"
                     version = "1.0.0"
+                    hostApi = "^1"
                     implements {
                         capability(project(":minecraft"), version = "^1")
                     }
@@ -412,6 +419,7 @@ val ImprintPluginTest by testSuite {
             }
             """.trimIndent(),
         )
+        fixture.writeHostedProvider("paper")
         fixture.write(
             "extension/src/minecraft/kotlin/fixture/MinecraftSupport.kt",
             "package fixture\nclass MinecraftSupport",
@@ -523,6 +531,7 @@ val ImprintPluginTest by testSuite {
                 engine {
                     id = "paper"
                     version = "1.0.0"
+                    hostApi = "^1"
                 }
             }
             """.trimIndent(),
@@ -566,6 +575,13 @@ private class FunctionalFixture(
             parentFile.mkdirs()
             writeText(content)
         }
+    }
+
+    fun writeHostedProvider(project: String) {
+        write(
+            "$project/src/main/resources/META-INF/services/com.typewritermc.loader.api.HostedRuntimeProvider",
+            "fixture.HostedRuntimeProvider",
+        )
     }
 
     fun build(

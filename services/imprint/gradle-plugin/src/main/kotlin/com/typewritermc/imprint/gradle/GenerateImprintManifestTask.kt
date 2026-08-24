@@ -16,6 +16,7 @@ import com.typewritermc.imprint.IMPRINT_CONTRIBUTIONS_PATH
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
+import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import org.gradle.api.DefaultTask
@@ -38,6 +39,7 @@ import java.util.zip.ZipFile
 
 private const val RECORD_SEPARATOR = '\u001F'
 private const val LIST_SEPARATOR = '\u001E'
+private const val HOSTED_RUNTIME_PROVIDER = "META-INF/services/com.typewritermc.loader.api.HostedRuntimeProvider"
 
 internal fun Project.registerManifestTask(
     declaration: DeclaredArtifact,
@@ -57,6 +59,7 @@ internal fun Project.registerManifestTask(
         task.artifactKind.set(declaration.kind.name)
         task.artifactId.set(declaration.id.value)
         task.artifactVersion.set(declaration.version.value)
+        task.hostApiConstraint.set(declaration.hostApi?.expression.orEmpty())
         task.sourcePartKinds.set(
             declaration.sourceParts.map { sourcePart ->
                 val kind =
@@ -92,6 +95,12 @@ internal fun Project.registerManifestTask(
         task.relationshipArtifacts.from(relationships.map(ConfiguredRelationship::directFiles))
         task.graphArtifacts.from(relationships.map(ConfiguredRelationship::configuration))
         task.contributionFiles.from(contributionFiles)
+        if (declaration.kind == ArtifactKind.REALM || declaration.kind == ArtifactKind.ENGINE) {
+            task.providerArtifacts.from(
+                configurations.getByName("runtimeClasspath"),
+                fileTree("src/main/resources") { it.include(HOSTED_RUNTIME_PROVIDER) },
+            )
+        }
         task.outputFile.set(layout.buildDirectory.file("generated/imprint/artifact.cbor"))
         val kspTasks = productionParts.map { part -> if (part == "main") "kspKotlin" else "ksp${part.capitalized()}Kotlin" }
         task.dependsOn(tasks.matching { it.name in kspTasks })
@@ -111,6 +120,9 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     abstract val artifactVersion: Property<String>
 
     @get:Input
+    abstract val hostApiConstraint: Property<String>
+
+    @get:Input
     abstract val sourcePartKinds: ListProperty<String>
 
     @get:Input
@@ -128,6 +140,10 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val contributionFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val providerArtifacts: ConfigurableFileCollection
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -138,16 +154,85 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
         val allManifests = readGraphManifests()
         val relationships = readRelationships(allManifests)
         val localContributions = readContributions(id)
+        if (ArtifactKind.valueOf(artifactKind.get()) in setOf(ArtifactKind.REALM, ArtifactKind.ENGINE)) {
+            validateHostedRuntimeProvider()
+        }
         val manifest =
             when (val kind = ArtifactKind.valueOf(artifactKind.get())) {
-                ArtifactKind.ENGINE -> engineManifest(id, version, relationships, allManifests, localContributions)
-                ArtifactKind.CAPABILITY -> capabilityManifest(id, version, relationships, allManifests, localContributions)
-                ArtifactKind.EXTENSION -> extensionManifest(id, version, relationships, allManifests, localContributions)
+                ArtifactKind.REALM -> {
+                    RealmManifest(
+                        id = id,
+                        version = version,
+                        hostApi = requiredHostApi(),
+                        contributions = canonicalContributions(localContributions),
+                    )
+                }
+
+                ArtifactKind.ENGINE -> {
+                    engineManifest(id, version, relationships, allManifests, localContributions)
+                }
+
+                ArtifactKind.CAPABILITY -> {
+                    capabilityManifest(id, version, relationships, allManifests, localContributions)
+                }
+
+                ArtifactKind.EXTENSION -> {
+                    extensionManifest(id, version, relationships, allManifests, localContributions)
+                }
             }
         outputFile.get().asFile.apply {
             parentFile.mkdirs()
             writeBytes(ImprintManifestCodec.encode(manifest))
         }
+    }
+
+    private fun validateHostedRuntimeProvider() {
+        val providers =
+            providerArtifacts.files
+                .flatMap { file ->
+                    when {
+                        file.isDirectory -> {
+                            file
+                                .resolve(HOSTED_RUNTIME_PROVIDER)
+                                .takeIf(File::isFile)
+                                ?.readLines()
+                                .orEmpty()
+                        }
+
+                        file.isFile && file.invariantSeparatorsPath.endsWith(HOSTED_RUNTIME_PROVIDER) -> {
+                            file.readLines()
+                        }
+
+                        file.isFile && file.name.endsWith(".jar") -> {
+                            ZipFile(file).use { archive ->
+                                archive
+                                    .getEntry(HOSTED_RUNTIME_PROVIDER)
+                                    ?.let { entry ->
+                                        archive.getInputStream(entry).bufferedReader().readLines()
+                                    }.orEmpty()
+                            }
+                        }
+
+                        else -> {
+                            emptyList()
+                        }
+                    }
+                }.map(String::trim)
+                .filter { it.isNotEmpty() && !it.startsWith('#') }
+                .distinct()
+        if (providers.size != 1) {
+            throw GradleException(
+                "A hosted artifact must supply exactly one HostedRuntimeProvider, but found ${providers.size}.",
+            )
+        }
+    }
+
+    private fun requiredHostApi(): VersionConstraint {
+        val expression = hostApiConstraint.get()
+        if (expression.isBlank()) {
+            throw GradleException("Hosted Imprint artifacts must declare a host API constraint.")
+        }
+        return VersionConstraint(expression)
     }
 
     private fun readGraphManifests(): Map<ArtifactId, ImprintManifest> {
@@ -210,6 +295,7 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
         return EngineManifest(
             id = id,
             version = version,
+            hostApi = requiredHostApi(),
             directCapabilities = direct,
             resolvedCapabilities = graph,
             bundledComponents = graph,
@@ -287,6 +373,10 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
 
                 ArtifactKind.EXTENSION -> {
                     error("Extensions cannot target extensions.")
+                }
+
+                ArtifactKind.REALM -> {
+                    error("Extensions cannot target Realm artifacts.")
                 }
             }
         }
@@ -481,6 +571,7 @@ private fun ImprintManifest.descriptor(): ResolvedArtifact =
                 is EngineManifest -> ArtifactKind.ENGINE
                 is CapabilityManifest -> ArtifactKind.CAPABILITY
                 is ExtensionManifest -> ArtifactKind.EXTENSION
+                is RealmManifest -> ArtifactKind.REALM
             },
     )
 

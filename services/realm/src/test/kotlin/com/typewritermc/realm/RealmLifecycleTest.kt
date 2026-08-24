@@ -1,6 +1,9 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.loader.api.HostedMessagingSession
+import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmElementCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
@@ -9,13 +12,6 @@ import com.typewritermc.realm.schema.SchemaMigrator
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.TransportError
-import com.typewritermc.services.libs.registrar.OrganizationBinding
-import com.typewritermc.services.libs.registrar.ReadySession
-import com.typewritermc.services.libs.registrar.RegistrarResult
-import com.typewritermc.services.libs.registrar.RegistrarSnapshot
-import com.typewritermc.services.libs.registrar.RegistrarState
-import com.typewritermc.services.libs.registrar.ServiceIdentity
-import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.mainSpan
@@ -23,12 +19,13 @@ import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration
@@ -36,71 +33,78 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
-    test("loader connection attempts replace routes even when the connection generation repeats") {
+    test("messaging replacement preserves the Realm runtime and swaps routers") {
         runTest {
-            RealmLifecycleFixture(this).use { fixture ->
-                val first = fixture.ready(attempt = 1, generation = 4)
-                val states = MutableStateFlow(first.snapshot)
-                fixture.start(states)
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                fixture.start()
+                val first = fixture.session(1)
+                fixture.messaging.value = first.session
+                runCurrent()
+                val routeCount = first.transport.activeSubscriptionCount
+                routeCount shouldBeGreaterThan 0
 
-                first.transport.activeSubscriptionCount shouldBe ROUTE_COUNT
-                val second = fixture.ready(attempt = 2, generation = 4)
-                states.value = second.snapshot
+                val second = fixture.session(2)
+                fixture.messaging.value = second.session
                 runCurrent()
 
+                fixture.databaseOpen shouldBe true
                 first.transport.activeSubscriptionCount shouldBe 0
-                second.transport.activeSubscriptionCount shouldBe ROUTE_COUNT
-                fixture.realm.shutdown()
-                second.transport.activeSubscriptionCount shouldBe 0
+                second.transport.activeSubscriptionCount shouldBe routeCount
+            } finally {
+                fixture.close()
             }
         }
     }
 
-    test("failed route replacement retries while the ready session remains current") {
+    test("failed router replacement retains the healthy router until retry succeeds") {
         runTest {
-            RealmLifecycleFixture(this).use { fixture ->
-                val first = fixture.ready(attempt = 1, generation = 1)
-                val states = MutableStateFlow(first.snapshot)
-                fixture.start(states)
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                fixture.start()
+                val first = fixture.session(1)
+                fixture.messaging.value = first.session
+                runCurrent()
+                val routeCount = first.transport.activeSubscriptionCount
 
-                val second = fixture.ready(attempt = 2, generation = 2)
+                val second = fixture.session(2)
                 second.transport.failNextSubscribe(TransportError.Unavailable(IllegalStateException("not ready")))
-                states.value = second.snapshot
+                fixture.messaging.value = second.session
                 runCurrent()
 
-                first.transport.activeSubscriptionCount shouldBe 0
+                first.transport.activeSubscriptionCount shouldBe routeCount
                 second.transport.activeSubscriptionCount shouldBe 0
                 fixture.delayScheduler.awaitRequest()
                 fixture.delayScheduler.resume()
                 runCurrent()
 
-                second.transport.activeSubscriptionCount shouldBe ROUTE_COUNT
-                fixture.realm.shutdown()
+                first.transport.activeSubscriptionCount shouldBe 0
+                second.transport.activeSubscriptionCount shouldBe routeCount
+            } finally {
+                fixture.close()
             }
         }
     }
 }
 
-private const val ROUTE_COUNT = 19
-
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
-) : AutoCloseable {
-    private val communicators = mutableMapOf<Long, Communicator>()
-    private val transports = mutableListOf<FakeMessageTransport>()
+) {
     private val telemetry = TelemetryTestHarness.create()
-    private val lifecycleEvents = mutableListOf<String>()
+    private val sharedArtifacts = mockk<SharedArtifactAccess>(relaxed = true)
+    val messaging = MutableStateFlow<HostedMessagingSession?>(null)
     val delayScheduler = FakeDelayScheduler()
-    val realm =
+    var databaseOpen = false
+        private set
+    private val host =
+        object : HostedRuntimeHost {
+            override val messaging = this@RealmLifecycleFixture.messaging
+            override val openTelemetry = telemetry.openTelemetry
+            override val sharedArtifacts = this@RealmLifecycleFixture.sharedArtifacts
+        }
+    private val realm =
         Realm(
-            databaseProvider =
-                TestDatabaseProvider(
-                    onConnect = { lifecycleEvents += "database.connect" },
-                    onClose = {
-                        check(transports.all { it.activeSubscriptionCount == 0 })
-                        lifecycleEvents += "database.close"
-                    },
-                ),
+            databaseProvider = TestDatabaseProvider({ databaseOpen = true }, { databaseOpen = false }),
             editorCatalog = UnavailableRealmEditorCatalogSource(),
             elementCatalog = UnavailableRealmElementCatalogSource(),
             presentationSearch = UnavailableRealmPresentationSearchSource(),
@@ -115,49 +119,37 @@ private class RealmLifecycleFixture(
                     scope = scope,
                     telemetry = telemetry.telemetry,
                 ),
+            host = host,
         )
 
-    fun ready(
-        attempt: Long,
-        generation: Long,
-    ): ReadyState {
+    fun session(id: Long): TestSession {
         val transport = FakeMessageTransport()
-        transports += transport
         val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
-        val identity = ServiceIdentity("loader", "Loader", "loader", ServiceRole.Host("1.0.0"))
-        communicators[generation] = communicator
-        val session = ReadySession(identity, OrganizationBinding("organization", "Organization"))
-        return ReadyState(
-            RegistrarSnapshot(attempt, attempt, RegistrarState.Ready(session, generation)),
-            transport,
-        )
+        return TestSession(HostedMessagingSession(id, "organization", communicator), transport)
     }
 
-    suspend fun start(states: MutableStateFlow<RegistrarSnapshot>) {
+    suspend fun start() {
         telemetry.telemetry.mainSpan(
             name = "test.realm.start",
             unhandledFailureSlug = ErrorSlug.of("test-realm-start-failed"),
         ) {
-            realm.start("realm", states) { generation ->
-                lifecycleEvents += "communicator"
-                RegistrarResult.Success(communicators.getValue(generation))
-            }
+            realm.start("realm")
         }
-        lifecycleEvents.take(2) shouldBe listOf("database.connect", "communicator")
+        databaseOpen shouldBe true
     }
 
-    override fun close() {
+    suspend fun close() {
         try {
-            runBlocking { realm.shutdown() }
-            lifecycleEvents.lastOrNull() shouldBe "database.close"
+            realm.shutdown()
+            databaseOpen shouldBe false
         } finally {
             telemetry.close()
         }
     }
 }
 
-private data class ReadyState(
-    val snapshot: RegistrarSnapshot,
+private data class TestSession(
+    val session: HostedMessagingSession,
     val transport: FakeMessageTransport,
 )
 

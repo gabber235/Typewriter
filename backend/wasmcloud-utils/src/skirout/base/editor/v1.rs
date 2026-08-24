@@ -13,14 +13,14 @@
 // To install the Skir client library, run:
 //   cargo add skir-client
 pub mod type_catalog;
-pub mod typed_value;
 pub mod path;
 pub mod diagnostic;
-pub mod search;
 pub mod binding;
 pub mod expression;
 pub mod action;
-pub mod presentation;
 pub mod conversion;
+pub mod presentation;
 pub mod catalog;
+pub mod search;
+pub mod typed_value;
 pub mod element_catalog;

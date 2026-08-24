@@ -229,9 +229,7 @@ class _Fixture {
       revision: 2,
       entrypoint: "PAPER",
       canHostRealm: true,
-      supportedEngines: [
-        skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
-      ],
+      supportedEngines: [skir.SupportedEngine(engineId: "paper")],
       topologyRevision: skir.ReconciledRevision(desired: 2, applied: 2),
       state: skir.HostRuntimeState(
         status: skir.HostRuntimeStatus.active,
@@ -243,8 +241,10 @@ class _Fixture {
       realmId: recordId("realm_instance:adventure"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       revision: 3,
-      targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-      manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),
+      targetEngine: skir.EngineTarget(
+        engineId: "paper",
+        versionConstraint: "^1",
+      ),
       state: _childState(message: childMessage),
     );
     engine = skir.EngineInstance(
@@ -252,8 +252,7 @@ class _Fixture {
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
       revision: 4,
-      target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-      manifestRevision: skir.ReconciledRevision(desired: 4, applied: 4),
+      target: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
       state: _childState(message: childMessage),
     );
     topology = OrganizationTopology(

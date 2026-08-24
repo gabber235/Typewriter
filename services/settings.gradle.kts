@@ -98,7 +98,7 @@ val serviceBuilds =
         ServiceBuild(
             "loader",
             "loader",
-            listOf(":loader-core", ":loader-standalone", ":loader-paper"),
+            listOf(":loader-api", ":loader-core", ":loader-standalone", ":loader-paper"),
         ),
         ServiceBuild(
             "engine",

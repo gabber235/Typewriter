@@ -138,14 +138,12 @@ AsyncValue<Selectable> _topologySelectable(
   return AsyncData(create(topology.requireValue, services.requireValue));
 }
 
-Map<String, List<int>> _engineTargetCatalog(
+Map<String, List<String>> _engineTargetCatalog(
   Iterable<TopologySupportedEngine> engines,
 ) {
-  final versions = <String, Set<int>>{};
+  final versions = <String, Set<String>>{};
   for (final engine in engines) {
-    versions
-        .putIfAbsent(engine.engineId, () => <int>{})
-        .addAll(engine.supportedMajorVersions);
+    versions.putIfAbsent(engine.engineId, () => <String>{"*"});
   }
   return {
     for (final entry in versions.entries)
@@ -178,11 +176,8 @@ String childRuntimeStatusLabel(TopologyRuntimeStatus status) =>
       TopologyRuntimeStatus.unknown => "Unknown",
     };
 
-String _revisionLabel(TopologyRevision revision) =>
-    "${revision.applied} of ${revision.desired}";
-
 String _targetLabel(TopologyEngineTarget target) =>
-    "${target.engineId.formatted} ${target.majorVersion}.x";
+    "${target.engineId.formatted} ${target.versionConstraint}";
 
-String _encodeTarget(String engineId, int majorVersion) =>
-    "$engineId@$majorVersion";
+String _encodeTarget(String engineId, String versionConstraint) =>
+    "$engineId@$versionConstraint";

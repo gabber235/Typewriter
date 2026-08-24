@@ -26,14 +26,14 @@ impl From<ReconciledRevisionRecord> for ReconciledRevision {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct EngineTargetRecord {
     pub engine_id: String,
-    pub major_version: i32,
+    pub version_constraint: String,
 }
 
 impl From<&EngineTarget> for EngineTargetRecord {
     fn from(value: &EngineTarget) -> Self {
         Self {
             engine_id: value.engine_id.clone(),
-            major_version: value.major_version,
+            version_constraint: value.version_constraint.clone(),
         }
     }
 }
@@ -42,7 +42,7 @@ impl From<EngineTargetRecord> for EngineTarget {
     fn from(value: EngineTargetRecord) -> Self {
         Self {
             engine_id: value.engine_id,
-            major_version: value.major_version,
+            version_constraint: value.version_constraint,
             _unrecognized: None,
         }
     }
@@ -51,14 +51,12 @@ impl From<EngineTargetRecord> for EngineTarget {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct SupportedEngineRecord {
     pub engine_id: String,
-    pub supported_major_versions: Vec<i32>,
 }
 
 impl From<SupportedEngineRecord> for SupportedEngine {
     fn from(value: SupportedEngineRecord) -> Self {
         Self {
             engine_id: value.engine_id,
-            supported_major_versions: value.supported_major_versions,
             _unrecognized: None,
         }
     }
@@ -211,7 +209,6 @@ pub struct RealmInstanceRecord {
     pub owner_host_id: RecordId,
     pub revision: i64,
     pub target_engine: EngineTargetRecord,
-    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -237,7 +234,6 @@ pub struct RealmInstanceViewRecord {
     pub owner_host: OwnerHostRecord,
     pub revision: i64,
     pub target_engine: EngineTargetRecord,
-    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -248,7 +244,6 @@ impl From<RealmInstanceViewRecord> for RealmInstance {
             owner_host: value.owner_host.into(),
             revision: value.revision,
             target_engine: value.target_engine.into(),
-            manifest_revision: value.manifest_revision.into(),
             state: value.state.into(),
             _unrecognized: None,
         }
@@ -262,7 +257,6 @@ pub struct EngineInstanceRecord {
     pub realm_id: RecordId,
     pub revision: i64,
     pub target: EngineTargetRecord,
-    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -289,7 +283,6 @@ pub struct EngineInstanceViewRecord {
     pub realm: RealmInfoRecord,
     pub revision: i64,
     pub target: EngineTargetRecord,
-    pub manifest_revision: ReconciledRevisionRecord,
     pub state: ChildRuntimeStateRecord,
 }
 
@@ -301,7 +294,6 @@ impl From<EngineInstanceViewRecord> for EngineInstance {
             realm: value.realm.into(),
             revision: value.revision,
             target: value.target.into(),
-            manifest_revision: value.manifest_revision.into(),
             state: value.state.into(),
             _unrecognized: None,
         }

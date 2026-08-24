@@ -134,6 +134,11 @@ class NatsConnection internal constructor(
             mutableState.value == NatsConnectionState.Connected && it.connectivity.value == NatsClientConnectivity.Connected
         }
 
+    internal fun connectedInboxPrefix(): String? =
+        activeConfiguration
+            ?.inboxPrefix
+            ?.takeIf { connectedClient() != null }
+
     private suspend fun connectNew(connectingState: NatsConnectionState): NatsLifecycleResult {
         mutableState.value = connectingState
         val configuration =

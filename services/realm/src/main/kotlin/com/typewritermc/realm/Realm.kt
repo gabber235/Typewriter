@@ -1,11 +1,8 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
-import com.typewritermc.loader.LoaderServiceResult
-import com.typewritermc.loader.LoaderServiceSnapshot
-import com.typewritermc.realm.deployment.CompatibleNoOperationCheckpoint
-import com.typewritermc.realm.deployment.ManagedRealmRuntime
-import com.typewritermc.realm.deployment.RealmUpgradeCheckpoint
+import com.typewritermc.loader.api.HostedMessagingSession
+import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.realm.outbox.RealmOutboxPublisher
 import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.SurrealBookRepository
@@ -17,11 +14,8 @@ import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.schema.RealmDatabaseProvider
-import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
-import com.typewritermc.services.libs.registrar.RegistrarResult
-import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -34,19 +28,13 @@ import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 
-/**
- * Owns Realm storage, communication routes, loader connection monitoring, and outbox publication for one child deployment.
- *
- * [start] and [stop] define one lifecycle and are serialized internally. The current scaffold exposes a compatible no
- * operation upgrade checkpoint, so replacement restarts the Realm without migrating in memory state.
- */
+/** Owns Realm storage, application routes, and outbox publication for one hosted deployment. */
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,
@@ -58,26 +46,19 @@ class Realm(
     private val delayScheduler: DelayScheduler,
     private val clock: Clock,
     private val catalogInvalidations: RealmCatalogInvalidationProcess,
-) : ManagedRealmRuntime {
+    private val host: HostedRuntimeHost,
+) {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
     private var routeFactory: RealmRouteFactory? = null
     private var router: CommunicatorRouter? = null
     private var outboxPublisher: RealmOutboxPublisher? = null
-    private var routerSession: RouterSession? = null
+    private var routerSession: Long? = null
     private var serviceMonitor: Job? = null
 
     context(main: MainSpanScope)
-    suspend fun start(
-        realmId: String,
-        serviceStates: StateFlow<LoaderServiceSnapshot>,
-        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
-    ) {
+    suspend fun start(realmId: String) {
         check(database == null) { "Realm is already started" }
-        val snapshot = serviceStates.value
-        val ready =
-            snapshot.state as? RegistrarState.Ready
-                ?: error("Registrar must be ready before Realm starts")
         val connected = childSpan("realm.database.initialize") { databaseProvider.connect() }
         try {
             database = connected
@@ -92,14 +73,10 @@ class Realm(
                     elementCatalog,
                     presentationSearch,
                 )
-            replaceRouter(realmId, snapshot.attempt, ready, communicatorFor)
             serviceMonitor =
                 scope.launch {
-                    serviceStates.collectLatest { snapshot ->
-                        val state = snapshot.state
-                        if (state is RegistrarState.Ready) {
-                            replaceRouterWithRetry(realmId, snapshot.attempt, state, communicatorFor)
-                        }
+                    host.messaging.collectLatest { session ->
+                        replaceRouterWithRetry(realmId, session)
                     }
                 }
         } catch (failure: Throwable) {
@@ -154,76 +131,53 @@ class Realm(
         }
     }
 
-    override suspend fun prepareUpgradeCheckpoint(): RealmUpgradeCheckpoint = CompatibleNoOperationCheckpoint
-
-    override suspend fun stop() {
-        shutdown()
-    }
-
-    context(main: MainSpanScope)
-    private suspend fun replaceRouterWithRetry(
-        realmId: String,
-        attempt: Long,
-        ready: RegistrarState.Ready,
-        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
-    ) {
-        var retryAttempt = 0L
-        while (true) {
-            try {
-                telemetry.mainSpan(
-                    name = "realm.routes.replace",
-                    unhandledFailureSlug = ErrorSlug.of("realm-routes-replace-failed"),
-                ) {
-                    replaceRouter(realmId, attempt, ready, communicatorFor)
-                }
-                return
-            } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
-                delayScheduler.delay(retryPolicy.delayFor(retryAttempt))
-                retryAttempt = if (retryAttempt == Long.MAX_VALUE) Long.MAX_VALUE else retryAttempt + 1
-            }
-        }
-    }
-
-    context(main: MainSpanScope)
     private suspend fun replaceRouter(
         realmId: String,
-        attempt: Long,
-        ready: RegistrarState.Ready,
-        communicatorFor: suspend (Long) -> LoaderServiceResult<Communicator>,
+        session: HostedMessagingSession?,
     ) = lifecycle.withLock {
-        val session = RouterSession(attempt, ready.connectionGeneration)
-        if (routerSession == session) return@withLock
-        val previous = router
-        router = null
-        routerSession = null
-        catalogInvalidations.stop()
-        outboxPublisher?.stop()
-        previous?.stop()?.requireSuccess("replace")
+        if (routerSession == session?.id) return@withLock
+        if (session == null) {
+            val previous = router
+            router = null
+            routerSession = null
+            catalogInvalidations.stop()
+            outboxPublisher?.stop()
+            previous?.stop()?.requireSuccess("disconnect")
+            return@withLock
+        }
         val address =
             RealmAddress(
                 realmId = realmId,
-                organizationId = ready.session.binding.organizationId,
+                organizationId = session.organizationId,
             )
-        val communicator =
-            when (val result = communicatorFor(ready.connectionGeneration)) {
-                is RegistrarResult.Success -> result.value
-                is RegistrarResult.Failure -> error("Loader communicator unavailable: ${result.failure}")
-            }
         val routes = checkNotNull(routeFactory) { "Realm routes are not initialized" }
-        val replacement = communicator.createRouter(routes.create(address), scope)
+        val replacement = session.communicator.createRouter(routes.create(address), scope)
         replacement.start().requireSuccess("start")
+        val previous = router
         router = replacement
-        routerSession = session
-        catalogInvalidations.replaceCommunicator(communicator, address)
-        checkNotNull(outboxPublisher) { "Realm outbox publisher is not initialized" }.replaceCommunicator(communicator)
+        routerSession = session.id
+        catalogInvalidations.replaceCommunicator(session.communicator, address)
+        checkNotNull(outboxPublisher) { "Realm outbox publisher is not initialized" }
+            .replaceCommunicator(session.communicator)
+        previous?.stop()?.requireSuccess("replace")
+    }
+
+    private suspend fun replaceRouterWithRetry(
+        realmId: String,
+        session: HostedMessagingSession?,
+    ) {
+        var retry = 0L
+        while (host.messaging.value?.id == session?.id) {
+            try {
+                replaceRouter(realmId, session)
+                return
+            } catch (failure: Throwable) {
+                rethrowExceptionalThrowable(failure)
+                delayScheduler.delay(retryPolicy.delayFor(retry++, 0.5))
+            }
+        }
     }
 }
-
-private data class RouterSession(
-    val attempt: Long,
-    val connectionGeneration: Long,
-)
 
 private fun RouterResult.requireSuccess(operation: String) {
     if (this is RouterResult.Failure) error("Realm router $operation failed: $error")

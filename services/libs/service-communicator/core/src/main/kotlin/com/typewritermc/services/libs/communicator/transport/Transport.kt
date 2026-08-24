@@ -221,9 +221,19 @@ interface TransportSubscription {
     suspend fun close()
 }
 
+/** A transport-owned reply subscription whose address follows the transport's native inbox rules. */
+interface ReplyChannel {
+    val address: MessageAddress
+    val deliveries: Flow<TransportDelivery>
+
+    suspend fun close()
+}
+
 /** Adapter SPI whose operational failures are returned and whose cancellation remains explicit. */
 interface MessageTransport {
     val system: MessagingSystem
+
+    suspend fun openReplyChannel(): TransportResult<ReplyChannel>
 
     suspend fun publish(message: OutboundMessage): TransportResult<Unit>
 

@@ -3,6 +3,10 @@ package com.typewritermc.loader.standalone
 import com.typewritermc.loader.LoaderService
 import com.typewritermc.loader.LoaderServiceFactory
 import com.typewritermc.loader.RegistrarLoaderService
+import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.shared.FileSharedArtifactRepository
+import com.typewritermc.loader.shared.SharedArtifactOutboxPublisher
+import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.services.libs.registrar.CredentialStorage
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.ServiceRegistrar
@@ -22,6 +26,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -56,7 +61,37 @@ class DefaultLoaderServiceFactory(
         val registrar = application.koin.get<ServiceRegistrar>()
         val observer = RegistrarConsoleObserver(MordantBindingTokenOutput())
         val observerJob = scope.launch(start = CoroutineStart.UNDISPATCHED) { observer.observe(registrar.states) }
-        return RegistrarLoaderService(registrar, openTelemetry, telemetry) {
+        val artifactsRoot = workDirectory.resolve("artifacts")
+        val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry)
+        val shared = ConcurrentHashMap<String, SharedArtifactService>()
+        val sharedRepositories = ConcurrentHashMap<String, FileSharedArtifactRepository>()
+        val sharedPublisher =
+            SharedArtifactOutboxPublisher(
+                scope,
+                registrar.states,
+                registrar::communicatorFor,
+                sharedRepositories::values,
+            )
+        return RegistrarLoaderService(
+            registrar,
+            openTelemetry,
+            telemetry,
+            { realmId ->
+                shared.computeIfAbsent(realmId) {
+                    val repository =
+                        sharedRepositories.computeIfAbsent(realmId) {
+                            FileSharedArtifactRepository(artifactsRoot.resolve("shared").resolve("$realmId.cbor"))
+                        }
+                    SharedArtifactService(
+                        realmId,
+                        blobs,
+                        repository,
+                        telemetry,
+                    )
+                }
+            },
+        ) {
+            sharedPublisher.stop()
             observerJob.cancelAndJoin()
             application.close()
         }

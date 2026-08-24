@@ -1,5 +1,8 @@
 import { CatalogGeneration } from "editor/v1/catalog.skir";
-import { DeclaredTypeId, ResolvedTypeRef } from "editor/v1/type_catalog.skir";
+import {
+  DeclaredTypeId,
+  ResolvedTypeRef,
+} from "editor/v1/type_catalog.skir";
 import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 import { Color } from "kernel/v1/color.skir";
 import { Icon } from "kernel/v1/icon.skir";

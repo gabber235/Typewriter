@@ -1,10 +1,12 @@
 package com.typewritermc.services.libs.communicator.testing
 
 import com.typewritermc.services.libs.communicator.address.AddressPattern
+import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
+import com.typewritermc.services.libs.communicator.transport.ReplyChannel
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
@@ -13,6 +15,7 @@ import com.typewritermc.services.libs.communicator.transport.TransportSubscripti
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 
 /** Deterministic in-memory transport for communicator and downstream tests. */
@@ -29,6 +32,7 @@ class FakeMessageTransport(
     private val publishFailures = ArrayDeque<TransportError>()
     private val subscribeFailures = ArrayDeque<TransportError>()
     private var closed = false
+    private val nextReplyChannel = AtomicLong()
     private var subscriptionAttempts = 0
     private val subscriptionFailuresAt = mutableMapOf<Int, TransportError>()
     private val subscriptionCloseBehaviorsAt = mutableMapOf<Int, suspend () -> Unit>()
@@ -79,6 +83,14 @@ class FakeMessageTransport(
                 subscriptions.filter { delivery !is TransportDelivery.Message || it.matches(delivery.message) }
             }
         targets.forEach { it.deliver(delivery) }
+    }
+
+    override suspend fun openReplyChannel(): TransportResult<ReplyChannel> {
+        val address = MessageAddress.of("_FAKE_INBOX.${nextReplyChannel.incrementAndGet()}")
+        return when (val result = subscribe(AddressPattern.of(address.value))) {
+            is TransportResult.Failure -> result
+            is TransportResult.Success -> TransportResult.Success(FakeReplyChannel(address, result.value))
+        }
     }
 
     override suspend fun publish(message: OutboundMessage): TransportResult<Unit> =
@@ -211,6 +223,15 @@ class FakeMessageTransport(
             deregister(this)
         }
     }
+}
+
+private class FakeReplyChannel(
+    override val address: MessageAddress,
+    private val subscription: TransportSubscription,
+) : ReplyChannel {
+    override val deliveries: Flow<TransportDelivery> = subscription.deliveries
+
+    override suspend fun close() = subscription.close()
 }
 
 private fun OutboundMessage.snapshot() = copy()

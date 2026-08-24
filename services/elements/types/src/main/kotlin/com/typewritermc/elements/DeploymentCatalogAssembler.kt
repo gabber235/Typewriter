@@ -15,6 +15,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.GeneratedContribution
+import com.typewritermc.imprint.ImprintManifest
 
 data class AssembledDeploymentCatalog(
     val discovery: DeploymentDiscoverySnapshot,
@@ -34,7 +35,20 @@ object DeploymentCatalogAssembler {
         val orderedExtensions = extensions.sortedBy { it.id.value }
         val selection = DeploymentSelection(engine, selectedExtensions)
         val sourceParts = SourcePartEligibilityResolver.resolve(selection, orderedExtensions)
-        val manifests = listOf(engine) + orderedExtensions
+        return assemble(generation, listOf(engine), orderedExtensions, sourceParts, facts)
+    }
+
+    fun assemble(
+        generation: CatalogGeneration,
+        engines: Collection<EngineManifest>,
+        extensions: Collection<ExtensionManifest>,
+        sourceParts: Collection<com.typewritermc.discovery.SourcePartCatalogEntry>,
+        facts: DeploymentFacts,
+        otherManifests: Collection<ImprintManifest> = emptyList(),
+    ): AssembledDeploymentCatalog {
+        val orderedEngines = engines.sortedBy { it.id.value }
+        val orderedExtensions = extensions.sortedBy { it.id.value }
+        val manifests = otherManifests.sortedBy { it.id.value } + orderedEngines + orderedExtensions
         val read = ManifestDiscoveryReader.read(manifests)
         val runtimeDiscovery = TypeContributionAssembler.assemble(read.types, sourceParts)
         val elements =
@@ -45,13 +59,16 @@ object DeploymentCatalogAssembler {
             )
         val artifacts =
             buildList {
-                add(ArtifactCatalogEntry(engine.id, Eligibility.Eligible))
-                engine.resolvedCapabilities
-                    .sortedBy { it.id.value }
-                    .forEach { add(ArtifactCatalogEntry(it.id, Eligibility.Eligible)) }
+                otherManifests.sortedBy { it.id.value }.forEach { add(ArtifactCatalogEntry(it.id, Eligibility.Eligible)) }
+                orderedEngines.forEach { engine ->
+                    add(ArtifactCatalogEntry(engine.id, Eligibility.Eligible))
+                    engine.resolvedCapabilities
+                        .sortedBy { it.id.value }
+                        .forEach { add(ArtifactCatalogEntry(it.id, Eligibility.Eligible)) }
+                }
                 orderedExtensions.forEach { extension ->
                     val eligibility =
-                        if (extension.id in selectedExtensions) {
+                        if (sourceParts.any { it.artifact == extension.id && it.eligibility is Eligibility.Eligible }) {
                             Eligibility.Eligible
                         } else {
                             Eligibility.Ineligible(listOf("Extension ${extension.id} is not selected."))
@@ -63,7 +80,7 @@ object DeploymentCatalogAssembler {
             DeploymentDiscoverySnapshot(
                 generation = generation,
                 artifacts = artifacts,
-                sourceParts = sourceParts,
+                sourceParts = sourceParts.toList(),
                 types = runtimeDiscovery.catalog,
                 diagnostics = emptyList<DiscoveryDiagnostic>(),
             )

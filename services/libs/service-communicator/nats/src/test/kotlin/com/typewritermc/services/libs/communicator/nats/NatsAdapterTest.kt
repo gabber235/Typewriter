@@ -283,6 +283,30 @@ val NatsAdapterTest by testSuite {
         subscription.unsubscribeCalls shouldBe 1
     }
 
+    test("reply channels use the configured NATS inbox prefix") {
+        val subscription = FakeSubscription(flowOf())
+        val client = FakeClient(subscription = subscription)
+        val connection =
+            NatsConnection(
+                { NatsConnectionConfiguration("nats://localhost", inboxPrefix = "_TYPEWRITER_REPLY.") },
+                { NatsAuthentication() },
+                FakeFactory(client),
+            )
+        connection.connect()
+
+        val result = NatsMessageTransport(connection).openReplyChannel() as TransportResult.Success
+
+        result.value.address.value
+            .startsWith("_TYPEWRITER_REPLY.") shouldBe true
+        client.events.takeLast(2) shouldBe
+            listOf(
+                "subscribe:${result.value.address.value}:null",
+                "flush",
+            )
+        result.value.close()
+        connection.shutdown()
+    }
+
     test("closing active subscription completes deliveries") {
         coroutineScope {
             val closed = CompletableDeferred<Unit>()

@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.communicator.transport.MessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessagingSystem
 import com.typewritermc.services.libs.communicator.transport.OutboundMessage
 import com.typewritermc.services.libs.communicator.transport.Payload
+import com.typewritermc.services.libs.communicator.transport.ReplyChannel
 import com.typewritermc.services.libs.communicator.transport.SubscriptionOptions
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.communicator.transport.TransportError
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import kotlin.time.Duration
 
 /** Core-NATS transport adapter backed by a connected [NatsConnection]. */
@@ -34,6 +36,15 @@ class NatsMessageTransport(
     private val connection: NatsConnection,
 ) : MessageTransport {
     override val system: MessagingSystem = MessagingSystem.of("nats")
+
+    override suspend fun openReplyChannel(): TransportResult<ReplyChannel> {
+        val prefix = connection.connectedInboxPrefix() ?: return disconnectedFailure()
+        val address = MessageAddress.of(prefix + UUID.randomUUID().toString().replace("-", ""))
+        return when (val result = subscribe(AddressPattern.of(address.value))) {
+            is TransportResult.Failure -> result
+            is TransportResult.Success -> TransportResult.Success(NatsReplyChannel(address, result.value))
+        }
+    }
 
     override suspend fun publish(message: OutboundMessage): TransportResult<Unit> {
         val client = connection.connectedClient() ?: return disconnectedFailure()
@@ -87,6 +98,15 @@ class NatsMessageTransport(
             TransportResult.Failure(TransportError.Failure(failure))
         }
     }
+}
+
+private class NatsReplyChannel(
+    override val address: MessageAddress,
+    private val subscription: TransportSubscription,
+) : ReplyChannel {
+    override val deliveries: Flow<TransportDelivery> = subscription.deliveries
+
+    override suspend fun close() = subscription.close()
 }
 
 private class NatsTransportSubscription(

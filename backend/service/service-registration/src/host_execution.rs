@@ -58,7 +58,6 @@ pub async fn handle_watch(
                     id,
                     revision,
                     target_engine,
-                    manifest_revision,
                     state,
                     {
                         id: owner_host_id,
@@ -70,7 +69,6 @@ pub async fn handle_watch(
                     id,
                     revision,
                     target,
-                    manifest_revision,
                     state,
                     {
                         id: owner_host_id,
@@ -158,11 +156,6 @@ pub async fn handle_report(
                             $realm_state.message
                         },
                         updated_at: <datetime>$realm_state.updated_at,
-                    },
-                    manifest_revision.applied = IF $realm_state.status = 'ACTIVE' {
-                        manifest_revision.desired
-                    } ELSE {
-                        manifest_revision.applied
                     }
                 WHERE owner_host_id = $host_id
             };
@@ -181,11 +174,6 @@ pub async fn handle_report(
                             $engine_state.message
                         },
                         updated_at: <datetime>$engine_state.updated_at,
-                    },
-                    manifest_revision.applied = IF $engine_state.status = 'ACTIVE' {
-                        manifest_revision.desired
-                    } ELSE {
-                        manifest_revision.applied
                     }
                 WHERE owner_host_id = $host_id
             };
@@ -235,7 +223,6 @@ pub async fn handle_report(
                         id,
                         revision,
                         target_engine,
-                        manifest_revision,
                         state,
                         {
                             id: owner_host_id,
@@ -247,7 +234,6 @@ pub async fn handle_report(
                         id,
                         revision,
                         target,
-                        manifest_revision,
                         state,
                         {
                             id: owner_host_id,

@@ -18,9 +18,7 @@ skir.ServiceHost _host({String id = "host1", int revision = 1}) =>
       revision: revision,
       entrypoint: "PAPER",
       canHostRealm: true,
-      supportedEngines: [
-        skir.SupportedEngine(engineId: "paper", supportedMajorVersions: [1]),
-      ],
+      supportedEngines: [skir.SupportedEngine(engineId: "paper")],
       topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
       state: skir.HostRuntimeState.defaultInstance,
     );
@@ -29,8 +27,7 @@ skir.RealmInstance _realm() => skir.RealmInstance(
   realmId: recordId("realm_instance:realm1"),
   ownerHost: skir.OwnerHost(id: _host().hostId, name: "host_1"),
   revision: 1,
-  targetEngine: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-  manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+  targetEngine: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
   state: skir.ChildRuntimeState.defaultInstance,
 );
 
@@ -45,8 +42,7 @@ skir.EngineInstance _engine() => skir.EngineInstance(
     ownerHost: _realm().ownerHost,
   ),
   revision: 1,
-  target: skir.EngineTarget(engineId: "paper", majorVersion: 1),
-  manifestRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+  target: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
   state: skir.ChildRuntimeState.defaultInstance,
 );
 
@@ -167,7 +163,7 @@ void main() {
       addTearDown(nats.dispose);
       final execution = skir.HostExecutionConfiguration(
         realm: null,
-        engine: null,
+        primaryEngine: null,
       );
 
       await container

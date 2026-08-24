@@ -6,6 +6,7 @@ import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.client.EncodedPublication
+import com.typewritermc.services.libs.communicator.client.ScatterPolicy
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
@@ -13,6 +14,7 @@ import com.typewritermc.services.libs.communicator.contract.ResponseClassificati
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
+import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
@@ -57,6 +59,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
@@ -96,6 +99,15 @@ private val unary =
         2.seconds,
         ErrorSlug.of("book-get-failed"),
     )
+private val scatter =
+    ScatterContract(
+        OperationName.of("host.probe"),
+        requestAddress,
+        strings,
+        strings,
+        successPolicy,
+        ErrorSlug.of("host-probe-failed"),
+    )
 private val event =
     EventContract(OperationName.of("book.changed"), requestAddress, strings, ErrorSlug.of("book-publish-failed"))
 private val watch =
@@ -115,6 +127,72 @@ private val propagators = ContextPropagators.create(W3CTraceContextPropagator.ge
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val CommunicatorTest by testSuite {
+    test("scatter subscribes before publishing and collects every expected reply") {
+        runTest {
+            fixture().use { (client, fake, harness) ->
+                val result =
+                    async {
+                        client
+                            .scatter(
+                                scatter,
+                                Target("realm"),
+                                "probe",
+                                ScatterPolicy(2.seconds) { responses -> responses.size == 2 },
+                            ).toList()
+                    }
+                runCurrent()
+                val actions = fake.actions
+                actions.first()::class shouldBe FakeMessageTransport.Action.Subscribe::class
+                val publication = actions.filterIsInstance<FakeMessageTransport.Action.Publish>().single().message
+                val inbox = requireNotNull(publication.replyTo)
+                fake.deliver(TransportDelivery.Message(InboundMessage(inbox, "host-a".encodeToByteArray())))
+                fake.deliver(TransportDelivery.Message(InboundMessage(inbox, "host-b".encodeToByteArray())))
+
+                result.await() shouldBe
+                    listOf(
+                        CommunicationResult.Success("host-a"),
+                        CommunicationResult.Success("host-b"),
+                    )
+                fake.activeSubscriptionCount shouldBe 0
+                val span = harness.finishedSpans().single { it.name == "host.probe scatter" }
+                span.attributes[AttributeKey.longKey("messaging.reply.count")] shouldBe 2L
+                span.attributes[AttributeKey.stringKey("messaging.destination.name")] shouldBe "service.realm.get"
+                span.attributes[AttributeKey.stringKey("operation.outcome")] shouldBe "success"
+            }
+        }
+    }
+
+    test("scatter completes after the configured quiet period") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val result =
+                    async {
+                        client
+                            .scatter(
+                                scatter,
+                                Target("realm"),
+                                "probe",
+                                ScatterPolicy(2.seconds, 100.milliseconds),
+                            ).toList()
+                    }
+                runCurrent()
+                val publication =
+                    fake.actions
+                        .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                        .single()
+                        .message
+                val inbox = requireNotNull(publication.replyTo)
+
+                fake.deliver(TransportDelivery.Message(InboundMessage(inbox, "host-a".encodeToByteArray())))
+                advanceTimeBy(101)
+                runCurrent()
+
+                result.await() shouldBe listOf(CommunicationResult.Success("host-a"))
+                fake.activeSubscriptionCount shouldBe 0
+            }
+        }
+    }
+
     test("communicator creates a router with its private infrastructure") {
         runTest {
             fixture().use { (client, fake, _) ->
@@ -647,6 +725,9 @@ private fun throwingWatchFixture(
     val transport =
         object : MessageTransport {
             override val system = MessagingSystem.of("test")
+
+            override suspend fun openReplyChannel(): TransportResult<com.typewritermc.services.libs.communicator.transport.ReplyChannel> =
+                error("Unexpected reply channel")
 
             override suspend fun publish(message: OutboundMessage): TransportResult<Unit> = error("Unexpected publish")
 

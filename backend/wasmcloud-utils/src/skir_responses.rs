@@ -126,6 +126,15 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
+    GetServiceMessagingScopeResponse {
+        success: Found,
+        errors {
+            NotFound => "Service messaging scope not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
     CreateOrganizationResponse {
         success: Success,
         errors {}

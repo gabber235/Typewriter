@@ -3,10 +3,9 @@ import java.util.jar.JarFile
 
 plugins {
     id("com.typewritermc.basic-conventions")
+    id("com.typewritermc.imprint")
     alias(libs.plugins.gradle.buildconfig)
 }
-
-version = "1000.0.0"
 
 dependencies {
     implementation(platform(libs.koin.bom))
@@ -18,7 +17,7 @@ dependencies {
     implementation("com.typewritermc:service-communicator-skir")
     implementation("com.typewritermc:service-file-transfer-core")
     implementation("com.typewritermc:service-file-transfer-storage-file")
-    implementation("com.typewritermc:loader-core")
+    imprintHostApi("com.typewritermc:loader-api")
     implementation("com.typewritermc:engine-types")
     implementation("com.typewritermc:discovery-model")
     implementation("com.typewritermc:element-types")
@@ -28,8 +27,17 @@ dependencies {
     testImplementation("com.typewritermc:service-communicator-testing")
     testImplementation("com.typewritermc:service-file-transfer-messaging")
     testImplementation("com.typewritermc:service-telemetry-testing")
+    testImplementation("com.typewritermc:loader-api")
     testImplementation(libs.mockk)
     testImplementation(libs.kotlin.coroutines.test)
+}
+
+typewriter {
+    realm {
+        id = "typewritermc:realm"
+        version = "1.0.0"
+        hostApi = "^1"
+    }
 }
 
 buildConfig {
@@ -103,7 +111,7 @@ val verifyLoaderManagedArtifact =
     tasks.register("verifyLoaderManagedArtifact") {
         group = "verification"
         description = "Verifies that Realm is packaged only as a loader managed deployment"
-        val realmJar = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+        val realmJar = tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
         dependsOn(realmJar)
         inputs.file(realmJar)
 

@@ -7,8 +7,8 @@ plugins {
 val loaderPlugin = configurations.create("loaderPlugin")
 
 dependencies {
-    implementation(project(":engine-core"))
-    implementation(project(":engine-minecraft"))
+    imprintEngineCore(project(":engine-core"))
+    imprintHostApi("com.typewritermc:loader-api")
     loaderPlugin("com.typewritermc:loader:development")
     testImplementation(libs.kotlin.coroutines.test)
 }
@@ -23,6 +23,7 @@ typewriter {
     engine {
         id = "typewritermc:paper"
         version = "1.0.0"
+        hostApi = "^1"
         implements {
             capability(project(":engine-minecraft"), version = "1.0.0")
         }

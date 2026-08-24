@@ -1,5 +1,6 @@
 pluginManagement {
     includeBuild("../build-logic")
+    includeBuild("../imprint")
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -10,6 +11,7 @@ pluginManagement {
 includeBuild("../discovery")
 includeBuild("../elements")
 includeBuild("../libs/typewriter-types")
+includeBuild("../imprint")
 
 plugins {
     id("com.typewritermc.settings-conventions")

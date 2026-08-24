@@ -3,8 +3,8 @@ part of "services.dart";
 PresentationNode _hostConfigurationSection({
   required Color color,
   required bool canHostRealm,
-  required Map<String, List<int>> realmTargets,
-  required Map<String, List<int>> engineTargets,
+  required Map<String, List<String>> realmTargets,
+  required Map<String, List<String>> engineTargets,
   required List<TopologyRealm> realms,
 }) => _dashboardSection(
   id: "serviceHost.configuration",
@@ -22,7 +22,7 @@ PresentationNode _hostConfigurationSection({
 );
 
 PresentationNode _realmConfigurationCard({
-  required Map<String, List<int>> targets,
+  required Map<String, List<String>> targets,
 }) => _dashboardCard(
   id: "serviceHost.configuration.realm",
   label: "REALM HOSTING",
@@ -56,7 +56,7 @@ PresentationNode _realmConfigurationCard({
 );
 
 PresentationNode _engineConfigurationCard({
-  required Map<String, List<int>> targets,
+  required Map<String, List<String>> targets,
   required List<TopologyRealm> realms,
   required bool canHostRealm,
 }) => _dashboardCard(
@@ -127,7 +127,7 @@ PresentationNode _engineTargetSelect({
   required String id,
   required String field,
   required String label,
-  required Map<String, List<int>> targets,
+  required Map<String, List<String>> targets,
 }) => PresentationNode(
   id: id,
   element: SelectInputElement(
@@ -137,7 +137,7 @@ PresentationNode _engineTargetSelect({
         for (final version in entry.value)
           SelectOption(
             id: _encodeTarget(entry.key, version),
-            label: "${entry.key.formatted} $version.x".asStringLiteral,
+            label: "${entry.key.formatted} $version".asStringLiteral,
             value: _encodeTarget(entry.key, version).asStringLiteral,
           ),
     ],

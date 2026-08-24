@@ -138,6 +138,7 @@ private fun isSatisfiable(condition: Condition): Boolean =
 /** Identifies the public contract implemented by an artifact. */
 @Serializable
 enum class ArtifactKind {
+    REALM,
     ENGINE,
     CAPABILITY,
     EXTENSION,

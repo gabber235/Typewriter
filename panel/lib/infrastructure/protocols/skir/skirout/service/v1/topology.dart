@@ -39,28 +39,17 @@ final class ReconciledRevision implements ReconciledRevision_orMutable {
   factory ReconciledRevision({
     required _core.int desired,
     required _core.int applied,
-  }) => ReconciledRevision._(
-    desired,
-    applied,
-  );
+  }) => ReconciledRevision._(desired, applied);
 
-  ReconciledRevision._(
-    this.desired,
-    this.applied,
-  );
+  ReconciledRevision._(this.desired, this.applied);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReconciledRevision._(
-    0,
-    0,
-  );
+  static final defaultInstance = ReconciledRevision._(0, 0);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReconciledRevision_mutable mutable() => ReconciledRevision_mutable._(
-    0,
-    0,
-  );
+  static ReconciledRevision_mutable mutable() =>
+      ReconciledRevision_mutable._(0, 0);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -68,31 +57,30 @@ final class ReconciledRevision implements ReconciledRevision_orMutable {
   ReconciledRevision toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReconciledRevision_mutable toMutable() => ReconciledRevision_mutable._(
-    this.desired,
-    this.applied,
-  );
+  ReconciledRevision_mutable toMutable() =>
+      ReconciledRevision_mutable._(this.desired, this.applied);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReconciledRevision) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.desired,
-    this.applied,
-  ];
+  _core.List get _equality_proxy => [this.desired, this.applied];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReconciledRevision` instances.
-  static _skir.StructSerializer<ReconciledRevision, ReconciledRevision_mutable> get serializer {
+  static _skir.StructSerializer<ReconciledRevision, ReconciledRevision_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "desired",
@@ -134,17 +122,13 @@ final class ReconciledRevision_mutable implements ReconciledRevision_orMutable {
   _core.int applied;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReconciledRevision_mutable._(
-    this.desired,
-    this.applied,
-  );
+  ReconciledRevision_mutable._(this.desired, this.applied);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReconciledRevision toFrozen() => ReconciledRevision(
-    desired: this.desired,
-    applied: this.applied,
-  ).._u = this._u;
+  ReconciledRevision toFrozen() =>
+      ReconciledRevision(desired: this.desired, applied: this.applied)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -153,7 +137,7 @@ final class ReconciledRevision_mutable implements ReconciledRevision_orMutable {
 
 sealed class EngineTarget_orMutable {
   _core.String get engineId;
-  _core.int get majorVersion;
+  _core.String get versionConstraint;
 
   EngineTarget toFrozen();
 }
@@ -163,34 +147,22 @@ final class EngineTarget implements EngineTarget_orMutable {
   @_core.override
   final _core.String engineId;
   @_core.override
-  final _core.int majorVersion;
+  final _core.String versionConstraint;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EngineTarget({
     required _core.String engineId,
-    required _core.int majorVersion,
-  }) => EngineTarget._(
-    engineId,
-    majorVersion,
-  );
+    required _core.String versionConstraint,
+  }) => EngineTarget._(engineId, versionConstraint);
 
-  EngineTarget._(
-    this.engineId,
-    this.majorVersion,
-  );
+  EngineTarget._(this.engineId, this.versionConstraint);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = EngineTarget._(
-    "",
-    0,
-  );
+  static final defaultInstance = EngineTarget._("", "");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EngineTarget_mutable mutable() => EngineTarget_mutable._(
-    "",
-    0,
-  );
+  static EngineTarget_mutable mutable() => EngineTarget_mutable._("", "");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -198,31 +170,30 @@ final class EngineTarget implements EngineTarget_orMutable {
   EngineTarget toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EngineTarget_mutable toMutable() => EngineTarget_mutable._(
-    this.engineId,
-    this.majorVersion,
-  );
+  EngineTarget_mutable toMutable() =>
+      EngineTarget_mutable._(this.engineId, this.versionConstraint);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EngineTarget) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.engineId,
-    this.majorVersion,
-  ];
+  _core.List get _equality_proxy => [this.engineId, this.versionConstraint];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EngineTarget` instances.
-  static _skir.StructSerializer<EngineTarget, EngineTarget_mutable> get serializer {
+  static _skir.StructSerializer<EngineTarget, EngineTarget_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "engine_id",
@@ -234,13 +205,13 @@ final class EngineTarget implements EngineTarget_orMutable {
         (it, v) => it.engineId = v,
       );
       _serializerBuilder.addField(
-        "major_version",
-        "majorVersion",
+        "version_constraint",
+        "versionConstraint",
         1,
-        _skir.Serializers.int32,
+        _skir.Serializers.string,
         "",
-        (it) => it.majorVersion,
-        (it, v) => it.majorVersion = v,
+        (it) => it.versionConstraint,
+        (it, v) => it.versionConstraint = v,
       );
       _serializerBuilder.finalize();
     }
@@ -261,19 +232,16 @@ final class EngineTarget implements EngineTarget_orMutable {
 /// Mutable version of [EngineTarget].
 final class EngineTarget_mutable implements EngineTarget_orMutable {
   _core.String engineId;
-  _core.int majorVersion;
+  _core.String versionConstraint;
   _skir.internal__UnrecognizedFields? _u;
 
-  EngineTarget_mutable._(
-    this.engineId,
-    this.majorVersion,
-  );
+  EngineTarget_mutable._(this.engineId, this.versionConstraint);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   EngineTarget toFrozen() => EngineTarget(
     engineId: this.engineId,
-    majorVersion: this.majorVersion,
+    versionConstraint: this.versionConstraint,
   ).._u = this._u;
 }
 
@@ -283,7 +251,6 @@ final class EngineTarget_mutable implements EngineTarget_orMutable {
 
 sealed class SupportedEngine_orMutable {
   _core.String get engineId;
-  _core.Iterable<_core.int> get supportedMajorVersions;
 
   SupportedEngine toFrozen();
 }
@@ -292,35 +259,19 @@ sealed class SupportedEngine_orMutable {
 final class SupportedEngine implements SupportedEngine_orMutable {
   @_core.override
   final _core.String engineId;
-  @_core.override
-  final _core.Iterable<_core.int> supportedMajorVersions;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory SupportedEngine({
-    required _core.String engineId,
-    required _core.Iterable<_core.int> supportedMajorVersions,
-  }) => SupportedEngine._(
-    engineId,
-    _skir.internal__frozenCopy(supportedMajorVersions),
-  );
+  factory SupportedEngine({required _core.String engineId}) =>
+      SupportedEngine._(engineId);
 
-  SupportedEngine._(
-    this.engineId,
-    this.supportedMajorVersions,
-  );
+  SupportedEngine._(this.engineId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SupportedEngine._(
-    "",
-    _skir.KeyedIterable.empty,
-  );
+  static final defaultInstance = SupportedEngine._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SupportedEngine_mutable mutable() => SupportedEngine_mutable._(
-    "",
-    _skir.KeyedIterable.empty,
-  );
+  static SupportedEngine_mutable mutable() => SupportedEngine_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -328,31 +279,30 @@ final class SupportedEngine implements SupportedEngine_orMutable {
   SupportedEngine toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SupportedEngine_mutable toMutable() => SupportedEngine_mutable._(
-    this.engineId,
-    this.supportedMajorVersions,
-  );
+  SupportedEngine_mutable toMutable() =>
+      SupportedEngine_mutable._(this.engineId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SupportedEngine) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.engineId,
-    this.supportedMajorVersions,
-  ];
+  _core.List get _equality_proxy => [this.engineId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SupportedEngine` instances.
-  static _skir.StructSerializer<SupportedEngine, SupportedEngine_mutable> get serializer {
+  static _skir.StructSerializer<SupportedEngine, SupportedEngine_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "engine_id",
@@ -362,17 +312,6 @@ final class SupportedEngine implements SupportedEngine_orMutable {
         "",
         (it) => it.engineId,
         (it, v) => it.engineId = v,
-      );
-      _serializerBuilder.addField(
-        "supported_major_versions",
-        "supportedMajorVersions",
-        1,
-        _skir.Serializers.iterable(
-          _skir.Serializers.int32,
-        ),
-        "",
-        (it) => it.supportedMajorVersions,
-        (it, v) => it.supportedMajorVersions = v,
       );
       _serializerBuilder.finalize();
     }
@@ -393,31 +332,14 @@ final class SupportedEngine implements SupportedEngine_orMutable {
 /// Mutable version of [SupportedEngine].
 final class SupportedEngine_mutable implements SupportedEngine_orMutable {
   _core.String engineId;
-  _core.Iterable<_core.int> supportedMajorVersions;
   _skir.internal__UnrecognizedFields? _u;
 
-  SupportedEngine_mutable._(
-    this.engineId,
-    this.supportedMajorVersions,
-  );
-
-  /// If the value of [supportedMajorVersions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [supportedMajorVersions] and returns it.
-  _core.List<_core.int> get mutableSupportedMajorVersions {
-    final value = this.supportedMajorVersions;
-    if (value is _skir.internal__MutableList<_core.int>) {
-      return value;
-    } else {
-      return this.supportedMajorVersions = _skir.internal__MutableList([...value]);
-    }
-  }
+  SupportedEngine_mutable._(this.engineId);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SupportedEngine toFrozen() => SupportedEngine(
-    engineId: this.engineId,
-    supportedMajorVersions: this.supportedMajorVersions,
-  ).._u = this._u;
+  SupportedEngine toFrozen() =>
+      SupportedEngine(engineId: this.engineId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -468,20 +390,8 @@ sealed class HostRuntimeStatus {
         "",
         reconciling,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "active",
-        "active",
-        "",
-        active,
-      );
-      _serializerBuilder.addConstantVariant(
-        4,
-        "failed",
-        "failed",
-        "",
-        failed,
-      );
+      _serializerBuilder.addConstantVariant(3, "active", "active", "", active);
+      _serializerBuilder.addConstantVariant(4, "failed", "failed", "", failed);
       _serializerBuilder.addConstantVariant(
         5,
         "drifted",
@@ -494,15 +404,16 @@ sealed class HostRuntimeStatus {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:HostRuntimeStatus",
-    doc: "",
-    unknownInstance: HostRuntimeStatus_unknown._instance,
-    enumInstance: HostRuntimeStatus.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: HostRuntimeStatus_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:HostRuntimeStatus",
+        doc: "",
+        unknownInstance: HostRuntimeStatus_unknown._instance,
+        enumInstance: HostRuntimeStatus.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: HostRuntimeStatus_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `HostRuntimeStatus`.
@@ -534,7 +445,8 @@ final class HostRuntimeStatus_unknown implements HostRuntimeStatus {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HostRuntimeStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HostRuntimeStatus.serializer);
 }
 
 enum _HostRuntimeStatus_consts implements HostRuntimeStatus {
@@ -550,7 +462,8 @@ enum _HostRuntimeStatus_consts implements HostRuntimeStatus {
   const _HostRuntimeStatus_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, HostRuntimeStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, HostRuntimeStatus.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -579,17 +492,9 @@ final class HostRuntimeState implements HostRuntimeState_orMutable {
     required HostRuntimeStatus status,
     required _core.String? message,
     required _core.DateTime updatedAt,
-  }) => HostRuntimeState._(
-    status,
-    message,
-    updatedAt.toUtc(),
-  );
+  }) => HostRuntimeState._(status, message, updatedAt.toUtc());
 
-  HostRuntimeState._(
-    this.status,
-    this.message,
-    this.updatedAt,
-  );
+  HostRuntimeState._(this.status, this.message, this.updatedAt);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HostRuntimeState._(
@@ -612,33 +517,30 @@ final class HostRuntimeState implements HostRuntimeState_orMutable {
   HostRuntimeState toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HostRuntimeState_mutable toMutable() => HostRuntimeState_mutable._(
-    this.status,
-    this.message,
-    this.updatedAt,
-  );
+  HostRuntimeState_mutable toMutable() =>
+      HostRuntimeState_mutable._(this.status, this.message, this.updatedAt);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HostRuntimeState) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.status,
-    this.message,
-    this.updatedAt,
-  ];
+  _core.List get _equality_proxy => [this.status, this.message, this.updatedAt];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HostRuntimeState` instances.
-  static _skir.StructSerializer<HostRuntimeState, HostRuntimeState_mutable> get serializer {
+  static _skir.StructSerializer<HostRuntimeState, HostRuntimeState_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "status",
@@ -653,9 +555,7 @@ final class HostRuntimeState implements HostRuntimeState_orMutable {
         "message",
         "message",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.message,
         (it, v) => it.message = v,
@@ -692,11 +592,7 @@ final class HostRuntimeState_mutable implements HostRuntimeState_orMutable {
   _core.DateTime updatedAt;
   _skir.internal__UnrecognizedFields? _u;
 
-  HostRuntimeState_mutable._(
-    this.status,
-    this.message,
-    this.updatedAt,
-  );
+  HostRuntimeState_mutable._(this.status, this.message, this.updatedAt);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -729,7 +625,8 @@ final class HostRuntimeState_mutable implements HostRuntimeState_orMutable {
 sealed class ChildRuntimeStatus {
   /// Constant indicating an unknown `ChildRuntimeStatus`.
   /// Default value for fields of type `ChildRuntimeStatus`.
-  static const ChildRuntimeStatus unknown = ChildRuntimeStatus_unknown._instance;
+  static const ChildRuntimeStatus unknown =
+      ChildRuntimeStatus_unknown._instance;
 
   static const absent = _ChildRuntimeStatus_consts.absentConst;
   static const staging = _ChildRuntimeStatus_consts.stagingConst;
@@ -745,13 +642,7 @@ sealed class ChildRuntimeStatus {
   /// Serializer for `ChildRuntimeStatus` instances.
   static _skir.EnumSerializer<ChildRuntimeStatus> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "absent",
-        "absent",
-        "",
-        absent,
-      );
+      _serializerBuilder.addConstantVariant(1, "absent", "absent", "", absent);
       _serializerBuilder.addConstantVariant(
         2,
         "staging",
@@ -759,13 +650,7 @@ sealed class ChildRuntimeStatus {
         "",
         staging,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "active",
-        "active",
-        "",
-        active,
-      );
+      _serializerBuilder.addConstantVariant(3, "active", "active", "", active);
       _serializerBuilder.addConstantVariant(
         4,
         "quiescing",
@@ -773,13 +658,7 @@ sealed class ChildRuntimeStatus {
         "",
         quiescing,
       );
-      _serializerBuilder.addConstantVariant(
-        5,
-        "failed",
-        "failed",
-        "",
-        failed,
-      );
+      _serializerBuilder.addConstantVariant(5, "failed", "failed", "", failed);
       _serializerBuilder.addConstantVariant(
         6,
         "rolled_back",
@@ -799,15 +678,16 @@ sealed class ChildRuntimeStatus {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:ChildRuntimeStatus",
-    doc: "",
-    unknownInstance: ChildRuntimeStatus_unknown._instance,
-    enumInstance: ChildRuntimeStatus.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ChildRuntimeStatus_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:ChildRuntimeStatus",
+        doc: "",
+        unknownInstance: ChildRuntimeStatus_unknown._instance,
+        enumInstance: ChildRuntimeStatus.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ChildRuntimeStatus_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ChildRuntimeStatus`.
@@ -841,7 +721,8 @@ final class ChildRuntimeStatus_unknown implements ChildRuntimeStatus {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ChildRuntimeStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ChildRuntimeStatus.serializer);
 }
 
 enum _ChildRuntimeStatus_consts implements ChildRuntimeStatus {
@@ -859,7 +740,8 @@ enum _ChildRuntimeStatus_consts implements ChildRuntimeStatus {
   const _ChildRuntimeStatus_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ChildRuntimeStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ChildRuntimeStatus.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -940,7 +822,10 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ChildRuntimeState) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -957,7 +842,8 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ChildRuntimeState` instances.
-  static _skir.StructSerializer<ChildRuntimeState, ChildRuntimeState_mutable> get serializer {
+  static _skir.StructSerializer<ChildRuntimeState, ChildRuntimeState_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "status",
@@ -972,9 +858,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
         "active_artifact_version",
         "activeArtifactVersion",
         1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.activeArtifactVersion,
         (it, v) => it.activeArtifactVersion = v,
@@ -983,9 +867,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
         "message",
         "message",
         2,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
+        _skir.Serializers.optional(_skir.Serializers.string),
         "",
         (it) => it.message,
         (it, v) => it.message = v,
@@ -1154,7 +1036,10 @@ final class ServiceHost implements ServiceHost_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceHost) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1175,7 +1060,8 @@ final class ServiceHost implements ServiceHost_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceHost` instances.
-  static _skir.StructSerializer<ServiceHost, ServiceHost_mutable> get serializer {
+  static _skir.StructSerializer<ServiceHost, ServiceHost_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "host_id",
@@ -1226,9 +1112,7 @@ final class ServiceHost implements ServiceHost_orMutable {
         "supported_engines",
         "supportedEngines",
         5,
-        _skir.Serializers.iterable(
-          SupportedEngine.serializer,
-        ),
+        _skir.Serializers.iterable(SupportedEngine.serializer),
         "",
         (it) => it.supportedEngines,
         (it, v) => it.supportedEngines = v,
@@ -1297,7 +1181,8 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1308,7 +1193,8 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1381,15 +1267,9 @@ final class OwnerHost implements OwnerHost_orMutable {
   factory OwnerHost({
     required _lib_kernel_v1_record_id.RecordId_orMutable id,
     required _core.String name,
-  }) => OwnerHost._(
-    id.toFrozen(),
-    name,
-  );
+  }) => OwnerHost._(id.toFrozen(), name);
 
-  OwnerHost._(
-    this.id,
-    this.name,
-  );
+  OwnerHost._(this.id, this.name);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OwnerHost._(
@@ -1410,25 +1290,22 @@ final class OwnerHost implements OwnerHost_orMutable {
   OwnerHost toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OwnerHost_mutable toMutable() => OwnerHost_mutable._(
-    this.id,
-    this.name,
-  );
+  OwnerHost_mutable toMutable() => OwnerHost_mutable._(this.id, this.name);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OwnerHost) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.id,
-    this.name,
-  ];
+  _core.List get _equality_proxy => [this.id, this.name];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -1476,10 +1353,7 @@ final class OwnerHost_mutable implements OwnerHost_orMutable {
   _core.String name;
   _skir.internal__UnrecognizedFields? _u;
 
-  OwnerHost_mutable._(
-    this.id,
-    this.name,
-  );
+  OwnerHost_mutable._(this.id, this.name);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -1494,10 +1368,7 @@ final class OwnerHost_mutable implements OwnerHost_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  OwnerHost toFrozen() => OwnerHost(
-    id: this.id,
-    name: this.name,
-  ).._u = this._u;
+  OwnerHost toFrozen() => OwnerHost(id: this.id, name: this.name).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1509,7 +1380,6 @@ sealed class RealmInstance_orMutable {
   OwnerHost_orMutable get ownerHost;
   _core.int get revision;
   EngineTarget_orMutable get targetEngine;
-  ReconciledRevision_orMutable get manifestRevision;
   ChildRuntimeState_orMutable get state;
 
   RealmInstance toFrozen();
@@ -1526,8 +1396,6 @@ final class RealmInstance implements RealmInstance_orMutable {
   @_core.override
   final EngineTarget targetEngine;
   @_core.override
-  final ReconciledRevision manifestRevision;
-  @_core.override
   final ChildRuntimeState state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1536,14 +1404,12 @@ final class RealmInstance implements RealmInstance_orMutable {
     required OwnerHost_orMutable ownerHost,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
-    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => RealmInstance._(
     realmId.toFrozen(),
     ownerHost.toFrozen(),
     revision,
     targetEngine.toFrozen(),
-    manifestRevision.toFrozen(),
     state.toFrozen(),
   );
 
@@ -1552,7 +1418,6 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHost,
     this.revision,
     this.targetEngine,
-    this.manifestRevision,
     this.state,
   );
 
@@ -1562,7 +1427,6 @@ final class RealmInstance implements RealmInstance_orMutable {
     OwnerHost.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1573,7 +1437,6 @@ final class RealmInstance implements RealmInstance_orMutable {
     OwnerHost.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -1588,7 +1451,6 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHost,
     this.revision,
     this.targetEngine,
-    this.manifestRevision,
     this.state,
   );
 
@@ -1596,7 +1458,10 @@ final class RealmInstance implements RealmInstance_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmInstance) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1607,7 +1472,6 @@ final class RealmInstance implements RealmInstance_orMutable {
     this.ownerHost,
     this.revision,
     this.targetEngine,
-    this.manifestRevision,
     this.state,
   ];
 
@@ -1615,7 +1479,8 @@ final class RealmInstance implements RealmInstance_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RealmInstance` instances.
-  static _skir.StructSerializer<RealmInstance, RealmInstance_mutable> get serializer {
+  static _skir.StructSerializer<RealmInstance, RealmInstance_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -1654,18 +1519,9 @@ final class RealmInstance implements RealmInstance_orMutable {
         (it, v) => it.targetEngine = v,
       );
       _serializerBuilder.addField(
-        "manifest_revision",
-        "manifestRevision",
+        "state",
+        "state",
         4,
-        ReconciledRevision.serializer,
-        "",
-        (it) => it.manifestRevision,
-        (it, v) => it.manifestRevision = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        5,
         ChildRuntimeState.serializer,
         "",
         (it) => it.state,
@@ -1693,7 +1549,6 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
   OwnerHost_orMutable ownerHost;
   _core.int revision;
   EngineTarget_orMutable targetEngine;
-  ReconciledRevision_orMutable manifestRevision;
   ChildRuntimeState_orMutable state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1702,7 +1557,6 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     this.ownerHost,
     this.revision,
     this.targetEngine,
-    this.manifestRevision,
     this.state,
   );
 
@@ -1713,7 +1567,8 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1739,17 +1594,6 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
-  /// If the value of [manifestRevision] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
-  ReconciledRevision_mutable get mutableManifestRevision {
-    final value = this.manifestRevision;
-    if (value is ReconciledRevision_mutable) {
-      return value;
-    } else {
-      return this.manifestRevision = (value as ReconciledRevision).toMutable();
-    }
-  }
-
   /// If the value of [state] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
@@ -1768,7 +1612,6 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     ownerHost: this.ownerHost,
     revision: this.revision,
     targetEngine: this.targetEngine,
-    manifestRevision: this.manifestRevision,
     state: this.state,
   ).._u = this._u;
 }
@@ -1795,15 +1638,9 @@ final class RealmInfo implements RealmInfo_orMutable {
   factory RealmInfo({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
     required OwnerHost_orMutable ownerHost,
-  }) => RealmInfo._(
-    realmId.toFrozen(),
-    ownerHost.toFrozen(),
-  );
+  }) => RealmInfo._(realmId.toFrozen(), ownerHost.toFrozen());
 
-  RealmInfo._(
-    this.realmId,
-    this.ownerHost,
-  );
+  RealmInfo._(this.realmId, this.ownerHost);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmInfo._(
@@ -1824,25 +1661,23 @@ final class RealmInfo implements RealmInfo_orMutable {
   RealmInfo toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RealmInfo_mutable toMutable() => RealmInfo_mutable._(
-    this.realmId,
-    this.ownerHost,
-  );
+  RealmInfo_mutable toMutable() =>
+      RealmInfo_mutable._(this.realmId, this.ownerHost);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RealmInfo) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-    this.ownerHost,
-  ];
+  _core.List get _equality_proxy => [this.realmId, this.ownerHost];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -1890,10 +1725,7 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
   OwnerHost_orMutable ownerHost;
   _skir.internal__UnrecognizedFields? _u;
 
-  RealmInfo_mutable._(
-    this.realmId,
-    this.ownerHost,
-  );
+  RealmInfo_mutable._(this.realmId, this.ownerHost);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -1902,7 +1734,8 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -1919,10 +1752,8 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RealmInfo toFrozen() => RealmInfo(
-    realmId: this.realmId,
-    ownerHost: this.ownerHost,
-  ).._u = this._u;
+  RealmInfo toFrozen() =>
+      RealmInfo(realmId: this.realmId, ownerHost: this.ownerHost).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1935,7 +1766,6 @@ sealed class EngineInstance_orMutable {
   RealmInfo_orMutable get realm;
   _core.int get revision;
   EngineTarget_orMutable get target;
-  ReconciledRevision_orMutable get manifestRevision;
   ChildRuntimeState_orMutable get state;
 
   EngineInstance toFrozen();
@@ -1954,8 +1784,6 @@ final class EngineInstance implements EngineInstance_orMutable {
   @_core.override
   final EngineTarget target;
   @_core.override
-  final ReconciledRevision manifestRevision;
-  @_core.override
   final ChildRuntimeState state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1965,7 +1793,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     required RealmInfo_orMutable realm,
     required _core.int revision,
     required EngineTarget_orMutable target,
-    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => EngineInstance._(
     engineId.toFrozen(),
@@ -1973,7 +1800,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     realm.toFrozen(),
     revision,
     target.toFrozen(),
-    manifestRevision.toFrozen(),
     state.toFrozen(),
   );
 
@@ -1983,7 +1809,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realm,
     this.revision,
     this.target,
-    this.manifestRevision,
     this.state,
   );
 
@@ -1994,7 +1819,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     RealmInfo.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -2006,7 +1830,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     RealmInfo.defaultInstance,
     0,
     EngineTarget.defaultInstance,
-    ReconciledRevision.defaultInstance,
     ChildRuntimeState.defaultInstance,
   );
 
@@ -2022,7 +1845,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realm,
     this.revision,
     this.target,
-    this.manifestRevision,
     this.state,
   );
 
@@ -2030,7 +1852,10 @@ final class EngineInstance implements EngineInstance_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EngineInstance) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2042,7 +1867,6 @@ final class EngineInstance implements EngineInstance_orMutable {
     this.realm,
     this.revision,
     this.target,
-    this.manifestRevision,
     this.state,
   ];
 
@@ -2050,7 +1874,8 @@ final class EngineInstance implements EngineInstance_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EngineInstance` instances.
-  static _skir.StructSerializer<EngineInstance, EngineInstance_mutable> get serializer {
+  static _skir.StructSerializer<EngineInstance, EngineInstance_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "engine_id",
@@ -2098,18 +1923,9 @@ final class EngineInstance implements EngineInstance_orMutable {
         (it, v) => it.target = v,
       );
       _serializerBuilder.addField(
-        "manifest_revision",
-        "manifestRevision",
+        "state",
+        "state",
         5,
-        ReconciledRevision.serializer,
-        "",
-        (it) => it.manifestRevision,
-        (it, v) => it.manifestRevision = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        6,
         ChildRuntimeState.serializer,
         "",
         (it) => it.state,
@@ -2138,7 +1954,6 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
   RealmInfo_orMutable realm;
   _core.int revision;
   EngineTarget_orMutable target;
-  ReconciledRevision_orMutable manifestRevision;
   ChildRuntimeState_orMutable state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -2148,7 +1963,6 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     this.realm,
     this.revision,
     this.target,
-    this.manifestRevision,
     this.state,
   );
 
@@ -2159,7 +1973,8 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.engineId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.engineId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -2196,17 +2011,6 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [manifestRevision] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
-  ReconciledRevision_mutable get mutableManifestRevision {
-    final value = this.manifestRevision;
-    if (value is ReconciledRevision_mutable) {
-      return value;
-    } else {
-      return this.manifestRevision = (value as ReconciledRevision).toMutable();
-    }
-  }
-
   /// If the value of [state] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
@@ -2226,7 +2030,6 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     realm: this.realm,
     revision: this.revision,
     target: this.target,
-    manifestRevision: this.manifestRevision,
     state: this.state,
   ).._u = this._u;
 }
@@ -2236,26 +2039,23 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class HostedRealmConfiguration_orMutable {
-  EngineTarget_orMutable get targetEngine;
+  EngineTarget_orMutable get primaryEngine;
 
   HostedRealmConfiguration toFrozen();
 }
 
 /// Deeply immutable.
-final class HostedRealmConfiguration implements HostedRealmConfiguration_orMutable {
+final class HostedRealmConfiguration
+    implements HostedRealmConfiguration_orMutable {
   @_core.override
-  final EngineTarget targetEngine;
+  final EngineTarget primaryEngine;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HostedRealmConfiguration({
-    required EngineTarget_orMutable targetEngine,
-  }) => HostedRealmConfiguration._(
-    targetEngine.toFrozen(),
-  );
+    required EngineTarget_orMutable primaryEngine,
+  }) => HostedRealmConfiguration._(primaryEngine.toFrozen());
 
-  HostedRealmConfiguration._(
-    this.targetEngine,
-  );
+  HostedRealmConfiguration._(this.primaryEngine);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HostedRealmConfiguration._(
@@ -2264,9 +2064,8 @@ final class HostedRealmConfiguration implements HostedRealmConfiguration_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HostedRealmConfiguration_mutable mutable() => HostedRealmConfiguration_mutable._(
-    EngineTarget.defaultInstance,
-  );
+  static HostedRealmConfiguration_mutable mutable() =>
+      HostedRealmConfiguration_mutable._(EngineTarget.defaultInstance);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2274,38 +2073,42 @@ final class HostedRealmConfiguration implements HostedRealmConfiguration_orMutab
   HostedRealmConfiguration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HostedRealmConfiguration_mutable toMutable() => HostedRealmConfiguration_mutable._(
-    this.targetEngine,
-  );
+  HostedRealmConfiguration_mutable toMutable() =>
+      HostedRealmConfiguration_mutable._(this.primaryEngine);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HostedRealmConfiguration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.targetEngine,
-  ];
+  _core.List get _equality_proxy => [this.primaryEngine];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HostedRealmConfiguration` instances.
-  static _skir.StructSerializer<HostedRealmConfiguration, HostedRealmConfiguration_mutable> get serializer {
+  static _skir.StructSerializer<
+    HostedRealmConfiguration,
+    HostedRealmConfiguration_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "target_engine",
-        "targetEngine",
+        "primary_engine",
+        "primaryEngine",
         0,
         EngineTarget.serializer,
         "",
-        (it) => it.targetEngine,
-        (it, v) => it.targetEngine = v,
+        (it) => it.primaryEngine,
+        (it, v) => it.primaryEngine = v,
       );
       _serializerBuilder.finalize();
     }
@@ -2324,30 +2127,28 @@ final class HostedRealmConfiguration implements HostedRealmConfiguration_orMutab
 }
 
 /// Mutable version of [HostedRealmConfiguration].
-final class HostedRealmConfiguration_mutable implements HostedRealmConfiguration_orMutable {
-  EngineTarget_orMutable targetEngine;
+final class HostedRealmConfiguration_mutable
+    implements HostedRealmConfiguration_orMutable {
+  EngineTarget_orMutable primaryEngine;
   _skir.internal__UnrecognizedFields? _u;
 
-  HostedRealmConfiguration_mutable._(
-    this.targetEngine,
-  );
+  HostedRealmConfiguration_mutable._(this.primaryEngine);
 
-  /// If the value of [targetEngine] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [targetEngine] and returns it.
-  EngineTarget_mutable get mutableTargetEngine {
-    final value = this.targetEngine;
+  /// If the value of [primaryEngine] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [primaryEngine] and returns it.
+  EngineTarget_mutable get mutablePrimaryEngine {
+    final value = this.primaryEngine;
     if (value is EngineTarget_mutable) {
       return value;
     } else {
-      return this.targetEngine = (value as EngineTarget).toMutable();
+      return this.primaryEngine = (value as EngineTarget).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  HostedRealmConfiguration toFrozen() => HostedRealmConfiguration(
-    targetEngine: this.targetEngine,
-  ).._u = this._u;
+  HostedRealmConfiguration toFrozen() =>
+      HostedRealmConfiguration(primaryEngine: this.primaryEngine).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2361,20 +2162,17 @@ sealed class EngineRealmSelection_ExistingRealm_orMutable {
 }
 
 /// Deeply immutable.
-final class EngineRealmSelection_ExistingRealm implements EngineRealmSelection_ExistingRealm_orMutable {
+final class EngineRealmSelection_ExistingRealm
+    implements EngineRealmSelection_ExistingRealm_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId realmId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EngineRealmSelection_ExistingRealm({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => EngineRealmSelection_ExistingRealm._(
-    realmId.toFrozen(),
-  );
+  }) => EngineRealmSelection_ExistingRealm._(realmId.toFrozen());
 
-  EngineRealmSelection_ExistingRealm._(
-    this.realmId,
-  );
+  EngineRealmSelection_ExistingRealm._(this.realmId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EngineRealmSelection_ExistingRealm._(
@@ -2383,9 +2181,10 @@ final class EngineRealmSelection_ExistingRealm implements EngineRealmSelection_E
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EngineRealmSelection_ExistingRealm_mutable mutable() => EngineRealmSelection_ExistingRealm_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static EngineRealmSelection_ExistingRealm_mutable mutable() =>
+      EngineRealmSelection_ExistingRealm_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2393,29 +2192,33 @@ final class EngineRealmSelection_ExistingRealm implements EngineRealmSelection_E
   EngineRealmSelection_ExistingRealm toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EngineRealmSelection_ExistingRealm_mutable toMutable() => EngineRealmSelection_ExistingRealm_mutable._(
-    this.realmId,
-  );
+  EngineRealmSelection_ExistingRealm_mutable toMutable() =>
+      EngineRealmSelection_ExistingRealm_mutable._(this.realmId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EngineRealmSelection_ExistingRealm) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-  ];
+  _core.List get _equality_proxy => [this.realmId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EngineRealmSelection_ExistingRealm` instances.
-  static _skir.StructSerializer<EngineRealmSelection_ExistingRealm, EngineRealmSelection_ExistingRealm_mutable> get serializer {
+  static _skir.StructSerializer<
+    EngineRealmSelection_ExistingRealm,
+    EngineRealmSelection_ExistingRealm_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -2443,13 +2246,12 @@ final class EngineRealmSelection_ExistingRealm implements EngineRealmSelection_E
 }
 
 /// Mutable version of [EngineRealmSelection_ExistingRealm].
-final class EngineRealmSelection_ExistingRealm_mutable implements EngineRealmSelection_ExistingRealm_orMutable {
+final class EngineRealmSelection_ExistingRealm_mutable
+    implements EngineRealmSelection_ExistingRealm_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _skir.internal__UnrecognizedFields? _u;
 
-  EngineRealmSelection_ExistingRealm_mutable._(
-    this.realmId,
-  );
+  EngineRealmSelection_ExistingRealm_mutable._(this.realmId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -2458,15 +2260,15 @@ final class EngineRealmSelection_ExistingRealm_mutable implements EngineRealmSel
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EngineRealmSelection_ExistingRealm toFrozen() => EngineRealmSelection_ExistingRealm(
-    realmId: this.realmId,
-  ).._u = this._u;
+  EngineRealmSelection_ExistingRealm toFrozen() =>
+      EngineRealmSelection_ExistingRealm(realmId: this.realmId).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2486,22 +2288,21 @@ final class EngineRealmSelection_ExistingRealm_mutable implements EngineRealmSel
 sealed class EngineRealmSelection {
   /// Constant indicating an unknown `EngineRealmSelection`.
   /// Default value for fields of type `EngineRealmSelection`.
-  static const EngineRealmSelection unknown = EngineRealmSelection_unknown._instance;
+  static const EngineRealmSelection unknown =
+      EngineRealmSelection_unknown._instance;
 
   static const hostedRealm = _EngineRealmSelection_consts.hostedRealmConst;
 
   /// Create a 'existing_realm' variant wrapping around the given value.
   factory EngineRealmSelection.wrapExistingRealm(
-    EngineRealmSelection_ExistingRealm value
+    EngineRealmSelection_ExistingRealm value,
   ) => EngineRealmSelection_existingRealmWrapper._(value);
 
   /// Same as `wrapExistingRealm(EngineRealmSelection_ExistingRealm(...))`.
   factory EngineRealmSelection.createExistingRealm({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
   }) => EngineRealmSelection.wrapExistingRealm(
-    EngineRealmSelection_ExistingRealm(
-      realmId: realmId,
-    )
+    EngineRealmSelection_ExistingRealm(realmId: realmId),
   );
 
   /// Returns the kind of variant held by this EngineRealmSelection.
@@ -2532,15 +2333,16 @@ sealed class EngineRealmSelection {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:EngineRealmSelection",
-    doc: "",
-    unknownInstance: EngineRealmSelection_unknown._instance,
-    enumInstance: EngineRealmSelection.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: EngineRealmSelection_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:EngineRealmSelection",
+        doc: "",
+        unknownInstance: EngineRealmSelection_unknown._instance,
+        enumInstance: EngineRealmSelection.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: EngineRealmSelection_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `EngineRealmSelection`.
@@ -2569,7 +2371,8 @@ final class EngineRealmSelection_unknown implements EngineRealmSelection {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EngineRealmSelection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EngineRealmSelection.serializer);
 }
 
 enum _EngineRealmSelection_consts implements EngineRealmSelection {
@@ -2581,7 +2384,8 @@ enum _EngineRealmSelection_consts implements EngineRealmSelection {
   const _EngineRealmSelection_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EngineRealmSelection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EngineRealmSelection.serializer);
 }
 
 sealed class _EngineRealmSelection_wrapper implements EngineRealmSelection {
@@ -2597,16 +2401,19 @@ sealed class _EngineRealmSelection_wrapper implements EngineRealmSelection {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EngineRealmSelection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EngineRealmSelection.serializer);
 }
 
-final class EngineRealmSelection_existingRealmWrapper extends _EngineRealmSelection_wrapper {
+final class EngineRealmSelection_existingRealmWrapper
+    extends _EngineRealmSelection_wrapper {
   final EngineRealmSelection_ExistingRealm value;
 
   EngineRealmSelection_existingRealmWrapper._(this.value);
 
   @_core.override
-  EngineRealmSelection_kind get kind => EngineRealmSelection_kind.existingRealmWrapper;
+  EngineRealmSelection_kind get kind =>
+      EngineRealmSelection_kind.existingRealmWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2621,7 +2428,8 @@ sealed class HostedEngineConfiguration_orMutable {
 }
 
 /// Deeply immutable.
-final class HostedEngineConfiguration implements HostedEngineConfiguration_orMutable {
+final class HostedEngineConfiguration
+    implements HostedEngineConfiguration_orMutable {
   @_core.override
   final EngineTarget target;
   @_core.override
@@ -2631,15 +2439,9 @@ final class HostedEngineConfiguration implements HostedEngineConfiguration_orMut
   factory HostedEngineConfiguration({
     required EngineTarget_orMutable target,
     required EngineRealmSelection realm,
-  }) => HostedEngineConfiguration._(
-    target.toFrozen(),
-    realm,
-  );
+  }) => HostedEngineConfiguration._(target.toFrozen(), realm);
 
-  HostedEngineConfiguration._(
-    this.target,
-    this.realm,
-  );
+  HostedEngineConfiguration._(this.target, this.realm);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HostedEngineConfiguration._(
@@ -2649,10 +2451,11 @@ final class HostedEngineConfiguration implements HostedEngineConfiguration_orMut
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HostedEngineConfiguration_mutable mutable() => HostedEngineConfiguration_mutable._(
-    EngineTarget.defaultInstance,
-    EngineRealmSelection.unknown,
-  );
+  static HostedEngineConfiguration_mutable mutable() =>
+      HostedEngineConfiguration_mutable._(
+        EngineTarget.defaultInstance,
+        EngineRealmSelection.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2660,31 +2463,33 @@ final class HostedEngineConfiguration implements HostedEngineConfiguration_orMut
   HostedEngineConfiguration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HostedEngineConfiguration_mutable toMutable() => HostedEngineConfiguration_mutable._(
-    this.target,
-    this.realm,
-  );
+  HostedEngineConfiguration_mutable toMutable() =>
+      HostedEngineConfiguration_mutable._(this.target, this.realm);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HostedEngineConfiguration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.realm,
-  ];
+  _core.List get _equality_proxy => [this.target, this.realm];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HostedEngineConfiguration` instances.
-  static _skir.StructSerializer<HostedEngineConfiguration, HostedEngineConfiguration_mutable> get serializer {
+  static _skir.StructSerializer<
+    HostedEngineConfiguration,
+    HostedEngineConfiguration_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -2721,15 +2526,13 @@ final class HostedEngineConfiguration implements HostedEngineConfiguration_orMut
 }
 
 /// Mutable version of [HostedEngineConfiguration].
-final class HostedEngineConfiguration_mutable implements HostedEngineConfiguration_orMutable {
+final class HostedEngineConfiguration_mutable
+    implements HostedEngineConfiguration_orMutable {
   EngineTarget_orMutable target;
   EngineRealmSelection realm;
   _skir.internal__UnrecognizedFields? _u;
 
-  HostedEngineConfiguration_mutable._(
-    this.target,
-    this.realm,
-  );
+  HostedEngineConfiguration_mutable._(this.target, this.realm);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -2744,10 +2547,9 @@ final class HostedEngineConfiguration_mutable implements HostedEngineConfigurati
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  HostedEngineConfiguration toFrozen() => HostedEngineConfiguration(
-    target: this.target,
-    realm: this.realm,
-  ).._u = this._u;
+  HostedEngineConfiguration toFrozen() =>
+      HostedEngineConfiguration(target: this.target, realm: this.realm)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2756,44 +2558,37 @@ final class HostedEngineConfiguration_mutable implements HostedEngineConfigurati
 
 sealed class HostExecutionConfiguration_orMutable {
   HostedRealmConfiguration_orMutable? get realm;
-  HostedEngineConfiguration_orMutable? get engine;
+  HostedEngineConfiguration_orMutable? get primaryEngine;
 
   HostExecutionConfiguration toFrozen();
 }
 
 /// Deeply immutable.
-final class HostExecutionConfiguration implements HostExecutionConfiguration_orMutable {
+final class HostExecutionConfiguration
+    implements HostExecutionConfiguration_orMutable {
   @_core.override
   final HostedRealmConfiguration? realm;
   @_core.override
-  final HostedEngineConfiguration? engine;
+  final HostedEngineConfiguration? primaryEngine;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HostExecutionConfiguration({
     required HostedRealmConfiguration_orMutable? realm,
-    required HostedEngineConfiguration_orMutable? engine,
+    required HostedEngineConfiguration_orMutable? primaryEngine,
   }) => HostExecutionConfiguration._(
     (realm != null) ? realm.toFrozen() : null,
-    (engine != null) ? engine.toFrozen() : null,
+    (primaryEngine != null) ? primaryEngine.toFrozen() : null,
   );
 
-  HostExecutionConfiguration._(
-    this.realm,
-    this.engine,
-  );
+  HostExecutionConfiguration._(this.realm, this.primaryEngine);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = HostExecutionConfiguration._(
-    null,
-    null,
-  );
+  static final defaultInstance = HostExecutionConfiguration._(null, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static HostExecutionConfiguration_mutable mutable() => HostExecutionConfiguration_mutable._(
-    null,
-    null,
-  );
+  static HostExecutionConfiguration_mutable mutable() =>
+      HostExecutionConfiguration_mutable._(null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2801,53 +2596,51 @@ final class HostExecutionConfiguration implements HostExecutionConfiguration_orM
   HostExecutionConfiguration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  HostExecutionConfiguration_mutable toMutable() => HostExecutionConfiguration_mutable._(
-    this.realm,
-    this.engine,
-  );
+  HostExecutionConfiguration_mutable toMutable() =>
+      HostExecutionConfiguration_mutable._(this.realm, this.primaryEngine);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! HostExecutionConfiguration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realm,
-    this.engine,
-  ];
+  _core.List get _equality_proxy => [this.realm, this.primaryEngine];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `HostExecutionConfiguration` instances.
-  static _skir.StructSerializer<HostExecutionConfiguration, HostExecutionConfiguration_mutable> get serializer {
+  static _skir.StructSerializer<
+    HostExecutionConfiguration,
+    HostExecutionConfiguration_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm",
         "realm",
         0,
-        _skir.Serializers.optional(
-          HostedRealmConfiguration.serializer,
-        ),
+        _skir.Serializers.optional(HostedRealmConfiguration.serializer),
         "",
         (it) => it.realm,
         (it, v) => it.realm = v,
       );
       _serializerBuilder.addField(
-        "engine",
-        "engine",
+        "primary_engine",
+        "primaryEngine",
         1,
-        _skir.Serializers.optional(
-          HostedEngineConfiguration.serializer,
-        ),
+        _skir.Serializers.optional(HostedEngineConfiguration.serializer),
         "",
-        (it) => it.engine,
-        (it, v) => it.engine = v,
+        (it) => it.primaryEngine,
+        (it, v) => it.primaryEngine = v,
       );
       _serializerBuilder.finalize();
     }
@@ -2866,21 +2659,19 @@ final class HostExecutionConfiguration implements HostExecutionConfiguration_orM
 }
 
 /// Mutable version of [HostExecutionConfiguration].
-final class HostExecutionConfiguration_mutable implements HostExecutionConfiguration_orMutable {
+final class HostExecutionConfiguration_mutable
+    implements HostExecutionConfiguration_orMutable {
   HostedRealmConfiguration_orMutable? realm;
-  HostedEngineConfiguration_orMutable? engine;
+  HostedEngineConfiguration_orMutable? primaryEngine;
   _skir.internal__UnrecognizedFields? _u;
 
-  HostExecutionConfiguration_mutable._(
-    this.realm,
-    this.engine,
-  );
+  HostExecutionConfiguration_mutable._(this.realm, this.primaryEngine);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   HostExecutionConfiguration toFrozen() => HostExecutionConfiguration(
     realm: this.realm,
-    engine: this.engine,
+    primaryEngine: this.primaryEngine,
   ).._u = this._u;
 }
 
@@ -2897,7 +2688,8 @@ sealed class ConfigureServiceHostRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostRequest implements ConfigureServiceHostRequest_orMutable {
+final class ConfigureServiceHostRequest
+    implements ConfigureServiceHostRequest_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId hostId;
   @_core.override
@@ -2931,11 +2723,12 @@ final class ConfigureServiceHostRequest implements ConfigureServiceHostRequest_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostRequest_mutable mutable() => ConfigureServiceHostRequest_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-    0,
-    HostExecutionConfiguration.defaultInstance,
-  );
+  static ConfigureServiceHostRequest_mutable mutable() =>
+      ConfigureServiceHostRequest_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+        0,
+        HostExecutionConfiguration.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2943,17 +2736,21 @@ final class ConfigureServiceHostRequest implements ConfigureServiceHostRequest_o
   ConfigureServiceHostRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostRequest_mutable toMutable() => ConfigureServiceHostRequest_mutable._(
-    this.hostId,
-    this.expectedRevision,
-    this.execution,
-  );
+  ConfigureServiceHostRequest_mutable toMutable() =>
+      ConfigureServiceHostRequest_mutable._(
+        this.hostId,
+        this.expectedRevision,
+        this.execution,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConfigureServiceHostRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2969,7 +2766,11 @@ final class ConfigureServiceHostRequest implements ConfigureServiceHostRequest_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostRequest` instances.
-  static _skir.StructSerializer<ConfigureServiceHostRequest, ConfigureServiceHostRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostRequest,
+    ConfigureServiceHostRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "host_id",
@@ -3015,7 +2816,8 @@ final class ConfigureServiceHostRequest implements ConfigureServiceHostRequest_o
 }
 
 /// Mutable version of [ConfigureServiceHostRequest].
-final class ConfigureServiceHostRequest_mutable implements ConfigureServiceHostRequest_orMutable {
+final class ConfigureServiceHostRequest_mutable
+    implements ConfigureServiceHostRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable hostId;
   _core.int expectedRevision;
   HostExecutionConfiguration_orMutable execution;
@@ -3034,7 +2836,8 @@ final class ConfigureServiceHostRequest_mutable implements ConfigureServiceHostR
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.hostId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
@@ -3071,7 +2874,8 @@ sealed class ConfigureServiceHostResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostResponse_Success implements ConfigureServiceHostResponse_Success_orMutable {
+final class ConfigureServiceHostResponse_Success
+    implements ConfigureServiceHostResponse_Success_orMutable {
   @_core.override
   final ServiceHost host;
   @_core.override
@@ -3090,11 +2894,7 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
     (engine != null) ? engine.toFrozen() : null,
   );
 
-  ConfigureServiceHostResponse_Success._(
-    this.host,
-    this.realm,
-    this.engine,
-  );
+  ConfigureServiceHostResponse_Success._(this.host, this.realm, this.engine);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConfigureServiceHostResponse_Success._(
@@ -3105,11 +2905,12 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_Success_mutable mutable() => ConfigureServiceHostResponse_Success_mutable._(
-    ServiceHost.defaultInstance,
-    null,
-    null,
-  );
+  static ConfigureServiceHostResponse_Success_mutable mutable() =>
+      ConfigureServiceHostResponse_Success_mutable._(
+        ServiceHost.defaultInstance,
+        null,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3117,33 +2918,37 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
   ConfigureServiceHostResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_Success_mutable toMutable() => ConfigureServiceHostResponse_Success_mutable._(
-    this.host,
-    this.realm,
-    this.engine,
-  );
+  ConfigureServiceHostResponse_Success_mutable toMutable() =>
+      ConfigureServiceHostResponse_Success_mutable._(
+        this.host,
+        this.realm,
+        this.engine,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConfigureServiceHostResponse_Success) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.host,
-    this.realm,
-    this.engine,
-  ];
+  _core.List get _equality_proxy => [this.host, this.realm, this.engine];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostResponse_Success` instances.
-  static _skir.StructSerializer<ConfigureServiceHostResponse_Success, ConfigureServiceHostResponse_Success_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostResponse_Success,
+    ConfigureServiceHostResponse_Success_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "host",
@@ -3158,9 +2963,7 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
         "realm",
         "realm",
         1,
-        _skir.Serializers.optional(
-          RealmInstance.serializer,
-        ),
+        _skir.Serializers.optional(RealmInstance.serializer),
         "",
         (it) => it.realm,
         (it, v) => it.realm = v,
@@ -3169,9 +2972,7 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
         "engine",
         "engine",
         2,
-        _skir.Serializers.optional(
-          EngineInstance.serializer,
-        ),
+        _skir.Serializers.optional(EngineInstance.serializer),
         "",
         (it) => it.engine,
         (it, v) => it.engine = v,
@@ -3186,14 +2987,16 @@ final class ConfigureServiceHostResponse_Success implements ConfigureServiceHost
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ConfigureServiceHostResponse_Success_mutable it) => it.toFrozen(),
+    toFrozen: (ConfigureServiceHostResponse_Success_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ConfigureServiceHostResponse_Success].
-final class ConfigureServiceHostResponse_Success_mutable implements ConfigureServiceHostResponse_Success_orMutable {
+final class ConfigureServiceHostResponse_Success_mutable
+    implements ConfigureServiceHostResponse_Success_orMutable {
   ServiceHost_orMutable host;
   RealmInstance_orMutable? realm;
   EngineInstance_orMutable? engine;
@@ -3218,11 +3021,12 @@ final class ConfigureServiceHostResponse_Success_mutable implements ConfigureSer
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConfigureServiceHostResponse_Success toFrozen() => ConfigureServiceHostResponse_Success(
-    host: this.host,
-    realm: this.realm,
-    engine: this.engine,
-  ).._u = this._u;
+  ConfigureServiceHostResponse_Success toFrozen() =>
+      ConfigureServiceHostResponse_Success(
+        host: this.host,
+        realm: this.realm,
+        engine: this.engine,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3236,20 +3040,17 @@ sealed class ConfigureServiceHostResponse_ConflictError_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostResponse_ConflictError implements ConfigureServiceHostResponse_ConflictError_orMutable {
+final class ConfigureServiceHostResponse_ConflictError
+    implements ConfigureServiceHostResponse_ConflictError_orMutable {
   @_core.override
   final ServiceHost actual;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConfigureServiceHostResponse_ConflictError({
     required ServiceHost_orMutable actual,
-  }) => ConfigureServiceHostResponse_ConflictError._(
-    actual.toFrozen(),
-  );
+  }) => ConfigureServiceHostResponse_ConflictError._(actual.toFrozen());
 
-  ConfigureServiceHostResponse_ConflictError._(
-    this.actual,
-  );
+  ConfigureServiceHostResponse_ConflictError._(this.actual);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConfigureServiceHostResponse_ConflictError._(
@@ -3258,9 +3059,10 @@ final class ConfigureServiceHostResponse_ConflictError implements ConfigureServi
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_ConflictError_mutable mutable() => ConfigureServiceHostResponse_ConflictError_mutable._(
-    ServiceHost.defaultInstance,
-  );
+  static ConfigureServiceHostResponse_ConflictError_mutable mutable() =>
+      ConfigureServiceHostResponse_ConflictError_mutable._(
+        ServiceHost.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3268,29 +3070,33 @@ final class ConfigureServiceHostResponse_ConflictError implements ConfigureServi
   ConfigureServiceHostResponse_ConflictError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_ConflictError_mutable toMutable() => ConfigureServiceHostResponse_ConflictError_mutable._(
-    this.actual,
-  );
+  ConfigureServiceHostResponse_ConflictError_mutable toMutable() =>
+      ConfigureServiceHostResponse_ConflictError_mutable._(this.actual);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConfigureServiceHostResponse_ConflictError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.actual,
-  ];
+  _core.List get _equality_proxy => [this.actual];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostResponse_ConflictError` instances.
-  static _skir.StructSerializer<ConfigureServiceHostResponse_ConflictError, ConfigureServiceHostResponse_ConflictError_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostResponse_ConflictError,
+    ConfigureServiceHostResponse_ConflictError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "actual",
@@ -3307,24 +3113,25 @@ final class ConfigureServiceHostResponse_ConflictError implements ConfigureServi
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.ConflictError",
+    recordId:
+        "service/v1/topology.skir:ConfigureServiceHostResponse.ConflictError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ConfigureServiceHostResponse_ConflictError_mutable it) => it.toFrozen(),
+    toFrozen: (ConfigureServiceHostResponse_ConflictError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ConfigureServiceHostResponse_ConflictError].
-final class ConfigureServiceHostResponse_ConflictError_mutable implements ConfigureServiceHostResponse_ConflictError_orMutable {
+final class ConfigureServiceHostResponse_ConflictError_mutable
+    implements ConfigureServiceHostResponse_ConflictError_orMutable {
   ServiceHost_orMutable actual;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConfigureServiceHostResponse_ConflictError_mutable._(
-    this.actual,
-  );
+  ConfigureServiceHostResponse_ConflictError_mutable._(this.actual);
 
   /// If the value of [actual] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
@@ -3339,9 +3146,9 @@ final class ConfigureServiceHostResponse_ConflictError_mutable implements Config
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConfigureServiceHostResponse_ConflictError toFrozen() => ConfigureServiceHostResponse_ConflictError(
-    actual: this.actual,
-  ).._u = this._u;
+  ConfigureServiceHostResponse_ConflictError toFrozen() =>
+      ConfigureServiceHostResponse_ConflictError(actual: this.actual)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3355,31 +3162,28 @@ sealed class ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostResponse_InvalidConfigurationError implements ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
+final class ConfigureServiceHostResponse_InvalidConfigurationError
+    implements
+        ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
   @_core.override
   final _core.String message;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConfigureServiceHostResponse_InvalidConfigurationError({
     required _core.String message,
-  }) => ConfigureServiceHostResponse_InvalidConfigurationError._(
-    message,
-  );
+  }) => ConfigureServiceHostResponse_InvalidConfigurationError._(message);
 
-  ConfigureServiceHostResponse_InvalidConfigurationError._(
-    this.message,
-  );
+  ConfigureServiceHostResponse_InvalidConfigurationError._(this.message);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ConfigureServiceHostResponse_InvalidConfigurationError._(
-    "",
-  );
+  static final defaultInstance =
+      ConfigureServiceHostResponse_InvalidConfigurationError._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_InvalidConfigurationError_mutable mutable() => ConfigureServiceHostResponse_InvalidConfigurationError_mutable._(
-    "",
-  );
+  static ConfigureServiceHostResponse_InvalidConfigurationError_mutable
+  mutable() =>
+      ConfigureServiceHostResponse_InvalidConfigurationError_mutable._("");
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3387,29 +3191,36 @@ final class ConfigureServiceHostResponse_InvalidConfigurationError implements Co
   ConfigureServiceHostResponse_InvalidConfigurationError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_InvalidConfigurationError_mutable toMutable() => ConfigureServiceHostResponse_InvalidConfigurationError_mutable._(
-    this.message,
-  );
+  ConfigureServiceHostResponse_InvalidConfigurationError_mutable toMutable() =>
+      ConfigureServiceHostResponse_InvalidConfigurationError_mutable._(
+        this.message,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ConfigureServiceHostResponse_InvalidConfigurationError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! ConfigureServiceHostResponse_InvalidConfigurationError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.message,
-  ];
+  _core.List get _equality_proxy => [this.message];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostResponse_InvalidConfigurationError` instances.
-  static _skir.StructSerializer<ConfigureServiceHostResponse_InvalidConfigurationError, ConfigureServiceHostResponse_InvalidConfigurationError_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostResponse_InvalidConfigurationError,
+    ConfigureServiceHostResponse_InvalidConfigurationError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "message",
@@ -3426,18 +3237,23 @@ final class ConfigureServiceHostResponse_InvalidConfigurationError implements Co
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidConfigurationError",
+    recordId:
+        "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidConfigurationError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ConfigureServiceHostResponse_InvalidConfigurationError_mutable it) => it.toFrozen(),
+    toFrozen:
+        (ConfigureServiceHostResponse_InvalidConfigurationError_mutable it) =>
+            it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ConfigureServiceHostResponse_InvalidConfigurationError].
-final class ConfigureServiceHostResponse_InvalidConfigurationError_mutable implements ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
+final class ConfigureServiceHostResponse_InvalidConfigurationError_mutable
+    implements
+        ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
   _core.String message;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -3447,9 +3263,10 @@ final class ConfigureServiceHostResponse_InvalidConfigurationError_mutable imple
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConfigureServiceHostResponse_InvalidConfigurationError toFrozen() => ConfigureServiceHostResponse_InvalidConfigurationError(
-    message: this.message,
-  ).._u = this._u;
+  ConfigureServiceHostResponse_InvalidConfigurationError toFrozen() =>
+      ConfigureServiceHostResponse_InvalidConfigurationError(
+        message: this.message,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3463,29 +3280,29 @@ sealed class ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostResponse_IncompatibleEngineError implements ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
+final class ConfigureServiceHostResponse_IncompatibleEngineError
+    implements ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
   @_core.override
   final EngineTarget target;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConfigureServiceHostResponse_IncompatibleEngineError({
     required EngineTarget_orMutable target,
-  }) => ConfigureServiceHostResponse_IncompatibleEngineError._(
-    target.toFrozen(),
-  );
+  }) =>
+      ConfigureServiceHostResponse_IncompatibleEngineError._(target.toFrozen());
 
-  ConfigureServiceHostResponse_IncompatibleEngineError._(
-    this.target,
-  );
+  ConfigureServiceHostResponse_IncompatibleEngineError._(this.target);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ConfigureServiceHostResponse_IncompatibleEngineError._(
-    EngineTarget.defaultInstance,
-  );
+  static final defaultInstance =
+      ConfigureServiceHostResponse_IncompatibleEngineError._(
+        EngineTarget.defaultInstance,
+      );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_IncompatibleEngineError_mutable mutable() => ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(
+  static ConfigureServiceHostResponse_IncompatibleEngineError_mutable
+  mutable() => ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(
     EngineTarget.defaultInstance,
   );
 
@@ -3495,29 +3312,36 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError implements Conf
   ConfigureServiceHostResponse_IncompatibleEngineError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_IncompatibleEngineError_mutable toMutable() => ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(
-    this.target,
-  );
+  ConfigureServiceHostResponse_IncompatibleEngineError_mutable toMutable() =>
+      ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(
+        this.target,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ConfigureServiceHostResponse_IncompatibleEngineError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    if (other is! ConfigureServiceHostResponse_IncompatibleEngineError)
+      return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-  ];
+  _core.List get _equality_proxy => [this.target];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostResponse_IncompatibleEngineError` instances.
-  static _skir.StructSerializer<ConfigureServiceHostResponse_IncompatibleEngineError, ConfigureServiceHostResponse_IncompatibleEngineError_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostResponse_IncompatibleEngineError,
+    ConfigureServiceHostResponse_IncompatibleEngineError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -3534,24 +3358,26 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError implements Conf
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.IncompatibleEngineError",
+    recordId:
+        "service/v1/topology.skir:ConfigureServiceHostResponse.IncompatibleEngineError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ConfigureServiceHostResponse_IncompatibleEngineError_mutable it) => it.toFrozen(),
+    toFrozen:
+        (ConfigureServiceHostResponse_IncompatibleEngineError_mutable it) =>
+            it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ConfigureServiceHostResponse_IncompatibleEngineError].
-final class ConfigureServiceHostResponse_IncompatibleEngineError_mutable implements ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
+final class ConfigureServiceHostResponse_IncompatibleEngineError_mutable
+    implements ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
   EngineTarget_orMutable target;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(
-    this.target,
-  );
+  ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(this.target);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -3566,9 +3392,9 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError_mutable impleme
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConfigureServiceHostResponse_IncompatibleEngineError toFrozen() => ConfigureServiceHostResponse_IncompatibleEngineError(
-    target: this.target,
-  ).._u = this._u;
+  ConfigureServiceHostResponse_IncompatibleEngineError toFrozen() =>
+      ConfigureServiceHostResponse_IncompatibleEngineError(target: this.target)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3582,31 +3408,30 @@ sealed class ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class ConfigureServiceHostResponse_RealmNotFoundError implements ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
+final class ConfigureServiceHostResponse_RealmNotFoundError
+    implements ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId realmId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConfigureServiceHostResponse_RealmNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-  }) => ConfigureServiceHostResponse_RealmNotFoundError._(
-    realmId.toFrozen(),
-  );
+  }) => ConfigureServiceHostResponse_RealmNotFoundError._(realmId.toFrozen());
 
-  ConfigureServiceHostResponse_RealmNotFoundError._(
-    this.realmId,
-  );
+  ConfigureServiceHostResponse_RealmNotFoundError._(this.realmId);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ConfigureServiceHostResponse_RealmNotFoundError._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static final defaultInstance =
+      ConfigureServiceHostResponse_RealmNotFoundError._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_RealmNotFoundError_mutable mutable() => ConfigureServiceHostResponse_RealmNotFoundError_mutable._(
-    _lib_kernel_v1_record_id.RecordId.defaultInstance,
-  );
+  static ConfigureServiceHostResponse_RealmNotFoundError_mutable mutable() =>
+      ConfigureServiceHostResponse_RealmNotFoundError_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3614,29 +3439,33 @@ final class ConfigureServiceHostResponse_RealmNotFoundError implements Configure
   ConfigureServiceHostResponse_RealmNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_RealmNotFoundError_mutable toMutable() => ConfigureServiceHostResponse_RealmNotFoundError_mutable._(
-    this.realmId,
-  );
+  ConfigureServiceHostResponse_RealmNotFoundError_mutable toMutable() =>
+      ConfigureServiceHostResponse_RealmNotFoundError_mutable._(this.realmId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ConfigureServiceHostResponse_RealmNotFoundError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.realmId,
-  ];
+  _core.List get _equality_proxy => [this.realmId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ConfigureServiceHostResponse_RealmNotFoundError` instances.
-  static _skir.StructSerializer<ConfigureServiceHostResponse_RealmNotFoundError, ConfigureServiceHostResponse_RealmNotFoundError_mutable> get serializer {
+  static _skir.StructSerializer<
+    ConfigureServiceHostResponse_RealmNotFoundError,
+    ConfigureServiceHostResponse_RealmNotFoundError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -3653,24 +3482,25 @@ final class ConfigureServiceHostResponse_RealmNotFoundError implements Configure
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.RealmNotFoundError",
+    recordId:
+        "service/v1/topology.skir:ConfigureServiceHostResponse.RealmNotFoundError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ConfigureServiceHostResponse_RealmNotFoundError_mutable it) => it.toFrozen(),
+    toFrozen: (ConfigureServiceHostResponse_RealmNotFoundError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ConfigureServiceHostResponse_RealmNotFoundError].
-final class ConfigureServiceHostResponse_RealmNotFoundError_mutable implements ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
+final class ConfigureServiceHostResponse_RealmNotFoundError_mutable
+    implements ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable realmId;
   _skir.internal__UnrecognizedFields? _u;
 
-  ConfigureServiceHostResponse_RealmNotFoundError_mutable._(
-    this.realmId,
-  );
+  ConfigureServiceHostResponse_RealmNotFoundError_mutable._(this.realmId);
 
   /// If the value of [realmId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
@@ -3679,15 +3509,16 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable implements C
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ConfigureServiceHostResponse_RealmNotFoundError toFrozen() => ConfigureServiceHostResponse_RealmNotFoundError(
-    realmId: this.realmId,
-  ).._u = this._u;
+  ConfigureServiceHostResponse_RealmNotFoundError toFrozen() =>
+      ConfigureServiceHostResponse_RealmNotFoundError(realmId: this.realmId)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3712,11 +3543,12 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable implements C
 sealed class ConfigureServiceHostResponse {
   /// Constant indicating an unknown `ConfigureServiceHostResponse`.
   /// Default value for fields of type `ConfigureServiceHostResponse`.
-  static const ConfigureServiceHostResponse unknown = ConfigureServiceHostResponse_unknown._instance;
+  static const ConfigureServiceHostResponse unknown =
+      ConfigureServiceHostResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapSuccess(
-    ConfigureServiceHostResponse_Success value
+    ConfigureServiceHostResponse_Success value,
   ) => ConfigureServiceHostResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(ConfigureServiceHostResponse_Success(...))`.
@@ -3729,68 +3561,60 @@ sealed class ConfigureServiceHostResponse {
       host: host,
       realm: realm,
       engine: engine,
-    )
+    ),
   );
 
   /// Create a 'conflict_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapConflictError(
-    ConfigureServiceHostResponse_ConflictError value
+    ConfigureServiceHostResponse_ConflictError value,
   ) => ConfigureServiceHostResponse_conflictErrorWrapper._(value);
 
   /// Same as `wrapConflictError(ConfigureServiceHostResponse_ConflictError(...))`.
   factory ConfigureServiceHostResponse.createConflictError({
     required ServiceHost_orMutable actual,
   }) => ConfigureServiceHostResponse.wrapConflictError(
-    ConfigureServiceHostResponse_ConflictError(
-      actual: actual,
-    )
+    ConfigureServiceHostResponse_ConflictError(actual: actual),
   );
 
   /// Create a 'invalid_configuration_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapInvalidConfigurationError(
-    ConfigureServiceHostResponse_InvalidConfigurationError value
+    ConfigureServiceHostResponse_InvalidConfigurationError value,
   ) => ConfigureServiceHostResponse_invalidConfigurationErrorWrapper._(value);
 
   /// Same as `wrapInvalidConfigurationError(ConfigureServiceHostResponse_InvalidConfigurationError(...))`.
   factory ConfigureServiceHostResponse.createInvalidConfigurationError({
     required _core.String message,
   }) => ConfigureServiceHostResponse.wrapInvalidConfigurationError(
-    ConfigureServiceHostResponse_InvalidConfigurationError(
-      message: message,
-    )
+    ConfigureServiceHostResponse_InvalidConfigurationError(message: message),
   );
 
   /// Create a 'incompatible_engine_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapIncompatibleEngineError(
-    ConfigureServiceHostResponse_IncompatibleEngineError value
+    ConfigureServiceHostResponse_IncompatibleEngineError value,
   ) => ConfigureServiceHostResponse_incompatibleEngineErrorWrapper._(value);
 
   /// Same as `wrapIncompatibleEngineError(ConfigureServiceHostResponse_IncompatibleEngineError(...))`.
   factory ConfigureServiceHostResponse.createIncompatibleEngineError({
     required EngineTarget_orMutable target,
   }) => ConfigureServiceHostResponse.wrapIncompatibleEngineError(
-    ConfigureServiceHostResponse_IncompatibleEngineError(
-      target: target,
-    )
+    ConfigureServiceHostResponse_IncompatibleEngineError(target: target),
   );
 
   /// Create a 'realm_not_found_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapRealmNotFoundError(
-    ConfigureServiceHostResponse_RealmNotFoundError value
+    ConfigureServiceHostResponse_RealmNotFoundError value,
   ) => ConfigureServiceHostResponse_realmNotFoundErrorWrapper._(value);
 
   /// Same as `wrapRealmNotFoundError(ConfigureServiceHostResponse_RealmNotFoundError(...))`.
   factory ConfigureServiceHostResponse.createRealmNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
   }) => ConfigureServiceHostResponse.wrapRealmNotFoundError(
-    ConfigureServiceHostResponse_RealmNotFoundError(
-      realmId: realmId,
-    )
+    ConfigureServiceHostResponse_RealmNotFoundError(realmId: realmId),
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value
+    _lib_kernel_v1_errors.InvalidRecordIdError value,
   ) => ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -3801,18 +3625,19 @@ sealed class ConfigureServiceHostResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    )
+    ),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => ConfigureServiceHostResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory ConfigureServiceHostResponse.createInternalError() => ConfigureServiceHostResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory ConfigureServiceHostResponse.createInternalError() =>
+      ConfigureServiceHostResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this ConfigureServiceHostResponse.
   ConfigureServiceHostResponse_kind get kind;
@@ -3838,7 +3663,8 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_conflictErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.conflictErrorWrapper._ordinal,
+        ordinal:
+            ConfigureServiceHostResponse_kind.conflictErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -3848,7 +3674,9 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_invalidConfigurationErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.invalidConfigurationErrorWrapper._ordinal,
+        ordinal: ConfigureServiceHostResponse_kind
+            .invalidConfigurationErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -3858,7 +3686,9 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_incompatibleEngineErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.incompatibleEngineErrorWrapper._ordinal,
+        ordinal: ConfigureServiceHostResponse_kind
+            .incompatibleEngineErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
@@ -3868,7 +3698,9 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_realmNotFoundErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.realmNotFoundErrorWrapper._ordinal,
+        ordinal: ConfigureServiceHostResponse_kind
+            .realmNotFoundErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
@@ -3878,7 +3710,9 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.invalidRecordIdErrorWrapper._ordinal,
+        ordinal: ConfigureServiceHostResponse_kind
+            .invalidRecordIdErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         7,
@@ -3888,22 +3722,24 @@ sealed class ConfigureServiceHostResponse {
         "",
         ConfigureServiceHostResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind.internalErrorWrapper._ordinal,
+        ordinal:
+            ConfigureServiceHostResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse",
-    doc: "",
-    unknownInstance: ConfigureServiceHostResponse_unknown._instance,
-    enumInstance: ConfigureServiceHostResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ConfigureServiceHostResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:ConfigureServiceHostResponse",
+        doc: "",
+        unknownInstance: ConfigureServiceHostResponse_unknown._instance,
+        enumInstance: ConfigureServiceHostResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ConfigureServiceHostResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ConfigureServiceHostResponse`.
@@ -3922,7 +3758,8 @@ enum ConfigureServiceHostResponse_kind {
   const ConfigureServiceHostResponse_kind(this._ordinal);
 }
 
-final class ConfigureServiceHostResponse_unknown implements ConfigureServiceHostResponse {
+final class ConfigureServiceHostResponse_unknown
+    implements ConfigureServiceHostResponse {
   static const _instance = ConfigureServiceHostResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -3931,16 +3768,20 @@ final class ConfigureServiceHostResponse_unknown implements ConfigureServiceHost
   ConfigureServiceHostResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.unknown;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is ConfigureServiceHostResponse_unknown;
+  _core.bool operator ==(other) =>
+      other is ConfigureServiceHostResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConfigureServiceHostResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConfigureServiceHostResponse.serializer);
 }
 
-sealed class _ConfigureServiceHostResponse_wrapper implements ConfigureServiceHostResponse {
+sealed class _ConfigureServiceHostResponse_wrapper
+    implements ConfigureServiceHostResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -3953,70 +3794,85 @@ sealed class _ConfigureServiceHostResponse_wrapper implements ConfigureServiceHo
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ConfigureServiceHostResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ConfigureServiceHostResponse.serializer);
 }
 
-final class ConfigureServiceHostResponse_successWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_successWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final ConfigureServiceHostResponse_Success value;
 
   ConfigureServiceHostResponse_successWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.successWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.successWrapper;
 }
 
-final class ConfigureServiceHostResponse_conflictErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_conflictErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final ConfigureServiceHostResponse_ConflictError value;
 
   ConfigureServiceHostResponse_conflictErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.conflictErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.conflictErrorWrapper;
 }
 
-final class ConfigureServiceHostResponse_invalidConfigurationErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_invalidConfigurationErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final ConfigureServiceHostResponse_InvalidConfigurationError value;
 
   ConfigureServiceHostResponse_invalidConfigurationErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.invalidConfigurationErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.invalidConfigurationErrorWrapper;
 }
 
-final class ConfigureServiceHostResponse_incompatibleEngineErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_incompatibleEngineErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final ConfigureServiceHostResponse_IncompatibleEngineError value;
 
   ConfigureServiceHostResponse_incompatibleEngineErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.incompatibleEngineErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.incompatibleEngineErrorWrapper;
 }
 
-final class ConfigureServiceHostResponse_realmNotFoundErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_realmNotFoundErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final ConfigureServiceHostResponse_RealmNotFoundError value;
 
   ConfigureServiceHostResponse_realmNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.realmNotFoundErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.realmNotFoundErrorWrapper;
 }
 
-final class ConfigureServiceHostResponse_invalidRecordIdErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_invalidRecordIdErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   ConfigureServiceHostResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.invalidRecordIdErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-final class ConfigureServiceHostResponse_internalErrorWrapper extends _ConfigureServiceHostResponse_wrapper {
+final class ConfigureServiceHostResponse_internalErrorWrapper
+    extends _ConfigureServiceHostResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   ConfigureServiceHostResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  ConfigureServiceHostResponse_kind get kind => ConfigureServiceHostResponse_kind.internalErrorWrapper;
+  ConfigureServiceHostResponse_kind get kind =>
+      ConfigureServiceHostResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -4028,10 +3884,12 @@ sealed class WatchOrganizationTopologyRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchOrganizationTopologyRequest implements WatchOrganizationTopologyRequest_orMutable {
+final class WatchOrganizationTopologyRequest
+    implements WatchOrganizationTopologyRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchOrganizationTopologyRequest() => WatchOrganizationTopologyRequest._();
+  factory WatchOrganizationTopologyRequest() =>
+      WatchOrganizationTopologyRequest._();
 
   WatchOrganizationTopologyRequest._();
 
@@ -4040,7 +3898,8 @@ final class WatchOrganizationTopologyRequest implements WatchOrganizationTopolog
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchOrganizationTopologyRequest_mutable mutable() => WatchOrganizationTopologyRequest_mutable._();
+  static WatchOrganizationTopologyRequest_mutable mutable() =>
+      WatchOrganizationTopologyRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4048,13 +3907,17 @@ final class WatchOrganizationTopologyRequest implements WatchOrganizationTopolog
   WatchOrganizationTopologyRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchOrganizationTopologyRequest_mutable toMutable() => WatchOrganizationTopologyRequest_mutable._();
+  WatchOrganizationTopologyRequest_mutable toMutable() =>
+      WatchOrganizationTopologyRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchOrganizationTopologyRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -4066,7 +3929,11 @@ final class WatchOrganizationTopologyRequest implements WatchOrganizationTopolog
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchOrganizationTopologyRequest` instances.
-  static _skir.StructSerializer<WatchOrganizationTopologyRequest, WatchOrganizationTopologyRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchOrganizationTopologyRequest,
+    WatchOrganizationTopologyRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -4085,14 +3952,16 @@ final class WatchOrganizationTopologyRequest implements WatchOrganizationTopolog
 }
 
 /// Mutable version of [WatchOrganizationTopologyRequest].
-final class WatchOrganizationTopologyRequest_mutable implements WatchOrganizationTopologyRequest_orMutable {
+final class WatchOrganizationTopologyRequest_mutable
+    implements WatchOrganizationTopologyRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchOrganizationTopologyRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchOrganizationTopologyRequest toFrozen() => WatchOrganizationTopologyRequest().._u = this._u;
+  WatchOrganizationTopologyRequest toFrozen() =>
+      WatchOrganizationTopologyRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4108,7 +3977,8 @@ sealed class WatchOrganizationTopologyResponse_List_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchOrganizationTopologyResponse_List implements WatchOrganizationTopologyResponse_List_orMutable {
+final class WatchOrganizationTopologyResponse_List
+    implements WatchOrganizationTopologyResponse_List_orMutable {
   @_core.override
   final _core.Iterable<ServiceHost> hosts;
   @_core.override
@@ -4142,11 +4012,12 @@ final class WatchOrganizationTopologyResponse_List implements WatchOrganizationT
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchOrganizationTopologyResponse_List_mutable mutable() => WatchOrganizationTopologyResponse_List_mutable._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
+  static WatchOrganizationTopologyResponse_List_mutable mutable() =>
+      WatchOrganizationTopologyResponse_List_mutable._(
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4154,41 +4025,43 @@ final class WatchOrganizationTopologyResponse_List implements WatchOrganizationT
   WatchOrganizationTopologyResponse_List toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchOrganizationTopologyResponse_List_mutable toMutable() => WatchOrganizationTopologyResponse_List_mutable._(
-    this.hosts,
-    this.realms,
-    this.engines,
-  );
+  WatchOrganizationTopologyResponse_List_mutable toMutable() =>
+      WatchOrganizationTopologyResponse_List_mutable._(
+        this.hosts,
+        this.realms,
+        this.engines,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchOrganizationTopologyResponse_List) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.hosts,
-    this.realms,
-    this.engines,
-  ];
+  _core.List get _equality_proxy => [this.hosts, this.realms, this.engines];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchOrganizationTopologyResponse_List` instances.
-  static _skir.StructSerializer<WatchOrganizationTopologyResponse_List, WatchOrganizationTopologyResponse_List_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchOrganizationTopologyResponse_List,
+    WatchOrganizationTopologyResponse_List_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "hosts",
         "hosts",
         0,
-        _skir.Serializers.iterable(
-          ServiceHost.serializer,
-        ),
+        _skir.Serializers.iterable(ServiceHost.serializer),
         "",
         (it) => it.hosts,
         (it, v) => it.hosts = v,
@@ -4197,9 +4070,7 @@ final class WatchOrganizationTopologyResponse_List implements WatchOrganizationT
         "realms",
         "realms",
         1,
-        _skir.Serializers.iterable(
-          RealmInstance.serializer,
-        ),
+        _skir.Serializers.iterable(RealmInstance.serializer),
         "",
         (it) => it.realms,
         (it, v) => it.realms = v,
@@ -4208,9 +4079,7 @@ final class WatchOrganizationTopologyResponse_List implements WatchOrganizationT
         "engines",
         "engines",
         2,
-        _skir.Serializers.iterable(
-          EngineInstance.serializer,
-        ),
+        _skir.Serializers.iterable(EngineInstance.serializer),
         "",
         (it) => it.engines,
         (it, v) => it.engines = v,
@@ -4225,14 +4094,16 @@ final class WatchOrganizationTopologyResponse_List implements WatchOrganizationT
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchOrganizationTopologyResponse_List_mutable it) => it.toFrozen(),
+    toFrozen: (WatchOrganizationTopologyResponse_List_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WatchOrganizationTopologyResponse_List].
-final class WatchOrganizationTopologyResponse_List_mutable implements WatchOrganizationTopologyResponse_List_orMutable {
+final class WatchOrganizationTopologyResponse_List_mutable
+    implements WatchOrganizationTopologyResponse_List_orMutable {
   _core.Iterable<ServiceHost_orMutable> hosts;
   _core.Iterable<RealmInstance_orMutable> realms;
   _core.Iterable<EngineInstance_orMutable> engines;
@@ -4279,11 +4150,12 @@ final class WatchOrganizationTopologyResponse_List_mutable implements WatchOrgan
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchOrganizationTopologyResponse_List toFrozen() => WatchOrganizationTopologyResponse_List(
-    hosts: this.hosts,
-    realms: this.realms,
-    engines: this.engines,
-  ).._u = this._u;
+  WatchOrganizationTopologyResponse_List toFrozen() =>
+      WatchOrganizationTopologyResponse_List(
+        hosts: this.hosts,
+        realms: this.realms,
+        engines: this.engines,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4307,11 +4179,12 @@ final class WatchOrganizationTopologyResponse_List_mutable implements WatchOrgan
 sealed class WatchOrganizationTopologyResponse {
   /// Constant indicating an unknown `WatchOrganizationTopologyResponse`.
   /// Default value for fields of type `WatchOrganizationTopologyResponse`.
-  static const WatchOrganizationTopologyResponse unknown = WatchOrganizationTopologyResponse_unknown._instance;
+  static const WatchOrganizationTopologyResponse unknown =
+      WatchOrganizationTopologyResponse_unknown._instance;
 
   /// Create a 'list' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapList(
-    WatchOrganizationTopologyResponse_List value
+    WatchOrganizationTopologyResponse_List value,
   ) => WatchOrganizationTopologyResponse_listWrapper._(value);
 
   /// Same as `wrapList(WatchOrganizationTopologyResponse_List(...))`.
@@ -4324,12 +4197,12 @@ sealed class WatchOrganizationTopologyResponse {
       hosts: hosts,
       realms: realms,
       engines: engines,
-    )
+    ),
   );
 
   /// Create a 'host_updated' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapHostUpdated(
-    ServiceHost value
+    ServiceHost value,
   ) => WatchOrganizationTopologyResponse_hostUpdatedWrapper._(value);
 
   /// Same as `wrapHostUpdated(ServiceHost(...))`.
@@ -4352,12 +4225,12 @@ sealed class WatchOrganizationTopologyResponse {
       supportedEngines: supportedEngines,
       topologyRevision: topologyRevision,
       state: state,
-    )
+    ),
   );
 
   /// Create a 'realm_updated' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapRealmUpdated(
-    RealmInstance value
+    RealmInstance value,
   ) => WatchOrganizationTopologyResponse_realmUpdatedWrapper._(value);
 
   /// Same as `wrapRealmUpdated(RealmInstance(...))`.
@@ -4366,7 +4239,6 @@ sealed class WatchOrganizationTopologyResponse {
     required OwnerHost_orMutable ownerHost,
     required _core.int revision,
     required EngineTarget_orMutable targetEngine,
-    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => WatchOrganizationTopologyResponse.wrapRealmUpdated(
     RealmInstance(
@@ -4374,14 +4246,13 @@ sealed class WatchOrganizationTopologyResponse {
       ownerHost: ownerHost,
       revision: revision,
       targetEngine: targetEngine,
-      manifestRevision: manifestRevision,
       state: state,
-    )
+    ),
   );
 
   /// Create a 'engine_updated' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapEngineUpdated(
-    EngineInstance value
+    EngineInstance value,
   ) => WatchOrganizationTopologyResponse_engineUpdatedWrapper._(value);
 
   /// Same as `wrapEngineUpdated(EngineInstance(...))`.
@@ -4391,7 +4262,6 @@ sealed class WatchOrganizationTopologyResponse {
     required RealmInfo_orMutable realm,
     required _core.int revision,
     required EngineTarget_orMutable target,
-    required ReconciledRevision_orMutable manifestRevision,
     required ChildRuntimeState_orMutable state,
   }) => WatchOrganizationTopologyResponse.wrapEngineUpdated(
     EngineInstance(
@@ -4400,14 +4270,13 @@ sealed class WatchOrganizationTopologyResponse {
       realm: realm,
       revision: revision,
       target: target,
-      manifestRevision: manifestRevision,
       state: state,
-    )
+    ),
   );
 
   /// Create a 'resource_removed' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapResourceRemoved(
-    _lib_kernel_v1_record_id.RecordId value
+    _lib_kernel_v1_record_id.RecordId value,
   ) => WatchOrganizationTopologyResponse_resourceRemovedWrapper._(value);
 
   /// Same as `wrapResourceRemoved(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -4415,27 +4284,26 @@ sealed class WatchOrganizationTopologyResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchOrganizationTopologyResponse.wrapResourceRemoved(
-    _lib_kernel_v1_record_id.RecordId(
-      table: table,
-      key: key,
-    )
+    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchOrganizationTopologyResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchOrganizationTopologyResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchOrganizationTopologyResponse.createInternalError() => WatchOrganizationTopologyResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchOrganizationTopologyResponse.createInternalError() =>
+      WatchOrganizationTopologyResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this WatchOrganizationTopologyResponse.
   WatchOrganizationTopologyResponse_kind get kind;
 
   /// Serializer for `WatchOrganizationTopologyResponse` instances.
-  static _skir.EnumSerializer<WatchOrganizationTopologyResponse> get serializer {
+  static _skir.EnumSerializer<WatchOrganizationTopologyResponse>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -4455,7 +4323,8 @@ sealed class WatchOrganizationTopologyResponse {
         "",
         WatchOrganizationTopologyResponse_hostUpdatedWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationTopologyResponse_kind.hostUpdatedWrapper._ordinal,
+        ordinal:
+            WatchOrganizationTopologyResponse_kind.hostUpdatedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -4465,7 +4334,8 @@ sealed class WatchOrganizationTopologyResponse {
         "",
         WatchOrganizationTopologyResponse_realmUpdatedWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationTopologyResponse_kind.realmUpdatedWrapper._ordinal,
+        ordinal:
+            WatchOrganizationTopologyResponse_kind.realmUpdatedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -4475,7 +4345,9 @@ sealed class WatchOrganizationTopologyResponse {
         "",
         WatchOrganizationTopologyResponse_engineUpdatedWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationTopologyResponse_kind.engineUpdatedWrapper._ordinal,
+        ordinal: WatchOrganizationTopologyResponse_kind
+            .engineUpdatedWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
@@ -4485,7 +4357,9 @@ sealed class WatchOrganizationTopologyResponse {
         "",
         WatchOrganizationTopologyResponse_resourceRemovedWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationTopologyResponse_kind.resourceRemovedWrapper._ordinal,
+        ordinal: WatchOrganizationTopologyResponse_kind
+            .resourceRemovedWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         6,
@@ -4495,22 +4369,26 @@ sealed class WatchOrganizationTopologyResponse {
         "",
         WatchOrganizationTopologyResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: WatchOrganizationTopologyResponse_kind.internalErrorWrapper._ordinal,
+        ordinal: WatchOrganizationTopologyResponse_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:WatchOrganizationTopologyResponse",
-    doc: "",
-    unknownInstance: WatchOrganizationTopologyResponse_unknown._instance,
-    enumInstance: WatchOrganizationTopologyResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchOrganizationTopologyResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:WatchOrganizationTopologyResponse",
+        doc: "",
+        unknownInstance: WatchOrganizationTopologyResponse_unknown._instance,
+        enumInstance: WatchOrganizationTopologyResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized:
+            WatchOrganizationTopologyResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchOrganizationTopologyResponse`.
@@ -4528,7 +4406,8 @@ enum WatchOrganizationTopologyResponse_kind {
   const WatchOrganizationTopologyResponse_kind(this._ordinal);
 }
 
-final class WatchOrganizationTopologyResponse_unknown implements WatchOrganizationTopologyResponse {
+final class WatchOrganizationTopologyResponse_unknown
+    implements WatchOrganizationTopologyResponse {
   static const _instance = WatchOrganizationTopologyResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -4537,16 +4416,22 @@ final class WatchOrganizationTopologyResponse_unknown implements WatchOrganizati
   WatchOrganizationTopologyResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.unknown;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is WatchOrganizationTopologyResponse_unknown;
+  _core.bool operator ==(other) =>
+      other is WatchOrganizationTopologyResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationTopologyResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    WatchOrganizationTopologyResponse.serializer,
+  );
 }
 
-sealed class _WatchOrganizationTopologyResponse_wrapper implements WatchOrganizationTopologyResponse {
+sealed class _WatchOrganizationTopologyResponse_wrapper
+    implements WatchOrganizationTopologyResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -4559,61 +4444,76 @@ sealed class _WatchOrganizationTopologyResponse_wrapper implements WatchOrganiza
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchOrganizationTopologyResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    WatchOrganizationTopologyResponse.serializer,
+  );
 }
 
-final class WatchOrganizationTopologyResponse_listWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_listWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final WatchOrganizationTopologyResponse_List value;
 
   WatchOrganizationTopologyResponse_listWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.listWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.listWrapper;
 }
 
-final class WatchOrganizationTopologyResponse_hostUpdatedWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_hostUpdatedWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final ServiceHost value;
 
   WatchOrganizationTopologyResponse_hostUpdatedWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.hostUpdatedWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.hostUpdatedWrapper;
 }
 
-final class WatchOrganizationTopologyResponse_realmUpdatedWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_realmUpdatedWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final RealmInstance value;
 
   WatchOrganizationTopologyResponse_realmUpdatedWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.realmUpdatedWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.realmUpdatedWrapper;
 }
 
-final class WatchOrganizationTopologyResponse_engineUpdatedWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_engineUpdatedWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final EngineInstance value;
 
   WatchOrganizationTopologyResponse_engineUpdatedWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.engineUpdatedWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.engineUpdatedWrapper;
 }
 
-final class WatchOrganizationTopologyResponse_resourceRemovedWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_resourceRemovedWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final _lib_kernel_v1_record_id.RecordId value;
 
   WatchOrganizationTopologyResponse_resourceRemovedWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.resourceRemovedWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.resourceRemovedWrapper;
 }
 
-final class WatchOrganizationTopologyResponse_internalErrorWrapper extends _WatchOrganizationTopologyResponse_wrapper {
+final class WatchOrganizationTopologyResponse_internalErrorWrapper
+    extends _WatchOrganizationTopologyResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchOrganizationTopologyResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchOrganizationTopologyResponse_kind get kind => WatchOrganizationTopologyResponse_kind.internalErrorWrapper;
+  WatchOrganizationTopologyResponse_kind get kind =>
+      WatchOrganizationTopologyResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -4625,7 +4525,8 @@ sealed class WatchHostExecutionRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMutable {
+final class WatchHostExecutionRequest
+    implements WatchHostExecutionRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchHostExecutionRequest() => WatchHostExecutionRequest._();
@@ -4637,7 +4538,8 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchHostExecutionRequest_mutable mutable() => WatchHostExecutionRequest_mutable._();
+  static WatchHostExecutionRequest_mutable mutable() =>
+      WatchHostExecutionRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4645,13 +4547,17 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
   WatchHostExecutionRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchHostExecutionRequest_mutable toMutable() => WatchHostExecutionRequest_mutable._();
+  WatchHostExecutionRequest_mutable toMutable() =>
+      WatchHostExecutionRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchHostExecutionRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -4663,7 +4569,11 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchHostExecutionRequest` instances.
-  static _skir.StructSerializer<WatchHostExecutionRequest, WatchHostExecutionRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchHostExecutionRequest,
+    WatchHostExecutionRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -4682,14 +4592,16 @@ final class WatchHostExecutionRequest implements WatchHostExecutionRequest_orMut
 }
 
 /// Mutable version of [WatchHostExecutionRequest].
-final class WatchHostExecutionRequest_mutable implements WatchHostExecutionRequest_orMutable {
+final class WatchHostExecutionRequest_mutable
+    implements WatchHostExecutionRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchHostExecutionRequest_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchHostExecutionRequest toFrozen() => WatchHostExecutionRequest().._u = this._u;
+  WatchHostExecutionRequest toFrozen() =>
+      WatchHostExecutionRequest().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4705,7 +4617,8 @@ sealed class WatchHostExecutionResponse_Desired_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResponse_Desired_orMutable {
+final class WatchHostExecutionResponse_Desired
+    implements WatchHostExecutionResponse_Desired_orMutable {
   @_core.override
   final _core.int topologyRevision;
   @_core.override
@@ -4739,11 +4652,8 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchHostExecutionResponse_Desired_mutable mutable() => WatchHostExecutionResponse_Desired_mutable._(
-    0,
-    null,
-    null,
-  );
+  static WatchHostExecutionResponse_Desired_mutable mutable() =>
+      WatchHostExecutionResponse_Desired_mutable._(0, null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4751,17 +4661,21 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
   WatchHostExecutionResponse_Desired toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchHostExecutionResponse_Desired_mutable toMutable() => WatchHostExecutionResponse_Desired_mutable._(
-    this.topologyRevision,
-    this.realm,
-    this.engine,
-  );
+  WatchHostExecutionResponse_Desired_mutable toMutable() =>
+      WatchHostExecutionResponse_Desired_mutable._(
+        this.topologyRevision,
+        this.realm,
+        this.engine,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchHostExecutionResponse_Desired) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -4777,7 +4691,11 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchHostExecutionResponse_Desired` instances.
-  static _skir.StructSerializer<WatchHostExecutionResponse_Desired, WatchHostExecutionResponse_Desired_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchHostExecutionResponse_Desired,
+    WatchHostExecutionResponse_Desired_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "topology_revision",
@@ -4792,9 +4710,7 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
         "realm",
         "realm",
         1,
-        _skir.Serializers.optional(
-          RealmInstance.serializer,
-        ),
+        _skir.Serializers.optional(RealmInstance.serializer),
         "",
         (it) => it.realm,
         (it, v) => it.realm = v,
@@ -4803,9 +4719,7 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
         "engine",
         "engine",
         2,
-        _skir.Serializers.optional(
-          EngineInstance.serializer,
-        ),
+        _skir.Serializers.optional(EngineInstance.serializer),
         "",
         (it) => it.engine,
         (it, v) => it.engine = v,
@@ -4827,7 +4741,8 @@ final class WatchHostExecutionResponse_Desired implements WatchHostExecutionResp
 }
 
 /// Mutable version of [WatchHostExecutionResponse_Desired].
-final class WatchHostExecutionResponse_Desired_mutable implements WatchHostExecutionResponse_Desired_orMutable {
+final class WatchHostExecutionResponse_Desired_mutable
+    implements WatchHostExecutionResponse_Desired_orMutable {
   _core.int topologyRevision;
   RealmInstance_orMutable? realm;
   EngineInstance_orMutable? engine;
@@ -4841,11 +4756,12 @@ final class WatchHostExecutionResponse_Desired_mutable implements WatchHostExecu
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchHostExecutionResponse_Desired toFrozen() => WatchHostExecutionResponse_Desired(
-    topologyRevision: this.topologyRevision,
-    realm: this.realm,
-    engine: this.engine,
-  ).._u = this._u;
+  WatchHostExecutionResponse_Desired toFrozen() =>
+      WatchHostExecutionResponse_Desired(
+        topologyRevision: this.topologyRevision,
+        realm: this.realm,
+        engine: this.engine,
+      ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4865,11 +4781,12 @@ final class WatchHostExecutionResponse_Desired_mutable implements WatchHostExecu
 sealed class WatchHostExecutionResponse {
   /// Constant indicating an unknown `WatchHostExecutionResponse`.
   /// Default value for fields of type `WatchHostExecutionResponse`.
-  static const WatchHostExecutionResponse unknown = WatchHostExecutionResponse_unknown._instance;
+  static const WatchHostExecutionResponse unknown =
+      WatchHostExecutionResponse_unknown._instance;
 
   /// Create a 'desired' variant wrapping around the given value.
   factory WatchHostExecutionResponse.wrapDesired(
-    WatchHostExecutionResponse_Desired value
+    WatchHostExecutionResponse_Desired value,
   ) => WatchHostExecutionResponse_desiredWrapper._(value);
 
   /// Same as `wrapDesired(WatchHostExecutionResponse_Desired(...))`.
@@ -4882,18 +4799,19 @@ sealed class WatchHostExecutionResponse {
       topologyRevision: topologyRevision,
       realm: realm,
       engine: engine,
-    )
+    ),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchHostExecutionResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => WatchHostExecutionResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchHostExecutionResponse.createInternalError() => WatchHostExecutionResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory WatchHostExecutionResponse.createInternalError() =>
+      WatchHostExecutionResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this WatchHostExecutionResponse.
   WatchHostExecutionResponse_kind get kind;
@@ -4926,15 +4844,16 @@ sealed class WatchHostExecutionResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:WatchHostExecutionResponse",
-    doc: "",
-    unknownInstance: WatchHostExecutionResponse_unknown._instance,
-    enumInstance: WatchHostExecutionResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchHostExecutionResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:WatchHostExecutionResponse",
+        doc: "",
+        unknownInstance: WatchHostExecutionResponse_unknown._instance,
+        enumInstance: WatchHostExecutionResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: WatchHostExecutionResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `WatchHostExecutionResponse`.
@@ -4948,7 +4867,8 @@ enum WatchHostExecutionResponse_kind {
   const WatchHostExecutionResponse_kind(this._ordinal);
 }
 
-final class WatchHostExecutionResponse_unknown implements WatchHostExecutionResponse {
+final class WatchHostExecutionResponse_unknown
+    implements WatchHostExecutionResponse {
   static const _instance = WatchHostExecutionResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -4957,16 +4877,19 @@ final class WatchHostExecutionResponse_unknown implements WatchHostExecutionResp
   WatchHostExecutionResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.unknown;
+  WatchHostExecutionResponse_kind get kind =>
+      WatchHostExecutionResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is WatchHostExecutionResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchHostExecutionResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchHostExecutionResponse.serializer);
 }
 
-sealed class _WatchHostExecutionResponse_wrapper implements WatchHostExecutionResponse {
+sealed class _WatchHostExecutionResponse_wrapper
+    implements WatchHostExecutionResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -4979,25 +4902,30 @@ sealed class _WatchHostExecutionResponse_wrapper implements WatchHostExecutionRe
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchHostExecutionResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, WatchHostExecutionResponse.serializer);
 }
 
-final class WatchHostExecutionResponse_desiredWrapper extends _WatchHostExecutionResponse_wrapper {
+final class WatchHostExecutionResponse_desiredWrapper
+    extends _WatchHostExecutionResponse_wrapper {
   final WatchHostExecutionResponse_Desired value;
 
   WatchHostExecutionResponse_desiredWrapper._(this.value);
 
   @_core.override
-  WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.desiredWrapper;
+  WatchHostExecutionResponse_kind get kind =>
+      WatchHostExecutionResponse_kind.desiredWrapper;
 }
 
-final class WatchHostExecutionResponse_internalErrorWrapper extends _WatchHostExecutionResponse_wrapper {
+final class WatchHostExecutionResponse_internalErrorWrapper
+    extends _WatchHostExecutionResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchHostExecutionResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchHostExecutionResponse_kind get kind => WatchHostExecutionResponse_kind.internalErrorWrapper;
+  WatchHostExecutionResponse_kind get kind =>
+      WatchHostExecutionResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5013,7 +4941,8 @@ sealed class ReportHostExecutionRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orMutable {
+final class ReportHostExecutionRequest
+    implements ReportHostExecutionRequest_orMutable {
   @_core.override
   final _core.int topologyRevision;
   @_core.override
@@ -5039,19 +4968,12 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReportHostExecutionRequest._(
-    0,
-    null,
-    null,
-  );
+  static final defaultInstance = ReportHostExecutionRequest._(0, null, null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReportHostExecutionRequest_mutable mutable() => ReportHostExecutionRequest_mutable._(
-    0,
-    null,
-    null,
-  );
+  static ReportHostExecutionRequest_mutable mutable() =>
+      ReportHostExecutionRequest_mutable._(0, null, null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5059,17 +4981,21 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   ReportHostExecutionRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReportHostExecutionRequest_mutable toMutable() => ReportHostExecutionRequest_mutable._(
-    this.topologyRevision,
-    this.realmState,
-    this.engineState,
-  );
+  ReportHostExecutionRequest_mutable toMutable() =>
+      ReportHostExecutionRequest_mutable._(
+        this.topologyRevision,
+        this.realmState,
+        this.engineState,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReportHostExecutionRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -5085,7 +5011,11 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReportHostExecutionRequest` instances.
-  static _skir.StructSerializer<ReportHostExecutionRequest, ReportHostExecutionRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    ReportHostExecutionRequest,
+    ReportHostExecutionRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "topology_revision",
@@ -5100,9 +5030,7 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
         "realm_state",
         "realmState",
         1,
-        _skir.Serializers.optional(
-          ChildRuntimeState.serializer,
-        ),
+        _skir.Serializers.optional(ChildRuntimeState.serializer),
         "",
         (it) => it.realmState,
         (it, v) => it.realmState = v,
@@ -5111,9 +5039,7 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
         "engine_state",
         "engineState",
         2,
-        _skir.Serializers.optional(
-          ChildRuntimeState.serializer,
-        ),
+        _skir.Serializers.optional(ChildRuntimeState.serializer),
         "",
         (it) => it.engineState,
         (it, v) => it.engineState = v,
@@ -5135,7 +5061,8 @@ final class ReportHostExecutionRequest implements ReportHostExecutionRequest_orM
 }
 
 /// Mutable version of [ReportHostExecutionRequest].
-final class ReportHostExecutionRequest_mutable implements ReportHostExecutionRequest_orMutable {
+final class ReportHostExecutionRequest_mutable
+    implements ReportHostExecutionRequest_orMutable {
   _core.int topologyRevision;
   ChildRuntimeState_orMutable? realmState;
   ChildRuntimeState_orMutable? engineState;
@@ -5165,10 +5092,12 @@ sealed class ReportHostExecutionResponse_Success_orMutable {
 }
 
 /// Deeply immutable.
-final class ReportHostExecutionResponse_Success implements ReportHostExecutionResponse_Success_orMutable {
+final class ReportHostExecutionResponse_Success
+    implements ReportHostExecutionResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReportHostExecutionResponse_Success() => ReportHostExecutionResponse_Success._();
+  factory ReportHostExecutionResponse_Success() =>
+      ReportHostExecutionResponse_Success._();
 
   ReportHostExecutionResponse_Success._();
 
@@ -5177,7 +5106,8 @@ final class ReportHostExecutionResponse_Success implements ReportHostExecutionRe
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReportHostExecutionResponse_Success_mutable mutable() => ReportHostExecutionResponse_Success_mutable._();
+  static ReportHostExecutionResponse_Success_mutable mutable() =>
+      ReportHostExecutionResponse_Success_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5185,13 +5115,17 @@ final class ReportHostExecutionResponse_Success implements ReportHostExecutionRe
   ReportHostExecutionResponse_Success toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReportHostExecutionResponse_Success_mutable toMutable() => ReportHostExecutionResponse_Success_mutable._();
+  ReportHostExecutionResponse_Success_mutable toMutable() =>
+      ReportHostExecutionResponse_Success_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReportHostExecutionResponse_Success) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -5203,7 +5137,11 @@ final class ReportHostExecutionResponse_Success implements ReportHostExecutionRe
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReportHostExecutionResponse_Success` instances.
-  static _skir.StructSerializer<ReportHostExecutionResponse_Success, ReportHostExecutionResponse_Success_mutable> get serializer {
+  static _skir.StructSerializer<
+    ReportHostExecutionResponse_Success,
+    ReportHostExecutionResponse_Success_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -5222,14 +5160,16 @@ final class ReportHostExecutionResponse_Success implements ReportHostExecutionRe
 }
 
 /// Mutable version of [ReportHostExecutionResponse_Success].
-final class ReportHostExecutionResponse_Success_mutable implements ReportHostExecutionResponse_Success_orMutable {
+final class ReportHostExecutionResponse_Success_mutable
+    implements ReportHostExecutionResponse_Success_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ReportHostExecutionResponse_Success_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReportHostExecutionResponse_Success toFrozen() => ReportHostExecutionResponse_Success().._u = this._u;
+  ReportHostExecutionResponse_Success toFrozen() =>
+      ReportHostExecutionResponse_Success().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5241,19 +5181,23 @@ sealed class ReportHostExecutionResponse_StaleRevisionError_orMutable {
 }
 
 /// Deeply immutable.
-final class ReportHostExecutionResponse_StaleRevisionError implements ReportHostExecutionResponse_StaleRevisionError_orMutable {
+final class ReportHostExecutionResponse_StaleRevisionError
+    implements ReportHostExecutionResponse_StaleRevisionError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReportHostExecutionResponse_StaleRevisionError() => ReportHostExecutionResponse_StaleRevisionError._();
+  factory ReportHostExecutionResponse_StaleRevisionError() =>
+      ReportHostExecutionResponse_StaleRevisionError._();
 
   ReportHostExecutionResponse_StaleRevisionError._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReportHostExecutionResponse_StaleRevisionError._();
+  static final defaultInstance =
+      ReportHostExecutionResponse_StaleRevisionError._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReportHostExecutionResponse_StaleRevisionError_mutable mutable() => ReportHostExecutionResponse_StaleRevisionError_mutable._();
+  static ReportHostExecutionResponse_StaleRevisionError_mutable mutable() =>
+      ReportHostExecutionResponse_StaleRevisionError_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5261,13 +5205,17 @@ final class ReportHostExecutionResponse_StaleRevisionError implements ReportHost
   ReportHostExecutionResponse_StaleRevisionError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReportHostExecutionResponse_StaleRevisionError_mutable toMutable() => ReportHostExecutionResponse_StaleRevisionError_mutable._();
+  ReportHostExecutionResponse_StaleRevisionError_mutable toMutable() =>
+      ReportHostExecutionResponse_StaleRevisionError_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReportHostExecutionResponse_StaleRevisionError) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -5279,7 +5227,11 @@ final class ReportHostExecutionResponse_StaleRevisionError implements ReportHost
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReportHostExecutionResponse_StaleRevisionError` instances.
-  static _skir.StructSerializer<ReportHostExecutionResponse_StaleRevisionError, ReportHostExecutionResponse_StaleRevisionError_mutable> get serializer {
+  static _skir.StructSerializer<
+    ReportHostExecutionResponse_StaleRevisionError,
+    ReportHostExecutionResponse_StaleRevisionError_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -5287,25 +5239,29 @@ final class ReportHostExecutionResponse_StaleRevisionError implements ReportHost
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ReportHostExecutionResponse.StaleRevisionError",
+    recordId:
+        "service/v1/topology.skir:ReportHostExecutionResponse.StaleRevisionError",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReportHostExecutionResponse_StaleRevisionError_mutable it) => it.toFrozen(),
+    toFrozen: (ReportHostExecutionResponse_StaleRevisionError_mutable it) =>
+        it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ReportHostExecutionResponse_StaleRevisionError].
-final class ReportHostExecutionResponse_StaleRevisionError_mutable implements ReportHostExecutionResponse_StaleRevisionError_orMutable {
+final class ReportHostExecutionResponse_StaleRevisionError_mutable
+    implements ReportHostExecutionResponse_StaleRevisionError_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ReportHostExecutionResponse_StaleRevisionError_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReportHostExecutionResponse_StaleRevisionError toFrozen() => ReportHostExecutionResponse_StaleRevisionError().._u = this._u;
+  ReportHostExecutionResponse_StaleRevisionError toFrozen() =>
+      ReportHostExecutionResponse_StaleRevisionError().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5326,37 +5282,41 @@ final class ReportHostExecutionResponse_StaleRevisionError_mutable implements Re
 sealed class ReportHostExecutionResponse {
   /// Constant indicating an unknown `ReportHostExecutionResponse`.
   /// Default value for fields of type `ReportHostExecutionResponse`.
-  static const ReportHostExecutionResponse unknown = ReportHostExecutionResponse_unknown._instance;
+  static const ReportHostExecutionResponse unknown =
+      ReportHostExecutionResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
   factory ReportHostExecutionResponse.wrapSuccess(
-    ReportHostExecutionResponse_Success value
+    ReportHostExecutionResponse_Success value,
   ) => ReportHostExecutionResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(ReportHostExecutionResponse_Success(...))`.
-  factory ReportHostExecutionResponse.createSuccess() => ReportHostExecutionResponse.wrapSuccess(
-    ReportHostExecutionResponse_Success()
-  );
+  factory ReportHostExecutionResponse.createSuccess() =>
+      ReportHostExecutionResponse.wrapSuccess(
+        ReportHostExecutionResponse_Success(),
+      );
 
   /// Create a 'stale_revision_error' variant wrapping around the given value.
   factory ReportHostExecutionResponse.wrapStaleRevisionError(
-    ReportHostExecutionResponse_StaleRevisionError value
+    ReportHostExecutionResponse_StaleRevisionError value,
   ) => ReportHostExecutionResponse_staleRevisionErrorWrapper._(value);
 
   /// Same as `wrapStaleRevisionError(ReportHostExecutionResponse_StaleRevisionError(...))`.
-  factory ReportHostExecutionResponse.createStaleRevisionError() => ReportHostExecutionResponse.wrapStaleRevisionError(
-    ReportHostExecutionResponse_StaleRevisionError()
-  );
+  factory ReportHostExecutionResponse.createStaleRevisionError() =>
+      ReportHostExecutionResponse.wrapStaleRevisionError(
+        ReportHostExecutionResponse_StaleRevisionError(),
+      );
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory ReportHostExecutionResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => ReportHostExecutionResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory ReportHostExecutionResponse.createInternalError() => ReportHostExecutionResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory ReportHostExecutionResponse.createInternalError() =>
+      ReportHostExecutionResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this ReportHostExecutionResponse.
   ReportHostExecutionResponse_kind get kind;
@@ -5382,7 +5342,8 @@ sealed class ReportHostExecutionResponse {
         "",
         ReportHostExecutionResponse_staleRevisionErrorWrapper._,
         (it) => it.value,
-        ordinal: ReportHostExecutionResponse_kind.staleRevisionErrorWrapper._ordinal,
+        ordinal:
+            ReportHostExecutionResponse_kind.staleRevisionErrorWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -5399,15 +5360,16 @@ sealed class ReportHostExecutionResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "service/v1/topology.skir:ReportHostExecutionResponse",
-    doc: "",
-    unknownInstance: ReportHostExecutionResponse_unknown._instance,
-    enumInstance: ReportHostExecutionResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ReportHostExecutionResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:ReportHostExecutionResponse",
+        doc: "",
+        unknownInstance: ReportHostExecutionResponse_unknown._instance,
+        enumInstance: ReportHostExecutionResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ReportHostExecutionResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ReportHostExecutionResponse`.
@@ -5422,7 +5384,8 @@ enum ReportHostExecutionResponse_kind {
   const ReportHostExecutionResponse_kind(this._ordinal);
 }
 
-final class ReportHostExecutionResponse_unknown implements ReportHostExecutionResponse {
+final class ReportHostExecutionResponse_unknown
+    implements ReportHostExecutionResponse {
   static const _instance = ReportHostExecutionResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -5431,16 +5394,19 @@ final class ReportHostExecutionResponse_unknown implements ReportHostExecutionRe
   ReportHostExecutionResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.unknown;
+  ReportHostExecutionResponse_kind get kind =>
+      ReportHostExecutionResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is ReportHostExecutionResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ReportHostExecutionResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ReportHostExecutionResponse.serializer);
 }
 
-sealed class _ReportHostExecutionResponse_wrapper implements ReportHostExecutionResponse {
+sealed class _ReportHostExecutionResponse_wrapper
+    implements ReportHostExecutionResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -5453,80 +5419,663 @@ sealed class _ReportHostExecutionResponse_wrapper implements ReportHostExecution
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ReportHostExecutionResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ReportHostExecutionResponse.serializer);
 }
 
-final class ReportHostExecutionResponse_successWrapper extends _ReportHostExecutionResponse_wrapper {
+final class ReportHostExecutionResponse_successWrapper
+    extends _ReportHostExecutionResponse_wrapper {
   final ReportHostExecutionResponse_Success value;
 
   ReportHostExecutionResponse_successWrapper._(this.value);
 
   @_core.override
-  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.successWrapper;
+  ReportHostExecutionResponse_kind get kind =>
+      ReportHostExecutionResponse_kind.successWrapper;
 }
 
-final class ReportHostExecutionResponse_staleRevisionErrorWrapper extends _ReportHostExecutionResponse_wrapper {
+final class ReportHostExecutionResponse_staleRevisionErrorWrapper
+    extends _ReportHostExecutionResponse_wrapper {
   final ReportHostExecutionResponse_StaleRevisionError value;
 
   ReportHostExecutionResponse_staleRevisionErrorWrapper._(this.value);
 
   @_core.override
-  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.staleRevisionErrorWrapper;
+  ReportHostExecutionResponse_kind get kind =>
+      ReportHostExecutionResponse_kind.staleRevisionErrorWrapper;
 }
 
-final class ReportHostExecutionResponse_internalErrorWrapper extends _ReportHostExecutionResponse_wrapper {
+final class ReportHostExecutionResponse_internalErrorWrapper
+    extends _ReportHostExecutionResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   ReportHostExecutionResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  ReportHostExecutionResponse_kind get kind => ReportHostExecutionResponse_kind.internalErrorWrapper;
+  ReportHostExecutionResponse_kind get kind =>
+      ReportHostExecutionResponse_kind.internalErrorWrapper;
 }
 
-final _skir.Method<
-  ConfigureServiceHostRequest,
-  ConfigureServiceHostResponse
-> configureServiceHostMethod =
-  _skir.Method(
-    "ConfigureServiceHost",
-    934201,
-    ConfigureServiceHostRequest.serializer,
-    ConfigureServiceHostResponse.serializer,
-    "",
+// -----------------------------------------------------------------------------
+// struct ServiceMessagingScope
+// -----------------------------------------------------------------------------
+
+sealed class ServiceMessagingScope_orMutable {
+  _core.String get organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get ownedRealm;
+  _lib_kernel_v1_record_id.RecordId_orMutable? get attachedRealm;
+
+  ServiceMessagingScope toFrozen();
+}
+
+/// Deeply immutable.
+final class ServiceMessagingScope implements ServiceMessagingScope_orMutable {
+  @_core.override
+  final _core.String organizationId;
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId? ownedRealm;
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId? attachedRealm;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ServiceMessagingScope({
+    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? ownedRealm,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? attachedRealm,
+  }) => ServiceMessagingScope._(
+    organizationId,
+    (ownedRealm != null) ? ownedRealm.toFrozen() : null,
+    (attachedRealm != null) ? attachedRealm.toFrozen() : null,
   );
+
+  ServiceMessagingScope._(
+    this.organizationId,
+    this.ownedRealm,
+    this.attachedRealm,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ServiceMessagingScope._("", null, null);
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ServiceMessagingScope_mutable mutable() =>
+      ServiceMessagingScope_mutable._("", null, null);
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ServiceMessagingScope toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ServiceMessagingScope_mutable toMutable() => ServiceMessagingScope_mutable._(
+    this.organizationId,
+    this.ownedRealm,
+    this.attachedRealm,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ServiceMessagingScope) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.organizationId,
+    this.ownedRealm,
+    this.attachedRealm,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ServiceMessagingScope` instances.
+  static _skir.StructSerializer<
+    ServiceMessagingScope,
+    ServiceMessagingScope_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "organization_id",
+        "organizationId",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.organizationId,
+        (it, v) => it.organizationId = v,
+      );
+      _serializerBuilder.addField(
+        "owned_realm",
+        "ownedRealm",
+        1,
+        _skir.Serializers.optional(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.ownedRealm,
+        (it, v) => it.ownedRealm = v,
+      );
+      _serializerBuilder.addField(
+        "attached_realm",
+        "attachedRealm",
+        2,
+        _skir.Serializers.optional(
+          _lib_kernel_v1_record_id.RecordId.serializer,
+        ),
+        "",
+        (it) => it.attachedRealm,
+        (it, v) => it.attachedRealm = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:ServiceMessagingScope",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ServiceMessagingScope_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ServiceMessagingScope].
+final class ServiceMessagingScope_mutable
+    implements ServiceMessagingScope_orMutable {
+  _core.String organizationId;
+  _lib_kernel_v1_record_id.RecordId_orMutable? ownedRealm;
+  _lib_kernel_v1_record_id.RecordId_orMutable? attachedRealm;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ServiceMessagingScope_mutable._(
+    this.organizationId,
+    this.ownedRealm,
+    this.attachedRealm,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ServiceMessagingScope toFrozen() => ServiceMessagingScope(
+    organizationId: this.organizationId,
+    ownedRealm: this.ownedRealm,
+    attachedRealm: this.attachedRealm,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GetServiceMessagingScopeRequest
+// -----------------------------------------------------------------------------
+
+sealed class GetServiceMessagingScopeRequest_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
+
+  GetServiceMessagingScopeRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class GetServiceMessagingScopeRequest
+    implements GetServiceMessagingScopeRequest_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId serviceId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GetServiceMessagingScopeRequest({
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+  }) => GetServiceMessagingScopeRequest._(serviceId.toFrozen());
+
+  GetServiceMessagingScopeRequest._(this.serviceId);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GetServiceMessagingScopeRequest._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GetServiceMessagingScopeRequest_mutable mutable() =>
+      GetServiceMessagingScopeRequest_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+      );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GetServiceMessagingScopeRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GetServiceMessagingScopeRequest_mutable toMutable() =>
+      GetServiceMessagingScopeRequest_mutable._(this.serviceId);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GetServiceMessagingScopeRequest) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.serviceId];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GetServiceMessagingScopeRequest` instances.
+  static _skir.StructSerializer<
+    GetServiceMessagingScopeRequest,
+    GetServiceMessagingScopeRequest_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "service_id",
+        "serviceId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.serviceId,
+        (it, v) => it.serviceId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:GetServiceMessagingScopeRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GetServiceMessagingScopeRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GetServiceMessagingScopeRequest].
+final class GetServiceMessagingScopeRequest_mutable
+    implements GetServiceMessagingScopeRequest_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable serviceId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  GetServiceMessagingScopeRequest_mutable._(this.serviceId);
+
+  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
+    final value = this.serviceId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.serviceId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GetServiceMessagingScopeRequest toFrozen() =>
+      GetServiceMessagingScopeRequest(serviceId: this.serviceId).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct GetServiceMessagingScopeResponse.NotFound
+// -----------------------------------------------------------------------------
+
+sealed class GetServiceMessagingScopeResponse_NotFound_orMutable {
+  GetServiceMessagingScopeResponse_NotFound toFrozen();
+}
+
+/// Deeply immutable.
+final class GetServiceMessagingScopeResponse_NotFound
+    implements GetServiceMessagingScopeResponse_NotFound_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory GetServiceMessagingScopeResponse_NotFound() =>
+      GetServiceMessagingScopeResponse_NotFound._();
+
+  GetServiceMessagingScopeResponse_NotFound._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = GetServiceMessagingScopeResponse_NotFound._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static GetServiceMessagingScopeResponse_NotFound_mutable mutable() =>
+      GetServiceMessagingScopeResponse_NotFound_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  GetServiceMessagingScopeResponse_NotFound toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  GetServiceMessagingScopeResponse_NotFound_mutable toMutable() =>
+      GetServiceMessagingScopeResponse_NotFound_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! GetServiceMessagingScopeResponse_NotFound) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `GetServiceMessagingScopeResponse_NotFound` instances.
+  static _skir.StructSerializer<
+    GetServiceMessagingScopeResponse_NotFound,
+    GetServiceMessagingScopeResponse_NotFound_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId:
+        "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (GetServiceMessagingScopeResponse_NotFound_mutable it) =>
+        it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [GetServiceMessagingScopeResponse_NotFound].
+final class GetServiceMessagingScopeResponse_NotFound_mutable
+    implements GetServiceMessagingScopeResponse_NotFound_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  GetServiceMessagingScopeResponse_NotFound_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  GetServiceMessagingScopeResponse_NotFound toFrozen() =>
+      GetServiceMessagingScopeResponse_NotFound().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum GetServiceMessagingScopeResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case GetServiceMessagingScopeResponse_unknown(): { ... }
+///     case GetServiceMessagingScopeResponse_found(:var value): { ... }
+///     case GetServiceMessagingScopeResponse_notFound(:var value): { ... }
+///     case GetServiceMessagingScopeResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class GetServiceMessagingScopeResponse {
+  /// Constant indicating an unknown `GetServiceMessagingScopeResponse`.
+  /// Default value for fields of type `GetServiceMessagingScopeResponse`.
+  static const GetServiceMessagingScopeResponse unknown =
+      GetServiceMessagingScopeResponse_unknown._instance;
+
+  /// Create a 'found' variant wrapping around the given value.
+  factory GetServiceMessagingScopeResponse.wrapFound(
+    ServiceMessagingScope value,
+  ) => GetServiceMessagingScopeResponse_foundWrapper._(value);
+
+  /// Same as `wrapFound(ServiceMessagingScope(...))`.
+  factory GetServiceMessagingScopeResponse.createFound({
+    required _core.String organizationId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? ownedRealm,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? attachedRealm,
+  }) => GetServiceMessagingScopeResponse.wrapFound(
+    ServiceMessagingScope(
+      organizationId: organizationId,
+      ownedRealm: ownedRealm,
+      attachedRealm: attachedRealm,
+    ),
+  );
+
+  /// Create a 'not_found' variant wrapping around the given value.
+  factory GetServiceMessagingScopeResponse.wrapNotFound(
+    GetServiceMessagingScopeResponse_NotFound value,
+  ) => GetServiceMessagingScopeResponse_notFoundWrapper._(value);
+
+  /// Same as `wrapNotFound(GetServiceMessagingScopeResponse_NotFound(...))`.
+  factory GetServiceMessagingScopeResponse.createNotFound() =>
+      GetServiceMessagingScopeResponse.wrapNotFound(
+        GetServiceMessagingScopeResponse_NotFound(),
+      );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory GetServiceMessagingScopeResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => GetServiceMessagingScopeResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory GetServiceMessagingScopeResponse.createInternalError() =>
+      GetServiceMessagingScopeResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this GetServiceMessagingScopeResponse.
+  GetServiceMessagingScopeResponse_kind get kind;
+
+  /// Serializer for `GetServiceMessagingScopeResponse` instances.
+  static _skir.EnumSerializer<GetServiceMessagingScopeResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "found",
+        "wrapFound",
+        ServiceMessagingScope.serializer,
+        "",
+        GetServiceMessagingScopeResponse_foundWrapper._,
+        (it) => it.value,
+        ordinal: GetServiceMessagingScopeResponse_kind.foundWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "not_found",
+        "wrapNotFound",
+        GetServiceMessagingScopeResponse_NotFound.serializer,
+        "",
+        GetServiceMessagingScopeResponse_notFoundWrapper._,
+        (it) => it.value,
+        ordinal: GetServiceMessagingScopeResponse_kind.notFoundWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        GetServiceMessagingScopeResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal:
+            GetServiceMessagingScopeResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/topology.skir:GetServiceMessagingScopeResponse",
+        doc: "",
+        unknownInstance: GetServiceMessagingScopeResponse_unknown._instance,
+        enumInstance: GetServiceMessagingScopeResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized:
+            GetServiceMessagingScopeResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `GetServiceMessagingScopeResponse`.
+enum GetServiceMessagingScopeResponse_kind {
+  unknown(0),
+  foundWrapper(1),
+  notFoundWrapper(2),
+  internalErrorWrapper(3);
+
+  final _core.int _ordinal;
+
+  const GetServiceMessagingScopeResponse_kind(this._ordinal);
+}
+
+final class GetServiceMessagingScopeResponse_unknown
+    implements GetServiceMessagingScopeResponse {
+  static const _instance = GetServiceMessagingScopeResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const GetServiceMessagingScopeResponse_unknown._() : _u = null;
+  GetServiceMessagingScopeResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  GetServiceMessagingScopeResponse_kind get kind =>
+      GetServiceMessagingScopeResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) =>
+      other is GetServiceMessagingScopeResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    GetServiceMessagingScopeResponse.serializer,
+  );
+}
+
+sealed class _GetServiceMessagingScopeResponse_wrapper
+    implements GetServiceMessagingScopeResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _GetServiceMessagingScopeResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(
+    this,
+    GetServiceMessagingScopeResponse.serializer,
+  );
+}
+
+final class GetServiceMessagingScopeResponse_foundWrapper
+    extends _GetServiceMessagingScopeResponse_wrapper {
+  final ServiceMessagingScope value;
+
+  GetServiceMessagingScopeResponse_foundWrapper._(this.value);
+
+  @_core.override
+  GetServiceMessagingScopeResponse_kind get kind =>
+      GetServiceMessagingScopeResponse_kind.foundWrapper;
+}
+
+final class GetServiceMessagingScopeResponse_notFoundWrapper
+    extends _GetServiceMessagingScopeResponse_wrapper {
+  final GetServiceMessagingScopeResponse_NotFound value;
+
+  GetServiceMessagingScopeResponse_notFoundWrapper._(this.value);
+
+  @_core.override
+  GetServiceMessagingScopeResponse_kind get kind =>
+      GetServiceMessagingScopeResponse_kind.notFoundWrapper;
+}
+
+final class GetServiceMessagingScopeResponse_internalErrorWrapper
+    extends _GetServiceMessagingScopeResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  GetServiceMessagingScopeResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  GetServiceMessagingScopeResponse_kind get kind =>
+      GetServiceMessagingScopeResponse_kind.internalErrorWrapper;
+}
+
+final _skir.Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>
+configureServiceHostMethod = _skir.Method(
+  "ConfigureServiceHost",
+  934201,
+  ConfigureServiceHostRequest.serializer,
+  ConfigureServiceHostResponse.serializer,
+  "",
+);
 
 final _skir.Method<
   WatchOrganizationTopologyRequest,
   WatchOrganizationTopologyResponse
-> watchOrganizationTopologyMethod =
-  _skir.Method(
-    "WatchOrganizationTopology",
-    934202,
-    WatchOrganizationTopologyRequest.serializer,
-    WatchOrganizationTopologyResponse.serializer,
-    "",
-  );
+>
+watchOrganizationTopologyMethod = _skir.Method(
+  "WatchOrganizationTopology",
+  934202,
+  WatchOrganizationTopologyRequest.serializer,
+  WatchOrganizationTopologyResponse.serializer,
+  "",
+);
+
+final _skir.Method<WatchHostExecutionRequest, WatchHostExecutionResponse>
+watchHostExecutionMethod = _skir.Method(
+  "WatchHostExecution",
+  934203,
+  WatchHostExecutionRequest.serializer,
+  WatchHostExecutionResponse.serializer,
+  "",
+);
+
+final _skir.Method<ReportHostExecutionRequest, ReportHostExecutionResponse>
+reportHostExecutionMethod = _skir.Method(
+  "ReportHostExecution",
+  934204,
+  ReportHostExecutionRequest.serializer,
+  ReportHostExecutionResponse.serializer,
+  "",
+);
 
 final _skir.Method<
-  WatchHostExecutionRequest,
-  WatchHostExecutionResponse
-> watchHostExecutionMethod =
-  _skir.Method(
-    "WatchHostExecution",
-    934203,
-    WatchHostExecutionRequest.serializer,
-    WatchHostExecutionResponse.serializer,
-    "",
-  );
-
-final _skir.Method<
-  ReportHostExecutionRequest,
-  ReportHostExecutionResponse
-> reportHostExecutionMethod =
-  _skir.Method(
-    "ReportHostExecution",
-    934204,
-    ReportHostExecutionRequest.serializer,
-    ReportHostExecutionResponse.serializer,
-    "",
-  );
+  GetServiceMessagingScopeRequest,
+  GetServiceMessagingScopeResponse
+>
+getServiceMessagingScopeMethod = _skir.Method(
+  "GetServiceMessagingScope",
+  934205,
+  GetServiceMessagingScopeRequest.serializer,
+  GetServiceMessagingScopeResponse.serializer,
+  "",
+);

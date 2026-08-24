@@ -4,12 +4,14 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":engine-core"))
+    imprintEngineCore(project(":engine-core"))
+    imprintHostApi("com.typewritermc:loader-api")
 }
 
 typewriter {
     engine {
         id = "typewritermc:panel"
         version = "1.0.0"
+        hostApi = "^1"
     }
 }

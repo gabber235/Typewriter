@@ -199,7 +199,7 @@ class ServicesGraph extends ConsumerWidget {
     return _ServiceGraphItem(
       selectableId: EngineInstanceIdentifier(engine.engineId),
       title:
-          "${engine.target.engineId.formatted} ${engine.target.majorVersion}.x",
+          "${engine.target.engineId.formatted} ${engine.target.versionConstraint}",
       badge: "Engine",
       status: connected
           ? childRuntimeStatusLabel(engine.state.status)

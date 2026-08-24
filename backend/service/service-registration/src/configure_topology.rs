@@ -72,7 +72,7 @@ pub async fn handle_configure(
         .execution
         .realm
         .as_ref()
-        .map(|realm| &realm.target_engine);
+        .map(|realm| &realm.primary_engine);
     if let Some(target) = realm_target
         && !valid_target(target)
     {
@@ -80,7 +80,7 @@ pub async fn handle_configure(
     }
     let engine_target = request
         .execution
-        .engine
+        .primary_engine
         .as_ref()
         .map(|engine| &engine.target);
     if let Some(target) = engine_target
@@ -91,7 +91,7 @@ pub async fn handle_configure(
 
     let existing_realm_id = match request
         .execution
-        .engine
+        .primary_engine
         .as_ref()
         .map(|engine| &engine.realm)
     {
@@ -111,7 +111,7 @@ pub async fn handle_configure(
     let uses_hosted_realm = matches!(
         request
             .execution
-            .engine
+            .primary_engine
             .as_ref()
             .map(|engine| &engine.realm),
         Some(EngineRealmSelection::HostedRealm)
@@ -148,17 +148,9 @@ pub async fn handle_configure(
                     message: 'Host cannot run a Realm',
                 }
             };
-            IF $has_realm AND !array::any(
-                $host.supported_engines,
-                |$supported| $supported.engine_id = $realm_target.engine_id
-                    AND $realm_target.major_version IN $supported.supported_major_versions,
-            ) {
-                RETURN { outcome: 'incompatible-engine-error', target: $realm_target }
-            };
             IF $has_engine AND !array::any(
                 $host.supported_engines,
-                |$supported| $supported.engine_id = $engine_target.engine_id
-                    AND $engine_target.major_version IN $supported.supported_major_versions,
+                |$supported| $supported.engine_id = $engine_target.engine_id,
             ) {
                 RETURN { outcome: 'incompatible-engine-error', target: $engine_target }
             };
@@ -175,7 +167,6 @@ pub async fn handle_configure(
                     UPDATE ONLY $current_realm.id SET
                         target_engine = $realm_target,
                         revision += 1,
-                        manifest_revision.desired += 1,
                         state = { status: 'STAGING', updated_at: time::now() }
                 } ELSE {
                     $current_realm
@@ -212,7 +203,6 @@ pub async fn handle_configure(
                         realm_id = $assigned_realm.id,
                         target = $engine_target,
                         revision += 1,
-                        manifest_revision.desired += 1,
                         state = { status: 'STAGING', updated_at: time::now() }
                 } ELSE {
                     $current_engine
@@ -259,7 +249,6 @@ pub async fn handle_configure(
                         id,
                         revision,
                         target_engine,
-                        manifest_revision,
                         state,
                         {
                             id: owner_host_id,
@@ -271,7 +260,6 @@ pub async fn handle_configure(
                         id,
                         revision,
                         target,
-                        manifest_revision,
                         state,
                         {
                             id: owner_host_id,
@@ -299,7 +287,7 @@ pub async fn handle_configure(
     .bind("expected_revision", request.expected_revision)
     .bind("has_realm", request.execution.realm.is_some())
     .bind("realm_target", realm_target.map(EngineTargetRecord::from))
-    .bind("has_engine", request.execution.engine.is_some())
+    .bind("has_engine", request.execution.primary_engine.is_some())
     .bind("engine_target", engine_target.map(EngineTargetRecord::from))
     .bind("uses_hosted_realm", uses_hosted_realm)
     .bind("existing_realm_id", existing_realm_id)
@@ -412,12 +400,16 @@ fn invalid_configuration(message: impl Into<String>) -> ConfigureServiceHostResp
 }
 
 fn valid_target(target: &EngineTarget) -> bool {
-    target.major_version >= 0
-        && target.engine_id.len() >= 3
-        && target.engine_id.split('_').all(|part| {
-            !part.is_empty()
-                && part
-                    .chars()
-                    .all(|character| character.is_ascii_lowercase() || character.is_ascii_digit())
+    !target.version_constraint.trim().is_empty() && valid_artifact_id(&target.engine_id)
+}
+
+fn valid_artifact_id(value: &str) -> bool {
+    !value.is_empty()
+        && value.split(':').all(|segment| {
+            !segment.is_empty()
+                && segment.chars().enumerate().all(|(index, character)| {
+                    character.is_ascii_alphanumeric()
+                        || (index > 0 && matches!(character, '_' | '.' | '-'))
+                })
         })
 }

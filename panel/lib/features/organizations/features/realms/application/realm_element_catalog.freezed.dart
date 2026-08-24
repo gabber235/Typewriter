@@ -522,12 +522,12 @@ $DiscoveredElementDefinitionCopyWith<DiscoveredElementDefinition> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&const DeepCollectionEquality().equals(other.color, color)&&(identical(other.availability, availability) || other.availability == availability));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,const DeepCollectionEquality().hash(color),availability);
+int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,color,availability);
 
 @override
 String toString() {
@@ -559,7 +559,7 @@ class _$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = freezed,Object? availability = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -567,7 +567,7 @@ as ElementKind,type: null == type ? _self.type : type // ignore: cast_nullable_t
 as ResolvedTypeRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
-as IconValue,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,availability: null == availability ? _self.availability : availability // ignore: cast_nullable_to_non_nullable
 as ElementAvailability,
   ));
@@ -759,12 +759,12 @@ _$DiscoveredElementDefinitionCopyWith<_DiscoveredElementDefinition> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&const DeepCollectionEquality().equals(other.color, color)&&(identical(other.availability, availability) || other.availability == availability));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,const DeepCollectionEquality().hash(color),availability);
+int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,color,availability);
 
 @override
 String toString() {
@@ -796,7 +796,7 @@ class __$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = freezed,Object? availability = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
   return _then(_DiscoveredElementDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -804,7 +804,7 @@ as ElementKind,type: null == type ? _self.type : type // ignore: cast_nullable_t
 as ResolvedTypeRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
-as IconValue,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as IconValue,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,availability: null == availability ? _self.availability : availability // ignore: cast_nullable_to_non_nullable
 as ElementAvailability,
   ));

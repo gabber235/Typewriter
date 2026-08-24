@@ -20,6 +20,23 @@ sealed interface ImprintManifest {
     val contributions: List<GeneratedContribution>
 }
 
+/** Describes an artifact that is started by a stable Typewriter host. */
+@Serializable
+sealed interface HostedArtifactManifest : ImprintManifest {
+    val hostApi: VersionConstraint
+}
+
+/** Describes the Realm runtime hosted beside the panel engine. */
+@Serializable
+@SerialName("realm")
+data class RealmManifest(
+    override val format: Int = CURRENT_IMPRINT_FORMAT,
+    override val id: ArtifactId,
+    override val version: ArtifactVersion,
+    override val hostApi: VersionConstraint,
+    override val contributions: List<GeneratedContribution>,
+) : HostedArtifactManifest
+
 /** Describes an engine and every Typewriter component bundled into its canonical JAR. */
 @Serializable
 @SerialName("engine")
@@ -27,11 +44,12 @@ data class EngineManifest(
     override val format: Int = CURRENT_IMPRINT_FORMAT,
     override val id: ArtifactId,
     override val version: ArtifactVersion,
+    override val hostApi: VersionConstraint,
     val directCapabilities: List<ArtifactRequirement>,
     val resolvedCapabilities: List<ResolvedArtifact>,
     val bundledComponents: List<ResolvedArtifact>,
     override val contributions: List<GeneratedContribution>,
-) : ImprintManifest {
+) : HostedArtifactManifest {
     init {
         require(resolvedCapabilities.all { it.kind == ArtifactKind.CAPABILITY }) {
             "An engine capability graph may contain only capability artifacts."

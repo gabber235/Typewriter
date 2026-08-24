@@ -26,6 +26,7 @@ impl FixtureSpec for ServiceRegistration {
     fn configure(builder: FixtureBuilder<Self>) -> FixtureBuilder<Self> {
         builder
             .messaging_subscription("typewriter.from.service.*.status")
+            .messaging_subscription("typewriter.from.service.*.messaging.scope")
             .messaging_subscription("typewriter.from.service.*.heartbeat")
             .messaging_subscription("typewriter.from.service.*.shutdown")
             .messaging_subscription("typewriter.from.user.*.organization.*.services.*")

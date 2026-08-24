@@ -398,6 +398,52 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
+    test("authorization rotation keeps the current runtime until release") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                val replacementLedger = RegistrarActionLedger()
+                val replacement = f.runtime(replacementLedger)
+                replacement.setConnectivity(RuntimeConnectivity.CONNECTED)
+                replacement.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
+                f.factory.enqueue(RuntimeCreateResult.Success(replacement))
+
+                f.registrar.rotateAuthorization() shouldBe RegistrarResult.Success(2L)
+
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 0
+                replacementLedger.actions.any { it is RegistrarAction.Connect } shouldBe true
+                replacementLedger.actions.count { it == RegistrarAction.QueryBinding } shouldBe 1
+                replacementLedger.actions.count { it == RegistrarAction.Heartbeat } shouldBe 1
+                f.registrar.communicatorFor(2).shouldBeInstanceOf<RegistrarResult.Success<Communicator>>()
+
+                f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 1
+            }
+        }
+    }
+    test("failed authorization rotation preserves the current runtime") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.readyScript()
+                f.registrar.start()
+                runCurrent()
+                val replacementLedger = RegistrarActionLedger()
+                val replacement = f.runtime(replacementLedger)
+                replacement.enqueueConnect(RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.CONNECT)))
+                f.factory.enqueue(RuntimeCreateResult.Success(replacement))
+
+                f.registrar.rotateAuthorization().shouldBeInstanceOf<RegistrarResult.Failure>()
+
+                val ready = f.registrar.states.value.state as RegistrarState.Ready
+                ready.connectionGeneration shouldBe 1
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 0
+                replacementLedger.actions.count { it == RegistrarAction.Close } shouldBe 1
+                f.registrar.communicatorFor(1).shouldBeInstanceOf<RegistrarResult.Success<Communicator>>()
+            }
+        }
+    }
     test("connectivity recovery is a bounded root span") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
@@ -575,6 +621,16 @@ private class Fixture(
         runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
         factory.enqueue(RuntimeCreateResult.Success(runtime))
     }
+
+    fun runtime(runtimeLedger: RegistrarActionLedger): FakeRegistrarRuntime =
+        FakeRegistrarRuntime(
+            Communicator(
+                FakeMessageTransport(),
+                harness.telemetry,
+                ContextPropagators.noop(),
+            ),
+            runtimeLedger,
+        )
 
     private fun initialMissing() = initial is CredentialLoadResult.Missing
 

@@ -40,33 +40,24 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
 };
 
 DEFINE FUNCTION OVERWRITE fn::service::valid_engine_target($target: object) -> bool {
-    IF !array::all(object::keys($target), |$key| $key IN ["engine_id", "major_version"]) {
+    IF !array::all(object::keys($target), |$key| $key IN ["engine_id", "version_constraint"]) {
         THROW "engine-target-unknown-property-error"
     };
-    IF !fn::is_id($target.engine_id) {
+    IF !fn::is_artifact_id($target.engine_id) {
         THROW "engine-target-id-invalid-error"
     };
-    IF $target.major_version < 0 {
-        THROW "engine-target-major-invalid-error"
+    IF string::len(string::trim($target.version_constraint)) == 0 {
+        THROW "engine-target-version-constraint-invalid-error"
     };
     RETURN true;
 };
 
 DEFINE FUNCTION OVERWRITE fn::service::valid_supported_engine($engine: object) -> bool {
-    IF !array::all(object::keys($engine), |$key| $key IN ["engine_id", "supported_major_versions"]) {
+    IF !array::all(object::keys($engine), |$key| $key IN ["engine_id"]) {
         THROW "supported-engine-unknown-property-error"
     };
-    IF !fn::is_id($engine.engine_id) {
+    IF !fn::is_artifact_id($engine.engine_id) {
         THROW "supported-engine-id-invalid-error"
-    };
-    IF array::is_empty($engine.supported_major_versions) {
-        THROW "supported-engine-versions-required-error"
-    };
-    IF array::len(array::distinct($engine.supported_major_versions)) != array::len($engine.supported_major_versions) {
-        THROW "supported-engine-version-duplicate-error"
-    };
-    IF !array::all($engine.supported_major_versions, |$major| $major >= 0) {
-        THROW "supported-engine-major-invalid-error"
     };
     RETURN true;
 };

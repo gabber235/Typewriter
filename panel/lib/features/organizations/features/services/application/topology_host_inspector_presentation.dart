@@ -1,8 +1,8 @@
 part of "services.dart";
 
 PresentationDefinition _hostInspectorPresentation({
-  required Map<String, List<int>> realmTargets,
-  required Map<String, List<int>> engineTargets,
+  required Map<String, List<String>> realmTargets,
+  required Map<String, List<String>> engineTargets,
   required List<TopologyRealm> realms,
   required bool canHostRealm,
   required Color color,

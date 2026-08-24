@@ -13,33 +13,30 @@ abstract class TopologyRevision with _$TopologyRevision {
 abstract class TopologyEngineTarget with _$TopologyEngineTarget {
   const factory TopologyEngineTarget({
     required String engineId,
-    required int majorVersion,
+    required String versionConstraint,
   }) = _TopologyEngineTarget;
 
   factory TopologyEngineTarget.fromSkir(skir.EngineTarget target) =>
       TopologyEngineTarget(
         engineId: target.engineId,
-        majorVersion: target.majorVersion,
+        versionConstraint: target.versionConstraint,
       );
 
   const TopologyEngineTarget._();
 
-  skir.EngineTarget toSkir() =>
-      skir.EngineTarget(engineId: engineId, majorVersion: majorVersion);
+  skir.EngineTarget toSkir() => skir.EngineTarget(
+    engineId: engineId,
+    versionConstraint: versionConstraint,
+  );
 }
 
 @freezed
 abstract class TopologySupportedEngine with _$TopologySupportedEngine {
-  const factory TopologySupportedEngine({
-    required String engineId,
-    required List<int> supportedMajorVersions,
-  }) = _TopologySupportedEngine;
+  const factory TopologySupportedEngine({required String engineId}) =
+      _TopologySupportedEngine;
 
   factory TopologySupportedEngine.fromSkir(skir.SupportedEngine engine) =>
-      TopologySupportedEngine(
-        engineId: engine.engineId,
-        supportedMajorVersions: engine.supportedMajorVersions.toList(),
-      );
+      TopologySupportedEngine(engineId: engine.engineId);
 }
 
 enum TopologyHostStatus {
@@ -176,7 +173,6 @@ abstract class TopologyRealm with _$TopologyRealm {
     required TopologyOwnerHost ownerHost,
     required int revision,
     required TopologyEngineTarget targetEngine,
-    required TopologyRevision manifestRevision,
     required TopologyRuntimeState state,
   }) = _TopologyRealm;
 
@@ -185,7 +181,6 @@ abstract class TopologyRealm with _$TopologyRealm {
     ownerHost: TopologyOwnerHost.fromSkir(realm.ownerHost),
     revision: realm.revision,
     targetEngine: TopologyEngineTarget.fromSkir(realm.targetEngine),
-    manifestRevision: TopologyRevision.fromSkir(realm.manifestRevision),
     state: TopologyRuntimeState.fromSkir(realm.state),
   );
 }
@@ -198,7 +193,6 @@ abstract class TopologyEngine with _$TopologyEngine {
     required TopologyRealmInfo realm,
     required int revision,
     required TopologyEngineTarget target,
-    required TopologyRevision manifestRevision,
     required TopologyRuntimeState state,
   }) = _TopologyEngine;
 
@@ -208,7 +202,6 @@ abstract class TopologyEngine with _$TopologyEngine {
     realm: TopologyRealmInfo.fromSkir(engine.realm),
     revision: engine.revision,
     target: TopologyEngineTarget.fromSkir(engine.target),
-    manifestRevision: TopologyRevision.fromSkir(engine.manifestRevision),
     state: TopologyRuntimeState.fromSkir(engine.state),
   );
 }

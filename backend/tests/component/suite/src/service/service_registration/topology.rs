@@ -8,7 +8,8 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, HostExecutionConfiguration, HostedEngineConfiguration,
     HostedRealmConfiguration, ReportHostExecutionRequest, ReportHostExecutionResponse,
-    WatchHostExecutionRequest, WatchHostExecutionResponse,
+    GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse, WatchHostExecutionRequest,
+    WatchHostExecutionResponse,
     WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
 };
 
@@ -18,6 +19,40 @@ const ORGANIZATION_TOPOLOGY_SUBJECT: &str = "typewriter.to.organization.test_org
 const HOST_EXECUTION_SUBJECT: &str = "typewriter.to.service.host_service.execution.watch";
 
 #[component_test(ServiceRegistration)]
+async fn messaging_scope_reports_exact_owned_and_attached_realm(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_paper_host(context, "host", "host_service").await?;
+    let database = database(context)?;
+    database
+        .seed(
+            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', version_constraint: '^1' }",
+        )
+        .execute()
+        .await?;
+
+    let response: GetServiceMessagingScopeResponse = request(
+        context,
+        "typewriter.from.service.host_service.messaging.scope",
+        &GetServiceMessagingScopeRequest {
+            service_id: skir_record_id("service", "host_service"),
+            _unrecognized: None,
+        },
+        GetServiceMessagingScopeRequest::serializer(),
+        GetServiceMessagingScopeResponse::serializer(),
+    )
+    .await?;
+
+    let GetServiceMessagingScopeResponse::Found(scope) = response else {
+        anyhow::bail!("expected messaging scope");
+    };
+    assert_eq!(scope.organization_id, "test_org");
+    assert_eq!(scope.owned_realm.expect("owned Realm").key.to_string(), "realm");
+    assert_eq!(scope.attached_realm.expect("attached Realm").key.to_string(), "realm");
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
 async fn watch_returns_first_class_topology_for_one_organization(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
@@ -25,7 +60,7 @@ async fn watch_returns_first_class_topology_for_one_organization(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', major_version: 1 }; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]",
+            "CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:engine SET owner_host_id = service_host:host, realm_id = realm_instance:realm, target = { engine_id: 'paper', version_constraint: '^1' }; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]",
         )
         .execute()
         .await?;
@@ -66,10 +101,10 @@ async fn configure_creates_local_realm_and_engine_transactionally(
         1,
         HostExecutionConfiguration {
             realm: Some(HostedRealmConfiguration {
-                target_engine: paper_target(),
+                primary_engine: paper_target(),
                 _unrecognized: None,
             }),
-            engine: Some(HostedEngineConfiguration {
+            primary_engine: Some(HostedEngineConfiguration {
                 target: paper_target(),
                 realm: EngineRealmSelection::HostedRealm,
                 _unrecognized: None,
@@ -108,14 +143,14 @@ async fn configure_runs_an_advertised_custom_engine_on_a_standalone_host(
     seed_standalone_host(context, "host", "host_service").await?;
     database(context)?
         .seed(
-            "UPDATE service_host:host SET supported_engines = [{ engine_id: 'custom_engine', supported_major_versions: [0] }]",
+            "UPDATE service_host:host SET supported_engines = [{ engine_id: 'custom_engine' }]",
         )
         .execute()
         .await?;
     expect_publications(context, 3, 0, 1)?;
     let target = EngineTarget {
         engine_id: "custom_engine".into(),
-        major_version: 0,
+        version_constraint: "^0.1".into(),
         _unrecognized: None,
     };
 
@@ -124,10 +159,10 @@ async fn configure_runs_an_advertised_custom_engine_on_a_standalone_host(
         1,
         HostExecutionConfiguration {
             realm: Some(HostedRealmConfiguration {
-                target_engine: target.clone(),
+                primary_engine: target.clone(),
                 _unrecognized: None,
             }),
-            engine: Some(HostedEngineConfiguration {
+            primary_engine: Some(HostedEngineConfiguration {
                 target: target.clone(),
                 realm: EngineRealmSelection::HostedRealm,
                 _unrecognized: None,
@@ -153,7 +188,7 @@ async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
     let database = database(context)?;
     database
         .seed(
-            "CREATE service:realm_service SET name = 'realm_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', major_version: 1 }",
+            "CREATE service:realm_service SET name = 'realm_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:realm_host SET service_id = service:realm_service, entrypoint = 'STANDALONE', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:external_realm SET owner_host_id = service_host:realm_host, target_engine = { engine_id: 'paper', version_constraint: '^1' }",
         )
         .execute()
         .await?;
@@ -170,7 +205,7 @@ async fn configure_moves_engine_to_existing_realm_before_removing_local_realm(
         2,
         HostExecutionConfiguration {
             realm: None,
-            engine: Some(HostedEngineConfiguration {
+            primary_engine: Some(HostedEngineConfiguration {
                 target: paper_target(),
                 realm: EngineRealmSelection::ExistingRealm(Box::new(
                     EngineRealmSelection_ExistingRealm {
@@ -219,7 +254,7 @@ async fn configure_rejects_invalid_relationships_without_partial_writes(
         1,
         HostExecutionConfiguration {
             realm: None,
-            engine: Some(HostedEngineConfiguration {
+            primary_engine: Some(HostedEngineConfiguration {
                 target: paper_target(),
                 realm: EngineRealmSelection::ExistingRealm(Box::new(
                     EngineRealmSelection_ExistingRealm {
@@ -243,14 +278,22 @@ async fn configure_rejects_invalid_relationships_without_partial_writes(
         1,
         HostExecutionConfiguration {
             realm: Some(HostedRealmConfiguration {
-                target_engine: EngineTarget {
-                    engine_id: "paper".into(),
-                    major_version: 2,
+                primary_engine: EngineTarget {
+                    engine_id: "unsupported".into(),
+                    version_constraint: "^1".into(),
                     _unrecognized: None,
                 },
                 _unrecognized: None,
             }),
-            engine: None,
+            primary_engine: Some(HostedEngineConfiguration {
+                target: EngineTarget {
+                    engine_id: "unsupported".into(),
+                    version_constraint: "^1".into(),
+                    _unrecognized: None,
+                },
+                realm: EngineRealmSelection::HostedRealm,
+                _unrecognized: None,
+            }),
             _unrecognized: None,
         },
     )
@@ -265,6 +308,44 @@ async fn configure_rejects_invalid_relationships_without_partial_writes(
             .await?,
         [1, true, true]
     );
+    Ok(())
+}
+
+#[component_test(ServiceRegistration)]
+async fn realm_only_host_may_target_an_engine_it_does_not_execute(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_standalone_host(context, "host", "host_service").await?;
+    database(context)?
+        .seed("UPDATE service_host:host SET supported_engines = []")
+        .execute()
+        .await?;
+    expect_publications(context, 2, 0, 1)?;
+    let target = EngineTarget {
+        engine_id: "paper".into(),
+        version_constraint: "^1".into(),
+        _unrecognized: None,
+    };
+
+    let response = configure(
+        context,
+        1,
+        HostExecutionConfiguration {
+            realm: Some(HostedRealmConfiguration {
+                primary_engine: target.clone(),
+                _unrecognized: None,
+            }),
+            primary_engine: None,
+            _unrecognized: None,
+        },
+    )
+    .await?;
+
+    let ConfigureServiceHostResponse::Success(configured) = response else {
+        anyhow::bail!("expected Realm only configuration to succeed");
+    };
+    assert_eq!(configured.realm.expect("Realm must exist").target_engine, target);
+    assert!(configured.engine.is_none());
     Ok(())
 }
 
@@ -289,7 +370,7 @@ async fn configure_blocks_realm_removal_while_another_host_depends_on_it(
     let database = database(context)?;
     database
         .seed(
-            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }; CREATE service:paper_service SET name = 'paper_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', major_version: 1 }",
+            "CREATE realm_instance:shared_realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE service:paper_service SET name = 'paper_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:paper_host SET service_id = service:paper_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE engine_instance:remote_engine SET owner_host_id = service_host:paper_host, realm_id = realm_instance:shared_realm, target = { engine_id: 'paper', version_constraint: '^1' }",
         )
         .execute()
         .await?;
@@ -316,7 +397,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     let database = database(context)?;
     database
         .seed(
-            "UPDATE service_host:host SET topology_revision.desired = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', major_version: 1 }, manifest_revision.desired = 2; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper', supported_major_versions: [1] }], topology_revision.desired = 9",
+            "UPDATE service_host:host SET topology_revision.desired = 4; CREATE realm_instance:realm SET owner_host_id = service_host:host, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE service:other_service SET name = 'other_service', role = { type: 'host', version: '1.0.0' }, organization = organization:other_org; CREATE service_host:other_host SET service_id = service:other_service, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }], topology_revision.desired = 9",
         )
         .execute()
         .await?;
@@ -353,9 +434,9 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
     ));
     assert_jm!(
         database
-            .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.manifest_revision.applied, realm_instance:realm.state.status, service_host:other_host.topology_revision.applied, service_host:other_host.state.status]")
+            .query_json("RETURN [service_host:host.topology_revision.applied, service_host:host.state.status, realm_instance:realm.state.status, service_host:other_host.topology_revision.applied, service_host:other_host.state.status]")
             .await?,
-        [4, "ACTIVE", 2, "ACTIVE", 0, "OFFLINE"]
+        [4, "ACTIVE", "ACTIVE", 0, "OFFLINE"]
     );
     Ok(())
 }
@@ -403,10 +484,10 @@ async fn report(
 fn combined_execution() -> HostExecutionConfiguration {
     HostExecutionConfiguration {
         realm: Some(HostedRealmConfiguration {
-            target_engine: paper_target(),
+            primary_engine: paper_target(),
             _unrecognized: None,
         }),
-        engine: Some(HostedEngineConfiguration {
+        primary_engine: Some(HostedEngineConfiguration {
             target: paper_target(),
             realm: EngineRealmSelection::HostedRealm,
             _unrecognized: None,
@@ -418,7 +499,7 @@ fn combined_execution() -> HostExecutionConfiguration {
 fn paper_target() -> EngineTarget {
     EngineTarget {
         engine_id: "paper".into(),
-        major_version: 1,
+        version_constraint: "^1".into(),
         _unrecognized: None,
     }
 }
@@ -457,7 +538,7 @@ async fn seed_host(
 ) -> anyhow::Result<()> {
     database(context)?
         .seed(format!(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', role = {{ type: 'host', version: '1.0.0' }}, organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper', supported_major_versions: [1] }}]",
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', role = {{ type: 'host', version: '1.0.0' }}, organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper' }}]",
         ))
         .execute()
         .await?;

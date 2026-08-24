@@ -1,59 +1,60 @@
 package com.typewritermc.realm.deployment
 
-import com.typewritermc.loader.DeploymentContext
-import com.typewritermc.loader.DeploymentEntrypoint
-import com.typewritermc.loader.DeploymentRuntime
+import com.typewritermc.loader.api.HostedDeploymentContext
+import com.typewritermc.loader.api.HostedRuntimeProvider
+import com.typewritermc.loader.api.RuntimeHealth
+import com.typewritermc.loader.api.StagedHostedRuntime
 import com.typewritermc.realm.DefaultRealmRuntimeFactory
-import java.time.Instant
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
-/** Starts the complete Realm, panel engine, and Realm targeted extension scope for one deployment. */
 fun interface RealmRuntimeFactory {
-    suspend fun start(context: DeploymentContext): ManagedRealmRuntime
+    suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime
 }
 
-/**
- * Exposes the upgrade preparation and final shutdown boundary of a running Realm deployment.
- *
- * The scaffold accepts only [CompatibleNoOperationCheckpoint]. Future checkpoint types must define compatible state
- * transfer before the loader can replace those Realm versions.
- */
 interface ManagedRealmRuntime {
-    suspend fun prepareUpgradeCheckpoint(): RealmUpgradeCheckpoint
+    suspend fun activate()
+
+    suspend fun quiesce()
+
+    suspend fun resume()
 
     suspend fun stop()
 }
 
-/** States that the stopped Realm requires no data migration before a compatible replacement starts. */
-data object CompatibleNoOperationCheckpoint : RealmUpgradeCheckpoint
-
-/** Captures Realm state required by a later runtime version during whole deployment replacement. */
-sealed interface RealmUpgradeCheckpoint
-
-/**
- * Adapts a managed Realm runtime to the stable loader deployment lifecycle.
- *
- * Quiescing prepares exactly one upgrade checkpoint. Stopping rejects unsupported checkpoint types before releasing the
- * Realm, preventing silent state loss during a future migration.
- */
 class RealmDeploymentEntrypoint(
     private val factory: RealmRuntimeFactory = DefaultRealmRuntimeFactory(),
-) : DeploymentEntrypoint {
-    override suspend fun start(context: DeploymentContext): DeploymentRuntime = RealmDeploymentRuntime(factory.start(context))
+) : HostedRuntimeProvider {
+    override suspend fun stage(context: HostedDeploymentContext): StagedHostedRuntime = RealmDeploymentRuntime(factory.stage(context))
 }
 
 private class RealmDeploymentRuntime(
     private val realm: ManagedRealmRuntime,
-) : DeploymentRuntime {
-    private var checkpoint: RealmUpgradeCheckpoint? = null
+) : StagedHostedRuntime {
+    private val mutableHealth = MutableStateFlow<RuntimeHealth>(RuntimeHealth.Staged)
+    override val health: StateFlow<RuntimeHealth> = mutableHealth
 
-    override suspend fun quiesce(deadline: Instant) {
-        checkpoint = realm.prepareUpgradeCheckpoint()
+    override suspend fun activate() {
+        try {
+            realm.activate()
+            mutableHealth.value = RuntimeHealth.Healthy
+        } catch (failure: Throwable) {
+            mutableHealth.value = RuntimeHealth.Unhealthy(failure.message ?: "Realm activation failed.")
+            throw failure
+        }
     }
 
-    override suspend fun stop() {
-        check(checkpoint == null || checkpoint == CompatibleNoOperationCheckpoint) {
-            "Unsupported Realm upgrade checkpoint."
-        }
+    override suspend fun quiesce() {
+        realm.quiesce()
+        mutableHealth.value = RuntimeHealth.Staged
+    }
+
+    override suspend fun resume() {
+        realm.resume()
+        mutableHealth.value = RuntimeHealth.Healthy
+    }
+
+    override suspend fun close() {
         realm.stop()
     }
 }

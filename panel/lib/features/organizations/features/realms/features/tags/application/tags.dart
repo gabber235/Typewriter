@@ -25,11 +25,13 @@ class Tags extends _$Tags {
     }
 
     final request = skir.WatchTagsRequest();
+    final address = RealmServiceAddress(
+      organizationId: organizationId,
+      realmId: realmId,
+    );
     yield* ref.watchRequest(
-      subject:
-          "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.watch",
-      listenSubject:
-          "service.from.${realmId.id}.organization.${organizationId.id}.realm.tag.watch",
+      subject: address.request("tag.watch"),
+      listenSubject: address.event("tag.watch"),
       requestBytes: skir.WatchTagsRequest.serializer.toBytes(request),
       serializer: skir.WatchTagsResponse.serializer,
       transformer: (previous, response) {
@@ -76,7 +78,10 @@ class Tags extends _$Tags {
     final response = await runPanelMutation(
       operation: PanelMutationOperation.createTag,
       mutation: () => ref.requestSkir(
-        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.create",
+        RealmServiceAddress(
+          organizationId: organizationId,
+          realmId: realmId,
+        ).request("tag.create"),
         skir.CreateTagRequest.serializer.toBytes(request),
         skir.CreateTagResponse.serializer,
       ),
@@ -120,7 +125,10 @@ class Tags extends _$Tags {
     final response = await runPanelMutation<skir.UpdateTagResponse?>(
       operation: PanelMutationOperation.updateTag,
       mutation: () => ref.requestSkir(
-        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.update",
+        RealmServiceAddress(
+          organizationId: organizationId,
+          realmId: realmId,
+        ).request("tag.update"),
         skir.UpdateTagRequest.serializer.toBytes(request),
         skir.UpdateTagResponse.serializer,
       ),
@@ -203,7 +211,10 @@ class Tags extends _$Tags {
     final response = await runPanelMutation(
       operation: PanelMutationOperation.deleteTag,
       mutation: () => ref.requestSkir(
-        "service.to.${realmId.id}.organization.${organizationId.id}.realm.tag.delete",
+        RealmServiceAddress(
+          organizationId: organizationId,
+          realmId: realmId,
+        ).request("tag.delete"),
         skir.DeleteTagRequest.serializer.toBytes(request),
         skir.DeleteTagResponse.serializer,
       ),

@@ -3,11 +3,24 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
-import com.typewritermc.loader.DeploymentContext
-import com.typewritermc.realm.deployment.CompatibleNoOperationCheckpoint
+import com.typewritermc.discovery.CatalogGeneration
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.Eligibility
+import com.typewritermc.discovery.SourcePartCatalogEntry
+import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
+import com.typewritermc.discovery.runtime.DiscoveryDeployment
+import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
+import com.typewritermc.elements.DeploymentCatalogAssembler
+import com.typewritermc.imprint.EngineManifest
+import com.typewritermc.imprint.ExtensionManifest
+import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
+import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.imprint.ImprintManifestCodec
+import com.typewritermc.loader.api.HostedDeploymentContext
+import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
-import com.typewritermc.realm.deployment.RealmUpgradeCheckpoint
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
 import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
@@ -25,6 +38,7 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.console.installOpenTelemetryLogback
 import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import io.opentelemetry.api.OpenTelemetry
@@ -39,57 +53,131 @@ import org.koin.dsl.onClose
 import java.nio.file.Path
 import java.time.Clock
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.zip.ZipFile
 import kotlin.time.Duration.Companion.seconds
 
 /** Creates the complete Realm lifecycle exclusively for a loader managed deployment. */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
-    override suspend fun start(context: DeploymentContext): ManagedRealmRuntime {
+    override suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime {
         val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val configuration = RealmSettings.system().applicationConfiguration().resolveAgainst(context.workDirectory)
-        val delayScheduler = CoroutineDelayScheduler
-        val clock = Clock.systemUTC()
-        val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
-        val logback =
-            installOpenTelemetryLogback(
-                context.service.openTelemetry,
-                Level.toLevel(configuration.diagnosticLevel.name, Level.WARN),
-            )
-        val realmModule =
-            module {
-                single<OpenTelemetry> { context.service.openTelemetry }
-                single { context.service.telemetry }
-                single { applicationScope } onClose { it?.cancel() }
-                single { configuration.database }
-                single<RealmDatabaseProvider> { DatabaseProvider(get()) }
-                single { RealmDiscoverySnapshotStore() }
-                single<RealmEditorCatalogSource> { SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().discovery() } }
-                single<RealmElementCatalogSource> { SnapshotRealmElementCatalogSource { get<RealmDiscoverySnapshotStore>().elements() } }
-                single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
-                single { RealmCatalogInvalidationProcess(get(), get(), get()) }
-                single { Realm(get(), get(), get(), get(), get(), get(), routeRetryPolicy, delayScheduler, clock, get()) }
-            }
-
-        val application =
-            koinApplication {
-                modules(
-                    realmModule,
+        var logback: AutoCloseable? = null
+        var discovery: DiscoveryDeployment? = null
+        var application: KoinApplication? = null
+        try {
+            val configuration = RealmSettings.system().applicationConfiguration().resolveAgainst(context.directories.state)
+            val delayScheduler = CoroutineDelayScheduler
+            val clock = Clock.systemUTC()
+            val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
+            logback =
+                installOpenTelemetryLogback(
+                    context.host.openTelemetry,
+                    Level.toLevel(configuration.diagnosticLevel.name, Level.WARN),
                 )
-            }
-        val realm = application.koin.get<Realm>()
-        val telemetry = application.koin.get<ServiceTelemetry>()
-        val runtime =
-            DefaultManagedRealmRuntime(
-                application,
+            val catalogPaths =
+                (
+                    listOf(context.artifacts.runtimeArtifact) +
+                        context.artifacts.catalogArtifacts +
+                        context.artifacts.extensions.map { it.path }
+                ).distinct()
+            val manifests = catalogPaths.map(::readManifest)
+            val sourceParts =
+                context.artifacts.extensions.flatMap { extension ->
+                    extension.sourceParts.map { sourcePart ->
+                        SourcePartCatalogEntry(
+                            extension.id,
+                            sourcePart.name,
+                            when (val disposition = sourcePart.disposition) {
+                                is SourcePartDisposition.Eligible -> Eligibility.Eligible
+                                is SourcePartDisposition.Ineligible -> Eligibility.Ineligible(disposition.reasons)
+                            },
+                        )
+                    }
+                }
+            val assembled =
+                DeploymentCatalogAssembler.assemble(
+                    generation =
+                        CatalogGeneration(
+                            context.directories.deployment.fileName
+                                .toString(),
+                        ),
+                    engines = manifests.filterIsInstance<EngineManifest>(),
+                    extensions = manifests.filterIsInstance<ExtensionManifest>(),
+                    sourceParts = sourceParts,
+                    facts = DeploymentFacts(context.facts),
+                    otherManifests = manifests.filterNot { it is EngineManifest || it is ExtensionManifest },
+                )
+            val loadedDiscovery =
+                DiscoveryModuleLoader().load(
+                    DiscoveryArtifactPackage(
+                        artifacts = catalogPaths.map { it.toUri().toURL() },
+                        selectedEngine = null,
+                        selectedExtensions = context.artifacts.extensions.mapTo(mutableSetOf()) { it.id },
+                        facts = DeploymentFacts(context.facts),
+                    ),
+                    DiscoveryDomains.Realm,
+                    assembled.runtimeDiscovery,
+                    requireNotNull(javaClass.classLoader),
+                )
+            discovery = loadedDiscovery
+            val realmModule =
+                module {
+                    single<OpenTelemetry> { context.host.openTelemetry }
+                    single { context.host }
+                    single<ServiceTelemetry> { context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION) }
+                    single { applicationScope } onClose { it?.cancel() }
+                    single { configuration.database }
+                    single<RealmDatabaseProvider> { DatabaseProvider(get()) }
+                    single { RealmDiscoverySnapshotStore() }
+                    single<RealmEditorCatalogSource> {
+                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().discovery() }
+                    }
+                    single<RealmElementCatalogSource> {
+                        SnapshotRealmElementCatalogSource { get<RealmDiscoverySnapshotStore>().elements() }
+                    }
+                    single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
+                    single { RealmCatalogInvalidationProcess(get(), get(), get()) }
+                    single {
+                        Realm(
+                            get(),
+                            get(),
+                            get(),
+                            get(),
+                            get(),
+                            get(),
+                            routeRetryPolicy,
+                            delayScheduler,
+                            clock,
+                            get(),
+                            get(),
+                        )
+                    }
+                }
+
+            val startedApplication =
+                koinApplication {
+                    modules(
+                        realmModule,
+                    )
+                }
+            application = startedApplication
+            val realm = startedApplication.koin.get<Realm>()
+            startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
+                RealmDiscoverySnapshot(assembled.discovery, assembled.elements),
+            )
+            val telemetry = startedApplication.koin.get<ServiceTelemetry>()
+            return DefaultManagedRealmRuntime(
+                startedApplication,
                 telemetry,
                 realm,
-                logback,
+                requireNotNull(logback),
+                context,
+                loadedDiscovery,
             )
-
-        try {
-            startRealm(telemetry, realm, context)
-            return runtime
         } catch (failure: Throwable) {
-            runCatching { runtime.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
+            applicationScope.cancel()
+            runCatching { application?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+            runCatching { discovery?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+            runCatching { logback?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
         }
     }
@@ -100,20 +188,41 @@ private class DefaultManagedRealmRuntime(
     private val telemetry: ServiceTelemetry,
     private val realm: Realm,
     private val logback: AutoCloseable,
+    private val context: HostedDeploymentContext,
+    private val discovery: DiscoveryDeployment,
 ) : ManagedRealmRuntime {
     private val closed = AtomicBoolean()
+    private var active = false
 
-    override suspend fun prepareUpgradeCheckpoint(): RealmUpgradeCheckpoint = CompatibleNoOperationCheckpoint
+    override suspend fun activate() {
+        check(!closed.get()) { "Realm runtime is closed." }
+        if (active) return
+        startRealm(telemetry, realm, context)
+        active = true
+    }
+
+    override suspend fun quiesce() {
+        if (active) {
+            stopRealm(telemetry, realm)
+            active = false
+        }
+    }
+
+    override suspend fun resume() = activate()
 
     override suspend fun stop() {
         if (!closed.compareAndSet(false, true)) return
         try {
-            stopRealm(telemetry, realm)
+            if (active) stopRealm(telemetry, realm)
         } finally {
             try {
                 application.close()
             } finally {
-                logback.close()
+                try {
+                    discovery.close()
+                } finally {
+                    logback.close()
+                }
             }
         }
     }
@@ -144,6 +253,12 @@ private fun RealmDatabaseConfiguration.resolveAgainst(workDirectory: Path): Real
 
 private fun Path.resolveAgainst(workDirectory: Path): Path = if (isAbsolute) normalize() else workDirectory.resolve(this).normalize()
 
+private fun readManifest(path: Path): ImprintManifest =
+    ZipFile(path.toFile()).use { archive ->
+        val entry = requireNotNull(archive.getEntry(IMPRINT_MANIFEST_PATH)) { "Artifact ${path.fileName} has no Imprint manifest." }
+        ImprintManifestCodec.decode(archive.getInputStream(entry).readBytes())
+    }
+
 private suspend fun stopRealm(
     telemetry: ServiceTelemetry,
     realm: Realm,
@@ -158,7 +273,7 @@ private suspend fun stopRealm(
 private suspend fun startRealm(
     telemetry: ServiceTelemetry,
     realm: Realm,
-    context: DeploymentContext,
+    context: HostedDeploymentContext,
 ) = telemetry.mainSpan(
     name = "realm.start",
     unhandledFailureSlug = ErrorSlug.of("realm-start-failed"),
@@ -174,7 +289,7 @@ private suspend fun startRealm(
     ) {
         attribute("workflow.stage", "database")
     }
-    realm.start(context.child.instanceId, context.service.states, context.service::communicatorFor)
+    realm.start(context.identity.realmId)
     main.annotate { stage("database") { outcome("ready") } }
     main.event(
         name = "workflow.stage.completed",

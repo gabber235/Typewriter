@@ -12,6 +12,7 @@ import org.gradle.api.Project
 
 const val ENGINE_CORE_CONFIGURATION = "imprintEngineCore"
 const val EXTENSION_API_CONFIGURATION = "imprintExtensionApi"
+const val HOST_API_CONFIGURATION = "imprintHostApi"
 const val PROCESSORS_CONFIGURATION = "imprintProcessors"
 
 /** Configures one canonical engine, capability, or extension artifact. */
@@ -37,7 +38,12 @@ class ImprintPlugin : Plugin<Project> {
 }
 
 private fun Project.createDependencyBuckets() {
-    listOf(ENGINE_CORE_CONFIGURATION, EXTENSION_API_CONFIGURATION, PROCESSORS_CONFIGURATION).forEach { name ->
+    listOf(
+        ENGINE_CORE_CONFIGURATION,
+        EXTENSION_API_CONFIGURATION,
+        HOST_API_CONFIGURATION,
+        PROCESSORS_CONFIGURATION,
+    ).forEach { name ->
         configurations.maybeCreate(name).apply {
             isCanBeConsumed = false
             isCanBeResolved = false
@@ -58,6 +64,12 @@ open class TypewriterProjectExtension(
         project.configureEngineProject(declaration.toModel())
     }
 
+    fun realm(action: Action<RealmDeclaration>) {
+        val declaration = RealmDeclaration()
+        add(declaration, action)
+        project.configureRealmProject(declaration.toModel())
+    }
+
     fun engineCapability(action: Action<EngineCapabilityDeclaration>) {
         val declaration = EngineCapabilityDeclaration()
         add(declaration, action)
@@ -73,7 +85,7 @@ open class TypewriterProjectExtension(
     internal fun declaration(): DeclaredArtifact {
         if (declarations.size != 1) {
             throw GradleException(
-                "A project using Imprint must declare exactly one engine, engine capability, or extension.",
+                "A project using Imprint must declare exactly one Realm, engine, engine capability, or extension.",
             )
         }
         return declarations.single().toModel()
@@ -86,7 +98,7 @@ open class TypewriterProjectExtension(
         action.execute(declaration)
         if (declarations.isNotEmpty()) {
             throw GradleException(
-                "A project using Imprint must declare exactly one engine, engine capability, or extension.",
+                "A project using Imprint must declare exactly one Realm, engine, engine capability, or extension.",
             )
         }
         declarations += declaration
@@ -103,14 +115,26 @@ sealed class ArtifactDeclaration(
 
     internal open fun sourceParts(): List<DeclaredSourcePart> = emptyList()
 
+    internal open fun hostApi(): VersionConstraint? = null
+
     internal fun toModel(): DeclaredArtifact {
         val artifactId = validated("Typewriter artifact id") { ArtifactId(id) }
         val artifactVersion = validated("Typewriter artifact version") { ArtifactVersion(version) }
-        return DeclaredArtifact(kind, artifactId, artifactVersion, relationships(), sourceParts())
+        return DeclaredArtifact(kind, artifactId, artifactVersion, hostApi(), relationships(), sourceParts())
     }
 }
 
-open class EngineDeclaration : ArtifactDeclaration(ArtifactKind.ENGINE) {
+open class RealmDeclaration : HostedArtifactDeclaration(ArtifactKind.REALM)
+
+sealed class HostedArtifactDeclaration(
+    kind: ArtifactKind,
+) : ArtifactDeclaration(kind) {
+    var hostApi: String = ""
+
+    internal override fun hostApi(): VersionConstraint = validatedConstraint(hostApi, "Host API")
+}
+
+open class EngineDeclaration : HostedArtifactDeclaration(ArtifactKind.ENGINE) {
     private val capabilities = mutableListOf<DeclaredRelationship>()
 
     fun implements(action: Action<EngineCapabilities>) {
@@ -215,6 +239,7 @@ internal data class DeclaredArtifact(
     val kind: ArtifactKind,
     val id: ArtifactId,
     val version: ArtifactVersion,
+    val hostApi: VersionConstraint?,
     val relationships: List<DeclaredRelationship>,
     val sourceParts: List<DeclaredSourcePart>,
 )

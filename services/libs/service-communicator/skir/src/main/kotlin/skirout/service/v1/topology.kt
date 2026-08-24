@@ -178,7 +178,7 @@ class ReconciledRevision private constructor(
 
 sealed interface EngineTarget_OrMutable {
     val engineId: kotlin.String;
-    val majorVersion: kotlin.Int;
+    val versionConstraint: kotlin.String;
 
     fun toFrozen(): skirout.service.v1.topology.EngineTarget;
 }
@@ -187,7 +187,7 @@ sealed interface EngineTarget_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EngineTarget private constructor(
     override val engineId: kotlin.String,
-    override val majorVersion: kotlin.Int,
+    override val versionConstraint: kotlin.String,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineTarget>? =
         null,
 ): skirout.service.v1.topology.EngineTarget_OrMutable {
@@ -195,12 +195,12 @@ class EngineTarget private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         engineId: kotlin.String,
-        majorVersion: kotlin.Int,
+        versionConstraint: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineTarget>? =
             null,
     ): this(
         engineId,
-        majorVersion,
+        versionConstraint,
         _unrecognizedFields,
     ) {}
 
@@ -210,7 +210,7 @@ class EngineTarget private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         engineId = this.engineId,
-        majorVersion = this.majorVersion,
+        versionConstraint = this.versionConstraint,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -219,11 +219,11 @@ class EngineTarget private constructor(
             _MustNameArguments,
         engineId: kotlin.String =
             this.engineId,
-        majorVersion: kotlin.Int =
-            this.majorVersion,
+        versionConstraint: kotlin.String =
+            this.versionConstraint,
     ) = skirout.service.v1.topology.EngineTarget(
         engineId,
-        majorVersion,
+        versionConstraint,
         this._unrecognizedFields,
     );
 
@@ -231,11 +231,11 @@ class EngineTarget private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.EngineTarget && this.engineId == other.engineId && this.majorVersion == other.majorVersion);
+        return this === other || (other is skirout.service.v1.topology.EngineTarget && this.engineId == other.engineId && this.versionConstraint == other.versionConstraint);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.majorVersion).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.versionConstraint).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -251,15 +251,15 @@ class EngineTarget private constructor(
             _MustNameArguments,
         override var engineId: kotlin.String =
             "",
-        override var majorVersion: kotlin.Int =
-            0,
+        override var versionConstraint: kotlin.String =
+            "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineTarget>? =
             null,
     ): skirout.service.v1.topology.EngineTarget_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.EngineTarget(
             engineId = this.engineId,
-            majorVersion = this.majorVersion,
+            versionConstraint = this.versionConstraint,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -268,7 +268,7 @@ class EngineTarget private constructor(
         private val default =
             skirout.service.v1.topology.EngineTarget(
                 "",
-                0,
+                "",
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -284,11 +284,11 @@ class EngineTarget private constructor(
                 _MustNameArguments,
             engineId: kotlin.String =
                 "",
-            majorVersion: kotlin.Int =
-                0,
+            versionConstraint: kotlin.String =
+                "",
         ) = skirout.service.v1.topology.EngineTarget(
             engineId = engineId,
-            majorVersion = majorVersion,
+            versionConstraint = versionConstraint,
             _unrecognizedFields = null,
         );
 
@@ -319,13 +319,13 @@ class EngineTarget private constructor(
                 { mut, v -> mut.engineId = v },
             );
             serializerImpl.addField(
-                "major_version",
-                "majorVersion",
+                "version_constraint",
+                "versionConstraint",
                 1,
-                build.skir.Serializers.int32,
+                build.skir.Serializers.string,
                 "",
-                { it.majorVersion },
-                { mut, v -> mut.majorVersion = v },
+                { it.versionConstraint },
+                { mut, v -> mut.versionConstraint = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -334,7 +334,6 @@ class EngineTarget private constructor(
 
 sealed interface SupportedEngine_OrMutable {
     val engineId: kotlin.String;
-    val supportedMajorVersions: kotlin.collections.List<kotlin.Int>;
 
     fun toFrozen(): skirout.service.v1.topology.SupportedEngine;
 }
@@ -343,7 +342,6 @@ sealed interface SupportedEngine_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class SupportedEngine private constructor(
     override val engineId: kotlin.String,
-    override val supportedMajorVersions: kotlin.collections.List<kotlin.Int>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SupportedEngine>? =
         null,
 ): skirout.service.v1.topology.SupportedEngine_OrMutable {
@@ -351,12 +349,10 @@ class SupportedEngine private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         engineId: kotlin.String,
-        supportedMajorVersions: kotlin.collections.Iterable<kotlin.Int>,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SupportedEngine>? =
             null,
     ): this(
         engineId,
-        build.skir.internal.toFrozenList(supportedMajorVersions),
         _unrecognizedFields,
     ) {}
 
@@ -366,7 +362,6 @@ class SupportedEngine private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         engineId = this.engineId,
-        supportedMajorVersions = this.supportedMajorVersions,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -375,11 +370,8 @@ class SupportedEngine private constructor(
             _MustNameArguments,
         engineId: kotlin.String =
             this.engineId,
-        supportedMajorVersions: kotlin.collections.Iterable<kotlin.Int> =
-            this.supportedMajorVersions,
     ) = skirout.service.v1.topology.SupportedEngine(
         engineId,
-        build.skir.internal.toFrozenList(supportedMajorVersions),
         this._unrecognizedFields,
     );
 
@@ -387,11 +379,11 @@ class SupportedEngine private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.SupportedEngine && this.engineId == other.engineId && this.supportedMajorVersions == other.supportedMajorVersions);
+        return this === other || (other is skirout.service.v1.topology.SupportedEngine && this.engineId == other.engineId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.supportedMajorVersions).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.engineId).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -407,40 +399,20 @@ class SupportedEngine private constructor(
             _MustNameArguments,
         override var engineId: kotlin.String =
             "",
-        override var supportedMajorVersions: kotlin.collections.List<kotlin.Int> =
-            build.skir.internal.emptyFrozenList<kotlin.Int>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SupportedEngine>? =
             null,
     ): skirout.service.v1.topology.SupportedEngine_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.SupportedEngine(
             engineId = this.engineId,
-            supportedMajorVersions = this.supportedMajorVersions,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [supportedMajorVersions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [supportedMajorVersions] and returns it.
-         */
-        val mutableSupportedMajorVersions: kotlin.collections.MutableList<kotlin.Int> get() {
-            var value = this.supportedMajorVersions;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.supportedMajorVersions = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.service.v1.topology.SupportedEngine(
                 "",
-                build.skir.internal.emptyFrozenList<kotlin.Int>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -456,11 +428,8 @@ class SupportedEngine private constructor(
                 _MustNameArguments,
             engineId: kotlin.String =
                 "",
-            supportedMajorVersions: kotlin.collections.Iterable<kotlin.Int> =
-                build.skir.internal.emptyFrozenList<kotlin.Int>(),
         ) = skirout.service.v1.topology.SupportedEngine(
             engineId = engineId,
-            supportedMajorVersions = supportedMajorVersions,
             _unrecognizedFields = null,
         );
 
@@ -489,17 +458,6 @@ class SupportedEngine private constructor(
                 "",
                 { it.engineId },
                 { mut, v -> mut.engineId = v },
-            );
-            serializerImpl.addField(
-                "supported_major_versions",
-                "supportedMajorVersions",
-                1,
-                build.skir.Serializers.list(
-                    build.skir.Serializers.int32,
-                ),
-                "",
-                { it.supportedMajorVersions },
-                { mut, v -> mut.supportedMajorVersions = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -1899,7 +1857,6 @@ sealed interface RealmInstance_OrMutable {
     val ownerHost: skirout.service.v1.topology.OwnerHost_OrMutable;
     val revision: kotlin.Long;
     val targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable;
-    val manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
     val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.RealmInstance;
@@ -1912,7 +1869,6 @@ class RealmInstance private constructor(
     override val ownerHost: skirout.service.v1.topology.OwnerHost,
     override val revision: kotlin.Long,
     override val targetEngine: skirout.service.v1.topology.EngineTarget,
-    override val manifestRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
         null,
@@ -1924,7 +1880,6 @@ class RealmInstance private constructor(
         ownerHost: skirout.service.v1.topology.OwnerHost_OrMutable,
         revision: kotlin.Long,
         targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
-        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
             null,
@@ -1933,7 +1888,6 @@ class RealmInstance private constructor(
         ownerHost.toFrozen(),
         revision,
         targetEngine.toFrozen(),
-        manifestRevision.toFrozen(),
         state.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -1947,7 +1901,6 @@ class RealmInstance private constructor(
         ownerHost = this.ownerHost,
         revision = this.revision,
         targetEngine = this.targetEngine,
-        manifestRevision = this.manifestRevision,
         state = this.state,
     );
 
@@ -1963,8 +1916,6 @@ class RealmInstance private constructor(
             this.revision,
         targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
             this.targetEngine,
-        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-            this.manifestRevision,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             this.state,
     ) = skirout.service.v1.topology.RealmInstance(
@@ -1972,7 +1923,6 @@ class RealmInstance private constructor(
         ownerHost.toFrozen(),
         revision,
         targetEngine.toFrozen(),
-        manifestRevision.toFrozen(),
         state.toFrozen(),
         this._unrecognizedFields,
     );
@@ -1981,11 +1931,11 @@ class RealmInstance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.RealmInstance && this.realmId == other.realmId && this.ownerHost == other.ownerHost && this.revision == other.revision && this.targetEngine == other.targetEngine && this.manifestRevision == other.manifestRevision && this.state == other.state);
+        return this === other || (other is skirout.service.v1.topology.RealmInstance && this.realmId == other.realmId && this.ownerHost == other.ownerHost && this.revision == other.revision && this.targetEngine == other.targetEngine && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.ownerHost, this.revision, this.targetEngine, this.manifestRevision, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.ownerHost, this.revision, this.targetEngine, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2007,8 +1957,6 @@ class RealmInstance private constructor(
             0L,
         override var targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
             skirout.service.v1.topology.EngineTarget.partial(),
-        override var manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-            skirout.service.v1.topology.ReconciledRevision.partial(),
         override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             skirout.service.v1.topology.ChildRuntimeState.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
@@ -2020,7 +1968,6 @@ class RealmInstance private constructor(
             ownerHost = this.ownerHost,
             revision = this.revision,
             targetEngine = this.targetEngine,
-            manifestRevision = this.manifestRevision,
             state = this.state,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2074,22 +2021,6 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [manifestRevision] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
-         */
-        val mutableManifestRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
-            var value = this.manifestRevision;
-            return when (value) {
-                is skirout.service.v1.topology.ReconciledRevision -> {
-                    value = value.toMutable();
-                    this.manifestRevision = value;
-                    return value;
-                }
-                is skirout.service.v1.topology.ReconciledRevision.Mutable -> value;
-            }
-        }
-
-        /**
          * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
@@ -2113,7 +2044,6 @@ class RealmInstance private constructor(
                 skirout.service.v1.topology.OwnerHost.partial(),
                 0L,
                 skirout.service.v1.topology.EngineTarget.partial(),
-                skirout.service.v1.topology.ReconciledRevision.partial(),
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
             );
 
@@ -2136,8 +2066,6 @@ class RealmInstance private constructor(
                 0L,
             targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
                 skirout.service.v1.topology.EngineTarget.partial(),
-            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-                skirout.service.v1.topology.ReconciledRevision.partial(),
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
         ) = skirout.service.v1.topology.RealmInstance(
@@ -2145,7 +2073,6 @@ class RealmInstance private constructor(
             ownerHost = ownerHost,
             revision = revision,
             targetEngine = targetEngine,
-            manifestRevision = manifestRevision,
             state = state,
             _unrecognizedFields = null,
         );
@@ -2204,18 +2131,9 @@ class RealmInstance private constructor(
                 { mut, v -> mut.targetEngine = v },
             );
             serializerImpl.addField(
-                "manifest_revision",
-                "manifestRevision",
+                "state",
+                "state",
                 4,
-                skirout.service.v1.topology.ReconciledRevision.serializer,
-                "",
-                { it.manifestRevision },
-                { mut, v -> mut.manifestRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                5,
                 skirout.service.v1.topology.ChildRuntimeState.serializer,
                 "",
                 { it.state },
@@ -2420,7 +2338,6 @@ sealed interface EngineInstance_OrMutable {
     val realm: skirout.service.v1.topology.RealmInfo_OrMutable;
     val revision: kotlin.Long;
     val target: skirout.service.v1.topology.EngineTarget_OrMutable;
-    val manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable;
     val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.EngineInstance;
@@ -2434,7 +2351,6 @@ class EngineInstance private constructor(
     override val realm: skirout.service.v1.topology.RealmInfo,
     override val revision: kotlin.Long,
     override val target: skirout.service.v1.topology.EngineTarget,
-    override val manifestRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
         null,
@@ -2447,7 +2363,6 @@ class EngineInstance private constructor(
         realm: skirout.service.v1.topology.RealmInfo_OrMutable,
         revision: kotlin.Long,
         target: skirout.service.v1.topology.EngineTarget_OrMutable,
-        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
             null,
@@ -2457,7 +2372,6 @@ class EngineInstance private constructor(
         realm.toFrozen(),
         revision,
         target.toFrozen(),
-        manifestRevision.toFrozen(),
         state.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -2472,7 +2386,6 @@ class EngineInstance private constructor(
         realm = this.realm,
         revision = this.revision,
         target = this.target,
-        manifestRevision = this.manifestRevision,
         state = this.state,
     );
 
@@ -2490,8 +2403,6 @@ class EngineInstance private constructor(
             this.revision,
         target: skirout.service.v1.topology.EngineTarget_OrMutable =
             this.target,
-        manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-            this.manifestRevision,
         state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             this.state,
     ) = skirout.service.v1.topology.EngineInstance(
@@ -2500,7 +2411,6 @@ class EngineInstance private constructor(
         realm.toFrozen(),
         revision,
         target.toFrozen(),
-        manifestRevision.toFrozen(),
         state.toFrozen(),
         this._unrecognizedFields,
     );
@@ -2509,11 +2419,11 @@ class EngineInstance private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.EngineInstance && this.engineId == other.engineId && this.ownerHost == other.ownerHost && this.realm == other.realm && this.revision == other.revision && this.target == other.target && this.manifestRevision == other.manifestRevision && this.state == other.state);
+        return this === other || (other is skirout.service.v1.topology.EngineInstance && this.engineId == other.engineId && this.ownerHost == other.ownerHost && this.realm == other.realm && this.revision == other.revision && this.target == other.target && this.state == other.state);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.ownerHost, this.realm, this.revision, this.target, this.manifestRevision, this.state).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.ownerHost, this.realm, this.revision, this.target, this.state).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2537,8 +2447,6 @@ class EngineInstance private constructor(
             0L,
         override var target: skirout.service.v1.topology.EngineTarget_OrMutable =
             skirout.service.v1.topology.EngineTarget.partial(),
-        override var manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-            skirout.service.v1.topology.ReconciledRevision.partial(),
         override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
             skirout.service.v1.topology.ChildRuntimeState.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
@@ -2551,7 +2459,6 @@ class EngineInstance private constructor(
             realm = this.realm,
             revision = this.revision,
             target = this.target,
-            manifestRevision = this.manifestRevision,
             state = this.state,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2621,22 +2528,6 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [manifestRevision] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [manifestRevision] and returns it.
-         */
-        val mutableManifestRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
-            var value = this.manifestRevision;
-            return when (value) {
-                is skirout.service.v1.topology.ReconciledRevision -> {
-                    value = value.toMutable();
-                    this.manifestRevision = value;
-                    return value;
-                }
-                is skirout.service.v1.topology.ReconciledRevision.Mutable -> value;
-            }
-        }
-
-        /**
          * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
@@ -2661,7 +2552,6 @@ class EngineInstance private constructor(
                 skirout.service.v1.topology.RealmInfo.partial(),
                 0L,
                 skirout.service.v1.topology.EngineTarget.partial(),
-                skirout.service.v1.topology.ReconciledRevision.partial(),
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
             );
 
@@ -2686,8 +2576,6 @@ class EngineInstance private constructor(
                 0L,
             target: skirout.service.v1.topology.EngineTarget_OrMutable =
                 skirout.service.v1.topology.EngineTarget.partial(),
-            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable =
-                skirout.service.v1.topology.ReconciledRevision.partial(),
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
                 skirout.service.v1.topology.ChildRuntimeState.partial(),
         ) = skirout.service.v1.topology.EngineInstance(
@@ -2696,7 +2584,6 @@ class EngineInstance private constructor(
             realm = realm,
             revision = revision,
             target = target,
-            manifestRevision = manifestRevision,
             state = state,
             _unrecognizedFields = null,
         );
@@ -2764,18 +2651,9 @@ class EngineInstance private constructor(
                 { mut, v -> mut.target = v },
             );
             serializerImpl.addField(
-                "manifest_revision",
-                "manifestRevision",
+                "state",
+                "state",
                 5,
-                skirout.service.v1.topology.ReconciledRevision.serializer,
-                "",
-                { it.manifestRevision },
-                { mut, v -> mut.manifestRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                6,
                 skirout.service.v1.topology.ChildRuntimeState.serializer,
                 "",
                 { it.state },
@@ -2787,7 +2665,7 @@ class EngineInstance private constructor(
 }
 
 sealed interface HostedRealmConfiguration_OrMutable {
-    val targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable;
+    val primaryEngine: skirout.service.v1.topology.EngineTarget_OrMutable;
 
     fun toFrozen(): skirout.service.v1.topology.HostedRealmConfiguration;
 }
@@ -2795,18 +2673,18 @@ sealed interface HostedRealmConfiguration_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class HostedRealmConfiguration private constructor(
-    override val targetEngine: skirout.service.v1.topology.EngineTarget,
+    override val primaryEngine: skirout.service.v1.topology.EngineTarget,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedRealmConfiguration>? =
         null,
 ): skirout.service.v1.topology.HostedRealmConfiguration_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
+        primaryEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedRealmConfiguration>? =
             null,
     ): this(
-        targetEngine.toFrozen(),
+        primaryEngine.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -2815,17 +2693,17 @@ class HostedRealmConfiguration private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        targetEngine = this.targetEngine,
+        primaryEngine = this.primaryEngine,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
-            this.targetEngine,
+        primaryEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
+            this.primaryEngine,
     ) = skirout.service.v1.topology.HostedRealmConfiguration(
-        targetEngine.toFrozen(),
+        primaryEngine.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -2833,11 +2711,11 @@ class HostedRealmConfiguration private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.HostedRealmConfiguration && this.targetEngine == other.targetEngine);
+        return this === other || (other is skirout.service.v1.topology.HostedRealmConfiguration && this.primaryEngine == other.primaryEngine);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.targetEngine).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.primaryEngine).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2851,27 +2729,27 @@ class HostedRealmConfiguration private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
+        override var primaryEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
             skirout.service.v1.topology.EngineTarget.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedRealmConfiguration>? =
             null,
     ): skirout.service.v1.topology.HostedRealmConfiguration_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.HostedRealmConfiguration(
-            targetEngine = this.targetEngine,
+            primaryEngine = this.primaryEngine,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [targetEngine] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [targetEngine] and returns it.
+         * If the value of [primaryEngine] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [primaryEngine] and returns it.
          */
-        val mutableTargetEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
-            var value = this.targetEngine;
+        val mutablePrimaryEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
+            var value = this.primaryEngine;
             return when (value) {
                 is skirout.service.v1.topology.EngineTarget -> {
                     value = value.toMutable();
-                    this.targetEngine = value;
+                    this.primaryEngine = value;
                     return value;
                 }
                 is skirout.service.v1.topology.EngineTarget.Mutable -> value;
@@ -2896,10 +2774,10 @@ class HostedRealmConfiguration private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
+            primaryEngine: skirout.service.v1.topology.EngineTarget_OrMutable =
                 skirout.service.v1.topology.EngineTarget.partial(),
         ) = skirout.service.v1.topology.HostedRealmConfiguration(
-            targetEngine = targetEngine,
+            primaryEngine = primaryEngine,
             _unrecognizedFields = null,
         );
 
@@ -2921,13 +2799,13 @@ class HostedRealmConfiguration private constructor(
 
         init {
             serializerImpl.addField(
-                "target_engine",
-                "targetEngine",
+                "primary_engine",
+                "primaryEngine",
                 0,
                 skirout.service.v1.topology.EngineTarget.serializer,
                 "",
-                { it.targetEngine },
-                { mut, v -> mut.targetEngine = v },
+                { it.primaryEngine },
+                { mut, v -> mut.primaryEngine = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -3393,7 +3271,7 @@ class HostedEngineConfiguration private constructor(
 
 sealed interface HostExecutionConfiguration_OrMutable {
     val realm: skirout.service.v1.topology.HostedRealmConfiguration_OrMutable?;
-    val engine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable?;
+    val primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable?;
 
     fun toFrozen(): skirout.service.v1.topology.HostExecutionConfiguration;
 }
@@ -3402,7 +3280,7 @@ sealed interface HostExecutionConfiguration_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class HostExecutionConfiguration private constructor(
     override val realm: skirout.service.v1.topology.HostedRealmConfiguration?,
-    override val engine: skirout.service.v1.topology.HostedEngineConfiguration?,
+    override val primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionConfiguration>? =
         null,
 ): skirout.service.v1.topology.HostExecutionConfiguration_OrMutable {
@@ -3410,12 +3288,12 @@ class HostExecutionConfiguration private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         realm: skirout.service.v1.topology.HostedRealmConfiguration_OrMutable?,
-        engine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable?,
+        primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionConfiguration>? =
             null,
     ): this(
         if (realm != null) realm.toFrozen() else null,
-        if (engine != null) engine.toFrozen() else null,
+        if (primaryEngine != null) primaryEngine.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -3425,7 +3303,7 @@ class HostExecutionConfiguration private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         realm = this.realm,
-        engine = this.engine,
+        primaryEngine = this.primaryEngine,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -3434,11 +3312,11 @@ class HostExecutionConfiguration private constructor(
             _MustNameArguments,
         realm: skirout.service.v1.topology.HostedRealmConfiguration_OrMutable? =
             this.realm,
-        engine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
-            this.engine,
+        primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
+            this.primaryEngine,
     ) = skirout.service.v1.topology.HostExecutionConfiguration(
         if (realm != null) realm.toFrozen() else null,
-        if (engine != null) engine.toFrozen() else null,
+        if (primaryEngine != null) primaryEngine.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -3446,11 +3324,11 @@ class HostExecutionConfiguration private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.HostExecutionConfiguration && this.realm == other.realm && this.engine == other.engine);
+        return this === other || (other is skirout.service.v1.topology.HostExecutionConfiguration && this.realm == other.realm && this.primaryEngine == other.primaryEngine);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realm, this.engine).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.realm, this.primaryEngine).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3466,7 +3344,7 @@ class HostExecutionConfiguration private constructor(
             _MustNameArguments,
         override var realm: skirout.service.v1.topology.HostedRealmConfiguration_OrMutable? =
             null,
-        override var engine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
+        override var primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionConfiguration>? =
             null,
@@ -3474,7 +3352,7 @@ class HostExecutionConfiguration private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.HostExecutionConfiguration(
             realm = this.realm,
-            engine = this.engine,
+            primaryEngine = this.primaryEngine,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -3499,11 +3377,11 @@ class HostExecutionConfiguration private constructor(
                 _MustNameArguments,
             realm: skirout.service.v1.topology.HostedRealmConfiguration_OrMutable? =
                 null,
-            engine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
+            primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration_OrMutable? =
                 null,
         ) = skirout.service.v1.topology.HostExecutionConfiguration(
             realm = realm,
-            engine = engine,
+            primaryEngine = primaryEngine,
             _unrecognizedFields = null,
         );
 
@@ -3536,15 +3414,15 @@ class HostExecutionConfiguration private constructor(
                 { mut, v -> mut.realm = v },
             );
             serializerImpl.addField(
-                "engine",
-                "engine",
+                "primary_engine",
+                "primaryEngine",
                 1,
                 build.skir.Serializers.optional(
                     skirout.service.v1.topology.HostedEngineConfiguration.serializer,
                 ),
                 "",
-                { it.engine },
-                { mut, v -> mut.engine = v },
+                { it.primaryEngine },
+                { mut, v -> mut.primaryEngine = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -5193,7 +5071,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             ownerHost: skirout.service.v1.topology.OwnerHost_OrMutable,
             revision: kotlin.Long,
             targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
-            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         ) = RealmUpdatedWrapper(
             skirout.service.v1.topology.RealmInstance(
@@ -5201,7 +5078,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
                 ownerHost = ownerHost,
                 revision = revision,
                 targetEngine = targetEngine,
-                manifestRevision = manifestRevision,
                 state = state,
             )
         );
@@ -5216,7 +5092,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             realm: skirout.service.v1.topology.RealmInfo_OrMutable,
             revision: kotlin.Long,
             target: skirout.service.v1.topology.EngineTarget_OrMutable,
-            manifestRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
             state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
         ) = EngineUpdatedWrapper(
             skirout.service.v1.topology.EngineInstance(
@@ -5225,7 +5100,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
                 realm = realm,
                 revision = revision,
                 target = target,
-                manifestRevision = manifestRevision,
                 state = state,
             )
         );
@@ -6559,6 +6433,622 @@ sealed class ReportHostExecutionResponse private constructor() {
     }
 }
 
+sealed interface ServiceMessagingScope_OrMutable {
+    val organizationId: kotlin.String;
+    val ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?;
+    val attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?;
+
+    fun toFrozen(): skirout.service.v1.topology.ServiceMessagingScope;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ServiceMessagingScope private constructor(
+    override val organizationId: kotlin.String,
+    override val ownedRealm: skirout.kernel.v1.record_id.RecordId?,
+    override val attachedRealm: skirout.kernel.v1.record_id.RecordId?,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceMessagingScope>? =
+        null,
+): skirout.service.v1.topology.ServiceMessagingScope_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        organizationId: kotlin.String,
+        ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+        attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceMessagingScope>? =
+            null,
+    ): this(
+        organizationId,
+        if (ownedRealm != null) ownedRealm.toFrozen() else null,
+        if (attachedRealm != null) attachedRealm.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        organizationId = this.organizationId,
+        ownedRealm = this.ownedRealm,
+        attachedRealm = this.attachedRealm,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        organizationId: kotlin.String =
+            this.organizationId,
+        ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+            this.ownedRealm,
+        attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+            this.attachedRealm,
+    ) = skirout.service.v1.topology.ServiceMessagingScope(
+        organizationId,
+        if (ownedRealm != null) ownedRealm.toFrozen() else null,
+        if (attachedRealm != null) attachedRealm.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.ServiceMessagingScope && this.organizationId == other.organizationId && this.ownedRealm == other.ownedRealm && this.attachedRealm == other.attachedRealm);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.organizationId, this.ownedRealm, this.attachedRealm).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.service.v1.topology.ServiceMessagingScope.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ServiceMessagingScope]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var organizationId: kotlin.String =
+            "",
+        override var ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+            null,
+        override var attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceMessagingScope>? =
+            null,
+    ): skirout.service.v1.topology.ServiceMessagingScope_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.ServiceMessagingScope(
+            organizationId = this.organizationId,
+            ownedRealm = this.ownedRealm,
+            attachedRealm = this.attachedRealm,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.ServiceMessagingScope(
+                "",
+                null,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ServiceMessagingScope].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            organizationId: kotlin.String =
+                "",
+            ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+                null,
+            attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable? =
+                null,
+        ) = skirout.service.v1.topology.ServiceMessagingScope(
+            organizationId = organizationId,
+            ownedRealm = ownedRealm,
+            attachedRealm = attachedRealm,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "service/v1/topology.skir:ServiceMessagingScope",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ServiceMessagingScope] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ServiceMessagingScope] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "organization_id",
+                "organizationId",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.organizationId },
+                { mut, v -> mut.organizationId = v },
+            );
+            serializerImpl.addField(
+                "owned_realm",
+                "ownedRealm",
+                1,
+                build.skir.Serializers.optional(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                ),
+                "",
+                { it.ownedRealm },
+                { mut, v -> mut.ownedRealm = v },
+            );
+            serializerImpl.addField(
+                "attached_realm",
+                "attachedRealm",
+                2,
+                build.skir.Serializers.optional(
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                ),
+                "",
+                { it.attachedRealm },
+                { mut, v -> mut.attachedRealm = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface GetServiceMessagingScopeRequest_OrMutable {
+    val serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+
+    fun toFrozen(): skirout.service.v1.topology.GetServiceMessagingScopeRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class GetServiceMessagingScopeRequest private constructor(
+    override val serviceId: skirout.kernel.v1.record_id.RecordId,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeRequest>? =
+        null,
+): skirout.service.v1.topology.GetServiceMessagingScopeRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeRequest>? =
+            null,
+    ): this(
+        serviceId.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        serviceId = this.serviceId,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.serviceId,
+    ) = skirout.service.v1.topology.GetServiceMessagingScopeRequest(
+        serviceId.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.GetServiceMessagingScopeRequest && this.serviceId == other.serviceId);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.service.v1.topology.GetServiceMessagingScopeRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [GetServiceMessagingScopeRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeRequest>? =
+            null,
+    ): skirout.service.v1.topology.GetServiceMessagingScopeRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.GetServiceMessagingScopeRequest(
+            serviceId = this.serviceId,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [serviceId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
+         */
+        val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.serviceId;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.serviceId = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.GetServiceMessagingScopeRequest(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [GetServiceMessagingScopeRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+        ) = skirout.service.v1.topology.GetServiceMessagingScopeRequest(
+            serviceId = serviceId,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "service/v1/topology.skir:GetServiceMessagingScopeRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [GetServiceMessagingScopeRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [GetServiceMessagingScopeRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "service_id",
+                "serviceId",
+                0,
+                skirout.kernel.v1.record_id.RecordId.serializer,
+                "",
+                { it.serviceId },
+                { mut, v -> mut.serviceId = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class GetServiceMessagingScopeResponse private constructor() {
+    /** The kind of variant held by a `GetServiceMessagingScopeResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        FOUND_WRAPPER,
+        NOT_FOUND_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.GetServiceMessagingScopeResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.GetServiceMessagingScopeResponse>?,
+    ) : skirout.service.v1.topology.GetServiceMessagingScopeResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class FoundWrapper private constructor (
+        val value: skirout.service.v1.topology.ServiceMessagingScope,
+    ) : skirout.service.v1.topology.GetServiceMessagingScopeResponse() {
+        constructor(
+            value: skirout.service.v1.topology.ServiceMessagingScope_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.FOUND_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.FoundWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 97621890;
+        }
+    }
+
+    class NotFoundWrapper private constructor (
+        val value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound,
+    ) : skirout.service.v1.topology.GetServiceMessagingScopeResponse() {
+        constructor(
+            value: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.NOT_FOUND_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1615526678;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.topology.GetServiceMessagingScopeResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.GetServiceMessagingScopeResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [GetServiceMessagingScopeResponse].
+         * Default value for fields of type [GetServiceMessagingScopeResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `FoundWrapper(skirout.service.v1.topology.ServiceMessagingScope(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createFound(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            organizationId: kotlin.String,
+            ownedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+            attachedRealm: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+        ) = FoundWrapper(
+            skirout.service.v1.topology.ServiceMessagingScope(
+                organizationId = organizationId,
+                ownedRealm = ownedRealm,
+                attachedRealm = attachedRealm,
+            )
+        );
+
+        /** Shortcut for `NotFoundWrapper(skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createNotFound(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = NotFoundWrapper(
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound()
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.GetServiceMessagingScopeResponse, Unknown>(
+                recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [GetServiceMessagingScopeResponse] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [GetServiceMessagingScopeResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "found",
+                    Kind.FOUND_WRAPPER.ordinal,
+                    skirout.service.v1.topology.ServiceMessagingScope.serializer,
+                    "",
+                    { FoundWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "not_found",
+                    Kind.NOT_FOUND_WRAPPER.ordinal,
+                    skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.serializer,
+                    "",
+                    { NotFoundWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "internal_error",
+                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InternalError.serializer,
+                    "",
+                    { InternalErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface NotFound_OrMutable {
+        fun toFrozen(): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class NotFound private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+            null,
+    ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [NotFound]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+                null,
+        ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [NotFound].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound(
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [NotFound] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [NotFound] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+}
+
 val ConfigureServiceHost: build.skir.service.Method<
     skirout.service.v1.topology.ConfigureServiceHostRequest,
     skirout.service.v1.topology.ConfigureServiceHostResponse,
@@ -6607,6 +7097,19 @@ val ReportHostExecution: build.skir.service.Method<
         934204,
         skirout.service.v1.topology.ReportHostExecutionRequest.serializer,
         skirout.service.v1.topology.ReportHostExecutionResponse.serializer,
+        "",
+    )
+}
+
+val GetServiceMessagingScope: build.skir.service.Method<
+    skirout.service.v1.topology.GetServiceMessagingScopeRequest,
+    skirout.service.v1.topology.GetServiceMessagingScopeResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "GetServiceMessagingScope",
+        934205,
+        skirout.service.v1.topology.GetServiceMessagingScopeRequest.serializer,
+        skirout.service.v1.topology.GetServiceMessagingScopeResponse.serializer,
         "",
     )
 }

@@ -8,6 +8,7 @@ import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
+import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.transport.Payload
@@ -41,6 +42,23 @@ fun <Address : Any, Request : Any, Response : Any> skirUnaryContract(
         method.responseSerializer.asPayloadCodec(),
         responsePolicy,
         timeout,
+        failureSlug,
+    )
+
+/** Creates a scatter contract that collects replies from every listener through one inbox. */
+fun <Address : Any, Request : Any, Response : Any> skirScatterContract(
+    method: Method<Request, Response>,
+    name: OperationName,
+    address: AddressTemplate<Address>,
+    responsePolicy: ResponsePolicy<Response>,
+    failureSlug: ErrorSlug,
+): ScatterContract<Address, Request, Response> =
+    ScatterContract(
+        name,
+        address,
+        method.requestSerializer.asPayloadCodec(),
+        method.responseSerializer.asPayloadCodec(),
+        responsePolicy,
         failureSlug,
     )
 

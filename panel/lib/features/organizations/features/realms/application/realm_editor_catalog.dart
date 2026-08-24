@@ -14,17 +14,19 @@ abstract class RealmEditorCatalogRoute with _$RealmEditorCatalogRoute {
 
   const RealmEditorCatalogRoute._();
 
-  String get fetchSubject =>
-      "service.to.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.catalog.fetch";
+  RealmServiceAddress get address => RealmServiceAddress(
+    organizationId: this.organizationId,
+    realmId: this.realmId,
+  );
+
+  String get fetchSubject => address.request("editor.catalog.fetch");
 
   String get invalidationRequestSubject =>
-      "service.to.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.catalog.invalidate";
+      address.request("editor.catalog.invalidate");
 
-  String get invalidationSubject =>
-      "service.from.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.catalog.invalidate";
+  String get invalidationSubject => address.event("editor.catalog.invalidate");
 
-  String get elementsFetchSubject =>
-      "service.to.${this.realmId.id}.organization.${this.organizationId.id}.realm.editor.elements.fetch";
+  String get elementsFetchSubject => address.request("editor.elements.fetch");
 }
 
 @freezed

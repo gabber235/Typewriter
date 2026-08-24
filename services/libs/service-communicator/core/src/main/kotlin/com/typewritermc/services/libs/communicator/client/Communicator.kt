@@ -6,6 +6,7 @@ import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationOutcome
 import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
+import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
@@ -45,9 +46,12 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 
@@ -57,6 +61,129 @@ class Communicator(
     private val telemetry: ServiceTelemetry,
     private val propagators: ContextPropagators,
 ) {
+    /** Collects typed replies from every listener through one temporary inbox. */
+    fun <Address : Any, Request : Any, Response : Any> scatter(
+        contract: ScatterContract<Address, Request, Response>,
+        address: Address,
+        request: Request,
+        policy: ScatterPolicy<Response>,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ): Flow<CommunicationResult<Response>> =
+        channelFlow {
+            telemetry.mainSpan(
+                "${contract.name.value} scatter",
+                contract.failureSlug,
+                SpanKind.CLIENT,
+                attributes = attributes("scatter", contract.name.value, contract.requestAddress.template),
+            ) { main ->
+                val destination = contract.requestAddress.render(address)
+                main.annotate { attribute("messaging.destination.name", destination.value) }
+                val payload =
+                    try {
+                        contract.requestCodec.encode(request)
+                    } catch (failure: Throwable) {
+                        rethrowExceptionalThrowable(failure)
+                        main.recordDegraded(contract.failureSlug, failure)
+                        send(CommunicationResult.Failure(CommunicationError.Encode(contract.failureSlug, failure)))
+                        return@mainSpan
+                    }
+                val replies =
+                    when (val result = transport.openReplyChannel()) {
+                        is TransportResult.Failure -> {
+                            main.recordDegraded(contract.failureSlug, result.error.telemetryCause())
+                            send(CommunicationResult.Failure(result.error.toCommunicationError(contract.failureSlug)))
+                            return@mainSpan
+                        }
+
+                        is TransportResult.Success -> {
+                            result.value
+                        }
+                    }
+
+                try {
+                    val outbound = outbound(destination, payload, headers, replies.address)
+                    when (val published = transport.publish(outbound)) {
+                        is TransportResult.Failure -> {
+                            main.recordDegraded(contract.failureSlug, published.error.telemetryCause())
+                            send(CommunicationResult.Failure(published.error.toCommunicationError(contract.failureSlug)))
+                            return@mainSpan
+                        }
+
+                        is TransportResult.Success -> {}
+                    }
+
+                    coroutineScope {
+                        val deliveries = replies.deliveries.produceIn(this)
+                        val responses = mutableListOf<Response>()
+                        val completed =
+                            withTimeoutOrNull(policy.timeout) {
+                                while (true) {
+                                    val quietPeriod = policy.quietPeriod?.takeIf { responses.isNotEmpty() }
+                                    val delivery =
+                                        if (quietPeriod == null) {
+                                            deliveries.receiveCatching().getOrNull()
+                                        } else {
+                                            withTimeoutOrNull(quietPeriod) { deliveries.receiveCatching().getOrNull() }
+                                        }
+                                    if (delivery == null) return@withTimeoutOrNull true
+                                    when (delivery) {
+                                        is TransportDelivery.Message -> {
+                                            val response =
+                                                try {
+                                                    contract.responseCodec.decode(delivery.message.payload)
+                                                } catch (failure: Throwable) {
+                                                    rethrowExceptionalThrowable(failure)
+                                                    main.recordDegraded(contract.failureSlug, failure)
+                                                    send(
+                                                        CommunicationResult.Failure(
+                                                            CommunicationError.Decode(contract.failureSlug, failure),
+                                                        ),
+                                                    )
+                                                    continue
+                                                }
+                                            val classification = contract.responsePolicy.classify(response)
+                                            main.annotate {
+                                                attribute("domain.outcome", classification.variant.value)
+                                                attribute("operation.outcome", classification.outcome.name.lowercase())
+                                            }
+                                            responses += response
+                                            send(CommunicationResult.Success(response))
+                                            if (policy.completeWhen(responses)) return@withTimeoutOrNull true
+                                        }
+
+                                        is TransportDelivery.Failure -> {
+                                            main.recordDegraded(contract.failureSlug, delivery.error.telemetryCause())
+                                            send(
+                                                CommunicationResult.Failure(
+                                                    delivery.error.toCommunicationError(contract.failureSlug),
+                                                ),
+                                            )
+                                            return@withTimeoutOrNull true
+                                        }
+
+                                        TransportDelivery.Completed -> {
+                                            return@withTimeoutOrNull true
+                                        }
+                                    }
+                                }
+                            }
+                        main.annotate { attribute("messaging.reply.count", responses.size.toLong()) }
+                        if (completed == null && responses.isEmpty()) {
+                            val timeout = CommunicationError.Timeout(contract.failureSlug)
+                            main.recordDegraded(
+                                contract.failureSlug,
+                                IllegalStateException("Scatter response timed out."),
+                            )
+                            send(CommunicationResult.Failure(timeout))
+                        }
+                        deliveries.cancel()
+                    }
+                } finally {
+                    withContext(NonCancellable) { replies.close() }
+                }
+            }
+        }
+
     /** Creates a router that shares this communicator's transport and telemetry infrastructure. */
     fun createRouter(
         routes: CommunicatorRoutes,
@@ -511,6 +638,19 @@ class Communicator(
     ) : RuntimeException(error.cause)
 }
 
+data class ScatterPolicy<Response : Any>(
+    val timeout: Duration,
+    val quietPeriod: Duration? = null,
+    val completeWhen: (Collection<Response>) -> Boolean = { false },
+) {
+    init {
+        require(timeout.isPositive() && timeout.isFinite()) { "Scatter timeout must be positive and finite" }
+        require(quietPeriod == null || (quietPeriod.isPositive() && quietPeriod.isFinite())) {
+            "Scatter quiet period must be positive and finite"
+        }
+    }
+}
+
 private val ENCODED_PUBLISH_FAILURE = ErrorSlug.of("encoded-publish-failed")
 
 private fun <Value> CommunicationResult<OperationOutcome<Value>>.responseResult(): CommunicationResult<Value> =
@@ -533,6 +673,9 @@ private fun TransportError.toCommunicationError(slug: ErrorSlug): CommunicationE
         is TransportError.NoResponders -> CommunicationError.NoResponders(slug, cause)
         is TransportError.Failure -> CommunicationError.Transport(slug, cause)
     }
+
+private fun TransportError.telemetryCause(): Throwable =
+    cause ?: IllegalStateException("${this::class.simpleName} during transport operation.")
 
 private fun Throwable.causes(): Sequence<Throwable> =
     sequence {
