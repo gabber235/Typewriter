@@ -17,26 +17,18 @@ abstract class RealmEditorCatalogRequest with _$RealmEditorCatalogRequest {
   const factory RealmEditorCatalogRequest({
     @Default({}) Set<ResolvedTypeRef> types,
     @Default({}) Set<PresentationId> presentations,
-    @Default({}) Set<ConversionId> conversions,
-    @Default({}) Set<RealmActionId> realmActions,
     @Default({}) Set<RealmEditorSubtypeQuery> subtypeQueries,
   }) = _RealmEditorCatalogRequest;
 
   const RealmEditorCatalogRequest._();
 
   bool get isEmpty =>
-      types.isEmpty &&
-      presentations.isEmpty &&
-      conversions.isEmpty &&
-      realmActions.isEmpty &&
-      subtypeQueries.isEmpty;
+      types.isEmpty && presentations.isEmpty && subtypeQueries.isEmpty;
 
   RealmEditorCatalogRequest merge(RealmEditorCatalogRequest other) =>
       RealmEditorCatalogRequest(
         types: {...types, ...other.types},
         presentations: {...presentations, ...other.presentations},
-        conversions: {...conversions, ...other.conversions},
-        realmActions: {...realmActions, ...other.realmActions},
         subtypeQueries: {...subtypeQueries, ...other.subtypeQueries},
       );
 }

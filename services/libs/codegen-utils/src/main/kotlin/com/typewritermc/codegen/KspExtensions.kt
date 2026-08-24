@@ -5,6 +5,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.squareup.kotlinpoet.CodeBlock
 import kotlin.reflect.KClass
 
 /** Finds symbols using the actual annotation type so processors do not duplicate qualified names as strings. */
@@ -36,3 +37,9 @@ fun String.toUpperCamelIdentifier(): String =
     split(Regex("[^A-Za-z0-9]+"))
         .filter(String::isNotEmpty)
         .joinToString("") { it.replaceFirstChar(Char::uppercase) }
+
+fun Map<String, String>.stringMapCode(): CodeBlock {
+    val builder = CodeBlock.builder().add("mapOf(\n").indent()
+    toSortedMap().forEach { (key, value) -> builder.add("%S to %S,\n", key, value) }
+    return builder.unindent().add(")").build()
+}

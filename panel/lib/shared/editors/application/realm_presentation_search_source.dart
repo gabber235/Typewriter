@@ -15,6 +15,7 @@ typedef RealmPresentationSearchSourceBuilder =
 final class RealmPresentationSearchSource implements SearchSource {
   RealmPresentationSearchSource({
     required this.provider,
+    required this.generation,
     required this.payloadType,
     required this.resultType,
     required this.transport,
@@ -28,6 +29,7 @@ final class RealmPresentationSearchSource implements SearchSource {
   static var _nextSourceId = 0;
 
   final RealmCallbackSearchProvider provider;
+  final CatalogGeneration generation;
   final TypeExpression payloadType;
   final TypeExpression resultType;
   final RealmPresentationSearchTransport transport;
@@ -95,7 +97,8 @@ final class RealmPresentationSearchSource implements SearchSource {
         transport(
           RealmPresentationSearchRequest(
             subscriptionId: subscriptionId,
-            actionId: provider.actionId,
+            generation: generation,
+            capabilityId: provider.capabilityId,
             payload: payload.valueOrNull!,
             resultType: resultType,
             query: query,

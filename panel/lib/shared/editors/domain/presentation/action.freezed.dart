@@ -1363,12 +1363,12 @@ extension RealmActionPatterns on RealmAction {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ReloadRealmAction value)?  reload,TResult Function( InvokeRealmCallbackAction value)?  invokeCallback,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ReloadRealmAction value)?  reload,TResult Function( InvokeRealmCommandAction value)?  invokeCommand,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case ReloadRealmAction() when reload != null:
-return reload(_that);case InvokeRealmCallbackAction() when invokeCallback != null:
-return invokeCallback(_that);case _:
+return reload(_that);case InvokeRealmCommandAction() when invokeCommand != null:
+return invokeCommand(_that);case _:
   return orElse();
 
 }
@@ -1386,12 +1386,12 @@ return invokeCallback(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ReloadRealmAction value)  reload,required TResult Function( InvokeRealmCallbackAction value)  invokeCallback,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ReloadRealmAction value)  reload,required TResult Function( InvokeRealmCommandAction value)  invokeCommand,}){
 final _that = this;
 switch (_that) {
 case ReloadRealmAction():
-return reload(_that);case InvokeRealmCallbackAction():
-return invokeCallback(_that);}
+return reload(_that);case InvokeRealmCommandAction():
+return invokeCommand(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1405,12 +1405,12 @@ return invokeCallback(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ReloadRealmAction value)?  reload,TResult? Function( InvokeRealmCallbackAction value)?  invokeCallback,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ReloadRealmAction value)?  reload,TResult? Function( InvokeRealmCommandAction value)?  invokeCommand,}){
 final _that = this;
 switch (_that) {
 case ReloadRealmAction() when reload != null:
-return reload(_that);case InvokeRealmCallbackAction() when invokeCallback != null:
-return invokeCallback(_that);case _:
+return reload(_that);case InvokeRealmCommandAction() when invokeCommand != null:
+return invokeCommand(_that);case _:
   return null;
 
 }
@@ -1427,11 +1427,11 @@ return invokeCallback(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  reload,TResult Function( RealmActionId actionId,  TypedExpression payload)?  invokeCallback,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  reload,TResult Function( CapabilityId capabilityId,  TypedExpression payload)?  invokeCommand,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ReloadRealmAction() when reload != null:
-return reload();case InvokeRealmCallbackAction() when invokeCallback != null:
-return invokeCallback(_that.actionId,_that.payload);case _:
+return reload();case InvokeRealmCommandAction() when invokeCommand != null:
+return invokeCommand(_that.capabilityId,_that.payload);case _:
   return orElse();
 
 }
@@ -1449,11 +1449,11 @@ return invokeCallback(_that.actionId,_that.payload);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  reload,required TResult Function( RealmActionId actionId,  TypedExpression payload)  invokeCallback,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  reload,required TResult Function( CapabilityId capabilityId,  TypedExpression payload)  invokeCommand,}) {final _that = this;
 switch (_that) {
 case ReloadRealmAction():
-return reload();case InvokeRealmCallbackAction():
-return invokeCallback(_that.actionId,_that.payload);}
+return reload();case InvokeRealmCommandAction():
+return invokeCommand(_that.capabilityId,_that.payload);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1467,11 +1467,11 @@ return invokeCallback(_that.actionId,_that.payload);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  reload,TResult? Function( RealmActionId actionId,  TypedExpression payload)?  invokeCallback,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  reload,TResult? Function( CapabilityId capabilityId,  TypedExpression payload)?  invokeCommand,}) {final _that = this;
 switch (_that) {
 case ReloadRealmAction() when reload != null:
-return reload();case InvokeRealmCallbackAction() when invokeCallback != null:
-return invokeCallback(_that.actionId,_that.payload);case _:
+return reload();case InvokeRealmCommandAction() when invokeCommand != null:
+return invokeCommand(_that.capabilityId,_that.payload);case _:
   return null;
 
 }
@@ -1514,64 +1514,64 @@ String toString() {
 /// @nodoc
 
 
-class InvokeRealmCallbackAction implements RealmAction {
-  const InvokeRealmCallbackAction({required this.actionId, required this.payload});
+class InvokeRealmCommandAction implements RealmAction {
+  const InvokeRealmCommandAction({required this.capabilityId, required this.payload});
   
 
- final  RealmActionId actionId;
+ final  CapabilityId capabilityId;
  final  TypedExpression payload;
 
 /// Create a copy of RealmAction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$InvokeRealmCallbackActionCopyWith<InvokeRealmCallbackAction> get copyWith => _$InvokeRealmCallbackActionCopyWithImpl<InvokeRealmCallbackAction>(this, _$identity);
+$InvokeRealmCommandActionCopyWith<InvokeRealmCommandAction> get copyWith => _$InvokeRealmCommandActionCopyWithImpl<InvokeRealmCommandAction>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InvokeRealmCallbackAction&&(identical(other.actionId, actionId) || other.actionId == actionId)&&(identical(other.payload, payload) || other.payload == payload));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InvokeRealmCommandAction&&(identical(other.capabilityId, capabilityId) || other.capabilityId == capabilityId)&&(identical(other.payload, payload) || other.payload == payload));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,actionId,payload);
+int get hashCode => Object.hash(runtimeType,capabilityId,payload);
 
 @override
 String toString() {
-  return 'RealmAction.invokeCallback(actionId: $actionId, payload: $payload)';
+  return 'RealmAction.invokeCommand(capabilityId: $capabilityId, payload: $payload)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $InvokeRealmCallbackActionCopyWith<$Res> implements $RealmActionCopyWith<$Res> {
-  factory $InvokeRealmCallbackActionCopyWith(InvokeRealmCallbackAction value, $Res Function(InvokeRealmCallbackAction) _then) = _$InvokeRealmCallbackActionCopyWithImpl;
+abstract mixin class $InvokeRealmCommandActionCopyWith<$Res> implements $RealmActionCopyWith<$Res> {
+  factory $InvokeRealmCommandActionCopyWith(InvokeRealmCommandAction value, $Res Function(InvokeRealmCommandAction) _then) = _$InvokeRealmCommandActionCopyWithImpl;
 @useResult
 $Res call({
- RealmActionId actionId, TypedExpression payload
+ CapabilityId capabilityId, TypedExpression payload
 });
 
 
-$RealmActionIdCopyWith<$Res> get actionId;$TypedExpressionCopyWith<$Res> get payload;
+$CapabilityIdCopyWith<$Res> get capabilityId;$TypedExpressionCopyWith<$Res> get payload;
 
 }
 /// @nodoc
-class _$InvokeRealmCallbackActionCopyWithImpl<$Res>
-    implements $InvokeRealmCallbackActionCopyWith<$Res> {
-  _$InvokeRealmCallbackActionCopyWithImpl(this._self, this._then);
+class _$InvokeRealmCommandActionCopyWithImpl<$Res>
+    implements $InvokeRealmCommandActionCopyWith<$Res> {
+  _$InvokeRealmCommandActionCopyWithImpl(this._self, this._then);
 
-  final InvokeRealmCallbackAction _self;
-  final $Res Function(InvokeRealmCallbackAction) _then;
+  final InvokeRealmCommandAction _self;
+  final $Res Function(InvokeRealmCommandAction) _then;
 
 /// Create a copy of RealmAction
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? actionId = null,Object? payload = null,}) {
-  return _then(InvokeRealmCallbackAction(
-actionId: null == actionId ? _self.actionId : actionId // ignore: cast_nullable_to_non_nullable
-as RealmActionId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+@pragma('vm:prefer-inline') $Res call({Object? capabilityId = null,Object? payload = null,}) {
+  return _then(InvokeRealmCommandAction(
+capabilityId: null == capabilityId ? _self.capabilityId : capabilityId // ignore: cast_nullable_to_non_nullable
+as CapabilityId,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
 as TypedExpression,
   ));
 }
@@ -1580,10 +1580,10 @@ as TypedExpression,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$RealmActionIdCopyWith<$Res> get actionId {
+$CapabilityIdCopyWith<$Res> get capabilityId {
   
-  return $RealmActionIdCopyWith<$Res>(_self.actionId, (value) {
-    return _then(_self.copyWith(actionId: value));
+  return $CapabilityIdCopyWith<$Res>(_self.capabilityId, (value) {
+    return _then(_self.copyWith(capabilityId: value));
   });
 }/// Create a copy of RealmAction
 /// with the given fields replaced by the non-null parameter values.

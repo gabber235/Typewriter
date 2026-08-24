@@ -63,8 +63,13 @@ class CueIdentifier extends SelectableIdentifier {
         );
         return catalogState.resolveElement(
           cue.elementDefinition,
-          (catalog) =>
-              CueSelection(ref: ref, id: this, cue: cue!, typeCatalog: catalog),
+          (catalog, presentations) => CueSelection(
+            ref: ref,
+            id: this,
+            cue: cue!,
+            typeCatalog: catalog,
+            presentations: presentations,
+          ),
         );
       },
       error: AsyncValue.error,
@@ -91,6 +96,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
     required this.id,
     required this.cue,
     required this.typeCatalog,
+    required this.presentations,
   });
 
   final Ref ref;
@@ -102,6 +108,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
 
   @override
   final TypeCatalog typeCatalog;
+  final List<PresentationDefinition> presentations;
 
   @override
   String get name => cue.elementDefinition.name;
@@ -110,6 +117,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
   EditorDocument get document => EditorDocument(
     rootType: NamedType(cue.elementDefinition.rootType),
     typeCatalog: typeCatalog,
+    presentations: presentations,
     confirmedValue: cue.data,
     revision: 0,
   );

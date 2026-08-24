@@ -664,9 +664,9 @@ void main() {
         value: const UnitValue(),
         presentation: presentation,
         readOnly: true,
-        onRealmAction: (action) {
+        onRealmAction: (action, payload) {
           if (action is ReloadRealmAction) reloads++;
-          return const MutationSuccess(revision: 0, value: UnitValue());
+          return const RealmCommandResult.success([]);
         },
       ),
     );
@@ -677,11 +677,11 @@ void main() {
     expect(reloads, 1);
   });
 
-  testWidgets("rejects a realm callback with an invalid typed payload", (
+  testWidgets("rejects a Realm command with an invalid typed payload", (
     tester,
   ) async {
     var calls = 0;
-    const actionId = RealmActionId(namespace: "test", name: "callback");
+    const capabilityId = CapabilityId("capability");
     final payloadType = ResolvedTypeRef(
       id: const QualifiedTypeId(namespace: "test", name: "Payload"),
       revision: 1,
@@ -709,24 +709,27 @@ void main() {
             representation: const BooleanType(),
           ),
         ]),
-        realmActions: [
-          RealmActionDefinition(id: actionId, payloadType: payloadType),
+        capabilities: [
+          CapabilityDefinition.command(
+            id: capabilityId,
+            requestType: payloadType,
+          ),
         ],
         presentation: PresentationNode(
           id: "callback",
           element: ButtonElement(
             label: "Invoke callback".asStringLiteral,
             action: EditorAction.realm(
-              InvokeRealmCallbackAction(
-                actionId: actionId,
+              InvokeRealmCommandAction(
+                capabilityId: capabilityId,
                 payload: "invalid".asStringLiteral,
               ),
             ),
           ),
         ),
-        onRealmAction: (action) {
+        onRealmAction: (action, payload) {
           calls++;
-          return const MutationSuccess(revision: 0, value: UnitValue());
+          return const RealmCommandResult.success([]);
         },
       ),
     );

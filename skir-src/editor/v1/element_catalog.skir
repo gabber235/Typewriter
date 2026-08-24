@@ -1,5 +1,5 @@
-import { CatalogGeneration } from "editor/v1/catalog.skir";
 import {
+  CatalogGeneration,
   DeclaredTypeId,
   ResolvedTypeRef,
 } from "editor/v1/type_catalog.skir";

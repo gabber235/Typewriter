@@ -1,5 +1,16 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.capability.NotificationSeverity
+import com.typewritermc.capability.PanelInstruction
+import com.typewritermc.capability.RealmCapabilities
+import com.typewritermc.capability.RealmCapability
+import com.typewritermc.capability.RealmCommandContext
+import com.typewritermc.capability.RealmCommandOutcome
+import com.typewritermc.capability.RealmComputationContext
+import com.typewritermc.capability.RealmSearch
+import com.typewritermc.capability.RealmSearchContext
+import com.typewritermc.capability.RealmSearchRequest
+import com.typewritermc.capability.realmSearch
 import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.discovery.runtime.RuntimeScope
 import com.typewritermc.discovery.runtime.TypewriterRegistrar
@@ -10,7 +21,11 @@ import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.ExecutableEntry
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
+import com.typewritermc.presentation.PresentationBuildContext
+import com.typewritermc.presentation.TypewriterPresentation
+import com.typewritermc.presentation.presentation
 import com.typewritermc.types.TypewriterType
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -30,6 +45,7 @@ data class LiteralMessage(
 )
 data class RepeatedMessage(
     val value: String,
+    @SerialName("repeat_count")
     val repetitions: Int,
 ) : SyntheticMessage
 
@@ -49,6 +65,73 @@ data class SyntheticEntry(
         context.output.send(message)
     }
 }
+
+@RealmCapabilities
+class SyntheticRealmCapabilities {
+    context(_: RealmSearchContext)
+    @RealmCapability.Search
+    fun searchMessages(request: RealmSearchRequest<LiteralMessage>): RealmSearch<RepeatedMessage> =
+        realmSearch {
+            partial(listOf(RepeatedMessage(request.payload.value, 1)))
+            complete()
+        }
+
+    context(_: RealmComputationContext)
+    @RealmCapability.Computation
+    suspend fun repeatMessage(request: RepeatedMessage): LiteralMessage =
+        LiteralMessage(request.value.repeat(request.repetitions))
+
+    context(_: RealmCommandContext)
+    @RealmCapability.Command
+    suspend fun publishMessage(request: LiteralMessage): RealmCommandOutcome =
+        RealmCommandOutcome(
+            instructions =
+                listOf(
+                    PanelInstruction.Notify(
+                        severity = NotificationSeverity.SUCCESS,
+                        message = request.value,
+                    ),
+                ),
+        )
+}
+
+@TypewriterPresentation(
+    default = true,
+    priority = 100,
+)
+context(_: PresentationBuildContext)
+fun syntheticEntryEditor() =
+    presentation<SyntheticEntry>(name = "editor") {
+        section(
+            key = "message",
+            title = "Message",
+            initiallyExpanded = true,
+        ) {
+            polymorphicInput(SyntheticEntry::message) {
+                type<LiteralMessage>("Literal") {
+                    textInput(LiteralMessage::value, multiline = true)
+                }
+                type<RepeatedMessage>("Repeated") {
+                    textInput(RepeatedMessage::value)
+                    numericInput(RepeatedMessage::repetitions)
+                }
+            }
+        }
+    }
+
+@TypewriterPresentation(priority = 10)
+context(_: PresentationBuildContext)
+fun syntheticEntryCompactEditor() =
+    presentation<SyntheticEntry>(name = "compact") {
+        polymorphicInput(SyntheticEntry::message) {
+            type<LiteralMessage>("Literal") {
+                textInput(LiteralMessage::value)
+            }
+            type<RepeatedMessage>("Repeated") {
+                textInput(RepeatedMessage::value)
+            }
+        }
+    }
 
 @TypewriterElementFacet(SyntheticEntry::class)
 class SyntheticEntryFacet : ElementRuntimeFacet<SyntheticEntry> {

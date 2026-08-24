@@ -24,8 +24,14 @@ import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.FetchEditorCatalog
 import skirout.editor.v1.catalog.WatchEditorCatalog
+import skirout.editor.v1.capability.CommandResult
+import skirout.editor.v1.capability.ComputationResult
+import skirout.editor.v1.capability.InvokeRealmCommand
+import skirout.editor.v1.capability.InvokeRealmComputation
 import skirout.editor.v1.element_catalog.ElementCatalogResult
 import skirout.editor.v1.element_catalog.FetchElementCatalog
+import skirout.editor.v1.search.CancelRealmPresentationSearch
+import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.library.v1.book.CreateBook
 import skirout.library.v1.book.CreateBookResponse
 import skirout.library.v1.book.UpdateBook
@@ -89,6 +95,30 @@ internal class LibraryContracts(
             elementCatalogResponseClassifier(),
         )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
+    val cancelRealmPresentationSearch =
+        unary(
+            CancelRealmPresentationSearch,
+            "editor.presentation.search.cancel",
+            CancelRealmPresentationSearchResult.UNAVAILABLE,
+        )
+    val invokeRealmComputation =
+        unary(
+            InvokeRealmComputation,
+            "editor.capability.computation.invoke",
+            ComputationResult.createUnavailable(
+                invocationId = skirout.editor.v1.capability.InvocationId(value = ""),
+                diagnostics = emptyList(),
+            ),
+        )
+    val invokeRealmCommand =
+        unary(
+            InvokeRealmCommand,
+            "editor.capability.command.invoke",
+            CommandResult.createUnavailable(
+                invocationId = skirout.editor.v1.capability.InvocationId(value = ""),
+                diagnostics = emptyList(),
+            ),
+        )
 
     val watchBooks =
         watch(
@@ -259,14 +289,18 @@ private fun catalogWatchResponseClassifier(): ResponseClassifier<CatalogWatchUpd
 private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> =
     ResponseClassifier { response ->
         val wrapper = requireNotNull(response::class.simpleName).removeSuffix("Wrapper")
-        val words = wrapper.replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2").lowercase()
+        val variant =
+            wrapper
+                .replace(Regex("([a-z0-9])([A-Z])"), "\$1-\$2")
+                .replace('_', '-')
+                .lowercase()
         val outcome =
-            when (wrapper) {
-                "InternalError", "Unavailable" -> ResponseOutcome.INTERNAL_ERROR
-                "Success", "List", "Initial", "Add", "Update", "Remove" -> ResponseOutcome.SUCCESS
+            when (variant) {
+                "internal-error", "unavailable" -> ResponseOutcome.INTERNAL_ERROR
+                "success", "list", "initial", "add", "update", "remove", "canceled" -> ResponseOutcome.SUCCESS
                 else -> ResponseOutcome.DOMAIN_ERROR
             }
-        ResponseClassification(outcome, ResponseVariant.of(words))
+        ResponseClassification(outcome, ResponseVariant.of(variant))
     }
 
 internal fun <Request : Any, Initial : Any, Update : Any> WatchContract<RealmAddress, Request, Initial, Update>.encodeUpdate(

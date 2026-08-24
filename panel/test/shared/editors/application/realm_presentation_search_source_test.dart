@@ -137,7 +137,7 @@ RealmPresentationSearchSource _source(
   TypeExpression payloadType = const StringType(),
 }) => RealmPresentationSearchSource(
   provider: RealmCallbackSearchProvider(
-    actionId: const RealmActionId(namespace: "minecraft", name: "effects"),
+    capabilityId: const CapabilityId("capability"),
     payload: payload ?? "server".asStringLiteral,
     result: SearchResultMapping(
       bindingId: _candidateBindingId,
@@ -149,6 +149,7 @@ RealmPresentationSearchSource _source(
       ),
     ),
   ),
+  generation: const CatalogGeneration("generation"),
   payloadType: payloadType,
   resultType: const StringType(),
   transport: transport,

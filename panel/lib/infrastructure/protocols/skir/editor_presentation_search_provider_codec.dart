@@ -147,21 +147,14 @@ extension SkirPresentationSearchProviderDecoder on SkirPresentationDecoder {
   TypeResult<SearchProvider> _realmSearchProvider(
     wire.RealmCallbackSearchProvider value,
   ) {
-    final actionId =
-        value.realmActionId.namespace.isEmpty ||
-            value.realmActionId.name.isEmpty
-        ? invalidWire<RealmActionId>("Realm action ID is not qualified")
-        : TypeResult.success(
-            RealmActionId(
-              namespace: value.realmActionId.namespace,
-              name: value.realmActionId.name,
-            ),
-          );
+    final capabilityId = value.capabilityId.value.isEmpty
+        ? invalidWire<CapabilityId>("Realm search capability ID is empty")
+        : TypeResult.success(CapabilityId(value.capabilityId.value));
     final selectors = _decodeSearchList(value.selectors, _searchSelector);
     final payload = expressions.decode(value.payload);
     final result = _searchResultMapping(value.result);
     final diagnostics = [
-      ...actionId.diagnostics,
+      ...capabilityId.diagnostics,
       ...payload.diagnostics,
       ...result.diagnostics,
       ...selectors.diagnostics,
@@ -169,7 +162,7 @@ extension SkirPresentationSearchProviderDecoder on SkirPresentationDecoder {
     return diagnostics.isEmpty
         ? TypeResult.success(
             SearchProvider.realmCallback(
-              actionId: actionId.valueOrNull!,
+              capabilityId: capabilityId.valueOrNull!,
               payload: payload.valueOrNull!,
               result: result.valueOrNull!,
               selectors: selectors.valueOrNull!,

@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.codegen.stringMapCode
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.PrototypeBinding
@@ -60,6 +61,7 @@ import com.typewritermc.types.TypewriterType
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.KspTypeIdentityPolicy
+import com.typewritermc.types.ksp.serializedFieldNames
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.encodeToByteArray
@@ -321,6 +323,7 @@ private class TypewriterElementProcessor(
                 .addSuperclassConstructorParameter("graph.root.let { it as %T.Named }.reference", TypeExpression::class)
                 .addSuperclassConstructorParameter("graph.definitions.single { it.id == %L }", element.reference.code())
                 .addSuperclassConstructorParameter("%T.serializer()", sourceClass)
+                .addSuperclassConstructorParameter("%L", declaration.serializedFieldNames().stringMapCode())
                 .addProperty(
                     PropertySpec
                         .builder("descriptor", ElementDescriptor::class)

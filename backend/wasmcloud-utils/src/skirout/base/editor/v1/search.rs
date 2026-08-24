@@ -264,7 +264,8 @@ impl RealmSearchQuery {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchRequest {
     pub subscription_id: String,
-    pub realm_action_id: crate::skirout::base::editor::v1::type_catalog::RealmActionId,
+    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
+    pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
     pub payload: crate::skirout::base::editor::v1::type_catalog::TypedValue,
     pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
     pub query: RealmSearchQuery,
@@ -467,6 +468,88 @@ impl RealmPresentationSearchUpdate {
 }
 
 // ==============================================================================
+// struct CancelRealmPresentationSearchRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CancelRealmPresentationSearchRequest {
+    pub subscription_id: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CancelRealmPresentationSearchRequest>>,
+}
+
+impl CancelRealmPresentationSearchRequest {
+    pub fn default_ref() -> &'static CancelRealmPresentationSearchRequest {
+        static D: std::sync::LazyLock<CancelRealmPresentationSearchRequest> = std::sync::LazyLock::new(CancelRealmPresentationSearchRequest::default);
+        &D
+    }
+}
+
+impl CancelRealmPresentationSearchRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/search.skir",
+                    "CancelRealmPresentationSearchRequest",
+                    "",
+                    |x: &CancelRealmPresentationSearchRequest| &x._unrecognized,
+                    |x: &mut CancelRealmPresentationSearchRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CancelRealmPresentationSearchRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CancelRealmPresentationSearchRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum CancelRealmPresentationSearchResult
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CancelRealmPresentationSearchResult {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<CancelRealmPresentationSearchResult>>),
+    Canceled,
+    NotFound,
+    Unavailable,
+}
+
+impl Default for CancelRealmPresentationSearchResult {
+    fn default() -> Self {
+        CancelRealmPresentationSearchResult::Unknown(None)
+    }
+}
+
+impl CancelRealmPresentationSearchResult {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &CancelRealmPresentationSearchResult| match x {
+                        CancelRealmPresentationSearchResult::Unknown(_) => 0,
+                        CancelRealmPresentationSearchResult::Canceled => 1,
+                        CancelRealmPresentationSearchResult::NotFound => 2,
+                        CancelRealmPresentationSearchResult::Unavailable => 3,
+                    },
+                    |u| CancelRealmPresentationSearchResult::Unknown(Some(u)),
+                    |x: &CancelRealmPresentationSearchResult| match x { CancelRealmPresentationSearchResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/search.skir",
+                    "CancelRealmPresentationSearchResult",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CancelRealmPresentationSearchResult> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(CancelRealmPresentationSearchResult::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -515,7 +598,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest> = RealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchRequest| &x.subscription_id, |x: &mut RealmPresentationSearchRequest, v| x.subscription_id = v);
-                (*a).add_field("realm_action_id", 1, crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer(), "", |x: &RealmPresentationSearchRequest| &x.realm_action_id, |x: &mut RealmPresentationSearchRequest, v| x.realm_action_id = v);
+                (*a).add_field("generation", 5, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &RealmPresentationSearchRequest| &x.generation, |x: &mut RealmPresentationSearchRequest, v| x.generation = v);
+                (*a).add_field("capability_id", 1, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmPresentationSearchRequest| &x.capability_id, |x: &mut RealmPresentationSearchRequest, v| x.capability_id = v);
                 (*a).add_field("payload", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &RealmPresentationSearchRequest| &x.payload, |x: &mut RealmPresentationSearchRequest, v| x.payload = v);
                 (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &RealmPresentationSearchRequest| &x.result_type, |x: &mut RealmPresentationSearchRequest, v| x.result_type = v);
                 (*a).add_field("query", 4, crate::skir_client::internal::struct_serializer_from_static(RealmSearchQuery::_adapter()), "", |x: &RealmPresentationSearchRequest| &x.query, |x: &mut RealmPresentationSearchRequest, v| x.query = v);
@@ -549,6 +633,18 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("unavailable", 2, 2, crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchUnavailable::_adapter()), "", |v| RealmPresentationSearchUpdate::Unavailable(Box::new(v)), |x| match x { RealmPresentationSearchUpdate::Unavailable(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest> = CancelRealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &CancelRealmPresentationSearchRequest| &x.subscription_id, |x: &mut CancelRealmPresentationSearchRequest, v| x.subscription_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult> = CancelRealmPresentationSearchResult::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("canceled", 1, 1, "", CancelRealmPresentationSearchResult::Canceled);
+                (*a).add_constant_variant("not_found", 2, 2, "", CancelRealmPresentationSearchResult::NotFound);
+                (*a).add_constant_variant("unavailable", 3, 3, "", CancelRealmPresentationSearchResult::Unavailable);
+                (*a).finalize();
+            }
         });
     let _ = *INIT;
 }
@@ -564,6 +660,19 @@ pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::
             number: 910003_i64,
             request_serializer: RealmPresentationSearchRequest::serializer(),
             response_serializer: RealmPresentationSearchUpdate::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client::Method<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchResult> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchResult>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "CancelRealmPresentationSearch".to_string(),
+            number: 919103_i64,
+            request_serializer: CancelRealmPresentationSearchRequest::serializer(),
+            response_serializer: CancelRealmPresentationSearchResult::serializer(),
             doc: "".to_string(),
         }
     });

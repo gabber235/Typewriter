@@ -284,4 +284,48 @@ void main() {
       expect(second.latest!.latestCommit, isNull);
     });
   });
+
+  group("SelectionEditorSource actions", () {
+    test("invokes a Realm command once for a multi selection", () async {
+      var invocations = 0;
+      final container = ProviderContainer.test(
+        overrides: [
+          editorRealmRuntimeProvider.overrideWithValue(
+            EditorRealmRuntime(
+              executeAction: (action, context) async {
+                invocations++;
+                return const RealmCommandResult.success([]);
+              },
+              searchSourceBuilder:
+                  ({
+                    required provider,
+                    required queryBindingId,
+                    required expressions,
+                    required registry,
+                    required budget,
+                    required providerKey,
+                  }) => UnavailableRealmPresentationSearchSource(
+                    provider: provider,
+                  ),
+            ),
+          ),
+        ],
+      );
+      container.read(selectionProvider.notifier).selectAll([
+        _identifier("first", const StringValue("same")),
+        _identifier("second", const StringValue("same")),
+      ]);
+
+      final result = await container
+          .read(_sourceProvider)
+          .executeAction(
+            const EditorAction.realm(RealmAction.reload()),
+            const ExpressionContext(bindings: BindingEnvironment({})),
+            const {},
+          );
+
+      expect(result, isA<RealmEditorActionResult>());
+      expect(invocations, 1);
+    });
+  });
 }

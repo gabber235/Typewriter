@@ -17,8 +17,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import skirout.editor.v1.catalog.CatalogGeneration
 import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.type_catalog.CatalogGeneration
 
 /** Publishes catalog generation changes independently from client request lifetimes. */
 class RealmCatalogInvalidationProcess internal constructor(

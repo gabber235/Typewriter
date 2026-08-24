@@ -26,10 +26,10 @@ final class SkirRealmPresentationSearchCodec {
     return TypeResult.success(
       wire.RealmPresentationSearchRequest(
         subscriptionId: request.subscriptionId,
-        realmActionId: wire_type.RealmActionId(
-          namespace: request.actionId.namespace,
-          name: request.actionId.name,
+        generation: wire_type.CatalogGeneration(
+          value: request.generation.value,
         ),
+        capabilityId: wire_type.CapabilityId(value: request.capabilityId.value),
         payload: payload.valueOrNull!,
         resultType: resultType.valueOrNull!,
         query: _encodeQuery(request.query),

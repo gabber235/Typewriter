@@ -1,17 +1,13 @@
+import { CapabilityDefinition } from "editor/v1/capability.skir";
 import { ConversionDefinition } from "editor/v1/conversion.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
 import { PresentationDefinition } from "editor/v1/presentation.skir";
 import {
-  ConversionId,
+  CatalogGeneration,
   PresentationId,
-  RealmActionId,
   ResolvedTypeRef,
   TypeDefinition,
 } from "editor/v1/type_catalog.skir";
-
-struct CatalogGeneration(810900001) {
-  value: string = 0;
-}
 
 struct SubtypeQueryId(810900002) {
   value: string = 0;
@@ -27,19 +23,11 @@ struct SubtypeResult(810900004) {
   matching_types: [ResolvedTypeRef] = 1;
 }
 
-struct RealmActionDefinition(810900005) {
-  realm_action_id: RealmActionId = 0;
-  payload_type: ResolvedTypeRef = 1;
-  result_type: ResolvedTypeRef? = 2;
-}
-
 struct CatalogFetchRequest(810900006) {
   expected_generation: CatalogGeneration? = 0;
   requested_types: [ResolvedTypeRef] = 1;
   presentation_ids: [PresentationId] = 2;
-  conversion_ids: [ConversionId] = 3;
-  realm_action_ids: [RealmActionId] = 4;
-  subtype_queries: [SubtypeQuery] = 5;
+  subtype_queries: [SubtypeQuery] = 3;
 }
 
 struct CatalogFetchSuccess(810900007) {
@@ -47,7 +35,7 @@ struct CatalogFetchSuccess(810900007) {
   type_definitions: [TypeDefinition] = 1;
   presentation_definitions: [PresentationDefinition] = 2;
   conversions: [ConversionDefinition] = 3;
-  realm_action_definitions: [RealmActionDefinition] = 4;
+  capability_definitions: [CapabilityDefinition] = 4;
   subtype_results: [SubtypeResult] = 5;
   diagnostics: [TypeDiagnostic] = 6;
 }

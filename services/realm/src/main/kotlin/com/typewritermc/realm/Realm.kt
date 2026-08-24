@@ -9,6 +9,7 @@ import com.typewritermc.realm.repository.SurrealBookRepository
 import com.typewritermc.realm.repository.SurrealPageRepository
 import com.typewritermc.realm.repository.SurrealTagRepository
 import com.typewritermc.realm.routes.RealmAddress
+import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
 import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
@@ -47,6 +48,7 @@ class Realm(
     private val clock: Clock,
     private val catalogInvalidations: RealmCatalogInvalidationProcess,
     private val host: HostedRuntimeHost,
+    private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
 ) {
     private val lifecycle = Mutex()
     private var database: Surreal? = null
@@ -72,6 +74,7 @@ class Realm(
                     editorCatalog,
                     elementCatalog,
                     presentationSearch,
+                    capabilityInvocations,
                 )
             serviceMonitor =
                 scope.launch {

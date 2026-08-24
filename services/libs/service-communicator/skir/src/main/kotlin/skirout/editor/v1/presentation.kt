@@ -22305,7 +22305,7 @@ class HttpJsonSearchProvider private constructor(
 }
 
 sealed interface RealmCallbackSearchProvider_OrMutable {
-    val realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable;
+    val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
     val payload: skirout.editor.v1.expression.TypedExpression_OrMutable;
     val result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable;
     val selectors: kotlin.collections.List<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>;
@@ -22316,7 +22316,7 @@ sealed interface RealmCallbackSearchProvider_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmCallbackSearchProvider private constructor(
-    override val realmActionId: skirout.editor.v1.type_catalog.RealmActionId,
+    override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
     override val payload: skirout.editor.v1.expression.TypedExpression,
     override val result: skirout.editor.v1.presentation.SearchResultMapping,
     override val selectors: build.skir.KeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>,
@@ -22326,14 +22326,14 @@ class RealmCallbackSearchProvider private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
         payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
         result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
         selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RealmCallbackSearchProvider>? =
             null,
     ): this(
-        realmActionId.toFrozen(),
+        capabilityId.toFrozen(),
         payload.toFrozen(),
         result.toFrozen(),
         build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
@@ -22345,7 +22345,7 @@ class RealmCallbackSearchProvider private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        realmActionId = this.realmActionId,
+        capabilityId = this.capabilityId,
         payload = this.payload,
         result = this.result,
         selectors = this.selectors,
@@ -22355,8 +22355,8 @@ class RealmCallbackSearchProvider private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            this.realmActionId,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capabilityId,
         payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
             this.payload,
         result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
@@ -22364,7 +22364,7 @@ class RealmCallbackSearchProvider private constructor(
         selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
             this.selectors,
     ) = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
-        realmActionId.toFrozen(),
+        capabilityId.toFrozen(),
         payload.toFrozen(),
         result.toFrozen(),
         build.skir.internal.toKeyedList(selectors, "selectorId", { it.selectorId }, { it.toFrozen() }),
@@ -22375,11 +22375,11 @@ class RealmCallbackSearchProvider private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.RealmCallbackSearchProvider && this.realmActionId == other.realmActionId && this.payload == other.payload && this.result == other.result && this.selectors == other.selectors);
+        return this === other || (other is skirout.editor.v1.presentation.RealmCallbackSearchProvider && this.capabilityId == other.capabilityId && this.payload == other.payload && this.result == other.result && this.selectors == other.selectors);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmActionId, this.payload, this.result, this.selectors).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.capabilityId, this.payload, this.result, this.selectors).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -22393,8 +22393,8 @@ class RealmCallbackSearchProvider private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            skirout.editor.v1.type_catalog.RealmActionId.partial(),
+        override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
         override var payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
             skirout.editor.v1.expression.TypedExpression.partial(),
         override var result: skirout.editor.v1.presentation.SearchResultMapping =
@@ -22406,7 +22406,7 @@ class RealmCallbackSearchProvider private constructor(
     ): skirout.editor.v1.presentation.RealmCallbackSearchProvider_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
-            realmActionId = this.realmActionId,
+            capabilityId = this.capabilityId,
             payload = this.payload,
             result = this.result,
             selectors = this.selectors,
@@ -22414,18 +22414,18 @@ class RealmCallbackSearchProvider private constructor(
         );
 
         /**
-         * If the value of [realmActionId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
-        val mutableRealmActionId: skirout.editor.v1.type_catalog.RealmActionId.Mutable get() {
-            var value = this.realmActionId;
+        val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capabilityId;
             return when (value) {
-                is skirout.editor.v1.type_catalog.RealmActionId -> {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
                     value = value.toMutable();
-                    this.realmActionId = value;
+                    this.capabilityId = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.RealmActionId.Mutable -> value;
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
 
@@ -22465,7 +22465,7 @@ class RealmCallbackSearchProvider private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.RealmCallbackSearchProvider(
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
                 skirout.editor.v1.expression.TypedExpression.partial(),
                 skirout.editor.v1.presentation.SearchResultMapping.partial(),
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
@@ -22482,8 +22482,8 @@ class RealmCallbackSearchProvider private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
             payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
                 skirout.editor.v1.expression.TypedExpression.partial(),
             result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable =
@@ -22491,7 +22491,7 @@ class RealmCallbackSearchProvider private constructor(
             selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable> =
                 build.skir.internal.emptyKeyedList<skirout.editor.v1.presentation.SearchSelectorDefinition, kotlin.String>(),
         ) = skirout.editor.v1.presentation.RealmCallbackSearchProvider(
-            realmActionId = realmActionId,
+            capabilityId = capabilityId,
             payload = payload,
             result = result,
             selectors = selectors,
@@ -22516,13 +22516,13 @@ class RealmCallbackSearchProvider private constructor(
 
         init {
             serializerImpl.addField(
-                "realm_action_id",
-                "realmActionId",
+                "capability_id",
+                "capabilityId",
                 0,
-                skirout.editor.v1.type_catalog.RealmActionId.serializer,
+                skirout.editor.v1.type_catalog.CapabilityId.serializer,
                 "",
-                { it.realmActionId },
-                { mut, v -> mut.realmActionId = v },
+                { it.capabilityId },
+                { mut, v -> mut.capabilityId = v },
             );
             serializerImpl.addField(
                 "payload",
@@ -24628,13 +24628,13 @@ sealed class SearchProvider private constructor() {
         fun createRealmCallback(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
             payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
             result: skirout.editor.v1.presentation.SearchResultMapping_OrMutable,
             selectors: kotlin.collections.Iterable<skirout.editor.v1.presentation.SearchSelectorDefinition_OrMutable>,
         ) = RealmCallbackWrapper(
             skirout.editor.v1.presentation.RealmCallbackSearchProvider(
-                realmActionId = realmActionId,
+                capabilityId = capabilityId,
                 payload = payload,
                 result = result,
                 selectors = selectors,
@@ -28707,6 +28707,7 @@ sealed interface PresentationDefinition_OrMutable {
     val presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable;
     val target: skirout.editor.v1.type_catalog.TypeExpression;
     val root: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+    val dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationDefinition;
 }
@@ -28717,6 +28718,7 @@ class PresentationDefinition private constructor(
     override val presentationId: skirout.editor.v1.type_catalog.PresentationId,
     override val target: skirout.editor.v1.type_catalog.TypeExpression,
     override val root: skirout.editor.v1.presentation.PresentationNode,
+    override val dependencies: skirout.editor.v1.presentation.PresentationDependencies,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDefinition>? =
         null,
 ): skirout.editor.v1.presentation.PresentationDefinition_OrMutable {
@@ -28726,12 +28728,14 @@ class PresentationDefinition private constructor(
         presentationId: skirout.editor.v1.type_catalog.PresentationId_OrMutable,
         target: skirout.editor.v1.type_catalog.TypeExpression,
         root: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDefinition>? =
             null,
     ): this(
         presentationId.toFrozen(),
         target,
         root.toFrozen(),
+        dependencies.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -28743,6 +28747,7 @@ class PresentationDefinition private constructor(
         presentationId = this.presentationId,
         target = this.target,
         root = this.root,
+        dependencies = this.dependencies,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -28755,10 +28760,13 @@ class PresentationDefinition private constructor(
             this.target,
         root: skirout.editor.v1.presentation.PresentationNode_OrMutable =
             this.root,
+        dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable =
+            this.dependencies,
     ) = skirout.editor.v1.presentation.PresentationDefinition(
         presentationId.toFrozen(),
         target,
         root.toFrozen(),
+        dependencies.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -28766,11 +28774,11 @@ class PresentationDefinition private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.PresentationDefinition && this.presentationId == other.presentationId && this.target == other.target && this.root == other.root);
+        return this === other || (other is skirout.editor.v1.presentation.PresentationDefinition && this.presentationId == other.presentationId && this.target == other.target && this.root == other.root && this.dependencies == other.dependencies);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.presentationId, this.target, this.root).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.presentationId, this.target, this.root, this.dependencies).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -28790,6 +28798,8 @@ class PresentationDefinition private constructor(
             skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
         override var root: skirout.editor.v1.presentation.PresentationNode_OrMutable =
             skirout.editor.v1.presentation.PresentationNode.partial(),
+        override var dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable =
+            skirout.editor.v1.presentation.PresentationDependencies.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDefinition>? =
             null,
     ): skirout.editor.v1.presentation.PresentationDefinition_OrMutable {
@@ -28798,6 +28808,7 @@ class PresentationDefinition private constructor(
             presentationId = this.presentationId,
             target = this.target,
             root = this.root,
+            dependencies = this.dependencies,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -28832,6 +28843,22 @@ class PresentationDefinition private constructor(
                 is skirout.editor.v1.presentation.PresentationNode.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [dependencies] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [dependencies] and returns it.
+         */
+        val mutableDependencies: skirout.editor.v1.presentation.PresentationDependencies.Mutable get() {
+            var value = this.dependencies;
+            return when (value) {
+                is skirout.editor.v1.presentation.PresentationDependencies -> {
+                    value = value.toMutable();
+                    this.dependencies = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.PresentationDependencies.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -28840,6 +28867,7 @@ class PresentationDefinition private constructor(
                 skirout.editor.v1.type_catalog.PresentationId.partial(),
                 skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
                 skirout.editor.v1.presentation.PresentationNode.partial(),
+                skirout.editor.v1.presentation.PresentationDependencies.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -28859,10 +28887,13 @@ class PresentationDefinition private constructor(
                 skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
             root: skirout.editor.v1.presentation.PresentationNode_OrMutable =
                 skirout.editor.v1.presentation.PresentationNode.partial(),
+            dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable =
+                skirout.editor.v1.presentation.PresentationDependencies.partial(),
         ) = skirout.editor.v1.presentation.PresentationDefinition(
             presentationId = presentationId,
             target = target,
             root = root,
+            dependencies = dependencies,
             _unrecognizedFields = null,
         );
 
@@ -28909,6 +28940,291 @@ class PresentationDefinition private constructor(
                 "",
                 { it.root },
                 { mut, v -> mut.root = v },
+            );
+            serializerImpl.addField(
+                "dependencies",
+                "dependencies",
+                3,
+                skirout.editor.v1.presentation.PresentationDependencies.serializer,
+                "",
+                { it.dependencies },
+                { mut, v -> mut.dependencies = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface PresentationDependencies_OrMutable {
+    val types: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>;
+    val presentations: kotlin.collections.List<skirout.editor.v1.type_catalog.PresentationId_OrMutable>;
+    val conversions: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable>;
+    val capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.CapabilityId_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationDependencies;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationDependencies private constructor(
+    override val types: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef>,
+    override val presentations: kotlin.collections.List<skirout.editor.v1.type_catalog.PresentationId>,
+    override val conversions: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId>,
+    override val capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.CapabilityId>,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDependencies>? =
+        null,
+): skirout.editor.v1.presentation.PresentationDependencies_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable>,
+        presentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.PresentationId_OrMutable>,
+        conversions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable>,
+        capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.CapabilityId_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDependencies>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(presentations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(conversions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(capabilities, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        types = this.types,
+        presentations = this.presentations,
+        conversions = this.conversions,
+        capabilities = this.capabilities,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+            this.types,
+        presentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.PresentationId_OrMutable> =
+            this.presentations,
+        conversions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
+            this.conversions,
+        capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.CapabilityId_OrMutable> =
+            this.capabilities,
+    ) = skirout.editor.v1.presentation.PresentationDependencies(
+        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(presentations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(conversions, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(capabilities, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationDependencies && this.types == other.types && this.presentations == other.presentations && this.conversions == other.conversions && this.capabilities == other.capabilities);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.types, this.presentations, this.conversions, this.capabilities).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.presentation.PresentationDependencies.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationDependencies]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var types: kotlin.collections.List<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+        override var presentations: kotlin.collections.List<skirout.editor.v1.type_catalog.PresentationId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.PresentationId>(),
+        override var conversions: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+        override var capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.CapabilityId_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.CapabilityId>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationDependencies>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationDependencies_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationDependencies(
+            types = this.types,
+            presentations = this.presentations,
+            conversions = this.conversions,
+            capabilities = this.capabilities,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [types] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
+         */
+        val mutableTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> get() {
+            var value = this.types;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.types = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [presentations] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [presentations] and returns it.
+         */
+        val mutablePresentations: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.PresentationId_OrMutable> get() {
+            var value = this.presentations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.presentations = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [conversions] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [conversions] and returns it.
+         */
+        val mutableConversions: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ConversionId_OrMutable> get() {
+            var value = this.conversions;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.conversions = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [capabilities] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
+         */
+        val mutableCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.CapabilityId_OrMutable> get() {
+            var value = this.capabilities;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.capabilities = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationDependencies(
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.PresentationId>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.CapabilityId>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationDependencies].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ResolvedTypeRef>(),
+            presentations: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.PresentationId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.PresentationId>(),
+            conversions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ConversionId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ConversionId>(),
+            capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.CapabilityId_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.CapabilityId>(),
+        ) = skirout.editor.v1.presentation.PresentationDependencies(
+            types = types,
+            presentations = presentations,
+            conversions = conversions,
+            capabilities = capabilities,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/presentation.skir:PresentationDependencies",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [PresentationDependencies] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [PresentationDependencies] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "types",
+                "types",
+                0,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
+                ),
+                "",
+                { it.types },
+                { mut, v -> mut.types = v },
+            );
+            serializerImpl.addField(
+                "presentations",
+                "presentations",
+                1,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.PresentationId.serializer,
+                ),
+                "",
+                { it.presentations },
+                { mut, v -> mut.presentations = v },
+            );
+            serializerImpl.addField(
+                "conversions",
+                "conversions",
+                2,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.ConversionId.serializer,
+                ),
+                "",
+                { it.conversions },
+                { mut, v -> mut.conversions = v },
+            );
+            serializerImpl.addField(
+                "capabilities",
+                "capabilities",
+                3,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.type_catalog.CapabilityId.serializer,
+                ),
+                "",
+                { it.capabilities },
+                { mut, v -> mut.capabilities = v },
             );
             serializerImpl.finalizeStruct();
         }

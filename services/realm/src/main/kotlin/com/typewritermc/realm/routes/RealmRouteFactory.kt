@@ -13,6 +13,7 @@ class RealmRouteFactory(
     private val editorCatalog: RealmEditorCatalogSource,
     private val elementCatalog: RealmElementCatalogSource,
     private val presentationSearch: RealmPresentationSearchSource,
+    private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
 ) {
     fun create(address: RealmAddress): CommunicatorRoutes {
         val contracts = LibraryContracts(address)
@@ -21,12 +22,14 @@ class RealmRouteFactory(
         val tagRoutes = TagRoutes(tags, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, elementCatalog, contracts, address)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
+        val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }
         return communicatorRoutes {
             bookRoutes.register(this)
             pageRoutes.register(this)
             tagRoutes.register(this)
             editorCatalogRoutes.register(this)
             presentationSearchRoutes.register(this)
+            capabilityInvocationRoutes?.register(this)
         }
     }
 }

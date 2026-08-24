@@ -9,7 +9,8 @@ import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchQuery
-import skirout.editor.v1.type_catalog.RealmActionId
+import skirout.editor.v1.type_catalog.CapabilityId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.type_catalog.TypeExpression
 import skirout.editor.v1.type_catalog.TypedValue
 
@@ -55,7 +56,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
             val source = FakeRealmPresentationSearchSource()
             val invalid =
                 validSearchRequest().copy(
-                    realmActionId = RealmActionId(namespace = "", name = ""),
+                    capabilityId = CapabilityId(value = ""),
                     payload = TypedValue.UNKNOWN,
                     resultType = TypeExpression.UNKNOWN,
                 )
@@ -66,7 +67,6 @@ val RealmPresentationSearchRoutesTest by testSuite {
                 response.value.status shouldBe RealmPresentationSearchStatus.ERROR
                 response.value.diagnostics.map { it.code } shouldContainExactly
                     listOf(
-                        DiagnosticCode.INVALID_VALUE,
                         DiagnosticCode.INVALID_VALUE,
                         DiagnosticCode.INVALID_VALUE,
                         DiagnosticCode.INVALID_VALUE,
@@ -119,6 +119,8 @@ private class FakeRealmPresentationSearchSource(
             diagnostics = emptyList(),
         )
     }
+
+    override fun cancel(subscriptionId: String): Boolean = false
 }
 
 private suspend fun RouteFixture.search(request: RealmPresentationSearchRequest): RealmPresentationSearchUpdate =
@@ -132,7 +134,8 @@ private suspend fun RouteFixture.search(request: RealmPresentationSearchRequest)
 private fun validSearchRequest() =
     RealmPresentationSearchRequest(
         subscriptionId = "search",
-        realmActionId = RealmActionId(namespace = "minecraft", name = "searchPlayers"),
+        generation = CatalogGeneration(value = "generation"),
+        capabilityId = CapabilityId(value = "capability"),
         payload = TypedValue.StringWrapper("server"),
         resultType = TypeExpression.UNIT,
         query =

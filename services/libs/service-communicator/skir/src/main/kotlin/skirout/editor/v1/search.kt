@@ -1038,7 +1038,8 @@ class RealmSearchQuery private constructor(
 
 sealed interface RealmPresentationSearchRequest_OrMutable {
     val subscriptionId: kotlin.String;
-    val realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable;
+    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
+    val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
     val payload: skirout.editor.v1.type_catalog.TypedValue;
     val resultType: skirout.editor.v1.type_catalog.TypeExpression;
     val query: skirout.editor.v1.search.RealmSearchQuery_OrMutable;
@@ -1050,7 +1051,8 @@ sealed interface RealmPresentationSearchRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmPresentationSearchRequest private constructor(
     override val subscriptionId: kotlin.String,
-    override val realmActionId: skirout.editor.v1.type_catalog.RealmActionId,
+    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
+    override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
     override val payload: skirout.editor.v1.type_catalog.TypedValue,
     override val resultType: skirout.editor.v1.type_catalog.TypeExpression,
     override val query: skirout.editor.v1.search.RealmSearchQuery,
@@ -1061,7 +1063,8 @@ class RealmPresentationSearchRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         subscriptionId: kotlin.String,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
         payload: skirout.editor.v1.type_catalog.TypedValue,
         resultType: skirout.editor.v1.type_catalog.TypeExpression,
         query: skirout.editor.v1.search.RealmSearchQuery_OrMutable,
@@ -1069,7 +1072,8 @@ class RealmPresentationSearchRequest private constructor(
             null,
     ): this(
         subscriptionId,
-        realmActionId.toFrozen(),
+        generation.toFrozen(),
+        capabilityId.toFrozen(),
         payload,
         resultType,
         query.toFrozen(),
@@ -1082,7 +1086,8 @@ class RealmPresentationSearchRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         subscriptionId = this.subscriptionId,
-        realmActionId = this.realmActionId,
+        generation = this.generation,
+        capabilityId = this.capabilityId,
         payload = this.payload,
         resultType = this.resultType,
         query = this.query,
@@ -1094,8 +1099,10 @@ class RealmPresentationSearchRequest private constructor(
             _MustNameArguments,
         subscriptionId: kotlin.String =
             this.subscriptionId,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            this.realmActionId,
+        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            this.generation,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capabilityId,
         payload: skirout.editor.v1.type_catalog.TypedValue =
             this.payload,
         resultType: skirout.editor.v1.type_catalog.TypeExpression =
@@ -1104,7 +1111,8 @@ class RealmPresentationSearchRequest private constructor(
             this.query,
     ) = skirout.editor.v1.search.RealmPresentationSearchRequest(
         subscriptionId,
-        realmActionId.toFrozen(),
+        generation.toFrozen(),
+        capabilityId.toFrozen(),
         payload,
         resultType,
         query.toFrozen(),
@@ -1115,11 +1123,11 @@ class RealmPresentationSearchRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchRequest && this.subscriptionId == other.subscriptionId && this.realmActionId == other.realmActionId && this.payload == other.payload && this.resultType == other.resultType && this.query == other.query);
+        return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchRequest && this.subscriptionId == other.subscriptionId && this.generation == other.generation && this.capabilityId == other.capabilityId && this.payload == other.payload && this.resultType == other.resultType && this.query == other.query);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId, this.realmActionId, this.payload, this.resultType, this.query).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId, this.generation, this.capabilityId, this.payload, this.resultType, this.query).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1135,8 +1143,10 @@ class RealmPresentationSearchRequest private constructor(
             _MustNameArguments,
         override var subscriptionId: kotlin.String =
             "",
-        override var realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            skirout.editor.v1.type_catalog.RealmActionId.partial(),
+        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+        override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
         override var payload: skirout.editor.v1.type_catalog.TypedValue =
             skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
         override var resultType: skirout.editor.v1.type_catalog.TypeExpression =
@@ -1149,7 +1159,8 @@ class RealmPresentationSearchRequest private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.search.RealmPresentationSearchRequest(
             subscriptionId = this.subscriptionId,
-            realmActionId = this.realmActionId,
+            generation = this.generation,
+            capabilityId = this.capabilityId,
             payload = this.payload,
             resultType = this.resultType,
             query = this.query,
@@ -1157,18 +1168,34 @@ class RealmPresentationSearchRequest private constructor(
         );
 
         /**
-         * If the value of [realmActionId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
+         * If the value of [generation] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
-        val mutableRealmActionId: skirout.editor.v1.type_catalog.RealmActionId.Mutable get() {
-            var value = this.realmActionId;
+        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
+            var value = this.generation;
             return when (value) {
-                is skirout.editor.v1.type_catalog.RealmActionId -> {
+                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
                     value = value.toMutable();
-                    this.realmActionId = value;
+                    this.generation = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.RealmActionId.Mutable -> value;
+                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+         */
+        val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capabilityId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
+                    value = value.toMutable();
+                    this.capabilityId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
 
@@ -1193,7 +1220,8 @@ class RealmPresentationSearchRequest private constructor(
         private val default =
             skirout.editor.v1.search.RealmPresentationSearchRequest(
                 "",
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
                 skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
                 skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
@@ -1212,8 +1240,10 @@ class RealmPresentationSearchRequest private constructor(
                 _MustNameArguments,
             subscriptionId: kotlin.String =
                 "",
-            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
             payload: skirout.editor.v1.type_catalog.TypedValue =
                 skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
             resultType: skirout.editor.v1.type_catalog.TypeExpression =
@@ -1222,7 +1252,8 @@ class RealmPresentationSearchRequest private constructor(
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
         ) = skirout.editor.v1.search.RealmPresentationSearchRequest(
             subscriptionId = subscriptionId,
-            realmActionId = realmActionId,
+            generation = generation,
+            capabilityId = capabilityId,
             payload = payload,
             resultType = resultType,
             query = query,
@@ -1256,13 +1287,22 @@ class RealmPresentationSearchRequest private constructor(
                 { mut, v -> mut.subscriptionId = v },
             );
             serializerImpl.addField(
-                "realm_action_id",
-                "realmActionId",
-                1,
-                skirout.editor.v1.type_catalog.RealmActionId.serializer,
+                "generation",
+                "generation",
+                5,
+                skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
                 "",
-                { it.realmActionId },
-                { mut, v -> mut.realmActionId = v },
+                { it.generation },
+                { mut, v -> mut.generation = v },
+            );
+            serializerImpl.addField(
+                "capability_id",
+                "capabilityId",
+                1,
+                skirout.editor.v1.type_catalog.CapabilityId.serializer,
+                "",
+                { it.capabilityId },
+                { mut, v -> mut.capabilityId = v },
             );
             serializerImpl.addField(
                 "payload",
@@ -2061,6 +2101,285 @@ sealed class RealmPresentationSearchUpdate private constructor() {
     }
 }
 
+sealed interface CancelRealmPresentationSearchRequest_OrMutable {
+    val subscriptionId: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.search.CancelRealmPresentationSearchRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CancelRealmPresentationSearchRequest private constructor(
+    override val subscriptionId: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.CancelRealmPresentationSearchRequest>? =
+        null,
+): skirout.editor.v1.search.CancelRealmPresentationSearchRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        subscriptionId: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.CancelRealmPresentationSearchRequest>? =
+            null,
+    ): this(
+        subscriptionId,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        subscriptionId = this.subscriptionId,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        subscriptionId: kotlin.String =
+            this.subscriptionId,
+    ) = skirout.editor.v1.search.CancelRealmPresentationSearchRequest(
+        subscriptionId,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.search.CancelRealmPresentationSearchRequest && this.subscriptionId == other.subscriptionId);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [CancelRealmPresentationSearchRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var subscriptionId: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.CancelRealmPresentationSearchRequest>? =
+            null,
+    ): skirout.editor.v1.search.CancelRealmPresentationSearchRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.search.CancelRealmPresentationSearchRequest(
+            subscriptionId = this.subscriptionId,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.search.CancelRealmPresentationSearchRequest(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CancelRealmPresentationSearchRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            subscriptionId: kotlin.String =
+                "",
+        ) = skirout.editor.v1.search.CancelRealmPresentationSearchRequest(
+            subscriptionId = subscriptionId,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/search.skir:CancelRealmPresentationSearchRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [CancelRealmPresentationSearchRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [CancelRealmPresentationSearchRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "subscription_id",
+                "subscriptionId",
+                0,
+                build.skir.Serializers.string,
+                "",
+                { it.subscriptionId },
+                { mut, v -> mut.subscriptionId = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class CancelRealmPresentationSearchResult private constructor() {
+    /** The kind of variant held by a `CancelRealmPresentationSearchResult`. */
+    enum class Kind {
+        UNKNOWN,
+        CANCELED_CONST,
+        NOT_FOUND_CONST,
+        UNAVAILABLE_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.search.CancelRealmPresentationSearchResult.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.search.CancelRealmPresentationSearchResult>?,
+    ) : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object CANCELED : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        override val kind get() = Kind.CANCELED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.CANCELED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.CANCELED_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object NOT_FOUND : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        override val kind get() = Kind.NOT_FOUND_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.NOT_FOUND_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.NOT_FOUND_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object UNAVAILABLE : skirout.editor.v1.search.CancelRealmPresentationSearchResult() {
+        override val kind get() = Kind.UNAVAILABLE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.CancelRealmPresentationSearchResult && other.kind == Kind.UNAVAILABLE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.UNAVAILABLE_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.search.CancelRealmPresentationSearchResult>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.search.CancelRealmPresentationSearchResult._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [CancelRealmPresentationSearchResult].
+         * Default value for fields of type [CancelRealmPresentationSearchResult].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.editor.v1.search.CancelRealmPresentationSearchResult, Unknown>(
+                recordId = "editor/v1/search.skir:CancelRealmPresentationSearchResult",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [CancelRealmPresentationSearchResult] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [CancelRealmPresentationSearchResult] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            CANCELED;
+            NOT_FOUND;
+            UNAVAILABLE;
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 4) {
+                _serializerImpl.addConstantVariant(
+                    1,
+                    "canceled",
+                    Kind.CANCELED_CONST.ordinal,
+                    "",
+                    CANCELED,
+                );
+                _serializerImpl.addConstantVariant(
+                    2,
+                    "not_found",
+                    Kind.NOT_FOUND_CONST.ordinal,
+                    "",
+                    NOT_FOUND,
+                );
+                _serializerImpl.addConstantVariant(
+                    3,
+                    "unavailable",
+                    Kind.UNAVAILABLE_CONST.ordinal,
+                    "",
+                    UNAVAILABLE,
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
 val WatchRealmPresentationSearch: build.skir.service.Method<
     skirout.editor.v1.search.RealmPresentationSearchRequest,
     skirout.editor.v1.search.RealmPresentationSearchUpdate,
@@ -2070,6 +2389,19 @@ val WatchRealmPresentationSearch: build.skir.service.Method<
         910003,
         skirout.editor.v1.search.RealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.RealmPresentationSearchUpdate.serializer,
+        "",
+    )
+}
+
+val CancelRealmPresentationSearch: build.skir.service.Method<
+    skirout.editor.v1.search.CancelRealmPresentationSearchRequest,
+    skirout.editor.v1.search.CancelRealmPresentationSearchResult,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "CancelRealmPresentationSearch",
+        919103,
+        skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializer,
+        skirout.editor.v1.search.CancelRealmPresentationSearchResult.serializer,
         "",
     )
 }

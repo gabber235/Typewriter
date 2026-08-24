@@ -292,7 +292,7 @@ $ResolvedTypeRefCopyWith<$Res> get target {
 /// @nodoc
 mixin _$RealmEditorCatalogRequest {
 
- Set<ResolvedTypeRef> get types; Set<PresentationId> get presentations; Set<ConversionId> get conversions; Set<RealmActionId> get realmActions; Set<RealmEditorSubtypeQuery> get subtypeQueries;
+ Set<ResolvedTypeRef> get types; Set<PresentationId> get presentations; Set<RealmEditorSubtypeQuery> get subtypeQueries;
 /// Create a copy of RealmEditorCatalogRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,16 +303,16 @@ $RealmEditorCatalogRequestCopyWith<RealmEditorCatalogRequest> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogRequest&&const DeepCollectionEquality().equals(other.types, types)&&const DeepCollectionEquality().equals(other.presentations, presentations)&&const DeepCollectionEquality().equals(other.conversions, conversions)&&const DeepCollectionEquality().equals(other.realmActions, realmActions)&&const DeepCollectionEquality().equals(other.subtypeQueries, subtypeQueries));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmEditorCatalogRequest&&const DeepCollectionEquality().equals(other.types, types)&&const DeepCollectionEquality().equals(other.presentations, presentations)&&const DeepCollectionEquality().equals(other.subtypeQueries, subtypeQueries));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(types),const DeepCollectionEquality().hash(presentations),const DeepCollectionEquality().hash(conversions),const DeepCollectionEquality().hash(realmActions),const DeepCollectionEquality().hash(subtypeQueries));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(types),const DeepCollectionEquality().hash(presentations),const DeepCollectionEquality().hash(subtypeQueries));
 
 @override
 String toString() {
-  return 'RealmEditorCatalogRequest(types: $types, presentations: $presentations, conversions: $conversions, realmActions: $realmActions, subtypeQueries: $subtypeQueries)';
+  return 'RealmEditorCatalogRequest(types: $types, presentations: $presentations, subtypeQueries: $subtypeQueries)';
 }
 
 
@@ -323,7 +323,7 @@ abstract mixin class $RealmEditorCatalogRequestCopyWith<$Res>  {
   factory $RealmEditorCatalogRequestCopyWith(RealmEditorCatalogRequest value, $Res Function(RealmEditorCatalogRequest) _then) = _$RealmEditorCatalogRequestCopyWithImpl;
 @useResult
 $Res call({
- Set<ResolvedTypeRef> types, Set<PresentationId> presentations, Set<ConversionId> conversions, Set<RealmActionId> realmActions, Set<RealmEditorSubtypeQuery> subtypeQueries
+ Set<ResolvedTypeRef> types, Set<PresentationId> presentations, Set<RealmEditorSubtypeQuery> subtypeQueries
 });
 
 
@@ -340,13 +340,11 @@ class _$RealmEditorCatalogRequestCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? types = null,Object? presentations = null,Object? conversions = null,Object? realmActions = null,Object? subtypeQueries = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? types = null,Object? presentations = null,Object? subtypeQueries = null,}) {
   return _then(_self.copyWith(
 types: null == types ? _self.types : types // ignore: cast_nullable_to_non_nullable
 as Set<ResolvedTypeRef>,presentations: null == presentations ? _self.presentations : presentations // ignore: cast_nullable_to_non_nullable
-as Set<PresentationId>,conversions: null == conversions ? _self.conversions : conversions // ignore: cast_nullable_to_non_nullable
-as Set<ConversionId>,realmActions: null == realmActions ? _self.realmActions : realmActions // ignore: cast_nullable_to_non_nullable
-as Set<RealmActionId>,subtypeQueries: null == subtypeQueries ? _self.subtypeQueries : subtypeQueries // ignore: cast_nullable_to_non_nullable
+as Set<PresentationId>,subtypeQueries: null == subtypeQueries ? _self.subtypeQueries : subtypeQueries // ignore: cast_nullable_to_non_nullable
 as Set<RealmEditorSubtypeQuery>,
   ));
 }
@@ -432,10 +430,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<ConversionId> conversions,  Set<RealmActionId> realmActions,  Set<RealmEditorSubtypeQuery> subtypeQueries)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<RealmEditorSubtypeQuery> subtypeQueries)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogRequest() when $default != null:
-return $default(_that.types,_that.presentations,_that.conversions,_that.realmActions,_that.subtypeQueries);case _:
+return $default(_that.types,_that.presentations,_that.subtypeQueries);case _:
   return orElse();
 
 }
@@ -453,10 +451,10 @@ return $default(_that.types,_that.presentations,_that.conversions,_that.realmAct
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<ConversionId> conversions,  Set<RealmActionId> realmActions,  Set<RealmEditorSubtypeQuery> subtypeQueries)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<RealmEditorSubtypeQuery> subtypeQueries)  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogRequest():
-return $default(_that.types,_that.presentations,_that.conversions,_that.realmActions,_that.subtypeQueries);case _:
+return $default(_that.types,_that.presentations,_that.subtypeQueries);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -473,10 +471,10 @@ return $default(_that.types,_that.presentations,_that.conversions,_that.realmAct
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<ConversionId> conversions,  Set<RealmActionId> realmActions,  Set<RealmEditorSubtypeQuery> subtypeQueries)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<ResolvedTypeRef> types,  Set<PresentationId> presentations,  Set<RealmEditorSubtypeQuery> subtypeQueries)?  $default,) {final _that = this;
 switch (_that) {
 case _RealmEditorCatalogRequest() when $default != null:
-return $default(_that.types,_that.presentations,_that.conversions,_that.realmActions,_that.subtypeQueries);case _:
+return $default(_that.types,_that.presentations,_that.subtypeQueries);case _:
   return null;
 
 }
@@ -488,7 +486,7 @@ return $default(_that.types,_that.presentations,_that.conversions,_that.realmAct
 
 
 class _RealmEditorCatalogRequest extends RealmEditorCatalogRequest {
-  const _RealmEditorCatalogRequest({final  Set<ResolvedTypeRef> types = const {}, final  Set<PresentationId> presentations = const {}, final  Set<ConversionId> conversions = const {}, final  Set<RealmActionId> realmActions = const {}, final  Set<RealmEditorSubtypeQuery> subtypeQueries = const {}}): _types = types,_presentations = presentations,_conversions = conversions,_realmActions = realmActions,_subtypeQueries = subtypeQueries,super._();
+  const _RealmEditorCatalogRequest({final  Set<ResolvedTypeRef> types = const {}, final  Set<PresentationId> presentations = const {}, final  Set<RealmEditorSubtypeQuery> subtypeQueries = const {}}): _types = types,_presentations = presentations,_subtypeQueries = subtypeQueries,super._();
   
 
  final  Set<ResolvedTypeRef> _types;
@@ -503,20 +501,6 @@ class _RealmEditorCatalogRequest extends RealmEditorCatalogRequest {
   if (_presentations is EqualUnmodifiableSetView) return _presentations;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_presentations);
-}
-
- final  Set<ConversionId> _conversions;
-@override@JsonKey() Set<ConversionId> get conversions {
-  if (_conversions is EqualUnmodifiableSetView) return _conversions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_conversions);
-}
-
- final  Set<RealmActionId> _realmActions;
-@override@JsonKey() Set<RealmActionId> get realmActions {
-  if (_realmActions is EqualUnmodifiableSetView) return _realmActions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_realmActions);
 }
 
  final  Set<RealmEditorSubtypeQuery> _subtypeQueries;
@@ -537,16 +521,16 @@ _$RealmEditorCatalogRequestCopyWith<_RealmEditorCatalogRequest> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogRequest&&const DeepCollectionEquality().equals(other._types, _types)&&const DeepCollectionEquality().equals(other._presentations, _presentations)&&const DeepCollectionEquality().equals(other._conversions, _conversions)&&const DeepCollectionEquality().equals(other._realmActions, _realmActions)&&const DeepCollectionEquality().equals(other._subtypeQueries, _subtypeQueries));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RealmEditorCatalogRequest&&const DeepCollectionEquality().equals(other._types, _types)&&const DeepCollectionEquality().equals(other._presentations, _presentations)&&const DeepCollectionEquality().equals(other._subtypeQueries, _subtypeQueries));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_types),const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_conversions),const DeepCollectionEquality().hash(_realmActions),const DeepCollectionEquality().hash(_subtypeQueries));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_types),const DeepCollectionEquality().hash(_presentations),const DeepCollectionEquality().hash(_subtypeQueries));
 
 @override
 String toString() {
-  return 'RealmEditorCatalogRequest(types: $types, presentations: $presentations, conversions: $conversions, realmActions: $realmActions, subtypeQueries: $subtypeQueries)';
+  return 'RealmEditorCatalogRequest(types: $types, presentations: $presentations, subtypeQueries: $subtypeQueries)';
 }
 
 
@@ -557,7 +541,7 @@ abstract mixin class _$RealmEditorCatalogRequestCopyWith<$Res> implements $Realm
   factory _$RealmEditorCatalogRequestCopyWith(_RealmEditorCatalogRequest value, $Res Function(_RealmEditorCatalogRequest) _then) = __$RealmEditorCatalogRequestCopyWithImpl;
 @override @useResult
 $Res call({
- Set<ResolvedTypeRef> types, Set<PresentationId> presentations, Set<ConversionId> conversions, Set<RealmActionId> realmActions, Set<RealmEditorSubtypeQuery> subtypeQueries
+ Set<ResolvedTypeRef> types, Set<PresentationId> presentations, Set<RealmEditorSubtypeQuery> subtypeQueries
 });
 
 
@@ -574,13 +558,11 @@ class __$RealmEditorCatalogRequestCopyWithImpl<$Res>
 
 /// Create a copy of RealmEditorCatalogRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? types = null,Object? presentations = null,Object? conversions = null,Object? realmActions = null,Object? subtypeQueries = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? types = null,Object? presentations = null,Object? subtypeQueries = null,}) {
   return _then(_RealmEditorCatalogRequest(
 types: null == types ? _self._types : types // ignore: cast_nullable_to_non_nullable
 as Set<ResolvedTypeRef>,presentations: null == presentations ? _self._presentations : presentations // ignore: cast_nullable_to_non_nullable
-as Set<PresentationId>,conversions: null == conversions ? _self._conversions : conversions // ignore: cast_nullable_to_non_nullable
-as Set<ConversionId>,realmActions: null == realmActions ? _self._realmActions : realmActions // ignore: cast_nullable_to_non_nullable
-as Set<RealmActionId>,subtypeQueries: null == subtypeQueries ? _self._subtypeQueries : subtypeQueries // ignore: cast_nullable_to_non_nullable
+as Set<PresentationId>,subtypeQueries: null == subtypeQueries ? _self._subtypeQueries : subtypeQueries // ignore: cast_nullable_to_non_nullable
 as Set<RealmEditorSubtypeQuery>,
   ));
 }

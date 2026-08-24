@@ -18809,7 +18809,7 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
 // -----------------------------------------------------------------------------
 
 sealed class RealmCallbackSearchProvider_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable get realmActionId;
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
   _lib_editor_v1_expression.TypedExpression_orMutable get payload;
   SearchResultMapping_orMutable get result;
   _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
@@ -18820,7 +18820,7 @@ sealed class RealmCallbackSearchProvider_orMutable {
 /// Deeply immutable.
 final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.RealmActionId realmActionId;
+  final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
   final _lib_editor_v1_expression.TypedExpression payload;
   @_core.override
@@ -18830,19 +18830,19 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   _skir.internal__UnrecognizedFields? _u;
 
   factory RealmCallbackSearchProvider({
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.TypedExpression_orMutable payload,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => RealmCallbackSearchProvider._(
-    realmActionId.toFrozen(),
+    capabilityId.toFrozen(),
     payload.toFrozen(),
     result.toFrozen(),
     _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
   );
 
   RealmCallbackSearchProvider._(
-    this.realmActionId,
+    this.capabilityId,
     this.payload,
     this.result,
     this.selectors,
@@ -18850,7 +18850,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmCallbackSearchProvider._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
@@ -18859,7 +18859,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RealmCallbackSearchProvider_mutable mutable() => RealmCallbackSearchProvider_mutable._(
-    _lib_editor_v1_type_catalog.RealmActionId.defaultInstance,
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
     _lib_editor_v1_expression.TypedExpression.defaultInstance,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
@@ -18872,7 +18872,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 
   /// Returns a mutable shallow copy of this instance.
   RealmCallbackSearchProvider_mutable toMutable() => RealmCallbackSearchProvider_mutable._(
-    this.realmActionId,
+    this.capabilityId,
     this.payload,
     this.result,
     this.selectors,
@@ -18889,7 +18889,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.realmActionId,
+    this.capabilityId,
     this.payload,
     this.result,
     this.selectors,
@@ -18902,13 +18902,13 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   static _skir.StructSerializer<RealmCallbackSearchProvider, RealmCallbackSearchProvider_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "realm_action_id",
-        "realmActionId",
+        "capability_id",
+        "capabilityId",
         0,
-        _lib_editor_v1_type_catalog.RealmActionId.serializer,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
         "",
-        (it) => it.realmActionId,
-        (it, v) => it.realmActionId = v,
+        (it) => it.capabilityId,
+        (it, v) => it.capabilityId = v,
       );
       _serializerBuilder.addField(
         "payload",
@@ -18959,27 +18959,27 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 
 /// Mutable version of [RealmCallbackSearchProvider].
 final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchProvider_orMutable {
-  _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId;
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
   _lib_editor_v1_expression.TypedExpression_orMutable payload;
   SearchResultMapping_orMutable result;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmCallbackSearchProvider_mutable._(
-    this.realmActionId,
+    this.capabilityId,
     this.payload,
     this.result,
     this.selectors,
   );
 
-  /// If the value of [realmActionId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
-  _lib_editor_v1_type_catalog.RealmActionId_mutable get mutableRealmActionId {
-    final value = this.realmActionId;
-    if (value is _lib_editor_v1_type_catalog.RealmActionId_mutable) {
+  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
+    final value = this.capabilityId;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.realmActionId = (value as _lib_editor_v1_type_catalog.RealmActionId).toMutable();
+      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -19008,7 +19008,7 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   RealmCallbackSearchProvider toFrozen() => RealmCallbackSearchProvider(
-    realmActionId: this.realmActionId,
+    capabilityId: this.capabilityId,
     payload: this.payload,
     result: this.result,
     selectors: this.selectors,
@@ -20536,13 +20536,13 @@ sealed class SearchProvider {
 
   /// Same as `wrapRealmCallback(RealmCallbackSearchProvider(...))`.
   factory SearchProvider.createRealmCallback({
-    required _lib_editor_v1_type_catalog.RealmActionId_orMutable realmActionId,
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.TypedExpression_orMutable payload,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => SearchProvider.wrapRealmCallback(
     RealmCallbackSearchProvider(
-      realmActionId: realmActionId,
+      capabilityId: capabilityId,
       payload: payload,
       result: result,
       selectors: selectors,
@@ -24336,6 +24336,7 @@ sealed class PresentationDefinition_orMutable {
   _lib_editor_v1_type_catalog.PresentationId_orMutable get presentationId;
   _lib_editor_v1_type_catalog.TypeExpression get target;
   PresentationNode_orMutable get root;
+  PresentationDependencies_orMutable get dependencies;
 
   PresentationDefinition toFrozen();
 }
@@ -24348,22 +24349,27 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
   final _lib_editor_v1_type_catalog.TypeExpression target;
   @_core.override
   final PresentationNode root;
+  @_core.override
+  final PresentationDependencies dependencies;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationDefinition({
     required _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId,
     required _lib_editor_v1_type_catalog.TypeExpression target,
     required PresentationNode_orMutable root,
+    required PresentationDependencies_orMutable dependencies,
   }) => PresentationDefinition._(
     presentationId.toFrozen(),
     target,
     root.toFrozen(),
+    dependencies.toFrozen(),
   );
 
   PresentationDefinition._(
     this.presentationId,
     this.target,
     this.root,
+    this.dependencies,
   );
 
   /// Default instance with all fields set to their default values.
@@ -24371,6 +24377,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
     _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
     PresentationNode.defaultInstance,
+    PresentationDependencies.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -24379,6 +24386,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
     _lib_editor_v1_type_catalog.PresentationId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeExpression.unknown,
     PresentationNode.defaultInstance,
+    PresentationDependencies.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -24391,6 +24399,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
     this.presentationId,
     this.target,
     this.root,
+    this.dependencies,
   );
 
   @_core.override
@@ -24407,6 +24416,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
     this.presentationId,
     this.target,
     this.root,
+    this.dependencies,
   ];
 
   @_core.override
@@ -24442,6 +24452,15 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
         (it) => it.root,
         (it, v) => it.root = v,
       );
+      _serializerBuilder.addField(
+        "dependencies",
+        "dependencies",
+        3,
+        PresentationDependencies.serializer,
+        "",
+        (it) => it.dependencies,
+        (it, v) => it.dependencies = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -24463,12 +24482,14 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
   _lib_editor_v1_type_catalog.PresentationId_orMutable presentationId;
   _lib_editor_v1_type_catalog.TypeExpression target;
   PresentationNode_orMutable root;
+  PresentationDependencies_orMutable dependencies;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationDefinition_mutable._(
     this.presentationId,
     this.target,
     this.root,
+    this.dependencies,
   );
 
   /// If the value of [presentationId] is already mutable, returns it as-is.
@@ -24493,11 +24514,249 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
     }
   }
 
+  /// If the value of [dependencies] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [dependencies] and returns it.
+  PresentationDependencies_mutable get mutableDependencies {
+    final value = this.dependencies;
+    if (value is PresentationDependencies_mutable) {
+      return value;
+    } else {
+      return this.dependencies = (value as PresentationDependencies).toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PresentationDefinition toFrozen() => PresentationDefinition(
     presentationId: this.presentationId,
     target: this.target,
     root: this.root,
+    dependencies: this.dependencies,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationDependencies
+// -----------------------------------------------------------------------------
+
+sealed class PresentationDependencies_orMutable {
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get types;
+  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> get presentations;
+  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> get conversions;
+  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> get capabilities;
+
+  PresentationDependencies toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationDependencies implements PresentationDependencies_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> types;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.PresentationId> presentations;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ConversionId> conversions;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId> capabilities;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationDependencies({
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types,
+    required _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions,
+    required _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities,
+  }) => PresentationDependencies._(
+    _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(presentations, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(conversions, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(capabilities, (it) => it.toFrozen()),
+  );
+
+  PresentationDependencies._(
+    this.types,
+    this.presentations,
+    this.conversions,
+    this.capabilities,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationDependencies._(
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationDependencies_mutable mutable() => PresentationDependencies_mutable._(
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationDependencies toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationDependencies_mutable toMutable() => PresentationDependencies_mutable._(
+    this.types,
+    this.presentations,
+    this.conversions,
+    this.capabilities,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationDependencies) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.types,
+    this.presentations,
+    this.conversions,
+    this.capabilities,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationDependencies` instances.
+  static _skir.StructSerializer<PresentationDependencies, PresentationDependencies_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "types",
+        "types",
+        0,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        ),
+        "",
+        (it) => it.types,
+        (it, v) => it.types = v,
+      );
+      _serializerBuilder.addField(
+        "presentations",
+        "presentations",
+        1,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.PresentationId.serializer,
+        ),
+        "",
+        (it) => it.presentations,
+        (it, v) => it.presentations = v,
+      );
+      _serializerBuilder.addField(
+        "conversions",
+        "conversions",
+        2,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ConversionId.serializer,
+        ),
+        "",
+        (it) => it.conversions,
+        (it, v) => it.conversions = v,
+      );
+      _serializerBuilder.addField(
+        "capabilities",
+        "capabilities",
+        3,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.CapabilityId.serializer,
+        ),
+        "",
+        (it) => it.capabilities,
+        (it, v) => it.capabilities = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationDependencies",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationDependencies_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationDependencies].
+final class PresentationDependencies_mutable implements PresentationDependencies_orMutable {
+  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types;
+  _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations;
+  _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions;
+  _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationDependencies_mutable._(
+    this.types,
+    this.presentations,
+    this.conversions,
+    this.capabilities,
+  );
+
+  /// If the value of [types] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get mutableTypes {
+    final value = this.types;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>) {
+      return value;
+    } else {
+      return this.types = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [presentations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [presentations] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.PresentationId_orMutable> get mutablePresentations {
+    final value = this.presentations;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.PresentationId_orMutable>) {
+      return value;
+    } else {
+      return this.presentations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [conversions] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [conversions] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable> get mutableConversions {
+    final value = this.conversions;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ConversionId_orMutable>) {
+      return value;
+    } else {
+      return this.conversions = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [capabilities] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.CapabilityId_orMutable> get mutableCapabilities {
+    final value = this.capabilities;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.CapabilityId_orMutable>) {
+      return value;
+    } else {
+      return this.capabilities = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationDependencies toFrozen() => PresentationDependencies(
+    types: this.types,
+    presentations: this.presentations,
+    conversions: this.conversions,
+    capabilities: this.capabilities,
   ).._u = this._u;
 }

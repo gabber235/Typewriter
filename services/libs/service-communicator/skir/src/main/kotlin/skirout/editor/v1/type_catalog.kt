@@ -6005,31 +6005,27 @@ class ConversionId private constructor(
     }
 }
 
-sealed interface RealmActionId_OrMutable {
-    val namespace: kotlin.String;
-    val name: kotlin.String;
+sealed interface CapabilityId_OrMutable {
+    val value: kotlin.String;
 
-    fun toFrozen(): skirout.editor.v1.type_catalog.RealmActionId;
+    fun toFrozen(): skirout.editor.v1.type_catalog.CapabilityId;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class RealmActionId private constructor(
-    override val namespace: kotlin.String,
-    override val name: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RealmActionId>? =
+class CapabilityId private constructor(
+    override val value: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CapabilityId>? =
         null,
-): skirout.editor.v1.type_catalog.RealmActionId_OrMutable {
+): skirout.editor.v1.type_catalog.CapabilityId_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        namespace: kotlin.String,
-        name: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RealmActionId>? =
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CapabilityId>? =
             null,
     ): this(
-        namespace,
-        name,
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -6038,21 +6034,17 @@ class RealmActionId private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        namespace = this.namespace,
-        name = this.name,
+        value = this.value,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        namespace: kotlin.String =
-            this.namespace,
-        name: kotlin.String =
-            this.name,
-    ) = skirout.editor.v1.type_catalog.RealmActionId(
-        namespace,
-        name,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.type_catalog.CapabilityId(
+        value,
         this._unrecognizedFields,
     );
 
@@ -6060,43 +6052,39 @@ class RealmActionId private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.RealmActionId && this.namespace == other.namespace && this.name == other.name);
+        return this === other || (other is skirout.editor.v1.type_catalog.CapabilityId && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.namespace, this.name).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.type_catalog.RealmActionId.serializerImpl,
+            skirout.editor.v1.type_catalog.CapabilityId.serializerImpl,
         )
     }
 
-    /** Mutable version of [RealmActionId]. */
+    /** Mutable version of [CapabilityId]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var namespace: kotlin.String =
+        override var value: kotlin.String =
             "",
-        override var name: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RealmActionId>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CapabilityId>? =
             null,
-    ): skirout.editor.v1.type_catalog.RealmActionId_OrMutable {
+    ): skirout.editor.v1.type_catalog.CapabilityId_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.RealmActionId(
-            namespace = this.namespace,
-            name = this.name,
+        override fun toFrozen() = skirout.editor.v1.type_catalog.CapabilityId(
+            value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.type_catalog.RealmActionId(
-                "",
+            skirout.editor.v1.type_catalog.CapabilityId(
                 "",
             );
 
@@ -6104,25 +6092,22 @@ class RealmActionId private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [RealmActionId].
+         * Creates a new instance of [CapabilityId].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            namespace: kotlin.String =
+            value: kotlin.String =
                 "",
-            name: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.RealmActionId(
-            namespace = namespace,
-            name = name,
+        ) = skirout.editor.v1.type_catalog.CapabilityId(
+            value = value,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/type_catalog.skir:RealmActionId",
+            recordId = "editor/v1/type_catalog.skir:CapabilityId",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -6131,30 +6116,153 @@ class RealmActionId private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [RealmActionId] instances. */
+        /** Serializer for [CapabilityId] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [RealmActionId] type. Provides runtime introspection capabilities. */
+        /** Describes the [CapabilityId] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "namespace",
-                "namespace",
+                "value",
+                "value",
                 0,
                 build.skir.Serializers.string,
                 "",
-                { it.namespace },
-                { mut, v -> mut.namespace = v },
+                { it.value },
+                { mut, v -> mut.value = v },
             );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+sealed interface CatalogGeneration_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.type_catalog.CatalogGeneration;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class CatalogGeneration private constructor(
+    override val value: kotlin.String,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CatalogGeneration>? =
+        null,
+): skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CatalogGeneration>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.type_catalog.CatalogGeneration(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.type_catalog.CatalogGeneration && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [CatalogGeneration]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.CatalogGeneration>? =
+            null,
+    ): skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.type_catalog.CatalogGeneration(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.type_catalog.CatalogGeneration(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [CatalogGeneration].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.type_catalog.CatalogGeneration(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "editor/v1/type_catalog.skir:CatalogGeneration",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [CatalogGeneration] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [CatalogGeneration] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
             serializerImpl.addField(
-                "name",
-                "name",
-                1,
+                "value",
+                "value",
+                0,
                 build.skir.Serializers.string,
                 "",
-                { it.name },
-                { mut, v -> mut.name = v },
+                { it.value },
+                { mut, v -> mut.value = v },
             );
             serializerImpl.finalizeStruct();
         }

@@ -33,23 +33,28 @@ class InspectorScaffold extends HookConsumerWidget {
   const InspectorScaffold({
     required this.child,
     this.margin = const EdgeInsets.only(top: 8, bottom: 8, right: 8),
+    this.realmRuntime,
     super.key,
   });
 
   final EdgeInsets margin;
 
   final Widget child;
+  final EditorRealmRuntime? realmRuntime;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return EditorRoot(
-      create: SelectionEditorSource.new,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return constraints.maxWidth < 3 * kInspectorMinSize
-              ? MobileInspector(child: child)
-              : DesktopInspector(margin: margin, child: child);
-        },
+    return ProviderScope(
+      overrides: [editorRealmRuntimeProvider.overrideWithValue(realmRuntime)],
+      child: EditorRoot(
+        create: (ref) => SelectionEditorSource(ref, realmRuntime: realmRuntime),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return constraints.maxWidth < 3 * kInspectorMinSize
+                ? MobileInspector(child: child)
+                : DesktopInspector(margin: margin, child: child);
+          },
+        ),
       ),
     );
   }

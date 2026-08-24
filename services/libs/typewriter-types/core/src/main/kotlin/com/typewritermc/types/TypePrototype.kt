@@ -21,6 +21,8 @@ interface TypePrototype<T : Any> {
     val runtimeType: KClass<T>
     val type: ResolvedTypeRef
     val definition: TypeDefinition
+    val serializedFieldNames: Map<String, String>
+        get() = emptyMap()
 }
 
 /** Converts values for a concrete type with a stable declared identity. */

@@ -3,6 +3,8 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
+import com.typewritermc.capability.RealmCapabilityProvider
+import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.discovery.CatalogGeneration
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
@@ -19,14 +21,17 @@ import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.presentation.PresentationCatalogAssembler
+import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
+import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
+import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
 import com.typewritermc.realm.routes.SnapshotRealmElementCatalogSource
-import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.DatabaseEndpoint
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseConfiguration
@@ -119,6 +124,18 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     requireNotNull(javaClass.classLoader),
                 )
             discovery = loadedDiscovery
+            val capabilityRegistry =
+                RealmCapabilityRegistry(
+                    providers = loadedDiscovery.application.koin.getAll<RealmCapabilityProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                )
+            val presentationCatalog =
+                PresentationCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                    types = assembled.discovery.types,
+                    capabilities = capabilityRegistry.descriptors,
+                )
             val realmModule =
                 module {
                     single<OpenTelemetry> { context.host.openTelemetry }
@@ -128,13 +145,18 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { configuration.database }
                     single<RealmDatabaseProvider> { DatabaseProvider(get()) }
                     single { RealmDiscoverySnapshotStore() }
+                    single { loadedDiscovery.prototypes }
+                    single { capabilityRegistry }
                     single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().discovery() }
+                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().editorCatalog() }
                     }
                     single<RealmElementCatalogSource> {
                         SnapshotRealmElementCatalogSource { get<RealmDiscoverySnapshotStore>().elements() }
                     }
-                    single<RealmPresentationSearchSource> { UnavailableRealmPresentationSearchSource() }
+                    single<RealmPresentationSearchSource> {
+                        CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
+                    }
+                    single { RealmCapabilityInvocationSource(get(), get(), get()) }
                     single { RealmCatalogInvalidationProcess(get(), get(), get()) }
                     single {
                         Realm(
@@ -149,6 +171,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             clock,
                             get(),
                             get(),
+                            capabilityInvocations = get(),
                         )
                     }
                 }
@@ -162,7 +185,13 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             application = startedApplication
             val realm = startedApplication.koin.get<Realm>()
             startedApplication.koin.get<RealmDiscoverySnapshotStore>().replace(
-                RealmDiscoverySnapshot(assembled.discovery, assembled.elements),
+                RealmDiscoverySnapshot(
+                    discovery = assembled.discovery.copy(types = presentationCatalog.types),
+                    elements = assembled.elements,
+                    presentations = presentationCatalog.definitions,
+                    capabilities = capabilityRegistry.descriptors,
+                    presentationDiagnostics = presentationCatalog.diagnostics,
+                ),
             )
             val telemetry = startedApplication.koin.get<ServiceTelemetry>()
             return DefaultManagedRealmRuntime(

@@ -1,6 +1,6 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/editor_codec_support.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as wire_catalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
+    as wire_capability;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
     as wire_presentation;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
@@ -56,60 +56,66 @@ final class SkirCatalogDefinitionCodec {
         ),
         target: target,
         root: root,
-      ),
-    );
-  }
-
-  TypeResult<RealmActionDefinition> decodeRealmAction(
-    wire_catalog.RealmActionDefinition value,
-  ) {
-    final id = _decodeQualified(
-      value.realmActionId.namespace,
-      value.realmActionId.name,
-    );
-    final payload = types.decodeReference(value.payloadType);
-    final result = value.resultType == null
-        ? const TypeResult<ResolvedTypeRef?>.success(null)
-        : types.decodeReference(value.resultType).mapValue((value) => value);
-    final diagnostics = [
-      ...id.diagnostics,
-      ...payload.diagnostics,
-      ...result.diagnostics,
-    ];
-    return diagnostics.isEmpty
-        ? TypeResult.success(
-            RealmActionDefinition(
-              id: RealmActionId(
-                namespace: id.valueOrNull!.$1,
-                name: id.valueOrNull!.$2,
-              ),
-              payloadType: payload.valueOrNull!,
-              resultType: result.valueOrNull,
-            ),
-          )
-        : TypeResult.failure(diagnostics);
-  }
-
-  TypeResult<wire_catalog.RealmActionDefinition> encodeRealmAction(
-    RealmActionDefinition value,
-  ) {
-    final payload = types.encodeReference(value.payloadType);
-    final result = value.resultType == null
-        ? const TypeResult<wire_type.ResolvedTypeRef?>.success(null)
-        : types.encodeReference(value.resultType!).mapValue((value) => value);
-    return combineResults(
-      payload,
-      result,
-      (payload, result) => wire_catalog.RealmActionDefinition(
-        realmActionId: wire_type.RealmActionId(
-          namespace: value.id.namespace,
-          name: value.id.name,
+        dependencies: wire_presentation.PresentationDependencies(
+          types: const [],
+          presentations: const [],
+          conversions: const [],
+          capabilities: const [],
         ),
-        payloadType: payload,
-        resultType: result,
       ),
     );
   }
+
+  TypeResult<CapabilityDefinition> decodeCapability(
+    wire_capability.CapabilityDefinition value,
+  ) => switch (value) {
+    wire_capability.CapabilityDefinition_searchWrapper(:final value) =>
+      _decodeCapabilityTypes(
+        value.capabilityId.value,
+        value.requestType,
+        value.resultType,
+        CapabilityDefinition.search,
+      ),
+    wire_capability.CapabilityDefinition_computationWrapper(:final value) =>
+      _decodeCapabilityTypes(
+        value.capabilityId.value,
+        value.requestType,
+        value.resultType,
+        CapabilityDefinition.computation,
+      ),
+    wire_capability.CapabilityDefinition_commandWrapper(:final value) =>
+      types
+          .decodeReference(value.requestType)
+          .mapValue(
+            (requestType) => CapabilityDefinition.command(
+              id: CapabilityId(value.capabilityId.value),
+              requestType: requestType,
+            ),
+          ),
+    wire_capability.CapabilityDefinition_unknown() => invalidWire(
+      "Unknown capability definition",
+    ),
+  };
+
+  TypeResult<CapabilityDefinition> _decodeCapabilityTypes(
+    String id,
+    wire_type.ResolvedTypeRef request,
+    wire_type.ResolvedTypeRef result,
+    CapabilityDefinition Function({
+      required CapabilityId id,
+      required ResolvedTypeRef requestType,
+      required ResolvedTypeRef resultType,
+    })
+    create,
+  ) => combineResults(
+    types.decodeReference(request),
+    types.decodeReference(result),
+    (requestType, resultType) => create(
+      id: CapabilityId(id),
+      requestType: requestType,
+      resultType: resultType,
+    ),
+  );
 
   TypeResult<TypedValueEnvelope> decodeEnvelope(
     wire_value.TypedValueEnvelope value,

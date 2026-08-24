@@ -196,9 +196,12 @@ struct ConversionId(810100023) {
   name: string = 1;
 }
 
-struct RealmActionId(810100024) {
-  namespace: string = 0;
-  name: string = 1;
+struct CapabilityId(810100028) {
+  value: string = 0;
+}
+
+struct CatalogGeneration(810900001) {
+  value: string = 0;
 }
 
 struct NamedPresentation(810100025) {

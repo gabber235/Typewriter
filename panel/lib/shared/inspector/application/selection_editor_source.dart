@@ -6,7 +6,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 class SelectionEditorSource extends ChangeNotifier implements EditorSource {
-  SelectionEditorSource(this._ref) {
+  SelectionEditorSource(this._ref, {this.realmRuntime}) {
     _ref.listen(inspectedSelectionProvider, (_, next) {
       final error = next.asError?.error;
       if (error is SelectableNotFoundException) {
@@ -19,6 +19,7 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   final Ref _ref;
+  final EditorRealmRuntime? realmRuntime;
   final Map<SelectableIdentifier, _TargetEditorState> _targets = {};
   List<InspectableSelectable> _selection = const [];
 
@@ -133,12 +134,28 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   @override
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
   ) async {
     _synchronize(notify: false);
+    if (action case RealmEditorAction(:final action)) {
+      final runtime = realmRuntime;
+      if (runtime == null) {
+        return RealmEditorActionResult(
+          RealmCommandResult.unavailable([
+            const TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidPresentation,
+              message: "Realm capability runtime is unavailable",
+            ),
+          ]),
+        );
+      }
+      return RealmEditorActionResult(
+        await runtime.executeAction(action, context),
+      );
+    }
     final entries = _selection.map((target) => _targets[target.id]!).toList();
     final results = await Future.wait(
       entries.map((entry) async {
@@ -147,9 +164,8 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
           context,
           aliases,
         );
-        if (result case MutationConflict(
-          :final actualRevision,
-          :final actualValue,
+        if (result case LocalEditorActionResult(
+          mutation: MutationConflict(:final actualRevision, :final actualValue),
         )) {
           entry.source.acceptRemote(
             revision: actualRevision,
@@ -159,7 +175,20 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
         return result;
       }),
     );
-    return aggregateSelectionResults(results);
+    final local = results.whereType<LocalEditorActionResult>().toList();
+    if (local.length != results.length) {
+      return RealmEditorActionResult(
+        RealmCommandResult.unavailable([
+          const TypeDiagnostic(
+            code: TypeDiagnosticCode.invalidValue,
+            message: "Selection returned incompatible action results",
+          ),
+        ]),
+      );
+    }
+    return LocalEditorActionResult(
+      aggregateSelectionResults(local.map((item) => item.mutation).toList()),
+    );
   }
 
   @override

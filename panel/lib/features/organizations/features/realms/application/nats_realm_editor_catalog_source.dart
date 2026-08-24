@@ -32,12 +32,10 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     final request = wire_catalog.CatalogFetchRequest(
       expectedGeneration: expectedGeneration == null
           ? null
-          : wire_catalog.CatalogGeneration(value: expectedGeneration.value),
+          : wire_type.CatalogGeneration(value: expectedGeneration.value),
       requestedTypes: encoded.valueOrNull!.$1,
       presentationIds: encoded.valueOrNull!.$2,
-      conversionIds: encoded.valueOrNull!.$3,
-      realmActionIds: encoded.valueOrNull!.$4,
-      subtypeQueries: encoded.valueOrNull!.$5,
+      subtypeQueries: encoded.valueOrNull!.$3,
     );
     final response = await ref.requestSkir(
       route.fetchSubject,
@@ -56,7 +54,7 @@ final class NatsRealmEditorCatalogSource implements RealmEditorCatalogSource {
     RealmEditorCatalogSnapshot snapshot,
   ) async {
     final request = wire_element.ElementCatalogRequest(
-      expectedGeneration: wire_catalog.CatalogGeneration(
+      expectedGeneration: wire_type.CatalogGeneration(
         value: snapshot.generation.value,
       ),
     );
@@ -242,7 +240,7 @@ extension on wire_catalog.CatalogFetchSuccess {
         generation: CatalogGeneration(value.generation.value),
         presentations: decodedParts.presentations,
         conversions: decodedParts.conversions,
-        realmActions: decodedParts.realmActions,
+        capabilities: decodedParts.capabilities,
         subtypeResults: decodedParts.subtypeResults,
         diagnostics: decodedParts.diagnostics,
       ),
@@ -270,8 +268,6 @@ extension on RealmEditorCatalogRequest {
     (
       List<wire_type.ResolvedTypeRef>,
       List<wire_type.PresentationId>,
-      List<wire_type.ConversionId>,
-      List<wire_type.RealmActionId>,
       List<wire_catalog.SubtypeQuery>,
     )
   >
@@ -281,13 +277,9 @@ extension on RealmEditorCatalogRequest {
     final encodedQueries = subtypeQueries
         .map((query) => types.encodeReference(query.target))
         .toList();
-    final encodedConversions = conversions
-        .map((id) => id.encodeWire())
-        .toList();
     final diagnostics = [
       ...encodedTypes.expand((result) => result.diagnostics),
       ...encodedQueries.expand((result) => result.diagnostics),
-      ...encodedConversions.expand((result) => result.diagnostics),
     ];
     if (diagnostics.isNotEmpty) return TypeResult.failure(diagnostics);
     return TypeResult.success((
@@ -295,11 +287,6 @@ extension on RealmEditorCatalogRequest {
       [
         for (final id in presentations)
           wire_type.PresentationId(namespace: id.namespace, name: id.name),
-      ],
-      encodedConversions.map((result) => result.valueOrNull!).toList(),
-      [
-        for (final id in realmActions)
-          wire_type.RealmActionId(namespace: id.namespace, name: id.name),
       ],
       [
         for (final entry in subtypeQueries.indexed)
@@ -353,7 +340,7 @@ extension on wire_catalog.CatalogFetchSuccess {
     );
     final presentations = <PresentationId, PresentationDefinition>{};
     final conversions = <ConversionId, ConversionDefinition>{};
-    final actions = <RealmActionId, RealmActionDefinition>{};
+    final capabilities = <CapabilityId, CapabilityDefinition>{};
     final subtypeResults = <String, RealmEditorSubtypeResult>{};
     final diagnostics = value.diagnostics._decodeDiagnostics(
       registry: catalog.registry,
@@ -372,11 +359,11 @@ extension on wire_catalog.CatalogFetchSuccess {
         conversions[definition.id] = definition;
       }
     }
-    for (final item in value.realmActionDefinitions) {
-      final decoded = definitionCodec.decodeRealmAction(item);
+    for (final item in value.capabilityDefinitions) {
+      final decoded = definitionCodec.decodeCapability(item);
       diagnostics.addAll(decoded.diagnostics);
       if (decoded.valueOrNull case final definition?) {
-        actions[definition.id] = definition;
+        capabilities[definition.id] = definition;
       }
     }
     for (final item in value.subtypeResults) {
@@ -394,7 +381,7 @@ extension on wire_catalog.CatalogFetchSuccess {
     return _DecodedCatalogParts(
       presentations: presentations,
       conversions: conversions,
-      realmActions: actions,
+      capabilities: capabilities,
       subtypeResults: subtypeResults,
       diagnostics: diagnostics,
     );
@@ -406,7 +393,7 @@ abstract class _DecodedCatalogParts with _$DecodedCatalogParts {
   const factory _DecodedCatalogParts({
     required Map<PresentationId, PresentationDefinition> presentations,
     required Map<ConversionId, ConversionDefinition> conversions,
-    required Map<RealmActionId, RealmActionDefinition> realmActions,
+    required Map<CapabilityId, CapabilityDefinition> capabilities,
     required Map<String, RealmEditorSubtypeResult> subtypeResults,
     required List<TypeDiagnostic> diagnostics,
   }) = _DecodedCatalogPartsValue;

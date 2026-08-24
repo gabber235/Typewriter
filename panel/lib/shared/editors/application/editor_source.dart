@@ -16,7 +16,7 @@ abstract interface class EditorSource implements Listenable {
 
   Future<TypedMutationResult> flush({Set<DataPath>? paths});
 
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,

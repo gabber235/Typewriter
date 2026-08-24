@@ -5,8 +5,9 @@ import {
 } from "editor/v1/binding.skir";
 import { TypedExpression } from "editor/v1/expression.skir";
 import {
+  CapabilityId,
+  ConversionId,
   PresentationId,
-  RealmActionId,
   ResolvedTypeRef,
   TypeExpression,
   TypedValue,
@@ -726,7 +727,7 @@ struct HttpJsonSearchProvider(810800107) {
 }
 
 struct RealmCallbackSearchProvider(810800108) {
-  realm_action_id: RealmActionId = 0;
+  capability_id: CapabilityId = 0;
   payload: TypedExpression = 1;
   result: SearchResultMapping = 2;
   selectors: [SearchSelectorDefinition|selector_id] = 3;
@@ -901,4 +902,12 @@ struct PresentationDefinition(810800128) {
   presentation_id: PresentationId = 0;
   target: TypeExpression = 1;
   root: PresentationNode = 2;
+  dependencies: PresentationDependencies = 3;
+}
+
+struct PresentationDependencies(810800129) {
+  types: [ResolvedTypeRef] = 0;
+  presentations: [PresentationId] = 1;
+  conversions: [ConversionId] = 2;
+  capabilities: [CapabilityId] = 3;
 }

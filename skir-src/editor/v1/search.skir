@@ -1,6 +1,7 @@
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
 import {
-  RealmActionId,
+  CapabilityId,
+  CatalogGeneration,
   TypeExpression,
   TypedValue,
 } from "editor/v1/type_catalog.skir";
@@ -40,7 +41,8 @@ struct RealmSearchQuery(811000006) {
 
 struct RealmPresentationSearchRequest(811000007) {
   subscription_id: string = 0;
-  realm_action_id: RealmActionId = 1;
+  generation: CatalogGeneration = 5;
+  capability_id: CapabilityId = 1;
   payload: TypedValue = 2;
   result_type: TypeExpression = 3;
   query: RealmSearchQuery = 4;
@@ -73,3 +75,17 @@ enum RealmPresentationSearchUpdate(811000011) {
 method WatchRealmPresentationSearch(
   RealmPresentationSearchRequest
 ): RealmPresentationSearchUpdate = 910003;
+
+struct CancelRealmPresentationSearchRequest(811000012) {
+  subscription_id: string = 0;
+}
+
+enum CancelRealmPresentationSearchResult(811000013) {
+  canceled = 1;
+  not_found = 2;
+  unavailable = 3;
+}
+
+method CancelRealmPresentationSearch(
+  CancelRealmPresentationSearchRequest
+): CancelRealmPresentationSearchResult = 919103;

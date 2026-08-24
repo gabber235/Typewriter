@@ -12,8 +12,8 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
     val messages =
         buildList {
             if (request.subscriptionId.isBlank()) add("Realm presentation search subscription ID must not be blank")
-            if (request.realmActionId.namespace.isBlank()) add("Realm action namespace must not be blank")
-            if (request.realmActionId.name.isBlank()) add("Realm action name must not be blank")
+            if (request.generation.value.isBlank()) add("Realm catalog generation must not be blank")
+            if (request.capabilityId.value.isBlank()) add("Realm search capability ID must not be blank")
             if (request.payload == TypedValue.UNKNOWN) add("Realm presentation search payload is missing")
             if (request.resultType == TypeExpression.UNKNOWN) add("Realm presentation search result type is missing")
             request.query.selectors.forEach { selector ->

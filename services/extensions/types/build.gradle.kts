@@ -6,6 +6,8 @@ plugins {
 dependencies {
     api("com.typewritermc:discovery-runtime")
     api("com.typewritermc:element-types")
+    api("com.typewritermc:presentation-types")
+    api("com.typewritermc:realm-capability-types")
     api("com.typewritermc:typewriter-types-core")
     api(libs.kotlin.coroutines.core)
 }

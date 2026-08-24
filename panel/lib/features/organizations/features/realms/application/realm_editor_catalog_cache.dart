@@ -71,14 +71,15 @@ final class RealmEditorCatalogCache {
     final changed =
         merged.types.length != _requested.types.length ||
         merged.presentations.length != _requested.presentations.length ||
-        merged.conversions.length != _requested.conversions.length ||
-        merged.realmActions.length != _requested.realmActions.length ||
         merged.subtypeQueries.length != _requested.subtypeQueries.length;
     _requested = merged;
     if (_started && changed) {
       unawaited(_refresh(expectedGeneration: _state.snapshot?.generation));
     }
   }
+
+  Future<void> refresh() =>
+      _refresh(expectedGeneration: _state.snapshot?.generation);
 
   Future<void> dispose() async {
     if (_disposed) return;

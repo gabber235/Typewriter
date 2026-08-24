@@ -4578,7 +4578,7 @@ impl HttpJsonSearchProvider {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmCallbackSearchProvider {
-    pub realm_action_id: crate::skirout::base::editor::v1::type_catalog::RealmActionId,
+    pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
     pub payload: crate::skirout::base::editor::v1::expression::TypedExpression,
     pub result: SearchResultMapping,
     pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
@@ -5513,6 +5513,7 @@ pub struct PresentationDefinition {
     pub presentation_id: crate::skirout::base::editor::v1::type_catalog::PresentationId,
     pub target: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
     pub root: PresentationNode,
+    pub dependencies: PresentationDependencies,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationDefinition>>,
 }
@@ -5541,6 +5542,47 @@ impl PresentationDefinition {
     pub fn serializer() -> crate::skir_client::Serializer<PresentationDefinition> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(PresentationDefinition::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationDependencies
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationDependencies {
+    pub types: Vec<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
+    pub presentations: Vec<crate::skirout::base::editor::v1::type_catalog::PresentationId>,
+    pub conversions: Vec<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
+    pub capabilities: Vec<crate::skirout::base::editor::v1::type_catalog::CapabilityId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationDependencies>>,
+}
+
+impl PresentationDependencies {
+    pub fn default_ref() -> &'static PresentationDependencies {
+        static D: std::sync::LazyLock<PresentationDependencies> = std::sync::LazyLock::new(PresentationDependencies::default);
+        &D
+    }
+}
+
+impl PresentationDependencies {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationDependencies> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationDependencies>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationDependencies",
+                    "",
+                    |x: &PresentationDependencies| &x._unrecognized,
+                    |x: &mut PresentationDependencies, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationDependencies> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationDependencies::_adapter())
     }
 }
 
@@ -6373,7 +6415,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmCallbackSearchProvider> = RealmCallbackSearchProvider::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_action_id", 0, crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer(), "", |x: &RealmCallbackSearchProvider| &x.realm_action_id, |x: &mut RealmCallbackSearchProvider, v| x.realm_action_id = v);
+                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmCallbackSearchProvider| &x.capability_id, |x: &mut RealmCallbackSearchProvider, v| x.capability_id = v);
                 (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RealmCallbackSearchProvider| &x.payload, |x: &mut RealmCallbackSearchProvider, v| x.payload = v);
                 (*a).add_field("result", 2, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &RealmCallbackSearchProvider| &x.result, |x: &mut RealmCallbackSearchProvider, v| x.result = v);
                 (*a).add_field("selectors", 3, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &RealmCallbackSearchProvider| &x.selectors, |x: &mut RealmCallbackSearchProvider, v| x.selectors = v);
@@ -6568,6 +6610,15 @@ fn initialize_module_serializers() {
                 (*a).add_field("presentation_id", 0, crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer(), "", |x: &PresentationDefinition| &x.presentation_id, |x: &mut PresentationDefinition, v| x.presentation_id = v);
                 (*a).add_field("target", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &PresentationDefinition| &x.target, |x: &mut PresentationDefinition, v| x.target = v);
                 (*a).add_field("root", 2, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &PresentationDefinition| &x.root, |x: &mut PresentationDefinition, v| x.root = v);
+                (*a).add_field("dependencies", 3, crate::skir_client::internal::struct_serializer_from_static(PresentationDependencies::_adapter()), "", |x: &PresentationDefinition| &x.dependencies, |x: &mut PresentationDefinition, v| x.dependencies = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationDependencies> = PresentationDependencies::_adapter() as *const _ as *mut _;
+                (*a).add_field("types", 0, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &PresentationDependencies| &x.types, |x: &mut PresentationDependencies, v| x.types = v);
+                (*a).add_field("presentations", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer()), "", |x: &PresentationDependencies| &x.presentations, |x: &mut PresentationDependencies, v| x.presentations = v);
+                (*a).add_field("conversions", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer()), "", |x: &PresentationDependencies| &x.conversions, |x: &mut PresentationDependencies, v| x.conversions = v);
+                (*a).add_field("capabilities", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer()), "", |x: &PresentationDependencies| &x.capabilities, |x: &mut PresentationDependencies, v| x.capabilities = v);
                 (*a).finalize();
             }
         });

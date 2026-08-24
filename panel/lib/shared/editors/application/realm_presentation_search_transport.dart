@@ -8,7 +8,8 @@ abstract class RealmPresentationSearchRequest
     with _$RealmPresentationSearchRequest {
   const factory RealmPresentationSearchRequest({
     required String subscriptionId,
-    required RealmActionId actionId,
+    required CatalogGeneration generation,
+    required CapabilityId capabilityId,
     required DataValue payload,
     required TypeExpression resultType,
     required SearchQueryContext query,

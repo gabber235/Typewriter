@@ -7,8 +7,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as wire_diagnostic;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
     as wire_expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as wire_type;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 final class SkirActionDecoder {
@@ -161,12 +159,17 @@ final class SkirActionDecoder {
         wire.RealmEditorAction_reloadWrapper() => const TypeResult.success(
           ReloadRealmAction(),
         ),
-        wire.RealmEditorAction_callbackWrapper(:final value) => combineResults(
-          value.realmActionId._decodeDomain(),
-          expressions.decode(value.payload),
-          (actionId, payload) =>
-              InvokeRealmCallbackAction(actionId: actionId, payload: payload),
-        ),
+        wire.RealmEditorAction_commandWrapper(:final value) =>
+          value.capabilityId.value.isEmpty
+              ? invalidWire("Realm command capability ID is empty")
+              : expressions
+                    .decode(value.payload)
+                    .mapValue(
+                      (payload) => InvokeRealmCommandAction(
+                        capabilityId: CapabilityId(value.capabilityId.value),
+                        payload: payload,
+                      ),
+                    ),
         wire.RealmEditorAction_unknown() => invalidWire("Unknown realm action"),
       };
 
@@ -191,13 +194,5 @@ final class SkirActionDecoder {
       (target, index, item) =>
           InsertListItemAction(target: target, index: index, value: item),
     );
-  }
-}
-
-extension on wire_type.RealmActionId {
-  TypeResult<RealmActionId> _decodeDomain() {
-    return namespace.isNotEmpty && name.isNotEmpty
-        ? TypeResult.success(RealmActionId(namespace: namespace, name: name))
-        : invalidWire("Realm action id is not qualified");
   }
 }

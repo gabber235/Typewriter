@@ -5,11 +5,11 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.CatalogGeneration
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.element_catalog.ElementCatalogRequest
 import skirout.editor.v1.element_catalog.ElementCatalogResult
+import skirout.editor.v1.type_catalog.CatalogGeneration
 
 val EditorCatalogRoutesTest by testSuite {
     test("production catalog source returns typed unavailable diagnostics") {
@@ -85,7 +85,7 @@ private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
             typeDefinitions = emptyList(),
             presentationDefinitions = emptyList(),
             conversions = emptyList(),
-            realmActionDefinitions = emptyList(),
+            capabilityDefinitions = emptyList(),
             subtypeResults = emptyList(),
             diagnostics = emptyList(),
         )
@@ -99,7 +99,5 @@ private fun emptyCatalogRequest() =
         expectedGeneration = null,
         requestedTypes = emptyList(),
         presentationIds = emptyList(),
-        conversionIds = emptyList(),
-        realmActionIds = emptyList(),
         subtypeQueries = emptyList(),
     )

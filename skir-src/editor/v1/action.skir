@@ -2,7 +2,7 @@ import { BindingRef } from "editor/v1/binding.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
 import { TypedExpression } from "editor/v1/expression.skir";
 import {
-  RealmActionId,
+  CapabilityId,
   ResolvedTypeRef,
   TypedValue,
 } from "editor/v1/type_catalog.skir";
@@ -68,14 +68,14 @@ enum LocalEditorAction(810700010) {
 
 struct ReloadRealmAction(810700011) {}
 
-struct RealmCallbackAction(810700012) {
-  realm_action_id: RealmActionId = 0;
+struct CommandCapabilityAction(810700012) {
+  capability_id: CapabilityId = 0;
   payload: TypedExpression = 1;
 }
 
 enum RealmEditorAction(810700013) {
   reload: ReloadRealmAction = 1;
-  callback: RealmCallbackAction = 2;
+  command: CommandCapabilityAction = 2;
 }
 
 enum EditorAction(810700014) {

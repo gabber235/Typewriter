@@ -8,7 +8,7 @@ typedef EditorCommitter =
 typedef EditorMutationValidator =
     EditorMutationResult Function(DataPath path, DataValue value);
 typedef EditorRealmActionExecutor =
-    Future<TypedMutationResult> Function(
+    Future<RealmCommandResult> Function(
       RealmAction action,
       ExpressionContext context,
     );
@@ -351,28 +351,37 @@ final class TransactionalEditorSource extends ChangeNotifier
   }
 
   @override
-  Future<TypedMutationResult> executeAction(
+  Future<EditorActionResult> executeAction(
     EditorAction action,
     ExpressionContext context,
     Map<BindingId, BindingReference> aliases,
   ) async {
-    if (_disposed) return _unavailable("Editor is disposed");
+    if (_disposed) {
+      return LocalEditorActionResult(_unavailable("Editor is disposed"));
+    }
     final result = switch (action) {
-      LocalEditorAction() =>
+      LocalEditorAction() => LocalEditorActionResult(
         action
             .canonicalizedWith(aliases)
             .execute(context, registry: TypeRegistry(_document.typeCatalog)),
-      RealmEditorAction(:final action) => await _executeRealm(action, context),
+      ),
+      RealmEditorAction(:final action) => RealmEditorActionResult(
+        await _executeRealm(action, context),
+      ),
     };
     return result;
   }
 
-  Future<TypedMutationResult> _executeRealm(
+  Future<RealmCommandResult> _executeRealm(
     RealmAction action,
     ExpressionContext context,
   ) async {
     final executor = _executeRealmAction;
-    if (executor == null) return _unavailable("Realm actions are unavailable");
+    if (executor == null) {
+      return RealmCommandResult.unavailable([
+        _diagnostic("Realm actions are unavailable"),
+      ]);
+    }
     return executor(action, context);
   }
 

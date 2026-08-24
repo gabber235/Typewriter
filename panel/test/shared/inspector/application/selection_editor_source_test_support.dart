@@ -1,10 +1,13 @@
 part of "selection_editor_source_test.dart";
 
 final _sourceProvider = Provider<SelectionEditorSource>((ref) {
-  final source = SelectionEditorSource(ref);
+  final source = SelectionEditorSource(
+    ref,
+    realmRuntime: ref.watch(editorRealmRuntimeProvider),
+  );
   ref.onDispose(source.dispose);
   return source;
-});
+}, dependencies: [editorRealmRuntimeProvider]);
 
 class _Identifier extends SelectableIdentifier {
   _Identifier({

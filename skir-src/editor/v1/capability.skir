@@ -1,0 +1,123 @@
+import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import {
+  CapabilityId,
+  CatalogGeneration,
+  ResolvedTypeRef,
+  TypeExpression,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+
+struct InvocationId(811200001) {
+  value: string = 0;
+}
+
+struct SearchCapabilityDefinition(811200002) {
+  capability_id: CapabilityId = 0;
+  request_type: ResolvedTypeRef = 1;
+  result_type: ResolvedTypeRef = 2;
+}
+
+struct ComputationCapabilityDefinition(811200003) {
+  capability_id: CapabilityId = 0;
+  request_type: ResolvedTypeRef = 1;
+  result_type: ResolvedTypeRef = 2;
+}
+
+struct CommandCapabilityDefinition(811200004) {
+  capability_id: CapabilityId = 0;
+  request_type: ResolvedTypeRef = 1;
+}
+
+enum CapabilityDefinition(811200005) {
+  search: SearchCapabilityDefinition = 1;
+  computation: ComputationCapabilityDefinition = 2;
+  command: CommandCapabilityDefinition = 3;
+}
+
+struct ResourceAddress(811200006) {
+  resource_type: ResolvedTypeRef = 0;
+  identity: TypedValue = 1;
+}
+
+struct InvalidateResourceInstruction(811200007) {
+  resource: ResourceAddress = 0;
+}
+
+struct OpenResourceInstruction(811200008) {
+  resource: ResourceAddress = 0;
+}
+
+enum NotificationSeverity(811200009) {
+  info = 1;
+  success = 2;
+  warning = 3;
+  error = 4;
+}
+
+struct NotifyInstruction(811200010) {
+  severity: NotificationSeverity = 0;
+  message: string = 1;
+}
+
+enum PanelInstruction(811200011) {
+  invalidate_resource: InvalidateResourceInstruction = 1;
+  open_resource: OpenResourceInstruction = 2;
+  notify: NotifyInstruction = 3;
+}
+
+struct CapabilityInvocationRequest(811200012) {
+  invocation_id: InvocationId = 0;
+  generation: CatalogGeneration = 1;
+  capability_id: CapabilityId = 2;
+  payload: TypedValue = 3;
+  expected_result_type: TypeExpression? = 4;
+}
+
+struct ComputationSuccess(811200013) {
+  invocation_id: InvocationId = 0;
+  value: TypedValue = 1;
+}
+
+struct CommandSuccess(811200014) {
+  invocation_id: InvocationId = 0;
+  instructions: [PanelInstruction] = 1;
+}
+
+struct CapabilityPermissionDenied(811200015) {
+  invocation_id: InvocationId = 0;
+  message: string = 1;
+}
+
+struct StaleCatalogGeneration(811200016) {
+  invocation_id: InvocationId = 0;
+  actual_generation: CatalogGeneration = 1;
+}
+
+struct CapabilityFailure(811200017) {
+  invocation_id: InvocationId = 0;
+  diagnostics: [TypeDiagnostic] = 1;
+}
+
+enum ComputationResult(811200018) {
+  success: ComputationSuccess = 1;
+  invalid: CapabilityFailure = 2;
+  unavailable: CapabilityFailure = 3;
+  permission_denied: CapabilityPermissionDenied = 4;
+  stale_generation: StaleCatalogGeneration = 5;
+}
+
+enum CommandResult(811200019) {
+  success: CommandSuccess = 1;
+  invalid: CapabilityFailure = 2;
+  unavailable: CapabilityFailure = 3;
+  permission_denied: CapabilityPermissionDenied = 4;
+  stale_generation: StaleCatalogGeneration = 5;
+}
+
+method InvokeRealmComputation(
+  CapabilityInvocationRequest
+): ComputationResult = 919101;
+
+method InvokeRealmCommand(
+  CapabilityInvocationRequest
+): CommandResult = 919102;

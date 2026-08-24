@@ -9,6 +9,7 @@ open class SerializationConcreteTypePrototype<T : Any>(
     override val type: ResolvedTypeRef,
     override val definition: TypeDefinition,
     final override val serializer: KSerializer<T>,
+    final override val serializedFieldNames: Map<String, String> = emptyMap(),
 ) : ConcreteTypePrototype<T> {
     init {
         require(definition.id == type) { "A serialization prototype definition must match its reference." }

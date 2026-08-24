@@ -7,6 +7,8 @@ includeBuild("../libs/codegen-utils")
 includeBuild("../libs/typewriter-types")
 includeBuild("../discovery")
 includeBuild("../elements")
+includeBuild("../presentation")
+includeBuild("../realm-capabilities")
 includeBuild("../engine")
 includeBuild("../imprint")
 

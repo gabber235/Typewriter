@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 
 internal class RealmPresentationSearchRoutes(
@@ -10,6 +11,13 @@ internal class RealmPresentationSearchRoutes(
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
+            unary(contracts.cancelRealmPresentationSearch) { call ->
+                if (source.cancel(call.request.subscriptionId)) {
+                    CancelRealmPresentationSearchResult.CANCELED
+                } else {
+                    CancelRealmPresentationSearchResult.NOT_FOUND
+                }
+            }
             watch(contracts.watchRealmPresentationSearch) { call ->
                 invalidRealmPresentationSearchRequest(call.request)?.let { return@watch it }
 

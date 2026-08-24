@@ -2340,30 +2340,30 @@ class ReloadRealmAction private constructor(
     }
 }
 
-sealed interface RealmCallbackAction_OrMutable {
-    val realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable;
+sealed interface CommandCapabilityAction_OrMutable {
+    val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
     val payload: skirout.editor.v1.expression.TypedExpression_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.action.RealmCallbackAction;
+    fun toFrozen(): skirout.editor.v1.action.CommandCapabilityAction;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class RealmCallbackAction private constructor(
-    override val realmActionId: skirout.editor.v1.type_catalog.RealmActionId,
+class CommandCapabilityAction private constructor(
+    override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
     override val payload: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RealmCallbackAction>? =
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
         null,
-): skirout.editor.v1.action.RealmCallbackAction_OrMutable {
+): skirout.editor.v1.action.CommandCapabilityAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
         payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RealmCallbackAction>? =
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
             null,
     ): this(
-        realmActionId.toFrozen(),
+        capabilityId.toFrozen(),
         payload.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -2373,7 +2373,7 @@ class RealmCallbackAction private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        realmActionId = this.realmActionId,
+        capabilityId = this.capabilityId,
         payload = this.payload,
     );
 
@@ -2381,12 +2381,12 @@ class RealmCallbackAction private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            this.realmActionId,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capabilityId,
         payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
             this.payload,
-    ) = skirout.editor.v1.action.RealmCallbackAction(
-        realmActionId.toFrozen(),
+    ) = skirout.editor.v1.action.CommandCapabilityAction(
+        capabilityId.toFrozen(),
         payload.toFrozen(),
         this._unrecognizedFields,
     );
@@ -2395,51 +2395,51 @@ class RealmCallbackAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.RealmCallbackAction && this.realmActionId == other.realmActionId && this.payload == other.payload);
+        return this === other || (other is skirout.editor.v1.action.CommandCapabilityAction && this.capabilityId == other.capabilityId && this.payload == other.payload);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmActionId, this.payload).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.capabilityId, this.payload).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.RealmCallbackAction.serializerImpl,
+            skirout.editor.v1.action.CommandCapabilityAction.serializerImpl,
         )
     }
 
-    /** Mutable version of [RealmCallbackAction]. */
+    /** Mutable version of [CommandCapabilityAction]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-            skirout.editor.v1.type_catalog.RealmActionId.partial(),
+        override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
         override var payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
             skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RealmCallbackAction>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
             null,
-    ): skirout.editor.v1.action.RealmCallbackAction_OrMutable {
+    ): skirout.editor.v1.action.CommandCapabilityAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.RealmCallbackAction(
-            realmActionId = this.realmActionId,
+        override fun toFrozen() = skirout.editor.v1.action.CommandCapabilityAction(
+            capabilityId = this.capabilityId,
             payload = this.payload,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [realmActionId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [realmActionId] and returns it.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
-        val mutableRealmActionId: skirout.editor.v1.type_catalog.RealmActionId.Mutable get() {
-            var value = this.realmActionId;
+        val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capabilityId;
             return when (value) {
-                is skirout.editor.v1.type_catalog.RealmActionId -> {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
                     value = value.toMutable();
-                    this.realmActionId = value;
+                    this.capabilityId = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.RealmActionId.Mutable -> value;
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
 
@@ -2462,8 +2462,8 @@ class RealmCallbackAction private constructor(
 
     companion object {
         private val default =
-            skirout.editor.v1.action.RealmCallbackAction(
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+            skirout.editor.v1.action.CommandCapabilityAction(
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
                 skirout.editor.v1.expression.TypedExpression.partial(),
             );
 
@@ -2471,25 +2471,25 @@ class RealmCallbackAction private constructor(
         fun partial() = default;
 
         /**
-         * Creates a new instance of [RealmCallbackAction].
+         * Creates a new instance of [CommandCapabilityAction].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable =
-                skirout.editor.v1.type_catalog.RealmActionId.partial(),
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
             payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
                 skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.RealmCallbackAction(
-            realmActionId = realmActionId,
+        ) = skirout.editor.v1.action.CommandCapabilityAction(
+            capabilityId = capabilityId,
             payload = payload,
             _unrecognizedFields = null,
         );
 
         private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:RealmCallbackAction",
+            recordId = "editor/v1/action.skir:CommandCapabilityAction",
             doc = "",
             defaultInstance = default,
             newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -2498,21 +2498,21 @@ class RealmCallbackAction private constructor(
             setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
         );
 
-        /** Serializer for [RealmCallbackAction] instances. */
+        /** Serializer for [CommandCapabilityAction] instances. */
         val serializer = build.skir.internal.makeSerializer(serializerImpl);
 
-        /** Describes the [RealmCallbackAction] type. Provides runtime introspection capabilities. */
+        /** Describes the [CommandCapabilityAction] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = serializerImpl.typeDescriptor;
 
         init {
             serializerImpl.addField(
-                "realm_action_id",
-                "realmActionId",
+                "capability_id",
+                "capabilityId",
                 0,
-                skirout.editor.v1.type_catalog.RealmActionId.serializer,
+                skirout.editor.v1.type_catalog.CapabilityId.serializer,
                 "",
-                { it.realmActionId },
-                { mut, v -> mut.realmActionId = v },
+                { it.capabilityId },
+                { mut, v -> mut.capabilityId = v },
             );
             serializerImpl.addField(
                 "payload",
@@ -2534,7 +2534,7 @@ sealed class RealmEditorAction private constructor() {
     enum class Kind {
         UNKNOWN,
         RELOAD_WRAPPER,
-        CALLBACK_WRAPPER,
+        COMMAND_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.RealmEditorAction.UNKNOWN")) internal constructor(
@@ -2570,21 +2570,21 @@ sealed class RealmEditorAction private constructor() {
         }
     }
 
-    class CallbackWrapper private constructor (
-        val value: skirout.editor.v1.action.RealmCallbackAction,
+    class CommandWrapper private constructor (
+        val value: skirout.editor.v1.action.CommandCapabilityAction,
     ) : skirout.editor.v1.action.RealmEditorAction() {
         constructor(
-            value: skirout.editor.v1.action.RealmCallbackAction_OrMutable,
+            value: skirout.editor.v1.action.CommandCapabilityAction_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.CALLBACK_WRAPPER;
+        override val kind get() = Kind.COMMAND_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.RealmEditorAction.CallbackWrapper && value == other.value;
+            return other is skirout.editor.v1.action.RealmEditorAction.CommandWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -172220347;
+            return this.value.hashCode() + 950394699;
         }
     }
 
@@ -2615,16 +2615,16 @@ sealed class RealmEditorAction private constructor() {
             skirout.editor.v1.action.ReloadRealmAction()
         );
 
-        /** Shortcut for `CallbackWrapper(skirout.editor.v1.action.RealmCallbackAction(...))`. */
+        /** Shortcut for `CommandWrapper(skirout.editor.v1.action.CommandCapabilityAction(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createCallback(
+        fun createCommand(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            realmActionId: skirout.editor.v1.type_catalog.RealmActionId_OrMutable,
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
             payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = CallbackWrapper(
-            skirout.editor.v1.action.RealmCallbackAction(
-                realmActionId = realmActionId,
+        ) = CommandWrapper(
+            skirout.editor.v1.action.CommandCapabilityAction(
+                capabilityId = capabilityId,
                 payload = payload,
             )
         );
@@ -2666,11 +2666,11 @@ sealed class RealmEditorAction private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     2,
-                    "callback",
-                    Kind.CALLBACK_WRAPPER.ordinal,
-                    skirout.editor.v1.action.RealmCallbackAction.serializer,
+                    "command",
+                    Kind.COMMAND_WRAPPER.ordinal,
+                    skirout.editor.v1.action.CommandCapabilityAction.serializer,
                     "",
-                    { CallbackWrapper(it) },
+                    { CommandWrapper(it) },
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();

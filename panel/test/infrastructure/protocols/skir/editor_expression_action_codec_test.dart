@@ -273,12 +273,12 @@ void main() {
       ),
       (
         const EditorAction.realm(
-          InvokeRealmCallbackAction(
-            actionId: RealmActionId(namespace: "example", name: "save"),
+          InvokeRealmCommandAction(
+            capabilityId: CapabilityId("capability"),
             payload: text,
           ),
         ),
-        wire_action.RealmEditorAction_kind.callbackWrapper,
+        wire_action.RealmEditorAction_kind.commandWrapper,
       ),
     ];
 

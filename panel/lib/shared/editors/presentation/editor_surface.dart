@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_animate/flutter_animate.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -15,6 +17,7 @@ class EditorSurface extends StatefulWidget {
     this.registry,
     this.conversions = const [],
     this.realmSearchSourceBuilder,
+    this.executePanelInstruction,
     this.headerShortcuts = const {},
     this.historyNamespace = "local",
     this.readOnly = false,
@@ -26,6 +29,8 @@ class EditorSurface extends StatefulWidget {
   final TypeRegistry? registry;
   final List<ConversionDefinition> conversions;
   final RealmPresentationSearchSourceBuilder? realmSearchSourceBuilder;
+  final FutureOr<void> Function(PanelInstruction instruction)?
+  executePanelInstruction;
   final Map<HeaderItemCommandId, List<ShortcutActivator>> headerShortcuts;
   final String historyNamespace;
   final bool readOnly;
@@ -210,6 +215,19 @@ class _EditorSurfaceState extends State<EditorSurface> {
     final result = await widget.source.executeAction(action, context, aliases);
     if (!mounted) return;
     switch (result) {
+      case LocalEditorActionResult(:final mutation):
+        _handleMutationResult(action, aliases, mutation);
+      case RealmEditorActionResult(:final command):
+        await _handleCommandResult(command);
+    }
+  }
+
+  void _handleMutationResult(
+    EditorAction action,
+    Map<BindingId, BindingReference> aliases,
+    TypedMutationResult result,
+  ) {
+    switch (result) {
       case MutationSuccess(:final value):
         final localPath = _localActionMutationPath(action, aliases);
         final localValue = localPath?.read(value).valueOrNull;
@@ -232,6 +250,48 @@ class _EditorSurfaceState extends State<EditorSurface> {
             TypeDiagnostic(
               code: TypeDiagnosticCode.invalidValue,
               message: message,
+            ),
+          ],
+        );
+    }
+  }
+
+  Future<void> _handleCommandResult(RealmCommandResult result) async {
+    switch (result) {
+      case RealmCommandSuccess(:final instructions):
+        final executor = widget.executePanelInstruction;
+        if (executor == null && instructions.isNotEmpty) {
+          setState(
+            () => _mutationDiagnostics = [
+              const TypeDiagnostic(
+                code: TypeDiagnosticCode.invalidPresentation,
+                message: "Panel instruction executor is unavailable",
+              ),
+            ],
+          );
+          return;
+        }
+        for (final instruction in instructions) {
+          await executor!(instruction);
+        }
+      case RealmCommandInvalid(:final diagnostics) ||
+          RealmCommandUnavailable(:final diagnostics):
+        setState(() => _mutationDiagnostics = diagnostics);
+      case RealmCommandPermissionDenied(:final message):
+        setState(
+          () => _mutationDiagnostics = [
+            TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidPresentation,
+              message: message,
+            ),
+          ],
+        );
+      case RealmCommandStaleGeneration():
+        setState(
+          () => _mutationDiagnostics = [
+            const TypeDiagnostic(
+              code: TypeDiagnosticCode.invalidPresentation,
+              message: "Realm catalog generation is stale",
             ),
           ],
         );

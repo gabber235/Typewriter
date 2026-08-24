@@ -21,6 +21,8 @@ dependencies {
     implementation("com.typewritermc:engine-types")
     implementation("com.typewritermc:discovery-model")
     implementation("com.typewritermc:element-types")
+    implementation("com.typewritermc:presentation-types")
+    implementation("com.typewritermc:realm-capability-types")
     implementation("com.typewritermc:typewriter-types-skir")
     implementation(libs.surrealdb.java.sdk)
 

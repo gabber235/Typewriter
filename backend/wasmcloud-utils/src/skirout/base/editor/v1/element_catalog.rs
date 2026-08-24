@@ -579,7 +579,7 @@ impl ElementCatalogEntry {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ElementCatalogRequest {
-    pub expected_generation: Option<crate::skirout::base::editor::v1::catalog::CatalogGeneration>,
+    pub expected_generation: Option<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementCatalogRequest>>,
 }
@@ -617,7 +617,7 @@ impl ElementCatalogRequest {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ElementCatalogSuccess {
-    pub generation: crate::skirout::base::editor::v1::catalog::CatalogGeneration,
+    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub entries: Vec<ElementCatalogEntry>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementCatalogSuccess>>,
@@ -658,7 +658,7 @@ impl ElementCatalogSuccess {
 pub enum ElementCatalogResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementCatalogResult>>),
     Success(Box<ElementCatalogSuccess>),
-    GenerationMismatch(Box<crate::skirout::base::editor::v1::catalog::CatalogGeneration>),
+    GenerationMismatch(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     Unavailable(Vec<String>),
 }
 
@@ -830,19 +830,19 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ElementCatalogRequest> = ElementCatalogRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("expected_generation", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::catalog::CatalogGeneration::serializer()), "", |x: &ElementCatalogRequest| &x.expected_generation, |x: &mut ElementCatalogRequest, v| x.expected_generation = v);
+                (*a).add_field("expected_generation", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer()), "", |x: &ElementCatalogRequest| &x.expected_generation, |x: &mut ElementCatalogRequest, v| x.expected_generation = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ElementCatalogSuccess> = ElementCatalogSuccess::_adapter() as *const _ as *mut _;
-                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::catalog::CatalogGeneration::serializer(), "", |x: &ElementCatalogSuccess| &x.generation, |x: &mut ElementCatalogSuccess, v| x.generation = v);
+                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &ElementCatalogSuccess| &x.generation, |x: &mut ElementCatalogSuccess, v| x.generation = v);
                 (*a).add_field("entries", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ElementCatalogEntry::_adapter())), "", |x: &ElementCatalogSuccess| &x.entries, |x: &mut ElementCatalogSuccess, v| x.entries = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ElementCatalogResult> = ElementCatalogResult::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementCatalogSuccess::_adapter()), "", |v| ElementCatalogResult::Success(Box::new(v)), |x| match x { ElementCatalogResult::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("generation_mismatch", 2, 2, crate::skirout::base::editor::v1::catalog::CatalogGeneration::serializer(), "", |v| ElementCatalogResult::GenerationMismatch(Box::new(v)), |x| match x { ElementCatalogResult::GenerationMismatch(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("generation_mismatch", 2, 2, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |v| ElementCatalogResult::GenerationMismatch(Box::new(v)), |x| match x { ElementCatalogResult::GenerationMismatch(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("unavailable", 3, 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |v| ElementCatalogResult::Unavailable(v), |x| match x { ElementCatalogResult::Unavailable(v) => v, _ => unreachable!() });
                 (*a).finalize();
             }

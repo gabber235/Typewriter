@@ -2,6 +2,7 @@ library;
 
 export "application/collection_presentation_search_source.dart";
 export "application/color_library.dart";
+export "application/editor_realm_runtime.dart";
 export "application/editor_retry.dart";
 export "application/editor_source.dart";
 export "application/http_json_presentation_search_source.dart";

@@ -14,44 +14,6 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct CatalogGeneration
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CatalogGeneration {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogGeneration>>,
-}
-
-impl CatalogGeneration {
-    pub fn default_ref() -> &'static CatalogGeneration {
-        static D: std::sync::LazyLock<CatalogGeneration> = std::sync::LazyLock::new(CatalogGeneration::default);
-        &D
-    }
-}
-
-impl CatalogGeneration {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogGeneration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CatalogGeneration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/catalog.skir",
-                    "CatalogGeneration",
-                    "",
-                    |x: &CatalogGeneration| &x._unrecognized,
-                    |x: &mut CatalogGeneration, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CatalogGeneration> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct SubtypeQueryId
 // ==============================================================================
 
@@ -168,56 +130,14 @@ impl SubtypeResult {
 }
 
 // ==============================================================================
-// struct RealmActionDefinition
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmActionDefinition {
-    pub realm_action_id: crate::skirout::base::editor::v1::type_catalog::RealmActionId,
-    pub payload_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub result_type: Option<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmActionDefinition>>,
-}
-
-impl RealmActionDefinition {
-    pub fn default_ref() -> &'static RealmActionDefinition {
-        static D: std::sync::LazyLock<RealmActionDefinition> = std::sync::LazyLock::new(RealmActionDefinition::default);
-        &D
-    }
-}
-
-impl RealmActionDefinition {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmActionDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmActionDefinition>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/catalog.skir",
-                    "RealmActionDefinition",
-                    "",
-                    |x: &RealmActionDefinition| &x._unrecognized,
-                    |x: &mut RealmActionDefinition, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmActionDefinition> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmActionDefinition::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct CatalogFetchRequest
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogFetchRequest {
-    pub expected_generation: Option<CatalogGeneration>,
+    pub expected_generation: Option<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>,
     pub requested_types: Vec<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
     pub presentation_ids: Vec<crate::skirout::base::editor::v1::type_catalog::PresentationId>,
-    pub conversion_ids: Vec<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
-    pub realm_action_ids: Vec<crate::skirout::base::editor::v1::type_catalog::RealmActionId>,
     pub subtype_queries: Vec<SubtypeQuery>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogFetchRequest>>,
@@ -256,11 +176,11 @@ impl CatalogFetchRequest {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogFetchSuccess {
-    pub generation: CatalogGeneration,
+    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub type_definitions: Vec<crate::skirout::base::editor::v1::type_catalog::TypeDefinition>,
     pub presentation_definitions: Vec<crate::skirout::base::editor::v1::presentation::PresentationDefinition>,
     pub conversions: Vec<crate::skirout::base::editor::v1::conversion::ConversionDefinition>,
-    pub realm_action_definitions: Vec<RealmActionDefinition>,
+    pub capability_definitions: Vec<crate::skirout::base::editor::v1::capability::CapabilityDefinition>,
     pub subtype_results: Vec<SubtypeResult>,
     pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
     /// Set this to None when you're creating a struct.
@@ -300,7 +220,7 @@ impl CatalogFetchSuccess {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogGenerationMismatch {
-    pub actual_generation: CatalogGeneration,
+    pub actual_generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogGenerationMismatch>>,
 }
@@ -382,7 +302,7 @@ impl CatalogFetchResult {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogInvalidated {
-    pub generation: CatalogGeneration,
+    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub reason: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogInvalidated>>,
@@ -422,7 +342,7 @@ impl CatalogInvalidated {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CatalogWatchUpdate {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CatalogWatchUpdate>>),
-    Initial(Box<CatalogGeneration>),
+    Initial(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     Invalidated(Box<CatalogInvalidated>),
 }
 
@@ -502,11 +422,6 @@ fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> =
         std::sync::LazyLock::new(|| {
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CatalogGeneration> = CatalogGeneration::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &CatalogGeneration| &x.value, |x: &mut CatalogGeneration, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SubtypeQueryId> = SubtypeQueryId::_adapter() as *const _ as *mut _;
                 (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &SubtypeQueryId| &x.value, |x: &mut SubtypeQueryId, v| x.value = v);
                 (*a).finalize();
@@ -524,36 +439,27 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmActionDefinition> = RealmActionDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_action_id", 0, crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer(), "", |x: &RealmActionDefinition| &x.realm_action_id, |x: &mut RealmActionDefinition, v| x.realm_action_id = v);
-                (*a).add_field("payload_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &RealmActionDefinition| &x.payload_type, |x: &mut RealmActionDefinition, v| x.payload_type = v);
-                (*a).add_field("result_type", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &RealmActionDefinition| &x.result_type, |x: &mut RealmActionDefinition, v| x.result_type = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CatalogFetchRequest> = CatalogFetchRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("expected_generation", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter())), "", |x: &CatalogFetchRequest| &x.expected_generation, |x: &mut CatalogFetchRequest, v| x.expected_generation = v);
+                (*a).add_field("expected_generation", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer()), "", |x: &CatalogFetchRequest| &x.expected_generation, |x: &mut CatalogFetchRequest, v| x.expected_generation = v);
                 (*a).add_field("requested_types", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &CatalogFetchRequest| &x.requested_types, |x: &mut CatalogFetchRequest, v| x.requested_types = v);
                 (*a).add_field("presentation_ids", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer()), "", |x: &CatalogFetchRequest| &x.presentation_ids, |x: &mut CatalogFetchRequest, v| x.presentation_ids = v);
-                (*a).add_field("conversion_ids", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer()), "", |x: &CatalogFetchRequest| &x.conversion_ids, |x: &mut CatalogFetchRequest, v| x.conversion_ids = v);
-                (*a).add_field("realm_action_ids", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::RealmActionId::serializer()), "", |x: &CatalogFetchRequest| &x.realm_action_ids, |x: &mut CatalogFetchRequest, v| x.realm_action_ids = v);
-                (*a).add_field("subtype_queries", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SubtypeQuery::_adapter())), "", |x: &CatalogFetchRequest| &x.subtype_queries, |x: &mut CatalogFetchRequest, v| x.subtype_queries = v);
+                (*a).add_field("subtype_queries", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SubtypeQuery::_adapter())), "", |x: &CatalogFetchRequest| &x.subtype_queries, |x: &mut CatalogFetchRequest, v| x.subtype_queries = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CatalogFetchSuccess> = CatalogFetchSuccess::_adapter() as *const _ as *mut _;
-                (*a).add_field("generation", 0, crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter()), "", |x: &CatalogFetchSuccess| &x.generation, |x: &mut CatalogFetchSuccess, v| x.generation = v);
+                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CatalogFetchSuccess| &x.generation, |x: &mut CatalogFetchSuccess, v| x.generation = v);
                 (*a).add_field("type_definitions", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::TypeDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.type_definitions, |x: &mut CatalogFetchSuccess, v| x.type_definitions = v);
                 (*a).add_field("presentation_definitions", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::presentation::PresentationDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.presentation_definitions, |x: &mut CatalogFetchSuccess, v| x.presentation_definitions = v);
                 (*a).add_field("conversions", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::conversion::ConversionDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.conversions, |x: &mut CatalogFetchSuccess, v| x.conversions = v);
-                (*a).add_field("realm_action_definitions", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RealmActionDefinition::_adapter())), "", |x: &CatalogFetchSuccess| &x.realm_action_definitions, |x: &mut CatalogFetchSuccess, v| x.realm_action_definitions = v);
+                (*a).add_field("capability_definitions", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::capability::CapabilityDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.capability_definitions, |x: &mut CatalogFetchSuccess, v| x.capability_definitions = v);
                 (*a).add_field("subtype_results", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SubtypeResult::_adapter())), "", |x: &CatalogFetchSuccess| &x.subtype_results, |x: &mut CatalogFetchSuccess, v| x.subtype_results = v);
                 (*a).add_field("diagnostics", 6, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &CatalogFetchSuccess| &x.diagnostics, |x: &mut CatalogFetchSuccess, v| x.diagnostics = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CatalogGenerationMismatch> = CatalogGenerationMismatch::_adapter() as *const _ as *mut _;
-                (*a).add_field("actual_generation", 0, crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter()), "", |x: &CatalogGenerationMismatch| &x.actual_generation, |x: &mut CatalogGenerationMismatch, v| x.actual_generation = v);
+                (*a).add_field("actual_generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CatalogGenerationMismatch| &x.actual_generation, |x: &mut CatalogGenerationMismatch, v| x.actual_generation = v);
                 (*a).finalize();
             }
             unsafe {
@@ -565,13 +471,13 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CatalogInvalidated> = CatalogInvalidated::_adapter() as *const _ as *mut _;
-                (*a).add_field("generation", 0, crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter()), "", |x: &CatalogInvalidated| &x.generation, |x: &mut CatalogInvalidated, v| x.generation = v);
+                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CatalogInvalidated| &x.generation, |x: &mut CatalogInvalidated, v| x.generation = v);
                 (*a).add_field("reason", 1, crate::skir_client::Serializer::string(), "", |x: &CatalogInvalidated| &x.reason, |x: &mut CatalogInvalidated, v| x.reason = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<CatalogWatchUpdate> = CatalogWatchUpdate::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("initial", 1, 1, crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter()), "", |v| CatalogWatchUpdate::Initial(Box::new(v)), |x| match x { CatalogWatchUpdate::Initial(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("initial", 1, 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |v| CatalogWatchUpdate::Initial(Box::new(v)), |x| match x { CatalogWatchUpdate::Initial(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invalidated", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CatalogInvalidated::_adapter()), "", |v| CatalogWatchUpdate::Invalidated(Box::new(v)), |x| match x { CatalogWatchUpdate::Invalidated(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }

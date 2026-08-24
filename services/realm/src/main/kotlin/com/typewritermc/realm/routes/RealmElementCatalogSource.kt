@@ -8,7 +8,6 @@ import com.typewritermc.elements.ElementKind
 import com.typewritermc.types.Icon
 import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.skir.toSkir
-import skirout.editor.v1.catalog.CatalogGeneration
 import skirout.editor.v1.element_catalog.AvailabilityAll
 import skirout.editor.v1.element_catalog.AvailabilityAny
 import skirout.editor.v1.element_catalog.AvailabilityFact
@@ -19,6 +18,7 @@ import skirout.editor.v1.element_catalog.ElementCatalogSuccess
 import skirout.editor.v1.element_catalog.ElementEligibility
 import skirout.editor.v1.element_catalog.ElementTypeId
 import skirout.editor.v1.type_catalog.DeclaredTypeId
+import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.element_catalog.AvailabilityExpression as SkirAvailabilityExpression
 import skirout.editor.v1.element_catalog.ElementCatalogEntry as SkirElementCatalogEntry
 import skirout.editor.v1.element_catalog.ElementDescriptor as SkirElementDescriptor

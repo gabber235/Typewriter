@@ -1345,41 +1345,78 @@ impl ConversionId {
 }
 
 // ==============================================================================
-// struct RealmActionId
+// struct CapabilityId
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct RealmActionId {
-    pub namespace: String,
-    pub name: String,
+pub struct CapabilityId {
+    pub value: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmActionId>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CapabilityId>>,
 }
 
-impl RealmActionId {
-    pub fn default_ref() -> &'static RealmActionId {
-        static D: std::sync::LazyLock<RealmActionId> = std::sync::LazyLock::new(RealmActionId::default);
+impl CapabilityId {
+    pub fn default_ref() -> &'static CapabilityId {
+        static D: std::sync::LazyLock<CapabilityId> = std::sync::LazyLock::new(CapabilityId::default);
         &D
     }
 }
 
-impl RealmActionId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmActionId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmActionId>> =
+impl CapabilityId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CapabilityId>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/type_catalog.skir",
-                    "RealmActionId",
+                    "CapabilityId",
                     "",
-                    |x: &RealmActionId| &x._unrecognized,
-                    |x: &mut RealmActionId, u| x._unrecognized = u,
+                    |x: &CapabilityId| &x._unrecognized,
+                    |x: &mut CapabilityId, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<RealmActionId> {
+    pub fn serializer() -> crate::skir_client::Serializer<CapabilityId> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmActionId::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(CapabilityId::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CatalogGeneration
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CatalogGeneration {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogGeneration>>,
+}
+
+impl CatalogGeneration {
+    pub fn default_ref() -> &'static CatalogGeneration {
+        static D: std::sync::LazyLock<CatalogGeneration> = std::sync::LazyLock::new(CatalogGeneration::default);
+        &D
+    }
+}
+
+impl CatalogGeneration {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogGeneration> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CatalogGeneration>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/type_catalog.skir",
+                    "CatalogGeneration",
+                    "",
+                    |x: &CatalogGeneration| &x._unrecognized,
+                    |x: &mut CatalogGeneration, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CatalogGeneration> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CatalogGeneration::_adapter())
     }
 }
 
@@ -1758,9 +1795,13 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmActionId> = RealmActionId::_adapter() as *const _ as *mut _;
-                (*a).add_field("namespace", 0, crate::skir_client::Serializer::string(), "", |x: &RealmActionId| &x.namespace, |x: &mut RealmActionId, v| x.namespace = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &RealmActionId| &x.name, |x: &mut RealmActionId, v| x.name = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<CapabilityId> = CapabilityId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &CapabilityId| &x.value, |x: &mut CapabilityId, v| x.value = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<CatalogGeneration> = CatalogGeneration::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &CatalogGeneration| &x.value, |x: &mut CatalogGeneration, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {

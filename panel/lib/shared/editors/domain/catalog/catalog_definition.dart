@@ -13,12 +13,23 @@ abstract class PresentationDefinition with _$PresentationDefinition {
 }
 
 @freezed
-abstract class RealmActionDefinition with _$RealmActionDefinition {
-  const factory RealmActionDefinition({
-    required RealmActionId id,
-    required ResolvedTypeRef payloadType,
-    ResolvedTypeRef? resultType,
-  }) = _RealmActionDefinition;
+sealed class CapabilityDefinition with _$CapabilityDefinition {
+  const factory CapabilityDefinition.search({
+    required CapabilityId id,
+    required ResolvedTypeRef requestType,
+    required ResolvedTypeRef resultType,
+  }) = SearchCapabilityDefinition;
+
+  const factory CapabilityDefinition.computation({
+    required CapabilityId id,
+    required ResolvedTypeRef requestType,
+    required ResolvedTypeRef resultType,
+  }) = ComputationCapabilityDefinition;
+
+  const factory CapabilityDefinition.command({
+    required CapabilityId id,
+    required ResolvedTypeRef requestType,
+  }) = CommandCapabilityDefinition;
 }
 
 @freezed

@@ -2329,7 +2329,7 @@ class ElementCatalogEntry private constructor(
 }
 
 sealed interface ElementCatalogRequest_OrMutable {
-    val expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration_OrMutable?;
+    val expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.element_catalog.ElementCatalogRequest;
 }
@@ -2337,14 +2337,14 @@ sealed interface ElementCatalogRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ElementCatalogRequest private constructor(
-    override val expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration?,
+    override val expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogRequest>? =
         null,
 ): skirout.editor.v1.element_catalog.ElementCatalogRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration_OrMutable?,
+        expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogRequest>? =
             null,
     ): this(
@@ -2364,7 +2364,7 @@ class ElementCatalogRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration_OrMutable? =
+        expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
             this.expectedGeneration,
     ) = skirout.editor.v1.element_catalog.ElementCatalogRequest(
         if (expectedGeneration != null) expectedGeneration.toFrozen() else null,
@@ -2393,7 +2393,7 @@ class ElementCatalogRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration_OrMutable? =
+        override var expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogRequest>? =
             null,
@@ -2422,7 +2422,7 @@ class ElementCatalogRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            expectedGeneration: skirout.editor.v1.catalog.CatalogGeneration_OrMutable? =
+            expectedGeneration: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable? =
                 null,
         ) = skirout.editor.v1.element_catalog.ElementCatalogRequest(
             expectedGeneration = expectedGeneration,
@@ -2451,7 +2451,7 @@ class ElementCatalogRequest private constructor(
                 "expectedGeneration",
                 0,
                 build.skir.Serializers.optional(
-                    skirout.editor.v1.catalog.CatalogGeneration.serializer,
+                    skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
                 ),
                 "",
                 { it.expectedGeneration },
@@ -2463,7 +2463,7 @@ class ElementCatalogRequest private constructor(
 }
 
 sealed interface ElementCatalogSuccess_OrMutable {
-    val generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable;
+    val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val entries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.element_catalog.ElementCatalogSuccess;
@@ -2472,7 +2472,7 @@ sealed interface ElementCatalogSuccess_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ElementCatalogSuccess private constructor(
-    override val generation: skirout.editor.v1.catalog.CatalogGeneration,
+    override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val entries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogSuccess>? =
         null,
@@ -2480,7 +2480,7 @@ class ElementCatalogSuccess private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable,
+        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         entries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogSuccess>? =
             null,
@@ -2503,7 +2503,7 @@ class ElementCatalogSuccess private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable =
+        generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
             this.generation,
         entries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
             this.entries,
@@ -2535,8 +2535,8 @@ class ElementCatalogSuccess private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.catalog.CatalogGeneration.partial(),
+        override var generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
         override var entries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.element_catalog.ElementCatalogSuccess>? =
@@ -2553,15 +2553,15 @@ class ElementCatalogSuccess private constructor(
          * If the value of [generation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
-        val mutableGeneration: skirout.editor.v1.catalog.CatalogGeneration.Mutable get() {
+        val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
             var value = this.generation;
             return when (value) {
-                is skirout.editor.v1.catalog.CatalogGeneration -> {
+                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
                     value = value.toMutable();
                     this.generation = value;
                     return value;
                 }
-                is skirout.editor.v1.catalog.CatalogGeneration.Mutable -> value;
+                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
             }
         }
 
@@ -2585,7 +2585,7 @@ class ElementCatalogSuccess private constructor(
     companion object {
         private val default =
             skirout.editor.v1.element_catalog.ElementCatalogSuccess(
-                skirout.editor.v1.catalog.CatalogGeneration.partial(),
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
             );
 
@@ -2600,8 +2600,8 @@ class ElementCatalogSuccess private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.catalog.CatalogGeneration.partial(),
+            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
             entries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
         ) = skirout.editor.v1.element_catalog.ElementCatalogSuccess(
@@ -2631,7 +2631,7 @@ class ElementCatalogSuccess private constructor(
                 "generation",
                 "generation",
                 0,
-                skirout.editor.v1.catalog.CatalogGeneration.serializer,
+                skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
                 "",
                 { it.generation },
                 { mut, v -> mut.generation = v },
@@ -2696,10 +2696,10 @@ sealed class ElementCatalogResult private constructor() {
     }
 
     class GenerationMismatchWrapper private constructor (
-        val value: skirout.editor.v1.catalog.CatalogGeneration,
+        val value: skirout.editor.v1.type_catalog.CatalogGeneration,
     ) : skirout.editor.v1.element_catalog.ElementCatalogResult() {
         constructor(
-            value: skirout.editor.v1.catalog.CatalogGeneration_OrMutable,
+            value: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.GENERATION_MISMATCH_WRAPPER;
@@ -2754,7 +2754,7 @@ sealed class ElementCatalogResult private constructor() {
         fun createSuccess(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            generation: skirout.editor.v1.catalog.CatalogGeneration_OrMutable,
+            generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
             entries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>,
         ) = SuccessWrapper(
             skirout.editor.v1.element_catalog.ElementCatalogSuccess(
@@ -2763,14 +2763,14 @@ sealed class ElementCatalogResult private constructor() {
             )
         );
 
-        /** Shortcut for `GenerationMismatchWrapper(skirout.editor.v1.catalog.CatalogGeneration(...))`. */
+        /** Shortcut for `GenerationMismatchWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createGenerationMismatch(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             value: kotlin.String,
         ) = GenerationMismatchWrapper(
-            skirout.editor.v1.catalog.CatalogGeneration(
+            skirout.editor.v1.type_catalog.CatalogGeneration(
                 value = value,
             )
         );
@@ -2814,7 +2814,7 @@ sealed class ElementCatalogResult private constructor() {
                     2,
                     "generation_mismatch",
                     Kind.GENERATION_MISMATCH_WRAPPER.ordinal,
-                    skirout.editor.v1.catalog.CatalogGeneration.serializer,
+                    skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
                     "",
                     { GenerationMismatchWrapper(it) },
                     { it.value },

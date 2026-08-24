@@ -165,11 +165,12 @@ class EntryIdentifier extends SelectableIdentifier
         );
         return catalogState.resolveElement(
           value.elementDefinition,
-          (catalog) => EntrySelection(
+          (catalog, presentations) => EntrySelection(
             ref: ref,
             id: this,
             definition: value,
             typeCatalog: catalog,
+            presentations: presentations,
           ),
         );
       },
@@ -198,6 +199,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     required this.id,
     required this.definition,
     required this.typeCatalog,
+    required this.presentations,
   });
 
   @override
@@ -207,6 +209,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
 
   @override
   final TypeCatalog typeCatalog;
+  final List<PresentationDefinition> presentations;
 
   @override
   String get name => definition.name;
@@ -215,6 +218,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   EditorDocument get document => EditorDocument(
     rootType: NamedType(definition.elementDefinition.rootType),
     typeCatalog: typeCatalog,
+    presentations: presentations,
     confirmedValue: definition.data,
     revision: 0,
   );
