@@ -36,17 +36,28 @@ final class ArtifactDigest implements ArtifactDigest_orMutable {
   factory ArtifactDigest({
     required DigestAlgorithm algorithm,
     required _core.String value,
-  }) => ArtifactDigest._(algorithm, value);
+  }) => ArtifactDigest._(
+    algorithm,
+    value,
+  );
 
-  ArtifactDigest._(this.algorithm, this.value);
+  ArtifactDigest._(
+    this.algorithm,
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ArtifactDigest._(DigestAlgorithm.unknown, "");
+  static final defaultInstance = ArtifactDigest._(
+    DigestAlgorithm.unknown,
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ArtifactDigest_mutable mutable() =>
-      ArtifactDigest_mutable._(DigestAlgorithm.unknown, "");
+  static ArtifactDigest_mutable mutable() => ArtifactDigest_mutable._(
+    DigestAlgorithm.unknown,
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -54,30 +65,31 @@ final class ArtifactDigest implements ArtifactDigest_orMutable {
   ArtifactDigest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ArtifactDigest_mutable toMutable() =>
-      ArtifactDigest_mutable._(this.algorithm, this.value);
+  ArtifactDigest_mutable toMutable() => ArtifactDigest_mutable._(
+    this.algorithm,
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ArtifactDigest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.algorithm, this.value];
+  _core.List get _equality_proxy => [
+    this.algorithm,
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ArtifactDigest` instances.
-  static _skir.StructSerializer<ArtifactDigest, ArtifactDigest_mutable>
-  get serializer {
+  static _skir.StructSerializer<ArtifactDigest, ArtifactDigest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "algorithm",
@@ -119,13 +131,17 @@ final class ArtifactDigest_mutable implements ArtifactDigest_orMutable {
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ArtifactDigest_mutable._(this.algorithm, this.value);
+  ArtifactDigest_mutable._(
+    this.algorithm,
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ArtifactDigest toFrozen() =>
-      ArtifactDigest(algorithm: this.algorithm, value: this.value)
-        .._u = this._u;
+  ArtifactDigest toFrozen() => ArtifactDigest(
+    algorithm: this.algorithm,
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -154,22 +170,27 @@ sealed class DigestAlgorithm {
   /// Serializer for `DigestAlgorithm` instances.
   static _skir.EnumSerializer<DigestAlgorithm> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "sha256", "sha256", "", sha256);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "sha256",
+        "sha256",
+        "",
+        sha256,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:DigestAlgorithm",
-        doc: "",
-        unknownInstance: DigestAlgorithm_unknown._instance,
-        enumInstance: DigestAlgorithm.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: DigestAlgorithm_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:DigestAlgorithm",
+    doc: "",
+    unknownInstance: DigestAlgorithm_unknown._instance,
+    enumInstance: DigestAlgorithm.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: DigestAlgorithm_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `DigestAlgorithm`.
@@ -197,8 +218,7 @@ final class DigestAlgorithm_unknown implements DigestAlgorithm {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DigestAlgorithm.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DigestAlgorithm.serializer);
 }
 
 enum _DigestAlgorithm_consts implements DigestAlgorithm {
@@ -210,8 +230,7 @@ enum _DigestAlgorithm_consts implements DigestAlgorithm {
   const _DigestAlgorithm_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, DigestAlgorithm.serializer);
+  _core.String toString() => _skir.internal__stringify(this, DigestAlgorithm.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -236,9 +255,15 @@ final class BlobMetadata implements BlobMetadata_orMutable {
   factory BlobMetadata({
     required ArtifactDigest_orMutable digest,
     required _core.int size,
-  }) => BlobMetadata._(digest.toFrozen(), size);
+  }) => BlobMetadata._(
+    digest.toFrozen(),
+    size,
+  );
 
-  BlobMetadata._(this.digest, this.size);
+  BlobMetadata._(
+    this.digest,
+    this.size,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BlobMetadata._(
@@ -248,8 +273,10 @@ final class BlobMetadata implements BlobMetadata_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BlobMetadata_mutable mutable() =>
-      BlobMetadata_mutable._(ArtifactDigest.defaultInstance, 0);
+  static BlobMetadata_mutable mutable() => BlobMetadata_mutable._(
+    ArtifactDigest.defaultInstance,
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -257,30 +284,31 @@ final class BlobMetadata implements BlobMetadata_orMutable {
   BlobMetadata toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BlobMetadata_mutable toMutable() =>
-      BlobMetadata_mutable._(this.digest, this.size);
+  BlobMetadata_mutable toMutable() => BlobMetadata_mutable._(
+    this.digest,
+    this.size,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BlobMetadata) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.digest, this.size];
+  _core.List get _equality_proxy => [
+    this.digest,
+    this.size,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BlobMetadata` instances.
-  static _skir.StructSerializer<BlobMetadata, BlobMetadata_mutable>
-  get serializer {
+  static _skir.StructSerializer<BlobMetadata, BlobMetadata_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "digest",
@@ -322,7 +350,10 @@ final class BlobMetadata_mutable implements BlobMetadata_orMutable {
   _core.int size;
   _skir.internal__UnrecognizedFields? _u;
 
-  BlobMetadata_mutable._(this.digest, this.size);
+  BlobMetadata_mutable._(
+    this.digest,
+    this.size,
+  );
 
   /// If the value of [digest] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
@@ -337,8 +368,10 @@ final class BlobMetadata_mutable implements BlobMetadata_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BlobMetadata toFrozen() =>
-      BlobMetadata(digest: this.digest, size: this.size).._u = this._u;
+  BlobMetadata toFrozen() => BlobMetadata(
+    digest: this.digest,
+    size: this.size,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -367,17 +400,32 @@ final class BlobChunk implements BlobChunk_orMutable {
     required _core.int offset,
     required _skir.ByteString bytes,
     required _core.bool complete,
-  }) => BlobChunk._(offset, bytes, complete);
+  }) => BlobChunk._(
+    offset,
+    bytes,
+    complete,
+  );
 
-  BlobChunk._(this.offset, this.bytes, this.complete);
+  BlobChunk._(
+    this.offset,
+    this.bytes,
+    this.complete,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BlobChunk._(0, _skir.ByteString.empty, false);
+  static final defaultInstance = BlobChunk._(
+    0,
+    _skir.ByteString.empty,
+    false,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BlobChunk_mutable mutable() =>
-      BlobChunk_mutable._(0, _skir.ByteString.empty, false);
+  static BlobChunk_mutable mutable() => BlobChunk_mutable._(
+    0,
+    _skir.ByteString.empty,
+    false,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -385,23 +433,27 @@ final class BlobChunk implements BlobChunk_orMutable {
   BlobChunk toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BlobChunk_mutable toMutable() =>
-      BlobChunk_mutable._(this.offset, this.bytes, this.complete);
+  BlobChunk_mutable toMutable() => BlobChunk_mutable._(
+    this.offset,
+    this.bytes,
+    this.complete,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BlobChunk) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.offset, this.bytes, this.complete];
+  _core.List get _equality_proxy => [
+    this.offset,
+    this.bytes,
+    this.complete,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -459,13 +511,19 @@ final class BlobChunk_mutable implements BlobChunk_orMutable {
   _core.bool complete;
   _skir.internal__UnrecognizedFields? _u;
 
-  BlobChunk_mutable._(this.offset, this.bytes, this.complete);
+  BlobChunk_mutable._(
+    this.offset,
+    this.bytes,
+    this.complete,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BlobChunk toFrozen() =>
-      BlobChunk(offset: this.offset, bytes: this.bytes, complete: this.complete)
-        .._u = this._u;
+  BlobChunk toFrozen() => BlobChunk(
+    offset: this.offset,
+    bytes: this.bytes,
+    complete: this.complete,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -487,8 +545,7 @@ sealed class SharedArtifactDescriptor_orMutable {
 }
 
 /// Deeply immutable.
-final class SharedArtifactDescriptor
-    implements SharedArtifactDescriptor_orMutable {
+final class SharedArtifactDescriptor implements SharedArtifactDescriptor_orMutable {
   @_core.override
   final _core.String id;
   @_core.override
@@ -558,18 +615,17 @@ final class SharedArtifactDescriptor
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactDescriptor_mutable mutable() =>
-      SharedArtifactDescriptor_mutable._(
-        "",
-        0,
-        "",
-        "",
-        null,
-        null,
-        null,
-        SharedArtifactProvenance.unknown,
-        false,
-      );
+  static SharedArtifactDescriptor_mutable mutable() => SharedArtifactDescriptor_mutable._(
+    "",
+    0,
+    "",
+    "",
+    null,
+    null,
+    null,
+    SharedArtifactProvenance.unknown,
+    false,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -577,27 +633,23 @@ final class SharedArtifactDescriptor
   SharedArtifactDescriptor toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SharedArtifactDescriptor_mutable toMutable() =>
-      SharedArtifactDescriptor_mutable._(
-        this.id,
-        this.revision,
-        this.label,
-        this.mediaType,
-        this.digest,
-        this.size,
-        this.metadata,
-        this.provenance,
-        this.deleted,
-      );
+  SharedArtifactDescriptor_mutable toMutable() => SharedArtifactDescriptor_mutable._(
+    this.id,
+    this.revision,
+    this.label,
+    this.mediaType,
+    this.digest,
+    this.size,
+    this.metadata,
+    this.provenance,
+    this.deleted,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactDescriptor) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -619,11 +671,7 @@ final class SharedArtifactDescriptor
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactDescriptor` instances.
-  static _skir.StructSerializer<
-    SharedArtifactDescriptor,
-    SharedArtifactDescriptor_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactDescriptor, SharedArtifactDescriptor_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -665,7 +713,9 @@ final class SharedArtifactDescriptor
         "digest",
         "digest",
         4,
-        _skir.Serializers.optional(ArtifactDigest.serializer),
+        _skir.Serializers.optional(
+          ArtifactDigest.serializer,
+        ),
         "",
         (it) => it.digest,
         (it, v) => it.digest = v,
@@ -674,7 +724,9 @@ final class SharedArtifactDescriptor
         "size",
         "size",
         5,
-        _skir.Serializers.optional(_skir.Serializers.int64),
+        _skir.Serializers.optional(
+          _skir.Serializers.int64,
+        ),
         "",
         (it) => it.size,
         (it, v) => it.size = v,
@@ -683,7 +735,9 @@ final class SharedArtifactDescriptor
         "metadata",
         "metadata",
         6,
-        _skir.Serializers.optional(ProducerMetadata.serializer),
+        _skir.Serializers.optional(
+          ProducerMetadata.serializer,
+        ),
         "",
         (it) => it.metadata,
         (it, v) => it.metadata = v,
@@ -723,8 +777,7 @@ final class SharedArtifactDescriptor
 }
 
 /// Mutable version of [SharedArtifactDescriptor].
-final class SharedArtifactDescriptor_mutable
-    implements SharedArtifactDescriptor_orMutable {
+final class SharedArtifactDescriptor_mutable implements SharedArtifactDescriptor_orMutable {
   _core.String id;
   _core.int revision;
   _core.String label;
@@ -774,25 +827,31 @@ sealed class SharedArtifactProvenance_LocalInbox_orMutable {
 }
 
 /// Deeply immutable.
-final class SharedArtifactProvenance_LocalInbox
-    implements SharedArtifactProvenance_LocalInbox_orMutable {
+final class SharedArtifactProvenance_LocalInbox implements SharedArtifactProvenance_LocalInbox_orMutable {
   @_core.override
   final _core.String relativePath;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SharedArtifactProvenance_LocalInbox({
     required _core.String relativePath,
-  }) => SharedArtifactProvenance_LocalInbox._(relativePath);
+  }) => SharedArtifactProvenance_LocalInbox._(
+    relativePath,
+  );
 
-  SharedArtifactProvenance_LocalInbox._(this.relativePath);
+  SharedArtifactProvenance_LocalInbox._(
+    this.relativePath,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SharedArtifactProvenance_LocalInbox._("");
+  static final defaultInstance = SharedArtifactProvenance_LocalInbox._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactProvenance_LocalInbox_mutable mutable() =>
-      SharedArtifactProvenance_LocalInbox_mutable._("");
+  static SharedArtifactProvenance_LocalInbox_mutable mutable() => SharedArtifactProvenance_LocalInbox_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -800,33 +859,29 @@ final class SharedArtifactProvenance_LocalInbox
   SharedArtifactProvenance_LocalInbox toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SharedArtifactProvenance_LocalInbox_mutable toMutable() =>
-      SharedArtifactProvenance_LocalInbox_mutable._(this.relativePath);
+  SharedArtifactProvenance_LocalInbox_mutable toMutable() => SharedArtifactProvenance_LocalInbox_mutable._(
+    this.relativePath,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactProvenance_LocalInbox) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.relativePath];
+  _core.List get _equality_proxy => [
+    this.relativePath,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactProvenance_LocalInbox` instances.
-  static _skir.StructSerializer<
-    SharedArtifactProvenance_LocalInbox,
-    SharedArtifactProvenance_LocalInbox_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactProvenance_LocalInbox, SharedArtifactProvenance_LocalInbox_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "relative_path",
@@ -854,18 +909,19 @@ final class SharedArtifactProvenance_LocalInbox
 }
 
 /// Mutable version of [SharedArtifactProvenance_LocalInbox].
-final class SharedArtifactProvenance_LocalInbox_mutable
-    implements SharedArtifactProvenance_LocalInbox_orMutable {
+final class SharedArtifactProvenance_LocalInbox_mutable implements SharedArtifactProvenance_LocalInbox_orMutable {
   _core.String relativePath;
   _skir.internal__UnrecognizedFields? _u;
 
-  SharedArtifactProvenance_LocalInbox_mutable._(this.relativePath);
+  SharedArtifactProvenance_LocalInbox_mutable._(
+    this.relativePath,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SharedArtifactProvenance_LocalInbox toFrozen() =>
-      SharedArtifactProvenance_LocalInbox(relativePath: this.relativePath)
-        .._u = this._u;
+  SharedArtifactProvenance_LocalInbox toFrozen() => SharedArtifactProvenance_LocalInbox(
+    relativePath: this.relativePath,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -879,24 +935,31 @@ sealed class SharedArtifactProvenance_Panel_orMutable {
 }
 
 /// Deeply immutable.
-final class SharedArtifactProvenance_Panel
-    implements SharedArtifactProvenance_Panel_orMutable {
+final class SharedArtifactProvenance_Panel implements SharedArtifactProvenance_Panel_orMutable {
   @_core.override
   final _core.String userId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory SharedArtifactProvenance_Panel({required _core.String userId}) =>
-      SharedArtifactProvenance_Panel._(userId);
+  factory SharedArtifactProvenance_Panel({
+    required _core.String userId,
+  }) => SharedArtifactProvenance_Panel._(
+    userId,
+  );
 
-  SharedArtifactProvenance_Panel._(this.userId);
+  SharedArtifactProvenance_Panel._(
+    this.userId,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SharedArtifactProvenance_Panel._("");
+  static final defaultInstance = SharedArtifactProvenance_Panel._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactProvenance_Panel_mutable mutable() =>
-      SharedArtifactProvenance_Panel_mutable._("");
+  static SharedArtifactProvenance_Panel_mutable mutable() => SharedArtifactProvenance_Panel_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -904,33 +967,29 @@ final class SharedArtifactProvenance_Panel
   SharedArtifactProvenance_Panel toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SharedArtifactProvenance_Panel_mutable toMutable() =>
-      SharedArtifactProvenance_Panel_mutable._(this.userId);
+  SharedArtifactProvenance_Panel_mutable toMutable() => SharedArtifactProvenance_Panel_mutable._(
+    this.userId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactProvenance_Panel) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.userId];
+  _core.List get _equality_proxy => [
+    this.userId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactProvenance_Panel` instances.
-  static _skir.StructSerializer<
-    SharedArtifactProvenance_Panel,
-    SharedArtifactProvenance_Panel_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactProvenance_Panel, SharedArtifactProvenance_Panel_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "user_id",
@@ -958,17 +1017,19 @@ final class SharedArtifactProvenance_Panel
 }
 
 /// Mutable version of [SharedArtifactProvenance_Panel].
-final class SharedArtifactProvenance_Panel_mutable
-    implements SharedArtifactProvenance_Panel_orMutable {
+final class SharedArtifactProvenance_Panel_mutable implements SharedArtifactProvenance_Panel_orMutable {
   _core.String userId;
   _skir.internal__UnrecognizedFields? _u;
 
-  SharedArtifactProvenance_Panel_mutable._(this.userId);
+  SharedArtifactProvenance_Panel_mutable._(
+    this.userId,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SharedArtifactProvenance_Panel toFrozen() =>
-      SharedArtifactProvenance_Panel(userId: this.userId).._u = this._u;
+  SharedArtifactProvenance_Panel toFrozen() => SharedArtifactProvenance_Panel(
+    userId: this.userId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -983,8 +1044,7 @@ sealed class SharedArtifactProvenance_Service_orMutable {
 }
 
 /// Deeply immutable.
-final class SharedArtifactProvenance_Service
-    implements SharedArtifactProvenance_Service_orMutable {
+final class SharedArtifactProvenance_Service implements SharedArtifactProvenance_Service_orMutable {
   @_core.override
   final _core.String hostId;
   @_core.override
@@ -994,17 +1054,28 @@ final class SharedArtifactProvenance_Service
   factory SharedArtifactProvenance_Service({
     required _core.String hostId,
     required _core.String runtimeId,
-  }) => SharedArtifactProvenance_Service._(hostId, runtimeId);
+  }) => SharedArtifactProvenance_Service._(
+    hostId,
+    runtimeId,
+  );
 
-  SharedArtifactProvenance_Service._(this.hostId, this.runtimeId);
+  SharedArtifactProvenance_Service._(
+    this.hostId,
+    this.runtimeId,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = SharedArtifactProvenance_Service._("", "");
+  static final defaultInstance = SharedArtifactProvenance_Service._(
+    "",
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactProvenance_Service_mutable mutable() =>
-      SharedArtifactProvenance_Service_mutable._("", "");
+  static SharedArtifactProvenance_Service_mutable mutable() => SharedArtifactProvenance_Service_mutable._(
+    "",
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1012,33 +1083,31 @@ final class SharedArtifactProvenance_Service
   SharedArtifactProvenance_Service toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SharedArtifactProvenance_Service_mutable toMutable() =>
-      SharedArtifactProvenance_Service_mutable._(this.hostId, this.runtimeId);
+  SharedArtifactProvenance_Service_mutable toMutable() => SharedArtifactProvenance_Service_mutable._(
+    this.hostId,
+    this.runtimeId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactProvenance_Service) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.hostId, this.runtimeId];
+  _core.List get _equality_proxy => [
+    this.hostId,
+    this.runtimeId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactProvenance_Service` instances.
-  static _skir.StructSerializer<
-    SharedArtifactProvenance_Service,
-    SharedArtifactProvenance_Service_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactProvenance_Service, SharedArtifactProvenance_Service_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "host_id",
@@ -1075,21 +1144,22 @@ final class SharedArtifactProvenance_Service
 }
 
 /// Mutable version of [SharedArtifactProvenance_Service].
-final class SharedArtifactProvenance_Service_mutable
-    implements SharedArtifactProvenance_Service_orMutable {
+final class SharedArtifactProvenance_Service_mutable implements SharedArtifactProvenance_Service_orMutable {
   _core.String hostId;
   _core.String runtimeId;
   _skir.internal__UnrecognizedFields? _u;
 
-  SharedArtifactProvenance_Service_mutable._(this.hostId, this.runtimeId);
+  SharedArtifactProvenance_Service_mutable._(
+    this.hostId,
+    this.runtimeId,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SharedArtifactProvenance_Service toFrozen() =>
-      SharedArtifactProvenance_Service(
-        hostId: this.hostId,
-        runtimeId: this.runtimeId,
-      ).._u = this._u;
+  SharedArtifactProvenance_Service toFrozen() => SharedArtifactProvenance_Service(
+    hostId: this.hostId,
+    runtimeId: this.runtimeId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1110,36 +1180,39 @@ final class SharedArtifactProvenance_Service_mutable
 sealed class SharedArtifactProvenance {
   /// Constant indicating an unknown `SharedArtifactProvenance`.
   /// Default value for fields of type `SharedArtifactProvenance`.
-  static const SharedArtifactProvenance unknown =
-      SharedArtifactProvenance_unknown._instance;
+  static const SharedArtifactProvenance unknown = SharedArtifactProvenance_unknown._instance;
 
   /// Create a 'local_inbox' variant wrapping around the given value.
   factory SharedArtifactProvenance.wrapLocalInbox(
-    SharedArtifactProvenance_LocalInbox value,
+    SharedArtifactProvenance_LocalInbox value
   ) => SharedArtifactProvenance_localInboxWrapper._(value);
 
   /// Same as `wrapLocalInbox(SharedArtifactProvenance_LocalInbox(...))`.
   factory SharedArtifactProvenance.createLocalInbox({
     required _core.String relativePath,
   }) => SharedArtifactProvenance.wrapLocalInbox(
-    SharedArtifactProvenance_LocalInbox(relativePath: relativePath),
+    SharedArtifactProvenance_LocalInbox(
+      relativePath: relativePath,
+    )
   );
 
   /// Create a 'panel' variant wrapping around the given value.
   factory SharedArtifactProvenance.wrapPanel(
-    SharedArtifactProvenance_Panel value,
+    SharedArtifactProvenance_Panel value
   ) => SharedArtifactProvenance_panelWrapper._(value);
 
   /// Same as `wrapPanel(SharedArtifactProvenance_Panel(...))`.
   factory SharedArtifactProvenance.createPanel({
     required _core.String userId,
   }) => SharedArtifactProvenance.wrapPanel(
-    SharedArtifactProvenance_Panel(userId: userId),
+    SharedArtifactProvenance_Panel(
+      userId: userId,
+    )
   );
 
   /// Create a 'service' variant wrapping around the given value.
   factory SharedArtifactProvenance.wrapService(
-    SharedArtifactProvenance_Service value,
+    SharedArtifactProvenance_Service value
   ) => SharedArtifactProvenance_serviceWrapper._(value);
 
   /// Same as `wrapService(SharedArtifactProvenance_Service(...))`.
@@ -1147,7 +1220,10 @@ sealed class SharedArtifactProvenance {
     required _core.String hostId,
     required _core.String runtimeId,
   }) => SharedArtifactProvenance.wrapService(
-    SharedArtifactProvenance_Service(hostId: hostId, runtimeId: runtimeId),
+    SharedArtifactProvenance_Service(
+      hostId: hostId,
+      runtimeId: runtimeId,
+    )
   );
 
   /// Returns the kind of variant held by this SharedArtifactProvenance.
@@ -1191,16 +1267,15 @@ sealed class SharedArtifactProvenance {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:SharedArtifactProvenance",
-        doc: "",
-        unknownInstance: SharedArtifactProvenance_unknown._instance,
-        enumInstance: SharedArtifactProvenance.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: SharedArtifactProvenance_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:SharedArtifactProvenance",
+    doc: "",
+    unknownInstance: SharedArtifactProvenance_unknown._instance,
+    enumInstance: SharedArtifactProvenance.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: SharedArtifactProvenance_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `SharedArtifactProvenance`.
@@ -1215,8 +1290,7 @@ enum SharedArtifactProvenance_kind {
   const SharedArtifactProvenance_kind(this._ordinal);
 }
 
-final class SharedArtifactProvenance_unknown
-    implements SharedArtifactProvenance {
+final class SharedArtifactProvenance_unknown implements SharedArtifactProvenance {
   static const _instance = SharedArtifactProvenance_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -1225,19 +1299,16 @@ final class SharedArtifactProvenance_unknown
   SharedArtifactProvenance_unknown._unrecognized(this._u);
 
   @_core.override
-  SharedArtifactProvenance_kind get kind =>
-      SharedArtifactProvenance_kind.unknown;
+  SharedArtifactProvenance_kind get kind => SharedArtifactProvenance_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is SharedArtifactProvenance_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, SharedArtifactProvenance.serializer);
+  _core.String toString() => _skir.internal__stringify(this, SharedArtifactProvenance.serializer);
 }
 
-sealed class _SharedArtifactProvenance_wrapper
-    implements SharedArtifactProvenance {
+sealed class _SharedArtifactProvenance_wrapper implements SharedArtifactProvenance {
   _core.dynamic get value;
 
   @_core.override
@@ -1250,41 +1321,34 @@ sealed class _SharedArtifactProvenance_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, SharedArtifactProvenance.serializer);
+  _core.String toString() => _skir.internal__stringify(this, SharedArtifactProvenance.serializer);
 }
 
-final class SharedArtifactProvenance_localInboxWrapper
-    extends _SharedArtifactProvenance_wrapper {
+final class SharedArtifactProvenance_localInboxWrapper extends _SharedArtifactProvenance_wrapper {
   final SharedArtifactProvenance_LocalInbox value;
 
   SharedArtifactProvenance_localInboxWrapper._(this.value);
 
   @_core.override
-  SharedArtifactProvenance_kind get kind =>
-      SharedArtifactProvenance_kind.localInboxWrapper;
+  SharedArtifactProvenance_kind get kind => SharedArtifactProvenance_kind.localInboxWrapper;
 }
 
-final class SharedArtifactProvenance_panelWrapper
-    extends _SharedArtifactProvenance_wrapper {
+final class SharedArtifactProvenance_panelWrapper extends _SharedArtifactProvenance_wrapper {
   final SharedArtifactProvenance_Panel value;
 
   SharedArtifactProvenance_panelWrapper._(this.value);
 
   @_core.override
-  SharedArtifactProvenance_kind get kind =>
-      SharedArtifactProvenance_kind.panelWrapper;
+  SharedArtifactProvenance_kind get kind => SharedArtifactProvenance_kind.panelWrapper;
 }
 
-final class SharedArtifactProvenance_serviceWrapper
-    extends _SharedArtifactProvenance_wrapper {
+final class SharedArtifactProvenance_serviceWrapper extends _SharedArtifactProvenance_wrapper {
   final SharedArtifactProvenance_Service value;
 
   SharedArtifactProvenance_serviceWrapper._(this.value);
 
   @_core.override
-  SharedArtifactProvenance_kind get kind =>
-      SharedArtifactProvenance_kind.serviceWrapper;
+  SharedArtifactProvenance_kind get kind => SharedArtifactProvenance_kind.serviceWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1314,7 +1378,10 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
     _skir.internal__frozenMappedCopy(artifacts, (it) => it.toFrozen()),
   );
 
-  SharedArtifactCatalog._(this.revision, this.artifacts);
+  SharedArtifactCatalog._(
+    this.revision,
+    this.artifacts,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SharedArtifactCatalog._(
@@ -1324,8 +1391,10 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactCatalog_mutable mutable() =>
-      SharedArtifactCatalog_mutable._(0, _skir.KeyedIterable.empty);
+  static SharedArtifactCatalog_mutable mutable() => SharedArtifactCatalog_mutable._(
+    0,
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1333,33 +1402,31 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
   SharedArtifactCatalog toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SharedArtifactCatalog_mutable toMutable() =>
-      SharedArtifactCatalog_mutable._(this.revision, this.artifacts);
+  SharedArtifactCatalog_mutable toMutable() => SharedArtifactCatalog_mutable._(
+    this.revision,
+    this.artifacts,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactCatalog) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.revision, this.artifacts];
+  _core.List get _equality_proxy => [
+    this.revision,
+    this.artifacts,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactCatalog` instances.
-  static _skir.StructSerializer<
-    SharedArtifactCatalog,
-    SharedArtifactCatalog_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactCatalog, SharedArtifactCatalog_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "revision",
@@ -1374,7 +1441,9 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
         "artifacts",
         "artifacts",
         1,
-        _skir.Serializers.iterable(SharedArtifactDescriptor.serializer),
+        _skir.Serializers.iterable(
+          SharedArtifactDescriptor.serializer,
+        ),
         "",
         (it) => it.artifacts,
         (it, v) => it.artifacts = v,
@@ -1396,20 +1465,21 @@ final class SharedArtifactCatalog implements SharedArtifactCatalog_orMutable {
 }
 
 /// Mutable version of [SharedArtifactCatalog].
-final class SharedArtifactCatalog_mutable
-    implements SharedArtifactCatalog_orMutable {
+final class SharedArtifactCatalog_mutable implements SharedArtifactCatalog_orMutable {
   _core.int revision;
   _core.Iterable<SharedArtifactDescriptor_orMutable> artifacts;
   _skir.internal__UnrecognizedFields? _u;
 
-  SharedArtifactCatalog_mutable._(this.revision, this.artifacts);
+  SharedArtifactCatalog_mutable._(
+    this.revision,
+    this.artifacts,
+  );
 
   /// If the value of [artifacts] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [artifacts] and returns it.
   _core.List<SharedArtifactDescriptor_orMutable> get mutableArtifacts {
     final value = this.artifacts;
-    if (value
-        is _skir.internal__MutableList<SharedArtifactDescriptor_orMutable>) {
+    if (value is _skir.internal__MutableList<SharedArtifactDescriptor_orMutable>) {
       return value;
     } else {
       return this.artifacts = _skir.internal__MutableList([...value]);
@@ -1418,9 +1488,10 @@ final class SharedArtifactCatalog_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SharedArtifactCatalog toFrozen() =>
-      SharedArtifactCatalog(revision: this.revision, artifacts: this.artifacts)
-        .._u = this._u;
+  SharedArtifactCatalog toFrozen() => SharedArtifactCatalog(
+    revision: this.revision,
+    artifacts: this.artifacts,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1449,9 +1520,17 @@ final class SharedArtifactChanged implements SharedArtifactChanged_orMutable {
     required _core.String realmId,
     required SharedArtifactDescriptor_orMutable artifact,
     required _core.int catalogRevision,
-  }) => SharedArtifactChanged._(realmId, artifact.toFrozen(), catalogRevision);
+  }) => SharedArtifactChanged._(
+    realmId,
+    artifact.toFrozen(),
+    catalogRevision,
+  );
 
-  SharedArtifactChanged._(this.realmId, this.artifact, this.catalogRevision);
+  SharedArtifactChanged._(
+    this.realmId,
+    this.artifact,
+    this.catalogRevision,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SharedArtifactChanged._(
@@ -1462,12 +1541,11 @@ final class SharedArtifactChanged implements SharedArtifactChanged_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SharedArtifactChanged_mutable mutable() =>
-      SharedArtifactChanged_mutable._(
-        "",
-        SharedArtifactDescriptor.defaultInstance,
-        0,
-      );
+  static SharedArtifactChanged_mutable mutable() => SharedArtifactChanged_mutable._(
+    "",
+    SharedArtifactDescriptor.defaultInstance,
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1485,10 +1563,7 @@ final class SharedArtifactChanged implements SharedArtifactChanged_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SharedArtifactChanged) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1504,11 +1579,7 @@ final class SharedArtifactChanged implements SharedArtifactChanged_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SharedArtifactChanged` instances.
-  static _skir.StructSerializer<
-    SharedArtifactChanged,
-    SharedArtifactChanged_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SharedArtifactChanged, SharedArtifactChanged_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "realm_id",
@@ -1554,8 +1625,7 @@ final class SharedArtifactChanged implements SharedArtifactChanged_orMutable {
 }
 
 /// Mutable version of [SharedArtifactChanged].
-final class SharedArtifactChanged_mutable
-    implements SharedArtifactChanged_orMutable {
+final class SharedArtifactChanged_mutable implements SharedArtifactChanged_orMutable {
   _core.String realmId;
   SharedArtifactDescriptor_orMutable artifact;
   _core.int catalogRevision;
@@ -1609,17 +1679,28 @@ final class ProducerMetadataEntry implements ProducerMetadataEntry_orMutable {
   factory ProducerMetadataEntry({
     required _core.String key,
     required _core.String value,
-  }) => ProducerMetadataEntry._(key, value);
+  }) => ProducerMetadataEntry._(
+    key,
+    value,
+  );
 
-  ProducerMetadataEntry._(this.key, this.value);
+  ProducerMetadataEntry._(
+    this.key,
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ProducerMetadataEntry._("", "");
+  static final defaultInstance = ProducerMetadataEntry._(
+    "",
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ProducerMetadataEntry_mutable mutable() =>
-      ProducerMetadataEntry_mutable._("", "");
+  static ProducerMetadataEntry_mutable mutable() => ProducerMetadataEntry_mutable._(
+    "",
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1627,33 +1708,31 @@ final class ProducerMetadataEntry implements ProducerMetadataEntry_orMutable {
   ProducerMetadataEntry toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ProducerMetadataEntry_mutable toMutable() =>
-      ProducerMetadataEntry_mutable._(this.key, this.value);
+  ProducerMetadataEntry_mutable toMutable() => ProducerMetadataEntry_mutable._(
+    this.key,
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ProducerMetadataEntry) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.key, this.value];
+  _core.List get _equality_proxy => [
+    this.key,
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ProducerMetadataEntry` instances.
-  static _skir.StructSerializer<
-    ProducerMetadataEntry,
-    ProducerMetadataEntry_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ProducerMetadataEntry, ProducerMetadataEntry_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "key",
@@ -1690,18 +1769,22 @@ final class ProducerMetadataEntry implements ProducerMetadataEntry_orMutable {
 }
 
 /// Mutable version of [ProducerMetadataEntry].
-final class ProducerMetadataEntry_mutable
-    implements ProducerMetadataEntry_orMutable {
+final class ProducerMetadataEntry_mutable implements ProducerMetadataEntry_orMutable {
   _core.String key;
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ProducerMetadataEntry_mutable._(this.key, this.value);
+  ProducerMetadataEntry_mutable._(
+    this.key,
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ProducerMetadataEntry toFrozen() =>
-      ProducerMetadataEntry(key: this.key, value: this.value).._u = this._u;
+  ProducerMetadataEntry toFrozen() => ProducerMetadataEntry(
+    key: this.key,
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1726,15 +1809,20 @@ final class ProducerMetadata implements ProducerMetadata_orMutable {
     _skir.internal__frozenMappedCopy(entries, (it) => it.toFrozen()),
   );
 
-  ProducerMetadata._(this.entries);
+  ProducerMetadata._(
+    this.entries,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ProducerMetadata._(_skir.KeyedIterable.empty);
+  static final defaultInstance = ProducerMetadata._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ProducerMetadata_mutable mutable() =>
-      ProducerMetadata_mutable._(_skir.KeyedIterable.empty);
+  static ProducerMetadata_mutable mutable() => ProducerMetadata_mutable._(
+    _skir.KeyedIterable.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1742,36 +1830,37 @@ final class ProducerMetadata implements ProducerMetadata_orMutable {
   ProducerMetadata toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ProducerMetadata_mutable toMutable() =>
-      ProducerMetadata_mutable._(this.entries);
+  ProducerMetadata_mutable toMutable() => ProducerMetadata_mutable._(
+    this.entries,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ProducerMetadata) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.entries];
+  _core.List get _equality_proxy => [
+    this.entries,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ProducerMetadata` instances.
-  static _skir.StructSerializer<ProducerMetadata, ProducerMetadata_mutable>
-  get serializer {
+  static _skir.StructSerializer<ProducerMetadata, ProducerMetadata_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "entries",
         "entries",
         0,
-        _skir.Serializers.iterable(ProducerMetadataEntry.serializer),
+        _skir.Serializers.iterable(
+          ProducerMetadataEntry.serializer,
+        ),
         "",
         (it) => it.entries,
         (it, v) => it.entries = v,
@@ -1797,7 +1886,9 @@ final class ProducerMetadata_mutable implements ProducerMetadata_orMutable {
   _core.Iterable<ProducerMetadataEntry_orMutable> entries;
   _skir.internal__UnrecognizedFields? _u;
 
-  ProducerMetadata_mutable._(this.entries);
+  ProducerMetadata_mutable._(
+    this.entries,
+  );
 
   /// If the value of [entries] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [entries] and returns it.
@@ -1812,8 +1903,9 @@ final class ProducerMetadata_mutable implements ProducerMetadata_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ProducerMetadata toFrozen() =>
-      ProducerMetadata(entries: this.entries).._u = this._u;
+  ProducerMetadata toFrozen() => ProducerMetadata(
+    entries: this.entries,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1827,25 +1919,31 @@ sealed class FetchSharedArtifactCatalogRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchSharedArtifactCatalogRequest
-    implements FetchSharedArtifactCatalogRequest_orMutable {
+final class FetchSharedArtifactCatalogRequest implements FetchSharedArtifactCatalogRequest_orMutable {
   @_core.override
   final _core.int? afterRevision;
   _skir.internal__UnrecognizedFields? _u;
 
   factory FetchSharedArtifactCatalogRequest({
     required _core.int? afterRevision,
-  }) => FetchSharedArtifactCatalogRequest._(afterRevision);
+  }) => FetchSharedArtifactCatalogRequest._(
+    afterRevision,
+  );
 
-  FetchSharedArtifactCatalogRequest._(this.afterRevision);
+  FetchSharedArtifactCatalogRequest._(
+    this.afterRevision,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = FetchSharedArtifactCatalogRequest._(null);
+  static final defaultInstance = FetchSharedArtifactCatalogRequest._(
+    null,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchSharedArtifactCatalogRequest_mutable mutable() =>
-      FetchSharedArtifactCatalogRequest_mutable._(null);
+  static FetchSharedArtifactCatalogRequest_mutable mutable() => FetchSharedArtifactCatalogRequest_mutable._(
+    null,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1853,39 +1951,37 @@ final class FetchSharedArtifactCatalogRequest
   FetchSharedArtifactCatalogRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchSharedArtifactCatalogRequest_mutable toMutable() =>
-      FetchSharedArtifactCatalogRequest_mutable._(this.afterRevision);
+  FetchSharedArtifactCatalogRequest_mutable toMutable() => FetchSharedArtifactCatalogRequest_mutable._(
+    this.afterRevision,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchSharedArtifactCatalogRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.afterRevision];
+  _core.List get _equality_proxy => [
+    this.afterRevision,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchSharedArtifactCatalogRequest` instances.
-  static _skir.StructSerializer<
-    FetchSharedArtifactCatalogRequest,
-    FetchSharedArtifactCatalogRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchSharedArtifactCatalogRequest, FetchSharedArtifactCatalogRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "after_revision",
         "afterRevision",
         0,
-        _skir.Serializers.optional(_skir.Serializers.int64),
+        _skir.Serializers.optional(
+          _skir.Serializers.int64,
+        ),
         "",
         (it) => it.afterRevision,
         (it, v) => it.afterRevision = v,
@@ -1907,18 +2003,19 @@ final class FetchSharedArtifactCatalogRequest
 }
 
 /// Mutable version of [FetchSharedArtifactCatalogRequest].
-final class FetchSharedArtifactCatalogRequest_mutable
-    implements FetchSharedArtifactCatalogRequest_orMutable {
+final class FetchSharedArtifactCatalogRequest_mutable implements FetchSharedArtifactCatalogRequest_orMutable {
   _core.int? afterRevision;
   _skir.internal__UnrecognizedFields? _u;
 
-  FetchSharedArtifactCatalogRequest_mutable._(this.afterRevision);
+  FetchSharedArtifactCatalogRequest_mutable._(
+    this.afterRevision,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchSharedArtifactCatalogRequest toFrozen() =>
-      FetchSharedArtifactCatalogRequest(afterRevision: this.afterRevision)
-        .._u = this._u;
+  FetchSharedArtifactCatalogRequest toFrozen() => FetchSharedArtifactCatalogRequest(
+    afterRevision: this.afterRevision,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1930,23 +2027,19 @@ sealed class FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchSharedArtifactCatalogResponse_Unavailable
-    implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
+final class FetchSharedArtifactCatalogResponse_Unavailable implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FetchSharedArtifactCatalogResponse_Unavailable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable._();
+  factory FetchSharedArtifactCatalogResponse_Unavailable() => FetchSharedArtifactCatalogResponse_Unavailable._();
 
   FetchSharedArtifactCatalogResponse_Unavailable._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      FetchSharedArtifactCatalogResponse_Unavailable._();
+  static final defaultInstance = FetchSharedArtifactCatalogResponse_Unavailable._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchSharedArtifactCatalogResponse_Unavailable_mutable mutable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
+  static FetchSharedArtifactCatalogResponse_Unavailable_mutable mutable() => FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1954,17 +2047,13 @@ final class FetchSharedArtifactCatalogResponse_Unavailable
   FetchSharedArtifactCatalogResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchSharedArtifactCatalogResponse_Unavailable_mutable toMutable() =>
-      FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
+  FetchSharedArtifactCatalogResponse_Unavailable_mutable toMutable() => FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchSharedArtifactCatalogResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -1976,11 +2065,7 @@ final class FetchSharedArtifactCatalogResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchSharedArtifactCatalogResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    FetchSharedArtifactCatalogResponse_Unavailable,
-    FetchSharedArtifactCatalogResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchSharedArtifactCatalogResponse_Unavailable, FetchSharedArtifactCatalogResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -1988,29 +2073,25 @@ final class FetchSharedArtifactCatalogResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchSharedArtifactCatalogResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:FetchSharedArtifactCatalogResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchSharedArtifactCatalogResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (FetchSharedArtifactCatalogResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [FetchSharedArtifactCatalogResponse_Unavailable].
-final class FetchSharedArtifactCatalogResponse_Unavailable_mutable
-    implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
+final class FetchSharedArtifactCatalogResponse_Unavailable_mutable implements FetchSharedArtifactCatalogResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   FetchSharedArtifactCatalogResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchSharedArtifactCatalogResponse_Unavailable toFrozen() =>
-      FetchSharedArtifactCatalogResponse_Unavailable().._u = this._u;
+  FetchSharedArtifactCatalogResponse_Unavailable toFrozen() => FetchSharedArtifactCatalogResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2030,12 +2111,11 @@ final class FetchSharedArtifactCatalogResponse_Unavailable_mutable
 sealed class FetchSharedArtifactCatalogResponse {
   /// Constant indicating an unknown `FetchSharedArtifactCatalogResponse`.
   /// Default value for fields of type `FetchSharedArtifactCatalogResponse`.
-  static const FetchSharedArtifactCatalogResponse unknown =
-      FetchSharedArtifactCatalogResponse_unknown._instance;
+  static const FetchSharedArtifactCatalogResponse unknown = FetchSharedArtifactCatalogResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
   factory FetchSharedArtifactCatalogResponse.wrapSuccess(
-    SharedArtifactCatalog value,
+    SharedArtifactCatalog value
   ) => FetchSharedArtifactCatalogResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(SharedArtifactCatalog(...))`.
@@ -2043,26 +2123,27 @@ sealed class FetchSharedArtifactCatalogResponse {
     required _core.int revision,
     required _core.Iterable<SharedArtifactDescriptor_orMutable> artifacts,
   }) => FetchSharedArtifactCatalogResponse.wrapSuccess(
-    SharedArtifactCatalog(revision: revision, artifacts: artifacts),
+    SharedArtifactCatalog(
+      revision: revision,
+      artifacts: artifacts,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory FetchSharedArtifactCatalogResponse.wrapUnavailable(
-    FetchSharedArtifactCatalogResponse_Unavailable value,
+    FetchSharedArtifactCatalogResponse_Unavailable value
   ) => FetchSharedArtifactCatalogResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(FetchSharedArtifactCatalogResponse_Unavailable(...))`.
-  factory FetchSharedArtifactCatalogResponse.createUnavailable() =>
-      FetchSharedArtifactCatalogResponse.wrapUnavailable(
-        FetchSharedArtifactCatalogResponse_Unavailable(),
-      );
+  factory FetchSharedArtifactCatalogResponse.createUnavailable() => FetchSharedArtifactCatalogResponse.wrapUnavailable(
+    FetchSharedArtifactCatalogResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this FetchSharedArtifactCatalogResponse.
   FetchSharedArtifactCatalogResponse_kind get kind;
 
   /// Serializer for `FetchSharedArtifactCatalogResponse` instances.
-  static _skir.EnumSerializer<FetchSharedArtifactCatalogResponse>
-  get serializer {
+  static _skir.EnumSerializer<FetchSharedArtifactCatalogResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -2072,8 +2153,7 @@ sealed class FetchSharedArtifactCatalogResponse {
         "",
         FetchSharedArtifactCatalogResponse_successWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchSharedArtifactCatalogResponse_kind.successWrapper._ordinal,
+        ordinal: FetchSharedArtifactCatalogResponse_kind.successWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -2083,25 +2163,22 @@ sealed class FetchSharedArtifactCatalogResponse {
         "",
         FetchSharedArtifactCatalogResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchSharedArtifactCatalogResponse_kind.unavailableWrapper._ordinal,
+        ordinal: FetchSharedArtifactCatalogResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:FetchSharedArtifactCatalogResponse",
-        doc: "",
-        unknownInstance: FetchSharedArtifactCatalogResponse_unknown._instance,
-        enumInstance: FetchSharedArtifactCatalogResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            FetchSharedArtifactCatalogResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:FetchSharedArtifactCatalogResponse",
+    doc: "",
+    unknownInstance: FetchSharedArtifactCatalogResponse_unknown._instance,
+    enumInstance: FetchSharedArtifactCatalogResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: FetchSharedArtifactCatalogResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `FetchSharedArtifactCatalogResponse`.
@@ -2115,8 +2192,7 @@ enum FetchSharedArtifactCatalogResponse_kind {
   const FetchSharedArtifactCatalogResponse_kind(this._ordinal);
 }
 
-final class FetchSharedArtifactCatalogResponse_unknown
-    implements FetchSharedArtifactCatalogResponse {
+final class FetchSharedArtifactCatalogResponse_unknown implements FetchSharedArtifactCatalogResponse {
   static const _instance = FetchSharedArtifactCatalogResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -2125,22 +2201,16 @@ final class FetchSharedArtifactCatalogResponse_unknown
   FetchSharedArtifactCatalogResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  FetchSharedArtifactCatalogResponse_kind get kind =>
-      FetchSharedArtifactCatalogResponse_kind.unknown;
+  FetchSharedArtifactCatalogResponse_kind get kind => FetchSharedArtifactCatalogResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is FetchSharedArtifactCatalogResponse_unknown;
+  _core.bool operator ==(other) => other is FetchSharedArtifactCatalogResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    FetchSharedArtifactCatalogResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, FetchSharedArtifactCatalogResponse.serializer);
 }
 
-sealed class _FetchSharedArtifactCatalogResponse_wrapper
-    implements FetchSharedArtifactCatalogResponse {
+sealed class _FetchSharedArtifactCatalogResponse_wrapper implements FetchSharedArtifactCatalogResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -2153,32 +2223,25 @@ sealed class _FetchSharedArtifactCatalogResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    FetchSharedArtifactCatalogResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, FetchSharedArtifactCatalogResponse.serializer);
 }
 
-final class FetchSharedArtifactCatalogResponse_successWrapper
-    extends _FetchSharedArtifactCatalogResponse_wrapper {
+final class FetchSharedArtifactCatalogResponse_successWrapper extends _FetchSharedArtifactCatalogResponse_wrapper {
   final SharedArtifactCatalog value;
 
   FetchSharedArtifactCatalogResponse_successWrapper._(this.value);
 
   @_core.override
-  FetchSharedArtifactCatalogResponse_kind get kind =>
-      FetchSharedArtifactCatalogResponse_kind.successWrapper;
+  FetchSharedArtifactCatalogResponse_kind get kind => FetchSharedArtifactCatalogResponse_kind.successWrapper;
 }
 
-final class FetchSharedArtifactCatalogResponse_unavailableWrapper
-    extends _FetchSharedArtifactCatalogResponse_wrapper {
+final class FetchSharedArtifactCatalogResponse_unavailableWrapper extends _FetchSharedArtifactCatalogResponse_wrapper {
   final FetchSharedArtifactCatalogResponse_Unavailable value;
 
   FetchSharedArtifactCatalogResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  FetchSharedArtifactCatalogResponse_kind get kind =>
-      FetchSharedArtifactCatalogResponse_kind.unavailableWrapper;
+  FetchSharedArtifactCatalogResponse_kind get kind => FetchSharedArtifactCatalogResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2200,8 +2263,7 @@ sealed class PublishSharedArtifactRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class PublishSharedArtifactRequest
-    implements PublishSharedArtifactRequest_orMutable {
+final class PublishSharedArtifactRequest implements PublishSharedArtifactRequest_orMutable {
   @_core.override
   final _core.String id;
   @_core.override
@@ -2271,18 +2333,17 @@ final class PublishSharedArtifactRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PublishSharedArtifactRequest_mutable mutable() =>
-      PublishSharedArtifactRequest_mutable._(
-        "",
-        null,
-        "",
-        "",
-        null,
-        null,
-        null,
-        SharedArtifactProvenance.unknown,
-        false,
-      );
+  static PublishSharedArtifactRequest_mutable mutable() => PublishSharedArtifactRequest_mutable._(
+    "",
+    null,
+    "",
+    "",
+    null,
+    null,
+    null,
+    SharedArtifactProvenance.unknown,
+    false,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2290,27 +2351,23 @@ final class PublishSharedArtifactRequest
   PublishSharedArtifactRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PublishSharedArtifactRequest_mutable toMutable() =>
-      PublishSharedArtifactRequest_mutable._(
-        this.id,
-        this.expectedRevision,
-        this.label,
-        this.mediaType,
-        this.digest,
-        this.size,
-        this.metadata,
-        this.provenance,
-        this.deleted,
-      );
+  PublishSharedArtifactRequest_mutable toMutable() => PublishSharedArtifactRequest_mutable._(
+    this.id,
+    this.expectedRevision,
+    this.label,
+    this.mediaType,
+    this.digest,
+    this.size,
+    this.metadata,
+    this.provenance,
+    this.deleted,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublishSharedArtifactRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2332,11 +2389,7 @@ final class PublishSharedArtifactRequest
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublishSharedArtifactRequest` instances.
-  static _skir.StructSerializer<
-    PublishSharedArtifactRequest,
-    PublishSharedArtifactRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<PublishSharedArtifactRequest, PublishSharedArtifactRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -2351,7 +2404,9 @@ final class PublishSharedArtifactRequest
         "expected_revision",
         "expectedRevision",
         1,
-        _skir.Serializers.optional(_skir.Serializers.int64),
+        _skir.Serializers.optional(
+          _skir.Serializers.int64,
+        ),
         "",
         (it) => it.expectedRevision,
         (it, v) => it.expectedRevision = v,
@@ -2378,7 +2433,9 @@ final class PublishSharedArtifactRequest
         "digest",
         "digest",
         4,
-        _skir.Serializers.optional(ArtifactDigest.serializer),
+        _skir.Serializers.optional(
+          ArtifactDigest.serializer,
+        ),
         "",
         (it) => it.digest,
         (it, v) => it.digest = v,
@@ -2387,7 +2444,9 @@ final class PublishSharedArtifactRequest
         "size",
         "size",
         5,
-        _skir.Serializers.optional(_skir.Serializers.int64),
+        _skir.Serializers.optional(
+          _skir.Serializers.int64,
+        ),
         "",
         (it) => it.size,
         (it, v) => it.size = v,
@@ -2396,7 +2455,9 @@ final class PublishSharedArtifactRequest
         "metadata",
         "metadata",
         6,
-        _skir.Serializers.optional(ProducerMetadata.serializer),
+        _skir.Serializers.optional(
+          ProducerMetadata.serializer,
+        ),
         "",
         (it) => it.metadata,
         (it, v) => it.metadata = v,
@@ -2436,8 +2497,7 @@ final class PublishSharedArtifactRequest
 }
 
 /// Mutable version of [PublishSharedArtifactRequest].
-final class PublishSharedArtifactRequest_mutable
-    implements PublishSharedArtifactRequest_orMutable {
+final class PublishSharedArtifactRequest_mutable implements PublishSharedArtifactRequest_orMutable {
   _core.String id;
   _core.int? expectedRevision;
   _core.String label;
@@ -2485,12 +2545,10 @@ sealed class PublishSharedArtifactResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class PublishSharedArtifactResponse_Unavailable
-    implements PublishSharedArtifactResponse_Unavailable_orMutable {
+final class PublishSharedArtifactResponse_Unavailable implements PublishSharedArtifactResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PublishSharedArtifactResponse_Unavailable() =>
-      PublishSharedArtifactResponse_Unavailable._();
+  factory PublishSharedArtifactResponse_Unavailable() => PublishSharedArtifactResponse_Unavailable._();
 
   PublishSharedArtifactResponse_Unavailable._();
 
@@ -2499,8 +2557,7 @@ final class PublishSharedArtifactResponse_Unavailable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PublishSharedArtifactResponse_Unavailable_mutable mutable() =>
-      PublishSharedArtifactResponse_Unavailable_mutable._();
+  static PublishSharedArtifactResponse_Unavailable_mutable mutable() => PublishSharedArtifactResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2508,17 +2565,13 @@ final class PublishSharedArtifactResponse_Unavailable
   PublishSharedArtifactResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PublishSharedArtifactResponse_Unavailable_mutable toMutable() =>
-      PublishSharedArtifactResponse_Unavailable_mutable._();
+  PublishSharedArtifactResponse_Unavailable_mutable toMutable() => PublishSharedArtifactResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublishSharedArtifactResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2530,11 +2583,7 @@ final class PublishSharedArtifactResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublishSharedArtifactResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    PublishSharedArtifactResponse_Unavailable,
-    PublishSharedArtifactResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<PublishSharedArtifactResponse_Unavailable, PublishSharedArtifactResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2542,29 +2591,25 @@ final class PublishSharedArtifactResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:PublishSharedArtifactResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:PublishSharedArtifactResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublishSharedArtifactResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (PublishSharedArtifactResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [PublishSharedArtifactResponse_Unavailable].
-final class PublishSharedArtifactResponse_Unavailable_mutable
-    implements PublishSharedArtifactResponse_Unavailable_orMutable {
+final class PublishSharedArtifactResponse_Unavailable_mutable implements PublishSharedArtifactResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   PublishSharedArtifactResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PublishSharedArtifactResponse_Unavailable toFrozen() =>
-      PublishSharedArtifactResponse_Unavailable().._u = this._u;
+  PublishSharedArtifactResponse_Unavailable toFrozen() => PublishSharedArtifactResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2586,12 +2631,11 @@ final class PublishSharedArtifactResponse_Unavailable_mutable
 sealed class PublishSharedArtifactResponse {
   /// Constant indicating an unknown `PublishSharedArtifactResponse`.
   /// Default value for fields of type `PublishSharedArtifactResponse`.
-  static const PublishSharedArtifactResponse unknown =
-      PublishSharedArtifactResponse_unknown._instance;
+  static const PublishSharedArtifactResponse unknown = PublishSharedArtifactResponse_unknown._instance;
 
   /// Create a 'published' variant wrapping around the given value.
   factory PublishSharedArtifactResponse.wrapPublished(
-    SharedArtifactDescriptor value,
+    SharedArtifactDescriptor value
   ) => PublishSharedArtifactResponse_publishedWrapper._(value);
 
   /// Same as `wrapPublished(SharedArtifactDescriptor(...))`.
@@ -2616,12 +2660,12 @@ sealed class PublishSharedArtifactResponse {
       metadata: metadata,
       provenance: provenance,
       deleted: deleted,
-    ),
+    )
   );
 
   /// Create a 'unchanged' variant wrapping around the given value.
   factory PublishSharedArtifactResponse.wrapUnchanged(
-    SharedArtifactDescriptor value,
+    SharedArtifactDescriptor value
   ) => PublishSharedArtifactResponse_unchangedWrapper._(value);
 
   /// Same as `wrapUnchanged(SharedArtifactDescriptor(...))`.
@@ -2646,24 +2690,23 @@ sealed class PublishSharedArtifactResponse {
       metadata: metadata,
       provenance: provenance,
       deleted: deleted,
-    ),
+    )
   );
 
   /// Create a 'conflict' variant wrapping around the given value.
   factory PublishSharedArtifactResponse.wrapConflict(
-    SharedArtifactDescriptor? value,
+    SharedArtifactDescriptor? value
   ) => PublishSharedArtifactResponse_conflictWrapper._(value);
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory PublishSharedArtifactResponse.wrapUnavailable(
-    PublishSharedArtifactResponse_Unavailable value,
+    PublishSharedArtifactResponse_Unavailable value
   ) => PublishSharedArtifactResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(PublishSharedArtifactResponse_Unavailable(...))`.
-  factory PublishSharedArtifactResponse.createUnavailable() =>
-      PublishSharedArtifactResponse.wrapUnavailable(
-        PublishSharedArtifactResponse_Unavailable(),
-      );
+  factory PublishSharedArtifactResponse.createUnavailable() => PublishSharedArtifactResponse.wrapUnavailable(
+    PublishSharedArtifactResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this PublishSharedArtifactResponse.
   PublishSharedArtifactResponse_kind get kind;
@@ -2695,7 +2738,9 @@ sealed class PublishSharedArtifactResponse {
         3,
         "conflict",
         "wrapConflict",
-        _skir.Serializers.optional(SharedArtifactDescriptor.serializer),
+        _skir.Serializers.optional(
+          SharedArtifactDescriptor.serializer,
+        ),
         "",
         PublishSharedArtifactResponse_conflictWrapper._,
         (it) => it.value,
@@ -2716,16 +2761,15 @@ sealed class PublishSharedArtifactResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:PublishSharedArtifactResponse",
-        doc: "",
-        unknownInstance: PublishSharedArtifactResponse_unknown._instance,
-        enumInstance: PublishSharedArtifactResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PublishSharedArtifactResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:PublishSharedArtifactResponse",
+    doc: "",
+    unknownInstance: PublishSharedArtifactResponse_unknown._instance,
+    enumInstance: PublishSharedArtifactResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PublishSharedArtifactResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `PublishSharedArtifactResponse`.
@@ -2741,8 +2785,7 @@ enum PublishSharedArtifactResponse_kind {
   const PublishSharedArtifactResponse_kind(this._ordinal);
 }
 
-final class PublishSharedArtifactResponse_unknown
-    implements PublishSharedArtifactResponse {
+final class PublishSharedArtifactResponse_unknown implements PublishSharedArtifactResponse {
   static const _instance = PublishSharedArtifactResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -2751,20 +2794,16 @@ final class PublishSharedArtifactResponse_unknown
   PublishSharedArtifactResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.unknown;
+  PublishSharedArtifactResponse_kind get kind => PublishSharedArtifactResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is PublishSharedArtifactResponse_unknown;
+  _core.bool operator ==(other) => other is PublishSharedArtifactResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublishSharedArtifactResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PublishSharedArtifactResponse.serializer);
 }
 
-sealed class _PublishSharedArtifactResponse_wrapper
-    implements PublishSharedArtifactResponse {
+sealed class _PublishSharedArtifactResponse_wrapper implements PublishSharedArtifactResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -2777,52 +2816,43 @@ sealed class _PublishSharedArtifactResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublishSharedArtifactResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PublishSharedArtifactResponse.serializer);
 }
 
-final class PublishSharedArtifactResponse_publishedWrapper
-    extends _PublishSharedArtifactResponse_wrapper {
+final class PublishSharedArtifactResponse_publishedWrapper extends _PublishSharedArtifactResponse_wrapper {
   final SharedArtifactDescriptor value;
 
   PublishSharedArtifactResponse_publishedWrapper._(this.value);
 
   @_core.override
-  PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.publishedWrapper;
+  PublishSharedArtifactResponse_kind get kind => PublishSharedArtifactResponse_kind.publishedWrapper;
 }
 
-final class PublishSharedArtifactResponse_unchangedWrapper
-    extends _PublishSharedArtifactResponse_wrapper {
+final class PublishSharedArtifactResponse_unchangedWrapper extends _PublishSharedArtifactResponse_wrapper {
   final SharedArtifactDescriptor value;
 
   PublishSharedArtifactResponse_unchangedWrapper._(this.value);
 
   @_core.override
-  PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.unchangedWrapper;
+  PublishSharedArtifactResponse_kind get kind => PublishSharedArtifactResponse_kind.unchangedWrapper;
 }
 
-final class PublishSharedArtifactResponse_conflictWrapper
-    extends _PublishSharedArtifactResponse_wrapper {
+final class PublishSharedArtifactResponse_conflictWrapper extends _PublishSharedArtifactResponse_wrapper {
   final SharedArtifactDescriptor? value;
 
   PublishSharedArtifactResponse_conflictWrapper._(this.value);
 
   @_core.override
-  PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.conflictWrapper;
+  PublishSharedArtifactResponse_kind get kind => PublishSharedArtifactResponse_kind.conflictWrapper;
 }
 
-final class PublishSharedArtifactResponse_unavailableWrapper
-    extends _PublishSharedArtifactResponse_wrapper {
+final class PublishSharedArtifactResponse_unavailableWrapper extends _PublishSharedArtifactResponse_wrapper {
   final PublishSharedArtifactResponse_Unavailable value;
 
   PublishSharedArtifactResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  PublishSharedArtifactResponse_kind get kind =>
-      PublishSharedArtifactResponse_kind.unavailableWrapper;
+  PublishSharedArtifactResponse_kind get kind => PublishSharedArtifactResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2838,8 +2868,7 @@ sealed class ReadArtifactBlobRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobRequest
-    implements ReadArtifactBlobRequest_orMutable {
+final class ReadArtifactBlobRequest implements ReadArtifactBlobRequest_orMutable {
   @_core.override
   final ArtifactDigest digest;
   @_core.override
@@ -2852,9 +2881,17 @@ final class ReadArtifactBlobRequest
     required ArtifactDigest_orMutable digest,
     required _core.int offset,
     required _core.int maximumBytes,
-  }) => ReadArtifactBlobRequest._(digest.toFrozen(), offset, maximumBytes);
+  }) => ReadArtifactBlobRequest._(
+    digest.toFrozen(),
+    offset,
+    maximumBytes,
+  );
 
-  ReadArtifactBlobRequest._(this.digest, this.offset, this.maximumBytes);
+  ReadArtifactBlobRequest._(
+    this.digest,
+    this.offset,
+    this.maximumBytes,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ReadArtifactBlobRequest._(
@@ -2865,8 +2902,11 @@ final class ReadArtifactBlobRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobRequest_mutable mutable() =>
-      ReadArtifactBlobRequest_mutable._(ArtifactDigest.defaultInstance, 0, 0);
+  static ReadArtifactBlobRequest_mutable mutable() => ReadArtifactBlobRequest_mutable._(
+    ArtifactDigest.defaultInstance,
+    0,
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2874,21 +2914,17 @@ final class ReadArtifactBlobRequest
   ReadArtifactBlobRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobRequest_mutable toMutable() =>
-      ReadArtifactBlobRequest_mutable._(
-        this.digest,
-        this.offset,
-        this.maximumBytes,
-      );
+  ReadArtifactBlobRequest_mutable toMutable() => ReadArtifactBlobRequest_mutable._(
+    this.digest,
+    this.offset,
+    this.maximumBytes,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReadArtifactBlobRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -2904,11 +2940,7 @@ final class ReadArtifactBlobRequest
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReadArtifactBlobRequest` instances.
-  static _skir.StructSerializer<
-    ReadArtifactBlobRequest,
-    ReadArtifactBlobRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ReadArtifactBlobRequest, ReadArtifactBlobRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "digest",
@@ -2954,8 +2986,7 @@ final class ReadArtifactBlobRequest
 }
 
 /// Mutable version of [ReadArtifactBlobRequest].
-final class ReadArtifactBlobRequest_mutable
-    implements ReadArtifactBlobRequest_orMutable {
+final class ReadArtifactBlobRequest_mutable implements ReadArtifactBlobRequest_orMutable {
   ArtifactDigest_orMutable digest;
   _core.int offset;
   _core.int maximumBytes;
@@ -2996,12 +3027,10 @@ sealed class ReadArtifactBlobResponse_NotFound_orMutable {
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobResponse_NotFound
-    implements ReadArtifactBlobResponse_NotFound_orMutable {
+final class ReadArtifactBlobResponse_NotFound implements ReadArtifactBlobResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReadArtifactBlobResponse_NotFound() =>
-      ReadArtifactBlobResponse_NotFound._();
+  factory ReadArtifactBlobResponse_NotFound() => ReadArtifactBlobResponse_NotFound._();
 
   ReadArtifactBlobResponse_NotFound._();
 
@@ -3010,8 +3039,7 @@ final class ReadArtifactBlobResponse_NotFound
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_NotFound_mutable mutable() =>
-      ReadArtifactBlobResponse_NotFound_mutable._();
+  static ReadArtifactBlobResponse_NotFound_mutable mutable() => ReadArtifactBlobResponse_NotFound_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3019,17 +3047,13 @@ final class ReadArtifactBlobResponse_NotFound
   ReadArtifactBlobResponse_NotFound toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_NotFound_mutable toMutable() =>
-      ReadArtifactBlobResponse_NotFound_mutable._();
+  ReadArtifactBlobResponse_NotFound_mutable toMutable() => ReadArtifactBlobResponse_NotFound_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReadArtifactBlobResponse_NotFound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -3041,11 +3065,7 @@ final class ReadArtifactBlobResponse_NotFound
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReadArtifactBlobResponse_NotFound` instances.
-  static _skir.StructSerializer<
-    ReadArtifactBlobResponse_NotFound,
-    ReadArtifactBlobResponse_NotFound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ReadArtifactBlobResponse_NotFound, ReadArtifactBlobResponse_NotFound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -3064,16 +3084,14 @@ final class ReadArtifactBlobResponse_NotFound
 }
 
 /// Mutable version of [ReadArtifactBlobResponse_NotFound].
-final class ReadArtifactBlobResponse_NotFound_mutable
-    implements ReadArtifactBlobResponse_NotFound_orMutable {
+final class ReadArtifactBlobResponse_NotFound_mutable implements ReadArtifactBlobResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ReadArtifactBlobResponse_NotFound_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReadArtifactBlobResponse_NotFound toFrozen() =>
-      ReadArtifactBlobResponse_NotFound().._u = this._u;
+  ReadArtifactBlobResponse_NotFound toFrozen() => ReadArtifactBlobResponse_NotFound().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3087,24 +3105,31 @@ sealed class ReadArtifactBlobResponse_Invalid_orMutable {
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobResponse_Invalid
-    implements ReadArtifactBlobResponse_Invalid_orMutable {
+final class ReadArtifactBlobResponse_Invalid implements ReadArtifactBlobResponse_Invalid_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReadArtifactBlobResponse_Invalid({required _core.String reason}) =>
-      ReadArtifactBlobResponse_Invalid._(reason);
+  factory ReadArtifactBlobResponse_Invalid({
+    required _core.String reason,
+  }) => ReadArtifactBlobResponse_Invalid._(
+    reason,
+  );
 
-  ReadArtifactBlobResponse_Invalid._(this.reason);
+  ReadArtifactBlobResponse_Invalid._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReadArtifactBlobResponse_Invalid._("");
+  static final defaultInstance = ReadArtifactBlobResponse_Invalid._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_Invalid_mutable mutable() =>
-      ReadArtifactBlobResponse_Invalid_mutable._("");
+  static ReadArtifactBlobResponse_Invalid_mutable mutable() => ReadArtifactBlobResponse_Invalid_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3112,33 +3137,29 @@ final class ReadArtifactBlobResponse_Invalid
   ReadArtifactBlobResponse_Invalid toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_Invalid_mutable toMutable() =>
-      ReadArtifactBlobResponse_Invalid_mutable._(this.reason);
+  ReadArtifactBlobResponse_Invalid_mutable toMutable() => ReadArtifactBlobResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReadArtifactBlobResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReadArtifactBlobResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    ReadArtifactBlobResponse_Invalid,
-    ReadArtifactBlobResponse_Invalid_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ReadArtifactBlobResponse_Invalid, ReadArtifactBlobResponse_Invalid_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -3166,17 +3187,19 @@ final class ReadArtifactBlobResponse_Invalid
 }
 
 /// Mutable version of [ReadArtifactBlobResponse_Invalid].
-final class ReadArtifactBlobResponse_Invalid_mutable
-    implements ReadArtifactBlobResponse_Invalid_orMutable {
+final class ReadArtifactBlobResponse_Invalid_mutable implements ReadArtifactBlobResponse_Invalid_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReadArtifactBlobResponse_Invalid_mutable._(this.reason);
+  ReadArtifactBlobResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReadArtifactBlobResponse_Invalid toFrozen() =>
-      ReadArtifactBlobResponse_Invalid(reason: this.reason).._u = this._u;
+  ReadArtifactBlobResponse_Invalid toFrozen() => ReadArtifactBlobResponse_Invalid(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3188,12 +3211,10 @@ sealed class ReadArtifactBlobResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class ReadArtifactBlobResponse_Unavailable
-    implements ReadArtifactBlobResponse_Unavailable_orMutable {
+final class ReadArtifactBlobResponse_Unavailable implements ReadArtifactBlobResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReadArtifactBlobResponse_Unavailable() =>
-      ReadArtifactBlobResponse_Unavailable._();
+  factory ReadArtifactBlobResponse_Unavailable() => ReadArtifactBlobResponse_Unavailable._();
 
   ReadArtifactBlobResponse_Unavailable._();
 
@@ -3202,8 +3223,7 @@ final class ReadArtifactBlobResponse_Unavailable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReadArtifactBlobResponse_Unavailable_mutable mutable() =>
-      ReadArtifactBlobResponse_Unavailable_mutable._();
+  static ReadArtifactBlobResponse_Unavailable_mutable mutable() => ReadArtifactBlobResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3211,17 +3231,13 @@ final class ReadArtifactBlobResponse_Unavailable
   ReadArtifactBlobResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReadArtifactBlobResponse_Unavailable_mutable toMutable() =>
-      ReadArtifactBlobResponse_Unavailable_mutable._();
+  ReadArtifactBlobResponse_Unavailable_mutable toMutable() => ReadArtifactBlobResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReadArtifactBlobResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -3233,11 +3249,7 @@ final class ReadArtifactBlobResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReadArtifactBlobResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    ReadArtifactBlobResponse_Unavailable,
-    ReadArtifactBlobResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<ReadArtifactBlobResponse_Unavailable, ReadArtifactBlobResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -3249,24 +3261,21 @@ final class ReadArtifactBlobResponse_Unavailable
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReadArtifactBlobResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (ReadArtifactBlobResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [ReadArtifactBlobResponse_Unavailable].
-final class ReadArtifactBlobResponse_Unavailable_mutable
-    implements ReadArtifactBlobResponse_Unavailable_orMutable {
+final class ReadArtifactBlobResponse_Unavailable_mutable implements ReadArtifactBlobResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ReadArtifactBlobResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReadArtifactBlobResponse_Unavailable toFrozen() =>
-      ReadArtifactBlobResponse_Unavailable().._u = this._u;
+  ReadArtifactBlobResponse_Unavailable toFrozen() => ReadArtifactBlobResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3288,12 +3297,12 @@ final class ReadArtifactBlobResponse_Unavailable_mutable
 sealed class ReadArtifactBlobResponse {
   /// Constant indicating an unknown `ReadArtifactBlobResponse`.
   /// Default value for fields of type `ReadArtifactBlobResponse`.
-  static const ReadArtifactBlobResponse unknown =
-      ReadArtifactBlobResponse_unknown._instance;
+  static const ReadArtifactBlobResponse unknown = ReadArtifactBlobResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
-  factory ReadArtifactBlobResponse.wrapSuccess(BlobChunk value) =>
-      ReadArtifactBlobResponse_successWrapper._(value);
+  factory ReadArtifactBlobResponse.wrapSuccess(
+    BlobChunk value
+  ) => ReadArtifactBlobResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(BlobChunk(...))`.
   factory ReadArtifactBlobResponse.createSuccess({
@@ -3301,42 +3310,46 @@ sealed class ReadArtifactBlobResponse {
     required _skir.ByteString bytes,
     required _core.bool complete,
   }) => ReadArtifactBlobResponse.wrapSuccess(
-    BlobChunk(offset: offset, bytes: bytes, complete: complete),
+    BlobChunk(
+      offset: offset,
+      bytes: bytes,
+      complete: complete,
+    )
   );
 
   /// Create a 'not_found' variant wrapping around the given value.
   factory ReadArtifactBlobResponse.wrapNotFound(
-    ReadArtifactBlobResponse_NotFound value,
+    ReadArtifactBlobResponse_NotFound value
   ) => ReadArtifactBlobResponse_notFoundWrapper._(value);
 
   /// Same as `wrapNotFound(ReadArtifactBlobResponse_NotFound(...))`.
-  factory ReadArtifactBlobResponse.createNotFound() =>
-      ReadArtifactBlobResponse.wrapNotFound(
-        ReadArtifactBlobResponse_NotFound(),
-      );
+  factory ReadArtifactBlobResponse.createNotFound() => ReadArtifactBlobResponse.wrapNotFound(
+    ReadArtifactBlobResponse_NotFound()
+  );
 
   /// Create a 'invalid' variant wrapping around the given value.
   factory ReadArtifactBlobResponse.wrapInvalid(
-    ReadArtifactBlobResponse_Invalid value,
+    ReadArtifactBlobResponse_Invalid value
   ) => ReadArtifactBlobResponse_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(ReadArtifactBlobResponse_Invalid(...))`.
   factory ReadArtifactBlobResponse.createInvalid({
     required _core.String reason,
   }) => ReadArtifactBlobResponse.wrapInvalid(
-    ReadArtifactBlobResponse_Invalid(reason: reason),
+    ReadArtifactBlobResponse_Invalid(
+      reason: reason,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory ReadArtifactBlobResponse.wrapUnavailable(
-    ReadArtifactBlobResponse_Unavailable value,
+    ReadArtifactBlobResponse_Unavailable value
   ) => ReadArtifactBlobResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(ReadArtifactBlobResponse_Unavailable(...))`.
-  factory ReadArtifactBlobResponse.createUnavailable() =>
-      ReadArtifactBlobResponse.wrapUnavailable(
-        ReadArtifactBlobResponse_Unavailable(),
-      );
+  factory ReadArtifactBlobResponse.createUnavailable() => ReadArtifactBlobResponse.wrapUnavailable(
+    ReadArtifactBlobResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this ReadArtifactBlobResponse.
   ReadArtifactBlobResponse_kind get kind;
@@ -3389,16 +3402,15 @@ sealed class ReadArtifactBlobResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse",
-        doc: "",
-        unknownInstance: ReadArtifactBlobResponse_unknown._instance,
-        enumInstance: ReadArtifactBlobResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: ReadArtifactBlobResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:ReadArtifactBlobResponse",
+    doc: "",
+    unknownInstance: ReadArtifactBlobResponse_unknown._instance,
+    enumInstance: ReadArtifactBlobResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: ReadArtifactBlobResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `ReadArtifactBlobResponse`.
@@ -3414,8 +3426,7 @@ enum ReadArtifactBlobResponse_kind {
   const ReadArtifactBlobResponse_kind(this._ordinal);
 }
 
-final class ReadArtifactBlobResponse_unknown
-    implements ReadArtifactBlobResponse {
+final class ReadArtifactBlobResponse_unknown implements ReadArtifactBlobResponse {
   static const _instance = ReadArtifactBlobResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -3424,19 +3435,16 @@ final class ReadArtifactBlobResponse_unknown
   ReadArtifactBlobResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.unknown;
+  ReadArtifactBlobResponse_kind get kind => ReadArtifactBlobResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is ReadArtifactBlobResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ReadArtifactBlobResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ReadArtifactBlobResponse.serializer);
 }
 
-sealed class _ReadArtifactBlobResponse_wrapper
-    implements ReadArtifactBlobResponse {
+sealed class _ReadArtifactBlobResponse_wrapper implements ReadArtifactBlobResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -3449,52 +3457,43 @@ sealed class _ReadArtifactBlobResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, ReadArtifactBlobResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, ReadArtifactBlobResponse.serializer);
 }
 
-final class ReadArtifactBlobResponse_successWrapper
-    extends _ReadArtifactBlobResponse_wrapper {
+final class ReadArtifactBlobResponse_successWrapper extends _ReadArtifactBlobResponse_wrapper {
   final BlobChunk value;
 
   ReadArtifactBlobResponse_successWrapper._(this.value);
 
   @_core.override
-  ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.successWrapper;
+  ReadArtifactBlobResponse_kind get kind => ReadArtifactBlobResponse_kind.successWrapper;
 }
 
-final class ReadArtifactBlobResponse_notFoundWrapper
-    extends _ReadArtifactBlobResponse_wrapper {
+final class ReadArtifactBlobResponse_notFoundWrapper extends _ReadArtifactBlobResponse_wrapper {
   final ReadArtifactBlobResponse_NotFound value;
 
   ReadArtifactBlobResponse_notFoundWrapper._(this.value);
 
   @_core.override
-  ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.notFoundWrapper;
+  ReadArtifactBlobResponse_kind get kind => ReadArtifactBlobResponse_kind.notFoundWrapper;
 }
 
-final class ReadArtifactBlobResponse_invalidWrapper
-    extends _ReadArtifactBlobResponse_wrapper {
+final class ReadArtifactBlobResponse_invalidWrapper extends _ReadArtifactBlobResponse_wrapper {
   final ReadArtifactBlobResponse_Invalid value;
 
   ReadArtifactBlobResponse_invalidWrapper._(this.value);
 
   @_core.override
-  ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.invalidWrapper;
+  ReadArtifactBlobResponse_kind get kind => ReadArtifactBlobResponse_kind.invalidWrapper;
 }
 
-final class ReadArtifactBlobResponse_unavailableWrapper
-    extends _ReadArtifactBlobResponse_wrapper {
+final class ReadArtifactBlobResponse_unavailableWrapper extends _ReadArtifactBlobResponse_wrapper {
   final ReadArtifactBlobResponse_Unavailable value;
 
   ReadArtifactBlobResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  ReadArtifactBlobResponse_kind get kind =>
-      ReadArtifactBlobResponse_kind.unavailableWrapper;
+  ReadArtifactBlobResponse_kind get kind => ReadArtifactBlobResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -3509,8 +3508,7 @@ sealed class BeginArtifactBlobWriteRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteRequest
-    implements BeginArtifactBlobWriteRequest_orMutable {
+final class BeginArtifactBlobWriteRequest implements BeginArtifactBlobWriteRequest_orMutable {
   @_core.override
   final _core.String transferId;
   @_core.override
@@ -3520,9 +3518,15 @@ final class BeginArtifactBlobWriteRequest
   factory BeginArtifactBlobWriteRequest({
     required _core.String transferId,
     required BlobMetadata_orMutable expected,
-  }) => BeginArtifactBlobWriteRequest._(transferId, expected.toFrozen());
+  }) => BeginArtifactBlobWriteRequest._(
+    transferId,
+    expected.toFrozen(),
+  );
 
-  BeginArtifactBlobWriteRequest._(this.transferId, this.expected);
+  BeginArtifactBlobWriteRequest._(
+    this.transferId,
+    this.expected,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BeginArtifactBlobWriteRequest._(
@@ -3532,8 +3536,10 @@ final class BeginArtifactBlobWriteRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteRequest_mutable mutable() =>
-      BeginArtifactBlobWriteRequest_mutable._("", BlobMetadata.defaultInstance);
+  static BeginArtifactBlobWriteRequest_mutable mutable() => BeginArtifactBlobWriteRequest_mutable._(
+    "",
+    BlobMetadata.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3541,33 +3547,31 @@ final class BeginArtifactBlobWriteRequest
   BeginArtifactBlobWriteRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteRequest_mutable toMutable() =>
-      BeginArtifactBlobWriteRequest_mutable._(this.transferId, this.expected);
+  BeginArtifactBlobWriteRequest_mutable toMutable() => BeginArtifactBlobWriteRequest_mutable._(
+    this.transferId,
+    this.expected,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BeginArtifactBlobWriteRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.transferId, this.expected];
+  _core.List get _equality_proxy => [
+    this.transferId,
+    this.expected,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BeginArtifactBlobWriteRequest` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteRequest,
-    BeginArtifactBlobWriteRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<BeginArtifactBlobWriteRequest, BeginArtifactBlobWriteRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "transfer_id",
@@ -3604,13 +3608,15 @@ final class BeginArtifactBlobWriteRequest
 }
 
 /// Mutable version of [BeginArtifactBlobWriteRequest].
-final class BeginArtifactBlobWriteRequest_mutable
-    implements BeginArtifactBlobWriteRequest_orMutable {
+final class BeginArtifactBlobWriteRequest_mutable implements BeginArtifactBlobWriteRequest_orMutable {
   _core.String transferId;
   BlobMetadata_orMutable expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteRequest_mutable._(this.transferId, this.expected);
+  BeginArtifactBlobWriteRequest_mutable._(
+    this.transferId,
+    this.expected,
+  );
 
   /// If the value of [expected] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
@@ -3642,25 +3648,31 @@ sealed class BeginArtifactBlobWriteResponse_Accepted_orMutable {
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Accepted
-    implements BeginArtifactBlobWriteResponse_Accepted_orMutable {
+final class BeginArtifactBlobWriteResponse_Accepted implements BeginArtifactBlobWriteResponse_Accepted_orMutable {
   @_core.override
   final _core.int offset;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BeginArtifactBlobWriteResponse_Accepted({
     required _core.int offset,
-  }) => BeginArtifactBlobWriteResponse_Accepted._(offset);
+  }) => BeginArtifactBlobWriteResponse_Accepted._(
+    offset,
+  );
 
-  BeginArtifactBlobWriteResponse_Accepted._(this.offset);
+  BeginArtifactBlobWriteResponse_Accepted._(
+    this.offset,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Accepted._(0);
+  static final defaultInstance = BeginArtifactBlobWriteResponse_Accepted._(
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Accepted_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Accepted_mutable._(0);
+  static BeginArtifactBlobWriteResponse_Accepted_mutable mutable() => BeginArtifactBlobWriteResponse_Accepted_mutable._(
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3668,33 +3680,29 @@ final class BeginArtifactBlobWriteResponse_Accepted
   BeginArtifactBlobWriteResponse_Accepted toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Accepted_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Accepted_mutable._(this.offset);
+  BeginArtifactBlobWriteResponse_Accepted_mutable toMutable() => BeginArtifactBlobWriteResponse_Accepted_mutable._(
+    this.offset,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BeginArtifactBlobWriteResponse_Accepted) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.offset];
+  _core.List get _equality_proxy => [
+    this.offset,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BeginArtifactBlobWriteResponse_Accepted` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Accepted,
-    BeginArtifactBlobWriteResponse_Accepted_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<BeginArtifactBlobWriteResponse_Accepted, BeginArtifactBlobWriteResponse_Accepted_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "offset",
@@ -3711,31 +3719,30 @@ final class BeginArtifactBlobWriteResponse_Accepted
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Accepted",
+    recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Accepted",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Accepted_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (BeginArtifactBlobWriteResponse_Accepted_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BeginArtifactBlobWriteResponse_Accepted].
-final class BeginArtifactBlobWriteResponse_Accepted_mutable
-    implements BeginArtifactBlobWriteResponse_Accepted_orMutable {
+final class BeginArtifactBlobWriteResponse_Accepted_mutable implements BeginArtifactBlobWriteResponse_Accepted_orMutable {
   _core.int offset;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteResponse_Accepted_mutable._(this.offset);
+  BeginArtifactBlobWriteResponse_Accepted_mutable._(
+    this.offset,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Accepted toFrozen() =>
-      BeginArtifactBlobWriteResponse_Accepted(offset: this.offset)
-        .._u = this._u;
+  BeginArtifactBlobWriteResponse_Accepted toFrozen() => BeginArtifactBlobWriteResponse_Accepted(
+    offset: this.offset,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3749,25 +3756,31 @@ sealed class BeginArtifactBlobWriteResponse_Invalid_orMutable {
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Invalid
-    implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
+final class BeginArtifactBlobWriteResponse_Invalid implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BeginArtifactBlobWriteResponse_Invalid({
     required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse_Invalid._(reason);
+  }) => BeginArtifactBlobWriteResponse_Invalid._(
+    reason,
+  );
 
-  BeginArtifactBlobWriteResponse_Invalid._(this.reason);
+  BeginArtifactBlobWriteResponse_Invalid._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Invalid._("");
+  static final defaultInstance = BeginArtifactBlobWriteResponse_Invalid._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Invalid_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Invalid_mutable._("");
+  static BeginArtifactBlobWriteResponse_Invalid_mutable mutable() => BeginArtifactBlobWriteResponse_Invalid_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3775,33 +3788,29 @@ final class BeginArtifactBlobWriteResponse_Invalid
   BeginArtifactBlobWriteResponse_Invalid toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Invalid_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_Invalid_mutable toMutable() => BeginArtifactBlobWriteResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BeginArtifactBlobWriteResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BeginArtifactBlobWriteResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Invalid,
-    BeginArtifactBlobWriteResponse_Invalid_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<BeginArtifactBlobWriteResponse_Invalid, BeginArtifactBlobWriteResponse_Invalid_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -3822,25 +3831,26 @@ final class BeginArtifactBlobWriteResponse_Invalid
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Invalid_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (BeginArtifactBlobWriteResponse_Invalid_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BeginArtifactBlobWriteResponse_Invalid].
-final class BeginArtifactBlobWriteResponse_Invalid_mutable
-    implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
+final class BeginArtifactBlobWriteResponse_Invalid_mutable implements BeginArtifactBlobWriteResponse_Invalid_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Invalid toFrozen() =>
-      BeginArtifactBlobWriteResponse_Invalid(reason: this.reason).._u = this._u;
+  BeginArtifactBlobWriteResponse_Invalid toFrozen() => BeginArtifactBlobWriteResponse_Invalid(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3854,25 +3864,31 @@ sealed class BeginArtifactBlobWriteResponse_Conflict_orMutable {
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Conflict
-    implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
+final class BeginArtifactBlobWriteResponse_Conflict implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BeginArtifactBlobWriteResponse_Conflict({
     required _core.String reason,
-  }) => BeginArtifactBlobWriteResponse_Conflict._(reason);
+  }) => BeginArtifactBlobWriteResponse_Conflict._(
+    reason,
+  );
 
-  BeginArtifactBlobWriteResponse_Conflict._(this.reason);
+  BeginArtifactBlobWriteResponse_Conflict._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = BeginArtifactBlobWriteResponse_Conflict._("");
+  static final defaultInstance = BeginArtifactBlobWriteResponse_Conflict._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Conflict_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Conflict_mutable._("");
+  static BeginArtifactBlobWriteResponse_Conflict_mutable mutable() => BeginArtifactBlobWriteResponse_Conflict_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3880,33 +3896,29 @@ final class BeginArtifactBlobWriteResponse_Conflict
   BeginArtifactBlobWriteResponse_Conflict toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Conflict_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_Conflict_mutable toMutable() => BeginArtifactBlobWriteResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BeginArtifactBlobWriteResponse_Conflict) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BeginArtifactBlobWriteResponse_Conflict` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Conflict,
-    BeginArtifactBlobWriteResponse_Conflict_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<BeginArtifactBlobWriteResponse_Conflict, BeginArtifactBlobWriteResponse_Conflict_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -3923,31 +3935,30 @@ final class BeginArtifactBlobWriteResponse_Conflict
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Conflict",
+    recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Conflict",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Conflict_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (BeginArtifactBlobWriteResponse_Conflict_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BeginArtifactBlobWriteResponse_Conflict].
-final class BeginArtifactBlobWriteResponse_Conflict_mutable
-    implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
+final class BeginArtifactBlobWriteResponse_Conflict_mutable implements BeginArtifactBlobWriteResponse_Conflict_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  BeginArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  BeginArtifactBlobWriteResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Conflict toFrozen() =>
-      BeginArtifactBlobWriteResponse_Conflict(reason: this.reason)
-        .._u = this._u;
+  BeginArtifactBlobWriteResponse_Conflict toFrozen() => BeginArtifactBlobWriteResponse_Conflict(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -3959,12 +3970,10 @@ sealed class BeginArtifactBlobWriteResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class BeginArtifactBlobWriteResponse_Unavailable
-    implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
+final class BeginArtifactBlobWriteResponse_Unavailable implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory BeginArtifactBlobWriteResponse_Unavailable() =>
-      BeginArtifactBlobWriteResponse_Unavailable._();
+  factory BeginArtifactBlobWriteResponse_Unavailable() => BeginArtifactBlobWriteResponse_Unavailable._();
 
   BeginArtifactBlobWriteResponse_Unavailable._();
 
@@ -3973,8 +3982,7 @@ final class BeginArtifactBlobWriteResponse_Unavailable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BeginArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
-      BeginArtifactBlobWriteResponse_Unavailable_mutable._();
+  static BeginArtifactBlobWriteResponse_Unavailable_mutable mutable() => BeginArtifactBlobWriteResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -3982,17 +3990,13 @@ final class BeginArtifactBlobWriteResponse_Unavailable
   BeginArtifactBlobWriteResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BeginArtifactBlobWriteResponse_Unavailable_mutable toMutable() =>
-      BeginArtifactBlobWriteResponse_Unavailable_mutable._();
+  BeginArtifactBlobWriteResponse_Unavailable_mutable toMutable() => BeginArtifactBlobWriteResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BeginArtifactBlobWriteResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -4004,11 +4008,7 @@ final class BeginArtifactBlobWriteResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BeginArtifactBlobWriteResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    BeginArtifactBlobWriteResponse_Unavailable,
-    BeginArtifactBlobWriteResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<BeginArtifactBlobWriteResponse_Unavailable, BeginArtifactBlobWriteResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -4016,29 +4016,25 @@ final class BeginArtifactBlobWriteResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BeginArtifactBlobWriteResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (BeginArtifactBlobWriteResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [BeginArtifactBlobWriteResponse_Unavailable].
-final class BeginArtifactBlobWriteResponse_Unavailable_mutable
-    implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
+final class BeginArtifactBlobWriteResponse_Unavailable_mutable implements BeginArtifactBlobWriteResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   BeginArtifactBlobWriteResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BeginArtifactBlobWriteResponse_Unavailable toFrozen() =>
-      BeginArtifactBlobWriteResponse_Unavailable().._u = this._u;
+  BeginArtifactBlobWriteResponse_Unavailable toFrozen() => BeginArtifactBlobWriteResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4060,55 +4056,59 @@ final class BeginArtifactBlobWriteResponse_Unavailable_mutable
 sealed class BeginArtifactBlobWriteResponse {
   /// Constant indicating an unknown `BeginArtifactBlobWriteResponse`.
   /// Default value for fields of type `BeginArtifactBlobWriteResponse`.
-  static const BeginArtifactBlobWriteResponse unknown =
-      BeginArtifactBlobWriteResponse_unknown._instance;
+  static const BeginArtifactBlobWriteResponse unknown = BeginArtifactBlobWriteResponse_unknown._instance;
 
   /// Create a 'accepted' variant wrapping around the given value.
   factory BeginArtifactBlobWriteResponse.wrapAccepted(
-    BeginArtifactBlobWriteResponse_Accepted value,
+    BeginArtifactBlobWriteResponse_Accepted value
   ) => BeginArtifactBlobWriteResponse_acceptedWrapper._(value);
 
   /// Same as `wrapAccepted(BeginArtifactBlobWriteResponse_Accepted(...))`.
   factory BeginArtifactBlobWriteResponse.createAccepted({
     required _core.int offset,
   }) => BeginArtifactBlobWriteResponse.wrapAccepted(
-    BeginArtifactBlobWriteResponse_Accepted(offset: offset),
+    BeginArtifactBlobWriteResponse_Accepted(
+      offset: offset,
+    )
   );
 
   /// Create a 'invalid' variant wrapping around the given value.
   factory BeginArtifactBlobWriteResponse.wrapInvalid(
-    BeginArtifactBlobWriteResponse_Invalid value,
+    BeginArtifactBlobWriteResponse_Invalid value
   ) => BeginArtifactBlobWriteResponse_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(BeginArtifactBlobWriteResponse_Invalid(...))`.
   factory BeginArtifactBlobWriteResponse.createInvalid({
     required _core.String reason,
   }) => BeginArtifactBlobWriteResponse.wrapInvalid(
-    BeginArtifactBlobWriteResponse_Invalid(reason: reason),
+    BeginArtifactBlobWriteResponse_Invalid(
+      reason: reason,
+    )
   );
 
   /// Create a 'conflict' variant wrapping around the given value.
   factory BeginArtifactBlobWriteResponse.wrapConflict(
-    BeginArtifactBlobWriteResponse_Conflict value,
+    BeginArtifactBlobWriteResponse_Conflict value
   ) => BeginArtifactBlobWriteResponse_conflictWrapper._(value);
 
   /// Same as `wrapConflict(BeginArtifactBlobWriteResponse_Conflict(...))`.
   factory BeginArtifactBlobWriteResponse.createConflict({
     required _core.String reason,
   }) => BeginArtifactBlobWriteResponse.wrapConflict(
-    BeginArtifactBlobWriteResponse_Conflict(reason: reason),
+    BeginArtifactBlobWriteResponse_Conflict(
+      reason: reason,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory BeginArtifactBlobWriteResponse.wrapUnavailable(
-    BeginArtifactBlobWriteResponse_Unavailable value,
+    BeginArtifactBlobWriteResponse_Unavailable value
   ) => BeginArtifactBlobWriteResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(BeginArtifactBlobWriteResponse_Unavailable(...))`.
-  factory BeginArtifactBlobWriteResponse.createUnavailable() =>
-      BeginArtifactBlobWriteResponse.wrapUnavailable(
-        BeginArtifactBlobWriteResponse_Unavailable(),
-      );
+  factory BeginArtifactBlobWriteResponse.createUnavailable() => BeginArtifactBlobWriteResponse.wrapUnavailable(
+    BeginArtifactBlobWriteResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this BeginArtifactBlobWriteResponse.
   BeginArtifactBlobWriteResponse_kind get kind;
@@ -4154,24 +4154,22 @@ sealed class BeginArtifactBlobWriteResponse {
         "",
         BeginArtifactBlobWriteResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal:
-            BeginArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
+        ordinal: BeginArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse",
-        doc: "",
-        unknownInstance: BeginArtifactBlobWriteResponse_unknown._instance,
-        enumInstance: BeginArtifactBlobWriteResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: BeginArtifactBlobWriteResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:BeginArtifactBlobWriteResponse",
+    doc: "",
+    unknownInstance: BeginArtifactBlobWriteResponse_unknown._instance,
+    enumInstance: BeginArtifactBlobWriteResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: BeginArtifactBlobWriteResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `BeginArtifactBlobWriteResponse`.
@@ -4187,8 +4185,7 @@ enum BeginArtifactBlobWriteResponse_kind {
   const BeginArtifactBlobWriteResponse_kind(this._ordinal);
 }
 
-final class BeginArtifactBlobWriteResponse_unknown
-    implements BeginArtifactBlobWriteResponse {
+final class BeginArtifactBlobWriteResponse_unknown implements BeginArtifactBlobWriteResponse {
   static const _instance = BeginArtifactBlobWriteResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -4197,22 +4194,16 @@ final class BeginArtifactBlobWriteResponse_unknown
   BeginArtifactBlobWriteResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.unknown;
+  BeginArtifactBlobWriteResponse_kind get kind => BeginArtifactBlobWriteResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is BeginArtifactBlobWriteResponse_unknown;
+  _core.bool operator ==(other) => other is BeginArtifactBlobWriteResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    BeginArtifactBlobWriteResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, BeginArtifactBlobWriteResponse.serializer);
 }
 
-sealed class _BeginArtifactBlobWriteResponse_wrapper
-    implements BeginArtifactBlobWriteResponse {
+sealed class _BeginArtifactBlobWriteResponse_wrapper implements BeginArtifactBlobWriteResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -4225,54 +4216,43 @@ sealed class _BeginArtifactBlobWriteResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    BeginArtifactBlobWriteResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, BeginArtifactBlobWriteResponse.serializer);
 }
 
-final class BeginArtifactBlobWriteResponse_acceptedWrapper
-    extends _BeginArtifactBlobWriteResponse_wrapper {
+final class BeginArtifactBlobWriteResponse_acceptedWrapper extends _BeginArtifactBlobWriteResponse_wrapper {
   final BeginArtifactBlobWriteResponse_Accepted value;
 
   BeginArtifactBlobWriteResponse_acceptedWrapper._(this.value);
 
   @_core.override
-  BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.acceptedWrapper;
+  BeginArtifactBlobWriteResponse_kind get kind => BeginArtifactBlobWriteResponse_kind.acceptedWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_invalidWrapper
-    extends _BeginArtifactBlobWriteResponse_wrapper {
+final class BeginArtifactBlobWriteResponse_invalidWrapper extends _BeginArtifactBlobWriteResponse_wrapper {
   final BeginArtifactBlobWriteResponse_Invalid value;
 
   BeginArtifactBlobWriteResponse_invalidWrapper._(this.value);
 
   @_core.override
-  BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.invalidWrapper;
+  BeginArtifactBlobWriteResponse_kind get kind => BeginArtifactBlobWriteResponse_kind.invalidWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_conflictWrapper
-    extends _BeginArtifactBlobWriteResponse_wrapper {
+final class BeginArtifactBlobWriteResponse_conflictWrapper extends _BeginArtifactBlobWriteResponse_wrapper {
   final BeginArtifactBlobWriteResponse_Conflict value;
 
   BeginArtifactBlobWriteResponse_conflictWrapper._(this.value);
 
   @_core.override
-  BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.conflictWrapper;
+  BeginArtifactBlobWriteResponse_kind get kind => BeginArtifactBlobWriteResponse_kind.conflictWrapper;
 }
 
-final class BeginArtifactBlobWriteResponse_unavailableWrapper
-    extends _BeginArtifactBlobWriteResponse_wrapper {
+final class BeginArtifactBlobWriteResponse_unavailableWrapper extends _BeginArtifactBlobWriteResponse_wrapper {
   final BeginArtifactBlobWriteResponse_Unavailable value;
 
   BeginArtifactBlobWriteResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  BeginArtifactBlobWriteResponse_kind get kind =>
-      BeginArtifactBlobWriteResponse_kind.unavailableWrapper;
+  BeginArtifactBlobWriteResponse_kind get kind => BeginArtifactBlobWriteResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -4288,8 +4268,7 @@ sealed class WriteArtifactBlobChunkRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkRequest
-    implements WriteArtifactBlobChunkRequest_orMutable {
+final class WriteArtifactBlobChunkRequest implements WriteArtifactBlobChunkRequest_orMutable {
   @_core.override
   final _core.String transferId;
   @_core.override
@@ -4302,9 +4281,17 @@ final class WriteArtifactBlobChunkRequest
     required _core.String transferId,
     required _core.int offset,
     required _skir.ByteString bytes,
-  }) => WriteArtifactBlobChunkRequest._(transferId, offset, bytes);
+  }) => WriteArtifactBlobChunkRequest._(
+    transferId,
+    offset,
+    bytes,
+  );
 
-  WriteArtifactBlobChunkRequest._(this.transferId, this.offset, this.bytes);
+  WriteArtifactBlobChunkRequest._(
+    this.transferId,
+    this.offset,
+    this.bytes,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WriteArtifactBlobChunkRequest._(
@@ -4315,8 +4302,11 @@ final class WriteArtifactBlobChunkRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkRequest_mutable mutable() =>
-      WriteArtifactBlobChunkRequest_mutable._("", 0, _skir.ByteString.empty);
+  static WriteArtifactBlobChunkRequest_mutable mutable() => WriteArtifactBlobChunkRequest_mutable._(
+    "",
+    0,
+    _skir.ByteString.empty,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4324,37 +4314,33 @@ final class WriteArtifactBlobChunkRequest
   WriteArtifactBlobChunkRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkRequest_mutable toMutable() =>
-      WriteArtifactBlobChunkRequest_mutable._(
-        this.transferId,
-        this.offset,
-        this.bytes,
-      );
+  WriteArtifactBlobChunkRequest_mutable toMutable() => WriteArtifactBlobChunkRequest_mutable._(
+    this.transferId,
+    this.offset,
+    this.bytes,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.transferId, this.offset, this.bytes];
+  _core.List get _equality_proxy => [
+    this.transferId,
+    this.offset,
+    this.bytes,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkRequest` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkRequest,
-    WriteArtifactBlobChunkRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkRequest, WriteArtifactBlobChunkRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "transfer_id",
@@ -4400,8 +4386,7 @@ final class WriteArtifactBlobChunkRequest
 }
 
 /// Mutable version of [WriteArtifactBlobChunkRequest].
-final class WriteArtifactBlobChunkRequest_mutable
-    implements WriteArtifactBlobChunkRequest_orMutable {
+final class WriteArtifactBlobChunkRequest_mutable implements WriteArtifactBlobChunkRequest_orMutable {
   _core.String transferId;
   _core.int offset;
   _skir.ByteString bytes;
@@ -4433,25 +4418,31 @@ sealed class WriteArtifactBlobChunkResponse_Accepted_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Accepted
-    implements WriteArtifactBlobChunkResponse_Accepted_orMutable {
+final class WriteArtifactBlobChunkResponse_Accepted implements WriteArtifactBlobChunkResponse_Accepted_orMutable {
   @_core.override
   final _core.int offset;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WriteArtifactBlobChunkResponse_Accepted({
     required _core.int offset,
-  }) => WriteArtifactBlobChunkResponse_Accepted._(offset);
+  }) => WriteArtifactBlobChunkResponse_Accepted._(
+    offset,
+  );
 
-  WriteArtifactBlobChunkResponse_Accepted._(this.offset);
+  WriteArtifactBlobChunkResponse_Accepted._(
+    this.offset,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Accepted._(0);
+  static final defaultInstance = WriteArtifactBlobChunkResponse_Accepted._(
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Accepted_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Accepted_mutable._(0);
+  static WriteArtifactBlobChunkResponse_Accepted_mutable mutable() => WriteArtifactBlobChunkResponse_Accepted_mutable._(
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4459,33 +4450,29 @@ final class WriteArtifactBlobChunkResponse_Accepted
   WriteArtifactBlobChunkResponse_Accepted toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Accepted_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Accepted_mutable._(this.offset);
+  WriteArtifactBlobChunkResponse_Accepted_mutable toMutable() => WriteArtifactBlobChunkResponse_Accepted_mutable._(
+    this.offset,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkResponse_Accepted) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.offset];
+  _core.List get _equality_proxy => [
+    this.offset,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkResponse_Accepted` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Accepted,
-    WriteArtifactBlobChunkResponse_Accepted_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkResponse_Accepted, WriteArtifactBlobChunkResponse_Accepted_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "offset",
@@ -4502,31 +4489,30 @@ final class WriteArtifactBlobChunkResponse_Accepted
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Accepted",
+    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Accepted",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Accepted_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (WriteArtifactBlobChunkResponse_Accepted_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WriteArtifactBlobChunkResponse_Accepted].
-final class WriteArtifactBlobChunkResponse_Accepted_mutable
-    implements WriteArtifactBlobChunkResponse_Accepted_orMutable {
+final class WriteArtifactBlobChunkResponse_Accepted_mutable implements WriteArtifactBlobChunkResponse_Accepted_orMutable {
   _core.int offset;
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_Accepted_mutable._(this.offset);
+  WriteArtifactBlobChunkResponse_Accepted_mutable._(
+    this.offset,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Accepted toFrozen() =>
-      WriteArtifactBlobChunkResponse_Accepted(offset: this.offset)
-        .._u = this._u;
+  WriteArtifactBlobChunkResponse_Accepted toFrozen() => WriteArtifactBlobChunkResponse_Accepted(
+    offset: this.offset,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4538,12 +4524,10 @@ sealed class WriteArtifactBlobChunkResponse_NotFound_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_NotFound
-    implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
+final class WriteArtifactBlobChunkResponse_NotFound implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WriteArtifactBlobChunkResponse_NotFound() =>
-      WriteArtifactBlobChunkResponse_NotFound._();
+  factory WriteArtifactBlobChunkResponse_NotFound() => WriteArtifactBlobChunkResponse_NotFound._();
 
   WriteArtifactBlobChunkResponse_NotFound._();
 
@@ -4552,8 +4536,7 @@ final class WriteArtifactBlobChunkResponse_NotFound
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_NotFound_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_NotFound_mutable._();
+  static WriteArtifactBlobChunkResponse_NotFound_mutable mutable() => WriteArtifactBlobChunkResponse_NotFound_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4561,17 +4544,13 @@ final class WriteArtifactBlobChunkResponse_NotFound
   WriteArtifactBlobChunkResponse_NotFound toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_NotFound_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_NotFound_mutable._();
+  WriteArtifactBlobChunkResponse_NotFound_mutable toMutable() => WriteArtifactBlobChunkResponse_NotFound_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkResponse_NotFound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -4583,11 +4562,7 @@ final class WriteArtifactBlobChunkResponse_NotFound
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkResponse_NotFound` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_NotFound,
-    WriteArtifactBlobChunkResponse_NotFound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkResponse_NotFound, WriteArtifactBlobChunkResponse_NotFound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -4595,29 +4570,25 @@ final class WriteArtifactBlobChunkResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.NotFound",
+    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.NotFound",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_NotFound_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (WriteArtifactBlobChunkResponse_NotFound_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WriteArtifactBlobChunkResponse_NotFound].
-final class WriteArtifactBlobChunkResponse_NotFound_mutable
-    implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
+final class WriteArtifactBlobChunkResponse_NotFound_mutable implements WriteArtifactBlobChunkResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WriteArtifactBlobChunkResponse_NotFound_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_NotFound toFrozen() =>
-      WriteArtifactBlobChunkResponse_NotFound().._u = this._u;
+  WriteArtifactBlobChunkResponse_NotFound toFrozen() => WriteArtifactBlobChunkResponse_NotFound().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4631,25 +4602,31 @@ sealed class WriteArtifactBlobChunkResponse_Invalid_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Invalid
-    implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
+final class WriteArtifactBlobChunkResponse_Invalid implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WriteArtifactBlobChunkResponse_Invalid({
     required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse_Invalid._(reason);
+  }) => WriteArtifactBlobChunkResponse_Invalid._(
+    reason,
+  );
 
-  WriteArtifactBlobChunkResponse_Invalid._(this.reason);
+  WriteArtifactBlobChunkResponse_Invalid._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Invalid._("");
+  static final defaultInstance = WriteArtifactBlobChunkResponse_Invalid._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Invalid_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Invalid_mutable._("");
+  static WriteArtifactBlobChunkResponse_Invalid_mutable mutable() => WriteArtifactBlobChunkResponse_Invalid_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4657,33 +4634,29 @@ final class WriteArtifactBlobChunkResponse_Invalid
   WriteArtifactBlobChunkResponse_Invalid toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Invalid_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Invalid_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_Invalid_mutable toMutable() => WriteArtifactBlobChunkResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Invalid,
-    WriteArtifactBlobChunkResponse_Invalid_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkResponse_Invalid, WriteArtifactBlobChunkResponse_Invalid_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -4704,25 +4677,26 @@ final class WriteArtifactBlobChunkResponse_Invalid
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Invalid_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (WriteArtifactBlobChunkResponse_Invalid_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WriteArtifactBlobChunkResponse_Invalid].
-final class WriteArtifactBlobChunkResponse_Invalid_mutable
-    implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
+final class WriteArtifactBlobChunkResponse_Invalid_mutable implements WriteArtifactBlobChunkResponse_Invalid_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_Invalid_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Invalid toFrozen() =>
-      WriteArtifactBlobChunkResponse_Invalid(reason: this.reason).._u = this._u;
+  WriteArtifactBlobChunkResponse_Invalid toFrozen() => WriteArtifactBlobChunkResponse_Invalid(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4736,25 +4710,31 @@ sealed class WriteArtifactBlobChunkResponse_Conflict_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Conflict
-    implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
+final class WriteArtifactBlobChunkResponse_Conflict implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WriteArtifactBlobChunkResponse_Conflict({
     required _core.String reason,
-  }) => WriteArtifactBlobChunkResponse_Conflict._(reason);
+  }) => WriteArtifactBlobChunkResponse_Conflict._(
+    reason,
+  );
 
-  WriteArtifactBlobChunkResponse_Conflict._(this.reason);
+  WriteArtifactBlobChunkResponse_Conflict._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WriteArtifactBlobChunkResponse_Conflict._("");
+  static final defaultInstance = WriteArtifactBlobChunkResponse_Conflict._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Conflict_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Conflict_mutable._("");
+  static WriteArtifactBlobChunkResponse_Conflict_mutable mutable() => WriteArtifactBlobChunkResponse_Conflict_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4762,33 +4742,29 @@ final class WriteArtifactBlobChunkResponse_Conflict
   WriteArtifactBlobChunkResponse_Conflict toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Conflict_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Conflict_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_Conflict_mutable toMutable() => WriteArtifactBlobChunkResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkResponse_Conflict) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkResponse_Conflict` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Conflict,
-    WriteArtifactBlobChunkResponse_Conflict_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkResponse_Conflict, WriteArtifactBlobChunkResponse_Conflict_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -4805,31 +4781,30 @@ final class WriteArtifactBlobChunkResponse_Conflict
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Conflict",
+    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Conflict",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Conflict_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (WriteArtifactBlobChunkResponse_Conflict_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WriteArtifactBlobChunkResponse_Conflict].
-final class WriteArtifactBlobChunkResponse_Conflict_mutable
-    implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
+final class WriteArtifactBlobChunkResponse_Conflict_mutable implements WriteArtifactBlobChunkResponse_Conflict_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  WriteArtifactBlobChunkResponse_Conflict_mutable._(this.reason);
+  WriteArtifactBlobChunkResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Conflict toFrozen() =>
-      WriteArtifactBlobChunkResponse_Conflict(reason: this.reason)
-        .._u = this._u;
+  WriteArtifactBlobChunkResponse_Conflict toFrozen() => WriteArtifactBlobChunkResponse_Conflict(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4841,12 +4816,10 @@ sealed class WriteArtifactBlobChunkResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class WriteArtifactBlobChunkResponse_Unavailable
-    implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
+final class WriteArtifactBlobChunkResponse_Unavailable implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WriteArtifactBlobChunkResponse_Unavailable() =>
-      WriteArtifactBlobChunkResponse_Unavailable._();
+  factory WriteArtifactBlobChunkResponse_Unavailable() => WriteArtifactBlobChunkResponse_Unavailable._();
 
   WriteArtifactBlobChunkResponse_Unavailable._();
 
@@ -4855,8 +4828,7 @@ final class WriteArtifactBlobChunkResponse_Unavailable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WriteArtifactBlobChunkResponse_Unavailable_mutable mutable() =>
-      WriteArtifactBlobChunkResponse_Unavailable_mutable._();
+  static WriteArtifactBlobChunkResponse_Unavailable_mutable mutable() => WriteArtifactBlobChunkResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -4864,17 +4836,13 @@ final class WriteArtifactBlobChunkResponse_Unavailable
   WriteArtifactBlobChunkResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WriteArtifactBlobChunkResponse_Unavailable_mutable toMutable() =>
-      WriteArtifactBlobChunkResponse_Unavailable_mutable._();
+  WriteArtifactBlobChunkResponse_Unavailable_mutable toMutable() => WriteArtifactBlobChunkResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WriteArtifactBlobChunkResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -4886,11 +4854,7 @@ final class WriteArtifactBlobChunkResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WriteArtifactBlobChunkResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    WriteArtifactBlobChunkResponse_Unavailable,
-    WriteArtifactBlobChunkResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WriteArtifactBlobChunkResponse_Unavailable, WriteArtifactBlobChunkResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -4898,29 +4862,25 @@ final class WriteArtifactBlobChunkResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WriteArtifactBlobChunkResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (WriteArtifactBlobChunkResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [WriteArtifactBlobChunkResponse_Unavailable].
-final class WriteArtifactBlobChunkResponse_Unavailable_mutable
-    implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
+final class WriteArtifactBlobChunkResponse_Unavailable_mutable implements WriteArtifactBlobChunkResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WriteArtifactBlobChunkResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WriteArtifactBlobChunkResponse_Unavailable toFrozen() =>
-      WriteArtifactBlobChunkResponse_Unavailable().._u = this._u;
+  WriteArtifactBlobChunkResponse_Unavailable toFrozen() => WriteArtifactBlobChunkResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -4943,66 +4903,69 @@ final class WriteArtifactBlobChunkResponse_Unavailable_mutable
 sealed class WriteArtifactBlobChunkResponse {
   /// Constant indicating an unknown `WriteArtifactBlobChunkResponse`.
   /// Default value for fields of type `WriteArtifactBlobChunkResponse`.
-  static const WriteArtifactBlobChunkResponse unknown =
-      WriteArtifactBlobChunkResponse_unknown._instance;
+  static const WriteArtifactBlobChunkResponse unknown = WriteArtifactBlobChunkResponse_unknown._instance;
 
   /// Create a 'accepted' variant wrapping around the given value.
   factory WriteArtifactBlobChunkResponse.wrapAccepted(
-    WriteArtifactBlobChunkResponse_Accepted value,
+    WriteArtifactBlobChunkResponse_Accepted value
   ) => WriteArtifactBlobChunkResponse_acceptedWrapper._(value);
 
   /// Same as `wrapAccepted(WriteArtifactBlobChunkResponse_Accepted(...))`.
   factory WriteArtifactBlobChunkResponse.createAccepted({
     required _core.int offset,
   }) => WriteArtifactBlobChunkResponse.wrapAccepted(
-    WriteArtifactBlobChunkResponse_Accepted(offset: offset),
+    WriteArtifactBlobChunkResponse_Accepted(
+      offset: offset,
+    )
   );
 
   /// Create a 'not_found' variant wrapping around the given value.
   factory WriteArtifactBlobChunkResponse.wrapNotFound(
-    WriteArtifactBlobChunkResponse_NotFound value,
+    WriteArtifactBlobChunkResponse_NotFound value
   ) => WriteArtifactBlobChunkResponse_notFoundWrapper._(value);
 
   /// Same as `wrapNotFound(WriteArtifactBlobChunkResponse_NotFound(...))`.
-  factory WriteArtifactBlobChunkResponse.createNotFound() =>
-      WriteArtifactBlobChunkResponse.wrapNotFound(
-        WriteArtifactBlobChunkResponse_NotFound(),
-      );
+  factory WriteArtifactBlobChunkResponse.createNotFound() => WriteArtifactBlobChunkResponse.wrapNotFound(
+    WriteArtifactBlobChunkResponse_NotFound()
+  );
 
   /// Create a 'invalid' variant wrapping around the given value.
   factory WriteArtifactBlobChunkResponse.wrapInvalid(
-    WriteArtifactBlobChunkResponse_Invalid value,
+    WriteArtifactBlobChunkResponse_Invalid value
   ) => WriteArtifactBlobChunkResponse_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(WriteArtifactBlobChunkResponse_Invalid(...))`.
   factory WriteArtifactBlobChunkResponse.createInvalid({
     required _core.String reason,
   }) => WriteArtifactBlobChunkResponse.wrapInvalid(
-    WriteArtifactBlobChunkResponse_Invalid(reason: reason),
+    WriteArtifactBlobChunkResponse_Invalid(
+      reason: reason,
+    )
   );
 
   /// Create a 'conflict' variant wrapping around the given value.
   factory WriteArtifactBlobChunkResponse.wrapConflict(
-    WriteArtifactBlobChunkResponse_Conflict value,
+    WriteArtifactBlobChunkResponse_Conflict value
   ) => WriteArtifactBlobChunkResponse_conflictWrapper._(value);
 
   /// Same as `wrapConflict(WriteArtifactBlobChunkResponse_Conflict(...))`.
   factory WriteArtifactBlobChunkResponse.createConflict({
     required _core.String reason,
   }) => WriteArtifactBlobChunkResponse.wrapConflict(
-    WriteArtifactBlobChunkResponse_Conflict(reason: reason),
+    WriteArtifactBlobChunkResponse_Conflict(
+      reason: reason,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory WriteArtifactBlobChunkResponse.wrapUnavailable(
-    WriteArtifactBlobChunkResponse_Unavailable value,
+    WriteArtifactBlobChunkResponse_Unavailable value
   ) => WriteArtifactBlobChunkResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(WriteArtifactBlobChunkResponse_Unavailable(...))`.
-  factory WriteArtifactBlobChunkResponse.createUnavailable() =>
-      WriteArtifactBlobChunkResponse.wrapUnavailable(
-        WriteArtifactBlobChunkResponse_Unavailable(),
-      );
+  factory WriteArtifactBlobChunkResponse.createUnavailable() => WriteArtifactBlobChunkResponse.wrapUnavailable(
+    WriteArtifactBlobChunkResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this WriteArtifactBlobChunkResponse.
   WriteArtifactBlobChunkResponse_kind get kind;
@@ -5058,24 +5021,22 @@ sealed class WriteArtifactBlobChunkResponse {
         "",
         WriteArtifactBlobChunkResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal:
-            WriteArtifactBlobChunkResponse_kind.unavailableWrapper._ordinal,
+        ordinal: WriteArtifactBlobChunkResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse",
-        doc: "",
-        unknownInstance: WriteArtifactBlobChunkResponse_unknown._instance,
-        enumInstance: WriteArtifactBlobChunkResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WriteArtifactBlobChunkResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:WriteArtifactBlobChunkResponse",
+    doc: "",
+    unknownInstance: WriteArtifactBlobChunkResponse_unknown._instance,
+    enumInstance: WriteArtifactBlobChunkResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WriteArtifactBlobChunkResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WriteArtifactBlobChunkResponse`.
@@ -5092,8 +5053,7 @@ enum WriteArtifactBlobChunkResponse_kind {
   const WriteArtifactBlobChunkResponse_kind(this._ordinal);
 }
 
-final class WriteArtifactBlobChunkResponse_unknown
-    implements WriteArtifactBlobChunkResponse {
+final class WriteArtifactBlobChunkResponse_unknown implements WriteArtifactBlobChunkResponse {
   static const _instance = WriteArtifactBlobChunkResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -5102,22 +5062,16 @@ final class WriteArtifactBlobChunkResponse_unknown
   WriteArtifactBlobChunkResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.unknown;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is WriteArtifactBlobChunkResponse_unknown;
+  _core.bool operator ==(other) => other is WriteArtifactBlobChunkResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    WriteArtifactBlobChunkResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, WriteArtifactBlobChunkResponse.serializer);
 }
 
-sealed class _WriteArtifactBlobChunkResponse_wrapper
-    implements WriteArtifactBlobChunkResponse {
+sealed class _WriteArtifactBlobChunkResponse_wrapper implements WriteArtifactBlobChunkResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -5130,65 +5084,52 @@ sealed class _WriteArtifactBlobChunkResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    WriteArtifactBlobChunkResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, WriteArtifactBlobChunkResponse.serializer);
 }
 
-final class WriteArtifactBlobChunkResponse_acceptedWrapper
-    extends _WriteArtifactBlobChunkResponse_wrapper {
+final class WriteArtifactBlobChunkResponse_acceptedWrapper extends _WriteArtifactBlobChunkResponse_wrapper {
   final WriteArtifactBlobChunkResponse_Accepted value;
 
   WriteArtifactBlobChunkResponse_acceptedWrapper._(this.value);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.acceptedWrapper;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.acceptedWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_notFoundWrapper
-    extends _WriteArtifactBlobChunkResponse_wrapper {
+final class WriteArtifactBlobChunkResponse_notFoundWrapper extends _WriteArtifactBlobChunkResponse_wrapper {
   final WriteArtifactBlobChunkResponse_NotFound value;
 
   WriteArtifactBlobChunkResponse_notFoundWrapper._(this.value);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.notFoundWrapper;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.notFoundWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_invalidWrapper
-    extends _WriteArtifactBlobChunkResponse_wrapper {
+final class WriteArtifactBlobChunkResponse_invalidWrapper extends _WriteArtifactBlobChunkResponse_wrapper {
   final WriteArtifactBlobChunkResponse_Invalid value;
 
   WriteArtifactBlobChunkResponse_invalidWrapper._(this.value);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.invalidWrapper;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.invalidWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_conflictWrapper
-    extends _WriteArtifactBlobChunkResponse_wrapper {
+final class WriteArtifactBlobChunkResponse_conflictWrapper extends _WriteArtifactBlobChunkResponse_wrapper {
   final WriteArtifactBlobChunkResponse_Conflict value;
 
   WriteArtifactBlobChunkResponse_conflictWrapper._(this.value);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.conflictWrapper;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.conflictWrapper;
 }
 
-final class WriteArtifactBlobChunkResponse_unavailableWrapper
-    extends _WriteArtifactBlobChunkResponse_wrapper {
+final class WriteArtifactBlobChunkResponse_unavailableWrapper extends _WriteArtifactBlobChunkResponse_wrapper {
   final WriteArtifactBlobChunkResponse_Unavailable value;
 
   WriteArtifactBlobChunkResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  WriteArtifactBlobChunkResponse_kind get kind =>
-      WriteArtifactBlobChunkResponse_kind.unavailableWrapper;
+  WriteArtifactBlobChunkResponse_kind get kind => WriteArtifactBlobChunkResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5202,25 +5143,31 @@ sealed class CompleteArtifactBlobWriteRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteRequest
-    implements CompleteArtifactBlobWriteRequest_orMutable {
+final class CompleteArtifactBlobWriteRequest implements CompleteArtifactBlobWriteRequest_orMutable {
   @_core.override
   final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompleteArtifactBlobWriteRequest({
     required _core.String transferId,
-  }) => CompleteArtifactBlobWriteRequest._(transferId);
+  }) => CompleteArtifactBlobWriteRequest._(
+    transferId,
+  );
 
-  CompleteArtifactBlobWriteRequest._(this.transferId);
+  CompleteArtifactBlobWriteRequest._(
+    this.transferId,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompleteArtifactBlobWriteRequest._("");
+  static final defaultInstance = CompleteArtifactBlobWriteRequest._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteRequest_mutable mutable() =>
-      CompleteArtifactBlobWriteRequest_mutable._("");
+  static CompleteArtifactBlobWriteRequest_mutable mutable() => CompleteArtifactBlobWriteRequest_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5228,33 +5175,29 @@ final class CompleteArtifactBlobWriteRequest
   CompleteArtifactBlobWriteRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteRequest_mutable toMutable() =>
-      CompleteArtifactBlobWriteRequest_mutable._(this.transferId);
+  CompleteArtifactBlobWriteRequest_mutable toMutable() => CompleteArtifactBlobWriteRequest_mutable._(
+    this.transferId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteArtifactBlobWriteRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.transferId];
+  _core.List get _equality_proxy => [
+    this.transferId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteArtifactBlobWriteRequest` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteRequest,
-    CompleteArtifactBlobWriteRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CompleteArtifactBlobWriteRequest, CompleteArtifactBlobWriteRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "transfer_id",
@@ -5282,18 +5225,19 @@ final class CompleteArtifactBlobWriteRequest
 }
 
 /// Mutable version of [CompleteArtifactBlobWriteRequest].
-final class CompleteArtifactBlobWriteRequest_mutable
-    implements CompleteArtifactBlobWriteRequest_orMutable {
+final class CompleteArtifactBlobWriteRequest_mutable implements CompleteArtifactBlobWriteRequest_orMutable {
   _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompleteArtifactBlobWriteRequest_mutable._(this.transferId);
+  CompleteArtifactBlobWriteRequest_mutable._(
+    this.transferId,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteRequest toFrozen() =>
-      CompleteArtifactBlobWriteRequest(transferId: this.transferId)
-        .._u = this._u;
+  CompleteArtifactBlobWriteRequest toFrozen() => CompleteArtifactBlobWriteRequest(
+    transferId: this.transferId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5305,12 +5249,10 @@ sealed class CompleteArtifactBlobWriteResponse_NotFound_orMutable {
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_NotFound
-    implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
+final class CompleteArtifactBlobWriteResponse_NotFound implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CompleteArtifactBlobWriteResponse_NotFound() =>
-      CompleteArtifactBlobWriteResponse_NotFound._();
+  factory CompleteArtifactBlobWriteResponse_NotFound() => CompleteArtifactBlobWriteResponse_NotFound._();
 
   CompleteArtifactBlobWriteResponse_NotFound._();
 
@@ -5319,8 +5261,7 @@ final class CompleteArtifactBlobWriteResponse_NotFound
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_NotFound_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_NotFound_mutable._();
+  static CompleteArtifactBlobWriteResponse_NotFound_mutable mutable() => CompleteArtifactBlobWriteResponse_NotFound_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5328,17 +5269,13 @@ final class CompleteArtifactBlobWriteResponse_NotFound
   CompleteArtifactBlobWriteResponse_NotFound toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_NotFound_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_NotFound_mutable._();
+  CompleteArtifactBlobWriteResponse_NotFound_mutable toMutable() => CompleteArtifactBlobWriteResponse_NotFound_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteArtifactBlobWriteResponse_NotFound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -5350,11 +5287,7 @@ final class CompleteArtifactBlobWriteResponse_NotFound
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteArtifactBlobWriteResponse_NotFound` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_NotFound,
-    CompleteArtifactBlobWriteResponse_NotFound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CompleteArtifactBlobWriteResponse_NotFound, CompleteArtifactBlobWriteResponse_NotFound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -5362,29 +5295,25 @@ final class CompleteArtifactBlobWriteResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.NotFound",
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.NotFound",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_NotFound_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_NotFound_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CompleteArtifactBlobWriteResponse_NotFound].
-final class CompleteArtifactBlobWriteResponse_NotFound_mutable
-    implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
+final class CompleteArtifactBlobWriteResponse_NotFound_mutable implements CompleteArtifactBlobWriteResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   CompleteArtifactBlobWriteResponse_NotFound_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteResponse_NotFound toFrozen() =>
-      CompleteArtifactBlobWriteResponse_NotFound().._u = this._u;
+  CompleteArtifactBlobWriteResponse_NotFound toFrozen() => CompleteArtifactBlobWriteResponse_NotFound().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5398,17 +5327,20 @@ sealed class CompleteArtifactBlobWriteResponse_Invalid_orMutable {
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Invalid
-    implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
+final class CompleteArtifactBlobWriteResponse_Invalid implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompleteArtifactBlobWriteResponse_Invalid({
     required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse_Invalid._(reason);
+  }) => CompleteArtifactBlobWriteResponse_Invalid._(
+    reason,
+  );
 
-  CompleteArtifactBlobWriteResponse_Invalid._(this.reason);
+  CompleteArtifactBlobWriteResponse_Invalid._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompleteArtifactBlobWriteResponse_Invalid._(
@@ -5417,8 +5349,9 @@ final class CompleteArtifactBlobWriteResponse_Invalid
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Invalid_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Invalid_mutable._("");
+  static CompleteArtifactBlobWriteResponse_Invalid_mutable mutable() => CompleteArtifactBlobWriteResponse_Invalid_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5426,33 +5359,29 @@ final class CompleteArtifactBlobWriteResponse_Invalid
   CompleteArtifactBlobWriteResponse_Invalid toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Invalid_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
+  CompleteArtifactBlobWriteResponse_Invalid_mutable toMutable() => CompleteArtifactBlobWriteResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteArtifactBlobWriteResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteArtifactBlobWriteResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Invalid,
-    CompleteArtifactBlobWriteResponse_Invalid_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CompleteArtifactBlobWriteResponse_Invalid, CompleteArtifactBlobWriteResponse_Invalid_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -5469,31 +5398,30 @@ final class CompleteArtifactBlobWriteResponse_Invalid
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Invalid",
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Invalid",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Invalid_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_Invalid_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CompleteArtifactBlobWriteResponse_Invalid].
-final class CompleteArtifactBlobWriteResponse_Invalid_mutable
-    implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
+final class CompleteArtifactBlobWriteResponse_Invalid_mutable implements CompleteArtifactBlobWriteResponse_Invalid_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompleteArtifactBlobWriteResponse_Invalid_mutable._(this.reason);
+  CompleteArtifactBlobWriteResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteResponse_Invalid toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Invalid(reason: this.reason)
-        .._u = this._u;
+  CompleteArtifactBlobWriteResponse_Invalid toFrozen() => CompleteArtifactBlobWriteResponse_Invalid(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5507,17 +5435,20 @@ sealed class CompleteArtifactBlobWriteResponse_Conflict_orMutable {
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Conflict
-    implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
+final class CompleteArtifactBlobWriteResponse_Conflict implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompleteArtifactBlobWriteResponse_Conflict({
     required _core.String reason,
-  }) => CompleteArtifactBlobWriteResponse_Conflict._(reason);
+  }) => CompleteArtifactBlobWriteResponse_Conflict._(
+    reason,
+  );
 
-  CompleteArtifactBlobWriteResponse_Conflict._(this.reason);
+  CompleteArtifactBlobWriteResponse_Conflict._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompleteArtifactBlobWriteResponse_Conflict._(
@@ -5526,8 +5457,9 @@ final class CompleteArtifactBlobWriteResponse_Conflict
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Conflict_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Conflict_mutable._("");
+  static CompleteArtifactBlobWriteResponse_Conflict_mutable mutable() => CompleteArtifactBlobWriteResponse_Conflict_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5535,33 +5467,29 @@ final class CompleteArtifactBlobWriteResponse_Conflict
   CompleteArtifactBlobWriteResponse_Conflict toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Conflict_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  CompleteArtifactBlobWriteResponse_Conflict_mutable toMutable() => CompleteArtifactBlobWriteResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteArtifactBlobWriteResponse_Conflict) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteArtifactBlobWriteResponse_Conflict` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Conflict,
-    CompleteArtifactBlobWriteResponse_Conflict_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CompleteArtifactBlobWriteResponse_Conflict, CompleteArtifactBlobWriteResponse_Conflict_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -5578,31 +5506,30 @@ final class CompleteArtifactBlobWriteResponse_Conflict
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Conflict",
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Conflict",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Conflict_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_Conflict_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CompleteArtifactBlobWriteResponse_Conflict].
-final class CompleteArtifactBlobWriteResponse_Conflict_mutable
-    implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
+final class CompleteArtifactBlobWriteResponse_Conflict_mutable implements CompleteArtifactBlobWriteResponse_Conflict_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompleteArtifactBlobWriteResponse_Conflict_mutable._(this.reason);
+  CompleteArtifactBlobWriteResponse_Conflict_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteResponse_Conflict toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Conflict(reason: this.reason)
-        .._u = this._u;
+  CompleteArtifactBlobWriteResponse_Conflict toFrozen() => CompleteArtifactBlobWriteResponse_Conflict(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5614,23 +5541,19 @@ sealed class CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class CompleteArtifactBlobWriteResponse_Unavailable
-    implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
+final class CompleteArtifactBlobWriteResponse_Unavailable implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CompleteArtifactBlobWriteResponse_Unavailable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable._();
+  factory CompleteArtifactBlobWriteResponse_Unavailable() => CompleteArtifactBlobWriteResponse_Unavailable._();
 
   CompleteArtifactBlobWriteResponse_Unavailable._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      CompleteArtifactBlobWriteResponse_Unavailable._();
+  static final defaultInstance = CompleteArtifactBlobWriteResponse_Unavailable._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompleteArtifactBlobWriteResponse_Unavailable_mutable mutable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
+  static CompleteArtifactBlobWriteResponse_Unavailable_mutable mutable() => CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -5638,17 +5561,13 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   CompleteArtifactBlobWriteResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteArtifactBlobWriteResponse_Unavailable_mutable toMutable() =>
-      CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
+  CompleteArtifactBlobWriteResponse_Unavailable_mutable toMutable() => CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteArtifactBlobWriteResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -5660,11 +5579,7 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteArtifactBlobWriteResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    CompleteArtifactBlobWriteResponse_Unavailable,
-    CompleteArtifactBlobWriteResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<CompleteArtifactBlobWriteResponse_Unavailable, CompleteArtifactBlobWriteResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -5672,29 +5587,25 @@ final class CompleteArtifactBlobWriteResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompleteArtifactBlobWriteResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (CompleteArtifactBlobWriteResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [CompleteArtifactBlobWriteResponse_Unavailable].
-final class CompleteArtifactBlobWriteResponse_Unavailable_mutable
-    implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
+final class CompleteArtifactBlobWriteResponse_Unavailable_mutable implements CompleteArtifactBlobWriteResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   CompleteArtifactBlobWriteResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteArtifactBlobWriteResponse_Unavailable toFrozen() =>
-      CompleteArtifactBlobWriteResponse_Unavailable().._u = this._u;
+  CompleteArtifactBlobWriteResponse_Unavailable toFrozen() => CompleteArtifactBlobWriteResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -5717,73 +5628,77 @@ final class CompleteArtifactBlobWriteResponse_Unavailable_mutable
 sealed class CompleteArtifactBlobWriteResponse {
   /// Constant indicating an unknown `CompleteArtifactBlobWriteResponse`.
   /// Default value for fields of type `CompleteArtifactBlobWriteResponse`.
-  static const CompleteArtifactBlobWriteResponse unknown =
-      CompleteArtifactBlobWriteResponse_unknown._instance;
+  static const CompleteArtifactBlobWriteResponse unknown = CompleteArtifactBlobWriteResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
-  factory CompleteArtifactBlobWriteResponse.wrapSuccess(BlobMetadata value) =>
-      CompleteArtifactBlobWriteResponse_successWrapper._(value);
+  factory CompleteArtifactBlobWriteResponse.wrapSuccess(
+    BlobMetadata value
+  ) => CompleteArtifactBlobWriteResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(BlobMetadata(...))`.
   factory CompleteArtifactBlobWriteResponse.createSuccess({
     required ArtifactDigest_orMutable digest,
     required _core.int size,
   }) => CompleteArtifactBlobWriteResponse.wrapSuccess(
-    BlobMetadata(digest: digest, size: size),
+    BlobMetadata(
+      digest: digest,
+      size: size,
+    )
   );
 
   /// Create a 'not_found' variant wrapping around the given value.
   factory CompleteArtifactBlobWriteResponse.wrapNotFound(
-    CompleteArtifactBlobWriteResponse_NotFound value,
+    CompleteArtifactBlobWriteResponse_NotFound value
   ) => CompleteArtifactBlobWriteResponse_notFoundWrapper._(value);
 
   /// Same as `wrapNotFound(CompleteArtifactBlobWriteResponse_NotFound(...))`.
-  factory CompleteArtifactBlobWriteResponse.createNotFound() =>
-      CompleteArtifactBlobWriteResponse.wrapNotFound(
-        CompleteArtifactBlobWriteResponse_NotFound(),
-      );
+  factory CompleteArtifactBlobWriteResponse.createNotFound() => CompleteArtifactBlobWriteResponse.wrapNotFound(
+    CompleteArtifactBlobWriteResponse_NotFound()
+  );
 
   /// Create a 'invalid' variant wrapping around the given value.
   factory CompleteArtifactBlobWriteResponse.wrapInvalid(
-    CompleteArtifactBlobWriteResponse_Invalid value,
+    CompleteArtifactBlobWriteResponse_Invalid value
   ) => CompleteArtifactBlobWriteResponse_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(CompleteArtifactBlobWriteResponse_Invalid(...))`.
   factory CompleteArtifactBlobWriteResponse.createInvalid({
     required _core.String reason,
   }) => CompleteArtifactBlobWriteResponse.wrapInvalid(
-    CompleteArtifactBlobWriteResponse_Invalid(reason: reason),
+    CompleteArtifactBlobWriteResponse_Invalid(
+      reason: reason,
+    )
   );
 
   /// Create a 'conflict' variant wrapping around the given value.
   factory CompleteArtifactBlobWriteResponse.wrapConflict(
-    CompleteArtifactBlobWriteResponse_Conflict value,
+    CompleteArtifactBlobWriteResponse_Conflict value
   ) => CompleteArtifactBlobWriteResponse_conflictWrapper._(value);
 
   /// Same as `wrapConflict(CompleteArtifactBlobWriteResponse_Conflict(...))`.
   factory CompleteArtifactBlobWriteResponse.createConflict({
     required _core.String reason,
   }) => CompleteArtifactBlobWriteResponse.wrapConflict(
-    CompleteArtifactBlobWriteResponse_Conflict(reason: reason),
+    CompleteArtifactBlobWriteResponse_Conflict(
+      reason: reason,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory CompleteArtifactBlobWriteResponse.wrapUnavailable(
-    CompleteArtifactBlobWriteResponse_Unavailable value,
+    CompleteArtifactBlobWriteResponse_Unavailable value
   ) => CompleteArtifactBlobWriteResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(CompleteArtifactBlobWriteResponse_Unavailable(...))`.
-  factory CompleteArtifactBlobWriteResponse.createUnavailable() =>
-      CompleteArtifactBlobWriteResponse.wrapUnavailable(
-        CompleteArtifactBlobWriteResponse_Unavailable(),
-      );
+  factory CompleteArtifactBlobWriteResponse.createUnavailable() => CompleteArtifactBlobWriteResponse.wrapUnavailable(
+    CompleteArtifactBlobWriteResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this CompleteArtifactBlobWriteResponse.
   CompleteArtifactBlobWriteResponse_kind get kind;
 
   /// Serializer for `CompleteArtifactBlobWriteResponse` instances.
-  static _skir.EnumSerializer<CompleteArtifactBlobWriteResponse>
-  get serializer {
+  static _skir.EnumSerializer<CompleteArtifactBlobWriteResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -5803,8 +5718,7 @@ sealed class CompleteArtifactBlobWriteResponse {
         "",
         CompleteArtifactBlobWriteResponse_notFoundWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.notFoundWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind.notFoundWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -5824,8 +5738,7 @@ sealed class CompleteArtifactBlobWriteResponse {
         "",
         CompleteArtifactBlobWriteResponse_conflictWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.conflictWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind.conflictWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         5,
@@ -5835,25 +5748,22 @@ sealed class CompleteArtifactBlobWriteResponse {
         "",
         CompleteArtifactBlobWriteResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal:
-            CompleteArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
+        ordinal: CompleteArtifactBlobWriteResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse",
-        doc: "",
-        unknownInstance: CompleteArtifactBlobWriteResponse_unknown._instance,
-        enumInstance: CompleteArtifactBlobWriteResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            CompleteArtifactBlobWriteResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:CompleteArtifactBlobWriteResponse",
+    doc: "",
+    unknownInstance: CompleteArtifactBlobWriteResponse_unknown._instance,
+    enumInstance: CompleteArtifactBlobWriteResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: CompleteArtifactBlobWriteResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `CompleteArtifactBlobWriteResponse`.
@@ -5870,8 +5780,7 @@ enum CompleteArtifactBlobWriteResponse_kind {
   const CompleteArtifactBlobWriteResponse_kind(this._ordinal);
 }
 
-final class CompleteArtifactBlobWriteResponse_unknown
-    implements CompleteArtifactBlobWriteResponse {
+final class CompleteArtifactBlobWriteResponse_unknown implements CompleteArtifactBlobWriteResponse {
   static const _instance = CompleteArtifactBlobWriteResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -5880,22 +5789,16 @@ final class CompleteArtifactBlobWriteResponse_unknown
   CompleteArtifactBlobWriteResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.unknown;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is CompleteArtifactBlobWriteResponse_unknown;
+  _core.bool operator ==(other) => other is CompleteArtifactBlobWriteResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    CompleteArtifactBlobWriteResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, CompleteArtifactBlobWriteResponse.serializer);
 }
 
-sealed class _CompleteArtifactBlobWriteResponse_wrapper
-    implements CompleteArtifactBlobWriteResponse {
+sealed class _CompleteArtifactBlobWriteResponse_wrapper implements CompleteArtifactBlobWriteResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -5908,65 +5811,52 @@ sealed class _CompleteArtifactBlobWriteResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    CompleteArtifactBlobWriteResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, CompleteArtifactBlobWriteResponse.serializer);
 }
 
-final class CompleteArtifactBlobWriteResponse_successWrapper
-    extends _CompleteArtifactBlobWriteResponse_wrapper {
+final class CompleteArtifactBlobWriteResponse_successWrapper extends _CompleteArtifactBlobWriteResponse_wrapper {
   final BlobMetadata value;
 
   CompleteArtifactBlobWriteResponse_successWrapper._(this.value);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.successWrapper;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.successWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_notFoundWrapper
-    extends _CompleteArtifactBlobWriteResponse_wrapper {
+final class CompleteArtifactBlobWriteResponse_notFoundWrapper extends _CompleteArtifactBlobWriteResponse_wrapper {
   final CompleteArtifactBlobWriteResponse_NotFound value;
 
   CompleteArtifactBlobWriteResponse_notFoundWrapper._(this.value);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.notFoundWrapper;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.notFoundWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_invalidWrapper
-    extends _CompleteArtifactBlobWriteResponse_wrapper {
+final class CompleteArtifactBlobWriteResponse_invalidWrapper extends _CompleteArtifactBlobWriteResponse_wrapper {
   final CompleteArtifactBlobWriteResponse_Invalid value;
 
   CompleteArtifactBlobWriteResponse_invalidWrapper._(this.value);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.invalidWrapper;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.invalidWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_conflictWrapper
-    extends _CompleteArtifactBlobWriteResponse_wrapper {
+final class CompleteArtifactBlobWriteResponse_conflictWrapper extends _CompleteArtifactBlobWriteResponse_wrapper {
   final CompleteArtifactBlobWriteResponse_Conflict value;
 
   CompleteArtifactBlobWriteResponse_conflictWrapper._(this.value);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.conflictWrapper;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.conflictWrapper;
 }
 
-final class CompleteArtifactBlobWriteResponse_unavailableWrapper
-    extends _CompleteArtifactBlobWriteResponse_wrapper {
+final class CompleteArtifactBlobWriteResponse_unavailableWrapper extends _CompleteArtifactBlobWriteResponse_wrapper {
   final CompleteArtifactBlobWriteResponse_Unavailable value;
 
   CompleteArtifactBlobWriteResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  CompleteArtifactBlobWriteResponse_kind get kind =>
-      CompleteArtifactBlobWriteResponse_kind.unavailableWrapper;
+  CompleteArtifactBlobWriteResponse_kind get kind => CompleteArtifactBlobWriteResponse_kind.unavailableWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -5980,17 +5870,20 @@ sealed class FetchArtifactBlobMetadataRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataRequest
-    implements FetchArtifactBlobMetadataRequest_orMutable {
+final class FetchArtifactBlobMetadataRequest implements FetchArtifactBlobMetadataRequest_orMutable {
   @_core.override
   final ArtifactDigest digest;
   _skir.internal__UnrecognizedFields? _u;
 
   factory FetchArtifactBlobMetadataRequest({
     required ArtifactDigest_orMutable digest,
-  }) => FetchArtifactBlobMetadataRequest._(digest.toFrozen());
+  }) => FetchArtifactBlobMetadataRequest._(
+    digest.toFrozen(),
+  );
 
-  FetchArtifactBlobMetadataRequest._(this.digest);
+  FetchArtifactBlobMetadataRequest._(
+    this.digest,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = FetchArtifactBlobMetadataRequest._(
@@ -5999,10 +5892,9 @@ final class FetchArtifactBlobMetadataRequest
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataRequest_mutable mutable() =>
-      FetchArtifactBlobMetadataRequest_mutable._(
-        ArtifactDigest.defaultInstance,
-      );
+  static FetchArtifactBlobMetadataRequest_mutable mutable() => FetchArtifactBlobMetadataRequest_mutable._(
+    ArtifactDigest.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -6010,33 +5902,29 @@ final class FetchArtifactBlobMetadataRequest
   FetchArtifactBlobMetadataRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataRequest_mutable toMutable() =>
-      FetchArtifactBlobMetadataRequest_mutable._(this.digest);
+  FetchArtifactBlobMetadataRequest_mutable toMutable() => FetchArtifactBlobMetadataRequest_mutable._(
+    this.digest,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchArtifactBlobMetadataRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.digest];
+  _core.List get _equality_proxy => [
+    this.digest,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchArtifactBlobMetadataRequest` instances.
-  static _skir.StructSerializer<
-    FetchArtifactBlobMetadataRequest,
-    FetchArtifactBlobMetadataRequest_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchArtifactBlobMetadataRequest, FetchArtifactBlobMetadataRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "digest",
@@ -6064,12 +5952,13 @@ final class FetchArtifactBlobMetadataRequest
 }
 
 /// Mutable version of [FetchArtifactBlobMetadataRequest].
-final class FetchArtifactBlobMetadataRequest_mutable
-    implements FetchArtifactBlobMetadataRequest_orMutable {
+final class FetchArtifactBlobMetadataRequest_mutable implements FetchArtifactBlobMetadataRequest_orMutable {
   ArtifactDigest_orMutable digest;
   _skir.internal__UnrecognizedFields? _u;
 
-  FetchArtifactBlobMetadataRequest_mutable._(this.digest);
+  FetchArtifactBlobMetadataRequest_mutable._(
+    this.digest,
+  );
 
   /// If the value of [digest] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
@@ -6084,8 +5973,9 @@ final class FetchArtifactBlobMetadataRequest_mutable
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataRequest toFrozen() =>
-      FetchArtifactBlobMetadataRequest(digest: this.digest).._u = this._u;
+  FetchArtifactBlobMetadataRequest toFrozen() => FetchArtifactBlobMetadataRequest(
+    digest: this.digest,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6097,12 +5987,10 @@ sealed class FetchArtifactBlobMetadataResponse_NotFound_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_NotFound
-    implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
+final class FetchArtifactBlobMetadataResponse_NotFound implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FetchArtifactBlobMetadataResponse_NotFound() =>
-      FetchArtifactBlobMetadataResponse_NotFound._();
+  factory FetchArtifactBlobMetadataResponse_NotFound() => FetchArtifactBlobMetadataResponse_NotFound._();
 
   FetchArtifactBlobMetadataResponse_NotFound._();
 
@@ -6111,8 +5999,7 @@ final class FetchArtifactBlobMetadataResponse_NotFound
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_NotFound_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_NotFound_mutable._();
+  static FetchArtifactBlobMetadataResponse_NotFound_mutable mutable() => FetchArtifactBlobMetadataResponse_NotFound_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -6120,17 +6007,13 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   FetchArtifactBlobMetadataResponse_NotFound toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_NotFound_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_NotFound_mutable._();
+  FetchArtifactBlobMetadataResponse_NotFound_mutable toMutable() => FetchArtifactBlobMetadataResponse_NotFound_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchArtifactBlobMetadataResponse_NotFound) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -6142,11 +6025,7 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchArtifactBlobMetadataResponse_NotFound` instances.
-  static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_NotFound,
-    FetchArtifactBlobMetadataResponse_NotFound_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchArtifactBlobMetadataResponse_NotFound, FetchArtifactBlobMetadataResponse_NotFound_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -6154,29 +6033,25 @@ final class FetchArtifactBlobMetadataResponse_NotFound
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.NotFound",
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.NotFound",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_NotFound_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (FetchArtifactBlobMetadataResponse_NotFound_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [FetchArtifactBlobMetadataResponse_NotFound].
-final class FetchArtifactBlobMetadataResponse_NotFound_mutable
-    implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
+final class FetchArtifactBlobMetadataResponse_NotFound_mutable implements FetchArtifactBlobMetadataResponse_NotFound_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   FetchArtifactBlobMetadataResponse_NotFound_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataResponse_NotFound toFrozen() =>
-      FetchArtifactBlobMetadataResponse_NotFound().._u = this._u;
+  FetchArtifactBlobMetadataResponse_NotFound toFrozen() => FetchArtifactBlobMetadataResponse_NotFound().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6190,17 +6065,20 @@ sealed class FetchArtifactBlobMetadataResponse_Invalid_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_Invalid
-    implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
+final class FetchArtifactBlobMetadataResponse_Invalid implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
   @_core.override
   final _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
   factory FetchArtifactBlobMetadataResponse_Invalid({
     required _core.String reason,
-  }) => FetchArtifactBlobMetadataResponse_Invalid._(reason);
+  }) => FetchArtifactBlobMetadataResponse_Invalid._(
+    reason,
+  );
 
-  FetchArtifactBlobMetadataResponse_Invalid._(this.reason);
+  FetchArtifactBlobMetadataResponse_Invalid._(
+    this.reason,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = FetchArtifactBlobMetadataResponse_Invalid._(
@@ -6209,8 +6087,9 @@ final class FetchArtifactBlobMetadataResponse_Invalid
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_Invalid_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_Invalid_mutable._("");
+  static FetchArtifactBlobMetadataResponse_Invalid_mutable mutable() => FetchArtifactBlobMetadataResponse_Invalid_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -6218,33 +6097,29 @@ final class FetchArtifactBlobMetadataResponse_Invalid
   FetchArtifactBlobMetadataResponse_Invalid toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_Invalid_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_Invalid_mutable._(this.reason);
+  FetchArtifactBlobMetadataResponse_Invalid_mutable toMutable() => FetchArtifactBlobMetadataResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchArtifactBlobMetadataResponse_Invalid) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.reason];
+  _core.List get _equality_proxy => [
+    this.reason,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchArtifactBlobMetadataResponse_Invalid` instances.
-  static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_Invalid,
-    FetchArtifactBlobMetadataResponse_Invalid_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchArtifactBlobMetadataResponse_Invalid, FetchArtifactBlobMetadataResponse_Invalid_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reason",
@@ -6261,31 +6136,30 @@ final class FetchArtifactBlobMetadataResponse_Invalid
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Invalid",
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Invalid",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_Invalid_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (FetchArtifactBlobMetadataResponse_Invalid_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [FetchArtifactBlobMetadataResponse_Invalid].
-final class FetchArtifactBlobMetadataResponse_Invalid_mutable
-    implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
+final class FetchArtifactBlobMetadataResponse_Invalid_mutable implements FetchArtifactBlobMetadataResponse_Invalid_orMutable {
   _core.String reason;
   _skir.internal__UnrecognizedFields? _u;
 
-  FetchArtifactBlobMetadataResponse_Invalid_mutable._(this.reason);
+  FetchArtifactBlobMetadataResponse_Invalid_mutable._(
+    this.reason,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataResponse_Invalid toFrozen() =>
-      FetchArtifactBlobMetadataResponse_Invalid(reason: this.reason)
-        .._u = this._u;
+  FetchArtifactBlobMetadataResponse_Invalid toFrozen() => FetchArtifactBlobMetadataResponse_Invalid(
+    reason: this.reason,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6297,23 +6171,19 @@ sealed class FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
 }
 
 /// Deeply immutable.
-final class FetchArtifactBlobMetadataResponse_Unavailable
-    implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
+final class FetchArtifactBlobMetadataResponse_Unavailable implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory FetchArtifactBlobMetadataResponse_Unavailable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable._();
+  factory FetchArtifactBlobMetadataResponse_Unavailable() => FetchArtifactBlobMetadataResponse_Unavailable._();
 
   FetchArtifactBlobMetadataResponse_Unavailable._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      FetchArtifactBlobMetadataResponse_Unavailable._();
+  static final defaultInstance = FetchArtifactBlobMetadataResponse_Unavailable._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static FetchArtifactBlobMetadataResponse_Unavailable_mutable mutable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
+  static FetchArtifactBlobMetadataResponse_Unavailable_mutable mutable() => FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -6321,17 +6191,13 @@ final class FetchArtifactBlobMetadataResponse_Unavailable
   FetchArtifactBlobMetadataResponse_Unavailable toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  FetchArtifactBlobMetadataResponse_Unavailable_mutable toMutable() =>
-      FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
+  FetchArtifactBlobMetadataResponse_Unavailable_mutable toMutable() => FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FetchArtifactBlobMetadataResponse_Unavailable) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -6343,11 +6209,7 @@ final class FetchArtifactBlobMetadataResponse_Unavailable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `FetchArtifactBlobMetadataResponse_Unavailable` instances.
-  static _skir.StructSerializer<
-    FetchArtifactBlobMetadataResponse_Unavailable,
-    FetchArtifactBlobMetadataResponse_Unavailable_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<FetchArtifactBlobMetadataResponse_Unavailable, FetchArtifactBlobMetadataResponse_Unavailable_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -6355,29 +6217,25 @@ final class FetchArtifactBlobMetadataResponse_Unavailable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId:
-        "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Unavailable",
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse.Unavailable",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (FetchArtifactBlobMetadataResponse_Unavailable_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (FetchArtifactBlobMetadataResponse_Unavailable_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [FetchArtifactBlobMetadataResponse_Unavailable].
-final class FetchArtifactBlobMetadataResponse_Unavailable_mutable
-    implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
+final class FetchArtifactBlobMetadataResponse_Unavailable_mutable implements FetchArtifactBlobMetadataResponse_Unavailable_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   FetchArtifactBlobMetadataResponse_Unavailable_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  FetchArtifactBlobMetadataResponse_Unavailable toFrozen() =>
-      FetchArtifactBlobMetadataResponse_Unavailable().._u = this._u;
+  FetchArtifactBlobMetadataResponse_Unavailable toFrozen() => FetchArtifactBlobMetadataResponse_Unavailable().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -6399,61 +6257,63 @@ final class FetchArtifactBlobMetadataResponse_Unavailable_mutable
 sealed class FetchArtifactBlobMetadataResponse {
   /// Constant indicating an unknown `FetchArtifactBlobMetadataResponse`.
   /// Default value for fields of type `FetchArtifactBlobMetadataResponse`.
-  static const FetchArtifactBlobMetadataResponse unknown =
-      FetchArtifactBlobMetadataResponse_unknown._instance;
+  static const FetchArtifactBlobMetadataResponse unknown = FetchArtifactBlobMetadataResponse_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
-  factory FetchArtifactBlobMetadataResponse.wrapSuccess(BlobMetadata value) =>
-      FetchArtifactBlobMetadataResponse_successWrapper._(value);
+  factory FetchArtifactBlobMetadataResponse.wrapSuccess(
+    BlobMetadata value
+  ) => FetchArtifactBlobMetadataResponse_successWrapper._(value);
 
   /// Same as `wrapSuccess(BlobMetadata(...))`.
   factory FetchArtifactBlobMetadataResponse.createSuccess({
     required ArtifactDigest_orMutable digest,
     required _core.int size,
   }) => FetchArtifactBlobMetadataResponse.wrapSuccess(
-    BlobMetadata(digest: digest, size: size),
+    BlobMetadata(
+      digest: digest,
+      size: size,
+    )
   );
 
   /// Create a 'not_found' variant wrapping around the given value.
   factory FetchArtifactBlobMetadataResponse.wrapNotFound(
-    FetchArtifactBlobMetadataResponse_NotFound value,
+    FetchArtifactBlobMetadataResponse_NotFound value
   ) => FetchArtifactBlobMetadataResponse_notFoundWrapper._(value);
 
   /// Same as `wrapNotFound(FetchArtifactBlobMetadataResponse_NotFound(...))`.
-  factory FetchArtifactBlobMetadataResponse.createNotFound() =>
-      FetchArtifactBlobMetadataResponse.wrapNotFound(
-        FetchArtifactBlobMetadataResponse_NotFound(),
-      );
+  factory FetchArtifactBlobMetadataResponse.createNotFound() => FetchArtifactBlobMetadataResponse.wrapNotFound(
+    FetchArtifactBlobMetadataResponse_NotFound()
+  );
 
   /// Create a 'invalid' variant wrapping around the given value.
   factory FetchArtifactBlobMetadataResponse.wrapInvalid(
-    FetchArtifactBlobMetadataResponse_Invalid value,
+    FetchArtifactBlobMetadataResponse_Invalid value
   ) => FetchArtifactBlobMetadataResponse_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(FetchArtifactBlobMetadataResponse_Invalid(...))`.
   factory FetchArtifactBlobMetadataResponse.createInvalid({
     required _core.String reason,
   }) => FetchArtifactBlobMetadataResponse.wrapInvalid(
-    FetchArtifactBlobMetadataResponse_Invalid(reason: reason),
+    FetchArtifactBlobMetadataResponse_Invalid(
+      reason: reason,
+    )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
   factory FetchArtifactBlobMetadataResponse.wrapUnavailable(
-    FetchArtifactBlobMetadataResponse_Unavailable value,
+    FetchArtifactBlobMetadataResponse_Unavailable value
   ) => FetchArtifactBlobMetadataResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(FetchArtifactBlobMetadataResponse_Unavailable(...))`.
-  factory FetchArtifactBlobMetadataResponse.createUnavailable() =>
-      FetchArtifactBlobMetadataResponse.wrapUnavailable(
-        FetchArtifactBlobMetadataResponse_Unavailable(),
-      );
+  factory FetchArtifactBlobMetadataResponse.createUnavailable() => FetchArtifactBlobMetadataResponse.wrapUnavailable(
+    FetchArtifactBlobMetadataResponse_Unavailable()
+  );
 
   /// Returns the kind of variant held by this FetchArtifactBlobMetadataResponse.
   FetchArtifactBlobMetadataResponse_kind get kind;
 
   /// Serializer for `FetchArtifactBlobMetadataResponse` instances.
-  static _skir.EnumSerializer<FetchArtifactBlobMetadataResponse>
-  get serializer {
+  static _skir.EnumSerializer<FetchArtifactBlobMetadataResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
@@ -6473,8 +6333,7 @@ sealed class FetchArtifactBlobMetadataResponse {
         "",
         FetchArtifactBlobMetadataResponse_notFoundWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchArtifactBlobMetadataResponse_kind.notFoundWrapper._ordinal,
+        ordinal: FetchArtifactBlobMetadataResponse_kind.notFoundWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -6494,25 +6353,22 @@ sealed class FetchArtifactBlobMetadataResponse {
         "",
         FetchArtifactBlobMetadataResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal:
-            FetchArtifactBlobMetadataResponse_kind.unavailableWrapper._ordinal,
+        ordinal: FetchArtifactBlobMetadataResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse",
-        doc: "",
-        unknownInstance: FetchArtifactBlobMetadataResponse_unknown._instance,
-        enumInstance: FetchArtifactBlobMetadataResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized:
-            FetchArtifactBlobMetadataResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/artifact.skir:FetchArtifactBlobMetadataResponse",
+    doc: "",
+    unknownInstance: FetchArtifactBlobMetadataResponse_unknown._instance,
+    enumInstance: FetchArtifactBlobMetadataResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: FetchArtifactBlobMetadataResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `FetchArtifactBlobMetadataResponse`.
@@ -6528,8 +6384,7 @@ enum FetchArtifactBlobMetadataResponse_kind {
   const FetchArtifactBlobMetadataResponse_kind(this._ordinal);
 }
 
-final class FetchArtifactBlobMetadataResponse_unknown
-    implements FetchArtifactBlobMetadataResponse {
+final class FetchArtifactBlobMetadataResponse_unknown implements FetchArtifactBlobMetadataResponse {
   static const _instance = FetchArtifactBlobMetadataResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -6538,22 +6393,16 @@ final class FetchArtifactBlobMetadataResponse_unknown
   FetchArtifactBlobMetadataResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.unknown;
+  FetchArtifactBlobMetadataResponse_kind get kind => FetchArtifactBlobMetadataResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) =>
-      other is FetchArtifactBlobMetadataResponse_unknown;
+  _core.bool operator ==(other) => other is FetchArtifactBlobMetadataResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    FetchArtifactBlobMetadataResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, FetchArtifactBlobMetadataResponse.serializer);
 }
 
-sealed class _FetchArtifactBlobMetadataResponse_wrapper
-    implements FetchArtifactBlobMetadataResponse {
+sealed class _FetchArtifactBlobMetadataResponse_wrapper implements FetchArtifactBlobMetadataResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -6566,130 +6415,125 @@ sealed class _FetchArtifactBlobMetadataResponse_wrapper
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(
-    this,
-    FetchArtifactBlobMetadataResponse.serializer,
-  );
+  _core.String toString() => _skir.internal__stringify(this, FetchArtifactBlobMetadataResponse.serializer);
 }
 
-final class FetchArtifactBlobMetadataResponse_successWrapper
-    extends _FetchArtifactBlobMetadataResponse_wrapper {
+final class FetchArtifactBlobMetadataResponse_successWrapper extends _FetchArtifactBlobMetadataResponse_wrapper {
   final BlobMetadata value;
 
   FetchArtifactBlobMetadataResponse_successWrapper._(this.value);
 
   @_core.override
-  FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.successWrapper;
+  FetchArtifactBlobMetadataResponse_kind get kind => FetchArtifactBlobMetadataResponse_kind.successWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_notFoundWrapper
-    extends _FetchArtifactBlobMetadataResponse_wrapper {
+final class FetchArtifactBlobMetadataResponse_notFoundWrapper extends _FetchArtifactBlobMetadataResponse_wrapper {
   final FetchArtifactBlobMetadataResponse_NotFound value;
 
   FetchArtifactBlobMetadataResponse_notFoundWrapper._(this.value);
 
   @_core.override
-  FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.notFoundWrapper;
+  FetchArtifactBlobMetadataResponse_kind get kind => FetchArtifactBlobMetadataResponse_kind.notFoundWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_invalidWrapper
-    extends _FetchArtifactBlobMetadataResponse_wrapper {
+final class FetchArtifactBlobMetadataResponse_invalidWrapper extends _FetchArtifactBlobMetadataResponse_wrapper {
   final FetchArtifactBlobMetadataResponse_Invalid value;
 
   FetchArtifactBlobMetadataResponse_invalidWrapper._(this.value);
 
   @_core.override
-  FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.invalidWrapper;
+  FetchArtifactBlobMetadataResponse_kind get kind => FetchArtifactBlobMetadataResponse_kind.invalidWrapper;
 }
 
-final class FetchArtifactBlobMetadataResponse_unavailableWrapper
-    extends _FetchArtifactBlobMetadataResponse_wrapper {
+final class FetchArtifactBlobMetadataResponse_unavailableWrapper extends _FetchArtifactBlobMetadataResponse_wrapper {
   final FetchArtifactBlobMetadataResponse_Unavailable value;
 
   FetchArtifactBlobMetadataResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  FetchArtifactBlobMetadataResponse_kind get kind =>
-      FetchArtifactBlobMetadataResponse_kind.unavailableWrapper;
+  FetchArtifactBlobMetadataResponse_kind get kind => FetchArtifactBlobMetadataResponse_kind.unavailableWrapper;
 }
 
 final _skir.Method<
   FetchSharedArtifactCatalogRequest,
   FetchSharedArtifactCatalogResponse
->
-fetchSharedArtifactCatalogMethod = _skir.Method(
-  "FetchSharedArtifactCatalog",
-  910005,
-  FetchSharedArtifactCatalogRequest.serializer,
-  FetchSharedArtifactCatalogResponse.serializer,
-  "",
-);
+> fetchSharedArtifactCatalogMethod =
+  _skir.Method(
+    "FetchSharedArtifactCatalog",
+    910005,
+    FetchSharedArtifactCatalogRequest.serializer,
+    FetchSharedArtifactCatalogResponse.serializer,
+    "",
+  );
 
-final _skir.Method<PublishSharedArtifactRequest, PublishSharedArtifactResponse>
-publishSharedArtifactMethod = _skir.Method(
-  "PublishSharedArtifact",
-  910006,
-  PublishSharedArtifactRequest.serializer,
-  PublishSharedArtifactResponse.serializer,
-  "",
-);
+final _skir.Method<
+  PublishSharedArtifactRequest,
+  PublishSharedArtifactResponse
+> publishSharedArtifactMethod =
+  _skir.Method(
+    "PublishSharedArtifact",
+    910006,
+    PublishSharedArtifactRequest.serializer,
+    PublishSharedArtifactResponse.serializer,
+    "",
+  );
 
-final _skir.Method<ReadArtifactBlobRequest, ReadArtifactBlobResponse>
-readArtifactBlobMethod = _skir.Method(
-  "ReadArtifactBlob",
-  910007,
-  ReadArtifactBlobRequest.serializer,
-  ReadArtifactBlobResponse.serializer,
-  "",
-);
+final _skir.Method<
+  ReadArtifactBlobRequest,
+  ReadArtifactBlobResponse
+> readArtifactBlobMethod =
+  _skir.Method(
+    "ReadArtifactBlob",
+    910007,
+    ReadArtifactBlobRequest.serializer,
+    ReadArtifactBlobResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   BeginArtifactBlobWriteRequest,
   BeginArtifactBlobWriteResponse
->
-beginArtifactBlobWriteMethod = _skir.Method(
-  "BeginArtifactBlobWrite",
-  910008,
-  BeginArtifactBlobWriteRequest.serializer,
-  BeginArtifactBlobWriteResponse.serializer,
-  "",
-);
+> beginArtifactBlobWriteMethod =
+  _skir.Method(
+    "BeginArtifactBlobWrite",
+    910008,
+    BeginArtifactBlobWriteRequest.serializer,
+    BeginArtifactBlobWriteResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   WriteArtifactBlobChunkRequest,
   WriteArtifactBlobChunkResponse
->
-writeArtifactBlobChunkMethod = _skir.Method(
-  "WriteArtifactBlobChunk",
-  910009,
-  WriteArtifactBlobChunkRequest.serializer,
-  WriteArtifactBlobChunkResponse.serializer,
-  "",
-);
+> writeArtifactBlobChunkMethod =
+  _skir.Method(
+    "WriteArtifactBlobChunk",
+    910009,
+    WriteArtifactBlobChunkRequest.serializer,
+    WriteArtifactBlobChunkResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   CompleteArtifactBlobWriteRequest,
   CompleteArtifactBlobWriteResponse
->
-completeArtifactBlobWriteMethod = _skir.Method(
-  "CompleteArtifactBlobWrite",
-  910010,
-  CompleteArtifactBlobWriteRequest.serializer,
-  CompleteArtifactBlobWriteResponse.serializer,
-  "",
-);
+> completeArtifactBlobWriteMethod =
+  _skir.Method(
+    "CompleteArtifactBlobWrite",
+    910010,
+    CompleteArtifactBlobWriteRequest.serializer,
+    CompleteArtifactBlobWriteResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   FetchArtifactBlobMetadataRequest,
   FetchArtifactBlobMetadataResponse
->
-fetchArtifactBlobMetadataMethod = _skir.Method(
-  "FetchArtifactBlobMetadata",
-  910011,
-  FetchArtifactBlobMetadataRequest.serializer,
-  FetchArtifactBlobMetadataResponse.serializer,
-  "",
-);
+> fetchArtifactBlobMetadataMethod =
+  _skir.Method(
+    "FetchArtifactBlobMetadata",
+    910011,
+    FetchArtifactBlobMetadataRequest.serializer,
+    FetchArtifactBlobMetadataResponse.serializer,
+    "",
+  );

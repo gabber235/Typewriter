@@ -176,7 +176,7 @@ return enumValue(_that.possibleValues);case _:
 
 class FreeTextSelectorValue extends QuerySelectorValue {
   const FreeTextSelectorValue(): super._();
-
+  
 
 
 
@@ -208,7 +208,7 @@ String toString() {
 
 class EnumSelectorValue extends QuerySelectorValue {
   const EnumSelectorValue(final  List<String> possibleValues): _possibleValues = possibleValues,super._();
-
+  
 
  final  List<String> _possibleValues;
  List<String> get possibleValues {

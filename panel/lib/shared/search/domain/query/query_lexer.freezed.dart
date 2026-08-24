@@ -215,7 +215,7 @@ return negation(_that.token,_that.raw,_that.range,_that.operatorRange,_that.issu
 
 class QueryLexerKeyValueSelectorToken implements QueryLexerToken, QueryLexerSelectorToken {
   const QueryLexerKeyValueSelectorToken({required this.selectorId, required this.keyRange, required this.raw, required this.range, this.value, this.valueRange, final  List<QueryParseIssue> issues = const <QueryParseIssue>[]}): assert(value != null || issues.length > 0, 'When no value is provided, an issue must be present'),_issues = issues;
-
+  
 
  final  String selectorId;
  final  QueryRange keyRange;
@@ -299,7 +299,7 @@ as List<QueryParseIssue>,
 
 class QueryLexerOperatorToken implements QueryLexerToken {
   const QueryLexerOperatorToken({required this.type, required this.raw, required this.range, required this.left, required this.right, required this.operatorRange, final  List<QueryParseIssue> issues = const <QueryParseIssue>[]}): _issues = issues;
-
+  
 
  final  QueryLexerOperatorType type;
 @override final  String raw;
@@ -380,7 +380,7 @@ as List<QueryParseIssue>,
 @override
 @pragma('vm:prefer-inline')
 $QueryLexerTokenCopyWith<$Res> get left {
-
+  
   return $QueryLexerTokenCopyWith<$Res>(_self.left, (value) {
     return _then(_self.copyWith(left: value));
   });
@@ -389,7 +389,7 @@ $QueryLexerTokenCopyWith<$Res> get left {
 @override
 @pragma('vm:prefer-inline')
 $QueryLexerTokenCopyWith<$Res> get right {
-
+  
   return $QueryLexerTokenCopyWith<$Res>(_self.right, (value) {
     return _then(_self.copyWith(right: value));
   });
@@ -401,7 +401,7 @@ $QueryLexerTokenCopyWith<$Res> get right {
 
 class QueryLexerNegationToken implements QueryLexerToken {
   const QueryLexerNegationToken({required this.token, required this.raw, required this.range, required this.operatorRange, final  List<QueryParseIssue> issues = const <QueryParseIssue>[]}): _issues = issues;
-
+  
 
  final  QueryLexerToken token;
 @override final  String raw;
@@ -478,7 +478,7 @@ as List<QueryParseIssue>,
 @override
 @pragma('vm:prefer-inline')
 $QueryLexerTokenCopyWith<$Res> get token {
-
+  
   return $QueryLexerTokenCopyWith<$Res>(_self.token, (value) {
     return _then(_self.copyWith(token: value));
   });

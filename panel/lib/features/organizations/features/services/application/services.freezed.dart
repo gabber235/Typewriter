@@ -80,7 +80,7 @@ as ServiceState?,
 @override
 @pragma('vm:prefer-inline')
 $ServiceRoleCopyWith<$Res> get role {
-
+  
   return $ServiceRoleCopyWith<$Res>(_self.role, (value) {
     return _then(_self.copyWith(role: value));
   });
@@ -247,7 +247,7 @@ return $default(_that.serviceId,_that.revision,_that.name,_that.role,_that.creat
 
 class _Service extends Service {
    _Service({required this.serviceId, required this.revision, required this.name, required this.role, required this.createdAt, this.organization, this.registration, this.state}): assert(name.isNotEmpty, 'Name must not be empty.'),super._();
-
+  
 
 @override final  skir.RecordId serviceId;
 @override final  int revision;
@@ -324,7 +324,7 @@ as ServiceState?,
 @override
 @pragma('vm:prefer-inline')
 $ServiceRoleCopyWith<$Res> get role {
-
+  
   return $ServiceRoleCopyWith<$Res>(_self.role, (value) {
     return _then(_self.copyWith(role: value));
   });
@@ -551,7 +551,7 @@ return custom(_that.version,_that.name);case _:
 
 class HostServiceRole extends ServiceRole {
    HostServiceRole({required this.version}): assert(version.isNotEmpty, 'Version must not be empty.'),super._();
-
+  
 
 @override final  String version;
 
@@ -617,7 +617,7 @@ as String,
 
 class CustomServiceRole extends ServiceRole {
    CustomServiceRole({required this.version, required this.name}): assert(version.isNotEmpty, 'Version must not be empty.'),assert(name.isNotEmpty, 'Name must not be empty.'),super._();
-
+  
 
 @override final  String version;
  final  String name;
@@ -877,7 +877,7 @@ return $default(_that.token,_that.expiresAt);case _:
 
 class _ServiceRegistration extends ServiceRegistration {
   const _ServiceRegistration({required this.token, required this.expiresAt}): super._();
-
+  
 
 @override final  String token;
 @override final  DateTime expiresAt;
@@ -1137,7 +1137,7 @@ return $default(_that.status,_that.lastSeen);case _:
 
 class _ServiceState extends ServiceState {
   const _ServiceState({required this.status, required this.lastSeen}): super._();
-
+  
 
 @override final  ServiceStateStatus status;
 @override final  DateTime lastSeen;
@@ -1397,7 +1397,7 @@ return $default(_that.desired,_that.applied);case _:
 
 class _TopologyRevision implements TopologyRevision {
   const _TopologyRevision({required this.desired, required this.applied});
-
+  
 
 @override final  int desired;
 @override final  int applied;
@@ -1657,7 +1657,7 @@ return $default(_that.engineId,_that.versionConstraint);case _:
 
 class _TopologyEngineTarget extends TopologyEngineTarget {
   const _TopologyEngineTarget({required this.engineId, required this.versionConstraint}): super._();
-
+  
 
 @override final  String engineId;
 @override final  String versionConstraint;
@@ -1916,7 +1916,7 @@ return $default(_that.engineId);case _:
 
 class _TopologySupportedEngine implements TopologySupportedEngine {
   const _TopologySupportedEngine({required this.engineId});
-
+  
 
 @override final  String engineId;
 
@@ -2175,7 +2175,7 @@ return $default(_that.status,_that.message,_that.updatedAt);case _:
 
 class _TopologyHostState implements TopologyHostState {
   const _TopologyHostState({required this.status, required this.message, required this.updatedAt});
-
+  
 
 @override final  TopologyHostStatus status;
 @override final  String? message;
@@ -2439,7 +2439,7 @@ return $default(_that.status,_that.activeArtifactVersion,_that.message,_that.upd
 
 class _TopologyRuntimeState implements TopologyRuntimeState {
   const _TopologyRuntimeState({required this.status, required this.activeArtifactVersion, required this.message, required this.updatedAt});
-
+  
 
 @override final  TopologyRuntimeStatus status;
 @override final  String? activeArtifactVersion;
@@ -2703,7 +2703,7 @@ return $default(_that.id,_that.name);case _:
 
 class _TopologyOwnerHost implements TopologyOwnerHost {
   const _TopologyOwnerHost({required this.id, required this.name});
-
+  
 
 @override final  skir.RecordId id;
 @override final  String name;
@@ -2829,7 +2829,7 @@ as TopologyOwnerHost,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -2972,7 +2972,7 @@ return $default(_that.realmId,_that.ownerHost);case _:
 
 class _TopologyRealmInfo implements TopologyRealmInfo {
   const _TopologyRealmInfo({required this.realmId, required this.ownerHost});
-
+  
 
 @override final  skir.RecordId realmId;
 @override final  TopologyOwnerHost ownerHost;
@@ -3037,7 +3037,7 @@ as TopologyOwnerHost,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -3113,7 +3113,7 @@ as TopologyHostState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyRevisionCopyWith<$Res> get topologyRevision {
-
+  
   return $TopologyRevisionCopyWith<$Res>(_self.topologyRevision, (value) {
     return _then(_self.copyWith(topologyRevision: value));
   });
@@ -3122,7 +3122,7 @@ $TopologyRevisionCopyWith<$Res> get topologyRevision {
 @override
 @pragma('vm:prefer-inline')
 $TopologyHostStateCopyWith<$Res> get state {
-
+  
   return $TopologyHostStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -3265,7 +3265,7 @@ return $default(_that.hostId,_that.serviceId,_that.revision,_that.entrypoint,_th
 
 class _TopologyHost implements TopologyHost {
   const _TopologyHost({required this.hostId, required this.serviceId, required this.revision, required this.entrypoint, required this.canHostRealm, required final  List<TopologySupportedEngine> supportedEngines, required this.topologyRevision, required this.state}): _supportedEngines = supportedEngines;
-
+  
 
 @override final  skir.RecordId hostId;
 @override final  skir.RecordId serviceId;
@@ -3348,7 +3348,7 @@ as TopologyHostState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyRevisionCopyWith<$Res> get topologyRevision {
-
+  
   return $TopologyRevisionCopyWith<$Res>(_self.topologyRevision, (value) {
     return _then(_self.copyWith(topologyRevision: value));
   });
@@ -3357,7 +3357,7 @@ $TopologyRevisionCopyWith<$Res> get topologyRevision {
 @override
 @pragma('vm:prefer-inline')
 $TopologyHostStateCopyWith<$Res> get state {
-
+  
   return $TopologyHostStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -3430,7 +3430,7 @@ as TopologyRuntimeState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -3439,7 +3439,7 @@ $TopologyOwnerHostCopyWith<$Res> get ownerHost {
 @override
 @pragma('vm:prefer-inline')
 $TopologyEngineTargetCopyWith<$Res> get targetEngine {
-
+  
   return $TopologyEngineTargetCopyWith<$Res>(_self.targetEngine, (value) {
     return _then(_self.copyWith(targetEngine: value));
   });
@@ -3448,7 +3448,7 @@ $TopologyEngineTargetCopyWith<$Res> get targetEngine {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRuntimeStateCopyWith<$Res> get state {
-
+  
   return $TopologyRuntimeStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -3591,7 +3591,7 @@ return $default(_that.realmId,_that.ownerHost,_that.revision,_that.targetEngine,
 
 class _TopologyRealm implements TopologyRealm {
   const _TopologyRealm({required this.realmId, required this.ownerHost, required this.revision, required this.targetEngine, required this.state});
-
+  
 
 @override final  skir.RecordId realmId;
 @override final  TopologyOwnerHost ownerHost;
@@ -3662,7 +3662,7 @@ as TopologyRuntimeState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -3671,7 +3671,7 @@ $TopologyOwnerHostCopyWith<$Res> get ownerHost {
 @override
 @pragma('vm:prefer-inline')
 $TopologyEngineTargetCopyWith<$Res> get targetEngine {
-
+  
   return $TopologyEngineTargetCopyWith<$Res>(_self.targetEngine, (value) {
     return _then(_self.copyWith(targetEngine: value));
   });
@@ -3680,7 +3680,7 @@ $TopologyEngineTargetCopyWith<$Res> get targetEngine {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRuntimeStateCopyWith<$Res> get state {
-
+  
   return $TopologyRuntimeStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -3754,7 +3754,7 @@ as TopologyRuntimeState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -3763,7 +3763,7 @@ $TopologyOwnerHostCopyWith<$Res> get ownerHost {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRealmInfoCopyWith<$Res> get realm {
-
+  
   return $TopologyRealmInfoCopyWith<$Res>(_self.realm, (value) {
     return _then(_self.copyWith(realm: value));
   });
@@ -3772,7 +3772,7 @@ $TopologyRealmInfoCopyWith<$Res> get realm {
 @override
 @pragma('vm:prefer-inline')
 $TopologyEngineTargetCopyWith<$Res> get target {
-
+  
   return $TopologyEngineTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -3781,7 +3781,7 @@ $TopologyEngineTargetCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRuntimeStateCopyWith<$Res> get state {
-
+  
   return $TopologyRuntimeStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -3924,7 +3924,7 @@ return $default(_that.engineId,_that.ownerHost,_that.realm,_that.revision,_that.
 
 class _TopologyEngine implements TopologyEngine {
   const _TopologyEngine({required this.engineId, required this.ownerHost, required this.realm, required this.revision, required this.target, required this.state});
-
+  
 
 @override final  skir.RecordId engineId;
 @override final  TopologyOwnerHost ownerHost;
@@ -3997,7 +3997,7 @@ as TopologyRuntimeState,
 @override
 @pragma('vm:prefer-inline')
 $TopologyOwnerHostCopyWith<$Res> get ownerHost {
-
+  
   return $TopologyOwnerHostCopyWith<$Res>(_self.ownerHost, (value) {
     return _then(_self.copyWith(ownerHost: value));
   });
@@ -4006,7 +4006,7 @@ $TopologyOwnerHostCopyWith<$Res> get ownerHost {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRealmInfoCopyWith<$Res> get realm {
-
+  
   return $TopologyRealmInfoCopyWith<$Res>(_self.realm, (value) {
     return _then(_self.copyWith(realm: value));
   });
@@ -4015,7 +4015,7 @@ $TopologyRealmInfoCopyWith<$Res> get realm {
 @override
 @pragma('vm:prefer-inline')
 $TopologyEngineTargetCopyWith<$Res> get target {
-
+  
   return $TopologyEngineTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -4024,7 +4024,7 @@ $TopologyEngineTargetCopyWith<$Res> get target {
 @override
 @pragma('vm:prefer-inline')
 $TopologyRuntimeStateCopyWith<$Res> get state {
-
+  
   return $TopologyRuntimeStateCopyWith<$Res>(_self.state, (value) {
     return _then(_self.copyWith(state: value));
   });
@@ -4095,7 +4095,7 @@ as TopologyEngine?,
 @override
 @pragma('vm:prefer-inline')
 $TopologyHostCopyWith<$Res> get host {
-
+  
   return $TopologyHostCopyWith<$Res>(_self.host, (value) {
     return _then(_self.copyWith(host: value));
   });
@@ -4262,7 +4262,7 @@ return $default(_that.host,_that.realm,_that.engine);case _:
 
 class _TopologyConfigurationResult implements TopologyConfigurationResult {
   const _TopologyConfigurationResult({required this.host, required this.realm, required this.engine});
-
+  
 
 @override final  TopologyHost host;
 @override final  TopologyRealm? realm;
@@ -4329,7 +4329,7 @@ as TopologyEngine?,
 @override
 @pragma('vm:prefer-inline')
 $TopologyHostCopyWith<$Res> get host {
-
+  
   return $TopologyHostCopyWith<$Res>(_self.host, (value) {
     return _then(_self.copyWith(host: value));
   });
@@ -4558,7 +4558,7 @@ return $default(_that.hosts,_that.realmInstances,_that.engineInstances);case _:
 
 class _OrganizationTopology extends OrganizationTopology {
   const _OrganizationTopology({required final  List<TopologyHost> hosts, required final  List<TopologyRealm> realmInstances, required final  List<TopologyEngine> engineInstances}): _hosts = hosts,_realmInstances = realmInstances,_engineInstances = engineInstances,super._();
-
+  
 
  final  List<TopologyHost> _hosts;
 @override List<TopologyHost> get hosts {
