@@ -11,13 +11,13 @@ import com.typewritermc.capability.RealmSearchUpdate
 import com.typewritermc.realm.RealmDiscoverySnapshotStore
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypePrototypeRegistry
-import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -27,8 +27,8 @@ import skirout.editor.v1.diagnostic.TypeDiagnostic
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
-import skirout.editor.v1.search.RealmSearchSelectorExpression as WireSelectorExpression
 import java.util.concurrent.ConcurrentHashMap
+import skirout.editor.v1.search.RealmSearchSelectorExpression as WireSelectorExpression
 
 interface RealmPresentationSearchSource {
     suspend fun watch(
@@ -129,26 +129,33 @@ class CapabilityRealmPresentationSearchSource(
         )
     }
 
-    override fun cancel(subscriptionId: String): Boolean = subscriptions.remove(subscriptionId)?.let {
-        it.cancel()
-        true
-    } ?: false
+    override fun cancel(subscriptionId: String): Boolean =
+        subscriptions.remove(subscriptionId)?.let {
+            it.cancel()
+            true
+        } ?: false
 
     private fun validate(request: RealmPresentationSearchRequest): RealmPresentationSearchUpdate? {
-        val current = snapshots.current()
-            ?: return unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Realm catalog is unavailable")
+        val current =
+            snapshots.current()
+                ?: return unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Realm catalog is unavailable")
         if (request.generation.value != current.discovery.generation.value) {
             return searchError(request.subscriptionId, "Realm catalog generation is stale")
         }
-        val descriptor = current.capabilities
-            .filterIsInstance<RealmCapabilityDescriptor.Search>()
-            .singleOrNull { it.id.value == request.capabilityId.value }
-            ?: return searchError(request.subscriptionId, "Realm search capability is unavailable")
+        val descriptor =
+            current.capabilities
+                .filterIsInstance<RealmCapabilityDescriptor.Search>()
+                .singleOrNull { it.id.value == request.capabilityId.value }
+                ?: return searchError(request.subscriptionId, "Realm search capability is unavailable")
         val resultType =
             when (val decoded = SkirTypeCodec.decode(request.resultType)) {
-                is SkirConversionResult.Success -> decoded.value
-                is SkirConversionResult.Failure ->
+                is SkirConversionResult.Success -> {
+                    decoded.value
+                }
+
+                is SkirConversionResult.Failure -> {
                     return searchError(request.subscriptionId, "Realm search result type is invalid")
+                }
             }
         if (resultType != TypeExpression.Named(descriptor.resultType)) {
             return searchError(request.subscriptionId, "Realm search result type does not match its capability")
@@ -170,18 +177,33 @@ private fun skirout.editor.v1.search.RealmSearchQuery.toDomain(): RealmSearchQue
 
 private fun WireSelectorExpression.toDomain(): RealmSearchSelectorExpression =
     when (this) {
-        is WireSelectorExpression.SelectorWrapper -> RealmSearchSelectorExpression.Selector(value.selectorId)
+        is WireSelectorExpression.SelectorWrapper -> {
+            RealmSearchSelectorExpression.Selector(value.selectorId)
+        }
+
         is WireSelectorExpression.BinaryWrapper -> {
             when (value.operator_) {
-                skirout.editor.v1.search.RealmSearchSelectorOperator.AND ->
+                skirout.editor.v1.search.RealmSearchSelectorOperator.AND -> {
                     RealmSearchSelectorExpression.And(value.left.toDomain(), value.right.toDomain())
-                skirout.editor.v1.search.RealmSearchSelectorOperator.OR ->
+                }
+
+                skirout.editor.v1.search.RealmSearchSelectorOperator.OR -> {
                     RealmSearchSelectorExpression.Or(value.left.toDomain(), value.right.toDomain())
-                else -> error("Unknown Realm search selector operator")
+                }
+
+                else -> {
+                    error("Unknown Realm search selector operator")
+                }
             }
         }
-        is WireSelectorExpression.NotWrapper -> RealmSearchSelectorExpression.Not(value.expression.toDomain())
-        else -> error("Unknown Realm search selector expression")
+
+        is WireSelectorExpression.NotWrapper -> {
+            RealmSearchSelectorExpression.Not(value.expression.toDomain())
+        }
+
+        else -> {
+            error("Unknown Realm search selector expression")
+        }
     }
 
 private fun searchSnapshot(

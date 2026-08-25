@@ -18,10 +18,10 @@ import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
-import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
-import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
 import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.type_catalog.CatalogGeneration
+import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
+import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
 
 class RealmCapabilityInvocationSource(
     private val capabilities: RealmCapabilityRegistry,
@@ -31,12 +31,15 @@ class RealmCapabilityInvocationSource(
     suspend fun computation(request: CapabilityInvocationRequest): ComputationResult {
         validateBase(request)?.let { return it.toComputationResult(request.invocationId) }
         val descriptor =
-            snapshots.current()?.capabilities
+            snapshots
+                .current()
+                ?.capabilities
                 ?.filterIsInstance<RealmCapabilityDescriptor.Computation>()
                 ?.singleOrNull { it.id.value == request.capabilityId.value }
                 ?: return invalidComputation(request, "Realm computation capability is unavailable")
-        val expected = request.expectedResultType?.decode()
-            ?: return invalidComputation(request, "Realm computation result type is required")
+        val expected =
+            request.expectedResultType?.decode()
+                ?: return invalidComputation(request, "Realm computation result type is required")
         if (expected != TypeExpression.Named(descriptor.resultType)) {
             return invalidComputation(request, "Realm computation result type does not match its capability")
         }
@@ -69,7 +72,9 @@ class RealmCapabilityInvocationSource(
     suspend fun command(request: CapabilityInvocationRequest): CommandResult {
         validateBase(request)?.let { return it.toCommandResult(request.invocationId) }
         val descriptor =
-            snapshots.current()?.capabilities
+            snapshots
+                .current()
+                ?.capabilities
                 ?.filterIsInstance<RealmCapabilityDescriptor.Command>()
                 ?.singleOrNull { it.id.value == request.capabilityId.value }
                 ?: return invalidCommand(request, "Realm command capability is unavailable")
@@ -108,8 +113,9 @@ class RealmCapabilityInvocationSource(
         if (request.payload == skirout.editor.v1.type_catalog.TypedValue.UNKNOWN) {
             return InvocationValidationFailure.Invalid("Capability payload is missing")
         }
-        val current = snapshots.current()
-            ?: return InvocationValidationFailure.Unavailable("Realm catalog is unavailable")
+        val current =
+            snapshots.current()
+                ?: return InvocationValidationFailure.Unavailable("Realm catalog is unavailable")
         if (request.generation.value != current.discovery.generation.value) {
             return InvocationValidationFailure.Stale(current.discovery.generation.value)
         }
@@ -118,9 +124,17 @@ class RealmCapabilityInvocationSource(
 }
 
 private sealed interface InvocationValidationFailure {
-    data class Invalid(val message: String) : InvocationValidationFailure
-    data class Unavailable(val message: String) : InvocationValidationFailure
-    data class Stale(val actualGeneration: String) : InvocationValidationFailure
+    data class Invalid(
+        val message: String,
+    ) : InvocationValidationFailure
+
+    data class Unavailable(
+        val message: String,
+    ) : InvocationValidationFailure
+
+    data class Stale(
+        val actualGeneration: String,
+    ) : InvocationValidationFailure
 }
 
 private data class ComputationContext(
@@ -131,34 +145,40 @@ private data class CommandContext(
     override val invocationId: String,
 ) : RealmCommandContext
 
-private fun InvocationValidationFailure.toComputationResult(
-    invocationId: skirout.editor.v1.capability.InvocationId,
-): ComputationResult =
+private fun InvocationValidationFailure.toComputationResult(invocationId: skirout.editor.v1.capability.InvocationId): ComputationResult =
     when (this) {
-        is InvocationValidationFailure.Invalid ->
+        is InvocationValidationFailure.Invalid -> {
             ComputationResult.createInvalid(invocationId = invocationId, diagnostics = listOf(capabilityDiagnostic(message)))
-        is InvocationValidationFailure.Unavailable ->
+        }
+
+        is InvocationValidationFailure.Unavailable -> {
             ComputationResult.createUnavailable(invocationId = invocationId, diagnostics = listOf(capabilityDiagnostic(message)))
-        is InvocationValidationFailure.Stale ->
+        }
+
+        is InvocationValidationFailure.Stale -> {
             ComputationResult.createStaleGeneration(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
+        }
     }
 
-private fun InvocationValidationFailure.toCommandResult(
-    invocationId: skirout.editor.v1.capability.InvocationId,
-): CommandResult =
+private fun InvocationValidationFailure.toCommandResult(invocationId: skirout.editor.v1.capability.InvocationId): CommandResult =
     when (this) {
-        is InvocationValidationFailure.Invalid ->
+        is InvocationValidationFailure.Invalid -> {
             CommandResult.createInvalid(invocationId = invocationId, diagnostics = listOf(capabilityDiagnostic(message)))
-        is InvocationValidationFailure.Unavailable ->
+        }
+
+        is InvocationValidationFailure.Unavailable -> {
             CommandResult.createUnavailable(invocationId = invocationId, diagnostics = listOf(capabilityDiagnostic(message)))
-        is InvocationValidationFailure.Stale ->
+        }
+
+        is InvocationValidationFailure.Stale -> {
             CommandResult.createStaleGeneration(
                 invocationId = invocationId,
                 actualGeneration = CatalogGeneration(value = actualGeneration),
             )
+        }
     }
 
 private fun skirout.editor.v1.type_catalog.TypeExpression.decode(): TypeExpression? =
@@ -185,32 +205,34 @@ private fun invalidCommand(
         diagnostics = listOf(capabilityDiagnostic(message)),
     )
 
-private fun capabilityDiagnostic(failure: Throwable) =
-    capabilityDiagnostic(failure.message ?: "Realm capability failed")
+private fun capabilityDiagnostic(failure: Throwable) = capabilityDiagnostic(failure.message ?: "Realm capability failed")
 
-private fun capabilityDiagnostic(message: String) =
-    realmPresentationSearchDiagnostic(DiagnosticCode.INVALID_VALUE, message)
+private fun capabilityDiagnostic(message: String) = realmPresentationSearchDiagnostic(DiagnosticCode.INVALID_VALUE, message)
 
 private fun PanelInstruction.toWire(): WirePanelInstruction =
     when (this) {
-        is PanelInstruction.InvalidateResource ->
+        is PanelInstruction.InvalidateResource -> {
             WirePanelInstruction.createInvalidateResource(
                 resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
             )
-        is PanelInstruction.OpenResource ->
+        }
+
+        is PanelInstruction.OpenResource -> {
             WirePanelInstruction.createOpenResource(
                 resource = resource.type.toWireResource(SkirDataValueCodec.encode(resource.identity).getOrThrow()),
             )
-        is PanelInstruction.Notify ->
+        }
+
+        is PanelInstruction.Notify -> {
             WirePanelInstruction.createNotify(severity = severity.toWire(), message = message)
+        }
     }
 
-private fun com.typewritermc.types.ResolvedTypeRef.toWireResource(
-    identity: skirout.editor.v1.type_catalog.TypedValue,
-) = skirout.editor.v1.capability.ResourceAddress(
-    resourceType = SkirTypeCodec.encode(this).getOrThrow(),
-    identity = identity,
-)
+private fun com.typewritermc.types.ResolvedTypeRef.toWireResource(identity: skirout.editor.v1.type_catalog.TypedValue) =
+    skirout.editor.v1.capability.ResourceAddress(
+        resourceType = SkirTypeCodec.encode(this).getOrThrow(),
+        identity = identity,
+    )
 
 private fun NotificationSeverity.toWire(): WireNotificationSeverity =
     when (this) {
