@@ -2,7 +2,12 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.capability.RealmCapabilityDescriptor
+import com.typewritermc.elements.ElementCatalogEntry
+import com.typewritermc.pages.PageCatalogEntry
+import com.typewritermc.pages.PageDiagnostic
+import com.typewritermc.pages.ResolvedPageEditorDefinition
 import com.typewritermc.presentation.PresentationDiagnostic
+import com.typewritermc.realm.RealmDiscoverySnapshot
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.PresentationId
 import com.typewritermc.types.ResolvedTypeRef
@@ -11,15 +16,15 @@ import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.capability.CapabilityDefinition
+import skirout.editor.v1.capability.CommandCapabilityDefinition
+import skirout.editor.v1.capability.ComputationCapabilityDefinition
+import skirout.editor.v1.capability.SearchCapabilityDefinition
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.SubtypeResult
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
-import skirout.editor.v1.capability.CapabilityDefinition
-import skirout.editor.v1.capability.CommandCapabilityDefinition
-import skirout.editor.v1.capability.ComputationCapabilityDefinition
-import skirout.editor.v1.capability.SearchCapabilityDefinition
 import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.diagnostic.DiagnosticSeverity
 import skirout.editor.v1.diagnostic.TypeDiagnostic
@@ -32,24 +37,12 @@ interface RealmEditorCatalogSource {
     suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate
 }
 
-data class RealmEditorCatalogSnapshot(
-    val generation: String,
-    val types: TypeCatalog,
-    val presentations: List<skirout.editor.v1.presentation.PresentationDefinition>,
-    val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
-    val presentationDiagnostics: List<PresentationDiagnostic> = emptyList(),
-)
-
-fun interface RealmEditorCatalogSnapshotProvider {
-    suspend fun snapshot(): RealmEditorCatalogSnapshot?
-}
-
 class SnapshotRealmEditorCatalogSource(
-    private val provider: RealmEditorCatalogSnapshotProvider,
+    private val snapshot: suspend () -> RealmDiscoverySnapshot?,
 ) : RealmEditorCatalogSource {
     override suspend fun fetch(request: CatalogFetchRequest): CatalogFetchResult {
-        val snapshot = provider.snapshot() ?: return unavailableCatalogFetchResult("Realm discovery snapshot is unavailable")
-        val generation = snapshot.generation
+        val snapshot = snapshot() ?: return unavailableCatalogFetchResult("Realm discovery snapshot is unavailable")
+        val generation = snapshot.discovery.generation.value
         if (request.expectedGeneration?.value != null && request.expectedGeneration?.value != generation) {
             return CatalogFetchResult.createGenerationMismatch(actualGeneration = CatalogGeneration(value = generation))
         }
@@ -57,7 +50,7 @@ class SnapshotRealmEditorCatalogSource(
         val subtypeMatches =
             request.subtypeQueries.map { query ->
                 val target = SkirTypeCodec.decode(query.target).getOrThrow()
-                Triple(query.queryId, target, snapshot.types.subtypesOf(target))
+                Triple(query.queryId, target, snapshot.discovery.types.subtypesOf(target))
             }
         val subtypeResults =
             subtypeMatches.map { (queryId, _, matches) ->
@@ -68,7 +61,9 @@ class SnapshotRealmEditorCatalogSource(
             }
         val closure =
             snapshot.closure(
-                requestedTypes + subtypeMatches.flatMap { (_, target, matches) -> listOf(target) + matches.map { it.id } },
+                requestedTypes +
+                    snapshot.catalogTypes() +
+                    subtypeMatches.flatMap { (_, target, matches) -> listOf(target) + matches.map { it.id } },
                 request.presentationIds.map { PresentationId(it.namespace, it.name) },
             )
         val encoded = SkirTypeCodec.encode(closure.types).getOrThrow()
@@ -80,12 +75,26 @@ class SnapshotRealmEditorCatalogSource(
             capabilityDefinitions = closure.capabilities.map(RealmCapabilityDescriptor::toWire),
             subtypeResults = subtypeResults,
             diagnostics = snapshot.presentationDiagnostics.map(PresentationDiagnostic::toWire),
+            elementEntries = snapshot.elements.entries.map(ElementCatalogEntry::toSkir),
+            pageEntries = snapshot.pages.entries.map(PageCatalogEntry::toSkir),
+            pageDiagnostics = snapshot.pages.diagnostics.map(PageDiagnostic::toSkir),
         )
     }
 
     override suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate =
-        CatalogWatchUpdate.createInitial(value = provider.snapshot()?.generation ?: "unavailable")
+        CatalogWatchUpdate.createInitial(
+            value = snapshot()?.discovery?.generation?.value ?: "unavailable",
+        )
 }
+
+private fun RealmDiscoverySnapshot.catalogTypes(): List<ResolvedTypeRef> =
+    elements.entries.map { it.descriptor.type } +
+        pages.entries.flatMap { entry ->
+            when (val editor = entry.descriptor.editor) {
+                is ResolvedPageEditorDefinition.Graph -> editor.nodes
+                is ResolvedPageEditorDefinition.Timeline -> editor.tracks + editor.segments + editor.keyframes
+            }
+        }
 
 private data class RealmEditorCatalogClosure(
     val types: TypeCatalog,
@@ -93,11 +102,11 @@ private data class RealmEditorCatalogClosure(
     val capabilities: List<RealmCapabilityDescriptor>,
 )
 
-private fun RealmEditorCatalogSnapshot.closure(
+private fun RealmDiscoverySnapshot.closure(
     requestedTypes: List<ResolvedTypeRef>,
     requestedPresentations: List<PresentationId>,
 ): RealmEditorCatalogClosure {
-    val collector = TypeClosureCollector(types)
+    val collector = TypeClosureCollector(discovery.types)
     requestedTypes.forEach(collector::includeReference)
     val presentationsById =
         presentations.associateBy { PresentationId(it.presentationId.namespace, it.presentationId.name) }

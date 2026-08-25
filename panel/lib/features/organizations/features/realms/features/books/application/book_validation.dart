@@ -20,8 +20,10 @@ extension on skir.PageValidationError {
         ApiException.unknownResponseMessage(),
       skir.PageValidationError_kind.nameRequiredConst =>
         ApiException.badRequest("Page name is required"),
-      skir.PageValidationError_kind.pageTypeUnknownConst =>
-        ApiException.badRequest("Page type is unknown"),
+      skir.PageValidationError_kind.pageKindUnknownConst =>
+        ApiException.badRequest("Page kind is unknown"),
+      skir.PageValidationError_kind.pageKindRevisionUnknownConst =>
+        ApiException.badRequest("Page kind revision is unknown"),
     };
   }
 }

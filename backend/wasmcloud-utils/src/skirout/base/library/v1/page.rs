@@ -14,61 +14,16 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// enum PageType
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum PageType {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PageType>>),
-    Sequence,
-    Static,
-    Scene,
-    Manifest,
-}
-
-impl Default for PageType {
-    fn default() -> Self {
-        PageType::Unknown(None)
-    }
-}
-
-impl PageType {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PageType> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PageType>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PageType| match x {
-                        PageType::Unknown(_) => 0,
-                        PageType::Sequence => 1,
-                        PageType::Static => 2,
-                        PageType::Scene => 3,
-                        PageType::Manifest => 4,
-                    },
-                    |u| PageType::Unknown(Some(u)),
-                    |x: &PageType| match x { PageType::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "library/v1/page.skir",
-                    "PageType",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<PageType> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PageType::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct Page
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Page {
     pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub revision: i64,
     pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub name: String,
-    pub type_: PageType,
+    pub kind: crate::skirout::base::kernel::v1::page_kind::PageKindRef,
     pub chapter: String,
     pub priority: i32,
     /// Set this to None when you're creating a struct.
@@ -110,7 +65,8 @@ impl Page {
 pub enum PageValidationError {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PageValidationError>>),
     NameRequired,
-    PageTypeUnknown,
+    PageKindUnknown,
+    PageKindRevisionUnknown,
 }
 
 impl Default for PageValidationError {
@@ -127,7 +83,8 @@ impl PageValidationError {
                     |x: &PageValidationError| match x {
                         PageValidationError::Unknown(_) => 0,
                         PageValidationError::NameRequired => 1,
-                        PageValidationError::PageTypeUnknown => 2,
+                        PageValidationError::PageKindUnknown => 2,
+                        PageValidationError::PageKindRevisionUnknown => 3,
                     },
                     |u| PageValidationError::Unknown(Some(u)),
                     |x: &PageValidationError| match x { PageValidationError::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -141,6 +98,170 @@ impl PageValidationError {
     pub fn serializer() -> crate::skir_client::Serializer<PageValidationError> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(PageValidationError::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ChangePageKindRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ChangePageKindRequest {
+    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub target: crate::skirout::base::kernel::v1::page_kind::PageKindRef,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ChangePageKindRequest>>,
+}
+
+impl ChangePageKindRequest {
+    pub fn default_ref() -> &'static ChangePageKindRequest {
+        static D: std::sync::LazyLock<ChangePageKindRequest> = std::sync::LazyLock::new(ChangePageKindRequest::default);
+        &D
+    }
+}
+
+impl ChangePageKindRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ChangePageKindRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ChangePageKindRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "ChangePageKindRequest",
+                    "",
+                    |x: &ChangePageKindRequest| &x._unrecognized,
+                    |x: &mut ChangePageKindRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ChangePageKindRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ChangePageKindRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ChangePageKindResponse.PageNotFoundError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ChangePageKindResponse_PageNotFoundError {
+    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ChangePageKindResponse_PageNotFoundError>>,
+}
+
+impl ChangePageKindResponse_PageNotFoundError {
+    pub fn default_ref() -> &'static ChangePageKindResponse_PageNotFoundError {
+        static D: std::sync::LazyLock<ChangePageKindResponse_PageNotFoundError> = std::sync::LazyLock::new(ChangePageKindResponse_PageNotFoundError::default);
+        &D
+    }
+}
+
+impl ChangePageKindResponse_PageNotFoundError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ChangePageKindResponse_PageNotFoundError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ChangePageKindResponse_PageNotFoundError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "ChangePageKindResponse.PageNotFoundError",
+                    "",
+                    |x: &ChangePageKindResponse_PageNotFoundError| &x._unrecognized,
+                    |x: &mut ChangePageKindResponse_PageNotFoundError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ChangePageKindResponse_PageNotFoundError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ChangePageKindResponse_PageNotFoundError::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ChangePageKindResponse.ConversionUnavailable
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ChangePageKindResponse_ConversionUnavailable {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ChangePageKindResponse_ConversionUnavailable>>,
+}
+
+impl ChangePageKindResponse_ConversionUnavailable {
+    pub fn default_ref() -> &'static ChangePageKindResponse_ConversionUnavailable {
+        static D: std::sync::LazyLock<ChangePageKindResponse_ConversionUnavailable> = std::sync::LazyLock::new(ChangePageKindResponse_ConversionUnavailable::default);
+        &D
+    }
+}
+
+impl ChangePageKindResponse_ConversionUnavailable {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ChangePageKindResponse_ConversionUnavailable> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ChangePageKindResponse_ConversionUnavailable>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "ChangePageKindResponse.ConversionUnavailable",
+                    "",
+                    |x: &ChangePageKindResponse_ConversionUnavailable| &x._unrecognized,
+                    |x: &mut ChangePageKindResponse_ConversionUnavailable, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ChangePageKindResponse_ConversionUnavailable> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ChangePageKindResponse_ConversionUnavailable::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ChangePageKindResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ChangePageKindResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ChangePageKindResponse>>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+    Success(Box<Page>),
+    PageNotFoundError(Box<ChangePageKindResponse_PageNotFoundError>),
+    ValidationError(Box<PageValidationError>),
+    ConversionUnavailable(Box<ChangePageKindResponse_ConversionUnavailable>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
+}
+
+impl Default for ChangePageKindResponse {
+    fn default() -> Self {
+        ChangePageKindResponse::Unknown(None)
+    }
+}
+
+impl ChangePageKindResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ChangePageKindResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ChangePageKindResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &ChangePageKindResponse| match x {
+                        ChangePageKindResponse::Unknown(_) => 0,
+                        ChangePageKindResponse::InternalError(_) => 1,
+                        ChangePageKindResponse::Success(_) => 2,
+                        ChangePageKindResponse::PageNotFoundError(_) => 3,
+                        ChangePageKindResponse::ValidationError(_) => 4,
+                        ChangePageKindResponse::ConversionUnavailable(_) => 5,
+                        ChangePageKindResponse::InvalidRecordIdError(_) => 6,
+                    },
+                    |u| ChangePageKindResponse::Unknown(Some(u)),
+                    |x: &ChangePageKindResponse| match x { ChangePageKindResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/page.skir",
+                    "ChangePageKindResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ChangePageKindResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ChangePageKindResponse::_adapter())
     }
 }
 
@@ -401,7 +522,7 @@ impl WatchPageResponse {
 pub struct CreatePageRequest {
     pub book_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     pub name: String,
-    pub type_: PageType,
+    pub kind: crate::skirout::base::kernel::v1::page_kind::PageKindRef,
     pub chapter: Option<String>,
     pub priority: Option<i32>,
     /// Set this to None when you're creating a struct.
@@ -528,8 +649,8 @@ impl CreatePageResponse {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UpdatePageRequest {
     pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub expected_revision: i64,
     pub name: Option<String>,
-    pub type_: Option<PageType>,
     pub chapter: Option<String>,
     pub priority: Option<i32>,
     /// Set this to None when you're creating a struct.
@@ -560,6 +681,45 @@ impl UpdatePageRequest {
     pub fn serializer() -> crate::skir_client::Serializer<UpdatePageRequest> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(UpdatePageRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct UpdatePageResponse.ConflictError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct UpdatePageResponse_ConflictError {
+    pub expected_revision: i64,
+    pub actual: Page,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UpdatePageResponse_ConflictError>>,
+}
+
+impl UpdatePageResponse_ConflictError {
+    pub fn default_ref() -> &'static UpdatePageResponse_ConflictError {
+        static D: std::sync::LazyLock<UpdatePageResponse_ConflictError> = std::sync::LazyLock::new(UpdatePageResponse_ConflictError::default);
+        &D
+    }
+}
+
+impl UpdatePageResponse_ConflictError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdatePageResponse_ConflictError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdatePageResponse_ConflictError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "UpdatePageResponse.ConflictError",
+                    "",
+                    |x: &UpdatePageResponse_ConflictError| &x._unrecognized,
+                    |x: &mut UpdatePageResponse_ConflictError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<UpdatePageResponse_ConflictError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(UpdatePageResponse_ConflictError::_adapter())
     }
 }
 
@@ -610,6 +770,7 @@ pub enum UpdatePageResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<UpdatePageResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<Page>),
+    ConflictError(Box<UpdatePageResponse_ConflictError>),
     PageNotFoundError(Box<UpdatePageResponse_PageNotFoundError>),
     ValidationError(Box<PageValidationError>),
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
@@ -630,9 +791,10 @@ impl UpdatePageResponse {
                         UpdatePageResponse::Unknown(_) => 0,
                         UpdatePageResponse::InternalError(_) => 1,
                         UpdatePageResponse::Success(_) => 2,
-                        UpdatePageResponse::PageNotFoundError(_) => 3,
-                        UpdatePageResponse::ValidationError(_) => 4,
-                        UpdatePageResponse::InvalidRecordIdError(_) => 5,
+                        UpdatePageResponse::ConflictError(_) => 3,
+                        UpdatePageResponse::PageNotFoundError(_) => 4,
+                        UpdatePageResponse::ValidationError(_) => 5,
+                        UpdatePageResponse::InvalidRecordIdError(_) => 6,
                     },
                     |u| UpdatePageResponse::Unknown(Some(u)),
                     |x: &UpdatePageResponse| match x { UpdatePageResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -646,165 +808,6 @@ impl UpdatePageResponse {
     pub fn serializer() -> crate::skir_client::Serializer<UpdatePageResponse> {
         initialize_module_serializers();
         crate::skir_client::internal::enum_serializer_from_static(UpdatePageResponse::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct DeletePageRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct DeletePageRequest {
-    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageRequest>>,
-}
-
-impl DeletePageRequest {
-    pub fn default_ref() -> &'static DeletePageRequest {
-        static D: std::sync::LazyLock<DeletePageRequest> = std::sync::LazyLock::new(DeletePageRequest::default);
-        &D
-    }
-}
-
-impl DeletePageRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/page.skir",
-                    "DeletePageRequest",
-                    "",
-                    |x: &DeletePageRequest| &x._unrecognized,
-                    |x: &mut DeletePageRequest, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DeletePageRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DeletePageRequest::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct DeletePageResponse.Success
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct DeletePageResponse_Success {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageResponse_Success>>,
-}
-
-impl DeletePageResponse_Success {
-    pub fn default_ref() -> &'static DeletePageResponse_Success {
-        static D: std::sync::LazyLock<DeletePageResponse_Success> = std::sync::LazyLock::new(DeletePageResponse_Success::default);
-        &D
-    }
-}
-
-impl DeletePageResponse_Success {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageResponse_Success> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageResponse_Success>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/page.skir",
-                    "DeletePageResponse.Success",
-                    "",
-                    |x: &DeletePageResponse_Success| &x._unrecognized,
-                    |x: &mut DeletePageResponse_Success, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse_Success> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_Success::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct DeletePageResponse.PageNotFoundError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct DeletePageResponse_PageNotFoundError {
-    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageResponse_PageNotFoundError>>,
-}
-
-impl DeletePageResponse_PageNotFoundError {
-    pub fn default_ref() -> &'static DeletePageResponse_PageNotFoundError {
-        static D: std::sync::LazyLock<DeletePageResponse_PageNotFoundError> = std::sync::LazyLock::new(DeletePageResponse_PageNotFoundError::default);
-        &D
-    }
-}
-
-impl DeletePageResponse_PageNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "library/v1/page.skir",
-                    "DeletePageResponse.PageNotFoundError",
-                    "",
-                    |x: &DeletePageResponse_PageNotFoundError| &x._unrecognized,
-                    |x: &mut DeletePageResponse_PageNotFoundError, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse_PageNotFoundError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_PageNotFoundError::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum DeletePageResponse
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DeletePageResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<DeletePageResponse>>),
-    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
-    Success(Box<DeletePageResponse_Success>),
-    PageNotFoundError(Box<DeletePageResponse_PageNotFoundError>),
-    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
-}
-
-impl Default for DeletePageResponse {
-    fn default() -> Self {
-        DeletePageResponse::Unknown(None)
-    }
-}
-
-impl DeletePageResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<DeletePageResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<DeletePageResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &DeletePageResponse| match x {
-                        DeletePageResponse::Unknown(_) => 0,
-                        DeletePageResponse::InternalError(_) => 1,
-                        DeletePageResponse::Success(_) => 2,
-                        DeletePageResponse::PageNotFoundError(_) => 3,
-                        DeletePageResponse::InvalidRecordIdError(_) => 4,
-                    },
-                    |u| DeletePageResponse::Unknown(Some(u)),
-                    |x: &DeletePageResponse| match x { DeletePageResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "library/v1/page.skir",
-                    "DeletePageResponse",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(DeletePageResponse::_adapter())
     }
 }
 
@@ -971,6 +974,165 @@ impl ChangePagesChaptersResponse {
 }
 
 // ==============================================================================
+// struct DeletePageRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeletePageRequest {
+    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageRequest>>,
+}
+
+impl DeletePageRequest {
+    pub fn default_ref() -> &'static DeletePageRequest {
+        static D: std::sync::LazyLock<DeletePageRequest> = std::sync::LazyLock::new(DeletePageRequest::default);
+        &D
+    }
+}
+
+impl DeletePageRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "DeletePageRequest",
+                    "",
+                    |x: &DeletePageRequest| &x._unrecognized,
+                    |x: &mut DeletePageRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeletePageRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeletePageRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct DeletePageResponse.Success
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeletePageResponse_Success {
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageResponse_Success>>,
+}
+
+impl DeletePageResponse_Success {
+    pub fn default_ref() -> &'static DeletePageResponse_Success {
+        static D: std::sync::LazyLock<DeletePageResponse_Success> = std::sync::LazyLock::new(DeletePageResponse_Success::default);
+        &D
+    }
+}
+
+impl DeletePageResponse_Success {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageResponse_Success> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageResponse_Success>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "DeletePageResponse.Success",
+                    "",
+                    |x: &DeletePageResponse_Success| &x._unrecognized,
+                    |x: &mut DeletePageResponse_Success, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse_Success> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_Success::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct DeletePageResponse.PageNotFoundError
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeletePageResponse_PageNotFoundError {
+    pub page_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeletePageResponse_PageNotFoundError>>,
+}
+
+impl DeletePageResponse_PageNotFoundError {
+    pub fn default_ref() -> &'static DeletePageResponse_PageNotFoundError {
+        static D: std::sync::LazyLock<DeletePageResponse_PageNotFoundError> = std::sync::LazyLock::new(DeletePageResponse_PageNotFoundError::default);
+        &D
+    }
+}
+
+impl DeletePageResponse_PageNotFoundError {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "library/v1/page.skir",
+                    "DeletePageResponse.PageNotFoundError",
+                    "",
+                    |x: &DeletePageResponse_PageNotFoundError| &x._unrecognized,
+                    |x: &mut DeletePageResponse_PageNotFoundError, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse_PageNotFoundError> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_PageNotFoundError::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum DeletePageResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum DeletePageResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<DeletePageResponse>>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+    Success(Box<DeletePageResponse_Success>),
+    PageNotFoundError(Box<DeletePageResponse_PageNotFoundError>),
+    InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
+}
+
+impl Default for DeletePageResponse {
+    fn default() -> Self {
+        DeletePageResponse::Unknown(None)
+    }
+}
+
+impl DeletePageResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<DeletePageResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<DeletePageResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &DeletePageResponse| match x {
+                        DeletePageResponse::Unknown(_) => 0,
+                        DeletePageResponse::InternalError(_) => 1,
+                        DeletePageResponse::Success(_) => 2,
+                        DeletePageResponse::PageNotFoundError(_) => 3,
+                        DeletePageResponse::InvalidRecordIdError(_) => 4,
+                    },
+                    |u| DeletePageResponse::Unknown(Some(u)),
+                    |x: &DeletePageResponse| match x { DeletePageResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "library/v1/page.skir",
+                    "DeletePageResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeletePageResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(DeletePageResponse::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -978,27 +1140,46 @@ fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> =
         std::sync::LazyLock::new(|| {
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PageType> = PageType::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("sequence", 1, 1, "", PageType::Sequence);
-                (*a).add_constant_variant("static", 2, 2, "", PageType::Static);
-                (*a).add_constant_variant("scene", 3, 3, "", PageType::Scene);
-                (*a).add_constant_variant("manifest", 4, 4, "", PageType::Manifest);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<Page> = Page::_adapter() as *const _ as *mut _;
                 (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Page| &x.page_id, |x: &mut Page, v| x.page_id = v);
-                (*a).add_field("book_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Page| &x.book_id, |x: &mut Page, v| x.book_id = v);
-                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &Page| &x.name, |x: &mut Page, v| x.name = v);
-                (*a).add_field("type", 3, crate::skir_client::internal::enum_serializer_from_static(PageType::_adapter()), "", |x: &Page| &x.type_, |x: &mut Page, v| x.type_ = v);
-                (*a).add_field("chapter", 4, crate::skir_client::Serializer::string(), "", |x: &Page| &x.chapter, |x: &mut Page, v| x.chapter = v);
-                (*a).add_field("priority", 5, crate::skir_client::Serializer::int32(), "", |x: &Page| &x.priority, |x: &mut Page, v| x.priority = v);
+                (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Page| &x.revision, |x: &mut Page, v| x.revision = v);
+                (*a).add_field("book_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Page| &x.book_id, |x: &mut Page, v| x.book_id = v);
+                (*a).add_field("name", 3, crate::skir_client::Serializer::string(), "", |x: &Page| &x.name, |x: &mut Page, v| x.name = v);
+                (*a).add_field("kind", 4, crate::skirout::base::kernel::v1::page_kind::PageKindRef::serializer(), "", |x: &Page| &x.kind, |x: &mut Page, v| x.kind = v);
+                (*a).add_field("chapter", 5, crate::skir_client::Serializer::string(), "", |x: &Page| &x.chapter, |x: &mut Page, v| x.chapter = v);
+                (*a).add_field("priority", 6, crate::skir_client::Serializer::int32(), "", |x: &Page| &x.priority, |x: &mut Page, v| x.priority = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<PageValidationError> = PageValidationError::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("name_required", 1, 1, "", PageValidationError::NameRequired);
-                (*a).add_constant_variant("page_type_unknown", 2, 2, "", PageValidationError::PageTypeUnknown);
+                (*a).add_constant_variant("page_kind_unknown", 2, 2, "", PageValidationError::PageKindUnknown);
+                (*a).add_constant_variant("page_kind_revision_unknown", 3, 3, "", PageValidationError::PageKindRevisionUnknown);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ChangePageKindRequest> = ChangePageKindRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ChangePageKindRequest| &x.page_id, |x: &mut ChangePageKindRequest, v| x.page_id = v);
+                (*a).add_field("target", 1, crate::skirout::base::kernel::v1::page_kind::PageKindRef::serializer(), "", |x: &ChangePageKindRequest| &x.target, |x: &mut ChangePageKindRequest, v| x.target = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ChangePageKindResponse_PageNotFoundError> = ChangePageKindResponse_PageNotFoundError::_adapter() as *const _ as *mut _;
+                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ChangePageKindResponse_PageNotFoundError| &x.page_id, |x: &mut ChangePageKindResponse_PageNotFoundError, v| x.page_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<ChangePageKindResponse_ConversionUnavailable> = ChangePageKindResponse_ConversionUnavailable::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<ChangePageKindResponse> = ChangePageKindResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ChangePageKindResponse::InternalError(Box::new(v)), |x| match x { ChangePageKindResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Page::_adapter()), "", |v| ChangePageKindResponse::Success(Box::new(v)), |x| match x { ChangePageKindResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ChangePageKindResponse_PageNotFoundError::_adapter()), "", |v| ChangePageKindResponse::PageNotFoundError(Box::new(v)), |x| match x { ChangePageKindResponse::PageNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("validation_error", 4, 4, crate::skir_client::internal::enum_serializer_from_static(PageValidationError::_adapter()), "", |v| ChangePageKindResponse::ValidationError(Box::new(v)), |x| match x { ChangePageKindResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conversion_unavailable", 5, 5, crate::skir_client::internal::struct_serializer_from_static(ChangePageKindResponse_ConversionUnavailable::_adapter()), "", |v| ChangePageKindResponse::ConversionUnavailable(Box::new(v)), |x| match x { ChangePageKindResponse::ConversionUnavailable(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 6, 6, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ChangePageKindResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ChangePageKindResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1044,7 +1225,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<CreatePageRequest> = CreatePageRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("book_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &CreatePageRequest| &x.book_id, |x: &mut CreatePageRequest, v| x.book_id = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &CreatePageRequest| &x.name, |x: &mut CreatePageRequest, v| x.name = v);
-                (*a).add_field("type", 2, crate::skir_client::internal::enum_serializer_from_static(PageType::_adapter()), "", |x: &CreatePageRequest| &x.type_, |x: &mut CreatePageRequest, v| x.type_ = v);
+                (*a).add_field("kind", 2, crate::skirout::base::kernel::v1::page_kind::PageKindRef::serializer(), "", |x: &CreatePageRequest| &x.kind, |x: &mut CreatePageRequest, v| x.kind = v);
                 (*a).add_field("chapter", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &CreatePageRequest| &x.chapter, |x: &mut CreatePageRequest, v| x.chapter = v);
                 (*a).add_field("priority", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &CreatePageRequest| &x.priority, |x: &mut CreatePageRequest, v| x.priority = v);
                 (*a).finalize();
@@ -1066,10 +1247,16 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<UpdatePageRequest> = UpdatePageRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &UpdatePageRequest| &x.page_id, |x: &mut UpdatePageRequest, v| x.page_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdatePageRequest| &x.name, |x: &mut UpdatePageRequest, v| x.name = v);
-                (*a).add_field("type", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PageType::_adapter())), "", |x: &UpdatePageRequest| &x.type_, |x: &mut UpdatePageRequest, v| x.type_ = v);
+                (*a).add_field("expected_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &UpdatePageRequest| &x.expected_revision, |x: &mut UpdatePageRequest, v| x.expected_revision = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdatePageRequest| &x.name, |x: &mut UpdatePageRequest, v| x.name = v);
                 (*a).add_field("chapter", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &UpdatePageRequest| &x.chapter, |x: &mut UpdatePageRequest, v| x.chapter = v);
                 (*a).add_field("priority", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &UpdatePageRequest| &x.priority, |x: &mut UpdatePageRequest, v| x.priority = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<UpdatePageResponse_ConflictError> = UpdatePageResponse_ConflictError::_adapter() as *const _ as *mut _;
+                (*a).add_field("expected_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &UpdatePageResponse_ConflictError| &x.expected_revision, |x: &mut UpdatePageResponse_ConflictError, v| x.expected_revision = v);
+                (*a).add_field("actual", 1, crate::skir_client::internal::struct_serializer_from_static(Page::_adapter()), "", |x: &UpdatePageResponse_ConflictError| &x.actual, |x: &mut UpdatePageResponse_ConflictError, v| x.actual = v);
                 (*a).finalize();
             }
             unsafe {
@@ -1081,31 +1268,10 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<UpdatePageResponse> = UpdatePageResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| UpdatePageResponse::InternalError(Box::new(v)), |x| match x { UpdatePageResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(Page::_adapter()), "", |v| UpdatePageResponse::Success(Box::new(v)), |x| match x { UpdatePageResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("page_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdatePageResponse_PageNotFoundError::_adapter()), "", |v| UpdatePageResponse::PageNotFoundError(Box::new(v)), |x| match x { UpdatePageResponse::PageNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("validation_error", 4, 4, crate::skir_client::internal::enum_serializer_from_static(PageValidationError::_adapter()), "", |v| UpdatePageResponse::ValidationError(Box::new(v)), |x| match x { UpdatePageResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 5, 5, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdatePageResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdatePageResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageRequest> = DeletePageRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DeletePageRequest| &x.page_id, |x: &mut DeletePageRequest, v| x.page_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageResponse_Success> = DeletePageResponse_Success::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError> = DeletePageResponse_PageNotFoundError::_adapter() as *const _ as *mut _;
-                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DeletePageResponse_PageNotFoundError| &x.page_id, |x: &mut DeletePageResponse_PageNotFoundError, v| x.page_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<DeletePageResponse> = DeletePageResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| DeletePageResponse::InternalError(Box::new(v)), |x| match x { DeletePageResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_Success::_adapter()), "", |v| DeletePageResponse::Success(Box::new(v)), |x| match x { DeletePageResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("page_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_PageNotFoundError::_adapter()), "", |v| DeletePageResponse::PageNotFoundError(Box::new(v)), |x| match x { DeletePageResponse::PageNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 4, 4, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| DeletePageResponse::InvalidRecordIdError(Box::new(v)), |x| match x { DeletePageResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("conflict_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(UpdatePageResponse_ConflictError::_adapter()), "", |v| UpdatePageResponse::ConflictError(Box::new(v)), |x| match x { UpdatePageResponse::ConflictError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page_not_found_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(UpdatePageResponse_PageNotFoundError::_adapter()), "", |v| UpdatePageResponse::PageNotFoundError(Box::new(v)), |x| match x { UpdatePageResponse::PageNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("validation_error", 5, 5, crate::skir_client::internal::enum_serializer_from_static(PageValidationError::_adapter()), "", |v| UpdatePageResponse::ValidationError(Box::new(v)), |x| match x { UpdatePageResponse::ValidationError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 6, 6, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| UpdatePageResponse::InvalidRecordIdError(Box::new(v)), |x| match x { UpdatePageResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -1133,6 +1299,28 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("invalid_record_id_error", 4, 4, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ChangePagesChaptersResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ChangePagesChaptersResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageRequest> = DeletePageRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DeletePageRequest| &x.page_id, |x: &mut DeletePageRequest, v| x.page_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageResponse_Success> = DeletePageResponse_Success::_adapter() as *const _ as *mut _;
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<DeletePageResponse_PageNotFoundError> = DeletePageResponse_PageNotFoundError::_adapter() as *const _ as *mut _;
+                (*a).add_field("page_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &DeletePageResponse_PageNotFoundError| &x.page_id, |x: &mut DeletePageResponse_PageNotFoundError, v| x.page_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<DeletePageResponse> = DeletePageResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| DeletePageResponse::InternalError(Box::new(v)), |x| match x { DeletePageResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("success", 2, 2, crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_Success::_adapter()), "", |v| DeletePageResponse::Success(Box::new(v)), |x| match x { DeletePageResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page_not_found_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(DeletePageResponse_PageNotFoundError::_adapter()), "", |v| DeletePageResponse::PageNotFoundError(Box::new(v)), |x| match x { DeletePageResponse::PageNotFoundError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("invalid_record_id_error", 4, 4, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| DeletePageResponse::InvalidRecordIdError(Box::new(v)), |x| match x { DeletePageResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
         });
     let _ = *INIT;
 }
@@ -1141,11 +1329,24 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
+pub fn change_page_kind_method() -> &'static crate::skir_client::Method<ChangePageKindRequest, ChangePageKindResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<ChangePageKindRequest, ChangePageKindResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "ChangePageKind".to_string(),
+            number: 247483_i64,
+            request_serializer: ChangePageKindRequest::serializer(),
+            response_serializer: ChangePageKindResponse::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
 pub fn search_pages_method() -> &'static crate::skir_client::Method<SearchPagesRequest, SearchPagesResponse> {
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<SearchPagesRequest, SearchPagesResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "SearchPages".to_string(),
-            number: 767938_i64,
+            number: 247484_i64,
             request_serializer: SearchPagesRequest::serializer(),
             response_serializer: SearchPagesResponse::serializer(),
             doc: "".to_string(),
@@ -1158,7 +1359,7 @@ pub fn watch_page_method() -> &'static crate::skir_client::Method<WatchPageReque
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchPageRequest, WatchPageResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "WatchPage".to_string(),
-            number: 610282_i64,
+            number: 247485_i64,
             request_serializer: WatchPageRequest::serializer(),
             response_serializer: WatchPageResponse::serializer(),
             doc: "".to_string(),
@@ -1171,7 +1372,7 @@ pub fn create_page_method() -> &'static crate::skir_client::Method<CreatePageReq
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<CreatePageRequest, CreatePageResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "CreatePage".to_string(),
-            number: 616486_i64,
+            number: 247486_i64,
             request_serializer: CreatePageRequest::serializer(),
             response_serializer: CreatePageResponse::serializer(),
             doc: "".to_string(),
@@ -1184,22 +1385,9 @@ pub fn update_page_method() -> &'static crate::skir_client::Method<UpdatePageReq
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<UpdatePageRequest, UpdatePageResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "UpdatePage".to_string(),
-            number: 247482_i64,
+            number: 247487_i64,
             request_serializer: UpdatePageRequest::serializer(),
             response_serializer: UpdatePageResponse::serializer(),
-            doc: "".to_string(),
-        }
-    });
-    &*METHOD
-}
-
-pub fn delete_page_method() -> &'static crate::skir_client::Method<DeletePageRequest, DeletePageResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<DeletePageRequest, DeletePageResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "DeletePage".to_string(),
-            number: 984691_i64,
-            request_serializer: DeletePageRequest::serializer(),
-            response_serializer: DeletePageResponse::serializer(),
             doc: "".to_string(),
         }
     });
@@ -1210,9 +1398,22 @@ pub fn change_pages_chapters_method() -> &'static crate::skir_client::Method<Cha
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<ChangePagesChaptersRequest, ChangePagesChaptersResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "ChangePagesChapters".to_string(),
-            number: 777756_i64,
+            number: 247488_i64,
             request_serializer: ChangePagesChaptersRequest::serializer(),
             response_serializer: ChangePagesChaptersResponse::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
+
+pub fn delete_page_method() -> &'static crate::skir_client::Method<DeletePageRequest, DeletePageResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<DeletePageRequest, DeletePageResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "DeletePage".to_string(),
+            number: 247489_i64,
+            request_serializer: DeletePageRequest::serializer(),
+            response_serializer: DeletePageResponse::serializer(),
             doc: "".to_string(),
         }
     });

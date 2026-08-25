@@ -25,8 +25,6 @@ abstract class RealmEditorCatalogRoute with _$RealmEditorCatalogRoute {
       address.request("editor.catalog.invalidate");
 
   String get invalidationSubject => address.event("editor.catalog.invalidate");
-
-  String get elementsFetchSubject => address.request("editor.elements.fetch");
 }
 
 @freezed
@@ -40,23 +38,8 @@ abstract class RealmEditorCatalogSnapshot with _$RealmEditorCatalogSnapshot {
     @Default({}) Map<String, RealmEditorSubtypeResult> subtypeResults,
     @Default([]) List<TypeDiagnostic> diagnostics,
     @Default({}) Map<String, RealmElementCatalogEntry> elements,
+    @Default(RealmPageCatalog()) RealmPageCatalog pageCatalog,
   }) = _RealmEditorCatalogSnapshot;
-
-  const RealmEditorCatalogSnapshot._();
-
-  RealmEditorCatalogSnapshot merge(RealmEditorCatalogSnapshot other) {
-    if (generation != other.generation) return other;
-    return RealmEditorCatalogSnapshot(
-      catalog: other.catalog,
-      generation: generation,
-      presentations: {...presentations, ...other.presentations},
-      conversions: {...conversions, ...other.conversions},
-      capabilities: {...capabilities, ...other.capabilities},
-      subtypeResults: {...subtypeResults, ...other.subtypeResults},
-      diagnostics: [...diagnostics, ...other.diagnostics],
-      elements: {...elements, ...other.elements},
-    );
-  }
 }
 
 @freezed

@@ -1,5 +1,7 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.realm.repository.utils.toTagId
+import com.typewritermc.realm.routes.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -37,7 +39,7 @@ val TagRepositoryTest by testSuite {
                         Placement(x = 0, y = 0, width = 4, height = 1),
                     ).successValue()
 
-                fixture.tags.listTags().map(Tag::name) shouldContainExactly listOf("alpha_tag", "zulu_tag")
+                fixture.tags.listTags().map { it.name.value } shouldContainExactly listOf("alpha_tag", "zulu_tag")
             }
         }
     }
@@ -62,7 +64,7 @@ val TagRepositoryTest by testSuite {
                             Placement(x = 4, y = 5, width = 6, height = 2),
                         ).successValue()
 
-                fixture.tags.listTags() shouldContainExactlyInAnyOrder listOf(parent, child)
+                fixture.tags.listTags().map { it.toSkir() } shouldContainExactlyInAnyOrder listOf(parent, child)
                 fixture.tags.getTag(child.tagId)?.parentIds shouldContainExactly listOf(parent.tagId)
             }
         }
@@ -149,7 +151,7 @@ val TagRepositoryTest by testSuite {
                             parentIds = listOf(missingId),
                             placement = tag.placement,
                         ),
-                    ) shouldBe TagUpdateResult.ParentsNotFound(listOf(missingId))
+                    ) shouldBe TagUpdateResult.ParentsNotFound(setOf(missingId.toTagId()))
 
                 fixture.tags.getTag(tag.tagId) shouldBe tag
             }
@@ -184,7 +186,7 @@ val TagRepositoryTest by testSuite {
                 val updatedChild = fixture.tags.getTag(child.tagId) ?: error("Child tag was not persisted")
                 val updatedBook = fixture.books.getBook(book.bookId) ?: error("Book was not persisted")
 
-                deletion shouldBe TagDeletion(listOf(updatedChild), listOf(updatedBook))
+                deletion shouldBe SkirTagDeletion(listOf(updatedChild), listOf(updatedBook))
                 fixture.tags.getTag(parent.tagId).shouldBeNull()
                 updatedChild.parentIds shouldBe emptyList()
                 updatedChild.revision shouldBe child.revision + 1
@@ -239,7 +241,7 @@ val TagRepositoryTest by testSuite {
                         Color(argb = 1),
                         listOf(missingId),
                         Placement(x = 0, y = 0, width = 4, height = 1),
-                    ) shouldBe TagCreateResult.ParentsNotFound(listOf(missingId))
+                    ) shouldBe TagCreateResult.ParentsNotFound(setOf(missingId.toTagId()))
 
                 fixture.tags.listTags() shouldBe emptyList()
             }

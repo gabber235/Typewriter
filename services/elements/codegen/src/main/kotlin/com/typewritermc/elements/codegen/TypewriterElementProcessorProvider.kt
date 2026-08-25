@@ -26,6 +26,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.codegen.stringMapCode
+import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.PrototypeBinding
@@ -38,11 +39,11 @@ import com.typewritermc.elements.Element
 import com.typewritermc.elements.ElementDescriptor
 import com.typewritermc.elements.ElementDiscoveryContribution
 import com.typewritermc.elements.ElementDiscoveryContributionCodec
-import com.typewritermc.elements.ElementKind
 import com.typewritermc.elements.ElementPrototype
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementTypeId
-import com.typewritermc.elements.Entry
+import com.typewritermc.elements.Keyframe
+import com.typewritermc.elements.Segment
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
 import com.typewritermc.types.Color
@@ -85,7 +86,7 @@ private class TypewriterElementProcessor(
         val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterElement::class.qualifiedName)).toList()
         val facetSymbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterElementFacet::class.qualifiedName)).toList()
         val deferred = (symbols + facetSymbols).filterNot(KSAnnotated::validate)
-        if (deferred.isNotEmpty()) return deferred
+        if (deferred.isNotEmpty()) return (symbols + facetSymbols).distinct()
         if (!validateContextArguments()) return emptyList()
 
         val elements = symbols.mapNotNull(::element).sortedBy { it.declaration.qualifiedName!!.asString() }
@@ -100,6 +101,14 @@ private class TypewriterElementProcessor(
                     .getSymbolsWithAnnotation(requireNotNull(TypewriterType::class.qualifiedName))
                     .filterIsInstance<KSClassDeclaration>()
                     .forEach { declaration -> declaration.declaredTypeReference()?.let { put(declaration.qualifiedName!!.asString(), it) } }
+                resolver
+                    .getSymbolsWithAnnotation(GENERATED_PAGE_KIND_ANNOTATION)
+                    .filterIsInstance<KSClassDeclaration>()
+                    .forEach { declaration ->
+                        declaration.generatedPageKindReference()?.let {
+                            put(declaration.qualifiedName!!.asString(), it)
+                        }
+                    }
                 elements.forEach { element -> put(element.declaration.qualifiedName!!.asString(), element.reference) }
             }
         val identityPolicy =
@@ -164,6 +173,7 @@ private class TypewriterElementProcessor(
                     FunSpec
                         .builder("module")
                         .addModifiers(KModifier.OVERRIDE)
+                        .addParameter("contribution", ContributionKey::class)
                         .returns(org.koin.core.module.Module::class)
                         .addCode(
                             "return module {\n" +
@@ -223,16 +233,11 @@ private class TypewriterElementProcessor(
             logger.error("Typewriter elements must implement Element.", declaration)
             return null
         }
-        val kinds =
-            listOfNotNull(
-                ElementKind.ENTRY.takeIf { Entry::class.qualifiedName in superTypes },
-                ElementKind.CUE.takeIf {
-                    Cue::class.qualifiedName in
-                        superTypes
-                },
-            )
-        if (kinds.size != 1) {
-            logger.error("Typewriter elements must implement exactly one concrete element kind.", declaration)
+        val isCue = Cue::class.qualifiedName in superTypes
+        val isSegment = Segment::class.qualifiedName in superTypes
+        val isKeyframe = Keyframe::class.qualifiedName in superTypes
+        if (isCue && isSegment == isKeyframe) {
+            logger.error("Cue elements must implement exactly one of Segment or Keyframe.", declaration)
             return null
         }
         val annotation = requireNotNull(declaration.annotation(requireNotNull(TypewriterElement::class.qualifiedName)))
@@ -265,7 +270,6 @@ private class TypewriterElementProcessor(
             runCatching {
                 ElementDescriptor(
                     id = ElementTypeId(id),
-                    kind = kinds.single(),
                     type = ResolvedTypeRef(TypeId.Declared(id), revision),
                     name = name,
                     description = description,
@@ -463,6 +467,12 @@ private fun KSClassDeclaration.declaredTypeReference(): ResolvedTypeRef? {
     return ResolvedTypeRef(TypeId.Declared(id), annotation.intArgument("revision") ?: 1)
 }
 
+private fun KSClassDeclaration.generatedPageKindReference(): ResolvedTypeRef? {
+    val annotation = annotation(GENERATED_PAGE_KIND_ANNOTATION) ?: return null
+    val id = annotation.stringArgument("id")?.let { runCatching { DeclaredTypeId.parse(it) }.getOrNull() } ?: return null
+    return ResolvedTypeRef(TypeId.Declared(id), annotation.intArgument("revision") ?: 1)
+}
+
 private fun KSClassDeclaration.annotation(name: String): KSAnnotation? =
     annotations.firstOrNull {
         it.annotationType
@@ -498,7 +508,6 @@ private fun ElementDescriptor.code(): String =
         "com.typewritermc.elements.ElementTypeId(" +
         "com.typewritermc.types.DeclaredTypeId.parse(\"${id.value}\")" +
         "), " +
-        "com.typewritermc.elements.ElementKind.${kind.name}, " +
         "${type.code()}, " +
         "\"${name.escape()}\", " +
         "\"${description.escape()}\", " +
@@ -517,3 +526,4 @@ private fun String.escape(): String = replace("\\", "\\\\").replace("\"", "\\\""
 private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
 private const val SOURCE_PART_OPTION = "typewriter.sourcePart"
 private const val SERIALIZABLE_ANNOTATION = "kotlinx.serialization.Serializable"
+private const val GENERATED_PAGE_KIND_ANNOTATION = "com.typewritermc.pages.GeneratedPageKind"

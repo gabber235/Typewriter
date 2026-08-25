@@ -1,23 +1,26 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.library.BookId
+import com.typewritermc.library.ChapterPath
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.Page
+import com.typewritermc.library.PageId
+import com.typewritermc.library.PageKindRef
 import com.typewritermc.realm.outbox.OutboxEvent
-import skirout.kernel.v1.record_id.RecordId
-import skirout.library.v1.page.Page
-import skirout.library.v1.page.PageType
 
 interface PageRepository {
     suspend fun searchPages(
-        bookId: RecordId,
+        bookId: BookId,
         search: String?,
     ): List<Page>
 
-    suspend fun getPage(id: RecordId): Page?
+    suspend fun getPage(id: PageId): Page?
 
     suspend fun createPage(
-        bookId: RecordId,
-        name: String,
-        type: PageType,
-        chapter: String,
+        bookId: BookId,
+        name: LibraryName,
+        kind: PageKindRef,
+        chapter: ChapterPath,
         priority: Int,
         encodeEvents: (Page) -> List<OutboxEvent>,
     ): RepositoryResult<Page>
@@ -25,17 +28,29 @@ interface PageRepository {
     suspend fun updatePage(
         page: Page,
         encodeEvents: (Page) -> List<OutboxEvent>,
-    ): RepositoryResult<Page>
+    ): PageUpdateResult
 
     suspend fun deletePage(
-        id: RecordId,
-        encodeEvents: (RecordId) -> List<OutboxEvent>,
+        id: PageId,
+        encodeEvents: (PageId) -> List<OutboxEvent>,
     ): RepositoryResult<Unit>
 
     suspend fun changePagesChapters(
-        bookId: RecordId,
-        oldChapter: String,
-        newChapter: String,
+        bookId: BookId,
+        oldChapter: ChapterPath,
+        newChapter: ChapterPath,
         encodeEvents: (List<Page>) -> List<OutboxEvent>,
     ): RepositoryResult<List<Page>>
+}
+
+sealed interface PageUpdateResult {
+    data class Success(
+        val page: Page,
+    ) : PageUpdateResult
+
+    data class Conflict(
+        val actual: Page,
+    ) : PageUpdateResult
+
+    data object NotFound : PageUpdateResult
 }

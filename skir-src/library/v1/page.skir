@@ -2,28 +2,43 @@ import {
   InternalError,
   InvalidRecordIdError,
 } from "kernel/v1/errors.skir";
+import { PageKindRef } from "kernel/v1/page_kind.skir";
 import { RecordId } from "kernel/v1/record_id.skir";
-
-enum PageType {
-  sequence;
-  static;
-  scene;
-  manifest;
-}
 
 struct Page {
   page_id: RecordId;
+  revision: int64;
   book_id: RecordId;
   name: string;
-  type: PageType;
+  kind: PageKindRef;
   chapter: string;
   priority: int32;
 }
 
 enum PageValidationError {
   name_required;
-  page_type_unknown;
+  page_kind_unknown;
+  page_kind_revision_unknown;
 }
+
+method ChangePageKind(
+  struct {
+    page_id: RecordId;
+    target: PageKindRef;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: Page;
+
+  page_not_found_error: struct {
+    page_id: RecordId;
+  };
+  validation_error: PageValidationError;
+  conversion_unavailable: struct {};
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 247483;
 
 method SearchPages(
   struct {
@@ -40,7 +55,7 @@ method SearchPages(
   };
 
   invalid_record_id_error: InvalidRecordIdError;
-} = 767938;
+} = 247484;
 
 method WatchPage(
   struct {
@@ -58,13 +73,13 @@ method WatchPage(
   };
 
   invalid_record_id_error: InvalidRecordIdError;
-} = 610282;
+} = 247485;
 
 method CreatePage(
   struct {
     book_id: RecordId;
     name: string;
-    type: PageType;
+    kind: PageKindRef;
     chapter: string?;
     priority: int32?;
   }
@@ -79,13 +94,13 @@ method CreatePage(
   validation_error: PageValidationError;
 
   invalid_record_id_error: InvalidRecordIdError;
-} = 616486;
+} = 247486;
 
 method UpdatePage(
   struct {
     page_id: RecordId;
+    expected_revision: int64;
     name: string?;
-    type: PageType?;
     chapter: string?;
     priority: int32?;
   }
@@ -94,29 +109,18 @@ method UpdatePage(
 
   success: Page;
 
+  conflict_error: struct {
+    expected_revision: int64;
+    actual: Page;
+  };
+
   page_not_found_error: struct {
     page_id: RecordId;
   };
   validation_error: PageValidationError;
 
   invalid_record_id_error: InvalidRecordIdError;
-} = 247482;
-
-method DeletePage(
-  struct {
-    page_id: RecordId;
-  }
-): enum {
-  internal_error: InternalError;
-
-  success: struct {};
-
-  page_not_found_error: struct {
-    page_id: RecordId;
-  };
-
-  invalid_record_id_error: InvalidRecordIdError;
-} = 984691;
+} = 247487;
 
 method ChangePagesChapters(
   struct {
@@ -136,4 +140,20 @@ method ChangePagesChapters(
   };
 
   invalid_record_id_error: InvalidRecordIdError;
-} = 777756;
+} = 247488;
+
+method DeletePage(
+  struct {
+    page_id: RecordId;
+  }
+): enum {
+  internal_error: InternalError;
+
+  success: struct {};
+
+  page_not_found_error: struct {
+    page_id: RecordId;
+  };
+
+  invalid_record_id_error: InvalidRecordIdError;
+} = 247489;

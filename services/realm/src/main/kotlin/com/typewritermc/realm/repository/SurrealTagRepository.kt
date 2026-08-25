@@ -1,6 +1,10 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.library.GridPlacement
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.Tag
+import com.typewritermc.library.TagId
 import com.typewritermc.realm.outbox.OutboxEvent
 import com.typewritermc.realm.outbox.RealmOutbox
 import com.typewritermc.realm.outbox.SurrealRealmOutbox
@@ -10,12 +14,10 @@ import com.typewritermc.realm.repository.records.TagRecord
 import com.typewritermc.realm.repository.records.TagUpdateOutputRecord
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
+import com.typewritermc.realm.repository.utils.surrealTagIds
 import com.typewritermc.realm.repository.utils.takeTransaction
-import com.typewritermc.realm.repository.utils.toSkirRecordId
-import skirout.kernel.v1.color.Color
-import skirout.kernel.v1.record_id.RecordId
-import skirout.library.v1.tag.Placement
-import skirout.library.v1.tag.Tag
+import com.typewritermc.realm.repository.utils.toTagId
+import com.typewritermc.types.Color
 
 class SurrealTagRepository(
     private val database: Surreal,
@@ -27,19 +29,19 @@ class SurrealTagRepository(
         return TagRecord.parseList(result).map(TagRecord::toTag)
     }
 
-    override suspend fun getTag(id: RecordId): Tag? {
+    override suspend fun getTag(id: TagId): Tag? {
         val result =
             database
                 .query(
                     $$"SELECT * FROM $tag",
-                    mapOf("tag" to id.surrealId("tag")),
+                    mapOf("tag" to id.surrealId()),
                 ).take(0)
 
         return TagRecord.parseList(result).firstOrNull()?.toTag()
     }
 
-    override suspend fun findMissing(ids: List<RecordId>): List<RecordId> {
-        if (ids.isEmpty()) return emptyList()
+    override suspend fun findMissing(ids: Set<TagId>): Set<TagId> {
+        if (ids.isEmpty()) return emptySet()
 
         val result =
             database
@@ -47,16 +49,16 @@ class SurrealTagRepository(
                     $$"""
                 $tags.filter(|$tag| !record::exists($tag))
                     """.trimIndent(),
-                    mapOf("tags" to ids.surrealId("tag")),
+                    mapOf("tags" to ids.surrealTagIds()),
                 ).take(0)
-        return result.array.map { it.recordId.toSkirRecordId() }
+        return result.array.mapTo(linkedSetOf()) { it.recordId.toTagId() }
     }
 
     override suspend fun createTag(
-        name: String,
+        name: LibraryName,
         color: Color,
-        parentIds: List<RecordId>,
-        placement: Placement,
+        parentIds: Set<TagId>,
+        placement: GridPlacement,
         encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagCreateResult {
         val mutation =
@@ -96,13 +98,13 @@ class SurrealTagRepository(
                 };
                             """.trimIndent(),
                             mapOf(
-                                "name" to name,
-                                "color" to color.argb.toUInt().toLong(),
+                                "name" to name.value,
+                                "color" to color.argb.toLong(),
                                 "x" to placement.x,
                                 "y" to placement.y,
                                 "width" to placement.width,
                                 "height" to placement.height,
-                                "parent_tags" to parentIds.surrealId("tag"),
+                                "parent_tags" to parentIds.surrealTagIds(),
                             ),
                         ).takeTransaction(3)
                 TagCreateOutputRecord.parse(result).toResult().also { mutation ->
@@ -174,18 +176,15 @@ class SurrealTagRepository(
                 };
                             """.trimIndent(),
                             mapOf(
-                                "tag" to tag.tagId.surrealId("tag"),
+                                "tag" to tag.id.surrealId(),
                                 "expected_revision" to expectedRevision,
-                                "name" to tag.name,
-                                "color" to
-                                    tag.color.argb
-                                        .toUInt()
-                                        .toLong(),
+                                "name" to tag.name.value,
+                                "color" to tag.color.argb.toLong(),
                                 "x" to tag.placement.x,
                                 "y" to tag.placement.y,
                                 "width" to tag.placement.width,
                                 "height" to tag.placement.height,
-                                "parent_tags" to tag.parentIds.surrealId("tag"),
+                                "parent_tags" to tag.parents.surrealTagIds(),
                             ),
                         ).takeTransaction(2)
                 TagUpdateOutputRecord.parse(result).toResult().also { mutation ->
@@ -197,7 +196,7 @@ class SurrealTagRepository(
     }
 
     override suspend fun deleteTag(
-        id: RecordId,
+        id: TagId,
         encodeEvents: (TagDeletion) -> List<OutboxEvent>,
     ): TagDeleteResult {
         val mutation =
@@ -228,7 +227,7 @@ class SurrealTagRepository(
 
                 RETURN $result;
                             """.trimIndent(),
-                            mapOf("tag" to id.surrealId("tag")),
+                            mapOf("tag" to id.surrealId()),
                         ).takeTransaction(1)
                 TagDeleteOutputRecord.parse(result).toResult().also { mutation ->
                     if (mutation is TagDeleteResult.Success) outbox.enqueue(transaction, encodeEvents(mutation.deletion))

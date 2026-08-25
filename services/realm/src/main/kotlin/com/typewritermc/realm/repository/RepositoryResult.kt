@@ -1,6 +1,24 @@
 package com.typewritermc.realm.repository
 
-import skirout.kernel.v1.record_id.RecordId
+import com.surrealdb.ErrorKind
+import com.surrealdb.ServerException
+
+enum class RepositoryFailure(
+    val wireValue: String,
+) {
+    BOOK_NOT_FOUND("book-not-found-error"),
+    PAGE_NOT_FOUND("page-not-found-error"),
+    PAGE_NAME_INVALID("page-name-invalid-error"),
+    PAGE_CHAPTER_INVALID("page-chapter-invalid-error"),
+    ;
+
+    companion object {
+        fun fromWireValue(value: String): RepositoryFailure? = entries.singleOrNull { it.wireValue == value }
+
+        fun fromThrownMessage(message: String): RepositoryFailure? =
+            entries.singleOrNull { message == "An error occurred: ${it.wireValue}" }
+    }
+}
 
 sealed interface RepositoryResult<out Value> {
     data class Success<Value>(
@@ -8,26 +26,20 @@ sealed interface RepositoryResult<out Value> {
     ) : RepositoryResult<Value>
 
     data class DomainFailure(
-        val slug: String,
-        val relatedIds: List<RecordId> = emptyList(),
+        val failure: RepositoryFailure,
     ) : RepositoryResult<Nothing>
 }
 
-internal inline fun <Value> repositoryMutation(
-    relatedIds: List<RecordId> = emptyList(),
-    operation: () -> Value,
-): RepositoryResult<Value> =
+internal inline fun <Value> repositoryMutation(operation: () -> Value): RepositoryResult<Value> =
     try {
         RepositoryResult.Success(operation())
     } catch (failure: RuntimeException) {
-        val slug = failure.domainSlug() ?: throw failure
-        RepositoryResult.DomainFailure(slug, relatedIds)
+        val serverFailure =
+            generateSequence<Throwable>(failure) { it.cause }
+                .filterIsInstance<ServerException>()
+                .firstOrNull() ?: throw failure
+        val thrown = serverFailure.findCause(ErrorKind.THROWN) ?: throw failure
+        val message = thrown.message ?: throw failure
+        val domainFailure = RepositoryFailure.fromThrownMessage(message) ?: throw failure
+        RepositoryResult.DomainFailure(domainFailure)
     }
-
-private fun Throwable.domainSlug(): String? =
-    generateSequence(this) { it.cause }
-        .mapNotNull(Throwable::message)
-        .flatMap { DOMAIN_SLUG.findAll(it).map(MatchResult::value) }
-        .firstOrNull()
-
-private val DOMAIN_SLUG = Regex("[a-z][a-z0-9-]*-error")

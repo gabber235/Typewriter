@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.pages.PageCatalog
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.PageRepository
 import com.typewritermc.realm.repository.TagRepository
@@ -11,16 +12,16 @@ class RealmRouteFactory(
     private val pages: PageRepository,
     private val tags: TagRepository,
     private val editorCatalog: RealmEditorCatalogSource,
-    private val elementCatalog: RealmElementCatalogSource,
+    private val pageDefinitions: PageCatalog,
     private val presentationSearch: RealmPresentationSearchSource,
     private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
 ) {
     fun create(address: RealmAddress): CommunicatorRoutes {
         val contracts = LibraryContracts(address)
         val bookRoutes = BookRoutes(books, tags, contracts, address)
-        val pageRoutes = PageRoutes(pages, books, contracts, address)
+        val pageRoutes = PageRoutes(pages, books, pageDefinitions, contracts, address)
         val tagRoutes = TagRoutes(tags, contracts, address)
-        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, elementCatalog, contracts, address)
+        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, contracts, address)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }
         return communicatorRoutes {

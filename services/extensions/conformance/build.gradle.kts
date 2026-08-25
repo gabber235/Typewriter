@@ -41,10 +41,15 @@ typewriter {
 
 dependencies {
     imprintExtensionApi(project(":extension-types"))
+    imprintExtensionApi("com.typewritermc:library-types")
+    imprintExtensionApi("com.typewritermc:page-types")
     imprintProcessors("com.typewritermc:typewriter-types-codegen")
     imprintProcessors("com.typewritermc:element-codegen")
     imprintProcessors("com.typewritermc:presentation-codegen")
+    imprintProcessors("com.typewritermc:page-codegen")
     imprintProcessors("com.typewritermc:realm-capability-codegen")
     imprintProcessors("com.typewritermc:discovery-codegen")
     testImplementation(project(":extension-types"))
+    testImplementation("com.typewritermc:library-types")
+    testImplementation("com.typewritermc:page-types")
 }

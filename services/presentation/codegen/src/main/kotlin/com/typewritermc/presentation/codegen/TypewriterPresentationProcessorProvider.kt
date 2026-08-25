@@ -24,6 +24,7 @@ import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
@@ -36,13 +37,12 @@ import com.typewritermc.presentation.TypewriterPresentation
 
 class TypewriterPresentationProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
-        TypewriterPresentationProcessor(environment.codeGenerator, environment.logger, environment.options)
+        TypewriterPresentationProcessor(environment.codeGenerator, environment.logger)
 }
 
 private class TypewriterPresentationProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
-    private val options: Map<String, String>,
 ) : SymbolProcessor {
     private var generated = false
 
@@ -51,15 +51,9 @@ private class TypewriterPresentationProcessor(
         val symbols = resolver.getSymbolsWithAnnotation(requireNotNull(TypewriterPresentation::class.qualifiedName)).toList()
         val deferred = symbols.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
-        val artifactId = options[ARTIFACT_ID_OPTION]
-        val sourcePart = options[SOURCE_PART_OPTION]
-        if (artifactId.isNullOrBlank() || sourcePart.isNullOrBlank()) {
-            logger.error("Presentation generation requires Imprint artifact and source part options.")
-            return emptyList()
-        }
         val functions = symbols.mapNotNull(::presentationFunction).sortedBy { it.qualifiedName?.asString() }
         if (functions.size != symbols.size) return emptyList()
-        val bindings = functions.map { function -> generate(function, artifactId, sourcePart) }
+        val bindings = functions.map(::generate)
         writeContribution(bindings, functions)
         generated = true
         return emptyList()
@@ -92,11 +86,7 @@ private class TypewriterPresentationProcessor(
         return function
     }
 
-    private fun generate(
-        function: KSFunctionDeclaration,
-        artifactId: String,
-        sourcePart: String,
-    ): ExecutableBinding {
+    private fun generate(function: KSFunctionDeclaration): ExecutableBinding {
         val functionName = function.simpleName.asString()
         val baseName = functionName.replaceFirstChar(Char::uppercase)
         val moduleName = "${baseName}PresentationDiscoveryModule"
@@ -108,16 +98,22 @@ private class TypewriterPresentationProcessor(
         val provider =
             TypeSpec
                 .classBuilder(providerName)
-                .addSuperinterface(PresentationProvider::class)
+                .primaryConstructor(
+                    FunSpec
+                        .constructorBuilder()
+                        .addParameter("namespace", String::class)
+                        .addParameter("sourcePart", String::class)
+                        .build(),
+                ).addSuperinterface(PresentationProvider::class)
                 .addProperty(
                     PropertySpec
                         .builder("namespace", String::class, KModifier.OVERRIDE)
-                        .initializer("%S", artifactId)
+                        .initializer("namespace")
                         .build(),
                 ).addProperty(
                     PropertySpec
                         .builder("sourcePart", String::class, KModifier.OVERRIDE)
-                        .initializer("%S", sourcePart)
+                        .initializer("sourcePart")
                         .build(),
                 ).addProperty(
                     PropertySpec
@@ -151,18 +147,18 @@ private class TypewriterPresentationProcessor(
                     FunSpec
                         .builder("module")
                         .addModifiers(KModifier.OVERRIDE)
+                        .addParameter("contribution", ContributionKey::class)
                         .returns(org.koin.core.module.Module::class)
                         .addCode(
                             CodeBlock
                                 .builder()
                                 .add("return module {\n")
                                 .indent()
-                                .add("singleOf(::%T) {\n", providerClass)
+                                .add("single(named(%S)) {\n", "presentation.${providerClass.canonicalName}")
                                 .indent()
-                                .add("named(%S)\n", "presentation.${providerClass.canonicalName}")
-                                .add("bind<%T>()\n", PresentationProvider::class)
+                                .add("%T(contribution.origin.value, contribution.sourcePart)\n", providerClass)
                                 .unindent()
-                                .add("}\n")
+                                .add("} bind %T::class\n", PresentationProvider::class)
                                 .unindent()
                                 .add("}\n")
                                 .build(),
@@ -171,8 +167,8 @@ private class TypewriterPresentationProcessor(
         FileSpec
             .builder(packageName, moduleName)
             .addImport("kotlin", "context")
-            .addImport("org.koin.core.module.dsl", "bind", "named", "singleOf")
-            .addImport("org.koin.dsl", "module")
+            .addImport("org.koin.core.qualifier", "named")
+            .addImport("org.koin.dsl", "bind", "module")
             .addType(provider)
             .addType(module)
             .build()
@@ -213,6 +209,3 @@ private fun KSAnnotation.argument(name: String): Any? = arguments.firstOrNull { 
 private fun KSAnnotation.booleanArgument(name: String): Boolean? = argument(name) as? Boolean
 
 private fun KSAnnotation.intArgument(name: String): Int? = argument(name) as? Int
-
-private const val ARTIFACT_ID_OPTION = "typewriter.artifactId"
-private const val SOURCE_PART_OPTION = "typewriter.sourcePart"

@@ -11,11 +11,11 @@ import kotlinx.coroutines.test.runTest
 import skirout.kernel.v1.color.Color
 import skirout.library.v1.book.WatchBookResponse
 import skirout.library.v1.book.WatchBooksResponse
-import skirout.library.v1.page.PageType
 import skirout.library.v1.page.WatchPageResponse
 import skirout.library.v1.tag.Placement
 import skirout.library.v1.tag.WatchTagResponse
 import skirout.library.v1.tag.WatchTagsResponse
+import com.typewritermc.realm.TestPageKinds as PageType
 
 val TransactionalOutboxTest by testSuite {
     test("book page and tag mutations persist the existing serialized watch bytes") {

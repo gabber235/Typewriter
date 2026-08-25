@@ -1,17 +1,26 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.library.ChapterPath
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.Page
+import com.typewritermc.library.ResourceRevision
+import com.typewritermc.pages.PageCatalog
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.PageRepository
+import com.typewritermc.realm.repository.PageUpdateResult
+import com.typewritermc.realm.repository.RepositoryFailure
 import com.typewritermc.realm.repository.RepositoryResult
 import com.typewritermc.realm.repository.utils.invalidRecordId
+import com.typewritermc.realm.repository.utils.toBookId
+import com.typewritermc.realm.repository.utils.toPageId
+import com.typewritermc.realm.repository.utils.toSkirRecordId
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpan
+import skirout.library.v1.page.ChangePageKindResponse
 import skirout.library.v1.page.ChangePagesChaptersResponse
 import skirout.library.v1.page.CreatePageResponse
 import skirout.library.v1.page.DeletePageResponse
-import skirout.library.v1.page.Page
-import skirout.library.v1.page.PageType
 import skirout.library.v1.page.PageValidationError
 import skirout.library.v1.page.SearchPagesResponse
 import skirout.library.v1.page.UpdatePageResponse
@@ -20,6 +29,7 @@ import skirout.library.v1.page.WatchPageResponse
 internal class PageRoutes(
     private val pages: PageRepository,
     private val books: BookRepository,
+    private val pageCatalog: PageCatalog,
     private val contracts: LibraryContracts,
     private val realmAddress: RealmAddress,
 ) {
@@ -30,27 +40,28 @@ internal class PageRoutes(
                     return@unary SearchPagesResponse.InvalidRecordIdErrorWrapper(it)
                 }
                 val book =
-                    childSpan("db.book.get") { books.getBook(call.request.bookId) }
+                    childSpan("db.book.get") { books.getBook(call.request.bookId.toBookId()) }
                         ?: return@unary SearchPagesResponse.createBookNotFoundError(bookId = call.request.bookId)
                 val result =
                     childSpan("db.page.search") {
-                        pages.searchPages(book.bookId, call.request.search?.takeIf(String::isNotBlank))
+                        pages.searchPages(book.id, call.request.search?.takeIf(String::isNotBlank))
                     }
-                SearchPagesResponse.SuccessWrapper(result)
+                SearchPagesResponse.SuccessWrapper(result.map(Page::toSkir))
             }
             watch(contracts.watchPage) { call ->
                 call.request.pageId.invalidRecordId("page")?.let {
                     return@watch WatchPageResponse.InvalidRecordIdErrorWrapper(it)
                 }
                 val page =
-                    childSpan("db.page.get") { pages.getPage(call.request.pageId) }
+                    childSpan("db.page.get") { pages.getPage(call.request.pageId.toPageId()) }
                         ?: return@watch WatchPageResponse.createPageNotFoundError(pageId = call.request.pageId)
-                WatchPageResponse.InitialWrapper(page)
+                WatchPageResponse.InitialWrapper(page.toSkir())
             }
             unary(contracts.createPage) { call -> create(call) }
             unary(contracts.updatePage) { call -> update(call) }
             unary(contracts.deletePage) { call -> delete(call) }
             unary(contracts.changePagesChapters) { call -> changeChapters(call) }
+            unary(contracts.changePageKind) { call -> changeKind(call) }
         }
 
     context(main: MainSpanScope)
@@ -65,40 +76,42 @@ internal class PageRoutes(
         request.bookId.invalidRecordId("book")?.let {
             return CreatePageResponse.InvalidRecordIdErrorWrapper(it)
         }
-        validate(request.name, request.type)?.let { return CreatePageResponse.ValidationErrorWrapper(it) }
+        validate(request.name, request.kind)?.let { return CreatePageResponse.ValidationErrorWrapper(it) }
         val book =
-            childSpan("db.book.get") { books.getBook(request.bookId) }
+            childSpan("db.book.get") { books.getBook(request.bookId.toBookId()) }
                 ?: return CreatePageResponse.createBookNotFoundError(bookId = request.bookId)
         val result =
             childSpan("db.page.create") {
                 pages.createPage(
-                    bookId = book.bookId,
-                    name = request.name,
-                    type = request.type,
-                    chapter = request.chapter.orEmpty(),
+                    bookId = book.id,
+                    name = LibraryName(request.name),
+                    kind = request.kind.toLibrary(),
+                    chapter = ChapterPath.parse(request.chapter.orEmpty()),
                     priority = request.priority ?: 0,
-                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page)) },
+                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page.toSkir())) },
                 )
             }
         val page =
             when (result) {
                 is RepositoryResult.Success -> result.value
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "book-not-found-error" -> {
+                is RepositoryResult.DomainFailure -> return when (result.failure) {
+                    RepositoryFailure.BOOK_NOT_FOUND -> {
                         CreatePageResponse.createBookNotFoundError(bookId = request.bookId)
                     }
 
-                    "page-name-invalid-error" -> {
+                    RepositoryFailure.PAGE_NAME_INVALID -> {
                         CreatePageResponse.ValidationErrorWrapper(PageValidationError.NAME_REQUIRED)
                     }
 
-                    else -> {
-                        error("Unexpected page creation domain error: ${result.slug}")
+                    RepositoryFailure.PAGE_NOT_FOUND,
+                    RepositoryFailure.PAGE_CHAPTER_INVALID,
+                    -> {
+                        error("Unexpected page creation domain error: ${result.failure}")
                     }
                 }
             }
-        return CreatePageResponse.SuccessWrapper(page)
+        return CreatePageResponse.SuccessWrapper(page.toSkir())
     }
 
     context(main: MainSpanScope)
@@ -114,44 +127,41 @@ internal class PageRoutes(
             return UpdatePageResponse.InvalidRecordIdErrorWrapper(it)
         }
         val existing =
-            childSpan("db.page.get") { pages.getPage(request.pageId) }
+            childSpan("db.page.get") { pages.getPage(request.pageId.toPageId()) }
                 ?: return UpdatePageResponse.createPageNotFoundError(pageId = request.pageId)
-        validate(request.name ?: existing.name, request.type ?: existing.type)?.let {
+        validateName(request.name ?: existing.name.value)?.let {
             return UpdatePageResponse.ValidationErrorWrapper(it)
         }
         val result =
             childSpan("db.page.update") {
                 pages.updatePage(
-                    Page(
-                        pageId = existing.pageId,
-                        bookId = existing.bookId,
-                        name = request.name ?: existing.name,
-                        type = request.type ?: existing.type,
-                        chapter = request.chapter ?: existing.chapter,
+                    existing.copy(
+                        revision = ResourceRevision(request.expectedRevision),
+                        name = LibraryName(request.name ?: existing.name.value),
+                        chapter = ChapterPath.parse(request.chapter ?: existing.chapter.value),
                         priority = request.priority ?: existing.priority,
                     ),
-                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page)) },
+                    encodeEvents = { page -> pageEvents(WatchPageResponse.UpdateWrapper(page.toSkir())) },
                 )
             }
         val page =
             when (result) {
-                is RepositoryResult.Success -> result.value
+                is PageUpdateResult.Success -> {
+                    result.page
+                }
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "page-not-found-error" -> {
-                        UpdatePageResponse.createPageNotFoundError(pageId = request.pageId)
-                    }
+                is PageUpdateResult.Conflict -> {
+                    return UpdatePageResponse.createConflictError(
+                        expectedRevision = request.expectedRevision,
+                        actual = result.actual.toSkir(),
+                    )
+                }
 
-                    "page-name-invalid-error" -> {
-                        UpdatePageResponse.ValidationErrorWrapper(PageValidationError.NAME_REQUIRED)
-                    }
-
-                    else -> {
-                        error("Unexpected page update domain error: ${result.slug}")
-                    }
+                PageUpdateResult.NotFound -> {
+                    return UpdatePageResponse.createPageNotFoundError(pageId = request.pageId)
                 }
             }
-        return UpdatePageResponse.SuccessWrapper(page)
+        return UpdatePageResponse.SuccessWrapper(page.toSkir())
     }
 
     context(main: MainSpanScope)
@@ -169,14 +179,20 @@ internal class PageRoutes(
         when (
             val result =
                 childSpan("db.page.delete") {
-                    pages.deletePage(id) { pageId -> pageEvents(WatchPageResponse.RemoveWrapper(pageId)) }
+                    pages.deletePage(id.toPageId()) { pageId ->
+                        pageEvents(WatchPageResponse.RemoveWrapper(pageId.toSkirRecordId()))
+                    }
                 }
         ) {
             is RepositoryResult.Success -> Unit
 
-            is RepositoryResult.DomainFailure -> return when (result.slug) {
-                "page-not-found-error" -> DeletePageResponse.createPageNotFoundError(pageId = id)
-                else -> error("Unexpected page deletion domain error: ${result.slug}")
+            is RepositoryResult.DomainFailure -> return when (result.failure) {
+                RepositoryFailure.PAGE_NOT_FOUND -> DeletePageResponse.createPageNotFoundError(pageId = id)
+
+                RepositoryFailure.BOOK_NOT_FOUND,
+                RepositoryFailure.PAGE_NAME_INVALID,
+                RepositoryFailure.PAGE_CHAPTER_INVALID,
+                -> error("Unexpected page deletion domain error: ${result.failure}")
             }
         }
         return DeletePageResponse.createSuccess()
@@ -195,17 +211,17 @@ internal class PageRoutes(
             return ChangePagesChaptersResponse.InvalidRecordIdErrorWrapper(it)
         }
         val book =
-            childSpan("db.book.get") { books.getBook(request.bookId) }
+            childSpan("db.book.get") { books.getBook(request.bookId.toBookId()) }
                 ?: return ChangePagesChaptersResponse.createBookNotFoundError(bookId = request.bookId)
         val result =
             childSpan("db.page.change_chapters") {
                 pages.changePagesChapters(
-                    book.bookId,
-                    request.oldChapter,
-                    request.newChapter,
+                    book.id,
+                    ChapterPath.parse(request.oldChapter),
+                    ChapterPath.parse(request.newChapter),
                 ) { changed ->
                     changed.map { page ->
-                        contracts.watchPage.encodeUpdate(realmAddress, WatchPageResponse.UpdateWrapper(page))
+                        contracts.watchPage.encodeUpdate(realmAddress, WatchPageResponse.UpdateWrapper(page.toSkir()))
                     }
                 }
             }
@@ -213,13 +229,16 @@ internal class PageRoutes(
             when (result) {
                 is RepositoryResult.Success -> result.value
 
-                is RepositoryResult.DomainFailure -> return when (result.slug) {
-                    "book-not-found-error" -> {
+                is RepositoryResult.DomainFailure -> return when (result.failure) {
+                    RepositoryFailure.BOOK_NOT_FOUND -> {
                         ChangePagesChaptersResponse.createBookNotFoundError(bookId = request.bookId)
                     }
 
-                    else -> {
-                        error("Unexpected chapter mutation domain error: ${result.slug}")
+                    RepositoryFailure.PAGE_NOT_FOUND,
+                    RepositoryFailure.PAGE_NAME_INVALID,
+                    RepositoryFailure.PAGE_CHAPTER_INVALID,
+                    -> {
+                        error("Unexpected chapter mutation domain error: ${result.failure}")
                     }
                 }
             }
@@ -230,11 +249,36 @@ internal class PageRoutes(
 
     private fun validate(
         name: String,
-        type: PageType,
-    ): PageValidationError? =
-        when {
-            name.isBlank() -> PageValidationError.NAME_REQUIRED
-            type is PageType.Unknown -> PageValidationError.PAGE_TYPE_UNKNOWN
-            else -> null
+        kind: skirout.kernel.v1.page_kind.PageKindRef,
+    ): PageValidationError? = validateName(name) ?: validateKind(kind)
+
+    private fun validateName(name: String): PageValidationError? = PageValidationError.NAME_REQUIRED.takeIf { name.isBlank() }
+
+    private fun validateKind(kind: skirout.kernel.v1.page_kind.PageKindRef): PageValidationError? {
+        val definition =
+            pageCatalog.definitions.singleOrNull {
+                it.kind.id.value
+                    .toString() == kind.id.value
+            }
+                ?: return PageValidationError.PAGE_KIND_UNKNOWN
+        return PageValidationError.PAGE_KIND_REVISION_UNKNOWN.takeIf { definition.kind.revision != kind.revision }
+    }
+
+    context(main: MainSpanScope)
+    private suspend fun changeKind(
+        call: com.typewritermc.services.libs.communicator.router.IncomingUnaryCall<
+            RealmAddress,
+            skirout.library.v1.page.ChangePageKindRequest,
+            ChangePageKindResponse,
+        >,
+    ): ChangePageKindResponse {
+        val request = call.request
+        request.pageId.invalidRecordId("page")?.let {
+            return ChangePageKindResponse.InvalidRecordIdErrorWrapper(it)
         }
+        childSpan("db.page.get") { pages.getPage(request.pageId.toPageId()) }
+            ?: return ChangePageKindResponse.createPageNotFoundError(pageId = request.pageId)
+        validateKind(request.target)?.let { return ChangePageKindResponse.ValidationErrorWrapper(it) }
+        return ChangePageKindResponse.createConversionUnavailable()
+    }
 }

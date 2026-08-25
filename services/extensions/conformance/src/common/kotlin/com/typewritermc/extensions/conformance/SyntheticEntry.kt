@@ -14,6 +14,7 @@ import com.typewritermc.capability.realmSearch
 import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.discovery.runtime.RuntimeScope
 import com.typewritermc.discovery.runtime.TypewriterRegistrar
+import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeContext
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.ElementRuntimeHandle
@@ -21,6 +22,10 @@ import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.ExecutableEntry
 import com.typewritermc.elements.TypewriterElement
 import com.typewritermc.elements.TypewriterElementFacet
+import com.typewritermc.pages.GraphDirection
+import com.typewritermc.pages.PageEditorDefinition
+import com.typewritermc.pages.TypewriterPage
+import com.typewritermc.pages.page
 import com.typewritermc.presentation.PresentationBuildContext
 import com.typewritermc.presentation.TypewriterPresentation
 import com.typewritermc.presentation.presentation
@@ -58,6 +63,7 @@ data class RepeatedMessage(
     color = "#7C4DFF",
 )
 data class SyntheticEntry(
+    override val id: ElementInstanceId,
     val message: SyntheticMessage,
 ) : ExecutableEntry {
     context(context: EntryExecutionContext)
@@ -66,23 +72,33 @@ data class SyntheticEntry(
     }
 }
 
+@TypewriterPage(
+    id = "019d3a87000170008000000000000001",
+)
+fun syntheticPage() =
+    page(
+        name = "Synthetic",
+        icon = "material-symbols:account-tree",
+        color = "#7C4DFF",
+        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(SyntheticEntry::class)),
+    )
+
 @RealmCapabilities
 class SyntheticRealmCapabilities {
-    context(_: RealmSearchContext)
     @RealmCapability.Search
+    context(_: RealmSearchContext)
     fun searchMessages(request: RealmSearchRequest<LiteralMessage>): RealmSearch<RepeatedMessage> =
         realmSearch {
             partial(listOf(RepeatedMessage(request.payload.value, 1)))
             complete()
         }
 
-    context(_: RealmComputationContext)
     @RealmCapability.Computation
-    suspend fun repeatMessage(request: RepeatedMessage): LiteralMessage =
-        LiteralMessage(request.value.repeat(request.repetitions))
+    context(_: RealmComputationContext)
+    suspend fun repeatMessage(request: RepeatedMessage): LiteralMessage = LiteralMessage(request.value.repeat(request.repetitions))
 
-    context(_: RealmCommandContext)
     @RealmCapability.Command
+    context(_: RealmCommandContext)
     suspend fun publishMessage(request: LiteralMessage): RealmCommandOutcome =
         RealmCommandOutcome(
             instructions =

@@ -91,7 +91,7 @@ class BooksMock extends Books {
   Future<skir.RecordId> createPage(
     skir.RecordId bookId,
     String name,
-    skir.PageType type,
+    PageKindRef kind,
     String chapter,
     int priority,
   ) async {

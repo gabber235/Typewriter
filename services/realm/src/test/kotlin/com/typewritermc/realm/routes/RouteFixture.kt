@@ -3,6 +3,7 @@ package com.typewritermc.realm.routes
 import build.skir.Serializer
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.RepositoryFixture
+import com.typewritermc.realm.testPageCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -25,7 +26,6 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
     editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
-    elementCatalog: RealmElementCatalogSource = UnavailableRealmElementCatalogSource(),
     presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
     decorateBooks: (BookRepository) -> BookRepository = { it },
 ) : AutoCloseable {
@@ -41,7 +41,7 @@ internal class RouteFixture(
                 repositories.pages,
                 repositories.tags,
                 editorCatalog,
-                elementCatalog,
+                testPageCatalog(),
                 presentationSearch,
             ).create(RealmAddress("realm", "organization")),
             scope,

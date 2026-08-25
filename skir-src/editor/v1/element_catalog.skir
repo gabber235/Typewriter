@@ -1,5 +1,4 @@
 import {
-  CatalogGeneration,
   DeclaredTypeId,
   ResolvedTypeRef,
 } from "editor/v1/type_catalog.skir";
@@ -40,32 +39,26 @@ enum AvailabilityExpression(811100007) {
   not: AvailabilityNot = 5;
 }
 
-enum ElementKind(811100008) {
-  entry = 1;
-  cue = 2;
-}
-
-struct ElementDescriptor(811100009) {
+struct ElementDescriptor(811100008) {
   element_type_id: ElementTypeId = 0;
-  kind: ElementKind = 1;
-  type: ResolvedTypeRef = 2;
-  name: string = 3;
-  description: string = 4;
-  icon: Icon = 5;
-  color: Color = 6;
-  availability: AvailabilityExpression = 7;
+  type: ResolvedTypeRef = 1;
+  name: string = 2;
+  description: string = 3;
+  icon: Icon = 4;
+  color: Color = 5;
+  availability: AvailabilityExpression = 6;
 }
 
-struct ElementIneligibility(811100010) {
+struct ElementIneligibility(811100009) {
   reasons: [string] = 0;
 }
 
-enum ElementEligibility(811100011) {
+enum ElementEligibility(811100010) {
   eligible: struct {} = 1;
   ineligible: ElementIneligibility = 2;
 }
 
-struct ElementCatalogEntry(811100012) {
+struct ElementCatalogEntry(811100011) {
   origin_artifact_id: string = 0;
   source_part: string = 1;
   descriptor: ElementDescriptor = 2;
@@ -73,28 +66,8 @@ struct ElementCatalogEntry(811100012) {
   available: bool = 4;
 }
 
-struct ElementCatalogRequest(811100013) {
-  expected_generation: CatalogGeneration? = 0;
+struct StoredElementEnvelope(811100012) {
+  element_type: ElementTypeId = 0;
+  schema_revision: int32 = 1;
+  value: TypedValueEnvelope = 2;
 }
-
-struct ElementCatalogSuccess(811100014) {
-  generation: CatalogGeneration = 0;
-  entries: [ElementCatalogEntry] = 1;
-}
-
-enum ElementCatalogResult(811100015) {
-  success: ElementCatalogSuccess = 1;
-  generation_mismatch: CatalogGeneration = 2;
-  unavailable: [string] = 3;
-}
-
-struct StoredElementEnvelope(811100016) {
-  id: ElementInstanceId = 0;
-  element_type: ElementTypeId = 1;
-  schema_revision: int32 = 2;
-  value: TypedValueEnvelope = 3;
-}
-
-method FetchElementCatalog(
-  ElementCatalogRequest
-): ElementCatalogResult = 910004;

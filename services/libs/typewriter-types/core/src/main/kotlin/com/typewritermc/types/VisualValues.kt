@@ -5,6 +5,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Icon {
+    val wireValue: String
+        get() =
+            when (this) {
+                is Iconify -> value
+                is Svg -> source
+            }
+
     @Serializable
     @SerialName("iconify")
     data class Iconify(

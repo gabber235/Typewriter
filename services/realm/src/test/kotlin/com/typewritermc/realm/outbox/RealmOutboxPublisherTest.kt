@@ -3,6 +3,7 @@ package com.typewritermc.realm.outbox
 import com.surrealdb.RecordId
 import com.surrealdb.Transaction
 import com.typewritermc.realm.repository.RepositoryFixture
+import com.typewritermc.realm.repository.createBook
 import com.typewritermc.realm.repository.successValue
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator

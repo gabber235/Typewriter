@@ -28,10 +28,7 @@ class ImprintPlugin : Plugin<Project> {
             task.group = "typewriter"
             task.description = "Prints the configured Typewriter artifact declaration."
             task.doLast {
-                val declaration = typewriter.declaration()
-                task.logger.lifecycle(
-                    "Typewriter ${declaration.kind.name.lowercase()} ${declaration.id} ${declaration.version}",
-                )
+                task.logger.lifecycle(typewriter.info())
             }
         }
     }
@@ -57,6 +54,13 @@ open class TypewriterProjectExtension(
     private val project: Project,
 ) {
     private val declarations = mutableListOf<ArtifactDeclaration>()
+    private var engineCoreConfigured = false
+
+    fun engineCore() {
+        requireUndeclared()
+        engineCoreConfigured = true
+        project.configureEngineCoreProject()
+    }
 
     fun engine(action: Action<EngineDeclaration>) {
         val declaration = EngineDeclaration()
@@ -83,12 +87,18 @@ open class TypewriterProjectExtension(
     }
 
     internal fun declaration(): DeclaredArtifact {
-        if (declarations.size != 1) {
+        if (declarations.size != 1 || engineCoreConfigured) {
             throw GradleException(
-                "A project using Imprint must declare exactly one Realm, engine, engine capability, or extension.",
+                "A project using Imprint must declare exactly one Realm, engine, engine core, engine capability, or extension.",
             )
         }
         return declarations.single().toModel()
+    }
+
+    internal fun info(): String {
+        if (engineCoreConfigured) return "Typewriter engine core ${project.group}:${project.name}"
+        val declaration = declaration()
+        return "Typewriter ${declaration.kind.name.lowercase()} ${declaration.id} ${declaration.version}"
     }
 
     private fun <T : ArtifactDeclaration> add(
@@ -96,12 +106,15 @@ open class TypewriterProjectExtension(
         action: Action<T>,
     ) {
         action.execute(declaration)
-        if (declarations.isNotEmpty()) {
-            throw GradleException(
-                "A project using Imprint must declare exactly one Realm, engine, engine capability, or extension.",
-            )
-        }
+        requireUndeclared()
         declarations += declaration
+    }
+
+    private fun requireUndeclared() {
+        if (declarations.isEmpty() && !engineCoreConfigured) return
+        throw GradleException(
+            "A project using Imprint must declare exactly one Realm, engine, engine core, engine capability, or extension.",
+        )
     }
 }
 

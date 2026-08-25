@@ -21,6 +21,7 @@ pub mod binding;
 pub mod expression;
 pub mod action;
 pub mod presentation;
+pub mod page_catalog;
 pub mod element_catalog;
 pub mod conversion;
 pub mod capability;

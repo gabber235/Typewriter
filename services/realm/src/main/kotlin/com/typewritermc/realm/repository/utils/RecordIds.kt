@@ -2,13 +2,18 @@ package com.typewritermc.realm.repository.utils
 
 import com.surrealdb.Id
 import com.surrealdb.Value
+import com.typewritermc.library.BookId
+import com.typewritermc.library.PageId
+import com.typewritermc.library.RecordIdKey
+import com.typewritermc.library.RecordIdValue
+import com.typewritermc.library.TagId
 import skirout.kernel.v1.errors.InvalidRecordIdError
 import skirout.kernel.v1.record_id.ObjectRecordIdKey
 import skirout.kernel.v1.record_id.ObjectRecordIdValue
 import skirout.kernel.v1.record_id.RecordId
-import skirout.kernel.v1.record_id.RecordIdKey
-import skirout.kernel.v1.record_id.RecordIdValue
 import java.util.UUID
+import skirout.kernel.v1.record_id.RecordIdKey as SkirRecordIdKey
+import skirout.kernel.v1.record_id.RecordIdValue as SkirRecordIdValue
 
 internal fun RecordId.invalidRecordId(expectedTable: String): InvalidRecordIdError? = listOf(this).invalidRecordId(expectedTable)
 
@@ -18,130 +23,204 @@ internal fun Iterable<RecordId>.invalidRecordId(expectedTable: String): InvalidR
     return InvalidRecordIdError(expectedTable = expectedTable, givenTables = givenTables)
 }
 
+internal fun RecordId.toBookId(): BookId {
+    requireTable("book")
+    return BookId(key.toLibraryKey())
+}
+
+internal fun RecordId.toTagId(): TagId {
+    requireTable("tag")
+    return TagId(key.toLibraryKey())
+}
+
+internal fun RecordId.toPageId(): PageId {
+    requireTable("page")
+    return PageId(key.toLibraryKey())
+}
+
+internal fun BookId.toSkirRecordId(): RecordId = RecordId(table = "book", key = key.toSkirKey())
+
+internal fun TagId.toSkirRecordId(): RecordId = RecordId(table = "tag", key = key.toSkirKey())
+
+internal fun PageId.toSkirRecordId(): RecordId = RecordId(table = "page", key = key.toSkirKey())
+
+internal fun BookId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("book")
+
+internal fun TagId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("tag")
+
+internal fun PageId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("page")
+
+internal fun Iterable<TagId>.surrealTagIds(): List<com.surrealdb.RecordId> = map(TagId::surrealId)
+
 internal fun RecordId.surrealId(expectedTable: String): com.surrealdb.RecordId {
-    require(table == expectedTable) { "Expected a $expectedTable record id, received $table" }
-    return toSurrealRecordId()
+    requireTable(expectedTable)
+    return key.toLibraryKey().toSurrealRecordId(table)
 }
 
 internal fun List<RecordId>.surrealId(expectedTable: String): List<com.surrealdb.RecordId> {
     invalidRecordId(expectedTable)?.let { invalid ->
         throw IllegalArgumentException("Expected all record ids to be $expectedTable, but found ${invalid.givenTables.joinToString()}")
     }
-    return map { it.toSurrealRecordId() }
+    return map { it.surrealId(expectedTable) }
+}
+
+internal fun com.surrealdb.RecordId.toBookId(): BookId {
+    require(table == "book") { "Expected a book record id, received $table." }
+    return BookId(id.toLibraryKey())
+}
+
+internal fun com.surrealdb.RecordId.toTagId(): TagId {
+    require(table == "tag") { "Expected a tag record id, received $table." }
+    return TagId(id.toLibraryKey())
+}
+
+internal fun com.surrealdb.RecordId.toPageId(): PageId {
+    require(table == "page") { "Expected a page record id, received $table." }
+    return PageId(id.toLibraryKey())
 }
 
 internal fun com.surrealdb.RecordId.toSkirRecordId(): RecordId =
     RecordId(
         table = table,
-        key = id.toSkirRecordIdKey(),
+        key = id.toLibraryKey().toSkirKey(),
     )
 
-private fun Id.toSkirRecordIdKey(): RecordIdKey =
+private fun RecordId.requireTable(expectedTable: String) {
+    require(table == expectedTable) { "Expected a $expectedTable record id, received $table." }
+}
+
+private fun Id.toLibraryKey(): RecordIdKey =
     when {
-        isLong -> {
-            RecordIdKey.NumberWrapper(long)
+        isLong -> RecordIdKey.Number(long)
+        isString -> RecordIdKey.String(string)
+        isUuid -> RecordIdKey.Uuid(uuid.toString())
+        isArray -> RecordIdKey.Array(array.map(Value::toLibraryValue))
+        isObject -> RecordIdKey.Object(getObject().associate { it.key to it.value.toLibraryValue() })
+        else -> error("Unsupported SurrealDB record id key")
+    }
+
+private fun Value.toLibraryValue(): RecordIdValue =
+    when {
+        isNull || isNone -> RecordIdValue.Null
+        isBoolean -> RecordIdValue.Boolean(boolean)
+        isLong -> RecordIdValue.Number(long)
+        isDouble -> RecordIdValue.Float(double)
+        isString -> RecordIdValue.String(string)
+        isArray -> RecordIdValue.Array(array.map(Value::toLibraryValue))
+        isObject -> RecordIdValue.Object(getObject().associate { it.key to it.value.toLibraryValue() })
+        else -> error("Unsupported SurrealDB record id value")
+    }
+
+private fun SkirRecordIdKey.toLibraryKey(): RecordIdKey =
+    when (this) {
+        is SkirRecordIdKey.NumberWrapper -> RecordIdKey.Number(value)
+        is SkirRecordIdKey.StringWrapper -> RecordIdKey.String(value)
+        is SkirRecordIdKey.UuidWrapper -> RecordIdKey.Uuid(value)
+        is SkirRecordIdKey.ArrayWrapper -> RecordIdKey.Array(value.map(SkirRecordIdValue::toLibraryValue))
+        is SkirRecordIdKey.ObjectWrapper -> RecordIdKey.Object(value.associate { it.key to it.value.toLibraryValue() })
+        is SkirRecordIdKey.Unknown -> error("Unknown record id key")
+    }
+
+private fun SkirRecordIdValue.toLibraryValue(): RecordIdValue =
+    when (this) {
+        SkirRecordIdValue.NULL -> RecordIdValue.Null
+        is SkirRecordIdValue.BooleanWrapper -> RecordIdValue.Boolean(value)
+        is SkirRecordIdValue.NumberWrapper -> RecordIdValue.Number(value)
+        is SkirRecordIdValue.FloatWrapper -> RecordIdValue.Float(value)
+        is SkirRecordIdValue.StringWrapper -> RecordIdValue.String(value)
+        is SkirRecordIdValue.ArrayWrapper -> RecordIdValue.Array(value.map(SkirRecordIdValue::toLibraryValue))
+        is SkirRecordIdValue.ObjectWrapper -> RecordIdValue.Object(value.associate { it.key to it.value.toLibraryValue() })
+        is SkirRecordIdValue.Unknown -> error("Unknown record id value")
+    }
+
+private fun RecordIdKey.toSkirKey(): SkirRecordIdKey =
+    when (this) {
+        is RecordIdKey.Number -> {
+            SkirRecordIdKey.NumberWrapper(value)
         }
 
-        isString -> {
-            RecordIdKey.StringWrapper(string)
+        is RecordIdKey.String -> {
+            SkirRecordIdKey.StringWrapper(value)
         }
 
-        isUuid -> {
-            RecordIdKey.UuidWrapper(uuid.toString())
+        is RecordIdKey.Uuid -> {
+            SkirRecordIdKey.UuidWrapper(value)
         }
 
-        isArray -> {
-            RecordIdKey.ArrayWrapper(array.map(Value::toSkirRecordIdValue))
+        is RecordIdKey.Array -> {
+            SkirRecordIdKey.ArrayWrapper(values.map(RecordIdValue::toSkirValue))
         }
 
-        isObject -> {
-            RecordIdKey.ObjectWrapper(
-                getObject().map { ObjectRecordIdKey(key = it.key, value = it.value.toSkirRecordIdValue()) },
+        is RecordIdKey.Object -> {
+            SkirRecordIdKey.ObjectWrapper(
+                values.map { ObjectRecordIdKey(key = it.key, value = it.value.toSkirValue()) },
             )
-        }
-
-        else -> {
-            error("Unsupported SurrealDB record id key")
         }
     }
 
-private fun Value.toSkirRecordIdValue(): RecordIdValue =
-    when {
-        isNull || isNone -> {
-            RecordIdValue.NULL
+private fun RecordIdValue.toSkirValue(): SkirRecordIdValue =
+    when (this) {
+        RecordIdValue.Null -> {
+            SkirRecordIdValue.NULL
         }
 
-        isBoolean -> {
-            RecordIdValue.BooleanWrapper(boolean)
+        is RecordIdValue.Boolean -> {
+            SkirRecordIdValue.BooleanWrapper(value)
         }
 
-        isLong -> {
-            RecordIdValue.NumberWrapper(long)
+        is RecordIdValue.Number -> {
+            SkirRecordIdValue.NumberWrapper(value)
         }
 
-        isDouble -> {
-            RecordIdValue.FloatWrapper(double)
+        is RecordIdValue.Float -> {
+            SkirRecordIdValue.FloatWrapper(value)
         }
 
-        isString -> {
-            RecordIdValue.StringWrapper(string)
+        is RecordIdValue.String -> {
+            SkirRecordIdValue.StringWrapper(value)
         }
 
-        isArray -> {
-            RecordIdValue.ArrayWrapper(array.map(Value::toSkirRecordIdValue))
+        is RecordIdValue.Array -> {
+            SkirRecordIdValue.ArrayWrapper(values.map(RecordIdValue::toSkirValue))
         }
 
-        isObject -> {
-            RecordIdValue.ObjectWrapper(
-                getObject().map { ObjectRecordIdValue(key = it.key, value = it.value.toSkirRecordIdValue()) },
+        is RecordIdValue.Object -> {
+            SkirRecordIdValue.ObjectWrapper(
+                values.map { ObjectRecordIdValue(key = it.key, value = it.value.toSkirValue()) },
             )
-        }
-
-        else -> {
-            error("Unsupported SurrealDB record id value")
         }
     }
 
-internal fun RecordId.toSurrealRecordId(): com.surrealdb.RecordId =
-    when (this.key) {
-        is RecordIdKey.NumberWrapper -> {
-            com.surrealdb.RecordId(table, (this.key as RecordIdKey.NumberWrapper).value)
+private fun RecordIdKey.toSurrealRecordId(table: String): com.surrealdb.RecordId =
+    when (this) {
+        is RecordIdKey.Number -> {
+            com.surrealdb.RecordId(table, value)
         }
 
-        is RecordIdKey.StringWrapper -> {
-            com.surrealdb.RecordId(table, (this.key as RecordIdKey.StringWrapper).value)
+        is RecordIdKey.String -> {
+            com.surrealdb.RecordId(table, value)
         }
 
-        is RecordIdKey.UuidWrapper -> {
-            com.surrealdb.RecordId(table, UUID.fromString((this.key as RecordIdKey.UuidWrapper).value))
+        is RecordIdKey.Uuid -> {
+            com.surrealdb.RecordId(table, UUID.fromString(value))
         }
 
-        is RecordIdKey.ArrayWrapper -> {
-            com.surrealdb.RecordId(
-                table,
-                com.surrealdb.Array.fromList((this.key as RecordIdKey.ArrayWrapper).value.map(RecordIdValue::databaseValue)),
-            )
+        is RecordIdKey.Array -> {
+            com.surrealdb.RecordId(table, com.surrealdb.Array.fromList(values.map(RecordIdValue::databaseValue)))
         }
 
-        is RecordIdKey.ObjectWrapper -> {
-            throw UnsupportedOperationException(
-                "Objects are not supported in the java sdk yet. Maybe in the kotlin sdk in the future?",
-            )
-        }
-
-        is RecordIdKey.Unknown -> {
-            error("Unknown record id key")
+        is RecordIdKey.Object -> {
+            throw UnsupportedOperationException("Objects are not supported by the SurrealDB Java SDK.")
         }
     }
 
 private fun RecordIdValue.databaseValue(): Any? =
     when (this) {
-        RecordIdValue.NULL -> null
-        is RecordIdValue.BooleanWrapper -> value
-        is RecordIdValue.NumberWrapper -> value
-        is RecordIdValue.FloatWrapper -> value
-        is RecordIdValue.StringWrapper -> value
-        is RecordIdValue.ArrayWrapper -> value.map(RecordIdValue::databaseValue)
-        is RecordIdValue.ObjectWrapper -> value.associate { it.key to it.value.databaseValue() }
-        is RecordIdValue.Unknown -> error("Unknown record id value")
+        RecordIdValue.Null -> null
+        is RecordIdValue.Boolean -> value
+        is RecordIdValue.Number -> value
+        is RecordIdValue.Float -> value
+        is RecordIdValue.String -> value
+        is RecordIdValue.Array -> values.map(RecordIdValue::databaseValue)
+        is RecordIdValue.Object -> values.mapValues { it.value.databaseValue() }
     }

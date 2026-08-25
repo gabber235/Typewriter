@@ -12,9 +12,10 @@ final _pageId = recordId("page:page1");
 
 Page _page({String name = "Current"}) => Page(
   pageId: _pageId,
+  revision: 1,
   bookId: recordId("book:book1"),
   name: name,
-  type: PageType.sequence,
+  kind: PageType.sequence.kind,
   chapter: "chapter",
   priority: 1,
 );

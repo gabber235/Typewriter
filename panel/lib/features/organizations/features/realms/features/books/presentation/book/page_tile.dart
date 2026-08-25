@@ -113,7 +113,13 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
-    final elementTypes = ref.watch(pageElementTypesProvider(page.type)).value;
+    final definition = ref
+        .watch(realmEditorCatalogProvider)
+        .value
+        ?.snapshot
+        ?.pageCatalog
+        .definitions[page.kind];
+    final elementTypes = ref.watch(pageElementTypesProvider(page.kind)).value;
 
     final color = Theme.of(context).colorScheme.onSurface;
 
@@ -122,7 +128,10 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           SizedBox(width: context.spacing.space1),
-          Icones(page.type.icon, size: 11, color: color),
+          if (definition == null)
+            Icon(Icons.warning_rounded, size: 11, color: color)
+          else
+            Icones.value(definition.icon, size: 11, color: color),
           SizedBox(width: context.spacing.space2),
           Expanded(
             child: Text(
@@ -232,6 +241,12 @@ class _SmallPageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final definition = ref
+        .watch(realmEditorCatalogProvider)
+        .value
+        ?.snapshot
+        ?.pageCatalog
+        .definitions[page.kind];
 
     return Material(
       color: isSelected
@@ -240,13 +255,21 @@ class _SmallPageTile extends HookConsumerWidget {
       borderRadius: context.shapes.mediumBorderRadius,
       child: Padding(
         padding: EdgeInsets.all(context.spacing.space2),
-        child: Icones(
-          page.type.icon,
-          size: 11,
-          color: isSelected
-              ? context.colors.onSelectionContainer
-              : context.colors.contentSecondary,
-        ),
+        child: definition == null
+            ? Icon(
+                Icons.warning_rounded,
+                size: 11,
+                color: isSelected
+                    ? context.colors.onSelectionContainer
+                    : context.colors.contentSecondary,
+              )
+            : Icones.value(
+                definition.icon,
+                size: 11,
+                color: isSelected
+                    ? context.colors.onSelectionContainer
+                    : context.colors.contentSecondary,
+              ),
       ),
     );
   }

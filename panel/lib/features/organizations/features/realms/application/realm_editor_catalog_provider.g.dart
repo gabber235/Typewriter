@@ -206,7 +206,7 @@ final class RealmEditorCatalogForTypeProvider
 }
 
 String _$realmEditorCatalogForTypeHash() =>
-    r'39980356c3859f9a615c02cee80cb0b85c7ef543';
+    r'dfbda60452b4295e94fb556a46e76b065802ced9';
 
 final class RealmEditorCatalogForTypeFamily extends $Family
     with
@@ -228,6 +228,95 @@ final class RealmEditorCatalogForTypeFamily extends $Family
 
   @override
   String toString() => r'realmEditorCatalogForTypeProvider';
+}
+
+@ProviderFor(realmEditorCatalogLease)
+final realmEditorCatalogLeaseProvider = RealmEditorCatalogLeaseFamily._();
+
+final class RealmEditorCatalogLeaseProvider
+    extends
+        $FunctionalProvider<
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogLease?
+        >
+    with $Provider<RealmEditorCatalogLease?> {
+  RealmEditorCatalogLeaseProvider._({
+    required RealmEditorCatalogLeaseFamily super.from,
+    required RealmEditorCatalogRequest super.argument,
+  }) : super(
+         retry: null,
+         name: r'realmEditorCatalogLeaseProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmEditorCatalogLeaseHash();
+
+  @override
+  String toString() {
+    return r'realmEditorCatalogLeaseProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<RealmEditorCatalogLease?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  RealmEditorCatalogLease? create(Ref ref) {
+    final argument = this.argument as RealmEditorCatalogRequest;
+    return realmEditorCatalogLease(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RealmEditorCatalogLease? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RealmEditorCatalogLease?>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RealmEditorCatalogLeaseProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$realmEditorCatalogLeaseHash() =>
+    r'0ebc66158a07b11aa18b2893e85a14ae2a2bed70';
+
+final class RealmEditorCatalogLeaseFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          RealmEditorCatalogLease?,
+          RealmEditorCatalogRequest
+        > {
+  RealmEditorCatalogLeaseFamily._()
+    : super(
+        retry: null,
+        name: r'realmEditorCatalogLeaseProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  RealmEditorCatalogLeaseProvider call(RealmEditorCatalogRequest request) =>
+      RealmEditorCatalogLeaseProvider._(argument: request, from: this);
+
+  @override
+  String toString() => r'realmEditorCatalogLeaseProvider';
 }
 
 @ProviderFor(availableElementDefinitions)

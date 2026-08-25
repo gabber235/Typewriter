@@ -5,29 +5,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("RealmEditorCatalogCache", () {
-    test("replaces the authoritative type catalog within one generation", () {
-      final oldType = _type("old");
-      final currentType = _type("current");
-      final previous = RealmEditorCatalogSnapshot(
-        catalog: TypeCatalog([
-          TypeDefinition(id: oldType, kind: NominalTypeKind.concrete),
-        ]),
-        generation: const CatalogGeneration("1"),
-      );
-      final current = RealmEditorCatalogSnapshot(
-        catalog: TypeCatalog([
-          TypeDefinition(id: currentType, kind: NominalTypeKind.concrete),
-        ]),
-        generation: const CatalogGeneration("1"),
-      );
-
-      final merged = previous.merge(current);
-
-      expect(merged.catalog.definitions.map((value) => value.id), [
-        currentType,
-      ]);
-    });
-
     test("publishes a fetched catalog with partial diagnostics", () async {
       final diagnostic = _diagnostic("One definition was rejected");
       final source = _FakeSource()
@@ -56,26 +33,66 @@ void main() {
       expect(ready.value.diagnostics, [diagnostic]);
     });
 
-    test("accumulates focused requests for lazy catalog batches", () async {
-      final firstType = _type("first");
-      final secondType = _type("second");
-      final source = _FakeSource()
-        ..responses.addAll([
-          Future.value(_fetched("1")),
-          Future.value(_fetched("1")),
-          Future.value(_fetched("1")),
-        ]);
-      final cache = _cache(source);
-      addTearDown(cache.dispose);
-      cache.start();
-      await _waitFor(() => source.requests.length == 1);
-      cache.request(RealmEditorCatalogRequest(types: {firstType}));
-      await _waitFor(() => source.requests.length == 2);
-      cache.request(RealmEditorCatalogRequest(types: {secondType}));
-      await _waitFor(() => source.requests.length == 3);
-      expect(source.requests[1].types, {firstType});
-      expect(source.requests[2].types, {firstType, secondType});
-    });
+    test(
+      "replaces authoritative diagnostics instead of duplicating them",
+      () async {
+        final diagnostic = _diagnostic("One definition was rejected");
+        final fetched = RealmEditorCatalogFetched(
+          RealmEditorCatalogSnapshot(
+            catalog: TypeCatalog([]),
+            generation: const CatalogGeneration("4"),
+            diagnostics: [diagnostic],
+          ),
+        );
+        final source = _FakeSource()
+          ..responses.addAll([Future.value(fetched), Future.value(fetched)]);
+        final cache = _cache(source);
+        addTearDown(cache.dispose);
+        cache.start();
+        await _waitFor(() => source.requests.length == 1);
+
+        await cache.refresh();
+
+        final ready = await cache.states.firstWhere(
+          (state) => state is RealmEditorCatalogReady,
+        );
+        expect(ready.snapshot!.diagnostics, [diagnostic]);
+      },
+    );
+
+    test(
+      "fetches the union of active leases and releases closed demand",
+      () async {
+        final firstType = _type("first");
+        final secondType = _type("second");
+        final source = _FakeSource()
+          ..responses.addAll([
+            Future.value(_fetched("1")),
+            Future.value(_fetched("1")),
+            Future.value(_fetched("1")),
+            Future.value(_fetched("1")),
+          ]);
+        final cache = _cache(source);
+        addTearDown(cache.dispose);
+        cache.start();
+        await _waitFor(() => source.requests.length == 1);
+        final firstLease = cache.acquire(
+          RealmEditorCatalogRequest(types: {firstType}),
+        );
+        addTearDown(firstLease.close);
+        await _waitFor(() => source.requests.length == 2);
+        final secondLease = cache.acquire(
+          RealmEditorCatalogRequest(types: {secondType}),
+        );
+        addTearDown(secondLease.close);
+        await _waitFor(() => source.requests.length == 3);
+        expect(source.requests[1].types, {firstType});
+        expect(source.requests[2].types, {firstType, secondType});
+        firstLease.close();
+        await cache.refresh();
+        expect(source.requests[3].types, {secondType});
+      },
+    );
 
     test("refreshes with the invalidated generation", () async {
       final source = _FakeSource()
@@ -179,11 +196,12 @@ void main() {
       final unavailable = cache.states.firstWhere(
         (state) => state is RealmEditorCatalogUnavailable,
       );
-      cache.request(
+      final lease = cache.acquire(
         RealmEditorCatalogRequest(
           presentations: {PresentationId(namespace: "test", name: "updated")},
         ),
       );
+      addTearDown(lease.close);
       expect(
         (await unavailable as RealmEditorCatalogUnavailable).previous,
         isNull,

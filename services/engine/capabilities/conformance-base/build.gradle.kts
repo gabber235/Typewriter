@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     api(project(":engine-types"))
+    implementation("com.typewritermc:element-types")
+    implementation("com.typewritermc:page-types")
 }
 
 typewriter {

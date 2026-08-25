@@ -19,11 +19,6 @@ final exemptions = <Exemption>[
     "design-system palette seeds",
   ),
   Exemption(
-    "lib/features/organizations/features/realms/features/books/features/pages/domain/page_type_extensions.dart",
-    RegExp(r"Colors\.(?:blue|green|red|purple|deepPurple|orange)"),
-    "persisted page-type identity colors",
-  ),
-  Exemption(
     "lib/features/organizations/features/services/application/service_models.dart",
     RegExp(r"Colors\.(?:blue|deepPurple|deepOrangeAccent|green)"),
     "service-role identity colors",
@@ -313,8 +308,7 @@ void main() {
         final isUi =
             path.contains("/presentation/") ||
             path.contains("/shared/ui/") ||
-            path.contains("/application/services.dart") ||
-            path.contains("/domain/page_type_extensions.dart");
+            path.contains("/application/services.dart");
         if (!isUi) {
           continue;
         }

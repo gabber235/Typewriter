@@ -38,10 +38,6 @@ void main() {
       route.invalidationSubject,
       "service.from.beta.organization.alpha.realm.editor.catalog.invalidate",
     );
-    expect(
-      route.elementsFetchSubject,
-      "service.to.beta.organization.alpha.realm.editor.elements.fetch",
-    );
   });
 
   test("eligible discovered elements become available definitions", () async {
@@ -234,7 +230,6 @@ final class _ElementSource implements RealmEditorCatalogSource {
             sourcePart: "common",
             definition: DiscoveredElementDefinition(
               id: _elementId,
-              kind: ElementKind.entry,
               type: type,
               name: "Synthetic Entry",
               description: "Verifies Typewriter discovery",

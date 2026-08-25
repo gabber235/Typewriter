@@ -9,54 +9,6 @@ part of 'page_element_type_policy.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(pageElementTypePolicy)
-final pageElementTypePolicyProvider = PageElementTypePolicyProvider._();
-
-final class PageElementTypePolicyProvider
-    extends
-        $FunctionalProvider<
-          PageElementTypePolicy,
-          PageElementTypePolicy,
-          PageElementTypePolicy
-        >
-    with $Provider<PageElementTypePolicy> {
-  PageElementTypePolicyProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'pageElementTypePolicyProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$pageElementTypePolicyHash();
-
-  @$internal
-  @override
-  $ProviderElement<PageElementTypePolicy> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  PageElementTypePolicy create(Ref ref) {
-    return pageElementTypePolicy(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PageElementTypePolicy value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PageElementTypePolicy>(value),
-    );
-  }
-}
-
-String _$pageElementTypePolicyHash() =>
-    r'5882b46dc04d375dfe1c49aadf2d99ad46d22bc6';
-
 @ProviderFor(pageElementTypes)
 final pageElementTypesProvider = PageElementTypesFamily._();
 
@@ -72,7 +24,7 @@ final class PageElementTypesProvider
         $StreamProvider<PageElementTypesState> {
   PageElementTypesProvider._({
     required PageElementTypesFamily super.from,
-    required PageType super.argument,
+    required PageKindRef super.argument,
   }) : super(
          retry: null,
          name: r'pageElementTypesProvider',
@@ -99,7 +51,7 @@ final class PageElementTypesProvider
 
   @override
   Stream<PageElementTypesState> create(Ref ref) {
-    final argument = this.argument as PageType;
+    final argument = this.argument as PageKindRef;
     return pageElementTypes(ref, argument);
   }
 
@@ -114,10 +66,10 @@ final class PageElementTypesProvider
   }
 }
 
-String _$pageElementTypesHash() => r'c8ac18e538f90296ca697901982c3c34d7a037de';
+String _$pageElementTypesHash() => r'230b3bfb0ffe56eb05d03452e8fe8ae903490f1f';
 
 final class PageElementTypesFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<PageElementTypesState>, PageType> {
+    with $FunctionalFamilyOverride<Stream<PageElementTypesState>, PageKindRef> {
   PageElementTypesFamily._()
     : super(
         retry: null,
@@ -127,8 +79,8 @@ final class PageElementTypesFamily extends $Family
         isAutoDispose: true,
       );
 
-  PageElementTypesProvider call(PageType pageType) =>
-      PageElementTypesProvider._(argument: pageType, from: this);
+  PageElementTypesProvider call(PageKindRef pageKind) =>
+      PageElementTypesProvider._(argument: pageKind, from: this);
 
   @override
   String toString() => r'pageElementTypesProvider';

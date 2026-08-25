@@ -15,6 +15,12 @@ val VisualValuesTest by testSuite {
         shouldThrow<IllegalArgumentException> { Icon.Svg(" ") }
     }
 
+    test("icon wire values round trip through the parser") {
+        val icons = listOf(Icon.Iconify("material-symbols:science"), Icon.Svg("<svg></svg>"))
+
+        icons.forEach { icon -> Icon.parse(icon.wireValue) shouldBe icon }
+    }
+
     test("RGB colors become opaque ARGB values") {
         Color.parseRgb("#7C4DFF") shouldBe Color(0xFF7C4DFFu)
     }

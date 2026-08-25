@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.createTag
+import com.typewritermc.realm.repository.getTag
 import com.typewritermc.realm.repository.successValue
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly

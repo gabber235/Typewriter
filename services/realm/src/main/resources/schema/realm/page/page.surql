@@ -1,6 +1,10 @@
 DEFINE TABLE OVERWRITE page SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
+DEFINE FIELD OVERWRITE revision ON page TYPE int
+    DEFAULT 1
+    ASSERT $value >= 1;
+
 DEFINE FIELD OVERWRITE name ON page TYPE string
     ASSERT {
         IF !fn::is_id($value) {
@@ -17,9 +21,13 @@ DEFINE FIELD OVERWRITE book ON page TYPE record<book> REFERENCE
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE type ON page
-    TYPE "sequence" | "scene" | "manifest" | "static"
-    DEFAULT "sequence";
+DEFINE FIELD OVERWRITE kind ON page
+    TYPE { id: string, revision: int };
+
+DEFINE FIELD OVERWRITE kind.id ON page TYPE string;
+
+DEFINE FIELD OVERWRITE kind.revision ON page TYPE int
+    ASSERT $value > 0;
 
 DEFINE FIELD OVERWRITE chapter ON page TYPE string
     DEFAULT ""

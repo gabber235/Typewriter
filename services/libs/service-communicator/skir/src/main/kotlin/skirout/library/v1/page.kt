@@ -20,183 +20,12 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-/** Deeply immutable. */
-sealed class PageType private constructor() {
-    /** The kind of variant held by a `PageType`. */
-    enum class Kind {
-        UNKNOWN,
-        SEQUENCE_CONST,
-        STATIC_CONST,
-        SCENE_CONST,
-        MANIFEST_CONST,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.page.PageType.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.PageType>?,
-    ) : skirout.library.v1.page.PageType() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageType && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    object SEQUENCE : skirout.library.v1.page.PageType() {
-        override val kind get() = Kind.SEQUENCE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageType && other.kind == Kind.SEQUENCE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SEQUENCE_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    object STATIC : skirout.library.v1.page.PageType() {
-        override val kind get() = Kind.STATIC_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageType && other.kind == Kind.STATIC_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.STATIC_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    object SCENE : skirout.library.v1.page.PageType() {
-        override val kind get() = Kind.SCENE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageType && other.kind == Kind.SCENE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.SCENE_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    object MANIFEST : skirout.library.v1.page.PageType() {
-        override val kind get() = Kind.MANIFEST_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageType && other.kind == Kind.MANIFEST_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.MANIFEST_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.PageType>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.page.PageType._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [PageType].
-         * Default value for fields of type [PageType].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.library.v1.page.PageType, Unknown>(
-                recordId = "library/v1/page.skir:PageType",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [PageType] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [PageType] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            SEQUENCE;
-            STATIC;
-            SCENE;
-            MANIFEST;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 5) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "sequence",
-                    Kind.SEQUENCE_CONST.ordinal,
-                    "",
-                    SEQUENCE,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "static",
-                    Kind.STATIC_CONST.ordinal,
-                    "",
-                    STATIC,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "scene",
-                    Kind.SCENE_CONST.ordinal,
-                    "",
-                    SCENE,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "manifest",
-                    Kind.MANIFEST_CONST.ordinal,
-                    "",
-                    MANIFEST,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-}
-
 sealed interface Page_OrMutable {
     val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val revision: kotlin.Long;
     val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val name: kotlin.String;
-    val type: skirout.library.v1.page.PageType;
+    val kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable;
     val chapter: kotlin.String;
     val priority: kotlin.Int;
 
@@ -207,9 +36,10 @@ sealed interface Page_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Page private constructor(
     override val pageId: skirout.kernel.v1.record_id.RecordId,
+    override val revision: kotlin.Long,
     override val bookId: skirout.kernel.v1.record_id.RecordId,
     override val name: kotlin.String,
-    override val type: skirout.library.v1.page.PageType,
+    override val kind: skirout.kernel.v1.page_kind.PageKindRef,
     override val chapter: kotlin.String,
     override val priority: kotlin.Int,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.Page>? =
@@ -219,18 +49,20 @@ class Page private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        revision: kotlin.Long,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         name: kotlin.String,
-        type: skirout.library.v1.page.PageType,
+        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
         chapter: kotlin.String,
         priority: kotlin.Int,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.Page>? =
             null,
     ): this(
         pageId.toFrozen(),
+        revision,
         bookId.toFrozen(),
         name,
-        type,
+        kind.toFrozen(),
         chapter,
         priority,
         _unrecognizedFields,
@@ -242,9 +74,10 @@ class Page private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         pageId = this.pageId,
+        revision = this.revision,
         bookId = this.bookId,
         name = this.name,
-        type = this.type,
+        kind = this.kind,
         chapter = this.chapter,
         priority = this.priority,
     );
@@ -255,21 +88,24 @@ class Page private constructor(
             _MustNameArguments,
         pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.pageId,
+        revision: kotlin.Long =
+            this.revision,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.bookId,
         name: kotlin.String =
             this.name,
-        type: skirout.library.v1.page.PageType =
-            this.type,
+        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            this.kind,
         chapter: kotlin.String =
             this.chapter,
         priority: kotlin.Int =
             this.priority,
     ) = skirout.library.v1.page.Page(
         pageId.toFrozen(),
+        revision,
         bookId.toFrozen(),
         name,
-        type,
+        kind.toFrozen(),
         chapter,
         priority,
         this._unrecognizedFields,
@@ -279,11 +115,11 @@ class Page private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.page.Page && this.pageId == other.pageId && this.bookId == other.bookId && this.name == other.name && this.type == other.type && this.chapter == other.chapter && this.priority == other.priority);
+        return this === other || (other is skirout.library.v1.page.Page && this.pageId == other.pageId && this.revision == other.revision && this.bookId == other.bookId && this.name == other.name && this.kind == other.kind && this.chapter == other.chapter && this.priority == other.priority);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.pageId, this.bookId, this.name, this.type, this.chapter, this.priority).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.pageId, this.revision, this.bookId, this.name, this.kind, this.chapter, this.priority).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -299,12 +135,14 @@ class Page private constructor(
             _MustNameArguments,
         override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
+        override var revision: kotlin.Long =
+            0L,
         override var bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var name: kotlin.String =
             "",
-        override var type: skirout.library.v1.page.PageType =
-            skirout.library.v1.page.PageType.UNKNOWN,
+        override var kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            skirout.kernel.v1.page_kind.PageKindRef.partial(),
         override var chapter: kotlin.String =
             "",
         override var priority: kotlin.Int =
@@ -315,9 +153,10 @@ class Page private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.page.Page(
             pageId = this.pageId,
+            revision = this.revision,
             bookId = this.bookId,
             name = this.name,
-            type = this.type,
+            kind = this.kind,
             chapter = this.chapter,
             priority = this.priority,
             _unrecognizedFields = this._unrecognizedFields,
@@ -354,15 +193,32 @@ class Page private constructor(
                 is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [kind] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [kind] and returns it.
+         */
+        val mutableKind: skirout.kernel.v1.page_kind.PageKindRef.Mutable get() {
+            var value = this.kind;
+            return when (value) {
+                is skirout.kernel.v1.page_kind.PageKindRef -> {
+                    value = value.toMutable();
+                    this.kind = value;
+                    return value;
+                }
+                is skirout.kernel.v1.page_kind.PageKindRef.Mutable -> value;
+            }
+        }
     }
 
     companion object {
         private val default =
             skirout.library.v1.page.Page(
                 skirout.kernel.v1.record_id.RecordId.partial(),
+                0L,
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 "",
-                skirout.library.v1.page.PageType.UNKNOWN,
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
                 "",
                 0,
             );
@@ -380,21 +236,24 @@ class Page private constructor(
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
+            revision: kotlin.Long =
+                0L,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
             name: kotlin.String =
                 "",
-            type: skirout.library.v1.page.PageType =
-                skirout.library.v1.page.PageType.UNKNOWN,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
             chapter: kotlin.String =
                 "",
             priority: kotlin.Int =
                 0,
         ) = skirout.library.v1.page.Page(
             pageId = pageId,
+            revision = revision,
             bookId = bookId,
             name = name,
-            type = type,
+            kind = kind,
             chapter = chapter,
             priority = priority,
             _unrecognizedFields = null,
@@ -427,9 +286,18 @@ class Page private constructor(
                 { mut, v -> mut.pageId = v },
             );
             serializerImpl.addField(
+                "revision",
+                "revision",
+                1,
+                build.skir.Serializers.int64,
+                "",
+                { it.revision },
+                { mut, v -> mut.revision = v },
+            );
+            serializerImpl.addField(
                 "book_id",
                 "bookId",
-                1,
+                2,
                 skirout.kernel.v1.record_id.RecordId.serializer,
                 "",
                 { it.bookId },
@@ -438,25 +306,25 @@ class Page private constructor(
             serializerImpl.addField(
                 "name",
                 "name",
-                2,
+                3,
                 build.skir.Serializers.string,
                 "",
                 { it.name },
                 { mut, v -> mut.name = v },
             );
             serializerImpl.addField(
-                "type",
-                "type",
-                3,
-                skirout.library.v1.page.PageType.serializer,
+                "kind",
+                "kind",
+                4,
+                skirout.kernel.v1.page_kind.PageKindRef.serializer,
                 "",
-                { it.type },
-                { mut, v -> mut.type = v },
+                { it.kind },
+                { mut, v -> mut.kind = v },
             );
             serializerImpl.addField(
                 "chapter",
                 "chapter",
-                4,
+                5,
                 build.skir.Serializers.string,
                 "",
                 { it.chapter },
@@ -465,7 +333,7 @@ class Page private constructor(
             serializerImpl.addField(
                 "priority",
                 "priority",
-                5,
+                6,
                 build.skir.Serializers.int32,
                 "",
                 { it.priority },
@@ -482,7 +350,8 @@ sealed class PageValidationError private constructor() {
     enum class Kind {
         UNKNOWN,
         NAME_REQUIRED_CONST,
-        PAGE_TYPE_UNKNOWN_CONST,
+        PAGE_KIND_UNKNOWN_CONST,
+        PAGE_KIND_REVISION_UNKNOWN_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.page.PageValidationError.UNKNOWN")) internal constructor(
@@ -516,15 +385,31 @@ sealed class PageValidationError private constructor() {
         }
     }
 
-    object PAGE_TYPE_UNKNOWN : skirout.library.v1.page.PageValidationError() {
-        override val kind get() = Kind.PAGE_TYPE_UNKNOWN_CONST;
+    object PAGE_KIND_UNKNOWN : skirout.library.v1.page.PageValidationError() {
+        override val kind get() = Kind.PAGE_KIND_UNKNOWN_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.PageValidationError && other.kind == Kind.PAGE_TYPE_UNKNOWN_CONST;
+            return other is skirout.library.v1.page.PageValidationError && other.kind == Kind.PAGE_KIND_UNKNOWN_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.PAGE_TYPE_UNKNOWN_CONST.ordinal;
+            return Kind.PAGE_KIND_UNKNOWN_CONST.ordinal;
+        }
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+    }
+
+    object PAGE_KIND_REVISION_UNKNOWN : skirout.library.v1.page.PageValidationError() {
+        override val kind get() = Kind.PAGE_KIND_REVISION_UNKNOWN_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.PageValidationError && other.kind == Kind.PAGE_KIND_REVISION_UNKNOWN_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PAGE_KIND_REVISION_UNKNOWN_CONST.ordinal;
         }
 
         init {
@@ -569,7 +454,8 @@ sealed class PageValidationError private constructor() {
 
         init {
             NAME_REQUIRED;
-            PAGE_TYPE_UNKNOWN;
+            PAGE_KIND_UNKNOWN;
+            PAGE_KIND_REVISION_UNKNOWN;
             _maybeFinalizeSerializer();
         }
 
@@ -577,7 +463,7 @@ sealed class PageValidationError private constructor() {
 
         private fun _maybeFinalizeSerializer() {
             _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
+            if (_finalizationCounter == 4) {
                 _serializerImpl.addConstantVariant(
                     1,
                     "name_required",
@@ -587,12 +473,753 @@ sealed class PageValidationError private constructor() {
                 );
                 _serializerImpl.addConstantVariant(
                     2,
-                    "page_type_unknown",
-                    Kind.PAGE_TYPE_UNKNOWN_CONST.ordinal,
+                    "page_kind_unknown",
+                    Kind.PAGE_KIND_UNKNOWN_CONST.ordinal,
                     "",
-                    PAGE_TYPE_UNKNOWN,
+                    PAGE_KIND_UNKNOWN,
+                );
+                _serializerImpl.addConstantVariant(
+                    3,
+                    "page_kind_revision_unknown",
+                    Kind.PAGE_KIND_REVISION_UNKNOWN_CONST.ordinal,
+                    "",
+                    PAGE_KIND_REVISION_UNKNOWN,
                 );
                 _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+}
+
+sealed interface ChangePageKindRequest_OrMutable {
+    val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val target: skirout.kernel.v1.page_kind.PageKindRef_OrMutable;
+
+    fun toFrozen(): skirout.library.v1.page.ChangePageKindRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ChangePageKindRequest private constructor(
+    override val pageId: skirout.kernel.v1.record_id.RecordId,
+    override val target: skirout.kernel.v1.page_kind.PageKindRef,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindRequest>? =
+        null,
+): skirout.library.v1.page.ChangePageKindRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        target: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindRequest>? =
+            null,
+    ): this(
+        pageId.toFrozen(),
+        target.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        pageId = this.pageId,
+        target = this.target,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.pageId,
+        target: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            this.target,
+    ) = skirout.library.v1.page.ChangePageKindRequest(
+        pageId.toFrozen(),
+        target.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.page.ChangePageKindRequest && this.pageId == other.pageId && this.target == other.target);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.pageId, this.target).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.page.ChangePageKindRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [ChangePageKindRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        override var target: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            skirout.kernel.v1.page_kind.PageKindRef.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindRequest>? =
+            null,
+    ): skirout.library.v1.page.ChangePageKindRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.page.ChangePageKindRequest(
+            pageId = this.pageId,
+            target = this.target,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [pageId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
+         */
+        val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.pageId;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.pageId = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [target] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.kernel.v1.page_kind.PageKindRef.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.kernel.v1.page_kind.PageKindRef -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.kernel.v1.page_kind.PageKindRef.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.page.ChangePageKindRequest(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ChangePageKindRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            target: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
+        ) = skirout.library.v1.page.ChangePageKindRequest(
+            pageId = pageId,
+            target = target,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/page.skir:ChangePageKindRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [ChangePageKindRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [ChangePageKindRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "page_id",
+                "pageId",
+                0,
+                skirout.kernel.v1.record_id.RecordId.serializer,
+                "",
+                { it.pageId },
+                { mut, v -> mut.pageId = v },
+            );
+            serializerImpl.addField(
+                "target",
+                "target",
+                1,
+                skirout.kernel.v1.page_kind.PageKindRef.serializer,
+                "",
+                { it.target },
+                { mut, v -> mut.target = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class ChangePageKindResponse private constructor() {
+    /** The kind of variant held by a `ChangePageKindResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        INTERNAL_ERROR_WRAPPER,
+        SUCCESS_WRAPPER,
+        PAGE_NOT_FOUND_ERROR_WRAPPER,
+        VALIDATION_ERROR_WRAPPER,
+        CONVERSION_UNAVAILABLE_WRAPPER,
+        INVALID_RECORD_ID_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.page.ChangePageKindResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.ChangePageKindResponse>?,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    class SuccessWrapper private constructor (
+        val value: skirout.library.v1.page.Page,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        constructor(
+            value: skirout.library.v1.page.Page_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SUCCESS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.SuccessWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class PageNotFoundErrorWrapper private constructor (
+        val value: skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        constructor(
+            value: skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PAGE_NOT_FOUND_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.PageNotFoundErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1405207023;
+        }
+    }
+
+    class ValidationErrorWrapper(
+        val value: skirout.library.v1.page.PageValidationError,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        override val kind get() = Kind.VALIDATION_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.ValidationErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 2105835202;
+        }
+    }
+
+    class ConversionUnavailableWrapper private constructor (
+        val value: skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        constructor(
+            value: skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONVERSION_UNAVAILABLE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailableWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1752266073;
+        }
+    }
+
+    class InvalidRecordIdErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
+    ) : skirout.library.v1.page.ChangePageKindResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.ChangePageKindResponse.InvalidRecordIdErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -908768310;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.ChangePageKindResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.page.ChangePageKindResponse._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ChangePageKindResponse].
+         * Default value for fields of type [ChangePageKindResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Shortcut for `SuccessWrapper(skirout.library.v1.page.Page(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSuccess(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
+            bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            name: kotlin.String,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
+            chapter: kotlin.String,
+            priority: kotlin.Int,
+        ) = SuccessWrapper(
+            skirout.library.v1.page.Page(
+                pageId = pageId,
+                revision = revision,
+                bookId = bookId,
+                name = name,
+                kind = kind,
+                chapter = chapter,
+                priority = priority,
+            )
+        );
+
+        /** Shortcut for `PageNotFoundErrorWrapper(skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPageNotFoundError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        ) = PageNotFoundErrorWrapper(
+            skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(
+                pageId = pageId,
+            )
+        );
+
+        /** Shortcut for `ConversionUnavailableWrapper(skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConversionUnavailable(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = ConversionUnavailableWrapper(
+            skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable()
+        );
+
+        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidRecordIdError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedTable: kotlin.String,
+            givenTables: kotlin.collections.Iterable<kotlin.String>,
+        ) = InvalidRecordIdErrorWrapper(
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = expectedTable,
+                givenTables = givenTables,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.library.v1.page.ChangePageKindResponse, Unknown>(
+                recordId = "library/v1/page.skir:ChangePageKindResponse",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [ChangePageKindResponse] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [ChangePageKindResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "internal_error",
+                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InternalError.serializer,
+                    "",
+                    { InternalErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "success",
+                    Kind.SUCCESS_WRAPPER.ordinal,
+                    skirout.library.v1.page.Page.serializer,
+                    "",
+                    { SuccessWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "page_not_found_error",
+                    Kind.PAGE_NOT_FOUND_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError.serializer,
+                    "",
+                    { PageNotFoundErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
+                    "validation_error",
+                    Kind.VALIDATION_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.page.PageValidationError.serializer,
+                    "",
+                    { ValidationErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    5,
+                    "conversion_unavailable",
+                    Kind.CONVERSION_UNAVAILABLE_WRAPPER.ordinal,
+                    skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable.serializer,
+                    "",
+                    { ConversionUnavailableWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    6,
+                    "invalid_record_id_error",
+                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+                    "",
+                    { InvalidRecordIdErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface PageNotFoundError_OrMutable {
+        val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+
+        fun toFrozen(): skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class PageNotFoundError private constructor(
+        override val pageId: skirout.kernel.v1.record_id.RecordId,
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError>? =
+            null,
+    ): skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError>? =
+                null,
+        ): this(
+            pageId.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            pageId = this.pageId,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                this.pageId,
+        ) = skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(
+            pageId.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError && this.pageId == other.pageId);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.pageId).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [PageNotFoundError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError>? =
+                null,
+        ): skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(
+                pageId = this.pageId,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [pageId] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
+             */
+            val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+                var value = this.pageId;
+                return when (value) {
+                    is skirout.kernel.v1.record_id.RecordId -> {
+                        value = value.toMutable();
+                        this.pageId = value;
+                        return value;
+                    }
+                    is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(
+                    skirout.kernel.v1.record_id.RecordId.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [PageNotFoundError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                    skirout.kernel.v1.record_id.RecordId.partial(),
+            ) = skirout.library.v1.page.ChangePageKindResponse.PageNotFoundError(
+                pageId = pageId,
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/page.skir:ChangePageKindResponse.PageNotFoundError",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [PageNotFoundError] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [PageNotFoundError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.addField(
+                    "page_id",
+                    "pageId",
+                    0,
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                    "",
+                    { it.pageId },
+                    { mut, v -> mut.pageId = v },
+                );
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+
+    sealed interface ConversionUnavailable_OrMutable {
+        fun toFrozen(): skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ConversionUnavailable private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable>? =
+            null,
+    ): skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [ConversionUnavailable]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable>? =
+                null,
+        ): skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ConversionUnavailable].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.library.v1.page.ChangePageKindResponse.ConversionUnavailable(
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/page.skir:ChangePageKindResponse.ConversionUnavailable",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [ConversionUnavailable] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [ConversionUnavailable] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.finalizeStruct();
             }
         }
     }
@@ -1458,17 +2085,19 @@ sealed class WatchPageResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             name: kotlin.String,
-            type: skirout.library.v1.page.PageType,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
             chapter: kotlin.String,
             priority: kotlin.Int,
         ) = InitialWrapper(
             skirout.library.v1.page.Page(
                 pageId = pageId,
+                revision = revision,
                 bookId = bookId,
                 name = name,
-                type = type,
+                kind = kind,
                 chapter = chapter,
                 priority = priority,
             )
@@ -1480,17 +2109,19 @@ sealed class WatchPageResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             name: kotlin.String,
-            type: skirout.library.v1.page.PageType,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
             chapter: kotlin.String,
             priority: kotlin.Int,
         ) = UpdateWrapper(
             skirout.library.v1.page.Page(
                 pageId = pageId,
+                revision = revision,
                 bookId = bookId,
                 name = name,
-                type = type,
+                kind = kind,
                 chapter = chapter,
                 priority = priority,
             )
@@ -1773,7 +2404,7 @@ sealed class WatchPageResponse private constructor() {
 sealed interface CreatePageRequest_OrMutable {
     val bookId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val name: kotlin.String;
-    val type: skirout.library.v1.page.PageType;
+    val kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable;
     val chapter: kotlin.String?;
     val priority: kotlin.Int?;
 
@@ -1785,7 +2416,7 @@ sealed interface CreatePageRequest_OrMutable {
 class CreatePageRequest private constructor(
     override val bookId: skirout.kernel.v1.record_id.RecordId,
     override val name: kotlin.String,
-    override val type: skirout.library.v1.page.PageType,
+    override val kind: skirout.kernel.v1.page_kind.PageKindRef,
     override val chapter: kotlin.String?,
     override val priority: kotlin.Int?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.CreatePageRequest>? =
@@ -1796,7 +2427,7 @@ class CreatePageRequest private constructor(
             _MustNameArguments,
         bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         name: kotlin.String,
-        type: skirout.library.v1.page.PageType,
+        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
         chapter: kotlin.String?,
         priority: kotlin.Int?,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.CreatePageRequest>? =
@@ -1804,7 +2435,7 @@ class CreatePageRequest private constructor(
     ): this(
         bookId.toFrozen(),
         name,
-        type,
+        kind.toFrozen(),
         chapter,
         priority,
         _unrecognizedFields,
@@ -1817,7 +2448,7 @@ class CreatePageRequest private constructor(
     fun toMutable() = Mutable(
         bookId = this.bookId,
         name = this.name,
-        type = this.type,
+        kind = this.kind,
         chapter = this.chapter,
         priority = this.priority,
     );
@@ -1830,8 +2461,8 @@ class CreatePageRequest private constructor(
             this.bookId,
         name: kotlin.String =
             this.name,
-        type: skirout.library.v1.page.PageType =
-            this.type,
+        kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            this.kind,
         chapter: kotlin.String? =
             this.chapter,
         priority: kotlin.Int? =
@@ -1839,7 +2470,7 @@ class CreatePageRequest private constructor(
     ) = skirout.library.v1.page.CreatePageRequest(
         bookId.toFrozen(),
         name,
-        type,
+        kind.toFrozen(),
         chapter,
         priority,
         this._unrecognizedFields,
@@ -1849,11 +2480,11 @@ class CreatePageRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.page.CreatePageRequest && this.bookId == other.bookId && this.name == other.name && this.type == other.type && this.chapter == other.chapter && this.priority == other.priority);
+        return this === other || (other is skirout.library.v1.page.CreatePageRequest && this.bookId == other.bookId && this.name == other.name && this.kind == other.kind && this.chapter == other.chapter && this.priority == other.priority);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.name, this.type, this.chapter, this.priority).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.bookId, this.name, this.kind, this.chapter, this.priority).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1871,8 +2502,8 @@ class CreatePageRequest private constructor(
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var name: kotlin.String =
             "",
-        override var type: skirout.library.v1.page.PageType =
-            skirout.library.v1.page.PageType.UNKNOWN,
+        override var kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+            skirout.kernel.v1.page_kind.PageKindRef.partial(),
         override var chapter: kotlin.String? =
             null,
         override var priority: kotlin.Int? =
@@ -1884,7 +2515,7 @@ class CreatePageRequest private constructor(
         override fun toFrozen() = skirout.library.v1.page.CreatePageRequest(
             bookId = this.bookId,
             name = this.name,
-            type = this.type,
+            kind = this.kind,
             chapter = this.chapter,
             priority = this.priority,
             _unrecognizedFields = this._unrecognizedFields,
@@ -1905,6 +2536,22 @@ class CreatePageRequest private constructor(
                 is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
             }
         }
+
+        /**
+         * If the value of [kind] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [kind] and returns it.
+         */
+        val mutableKind: skirout.kernel.v1.page_kind.PageKindRef.Mutable get() {
+            var value = this.kind;
+            return when (value) {
+                is skirout.kernel.v1.page_kind.PageKindRef -> {
+                    value = value.toMutable();
+                    this.kind = value;
+                    return value;
+                }
+                is skirout.kernel.v1.page_kind.PageKindRef.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -1912,7 +2559,7 @@ class CreatePageRequest private constructor(
             skirout.library.v1.page.CreatePageRequest(
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 "",
-                skirout.library.v1.page.PageType.UNKNOWN,
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
                 null,
                 null,
             );
@@ -1932,8 +2579,8 @@ class CreatePageRequest private constructor(
                 skirout.kernel.v1.record_id.RecordId.partial(),
             name: kotlin.String =
                 "",
-            type: skirout.library.v1.page.PageType =
-                skirout.library.v1.page.PageType.UNKNOWN,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable =
+                skirout.kernel.v1.page_kind.PageKindRef.partial(),
             chapter: kotlin.String? =
                 null,
             priority: kotlin.Int? =
@@ -1941,7 +2588,7 @@ class CreatePageRequest private constructor(
         ) = skirout.library.v1.page.CreatePageRequest(
             bookId = bookId,
             name = name,
-            type = type,
+            kind = kind,
             chapter = chapter,
             priority = priority,
             _unrecognizedFields = null,
@@ -1983,13 +2630,13 @@ class CreatePageRequest private constructor(
                 { mut, v -> mut.name = v },
             );
             serializerImpl.addField(
-                "type",
-                "type",
+                "kind",
+                "kind",
                 2,
-                skirout.library.v1.page.PageType.serializer,
+                skirout.kernel.v1.page_kind.PageKindRef.serializer,
                 "",
-                { it.type },
-                { mut, v -> mut.type = v },
+                { it.kind },
+                { mut, v -> mut.kind = v },
             );
             serializerImpl.addField(
                 "chapter",
@@ -2164,17 +2811,19 @@ sealed class CreatePageResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             name: kotlin.String,
-            type: skirout.library.v1.page.PageType,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
             chapter: kotlin.String,
             priority: kotlin.Int,
         ) = SuccessWrapper(
             skirout.library.v1.page.Page(
                 pageId = pageId,
+                revision = revision,
                 bookId = bookId,
                 name = name,
-                type = type,
+                kind = kind,
                 chapter = chapter,
                 priority = priority,
             )
@@ -2433,8 +3082,8 @@ sealed class CreatePageResponse private constructor() {
 
 sealed interface UpdatePageRequest_OrMutable {
     val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val expectedRevision: kotlin.Long;
     val name: kotlin.String?;
-    val type: skirout.library.v1.page.PageType?;
     val chapter: kotlin.String?;
     val priority: kotlin.Int?;
 
@@ -2445,8 +3094,8 @@ sealed interface UpdatePageRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UpdatePageRequest private constructor(
     override val pageId: skirout.kernel.v1.record_id.RecordId,
+    override val expectedRevision: kotlin.Long,
     override val name: kotlin.String?,
-    override val type: skirout.library.v1.page.PageType?,
     override val chapter: kotlin.String?,
     override val priority: kotlin.Int?,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.UpdatePageRequest>? =
@@ -2456,16 +3105,16 @@ class UpdatePageRequest private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        expectedRevision: kotlin.Long,
         name: kotlin.String?,
-        type: skirout.library.v1.page.PageType?,
         chapter: kotlin.String?,
         priority: kotlin.Int?,
         _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.UpdatePageRequest>? =
             null,
     ): this(
         pageId.toFrozen(),
+        expectedRevision,
         name,
-        type,
         chapter,
         priority,
         _unrecognizedFields,
@@ -2477,8 +3126,8 @@ class UpdatePageRequest private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         pageId = this.pageId,
+        expectedRevision = this.expectedRevision,
         name = this.name,
-        type = this.type,
         chapter = this.chapter,
         priority = this.priority,
     );
@@ -2489,18 +3138,18 @@ class UpdatePageRequest private constructor(
             _MustNameArguments,
         pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.pageId,
+        expectedRevision: kotlin.Long =
+            this.expectedRevision,
         name: kotlin.String? =
             this.name,
-        type: skirout.library.v1.page.PageType? =
-            this.type,
         chapter: kotlin.String? =
             this.chapter,
         priority: kotlin.Int? =
             this.priority,
     ) = skirout.library.v1.page.UpdatePageRequest(
         pageId.toFrozen(),
+        expectedRevision,
         name,
-        type,
         chapter,
         priority,
         this._unrecognizedFields,
@@ -2510,11 +3159,11 @@ class UpdatePageRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.page.UpdatePageRequest && this.pageId == other.pageId && this.name == other.name && this.type == other.type && this.chapter == other.chapter && this.priority == other.priority);
+        return this === other || (other is skirout.library.v1.page.UpdatePageRequest && this.pageId == other.pageId && this.expectedRevision == other.expectedRevision && this.name == other.name && this.chapter == other.chapter && this.priority == other.priority);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.pageId, this.name, this.type, this.chapter, this.priority).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.pageId, this.expectedRevision, this.name, this.chapter, this.priority).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2530,9 +3179,9 @@ class UpdatePageRequest private constructor(
             _MustNameArguments,
         override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
+        override var expectedRevision: kotlin.Long =
+            0L,
         override var name: kotlin.String? =
-            null,
-        override var type: skirout.library.v1.page.PageType? =
             null,
         override var chapter: kotlin.String? =
             null,
@@ -2544,8 +3193,8 @@ class UpdatePageRequest private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.library.v1.page.UpdatePageRequest(
             pageId = this.pageId,
+            expectedRevision = this.expectedRevision,
             name = this.name,
-            type = this.type,
             chapter = this.chapter,
             priority = this.priority,
             _unrecognizedFields = this._unrecognizedFields,
@@ -2572,7 +3221,7 @@ class UpdatePageRequest private constructor(
         private val default =
             skirout.library.v1.page.UpdatePageRequest(
                 skirout.kernel.v1.record_id.RecordId.partial(),
-                null,
+                0L,
                 null,
                 null,
                 null,
@@ -2591,9 +3240,9 @@ class UpdatePageRequest private constructor(
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
+            expectedRevision: kotlin.Long =
+                0L,
             name: kotlin.String? =
-                null,
-            type: skirout.library.v1.page.PageType? =
                 null,
             chapter: kotlin.String? =
                 null,
@@ -2601,8 +3250,8 @@ class UpdatePageRequest private constructor(
                 null,
         ) = skirout.library.v1.page.UpdatePageRequest(
             pageId = pageId,
+            expectedRevision = expectedRevision,
             name = name,
-            type = type,
             chapter = chapter,
             priority = priority,
             _unrecognizedFields = null,
@@ -2635,26 +3284,24 @@ class UpdatePageRequest private constructor(
                 { mut, v -> mut.pageId = v },
             );
             serializerImpl.addField(
-                "name",
-                "name",
+                "expected_revision",
+                "expectedRevision",
                 1,
+                build.skir.Serializers.int64,
+                "",
+                { it.expectedRevision },
+                { mut, v -> mut.expectedRevision = v },
+            );
+            serializerImpl.addField(
+                "name",
+                "name",
+                2,
                 build.skir.Serializers.optional(
                     build.skir.Serializers.string,
                 ),
                 "",
                 { it.name },
                 { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
-                "type",
-                "type",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.library.v1.page.PageType.serializer,
-                ),
-                "",
-                { it.type },
-                { mut, v -> mut.type = v },
             );
             serializerImpl.addField(
                 "chapter",
@@ -2690,6 +3337,7 @@ sealed class UpdatePageResponse private constructor() {
         UNKNOWN,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
+        CONFLICT_ERROR_WRAPPER,
         PAGE_NOT_FOUND_ERROR_WRAPPER,
         VALIDATION_ERROR_WRAPPER,
         INVALID_RECORD_ID_ERROR_WRAPPER,
@@ -2743,6 +3391,24 @@ sealed class UpdatePageResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class ConflictErrorWrapper private constructor (
+        val value: skirout.library.v1.page.UpdatePageResponse.ConflictError,
+    ) : skirout.library.v1.page.UpdatePageResponse() {
+        constructor(
+            value: skirout.library.v1.page.UpdatePageResponse.ConflictError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONFLICT_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.UpdatePageResponse.ConflictErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 274643803;
         }
     }
 
@@ -2829,19 +3495,35 @@ sealed class UpdatePageResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
             bookId: skirout.kernel.v1.record_id.RecordId_OrMutable,
             name: kotlin.String,
-            type: skirout.library.v1.page.PageType,
+            kind: skirout.kernel.v1.page_kind.PageKindRef_OrMutable,
             chapter: kotlin.String,
             priority: kotlin.Int,
         ) = SuccessWrapper(
             skirout.library.v1.page.Page(
                 pageId = pageId,
+                revision = revision,
                 bookId = bookId,
                 name = name,
-                type = type,
+                kind = kind,
                 chapter = chapter,
                 priority = priority,
+            )
+        );
+
+        /** Shortcut for `ConflictErrorWrapper(skirout.library.v1.page.UpdatePageResponse.ConflictError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConflictError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.page.Page_OrMutable,
+        ) = ConflictErrorWrapper(
+            skirout.library.v1.page.UpdatePageResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
             )
         );
 
@@ -2917,6 +3599,15 @@ sealed class UpdatePageResponse private constructor() {
                 );
                 _serializerImpl.addWrapperVariant(
                     3,
+                    "conflict_error",
+                    Kind.CONFLICT_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.page.UpdatePageResponse.ConflictError.serializer,
+                    "",
+                    { ConflictErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
                     "page_not_found_error",
                     Kind.PAGE_NOT_FOUND_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.page.UpdatePageResponse.PageNotFoundError.serializer,
@@ -2925,7 +3616,7 @@ sealed class UpdatePageResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    4,
+                    5,
                     "validation_error",
                     Kind.VALIDATION_ERROR_WRAPPER.ordinal,
                     skirout.library.v1.page.PageValidationError.serializer,
@@ -2934,7 +3625,7 @@ sealed class UpdatePageResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.addWrapperVariant(
-                    5,
+                    6,
                     "invalid_record_id_error",
                     Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
                     skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -2943,6 +3634,178 @@ sealed class UpdatePageResponse private constructor() {
                     { it.value },
                 );
                 _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface ConflictError_OrMutable {
+        val expectedRevision: kotlin.Long;
+        val actual: skirout.library.v1.page.Page_OrMutable;
+
+        fun toFrozen(): skirout.library.v1.page.UpdatePageResponse.ConflictError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ConflictError private constructor(
+        override val expectedRevision: kotlin.Long,
+        override val actual: skirout.library.v1.page.Page,
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.UpdatePageResponse.ConflictError>? =
+            null,
+    ): skirout.library.v1.page.UpdatePageResponse.ConflictError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long,
+            actual: skirout.library.v1.page.Page_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.UpdatePageResponse.ConflictError>? =
+                null,
+        ): this(
+            expectedRevision,
+            actual.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            expectedRevision = this.expectedRevision,
+            actual = this.actual,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedRevision: kotlin.Long =
+                this.expectedRevision,
+            actual: skirout.library.v1.page.Page_OrMutable =
+                this.actual,
+        ) = skirout.library.v1.page.UpdatePageResponse.ConflictError(
+            expectedRevision,
+            actual.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.page.UpdatePageResponse.ConflictError && this.expectedRevision == other.expectedRevision && this.actual == other.actual);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.expectedRevision, this.actual).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.page.UpdatePageResponse.ConflictError.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [ConflictError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var expectedRevision: kotlin.Long =
+                0L,
+            override var actual: skirout.library.v1.page.Page_OrMutable =
+                skirout.library.v1.page.Page.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.UpdatePageResponse.ConflictError>? =
+                null,
+        ): skirout.library.v1.page.UpdatePageResponse.ConflictError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.page.UpdatePageResponse.ConflictError(
+                expectedRevision = this.expectedRevision,
+                actual = this.actual,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [actual] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
+             */
+            val mutableActual: skirout.library.v1.page.Page.Mutable get() {
+                var value = this.actual;
+                return when (value) {
+                    is skirout.library.v1.page.Page -> {
+                        value = value.toMutable();
+                        this.actual = value;
+                        return value;
+                    }
+                    is skirout.library.v1.page.Page.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.page.UpdatePageResponse.ConflictError(
+                    0L,
+                    skirout.library.v1.page.Page.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ConflictError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                expectedRevision: kotlin.Long =
+                    0L,
+                actual: skirout.library.v1.page.Page_OrMutable =
+                    skirout.library.v1.page.Page.partial(),
+            ) = skirout.library.v1.page.UpdatePageResponse.ConflictError(
+                expectedRevision = expectedRevision,
+                actual = actual,
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/page.skir:UpdatePageResponse.ConflictError",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [ConflictError] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.addField(
+                    "expected_revision",
+                    "expectedRevision",
+                    0,
+                    build.skir.Serializers.int64,
+                    "",
+                    { it.expectedRevision },
+                    { mut, v -> mut.expectedRevision = v },
+                );
+                serializerImpl.addField(
+                    "actual",
+                    "actual",
+                    1,
+                    skirout.library.v1.page.Page.serializer,
+                    "",
+                    { it.actual },
+                    { mut, v -> mut.actual = v },
+                );
+                serializerImpl.finalizeStruct();
             }
         }
     }
@@ -3066,624 +3929,6 @@ sealed class UpdatePageResponse private constructor() {
 
             private val serializerImpl = build.skir.internal.StructSerializer(
                 recordId = "library/v1/page.skir:UpdatePageResponse.PageNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [PageNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [PageNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "page_id",
-                    "pageId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.pageId },
-                    { mut, v -> mut.pageId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-}
-
-sealed interface DeletePageRequest_OrMutable {
-    val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-    fun toFrozen(): skirout.library.v1.page.DeletePageRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class DeletePageRequest private constructor(
-    override val pageId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
-        null,
-): skirout.library.v1.page.DeletePageRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
-            null,
-    ): this(
-        pageId.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        pageId = this.pageId,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            this.pageId,
-    ) = skirout.library.v1.page.DeletePageRequest(
-        pageId.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.library.v1.page.DeletePageRequest && this.pageId == other.pageId);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.pageId).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.page.DeletePageRequest.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [DeletePageRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-            skirout.kernel.v1.record_id.RecordId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
-            null,
-    ): skirout.library.v1.page.DeletePageRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.library.v1.page.DeletePageRequest(
-            pageId = this.pageId,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [pageId] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
-         */
-        val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-            var value = this.pageId;
-            return when (value) {
-                is skirout.kernel.v1.record_id.RecordId -> {
-                    value = value.toMutable();
-                    this.pageId = value;
-                    return value;
-                }
-                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.library.v1.page.DeletePageRequest(
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [DeletePageRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-        ) = skirout.library.v1.page.DeletePageRequest(
-            pageId = pageId,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "library/v1/page.skir:DeletePageRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [DeletePageRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [DeletePageRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "page_id",
-                "pageId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.pageId },
-                { mut, v -> mut.pageId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class DeletePageResponse private constructor() {
-    /** The kind of variant held by a `DeletePageResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        INTERNAL_ERROR_WRAPPER,
-        SUCCESS_WRAPPER,
-        PAGE_NOT_FOUND_ERROR_WRAPPER,
-        INVALID_RECORD_ID_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.page.DeletePageResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.DeletePageResponse>?,
-    ) : skirout.library.v1.page.DeletePageResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.DeletePageResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.library.v1.page.DeletePageResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.DeletePageResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.library.v1.page.DeletePageResponse.Success,
-    ) : skirout.library.v1.page.DeletePageResponse() {
-        constructor(
-            value: skirout.library.v1.page.DeletePageResponse.Success_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.DeletePageResponse.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class PageNotFoundErrorWrapper private constructor (
-        val value: skirout.library.v1.page.DeletePageResponse.PageNotFoundError,
-    ) : skirout.library.v1.page.DeletePageResponse() {
-        constructor(
-            value: skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.PAGE_NOT_FOUND_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.DeletePageResponse.PageNotFoundErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1405207023;
-        }
-    }
-
-    class InvalidRecordIdErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
-    ) : skirout.library.v1.page.DeletePageResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.library.v1.page.DeletePageResponse.InvalidRecordIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -908768310;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.DeletePageResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.library.v1.page.DeletePageResponse._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [DeletePageResponse].
-         * Default value for fields of type [DeletePageResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Shortcut for `SuccessWrapper(skirout.library.v1.page.DeletePageResponse.Success(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = SuccessWrapper(
-            skirout.library.v1.page.DeletePageResponse.Success()
-        );
-
-        /** Shortcut for `PageNotFoundErrorWrapper(skirout.library.v1.page.DeletePageResponse.PageNotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPageNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ) = PageNotFoundErrorWrapper(
-            skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
-                pageId = pageId,
-            )
-        );
-
-        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidRecordIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedTable: kotlin.String,
-            givenTables: kotlin.collections.Iterable<kotlin.String>,
-        ) = InvalidRecordIdErrorWrapper(
-            skirout.kernel.v1.errors.InvalidRecordIdError(
-                expectedTable = expectedTable,
-                givenTables = givenTables,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.library.v1.page.DeletePageResponse, Unknown>(
-                recordId = "library/v1/page.skir:DeletePageResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [DeletePageResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [DeletePageResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.library.v1.page.DeletePageResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "page_not_found_error",
-                    Kind.PAGE_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.library.v1.page.DeletePageResponse.PageNotFoundError.serializer,
-                    "",
-                    { PageNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface Success_OrMutable {
-        fun toFrozen(): skirout.library.v1.page.DeletePageResponse.Success;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Success private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
-            null,
-    ): skirout.library.v1.page.DeletePageResponse.Success_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.library.v1.page.DeletePageResponse.Success);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.library.v1.page.DeletePageResponse.Success.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [Success]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
-                null,
-        ): skirout.library.v1.page.DeletePageResponse.Success_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.library.v1.page.DeletePageResponse.Success(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.library.v1.page.DeletePageResponse.Success();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Success].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.library.v1.page.DeletePageResponse.Success(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "library/v1/page.skir:DeletePageResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface PageNotFoundError_OrMutable {
-        val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
-
-        fun toFrozen(): skirout.library.v1.page.DeletePageResponse.PageNotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class PageNotFoundError private constructor(
-        override val pageId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
-            null,
-    ): skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
-                null,
-        ): this(
-            pageId.toFrozen(),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            pageId = this.pageId,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                this.pageId,
-        ) = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
-            pageId.toFrozen(),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.library.v1.page.DeletePageResponse.PageNotFoundError && this.pageId == other.pageId);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.pageId).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.library.v1.page.DeletePageResponse.PageNotFoundError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [PageNotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                skirout.kernel.v1.record_id.RecordId.partial(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
-                null,
-        ): skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
-                pageId = this.pageId,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [pageId] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
-             */
-            val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
-                var value = this.pageId;
-                return when (value) {
-                    is skirout.kernel.v1.record_id.RecordId -> {
-                        value = value.toMutable();
-                        this.pageId = value;
-                        return value;
-                    }
-                    is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [PageNotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
-                    skirout.kernel.v1.record_id.RecordId.partial(),
-            ) = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
-                pageId = pageId,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "library/v1/page.skir:DeletePageResponse.PageNotFoundError",
                 doc = "",
                 defaultInstance = default,
                 newMutableFn = { it?.toMutable() ?: Mutable() },
@@ -4421,13 +4666,644 @@ sealed class ChangePagesChaptersResponse private constructor() {
     }
 }
 
+sealed interface DeletePageRequest_OrMutable {
+    val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+
+    fun toFrozen(): skirout.library.v1.page.DeletePageRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DeletePageRequest private constructor(
+    override val pageId: skirout.kernel.v1.record_id.RecordId,
+    private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
+        null,
+): skirout.library.v1.page.DeletePageRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
+            null,
+    ): this(
+        pageId.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        pageId = this.pageId,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.pageId,
+    ) = skirout.library.v1.page.DeletePageRequest(
+        pageId.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.library.v1.page.DeletePageRequest && this.pageId == other.pageId);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.pageId).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.page.DeletePageRequest.serializerImpl,
+        )
+    }
+
+    /** Mutable version of [DeletePageRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageRequest>? =
+            null,
+    ): skirout.library.v1.page.DeletePageRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.library.v1.page.DeletePageRequest(
+            pageId = this.pageId,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [pageId] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
+         */
+        val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.pageId;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.pageId = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.library.v1.page.DeletePageRequest(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DeletePageRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+        ) = skirout.library.v1.page.DeletePageRequest(
+            pageId = pageId,
+            _unrecognizedFields = null,
+        );
+
+        private val serializerImpl = build.skir.internal.StructSerializer(
+            recordId = "library/v1/page.skir:DeletePageRequest",
+            doc = "",
+            defaultInstance = default,
+            newMutableFn = { it?.toMutable() ?: Mutable() },
+            toFrozenFn = { it.toFrozen() },
+            getUnrecognizedFields = { it._unrecognizedFields },
+            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        );
+
+        /** Serializer for [DeletePageRequest] instances. */
+        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+        /** Describes the [DeletePageRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+        init {
+            serializerImpl.addField(
+                "page_id",
+                "pageId",
+                0,
+                skirout.kernel.v1.record_id.RecordId.serializer,
+                "",
+                { it.pageId },
+                { mut, v -> mut.pageId = v },
+            );
+            serializerImpl.finalizeStruct();
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class DeletePageResponse private constructor() {
+    /** The kind of variant held by a `DeletePageResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        INTERNAL_ERROR_WRAPPER,
+        SUCCESS_WRAPPER,
+        PAGE_NOT_FOUND_ERROR_WRAPPER,
+        INVALID_RECORD_ID_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.library.v1.page.DeletePageResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.DeletePageResponse>?,
+    ) : skirout.library.v1.page.DeletePageResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.DeletePageResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.library.v1.page.DeletePageResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.DeletePageResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    class SuccessWrapper private constructor (
+        val value: skirout.library.v1.page.DeletePageResponse.Success,
+    ) : skirout.library.v1.page.DeletePageResponse() {
+        constructor(
+            value: skirout.library.v1.page.DeletePageResponse.Success_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SUCCESS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.DeletePageResponse.SuccessWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class PageNotFoundErrorWrapper private constructor (
+        val value: skirout.library.v1.page.DeletePageResponse.PageNotFoundError,
+    ) : skirout.library.v1.page.DeletePageResponse() {
+        constructor(
+            value: skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.PAGE_NOT_FOUND_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.DeletePageResponse.PageNotFoundErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1405207023;
+        }
+    }
+
+    class InvalidRecordIdErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InvalidRecordIdError,
+    ) : skirout.library.v1.page.DeletePageResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InvalidRecordIdError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INVALID_RECORD_ID_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.library.v1.page.DeletePageResponse.InvalidRecordIdErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -908768310;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.library.v1.page.DeletePageResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            skirout.library.v1.page.DeletePageResponse._serializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [DeletePageResponse].
+         * Default value for fields of type [DeletePageResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Shortcut for `SuccessWrapper(skirout.library.v1.page.DeletePageResponse.Success(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSuccess(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = SuccessWrapper(
+            skirout.library.v1.page.DeletePageResponse.Success()
+        );
+
+        /** Shortcut for `PageNotFoundErrorWrapper(skirout.library.v1.page.DeletePageResponse.PageNotFoundError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createPageNotFoundError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        ) = PageNotFoundErrorWrapper(
+            skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
+                pageId = pageId,
+            )
+        );
+
+        /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInvalidRecordIdError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            expectedTable: kotlin.String,
+            givenTables: kotlin.collections.Iterable<kotlin.String>,
+        ) = InvalidRecordIdErrorWrapper(
+            skirout.kernel.v1.errors.InvalidRecordIdError(
+                expectedTable = expectedTable,
+                givenTables = givenTables,
+            )
+        );
+
+        private val _serializerImpl =
+            build.skir.internal.EnumSerializer.create<skirout.library.v1.page.DeletePageResponse, Unknown>(
+                recordId = "library/v1/page.skir:DeletePageResponse",
+                doc = "",
+                getKindOrdinal = { it.kind.ordinal },
+                kindCount = Kind.values().size,
+                unknownInstance = UNKNOWN,
+                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
+                getUnrecognized = { it._unrecognized },
+            );
+
+        /** Serializer for [DeletePageResponse] instances. */
+        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+
+        /** Describes the [DeletePageResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+
+        init {
+            _maybeFinalizeSerializer();
+        }
+
+        private var _finalizationCounter = 0;
+
+        private fun _maybeFinalizeSerializer() {
+            _finalizationCounter += 1;
+            if (_finalizationCounter == 1) {
+                _serializerImpl.addWrapperVariant(
+                    1,
+                    "internal_error",
+                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InternalError.serializer,
+                    "",
+                    { InternalErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    2,
+                    "success",
+                    Kind.SUCCESS_WRAPPER.ordinal,
+                    skirout.library.v1.page.DeletePageResponse.Success.serializer,
+                    "",
+                    { SuccessWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    3,
+                    "page_not_found_error",
+                    Kind.PAGE_NOT_FOUND_ERROR_WRAPPER.ordinal,
+                    skirout.library.v1.page.DeletePageResponse.PageNotFoundError.serializer,
+                    "",
+                    { PageNotFoundErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.addWrapperVariant(
+                    4,
+                    "invalid_record_id_error",
+                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+                    "",
+                    { InvalidRecordIdErrorWrapper(it) },
+                    { it.value },
+                );
+                _serializerImpl.finalizeEnum();
+            }
+        }
+    }
+
+    sealed interface Success_OrMutable {
+        fun toFrozen(): skirout.library.v1.page.DeletePageResponse.Success;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Success private constructor(
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
+            null,
+    ): skirout.library.v1.page.DeletePageResponse.Success_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.page.DeletePageResponse.Success);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.page.DeletePageResponse.Success.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [Success]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.Success>? =
+                null,
+        ): skirout.library.v1.page.DeletePageResponse.Success_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.page.DeletePageResponse.Success(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.page.DeletePageResponse.Success();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Success].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.library.v1.page.DeletePageResponse.Success(
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/page.skir:DeletePageResponse.Success",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [Success] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [Success] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+
+    sealed interface PageNotFoundError_OrMutable {
+        val pageId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+
+        fun toFrozen(): skirout.library.v1.page.DeletePageResponse.PageNotFoundError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class PageNotFoundError private constructor(
+        override val pageId: skirout.kernel.v1.record_id.RecordId,
+        private val _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
+            null,
+    ): skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
+                null,
+        ): this(
+            pageId.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            pageId = this.pageId,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                this.pageId,
+        ) = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
+            pageId.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.library.v1.page.DeletePageResponse.PageNotFoundError && this.pageId == other.pageId);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.pageId).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                skirout.library.v1.page.DeletePageResponse.PageNotFoundError.serializerImpl,
+            )
+        }
+
+        /** Mutable version of [PageNotFoundError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.library.v1.page.DeletePageResponse.PageNotFoundError>? =
+                null,
+        ): skirout.library.v1.page.DeletePageResponse.PageNotFoundError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
+                pageId = this.pageId,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [pageId] is already mutable, returns it as-is.
+             * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
+             */
+            val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+                var value = this.pageId;
+                return when (value) {
+                    is skirout.kernel.v1.record_id.RecordId -> {
+                        value = value.toMutable();
+                        this.pageId = value;
+                        return value;
+                    }
+                    is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
+                    skirout.kernel.v1.record_id.RecordId.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [PageNotFoundError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                pageId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                    skirout.kernel.v1.record_id.RecordId.partial(),
+            ) = skirout.library.v1.page.DeletePageResponse.PageNotFoundError(
+                pageId = pageId,
+                _unrecognizedFields = null,
+            );
+
+            private val serializerImpl = build.skir.internal.StructSerializer(
+                recordId = "library/v1/page.skir:DeletePageResponse.PageNotFoundError",
+                doc = "",
+                defaultInstance = default,
+                newMutableFn = { it?.toMutable() ?: Mutable() },
+                toFrozenFn = { it.toFrozen() },
+                getUnrecognizedFields = { it._unrecognizedFields },
+                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            );
+
+            /** Serializer for [PageNotFoundError] instances. */
+            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+
+            /** Describes the [PageNotFoundError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = serializerImpl.typeDescriptor;
+
+            init {
+                serializerImpl.addField(
+                    "page_id",
+                    "pageId",
+                    0,
+                    skirout.kernel.v1.record_id.RecordId.serializer,
+                    "",
+                    { it.pageId },
+                    { mut, v -> mut.pageId = v },
+                );
+                serializerImpl.finalizeStruct();
+            }
+        }
+    }
+}
+
+val ChangePageKind: build.skir.service.Method<
+    skirout.library.v1.page.ChangePageKindRequest,
+    skirout.library.v1.page.ChangePageKindResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "ChangePageKind",
+        247483,
+        skirout.library.v1.page.ChangePageKindRequest.serializer,
+        skirout.library.v1.page.ChangePageKindResponse.serializer,
+        "",
+    )
+}
+
 val SearchPages: build.skir.service.Method<
     skirout.library.v1.page.SearchPagesRequest,
     skirout.library.v1.page.SearchPagesResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
         "SearchPages",
-        767938,
+        247484,
         skirout.library.v1.page.SearchPagesRequest.serializer,
         skirout.library.v1.page.SearchPagesResponse.serializer,
         "",
@@ -4440,7 +5316,7 @@ val WatchPage: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchPage",
-        610282,
+        247485,
         skirout.library.v1.page.WatchPageRequest.serializer,
         skirout.library.v1.page.WatchPageResponse.serializer,
         "",
@@ -4453,7 +5329,7 @@ val CreatePage: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CreatePage",
-        616486,
+        247486,
         skirout.library.v1.page.CreatePageRequest.serializer,
         skirout.library.v1.page.CreatePageResponse.serializer,
         "",
@@ -4466,22 +5342,9 @@ val UpdatePage: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "UpdatePage",
-        247482,
+        247487,
         skirout.library.v1.page.UpdatePageRequest.serializer,
         skirout.library.v1.page.UpdatePageResponse.serializer,
-        "",
-    )
-}
-
-val DeletePage: build.skir.service.Method<
-    skirout.library.v1.page.DeletePageRequest,
-    skirout.library.v1.page.DeletePageResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "DeletePage",
-        984691,
-        skirout.library.v1.page.DeletePageRequest.serializer,
-        skirout.library.v1.page.DeletePageResponse.serializer,
         "",
     )
 }
@@ -4492,9 +5355,22 @@ val ChangePagesChapters: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ChangePagesChapters",
-        777756,
+        247488,
         skirout.library.v1.page.ChangePagesChaptersRequest.serializer,
         skirout.library.v1.page.ChangePagesChaptersResponse.serializer,
+        "",
+    )
+}
+
+val DeletePage: build.skir.service.Method<
+    skirout.library.v1.page.DeletePageRequest,
+    skirout.library.v1.page.DeletePageResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "DeletePage",
+        247489,
+        skirout.library.v1.page.DeletePageRequest.serializer,
+        skirout.library.v1.page.DeletePageResponse.serializer,
         "",
     )
 }

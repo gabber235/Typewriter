@@ -7,6 +7,7 @@ export "skirout/access/v1/sentinel.dart";
 export "skirout/kernel/v1/color.dart";
 export "skirout/kernel/v1/duration.dart";
 export "skirout/kernel/v1/errors.dart";
+export "skirout/kernel/v1/page_kind.dart";
 export "skirout/kernel/v1/record_id.dart";
 export "skirout/library/v1/book.dart";
 export "skirout/library/v1/page.dart";

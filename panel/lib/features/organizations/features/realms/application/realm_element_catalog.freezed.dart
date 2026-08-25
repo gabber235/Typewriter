@@ -511,7 +511,7 @@ $ElementAvailabilityCopyWith<$Res> get expression {
 /// @nodoc
 mixin _$DiscoveredElementDefinition {
 
- String get id; ElementKind get kind; ResolvedTypeRef get type; String get name; String get description; IconValue get icon; Color get color; ElementAvailability get availability;
+ String get id; ResolvedTypeRef get type; String get name; String get description; IconValue get icon; Color get color; ElementAvailability get availability;
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -522,16 +522,16 @@ $DiscoveredElementDefinitionCopyWith<DiscoveredElementDefinition> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,color,availability);
+int get hashCode => Object.hash(runtimeType,id,type,name,description,icon,color,availability);
 
 @override
 String toString() {
-  return 'DiscoveredElementDefinition(id: $id, kind: $kind, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability)';
+  return 'DiscoveredElementDefinition(id: $id, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability)';
 }
 
 
@@ -542,7 +542,7 @@ abstract mixin class $DiscoveredElementDefinitionCopyWith<$Res>  {
   factory $DiscoveredElementDefinitionCopyWith(DiscoveredElementDefinition value, $Res Function(DiscoveredElementDefinition) _then) = _$DiscoveredElementDefinitionCopyWithImpl;
 @useResult
 $Res call({
- String id, ElementKind kind, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
+ String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
 });
 
 
@@ -559,11 +559,10 @@ class _$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as ElementKind,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
@@ -681,10 +680,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ElementKind kind,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition() when $default != null:
-return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
   return orElse();
 
 }
@@ -702,10 +701,10 @@ return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ElementKind kind,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)  $default,) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition():
-return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -722,10 +721,10 @@ return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ElementKind kind,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ResolvedTypeRef type,  String name,  String description,  IconValue icon,  Color color,  ElementAvailability availability)?  $default,) {final _that = this;
 switch (_that) {
 case _DiscoveredElementDefinition() when $default != null:
-return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
+return $default(_that.id,_that.type,_that.name,_that.description,_that.icon,_that.color,_that.availability);case _:
   return null;
 
 }
@@ -737,11 +736,10 @@ return $default(_that.id,_that.kind,_that.type,_that.name,_that.description,_tha
 
 
 class _DiscoveredElementDefinition implements DiscoveredElementDefinition {
-  const _DiscoveredElementDefinition({required this.id, required this.kind, required this.type, required this.name, required this.description, required this.icon, required this.color, required this.availability});
+  const _DiscoveredElementDefinition({required this.id, required this.type, required this.name, required this.description, required this.icon, required this.color, required this.availability});
   
 
 @override final  String id;
-@override final  ElementKind kind;
 @override final  ResolvedTypeRef type;
 @override final  String name;
 @override final  String description;
@@ -759,16 +757,16 @@ _$DiscoveredElementDefinitionCopyWith<_DiscoveredElementDefinition> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoveredElementDefinition&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&(identical(other.availability, availability) || other.availability == availability));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,kind,type,name,description,icon,color,availability);
+int get hashCode => Object.hash(runtimeType,id,type,name,description,icon,color,availability);
 
 @override
 String toString() {
-  return 'DiscoveredElementDefinition(id: $id, kind: $kind, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability)';
+  return 'DiscoveredElementDefinition(id: $id, type: $type, name: $name, description: $description, icon: $icon, color: $color, availability: $availability)';
 }
 
 
@@ -779,7 +777,7 @@ abstract mixin class _$DiscoveredElementDefinitionCopyWith<$Res> implements $Dis
   factory _$DiscoveredElementDefinitionCopyWith(_DiscoveredElementDefinition value, $Res Function(_DiscoveredElementDefinition) _then) = __$DiscoveredElementDefinitionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ElementKind kind, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
+ String id, ResolvedTypeRef type, String name, String description, IconValue icon, Color color, ElementAvailability availability
 });
 
 
@@ -796,11 +794,10 @@ class __$DiscoveredElementDefinitionCopyWithImpl<$Res>
 
 /// Create a copy of DiscoveredElementDefinition
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? name = null,Object? description = null,Object? icon = null,Object? color = null,Object? availability = null,}) {
   return _then(_DiscoveredElementDefinition(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
-as ElementKind,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ResolvedTypeRef,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable

@@ -139,7 +139,7 @@ final class PagesProvider extends $StreamNotifierProvider<Pages, Page> {
   }
 }
 
-String _$pagesHash() => r'caccb878255486d1b5f2f797e0156684f3e80d8a';
+String _$pagesHash() => r'e4a59a7f587cdf6d091d0f3395eb5fffd917744d';
 
 final class PagesFamily extends $Family
     with

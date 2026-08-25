@@ -109,6 +109,33 @@ val DiscoveryModelTest by testSuite {
         assembled.catalog.definitions shouldBe listOf(definition)
         assembled.executableBindings shouldBe emptyList()
     }
+
+    test("executable bindings retain their contribution provenance") {
+        val key =
+            ContributionKey(
+                ArtifactId("example:extension"),
+                "common",
+                ProducerId("types"),
+                ContributionName("pages.cbor"),
+            )
+        val binding = ExecutableBinding("pages", DiscoveryDomains.Realm, "example.GeneratedPageModule")
+
+        val assembled =
+            TypeContributionAssembler.assemble(
+                listOf(
+                    KeyedTypeContribution(
+                        key,
+                        TypeDiscoveryContribution(
+                            definitions = emptyList(),
+                            prototypeBindings = emptyList(),
+                            executableBindings = listOf(binding),
+                        ),
+                    ),
+                ),
+            )
+
+        assembled.executableBindings shouldBe listOf(KeyedExecutableBinding(key, binding))
+    }
 }
 
 private fun contribution(

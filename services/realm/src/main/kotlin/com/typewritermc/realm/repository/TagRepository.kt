@@ -1,24 +1,25 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.library.Book
+import com.typewritermc.library.GridPlacement
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.Tag
+import com.typewritermc.library.TagId
 import com.typewritermc.realm.outbox.OutboxEvent
-import skirout.kernel.v1.color.Color
-import skirout.kernel.v1.record_id.RecordId
-import skirout.library.v1.book.Book
-import skirout.library.v1.tag.Placement
-import skirout.library.v1.tag.Tag
+import com.typewritermc.types.Color
 
 interface TagRepository {
     suspend fun listTags(): List<Tag>
 
-    suspend fun getTag(id: RecordId): Tag?
+    suspend fun getTag(id: TagId): Tag?
 
-    suspend fun findMissing(ids: List<RecordId>): List<RecordId>
+    suspend fun findMissing(ids: Set<TagId>): Set<TagId>
 
     suspend fun createTag(
-        name: String,
+        name: LibraryName,
         color: Color,
-        parentIds: List<RecordId>,
-        placement: Placement,
+        parentIds: Set<TagId>,
+        placement: GridPlacement,
         encodeEvents: (Tag) -> List<OutboxEvent>,
     ): TagCreateResult
 
@@ -29,7 +30,7 @@ interface TagRepository {
     ): TagUpdateResult
 
     suspend fun deleteTag(
-        id: RecordId,
+        id: TagId,
         encodeEvents: (TagDeletion) -> List<OutboxEvent>,
     ): TagDeleteResult
 }
@@ -46,7 +47,7 @@ sealed interface TagCreateResult {
     data object HeightInvalid : TagCreateResult
 
     data class ParentsNotFound(
-        val parentIds: List<RecordId>,
+        val parentIds: Set<TagId>,
     ) : TagCreateResult
 }
 
@@ -68,7 +69,7 @@ sealed interface TagUpdateResult {
     data object HeightInvalid : TagUpdateResult
 
     data class ParentsNotFound(
-        val parentIds: List<RecordId>,
+        val parentIds: Set<TagId>,
     ) : TagUpdateResult
 
     data object InheritanceCycle : TagUpdateResult

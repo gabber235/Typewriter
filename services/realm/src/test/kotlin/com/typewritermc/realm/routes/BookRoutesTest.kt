@@ -2,6 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.createBook
 import com.typewritermc.realm.repository.createTag
+import com.typewritermc.realm.repository.getBook
 import com.typewritermc.realm.repository.recordId
 import com.typewritermc.realm.repository.successValue
 import com.typewritermc.realm.repository.updateBook

@@ -10,7 +10,9 @@ pluginManagement {
 
 includeBuild("../discovery")
 includeBuild("../elements")
+includeBuild("../library")
 includeBuild("../presentation")
+includeBuild("../pages")
 includeBuild("../realm-capabilities")
 includeBuild("../libs/typewriter-types")
 includeBuild("../imprint")

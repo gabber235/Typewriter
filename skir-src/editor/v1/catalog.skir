@@ -1,6 +1,11 @@
 import { CapabilityDefinition } from "editor/v1/capability.skir";
 import { ConversionDefinition } from "editor/v1/conversion.skir";
 import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { ElementCatalogEntry } from "editor/v1/element_catalog.skir";
+import {
+  PageCatalogEntry,
+  PageDiagnostic,
+} from "editor/v1/page_catalog.skir";
 import { PresentationDefinition } from "editor/v1/presentation.skir";
 import {
   CatalogGeneration,
@@ -23,14 +28,14 @@ struct SubtypeResult(810900004) {
   matching_types: [ResolvedTypeRef] = 1;
 }
 
-struct CatalogFetchRequest(810900006) {
+struct CatalogFetchRequest(810900005) {
   expected_generation: CatalogGeneration? = 0;
   requested_types: [ResolvedTypeRef] = 1;
   presentation_ids: [PresentationId] = 2;
   subtype_queries: [SubtypeQuery] = 3;
 }
 
-struct CatalogFetchSuccess(810900007) {
+struct CatalogFetchSuccess(810900006) {
   generation: CatalogGeneration = 0;
   type_definitions: [TypeDefinition] = 1;
   presentation_definitions: [PresentationDefinition] = 2;
@@ -38,24 +43,27 @@ struct CatalogFetchSuccess(810900007) {
   capability_definitions: [CapabilityDefinition] = 4;
   subtype_results: [SubtypeResult] = 5;
   diagnostics: [TypeDiagnostic] = 6;
+  element_entries: [ElementCatalogEntry] = 7;
+  page_entries: [PageCatalogEntry] = 8;
+  page_diagnostics: [PageDiagnostic] = 9;
 }
 
-struct CatalogGenerationMismatch(810900008) {
+struct CatalogGenerationMismatch(810900007) {
   actual_generation: CatalogGeneration = 0;
 }
 
-enum CatalogFetchResult(810900009) {
+enum CatalogFetchResult(810900008) {
   success: CatalogFetchSuccess = 1;
   generation_mismatch: CatalogGenerationMismatch = 2;
   unavailable: [TypeDiagnostic] = 3;
 }
 
-struct CatalogInvalidated(810900010) {
+struct CatalogInvalidated(810900009) {
   generation: CatalogGeneration = 0;
   reason: string = 1;
 }
 
-enum CatalogWatchUpdate(810900011) {
+enum CatalogWatchUpdate(810900010) {
   initial: CatalogGeneration = 1;
   invalidated: CatalogInvalidated = 2;
 }

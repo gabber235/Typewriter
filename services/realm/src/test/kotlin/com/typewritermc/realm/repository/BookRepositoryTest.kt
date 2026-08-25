@@ -1,5 +1,7 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.realm.repository.utils.toTagId
+import com.typewritermc.realm.routes.toSkir
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -24,7 +26,7 @@ val BookRepositoryTest by testSuite {
                 fixture.books.createBook("zulu_book", "book", Color(argb = 0), emptyList()).successValue()
                 fixture.books.createBook("alpha_book", "book", Color(argb = 0), emptyList()).successValue()
 
-                fixture.books.listBooks().map(Book::title) shouldContainExactly listOf("alpha_book", "zulu_book")
+                fixture.books.listBooks().map { it.title.value } shouldContainExactly listOf("alpha_book", "zulu_book")
             }
         }
     }
@@ -41,7 +43,7 @@ val BookRepositoryTest by testSuite {
                             emptyList(),
                         ).successValue()
 
-                fixture.books.listBooks() shouldContainExactly listOf(created)
+                fixture.books.listBooks().map { it.toSkir() } shouldContainExactly listOf(created)
                 fixture.books.getBook(created.bookId) shouldBe created
             }
         }
@@ -82,7 +84,7 @@ val BookRepositoryTest by testSuite {
 
                 updated.tagIds shouldBe emptyList()
                 updated.revision shouldBe book.revision + 1
-                fixture.books.listBooks() shouldContainExactly listOf(updated)
+                fixture.books.listBooks().map { it.toSkir() } shouldContainExactly listOf(updated)
                 fixture.books.getBook(book.bookId) shouldBe updated
             }
         }
@@ -106,7 +108,7 @@ val BookRepositoryTest by testSuite {
                         "book",
                         Color(argb = 0),
                         listOf(missingId),
-                    ) shouldBe BookCreateResult.TagsNotFound(listOf(missingId))
+                    ) shouldBe BookCreateResult.TagsNotFound(setOf(missingId.toTagId()))
 
                 fixture.books.listBooks() shouldBe emptyList()
             }
@@ -236,7 +238,7 @@ val BookRepositoryTest by testSuite {
                             color = Color(argb = 3),
                             tagIds = listOf(missingId),
                         ),
-                    ) shouldBe BookUpdateResult.TagsNotFound(listOf(missingId))
+                    ) shouldBe BookUpdateResult.TagsNotFound(setOf(missingId.toTagId()))
 
                 fixture.books.getBook(book.bookId) shouldBe book
             }

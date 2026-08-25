@@ -1,6 +1,10 @@
 package com.typewritermc.realm.repository
 
 import com.surrealdb.Surreal
+import com.typewritermc.library.Book
+import com.typewritermc.library.BookId
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.TagId
 import com.typewritermc.realm.outbox.RealmOutbox
 import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.records.BookCreateOutputRecord
@@ -8,10 +12,10 @@ import com.typewritermc.realm.repository.records.BookRecord
 import com.typewritermc.realm.repository.records.BookUpdateOutputRecord
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
+import com.typewritermc.realm.repository.utils.surrealTagIds
 import com.typewritermc.realm.repository.utils.takeTransaction
-import skirout.kernel.v1.color.Color
-import skirout.kernel.v1.record_id.RecordId
-import skirout.library.v1.book.Book
+import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 
 class SurrealBookRepository(
     private val database: Surreal,
@@ -22,21 +26,21 @@ class SurrealBookRepository(
         return BookRecord.parseList(result).map(BookRecord::toBook)
     }
 
-    override suspend fun getBook(id: RecordId): Book? {
+    override suspend fun getBook(id: BookId): Book? {
         val result =
             database
                 .query(
                     $$"SELECT * FROM type::record('book', $id)",
-                    mapOf("id" to id.surrealId("book")),
+                    mapOf("id" to id.surrealId()),
                 ).take(0)
         return BookRecord.parseList(result).firstOrNull()?.toBook()
     }
 
     override suspend fun createBook(
-        title: String,
-        icon: String,
+        title: LibraryName,
+        icon: Icon,
         color: Color,
-        tagIds: List<RecordId>,
+        tagIds: Set<TagId>,
         encodeEvents: (Book) -> List<com.typewritermc.realm.outbox.OutboxEvent>,
     ): BookCreateResult {
         val mutation =
@@ -75,10 +79,10 @@ class SurrealBookRepository(
 
                             """.trimIndent(),
                             mapOf(
-                                "title" to title,
-                                "icon" to icon,
-                                "color" to color.argb.toUInt().toLong(),
-                                "tags" to tagIds.surrealId("tag"),
+                                "title" to title.value,
+                                "icon" to icon.wireValue,
+                                "color" to color.argb.toLong(),
+                                "tags" to tagIds.surrealTagIds(),
                             ),
                         ).takeTransaction(3)
                 BookCreateOutputRecord.parse(result).toResult().also { mutation ->
@@ -143,15 +147,12 @@ class SurrealBookRepository(
                 };
                             """.trimIndent(),
                             mapOf(
-                                "book" to book.bookId.surrealId("book"),
+                                "book" to book.id.surrealId(),
                                 "expected_revision" to expectedRevision,
-                                "title" to book.title,
-                                "icon" to book.icon,
-                                "color" to
-                                    book.color.argb
-                                        .toUInt()
-                                        .toLong(),
-                                "tags" to book.tagIds.surrealId("tag"),
+                                "title" to book.title.value,
+                                "icon" to book.icon.wireValue,
+                                "color" to book.color.argb.toLong(),
+                                "tags" to book.tags.surrealTagIds(),
                             ),
                         ).takeTransaction(2)
                 BookUpdateOutputRecord.parse(result).toResult().also { mutation ->

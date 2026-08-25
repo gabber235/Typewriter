@@ -1,7 +1,6 @@
 package com.typewritermc.realm.repository
 
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
@@ -9,7 +8,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.kernel.v1.color.Color
 import skirout.library.v1.page.Page
-import skirout.library.v1.page.PageType
+import com.typewritermc.realm.TestPageKinds as PageType
 
 val PageRepositoryTest by testSuite {
     test("page listing is ordered by priority and name") {
@@ -100,9 +99,10 @@ val PageRepositoryTest by testSuite {
                         .updatePage(
                             Page(
                                 pageId = page.pageId,
+                                revision = page.revision,
                                 bookId = page.bookId,
                                 name = "opening_sequence",
-                                type = PageType.SEQUENCE,
+                                kind = PageType.SEQUENCE,
                                 chapter = page.chapter,
                                 priority = 9,
                             ),
@@ -165,7 +165,7 @@ val PageRepositoryTest by testSuite {
         }
     }
 
-    test("page creation generates unique identifiers and preserves every page type") {
+    test("page creation generates unique identifiers and preserves every page kind") {
         runTest {
             RepositoryFixture().use { fixture ->
                 val book = fixture.books.createBook("typed_book", "book", Color(argb = 0), emptyList()).successValue()
@@ -176,7 +176,7 @@ val PageRepositoryTest by testSuite {
                     }
 
                 pages.map(Page::pageId).distinct().size shouldBe types.size
-                pages.map(Page::type) shouldContainExactly types
+                pages.map(Page::kind) shouldContainExactly types
             }
         }
     }
@@ -216,13 +216,14 @@ val PageRepositoryTest by testSuite {
                     .updatePage(
                         Page(
                             pageId = recordId("page", "missing"),
+                            revision = 1,
                             bookId = recordId("book", "missing"),
                             name = "missing_page",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = "",
                             priority = 0,
                         ),
-                    ).failureSlug() shouldBe "page-not-found-error"
+                    ) shouldBe PageUpdateResult.NotFound
             }
         }
     }
@@ -261,16 +262,15 @@ val PageRepositoryTest by testSuite {
         }
     }
 
-    test("page creation rejects unknown page types without persisting records") {
+    test("page storage preserves unknown kinds for read only tombstones") {
         runTest {
             RepositoryFixture().use { fixture ->
                 val book = fixture.books.createBook("valid_book", "book", Color(argb = 0), emptyList()).successValue()
 
-                shouldThrow<IllegalStateException> {
-                    fixture.pages.createPage(book.bookId, "valid_page", PageType.UNKNOWN, "", 0)
-                }
+                val page = fixture.pages.createPage(book.bookId, "valid_page", PageType.UNKNOWN, "", 0).successValue()
 
-                fixture.pages.searchPages(book.bookId, null) shouldBe emptyList()
+                page.kind shouldBe PageType.UNKNOWN
+                fixture.pages.getPage(page.pageId) shouldBe page
             }
         }
     }

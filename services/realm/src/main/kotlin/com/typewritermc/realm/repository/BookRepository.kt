@@ -1,20 +1,23 @@
 package com.typewritermc.realm.repository
 
+import com.typewritermc.library.Book
+import com.typewritermc.library.BookId
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.TagId
 import com.typewritermc.realm.outbox.OutboxEvent
-import skirout.kernel.v1.color.Color
-import skirout.kernel.v1.record_id.RecordId
-import skirout.library.v1.book.Book
+import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 
 interface BookRepository {
     suspend fun listBooks(): List<Book>
 
-    suspend fun getBook(id: RecordId): Book?
+    suspend fun getBook(id: BookId): Book?
 
     suspend fun createBook(
-        title: String,
-        icon: String,
+        title: LibraryName,
+        icon: Icon,
         color: Color,
-        tagIds: List<RecordId>,
+        tagIds: Set<TagId>,
         encodeEvents: (Book) -> List<OutboxEvent>,
     ): BookCreateResult
 
@@ -35,7 +38,7 @@ sealed interface BookCreateResult {
     data object IconRequired : BookCreateResult
 
     data class TagsNotFound(
-        val tagIds: List<RecordId>,
+        val tagIds: Set<TagId>,
     ) : BookCreateResult
 }
 
@@ -55,6 +58,6 @@ sealed interface BookUpdateResult {
     data object IconRequired : BookUpdateResult
 
     data class TagsNotFound(
-        val tagIds: List<RecordId>,
+        val tagIds: Set<TagId>,
     ) : BookUpdateResult
 }

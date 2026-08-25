@@ -94,7 +94,6 @@ private fun descriptor(): ElementDescriptor {
     val id = DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")
     return ElementDescriptor(
         id = ElementTypeId(id),
-        kind = ElementKind.ENTRY,
         type = ResolvedTypeRef(TypeId.Declared(id), 1),
         name = "Synthetic Entry",
         description = "Verifies discovery",

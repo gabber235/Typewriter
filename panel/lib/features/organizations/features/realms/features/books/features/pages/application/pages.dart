@@ -7,36 +7,15 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "pages.freezed.dart";
 part "pages.g.dart";
 
-enum PageType {
-  sequence,
-  static,
-  scene,
-  manifest;
-
-  static PageType fromSkir(skir.PageType type) => switch (type) {
-    skir.PageType.sequence => PageType.sequence,
-    skir.PageType.static_ => PageType.static,
-    skir.PageType.scene => PageType.scene,
-    skir.PageType.manifest => PageType.manifest,
-    skir.PageType_unknown() => throw ApiException.unknownResponseMessage(),
-  };
-
-  skir.PageType toSkir() => switch (this) {
-    PageType.sequence => skir.PageType.sequence,
-    PageType.static => skir.PageType.static_,
-    PageType.scene => skir.PageType.scene,
-    PageType.manifest => skir.PageType.manifest,
-  };
-}
-
 @freezed
 abstract class Page with _$Page {
   @Assert("name != \"\"", "Name must not be empty.")
   const factory Page({
     required skir.RecordId pageId,
+    required int revision,
     required skir.RecordId bookId,
     required String name,
-    required PageType type,
+    required PageKindRef kind,
     required String chapter,
     required int priority,
   }) = _Page;
@@ -45,18 +24,20 @@ abstract class Page with _$Page {
 
   factory Page.fromSkir(skir.Page page) => Page(
     pageId: page.pageId,
+    revision: page.revision,
     bookId: page.bookId,
     name: page.name,
-    type: PageType.fromSkir(page.type),
+    kind: PageKindRef.fromSkir(page.kind),
     chapter: page.chapter,
     priority: page.priority,
   );
 
   skir.Page toSkir() => skir.Page(
     pageId: this.pageId,
+    revision: revision,
     bookId: this.bookId,
     name: name,
-    type: type.toSkir(),
+    kind: kind.toSkir(),
     chapter: chapter,
     priority: priority,
   );
@@ -139,11 +120,10 @@ class Pages extends _$Pages {
 
   Future<void> updatePage({
     String? name,
-    PageType? type,
     String? chapter,
     int? priority,
   }) async {
-    if (name == null && type == null && chapter == null && priority == null) {
+    if (name == null && chapter == null && priority == null) {
       throw ApiException.badRequest("At least one page field is required");
     }
 
@@ -158,15 +138,14 @@ class Pages extends _$Pages {
     state = AsyncData(
       currentPage.copyWith(
         name: name ?? currentPage.name,
-        type: type ?? currentPage.type,
         chapter: chapter ?? currentPage.chapter,
         priority: priority ?? currentPage.priority,
       ),
     );
     final request = skir.UpdatePageRequest(
       pageId: currentPage.pageId,
+      expectedRevision: currentPage.revision,
       name: name,
-      type: type?.toSkir(),
       chapter: chapter,
       priority: priority,
     );
@@ -188,6 +167,11 @@ class Pages extends _$Pages {
           throw ApiException.internalServerError();
         case skir.UpdatePageResponse_successWrapper(:final value):
           state = AsyncData(Page.fromSkir(value));
+        case skir.UpdatePageResponse_conflictErrorWrapper(:final value):
+          state = AsyncData(Page.fromSkir(value.actual));
+          throw ApiException.conflict(
+            "The page changed while it was being edited",
+          );
         case skir.UpdatePageResponse_pageNotFoundErrorWrapper():
           throw ApiException.notFound("Page");
         case skir.UpdatePageResponse_validationErrorWrapper(:final value):
@@ -195,6 +179,9 @@ class Pages extends _$Pages {
         case skir.UpdatePageResponse_invalidRecordIdErrorWrapper(:final value):
           throw ApiException.invalidRecordId(value);
       }
+    } on ApiException catch (failure) {
+      if (failure.code != 409) state = previousState;
+      rethrow;
     } catch (_) {
       state = previousState;
       rethrow;
@@ -216,7 +203,9 @@ ApiException _pageValidationException(skir.PageValidationError error) {
     skir.PageValidationError_kind.nameRequiredConst => ApiException.badRequest(
       "Page name is required",
     ),
-    skir.PageValidationError_kind.pageTypeUnknownConst =>
-      ApiException.badRequest("Page type is unknown"),
+    skir.PageValidationError_kind.pageKindUnknownConst =>
+      ApiException.badRequest("Page kind is unknown"),
+    skir.PageValidationError_kind.pageKindRevisionUnknownConst =>
+      ApiException.badRequest("Page kind revision is unknown"),
   };
 }

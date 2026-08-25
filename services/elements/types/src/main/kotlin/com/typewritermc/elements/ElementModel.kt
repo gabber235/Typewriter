@@ -9,16 +9,28 @@ import com.typewritermc.types.Icon
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypedValueEnvelope
+import com.typewritermc.types.TypewriterString
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.uuid.Uuid
 
-interface Element
+interface Element {
+    val id: ElementInstanceId
+}
 
 interface Entry : Element
 
 interface Cue : Element
+
+interface Segment : Cue {
+    val startFrame: Int
+    val endFrame: Int
+}
+
+interface Keyframe : Cue {
+    val frame: Int
+}
 
 @JvmInline
 @Serializable
@@ -28,6 +40,7 @@ value class ElementTypeId(
 
 @JvmInline
 @Serializable(with = ElementInstanceIdSerializer::class)
+@TypewriterString
 value class ElementInstanceId(
     val value: Uuid,
 )
@@ -100,15 +113,8 @@ sealed interface AvailabilityExpression {
 }
 
 @Serializable
-enum class ElementKind {
-    ENTRY,
-    CUE,
-}
-
-@Serializable
 data class ElementDescriptor(
     val id: ElementTypeId,
-    val kind: ElementKind,
     val type: ResolvedTypeRef,
     val name: String,
     val description: String,
@@ -128,7 +134,6 @@ interface ElementPrototype<E : Element> : ConcreteTypePrototype<E> {
 
 @Serializable
 data class StoredElementEnvelope(
-    val id: ElementInstanceId,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
     val value: TypedValueEnvelope,

@@ -23,6 +23,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
+import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
@@ -119,6 +120,7 @@ private class TypewriterRegistrarProcessor(
                     FunSpec
                         .builder("module")
                         .addModifiers(KModifier.OVERRIDE)
+                        .addParameter("contribution", ContributionKey::class)
                         .returns(org.koin.core.module.Module::class)
                         .addCode(moduleBody)
                         .build(),

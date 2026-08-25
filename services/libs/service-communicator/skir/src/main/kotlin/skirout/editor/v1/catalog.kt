@@ -798,6 +798,9 @@ sealed interface CatalogFetchSuccess_OrMutable {
     val capabilityDefinitions: kotlin.collections.List<skirout.editor.v1.capability.CapabilityDefinition>;
     val subtypeResults: kotlin.collections.List<skirout.editor.v1.catalog.SubtypeResult_OrMutable>;
     val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>;
+    val elementEntries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>;
+    val pageEntries: kotlin.collections.List<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable>;
+    val pageDiagnostics: kotlin.collections.List<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.catalog.CatalogFetchSuccess;
 }
@@ -812,6 +815,9 @@ class CatalogFetchSuccess private constructor(
     override val capabilityDefinitions: kotlin.collections.List<skirout.editor.v1.capability.CapabilityDefinition>,
     override val subtypeResults: kotlin.collections.List<skirout.editor.v1.catalog.SubtypeResult>,
     override val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic>,
+    override val elementEntries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry>,
+    override val pageEntries: kotlin.collections.List<skirout.editor.v1.page_catalog.PageCatalogEntry>,
+    override val pageDiagnostics: kotlin.collections.List<skirout.editor.v1.page_catalog.PageDiagnostic>,
     private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchSuccess>? =
         null,
 ): skirout.editor.v1.catalog.CatalogFetchSuccess_OrMutable {
@@ -825,6 +831,9 @@ class CatalogFetchSuccess private constructor(
         capabilityDefinitions: kotlin.collections.Iterable<skirout.editor.v1.capability.CapabilityDefinition>,
         subtypeResults: kotlin.collections.Iterable<skirout.editor.v1.catalog.SubtypeResult_OrMutable>,
         diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+        elementEntries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>,
+        pageEntries: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable>,
+        pageDiagnostics: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchSuccess>? =
             null,
     ): this(
@@ -835,6 +844,9 @@ class CatalogFetchSuccess private constructor(
         build.skir.internal.toFrozenList(capabilityDefinitions),
         build.skir.internal.toFrozenList(subtypeResults, { it.toFrozen() }),
         build.skir.internal.toFrozenList(diagnostics, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(elementEntries, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(pageEntries, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(pageDiagnostics, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -850,6 +862,9 @@ class CatalogFetchSuccess private constructor(
         capabilityDefinitions = this.capabilityDefinitions,
         subtypeResults = this.subtypeResults,
         diagnostics = this.diagnostics,
+        elementEntries = this.elementEntries,
+        pageEntries = this.pageEntries,
+        pageDiagnostics = this.pageDiagnostics,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -870,6 +885,12 @@ class CatalogFetchSuccess private constructor(
             this.subtypeResults,
         diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
             this.diagnostics,
+        elementEntries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
+            this.elementEntries,
+        pageEntries: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable> =
+            this.pageEntries,
+        pageDiagnostics: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable> =
+            this.pageDiagnostics,
     ) = skirout.editor.v1.catalog.CatalogFetchSuccess(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(typeDefinitions, { it.toFrozen() }),
@@ -878,6 +899,9 @@ class CatalogFetchSuccess private constructor(
         build.skir.internal.toFrozenList(capabilityDefinitions),
         build.skir.internal.toFrozenList(subtypeResults, { it.toFrozen() }),
         build.skir.internal.toFrozenList(diagnostics, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(elementEntries, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(pageEntries, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(pageDiagnostics, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -885,11 +909,11 @@ class CatalogFetchSuccess private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.CatalogFetchSuccess && this.generation == other.generation && this.typeDefinitions == other.typeDefinitions && this.presentationDefinitions == other.presentationDefinitions && this.conversions == other.conversions && this.capabilityDefinitions == other.capabilityDefinitions && this.subtypeResults == other.subtypeResults && this.diagnostics == other.diagnostics);
+        return this === other || (other is skirout.editor.v1.catalog.CatalogFetchSuccess && this.generation == other.generation && this.typeDefinitions == other.typeDefinitions && this.presentationDefinitions == other.presentationDefinitions && this.conversions == other.conversions && this.capabilityDefinitions == other.capabilityDefinitions && this.subtypeResults == other.subtypeResults && this.diagnostics == other.diagnostics && this.elementEntries == other.elementEntries && this.pageEntries == other.pageEntries && this.pageDiagnostics == other.pageDiagnostics);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.typeDefinitions, this.presentationDefinitions, this.conversions, this.capabilityDefinitions, this.subtypeResults, this.diagnostics).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.typeDefinitions, this.presentationDefinitions, this.conversions, this.capabilityDefinitions, this.subtypeResults, this.diagnostics, this.elementEntries, this.pageEntries, this.pageDiagnostics).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -917,6 +941,12 @@ class CatalogFetchSuccess private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.SubtypeResult>(),
         override var diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+        override var elementEntries: kotlin.collections.List<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
+        override var pageEntries: kotlin.collections.List<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageCatalogEntry>(),
+        override var pageDiagnostics: kotlin.collections.List<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageDiagnostic>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.CatalogFetchSuccess>? =
             null,
     ): skirout.editor.v1.catalog.CatalogFetchSuccess_OrMutable {
@@ -929,6 +959,9 @@ class CatalogFetchSuccess private constructor(
             capabilityDefinitions = this.capabilityDefinitions,
             subtypeResults = this.subtypeResults,
             diagnostics = this.diagnostics,
+            elementEntries = this.elementEntries,
+            pageEntries = this.pageEntries,
+            pageDiagnostics = this.pageDiagnostics,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1043,6 +1076,54 @@ class CatalogFetchSuccess private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [elementEntries] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [elementEntries] and returns it.
+         */
+        val mutableElementEntries: kotlin.collections.MutableList<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> get() {
+            var value = this.elementEntries;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.elementEntries = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [pageEntries] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [pageEntries] and returns it.
+         */
+        val mutablePageEntries: kotlin.collections.MutableList<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable> get() {
+            var value = this.pageEntries;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.pageEntries = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [pageDiagnostics] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [pageDiagnostics] and returns it.
+         */
+        val mutablePageDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable> get() {
+            var value = this.pageDiagnostics;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.pageDiagnostics = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -1055,6 +1136,9 @@ class CatalogFetchSuccess private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.capability.CapabilityDefinition>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.SubtypeResult>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageCatalogEntry>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageDiagnostic>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1082,6 +1166,12 @@ class CatalogFetchSuccess private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.SubtypeResult>(),
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+            elementEntries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.element_catalog.ElementCatalogEntry>(),
+            pageEntries: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageCatalogEntry>(),
+            pageDiagnostics: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.page_catalog.PageDiagnostic>(),
         ) = skirout.editor.v1.catalog.CatalogFetchSuccess(
             generation = generation,
             typeDefinitions = typeDefinitions,
@@ -1090,6 +1180,9 @@ class CatalogFetchSuccess private constructor(
             capabilityDefinitions = capabilityDefinitions,
             subtypeResults = subtypeResults,
             diagnostics = diagnostics,
+            elementEntries = elementEntries,
+            pageEntries = pageEntries,
+            pageDiagnostics = pageDiagnostics,
             _unrecognizedFields = null,
         );
 
@@ -1184,6 +1277,39 @@ class CatalogFetchSuccess private constructor(
                 "",
                 { it.diagnostics },
                 { mut, v -> mut.diagnostics = v },
+            );
+            serializerImpl.addField(
+                "element_entries",
+                "elementEntries",
+                7,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.element_catalog.ElementCatalogEntry.serializer,
+                ),
+                "",
+                { it.elementEntries },
+                { mut, v -> mut.elementEntries = v },
+            );
+            serializerImpl.addField(
+                "page_entries",
+                "pageEntries",
+                8,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.page_catalog.PageCatalogEntry.serializer,
+                ),
+                "",
+                { it.pageEntries },
+                { mut, v -> mut.pageEntries = v },
+            );
+            serializerImpl.addField(
+                "page_diagnostics",
+                "pageDiagnostics",
+                9,
+                build.skir.Serializers.list(
+                    skirout.editor.v1.page_catalog.PageDiagnostic.serializer,
+                ),
+                "",
+                { it.pageDiagnostics },
+                { mut, v -> mut.pageDiagnostics = v },
             );
             serializerImpl.finalizeStruct();
         }
@@ -1447,6 +1573,9 @@ sealed class CatalogFetchResult private constructor() {
             capabilityDefinitions: kotlin.collections.Iterable<skirout.editor.v1.capability.CapabilityDefinition>,
             subtypeResults: kotlin.collections.Iterable<skirout.editor.v1.catalog.SubtypeResult_OrMutable>,
             diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            elementEntries: kotlin.collections.Iterable<skirout.editor.v1.element_catalog.ElementCatalogEntry_OrMutable>,
+            pageEntries: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageCatalogEntry_OrMutable>,
+            pageDiagnostics: kotlin.collections.Iterable<skirout.editor.v1.page_catalog.PageDiagnostic_OrMutable>,
         ) = SuccessWrapper(
             skirout.editor.v1.catalog.CatalogFetchSuccess(
                 generation = generation,
@@ -1456,6 +1585,9 @@ sealed class CatalogFetchResult private constructor() {
                 capabilityDefinitions = capabilityDefinitions,
                 subtypeResults = subtypeResults,
                 diagnostics = diagnostics,
+                elementEntries = elementEntries,
+                pageEntries = pageEntries,
+                pageDiagnostics = pageDiagnostics,
             )
         );
 

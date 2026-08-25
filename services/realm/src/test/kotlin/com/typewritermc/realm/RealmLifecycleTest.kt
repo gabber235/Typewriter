@@ -5,7 +5,6 @@ import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
-import com.typewritermc.realm.routes.UnavailableRealmElementCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.schema.SchemaMigrator
@@ -106,7 +105,7 @@ private class RealmLifecycleFixture(
         Realm(
             databaseProvider = TestDatabaseProvider({ databaseOpen = true }, { databaseOpen = false }),
             editorCatalog = UnavailableRealmEditorCatalogSource(),
-            elementCatalog = UnavailableRealmElementCatalogSource(),
+            pageDefinitions = testPageCatalog(),
             presentationSearch = UnavailableRealmPresentationSearchSource(),
             scope = scope,
             telemetry = telemetry.telemetry,

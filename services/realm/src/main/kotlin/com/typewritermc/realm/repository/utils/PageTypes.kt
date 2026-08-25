@@ -1,21 +1,10 @@
 package com.typewritermc.realm.repository.utils
 
-import skirout.library.v1.page.PageType
+import com.typewritermc.library.PageKindId
+import com.typewritermc.library.PageKindRef
+import com.typewritermc.types.DeclaredTypeId
 
-internal fun PageType.databaseValue(): String =
-    when (this) {
-        PageType.SEQUENCE -> "sequence"
-        PageType.STATIC -> "static"
-        PageType.SCENE -> "scene"
-        PageType.MANIFEST -> "manifest"
-        is PageType.Unknown -> error("Unknown page type")
-    }
-
-internal fun String.toPageType(): PageType =
-    when (this) {
-        "sequence" -> PageType.SEQUENCE
-        "static" -> PageType.STATIC
-        "scene" -> PageType.SCENE
-        "manifest" -> PageType.MANIFEST
-        else -> error("Unknown stored page type: $this")
-    }
+internal fun pageKindRef(
+    id: String,
+    revision: Int,
+): PageKindRef = PageKindRef(id = PageKindId(value = DeclaredTypeId.parse(id)), revision = revision)

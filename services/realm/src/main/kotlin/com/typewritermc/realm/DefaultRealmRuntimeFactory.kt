@@ -21,17 +21,17 @@ import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
+import com.typewritermc.pages.PageCatalogAssembler
+import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
-import com.typewritermc.realm.routes.RealmEditorCatalogSource
-import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
-import com.typewritermc.realm.routes.RealmElementCatalogSource
-import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
+import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
+import com.typewritermc.realm.routes.RealmEditorCatalogSource
+import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
-import com.typewritermc.realm.routes.SnapshotRealmElementCatalogSource
 import com.typewritermc.realm.schema.DatabaseEndpoint
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseConfiguration
@@ -136,6 +136,11 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     types = assembled.discovery.types,
                     capabilities = capabilityRegistry.descriptors,
                 )
+            val pageCatalog =
+                PageCatalogAssembler.assemble(
+                    providers = loadedDiscovery.application.koin.getAll<PageProvider>(),
+                    prototypes = loadedDiscovery.prototypes,
+                )
             val realmModule =
                 module {
                     single<OpenTelemetry> { context.host.openTelemetry }
@@ -147,11 +152,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     single { RealmDiscoverySnapshotStore() }
                     single { loadedDiscovery.prototypes }
                     single { capabilityRegistry }
+                    single { pageCatalog }
                     single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().editorCatalog() }
-                    }
-                    single<RealmElementCatalogSource> {
-                        SnapshotRealmElementCatalogSource { get<RealmDiscoverySnapshotStore>().elements() }
+                        SnapshotRealmEditorCatalogSource { get<RealmDiscoverySnapshotStore>().current() }
                     }
                     single<RealmPresentationSearchSource> {
                         CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
@@ -188,6 +191,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 RealmDiscoverySnapshot(
                     discovery = assembled.discovery.copy(types = presentationCatalog.types),
                     elements = assembled.elements,
+                    pages = pageCatalog,
                     presentations = presentationCatalog.definitions,
                     capabilities = capabilityRegistry.descriptors,
                     presentationDiagnostics = presentationCatalog.diagnostics,

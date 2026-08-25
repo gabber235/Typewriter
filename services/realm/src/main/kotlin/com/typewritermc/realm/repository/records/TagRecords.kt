@@ -2,14 +2,16 @@ package com.typewritermc.realm.repository.records
 
 import com.surrealdb.RecordId
 import com.surrealdb.Value
+import com.typewritermc.library.GridPlacement
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.ResourceRevision
+import com.typewritermc.library.Tag
 import com.typewritermc.realm.repository.TagCreateResult
 import com.typewritermc.realm.repository.TagDeleteResult
 import com.typewritermc.realm.repository.TagDeletion
 import com.typewritermc.realm.repository.TagUpdateResult
-import com.typewritermc.realm.repository.utils.toSkirRecordId
-import skirout.kernel.v1.color.Color
-import skirout.library.v1.tag.Placement
-import skirout.library.v1.tag.Tag
+import com.typewritermc.realm.repository.utils.toTagId
+import com.typewritermc.types.Color
 
 internal data class PlacementRecord(
     val x: Int = 0,
@@ -17,7 +19,7 @@ internal data class PlacementRecord(
     val width: Int = 3,
     val height: Int = 1,
 ) {
-    fun toPlacement(): Placement = Placement(x = x, y = y, width = width, height = height)
+    fun toPlacement(): GridPlacement = GridPlacement(x = x, y = y, width = width, height = height)
 }
 
 @Suppress("PropertyName")
@@ -31,11 +33,11 @@ internal data class TagRecord(
 ) {
     fun toTag(): Tag =
         Tag(
-            tagId = id.toSkirRecordId(),
-            revision = revision,
-            name = name,
-            color = Color(argb = color.toInt()),
-            parentIds = parent_tags.map(RecordId::toSkirRecordId),
+            id = id.toTagId(),
+            revision = ResourceRevision(revision),
+            name = LibraryName(name),
+            color = Color(argb = color.toUInt()),
+            parents = parent_tags.mapTo(linkedSetOf(), RecordId::toTagId),
             placement = placement.toPlacement(),
         )
 
@@ -76,10 +78,10 @@ internal data class TagCreateOutputRecord(
 
     private fun requireTag(): TagRecord = tag ?: invalidTagOutput("create outcome '$kind' requires a tag")
 
-    private fun requireParentIds(): List<skirout.kernel.v1.record_id.RecordId> =
+    private fun requireParentIds() =
         parentIds
             ?.takeIf(List<*>::isNotEmpty)
-            ?.map(RecordId::toSkirRecordId)
+            ?.mapTo(linkedSetOf(), RecordId::toTagId)
             ?: invalidTagOutput("create outcome '$kind' requires parent ids")
 }
 
@@ -107,10 +109,10 @@ internal data class TagUpdateOutputRecord(
 
     private fun requireTag(): TagRecord = tag ?: invalidTagOutput("update outcome '$kind' requires a tag")
 
-    private fun requireParentIds(): List<skirout.kernel.v1.record_id.RecordId> =
+    private fun requireParentIds() =
         parentIds
             ?.takeIf(List<*>::isNotEmpty)
-            ?.map(RecordId::toSkirRecordId)
+            ?.mapTo(linkedSetOf(), RecordId::toTagId)
             ?: invalidTagOutput("update outcome '$kind' requires parent ids")
 }
 

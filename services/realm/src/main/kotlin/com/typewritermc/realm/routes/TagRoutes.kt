@@ -1,19 +1,24 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.ResourceRevision
+import com.typewritermc.library.Tag
+import com.typewritermc.library.TagId
 import com.typewritermc.realm.repository.TagCreateResult
 import com.typewritermc.realm.repository.TagDeleteResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.TagUpdateResult
 import com.typewritermc.realm.repository.utils.invalidRecordId
+import com.typewritermc.realm.repository.utils.toSkirRecordId
+import com.typewritermc.realm.repository.utils.toTagId
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpan
-import skirout.kernel.v1.color.Color
+import com.typewritermc.types.Color
 import skirout.library.v1.book.WatchBooksResponse
 import skirout.library.v1.tag.CreateTagResponse
 import skirout.library.v1.tag.DeleteTagResponse
 import skirout.library.v1.tag.Placement
-import skirout.library.v1.tag.Tag
 import skirout.library.v1.tag.TagValidationError
 import skirout.library.v1.tag.UpdateTagResponse
 import skirout.library.v1.tag.WatchTagResponse
@@ -27,16 +32,16 @@ internal class TagRoutes(
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             watch(contracts.watchTags) {
-                WatchTagsResponse.ListWrapper(childSpan("db.tag.list") { tags.listTags() })
+                WatchTagsResponse.ListWrapper(childSpan("db.tag.list") { tags.listTags() }.map(Tag::toSkir))
             }
             watch(contracts.watchTag) { call ->
                 call.request.tagId.invalidRecordId("tag")?.let {
                     return@watch WatchTagResponse.InvalidRecordIdErrorWrapper(it)
                 }
                 val tag =
-                    childSpan("db.tag.get") { tags.getTag(call.request.tagId) }
+                    childSpan("db.tag.get") { tags.getTag(call.request.tagId.toTagId()) }
                         ?: return@watch WatchTagResponse.createTagNotFoundError(tagId = call.request.tagId)
-                WatchTagResponse.InitialWrapper(tag)
+                WatchTagResponse.InitialWrapper(tag.toSkir())
             }
             unary(contracts.createTag) { call -> create(call) }
             unary(contracts.updateTag) { call -> update(call) }
@@ -57,17 +62,23 @@ internal class TagRoutes(
         request.parentIds.invalidRecordId("tag")?.let {
             return CreateTagResponse.InvalidRecordIdErrorWrapper(it)
         }
-        val missing = missingParents(request.parentIds)
-        if (missing.isNotEmpty()) return CreateTagResponse.createParentsNotFoundError(parentIds = missing)
+        val parentIds = request.parentIds.mapTo(linkedSetOf()) { it.toTagId() }
+        val missing = missingParents(parentIds)
+        if (missing.isNotEmpty()) {
+            return CreateTagResponse.createParentsNotFoundError(parentIds = missing.map { it.toSkirRecordId() })
+        }
         val result =
             childSpan("db.tag.create") {
                 tags.createTag(
-                    request.name,
-                    request.color ?: Color(argb = 0),
-                    request.parentIds,
-                    placement,
+                    LibraryName(request.name),
+                    request.color?.toLibrary() ?: Color(argb = 0u),
+                    parentIds,
+                    placement.toLibrary(),
                     encodeEvents = { tag ->
-                        tagEvents(WatchTagsResponse.AddWrapper(tag), WatchTagResponse.UpdateWrapper(tag))
+                        tagEvents(
+                            WatchTagsResponse.AddWrapper(tag.toSkir()),
+                            WatchTagResponse.UpdateWrapper(tag.toSkir()),
+                        )
                     },
                 )
             }
@@ -90,10 +101,12 @@ internal class TagRoutes(
                 }
 
                 is TagCreateResult.ParentsNotFound -> {
-                    return CreateTagResponse.createParentsNotFoundError(parentIds = result.parentIds)
+                    return CreateTagResponse.createParentsNotFoundError(
+                        parentIds = result.parentIds.map { it.toSkirRecordId() },
+                    )
                 }
             }
-        return CreateTagResponse.SuccessWrapper(tag)
+        return CreateTagResponse.SuccessWrapper(tag.toSkir())
     }
 
     context(main: MainSpanScope)
@@ -111,22 +124,25 @@ internal class TagRoutes(
         request.parentIds.invalidRecordId("tag")?.let {
             return UpdateTagResponse.InvalidRecordIdErrorWrapper(it)
         }
+        validate(request.name, request.placement)?.let {
+            return UpdateTagResponse.ValidationErrorWrapper(it)
+        }
         val result =
             childSpan("db.tag.update") {
                 tags.updateTag(
                     expectedRevision = request.expectedRevision,
                     Tag(
-                        tagId = request.tagId,
-                        revision = request.expectedRevision,
-                        name = request.name,
-                        color = request.color,
-                        parentIds = request.parentIds,
-                        placement = request.placement,
+                        id = request.tagId.toTagId(),
+                        revision = ResourceRevision(request.expectedRevision),
+                        name = LibraryName(request.name),
+                        color = request.color.toLibrary(),
+                        parents = request.parentIds.mapTo(linkedSetOf()) { it.toTagId() },
+                        placement = request.placement.toLibrary(),
                     ),
                     encodeEvents = { updated ->
                         tagEvents(
-                            WatchTagsResponse.UpdateWrapper(updated),
-                            WatchTagResponse.UpdateWrapper(updated),
+                            WatchTagsResponse.UpdateWrapper(updated.toSkir()),
+                            WatchTagResponse.UpdateWrapper(updated.toSkir()),
                         )
                     },
                 )
@@ -140,7 +156,7 @@ internal class TagRoutes(
                 is TagUpdateResult.Conflict -> {
                     return UpdateTagResponse.createConflictError(
                         expectedRevision = request.expectedRevision,
-                        actual = result.actual,
+                        actual = result.actual.toSkir(),
                     )
                 }
 
@@ -161,14 +177,16 @@ internal class TagRoutes(
                 }
 
                 is TagUpdateResult.ParentsNotFound -> {
-                    return UpdateTagResponse.createParentsNotFoundError(parentIds = result.parentIds)
+                    return UpdateTagResponse.createParentsNotFoundError(
+                        parentIds = result.parentIds.map { it.toSkirRecordId() },
+                    )
                 }
 
                 TagUpdateResult.InheritanceCycle -> {
                     return UpdateTagResponse.ValidationErrorWrapper(TagValidationError.INHERITANCE_CYCLE)
                 }
             }
-        return UpdateTagResponse.SuccessWrapper(tag)
+        return UpdateTagResponse.SuccessWrapper(tag.toSkir())
     }
 
     context(main: MainSpanScope)
@@ -186,7 +204,7 @@ internal class TagRoutes(
         when (
             val result =
                 childSpan("db.tag.delete") {
-                    tags.deleteTag(id) { deletion -> deletionEvents(id, deletion) }
+                    tags.deleteTag(id.toTagId()) { deletion -> deletionEvents(id, deletion) }
                 }
         ) {
             is TagDeleteResult.Success -> Unit
@@ -196,8 +214,7 @@ internal class TagRoutes(
     }
 
     context(main: MainSpanScope)
-    private suspend fun missingParents(parentIds: List<skirout.kernel.v1.record_id.RecordId>) =
-        childSpan("db.tag.validate") { tags.findMissing(parentIds) }
+    private suspend fun missingParents(parentIds: Set<TagId>) = childSpan("db.tag.validate") { tags.findMissing(parentIds) }
 
     private fun tagEvents(
         collection: WatchTagsResponse,
@@ -213,15 +230,20 @@ internal class TagRoutes(
     ) = buildList {
         addAll(tagEvents(WatchTagsResponse.RemoveWrapper(id), WatchTagResponse.RemoveWrapper(id)))
         deletion.childTags.forEach { child ->
-            addAll(tagEvents(WatchTagsResponse.UpdateWrapper(child), WatchTagResponse.UpdateWrapper(child)))
+            addAll(
+                tagEvents(
+                    WatchTagsResponse.UpdateWrapper(child.toSkir()),
+                    WatchTagResponse.UpdateWrapper(child.toSkir()),
+                ),
+            )
         }
         deletion.books.forEach { book ->
-            add(contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.UpdateWrapper(book)))
+            add(contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.UpdateWrapper(book.toSkir())))
             add(
                 contracts.watchBook.encodeUpdate(
                     realmAddress,
                     skirout.library.v1.book.WatchBookResponse
-                        .UpdateWrapper(book),
+                        .UpdateWrapper(book.toSkir()),
                 ),
             )
         }

@@ -20,18 +20,23 @@ import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.discovery.runtime.RuntimeRegistrar
-import com.typewritermc.elements.ElementKind
+import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.EntryOutput
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.library.PageId
+import com.typewritermc.library.PageRef
+import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.NominalTypeKind
 import com.typewritermc.types.TypeDecodingContext
 import com.typewritermc.types.TypeEncodingContext
+import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
@@ -40,10 +45,10 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlin.uuid.Uuid
 
 val SyntheticDiscoveryTest by testSuite {
     test("generates the element descriptor and stable concrete identity") {
-        SyntheticEntryElementPrototype.descriptor.kind shouldBe ElementKind.ENTRY
         SyntheticEntryElementPrototype.descriptor.name shouldBe "Synthetic Entry"
         SyntheticEntryElementPrototype.type.id shouldBe
             TypeId.Declared(
@@ -88,7 +93,7 @@ val SyntheticDiscoveryTest by testSuite {
             val output = RecordingOutput()
             val context = TestEntryExecutionContext(this, output)
             with(context) {
-                SyntheticEntry(RepeatedMessage("hello", 2)).execute()
+                SyntheticEntry(elementId("00000000000000000000000000000001"), RepeatedMessage("hello", 2)).execute()
             }
 
             output.values shouldBe listOf(RepeatedMessage("hello", 2))
@@ -114,14 +119,78 @@ val SyntheticDiscoveryTest by testSuite {
                         definition = parent,
                     ),
                 ),
+                (contribution.definitions + typeContribution("elements.cbor").definitions).distinctBy { it.id },
             )
-        val source = SyntheticEntry(LiteralMessage("hello"))
+        val source = SyntheticEntry(elementId("00000000000000000000000000000002"), LiteralMessage("hello"))
 
         val encoded = with(CodecContext(registry)) { SyntheticEntryElementPrototype.encode(source) }
         val message = (encoded as DataValue.Record).fields.getValue("message") as DataValue.Polymorphic
 
         message.concreteType shouldBe LiteralMessageTypewriterPrototype.type
         with(CodecContext(registry)) { SyntheticEntryElementPrototype.decode(encoded) } shouldBe source
+    }
+
+    test("encodes exact page references as scalar page ids") {
+        val definitions = typeContribution("elements.cbor").definitions
+        val entryDefinition =
+            definitions.single {
+                it.id.id == TypeId.Declared(DeclaredTypeId.parse("019d3a87000270008000000000000002"))
+            }
+        val pageType =
+            (entryDefinition.representation as TypeExpression.Record)
+                .fields
+                .single { it.name == "page" }
+                .type as TypeExpression.Named
+        val referencedKind = pageType.reference.arguments.single() as TypeExpression.Named
+        referencedKind.reference.id shouldBe
+            TypeId.Declared(DeclaredTypeId.parse("019d3a87000170008000000000000001"))
+        val registry =
+            TypePrototypeRegistry(
+                listOf(SyntheticPageReferenceEntryElementPrototype),
+                definitions,
+            )
+        val source =
+            SyntheticPageReferenceEntry(
+                elementId("00000000000000000000000000000003"),
+                PageRef<SyntheticPageKind>(PageId("page:opening")),
+            )
+
+        val encoded = with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.encode(source) }
+        val fields = (encoded as DataValue.Record).fields
+
+        fields.getValue("id") shouldBe DataValue.StringValue("00000000000000000000000000000003")
+        fields.getValue("page") shouldBe DataValue.StringValue("page:opening")
+        with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.decode(encoded) } shouldBe source
+    }
+
+    test("loads generated page providers with contribution provenance") {
+        val origin = ArtifactId("typewritermc:conformance")
+        val sourcePart = "loaded"
+        val discovery =
+            TypeContributionAssembler.assemble(
+                listOf(
+                    KeyedTypeContribution(
+                        key = ContributionKey(origin, sourcePart, ProducerId("types"), ContributionName("pages.cbor")),
+                        contribution = typeContribution("pages.cbor"),
+                    ),
+                ),
+            )
+        val deployment =
+            DiscoveryModuleLoader().load(
+                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
+                domain = DiscoveryDomains.Realm,
+                discovery = discovery,
+            )
+
+        deployment.use {
+            val provider =
+                it.application.koin
+                    .getAll<PageProvider>()
+                    .single()
+            provider.namespace shouldBe origin.value
+            provider.sourcePart shouldBe sourcePart
+            provider.declarationName shouldBe "syntheticPage"
+        }
     }
 
     test("loads generated facets and registrars only for execution discovery") {
@@ -271,11 +340,13 @@ val SyntheticDiscoveryTest by testSuite {
                         ),
                 ) shouldBe DataValue.Record(mapOf("value" to DataValue.StringValue("gogo")))
 
-                registry.requireCommand(publishMessageCapability.id).invoke(
-                    context = SyntheticCapabilityContext,
-                    prototypes = it.prototypes,
-                    payload = DataValue.Record(mapOf("value" to DataValue.StringValue("saved"))),
-                ).instructions shouldBe
+                registry
+                    .requireCommand(publishMessageCapability.id)
+                    .invoke(
+                        context = SyntheticCapabilityContext,
+                        prototypes = it.prototypes,
+                        payload = DataValue.Record(mapOf("value" to DataValue.StringValue("saved"))),
+                    ).instructions shouldBe
                     listOf(PanelInstruction.Notify(NotificationSeverity.SUCCESS, "saved"))
             }
         }
@@ -283,6 +354,8 @@ val SyntheticDiscoveryTest by testSuite {
 }
 
 private fun declaredContribution() = typeContribution("declared.cbor")
+
+private fun elementId(value: String) = ElementInstanceId(Uuid.parseHex(value))
 
 private fun typeContribution(name: String) =
     TypeDiscoveryContributionCodec.decode(

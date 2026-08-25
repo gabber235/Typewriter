@@ -30,10 +30,16 @@ val serviceBuilds =
             "elements",
             listOf(":element-types", ":element-codegen", ":element-testing"),
         ),
+        ServiceBuild("library", "library", listOf(":library-types")),
         ServiceBuild(
             "presentation",
             "presentation",
             listOf(":presentation-types", ":presentation-codegen", ":presentation-testing"),
+        ),
+        ServiceBuild(
+            "pages",
+            "pages",
+            listOf(":page-types", ":page-codegen", ":page-testing"),
         ),
         ServiceBuild(
             "realm-capabilities",

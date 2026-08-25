@@ -93,7 +93,7 @@ internal fun Project.configureExtensionProject(declaration: DeclaredArtifact) {
         }
     }
 
-    val manifest = registerManifestTask(declaration, relationships)
+    val manifest = registerManifestTask(declaration, relationships, files())
     configureThinJar(manifest, created.values)
     tasks.named("jar") { task ->
         task.outputs.cacheIf { true }

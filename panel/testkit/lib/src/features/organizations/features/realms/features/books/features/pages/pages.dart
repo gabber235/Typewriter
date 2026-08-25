@@ -11,6 +11,28 @@ import "package:typewriter_testkit/src/features/organizations/features/realms/fe
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/scene.dart";
 import "package:typewriter_testkit/src/shared/testing/mock_utils.dart";
 
+enum PageType {
+  sequence("019d3a87001070008000000000000010"),
+  static("019d3a87001170008000000000000011"),
+  scene("019d3a87001270008000000000000012"),
+  manifest("019d3a87001370008000000000000013");
+
+  const PageType(this.id);
+
+  final String id;
+
+  PageKindRef get kind => PageKindRef(id: id, revision: 1);
+
+  String get displayName => name;
+
+  static PageType fromKind(PageKindRef kind) =>
+      values.firstWhere((value) => value.kind == kind);
+}
+
+extension PageFixtureType on Page {
+  PageType get type => PageType.fromKind(kind);
+}
+
 Page generateRandomPage([PageType? pageType]) {
   final pageTypes = PageType.values.toList();
   final type = pageType ?? pageTypes.randomOrNull()!;
@@ -29,9 +51,10 @@ Page generateRandomPage([PageType? pageType]) {
 
   return Page(
     pageId: recordId("page:${faker.guid.guid()}"),
+    revision: 1,
     bookId: recordId("book:${faker.guid.guid()}"),
     name: pageName,
-    type: type,
+    kind: type.kind,
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
@@ -80,7 +103,6 @@ class PagesMock extends Pages {
   @override
   Future<void> updatePage({
     String? name,
-    PageType? type,
     String? chapter,
     int? priority,
   }) async {

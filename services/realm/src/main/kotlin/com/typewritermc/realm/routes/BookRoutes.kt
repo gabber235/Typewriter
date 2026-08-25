@@ -1,15 +1,21 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.library.Book
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.ResourceRevision
 import com.typewritermc.realm.repository.BookCreateResult
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.BookUpdateResult
 import com.typewritermc.realm.repository.TagRepository
 import com.typewritermc.realm.repository.utils.invalidRecordId
+import com.typewritermc.realm.repository.utils.toBookId
+import com.typewritermc.realm.repository.utils.toSkirRecordId
+import com.typewritermc.realm.repository.utils.toTagId
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.childSpan
-import skirout.kernel.v1.color.Color
-import skirout.library.v1.book.Book
+import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 import skirout.library.v1.book.BookValidationError
 import skirout.library.v1.book.CreateBookRequest
 import skirout.library.v1.book.CreateBookResponse
@@ -28,16 +34,16 @@ internal class BookRoutes(
         with(builder) {
             watch(contracts.watchBooks) {
                 val result = childSpan("db.book.list") { books.listBooks() }
-                WatchBooksResponse.ListWrapper(result)
+                WatchBooksResponse.ListWrapper(result.map(Book::toSkir))
             }
             watch(contracts.watchBook) { call ->
                 call.request.bookId.invalidRecordId("book")?.let {
                     return@watch WatchBookResponse.InvalidRecordIdErrorWrapper(it)
                 }
                 val book =
-                    childSpan("db.book.get") { books.getBook(call.request.bookId) }
+                    childSpan("db.book.get") { books.getBook(call.request.bookId.toBookId()) }
                         ?: return@watch WatchBookResponse.createBookNotFoundError(bookId = call.request.bookId)
-                WatchBookResponse.InitialWrapper(book)
+                WatchBookResponse.InitialWrapper(book.toSkir())
             }
             unary(contracts.createBook) { call -> create(call) }
             unary(contracts.updateBook) { call -> update(call) }
@@ -52,23 +58,32 @@ internal class BookRoutes(
         >,
     ): CreateBookResponse {
         val request = call.request
-        if (request.title.isBlank()) {
+        val title = runCatching { LibraryName(request.title) }.getOrNull()
+        if (title == null) {
             return CreateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
         }
         request.tagIds.invalidRecordId("tag")?.let {
             return CreateBookResponse.InvalidRecordIdErrorWrapper(it)
         }
-        val missing = childSpan("db.tag.validate") { tags.findMissing(request.tagIds) }
-        if (missing.isNotEmpty()) return CreateBookResponse.createTagsNotFoundError(tagIds = missing)
+        val tagIds = request.tagIds.mapTo(linkedSetOf()) { it.toTagId() }
+        val missing = childSpan("db.tag.validate") { tags.findMissing(tagIds) }
+        if (missing.isNotEmpty()) {
+            return CreateBookResponse.createTagsNotFoundError(tagIds = missing.map { it.toSkirRecordId() })
+        }
         val result =
             childSpan("db.book.create") {
                 books.createBook(
-                    title = request.title,
-                    icon = request.icon?.takeIf(String::isNotBlank) ?: "mdi:book",
-                    color = request.color ?: Color(argb = 0),
-                    tagIds = request.tagIds,
+                    title = title,
+                    icon = Icon.parse(request.icon?.takeIf(String::isNotBlank) ?: "mdi:book"),
+                    color = request.color?.toLibrary() ?: Color(argb = 0u),
+                    tagIds = tagIds,
                     encodeEvents = { book ->
-                        listOf(contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.AddWrapper(book)))
+                        listOf(
+                            contracts.watchBooks.encodeUpdate(
+                                realmAddress,
+                                WatchBooksResponse.AddWrapper(book.toSkir()),
+                            ),
+                        )
                     },
                 )
             }
@@ -87,10 +102,12 @@ internal class BookRoutes(
                 }
 
                 is BookCreateResult.TagsNotFound -> {
-                    return CreateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
+                    return CreateBookResponse.createTagsNotFoundError(
+                        tagIds = result.tagIds.map { it.toSkirRecordId() },
+                    )
                 }
             }
-        return CreateBookResponse.SuccessWrapper(book)
+        return CreateBookResponse.SuccessWrapper(book.toSkir())
     }
 
     context(main: MainSpanScope)
@@ -108,22 +125,31 @@ internal class BookRoutes(
         request.tagIds.invalidRecordId("tag")?.let {
             return UpdateBookResponse.InvalidRecordIdErrorWrapper(it)
         }
+        val title =
+            runCatching { LibraryName(request.title) }.getOrNull()
+                ?: return UpdateBookResponse.ValidationErrorWrapper(BookValidationError.TITLE_REQUIRED)
         val result =
             childSpan("db.book.update") {
                 books.updateBook(
                     expectedRevision = request.expectedRevision,
                     Book(
-                        bookId = request.bookId,
-                        revision = request.expectedRevision,
-                        title = request.title,
-                        icon = request.icon,
-                        color = request.color,
-                        tagIds = request.tagIds,
+                        id = request.bookId.toBookId(),
+                        revision = ResourceRevision(request.expectedRevision),
+                        title = title,
+                        icon = Icon.parse(request.icon),
+                        color = request.color.toLibrary(),
+                        tags = request.tagIds.mapTo(linkedSetOf()) { it.toTagId() },
                     ),
                     encodeEvents = { updated ->
                         listOf(
-                            contracts.watchBooks.encodeUpdate(realmAddress, WatchBooksResponse.UpdateWrapper(updated)),
-                            contracts.watchBook.encodeUpdate(realmAddress, WatchBookResponse.UpdateWrapper(updated)),
+                            contracts.watchBooks.encodeUpdate(
+                                realmAddress,
+                                WatchBooksResponse.UpdateWrapper(updated.toSkir()),
+                            ),
+                            contracts.watchBook.encodeUpdate(
+                                realmAddress,
+                                WatchBookResponse.UpdateWrapper(updated.toSkir()),
+                            ),
                         )
                     },
                 )
@@ -137,7 +163,7 @@ internal class BookRoutes(
                 is BookUpdateResult.Conflict -> {
                     return UpdateBookResponse.createConflictError(
                         expectedRevision = request.expectedRevision,
-                        actual = result.actual,
+                        actual = result.actual.toSkir(),
                     )
                 }
 
@@ -154,9 +180,11 @@ internal class BookRoutes(
                 }
 
                 is BookUpdateResult.TagsNotFound -> {
-                    return UpdateBookResponse.createTagsNotFoundError(tagIds = result.tagIds)
+                    return UpdateBookResponse.createTagsNotFoundError(
+                        tagIds = result.tagIds.map { it.toSkirRecordId() },
+                    )
                 }
             }
-        return UpdateBookResponse.SuccessWrapper(updated)
+        return UpdateBookResponse.SuccessWrapper(updated.toSkir())
     }
 }

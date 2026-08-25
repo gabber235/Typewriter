@@ -71,12 +71,25 @@ Stream<RealmEditorCatalogState> realmEditorCatalogForType(
       ]),
     );
   }
-  cache.request(RealmEditorCatalogRequest(types: {rootType}));
+  ref.watch(
+    realmEditorCatalogLeaseProvider(
+      RealmEditorCatalogRequest(types: {rootType}),
+    ),
+  );
   return cache.states;
 }
 
-void requestRealmEditorCatalog(Ref ref, RealmEditorCatalogRequest request) =>
-    ref.read(realmEditorCatalogCacheProvider)?.request(request);
+@riverpod
+RealmEditorCatalogLease? realmEditorCatalogLease(
+  Ref ref,
+  RealmEditorCatalogRequest request,
+) {
+  final cache = ref.watch(realmEditorCatalogCacheProvider);
+  if (cache == null) return null;
+  final lease = cache.acquire(request);
+  ref.onDispose(lease.close);
+  return lease;
+}
 
 final activeRealmEditorRuntimeProvider = Provider<EditorRealmRuntime?>((ref) {
   final organizationId = ref.watch(organizationIdProvider);

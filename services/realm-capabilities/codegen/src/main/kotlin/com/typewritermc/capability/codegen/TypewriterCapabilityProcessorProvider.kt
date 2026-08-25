@@ -43,8 +43,9 @@ import com.typewritermc.capability.RealmSearch
 import com.typewritermc.capability.RealmSearchCapabilityProvider
 import com.typewritermc.capability.RealmSearchCapabilityRef
 import com.typewritermc.capability.RealmSearchContext
-import com.typewritermc.capability.RealmSearchRequest
 import com.typewritermc.capability.RealmSearchQuery
+import com.typewritermc.capability.RealmSearchRequest
+import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
 import com.typewritermc.discovery.TypeDiscoveryContribution
@@ -149,7 +150,11 @@ private class TypewriterCapabilityProcessor(
         sourcePart: String,
     ): CapabilityDeclaration? {
         val kind = CapabilityKind.entries.single { function.hasAnnotation(it.annotationName) }
-        val parameterType = function.parameters.single().type.resolve()
+        val parameterType =
+            function.parameters
+                .single()
+                .type
+                .resolve()
         val returnType = function.returnType?.resolve()
         val requestType: KSType
         val resultType: KSType?
@@ -248,23 +253,26 @@ private class TypewriterCapabilityProcessor(
                 FunSpec
                     .builder("module")
                     .addModifiers(KModifier.OVERRIDE)
+                    .addParameter("contribution", ContributionKey::class)
                     .returns(org.koin.core.module.Module::class)
                     .addCode(
-                        CodeBlock.builder().apply {
-                            add("return module {\n")
-                            indent()
-                            add("singleOf(::%T)\n", ownerType)
-                            declarations.sortedBy(CapabilityDeclaration::providerName).forEach { declaration ->
-                                add("singleOf(::%T) {\n", ClassName(ownerType.packageName, declaration.providerName))
+                        CodeBlock
+                            .builder()
+                            .apply {
+                                add("return module {\n")
                                 indent()
-                                add("named(%S)\n", "capability.${declaration.id}")
-                                add("bind<%T>()\n", RealmCapabilityProvider::class)
+                                add("singleOf(::%T)\n", ownerType)
+                                declarations.sortedBy(CapabilityDeclaration::providerName).forEach { declaration ->
+                                    add("singleOf(::%T) {\n", ClassName(ownerType.packageName, declaration.providerName))
+                                    indent()
+                                    add("named(%S)\n", "capability.${declaration.id}")
+                                    add("bind<%T>()\n", RealmCapabilityProvider::class)
+                                    unindent()
+                                    add("}\n")
+                                }
                                 unindent()
                                 add("}\n")
-                            }
-                            unindent()
-                            add("}\n")
-                        }.build(),
+                            }.build(),
                     ).build(),
             ).build()
 
@@ -303,10 +311,17 @@ private data class CapabilityDeclaration(
     fun referenceProperty(): PropertySpec {
         val type =
             when (kind) {
-                CapabilityKind.SEARCH -> RealmSearchCapabilityRef::class.asClassName().parameterizedBy(requestType, requireNotNull(resultType))
-                CapabilityKind.COMPUTATION ->
+                CapabilityKind.SEARCH -> {
+                    RealmSearchCapabilityRef::class.asClassName().parameterizedBy(requestType, requireNotNull(resultType))
+                }
+
+                CapabilityKind.COMPUTATION -> {
                     RealmComputationCapabilityRef::class.asClassName().parameterizedBy(requestType, requireNotNull(resultType))
-                CapabilityKind.COMMAND -> RealmCommandCapabilityRef::class.asClassName().parameterizedBy(requestType)
+                }
+
+                CapabilityKind.COMMAND -> {
+                    RealmCommandCapabilityRef::class.asClassName().parameterizedBy(requestType)
+                }
             }
         val constructor =
             when (kind) {
@@ -321,6 +336,7 @@ private data class CapabilityDeclaration(
                     CapabilityKind.SEARCH,
                     CapabilityKind.COMPUTATION,
                     -> "%T(%T(%S), %T::class, %T::class)"
+
                     CapabilityKind.COMMAND -> "%T(%T(%S), %T::class)"
                 },
                 constructor,
@@ -368,6 +384,7 @@ private data class CapabilityDeclaration(
                     CapabilityKind.SEARCH,
                     CapabilityKind.COMPUTATION,
                     -> "return %T(id, prototypes.require(%T::class).type, prototypes.require(%T::class).type)"
+
                     CapabilityKind.COMMAND -> "return %T(id, prototypes.require(%T::class).type)"
                 },
                 descriptorType,
@@ -453,7 +470,11 @@ private fun KSType.canonicalName(): String =
 
 private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean = annotations.any { it.qualifiedName() == qualifiedName }
 
-private fun KSAnnotation.qualifiedName(): String? = annotationType.resolve().declaration.qualifiedName?.asString()
+private fun KSAnnotation.qualifiedName(): String? =
+    annotationType
+        .resolve()
+        .declaration.qualifiedName
+        ?.asString()
 
 private fun String.sha256(): String =
     MessageDigest

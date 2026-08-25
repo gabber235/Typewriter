@@ -45,7 +45,7 @@ class PrototypeRegistryLoader {
                         definition = definition,
                     ) as TypePrototype<*>
                 }
-        return TypePrototypeRegistry(concrete + abstracts)
+        return TypePrototypeRegistry(concrete + abstracts, discovery.catalog.definitions)
     }
 }
 

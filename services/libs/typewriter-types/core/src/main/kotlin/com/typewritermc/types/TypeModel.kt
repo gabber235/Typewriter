@@ -35,6 +35,11 @@ annotation class TypewriterType(
     val revision: Int = 1,
 )
 
+/** Declares that a Kotlin type uses a logical string serializer in Typewriter data. */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.BINARY)
+annotation class TypewriterString
+
 @Serializable
 enum class BuiltinTypeId {
     OPTION,

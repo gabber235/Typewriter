@@ -24,7 +24,7 @@ internal fun Project.configureRealmProject(declaration: DeclaredArtifact) {
         configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, emptyList())
+    val manifest = registerManifestTask(declaration, emptyList(), files())
     configureHostedJar(manifest)
 }
 
@@ -40,8 +40,12 @@ internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
         configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, relationships)
+    val manifest = registerManifestTask(declaration, relationships, resolveEngineCoreArtifacts())
     configureHostedJar(manifest)
+}
+
+internal fun Project.configureEngineCoreProject() {
+    configureMainCodegen("$group:$name", SourceSet.MAIN_SOURCE_SET_NAME)
 }
 
 internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
@@ -52,7 +56,7 @@ internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, relationships)
+    val manifest = registerManifestTask(declaration, relationships, files())
     configureThinJar(manifest, emptyList())
 }
 
@@ -123,22 +127,43 @@ internal fun Project.configureRelationships(
     }
 
 internal fun Project.configureMainCodegen(declaration: DeclaredArtifact) {
+    configureMainCodegen(declaration.id.value, SourceSet.MAIN_SOURCE_SET_NAME)
+}
+
+private fun Project.configureMainCodegen(
+    artifactId: String,
+    sourcePart: String,
+) {
     configurations.matching { it.name == "ksp" }.configureEach {
         it.extendsFrom(configurations.getByName(PROCESSORS_CONFIGURATION))
     }
-    configureKspContext(declaration, mapOf("kspKotlin" to SourceSet.MAIN_SOURCE_SET_NAME))
+    configureKspContext(artifactId, mapOf("kspKotlin" to sourcePart))
 }
 
 internal fun Project.configureKspContext(
     declaration: DeclaredArtifact,
     sourcePartsByTask: Map<String, String>,
+) = configureKspContext(declaration.id.value, sourcePartsByTask)
+
+private fun Project.configureKspContext(
+    artifactId: String,
+    sourcePartsByTask: Map<String, String>,
 ) {
     tasks.withType(KspAATask::class.java).configureEach { task ->
         val sourcePart = sourcePartsByTask[task.name] ?: return@configureEach
-        task.kspConfig.processorOptions.put("typewriter.artifactId", declaration.id.value)
+        task.kspConfig.processorOptions.put("typewriter.artifactId", artifactId)
         task.kspConfig.processorOptions.put("typewriter.sourcePart", sourcePart)
     }
 }
+
+private fun Project.resolveEngineCoreArtifacts(): FileCollection =
+    configurations.create("imprintEngineCoreArtifacts") { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = true
+        configuration.isTransitive = false
+        configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
+        configuration.description = "Resolves the direct engine core contribution artifact."
+    }
 
 internal fun Project.configureThinJar(
     manifest: org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask>,

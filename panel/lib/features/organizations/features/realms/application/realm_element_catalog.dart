@@ -4,8 +4,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "realm_element_catalog.freezed.dart";
 
-enum ElementKind { entry, cue }
-
 @freezed
 sealed class ElementAvailability with _$ElementAvailability {
   const factory ElementAvailability.always() = ElementAlwaysAvailable;
@@ -29,7 +27,6 @@ sealed class ElementAvailability with _$ElementAvailability {
 abstract class DiscoveredElementDefinition with _$DiscoveredElementDefinition {
   const factory DiscoveredElementDefinition({
     required String id,
-    required ElementKind kind,
     required ResolvedTypeRef type,
     required String name,
     required String description,

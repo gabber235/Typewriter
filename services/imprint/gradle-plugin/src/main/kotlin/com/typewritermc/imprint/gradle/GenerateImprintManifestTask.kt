@@ -23,6 +23,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -44,6 +45,7 @@ private const val HOSTED_RUNTIME_PROVIDER = "META-INF/services/com.typewritermc.
 internal fun Project.registerManifestTask(
     declaration: DeclaredArtifact,
     relationships: List<ConfiguredRelationship>,
+    engineCoreArtifacts: FileCollection,
 ): org.gradle.api.tasks.TaskProvider<GenerateImprintManifestTask> {
     val productionParts =
         if (declaration.kind == ArtifactKind.EXTENSION) {
@@ -95,6 +97,7 @@ internal fun Project.registerManifestTask(
         task.relationshipArtifacts.from(relationships.map(ConfiguredRelationship::directFiles))
         task.graphArtifacts.from(relationships.map(ConfiguredRelationship::configuration))
         task.contributionFiles.from(contributionFiles)
+        task.engineCoreArtifacts.from(engineCoreArtifacts)
         if (declaration.kind == ArtifactKind.REALM || declaration.kind == ArtifactKind.ENGINE) {
             task.providerArtifacts.from(
                 configurations.getByName("runtimeClasspath"),
@@ -142,6 +145,10 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val engineCoreArtifacts: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val providerArtifacts: ConfigurableFileCollection
 
     @get:OutputFile
@@ -151,14 +158,16 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
     fun generate() {
         val id = ArtifactId(artifactId.get())
         val version = ArtifactVersion(artifactVersion.get())
+        val kind = ArtifactKind.valueOf(artifactKind.get())
         val allManifests = readGraphManifests()
         val relationships = readRelationships(allManifests)
         val localContributions = readContributions(id)
-        if (ArtifactKind.valueOf(artifactKind.get()) in setOf(ArtifactKind.REALM, ArtifactKind.ENGINE)) {
+        val engineCoreContributions = if (kind == ArtifactKind.ENGINE) readEngineCoreContributions(id) else emptyList()
+        if (kind in setOf(ArtifactKind.REALM, ArtifactKind.ENGINE)) {
             validateHostedRuntimeProvider()
         }
         val manifest =
-            when (val kind = ArtifactKind.valueOf(artifactKind.get())) {
+            when (kind) {
                 ArtifactKind.REALM -> {
                     RealmManifest(
                         id = id,
@@ -169,7 +178,7 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
                 }
 
                 ArtifactKind.ENGINE -> {
-                    engineManifest(id, version, relationships, allManifests, localContributions)
+                    engineManifest(id, version, relationships, allManifests, localContributions + engineCoreContributions)
                 }
 
                 ArtifactKind.CAPABILITY -> {
@@ -500,6 +509,40 @@ abstract class GenerateImprintManifestTask : DefaultTask() {
                 }
                 GeneratedContribution(origin, sourcePart, producer, name, file.readBytes())
             }.let(::canonicalContributions)
+
+    private fun readEngineCoreContributions(origin: ArtifactId): List<GeneratedContribution> {
+        if (engineCoreArtifacts.isEmpty) return emptyList()
+        val artifact =
+            engineCoreArtifacts.files.singleOrNull()
+                ?: throw GradleException("An engine must resolve exactly one direct engine core artifact.")
+        if (!artifact.isFile || !artifact.name.endsWith(".jar")) {
+            throw GradleException("Engine core contribution artifact ${artifact.name} must be a JAR.")
+        }
+        val prefix = "$IMPRINT_CONTRIBUTIONS_PATH/"
+        return ZipFile(artifact)
+            .use { archive ->
+                archive
+                    .entries()
+                    .asSequence()
+                    .filterNot { it.isDirectory }
+                    .filter { it.name.startsWith(prefix) }
+                    .map { entry ->
+                        val contributionPath = entry.name.removePrefix(prefix)
+                        val producer = contributionPath.substringBefore('/')
+                        val name = contributionPath.substringAfter('/', "")
+                        if (producer.isBlank() || name.isBlank()) {
+                            throw GradleException("Unsafe engine core contribution path ${entry.name}.")
+                        }
+                        GeneratedContribution(
+                            origin = origin,
+                            sourcePart = "main",
+                            producer = producer,
+                            name = "core/$name",
+                            payload = archive.getInputStream(entry).use { it.readBytes() },
+                        )
+                    }.toList()
+            }.let(::canonicalContributions)
+    }
 
     private fun canonicalContributions(contributions: List<GeneratedContribution>): List<GeneratedContribution> {
         val duplicates =

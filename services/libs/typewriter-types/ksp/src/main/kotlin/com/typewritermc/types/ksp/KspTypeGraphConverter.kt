@@ -121,6 +121,9 @@ private class ConversionContext(
             classDeclaration.qualifiedName?.asString()
                 ?: return failure(path, "Local and anonymous types require an explicit nominal identity.")
 
+        if (classDeclaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION)) {
+            return logicalString(type, classDeclaration, path)
+        }
         primitive(qualifiedName)?.let { return it }
         collection(type, qualifiedName, path)?.let { return it }
         return nominal(type, classDeclaration, path)
@@ -198,6 +201,30 @@ private class ConversionContext(
             visiting.remove(identity)
         }
         return TypeExpression.Named(reference)
+    }
+
+    private fun logicalString(
+        type: KSType,
+        declaration: KSClassDeclaration,
+        path: List<String>,
+    ): TypeExpression? {
+        val identity =
+            runCatching { identityPolicy.identity(declaration) }
+                .getOrElse { return failure(path, it.message ?: "Could not assign a Typewriter identity.") }
+        val arguments =
+            type.arguments.mapIndexed { index, argument ->
+                argument.type?.resolve()?.let { expression(it, path + "argument $index") } ?: TypeExpression.Any
+            }
+        if (identity !in definitions) {
+            definitions[identity] =
+                TypeDefinition(
+                    id = identity,
+                    kind = NominalTypeKind.CONCRETE,
+                    representation = TypeExpression.StringType(),
+                    parameters = declaration.typeParameters.map { parameter(it, path + identity.sortKey) },
+                )
+        }
+        return TypeExpression.Named(identity.withArguments(arguments.filterNotNull()))
     }
 
     private fun buildDefinition(
@@ -377,6 +404,8 @@ private val ResolvedTypeRef.sortKey: String
             is TypeId.Declared -> "declared::${typeId.id}@$revision"
             is TypeId.Qualified -> "${typeId.namespace}::${typeId.name}@$revision"
         }
+
+private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
 
 private val PRIMITIVE_ARRAYS =
     mapOf(

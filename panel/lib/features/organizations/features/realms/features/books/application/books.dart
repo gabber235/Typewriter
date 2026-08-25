@@ -173,7 +173,7 @@ class Books extends _$Books {
   Future<skir.RecordId> createPage(
     skir.RecordId bookId,
     String name,
-    skir.PageType type,
+    PageKindRef kind,
     String chapter,
     int priority,
   ) async {
@@ -186,7 +186,7 @@ class Books extends _$Books {
     final request = skir.CreatePageRequest(
       bookId: bookId,
       name: name,
-      type: type,
+      kind: kind.toSkir(),
       chapter: chapter,
       priority: priority,
     );

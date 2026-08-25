@@ -7,8 +7,6 @@ import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogWatchUpdate
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
-import skirout.editor.v1.element_catalog.ElementCatalogRequest
-import skirout.editor.v1.element_catalog.ElementCatalogResult
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
 val EditorCatalogRoutesTest by testSuite {
@@ -52,30 +50,6 @@ val EditorCatalogRoutesTest by testSuite {
             }
         }
     }
-
-    test("routes element catalog requests through the injected source") {
-        runTest {
-            val elements =
-                RealmElementCatalogSource {
-                    ElementCatalogResult.createSuccess(
-                        generation = CatalogGeneration(value = "elements"),
-                        entries = emptyList(),
-                    )
-                }
-            RouteFixture(elementCatalog = elements).use { fixture ->
-                val response =
-                    fixture.request(
-                        "editor.elements.fetch",
-                        ElementCatalogRequest(expectedGeneration = null),
-                        ElementCatalogRequest.serializer,
-                        ElementCatalogResult.serializer,
-                    )
-
-                val success = response as ElementCatalogResult.SuccessWrapper
-                success.value.generation.value shouldBe "elements"
-            }
-        }
-    }
 }
 
 private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
@@ -88,6 +62,9 @@ private class FakeRealmEditorCatalogSource : RealmEditorCatalogSource {
             capabilityDefinitions = emptyList(),
             subtypeResults = emptyList(),
             diagnostics = emptyList(),
+            elementEntries = emptyList(),
+            pageEntries = emptyList(),
+            pageDiagnostics = emptyList(),
         )
 
     override suspend fun initialGeneration(request: WatchEditorCatalogRequest): CatalogWatchUpdate =

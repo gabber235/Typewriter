@@ -27,6 +27,19 @@ sealed class RealmEditorCatalogState with _$RealmEditorCatalogState {
   };
 }
 
+final class RealmEditorCatalogLease {
+  RealmEditorCatalogLease._(this._close);
+
+  final void Function() _close;
+  var _closed = false;
+
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    _close();
+  }
+}
+
 final class RealmEditorCatalogCache {
   RealmEditorCatalogCache({required this.source, required this.route});
 
@@ -40,7 +53,13 @@ final class RealmEditorCatalogCache {
   var _epoch = 0;
   var _started = false;
   var _disposed = false;
-  var _requested = RealmEditorCatalogRequest();
+  var _nextLeaseId = 0;
+  final Map<int, RealmEditorCatalogRequest> _requests = {};
+
+  RealmEditorCatalogRequest get _requested => _requests.values.fold(
+    RealmEditorCatalogRequest(),
+    (combined, request) => combined.merge(request),
+  );
 
   Stream<RealmEditorCatalogState> get states => Stream.multi((controller) {
     controller.add(_state);
@@ -65,17 +84,15 @@ final class RealmEditorCatalogCache {
     unawaited(_refresh());
   }
 
-  void request(RealmEditorCatalogRequest request) {
-    if (_disposed) return;
-    final merged = _requested.merge(request);
-    final changed =
-        merged.types.length != _requested.types.length ||
-        merged.presentations.length != _requested.presentations.length ||
-        merged.subtypeQueries.length != _requested.subtypeQueries.length;
-    _requested = merged;
-    if (_started && changed) {
+  RealmEditorCatalogLease acquire(RealmEditorCatalogRequest request) {
+    if (_disposed) return RealmEditorCatalogLease._(() {});
+    final previous = _requested;
+    final id = _nextLeaseId++;
+    _requests[id] = request;
+    if (_started && previous != _requested) {
       unawaited(_refresh(expectedGeneration: _state.snapshot?.generation));
     }
+    return RealmEditorCatalogLease._(() => _requests.remove(id));
   }
 
   Future<void> refresh() =>
@@ -156,12 +173,7 @@ final class RealmEditorCatalogCache {
   void _applyFetchResult(RealmEditorCatalogFetchResult result) {
     switch (result) {
       case RealmEditorCatalogFetched(:final snapshot):
-        final previous = _state.snapshot;
-        _emit(
-          RealmEditorCatalogReady(
-            previous == null ? snapshot : previous.merge(snapshot),
-          ),
-        );
+        _emit(RealmEditorCatalogReady(snapshot));
       case RealmEditorCatalogFetchUnavailable(:final diagnostics):
         _emitUnavailable(diagnostics);
       case RealmEditorCatalogGenerationMismatch(:final currentGeneration):

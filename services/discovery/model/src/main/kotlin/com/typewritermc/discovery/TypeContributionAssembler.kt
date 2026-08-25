@@ -8,10 +8,15 @@ data class KeyedTypeContribution(
     val contribution: TypeDiscoveryContribution,
 )
 
+data class KeyedExecutableBinding(
+    val key: ContributionKey,
+    val binding: ExecutableBinding,
+)
+
 data class AssembledTypeDiscovery(
     val catalog: TypeCatalog,
     val prototypeBindings: List<PrototypeBinding>,
-    val executableBindings: List<ExecutableBinding>,
+    val executableBindings: List<KeyedExecutableBinding>,
 )
 
 object TypeContributionAssembler {
@@ -26,7 +31,7 @@ object TypeContributionAssembler {
 
         val definitions = linkedMapOf<Any, TypeDefinition>()
         val prototypeBindings = linkedMapOf<Any, PrototypeBinding>()
-        val executableBindings = linkedMapOf<Pair<DiscoveryDomainId, String>, ExecutableBinding>()
+        val executableBindings = linkedMapOf<Pair<DiscoveryDomainId, String>, KeyedExecutableBinding>()
         val extensionEligibility = sourceParts.associateBy { it.artifact to it.sourcePart }
         ordered.forEach { keyed ->
             keyed.contribution.definitions.forEach { definition ->
@@ -45,9 +50,10 @@ object TypeContributionAssembler {
             }
             keyed.contribution.executableBindings.forEach { binding ->
                 val identity = binding.domain to binding.localName
-                val previous = executableBindings.putIfAbsent(identity, binding)
-                require(previous == null || previous == binding) {
-                    "Conflicting executable binding $identity from ${keyed.key}."
+                val candidate = KeyedExecutableBinding(keyed.key, binding)
+                val previous = executableBindings.putIfAbsent(identity, candidate)
+                require(previous == null || previous == candidate) {
+                    "Conflicting executable binding $identity from ${previous?.key} and ${keyed.key}."
                 }
             }
         }
@@ -55,7 +61,10 @@ object TypeContributionAssembler {
         return AssembledTypeDiscovery(
             catalog = TypeCatalog(definitions.values.sortedBy { it.id.toString() }),
             prototypeBindings = prototypeBindings.values.sortedBy { it.type.toString() },
-            executableBindings = executableBindings.values.sortedWith(compareBy({ it.domain.value }, { it.localName })),
+            executableBindings =
+                executableBindings.values.sortedWith(
+                    compareBy({ it.binding.domain.value }, { it.binding.localName }, { it.key.sortKey() }),
+                ),
         )
     }
 }

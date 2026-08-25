@@ -6,17 +6,6 @@ part "page_element_type_policy.freezed.dart";
 part "page_element_type_policy.g.dart";
 
 @freezed
-abstract class PageElementTypePolicy with _$PageElementTypePolicy {
-  const factory PageElementTypePolicy({
-    required Map<PageType, ResolvedTypeRef> acceptedTypes,
-  }) = _PageElementTypePolicy;
-
-  const PageElementTypePolicy._();
-
-  ResolvedTypeRef acceptedType(PageType pageType) => acceptedTypes[pageType]!;
-}
-
-@freezed
 sealed class PageElementTypesState with _$PageElementTypesState {
   const factory PageElementTypesState.loading() = PageElementTypesLoading;
 
@@ -28,18 +17,8 @@ sealed class PageElementTypesState with _$PageElementTypesState {
   ) = PageElementTypesUnavailable;
 }
 
-@Riverpod(keepAlive: true)
-PageElementTypePolicy pageElementTypePolicy(Ref ref) => PageElementTypePolicy(
-  acceptedTypes: {
-    PageType.sequence: "TriggerEntry"._typewriterEntryType,
-    PageType.static: "StaticEntry"._typewriterEntryType,
-    PageType.scene: "CinematicEntry"._typewriterEntryType,
-    PageType.manifest: "ManifestEntry"._typewriterEntryType,
-  },
-);
-
 @riverpod
-Stream<PageElementTypesState> pageElementTypes(Ref ref, PageType pageType) {
+Stream<PageElementTypesState> pageElementTypes(Ref ref, PageKindRef pageKind) {
   final cache = ref.watch(realmEditorCatalogCacheProvider);
   if (cache == null) {
     return Stream.value(
@@ -50,29 +29,63 @@ Stream<PageElementTypesState> pageElementTypes(Ref ref, PageType pageType) {
       ]),
     );
   }
-  final target = ref
-      .watch(pageElementTypePolicyProvider)
-      .acceptedType(pageType);
-  final query = RealmEditorSubtypeQuery(
-    id: "page:${pageType.name}:elements",
-    target: target,
+  final state = ref.watch(realmEditorCatalogProvider).value;
+  final definition = state?.snapshot?.pageCatalog.definitions[pageKind];
+  if (definition == null) {
+    return Stream.value(
+      PageElementTypesUnavailable([
+        realmEditorCatalogUnavailableDiagnostic(
+          "The page kind is unavailable in the active catalog",
+        ),
+      ]),
+    );
+  }
+  final roots = switch (definition.editor) {
+    RealmGraphPageEditor(:final nodeTypes) => nodeTypes,
+    RealmTimelinePageEditor(
+      :final trackTypes,
+      :final segmentTypes,
+      :final keyframeTypes,
+    ) =>
+      [...trackTypes, ...segmentTypes, ...keyframeTypes],
+  };
+  final queries = [
+    for (final root in roots.indexed)
+      RealmEditorSubtypeQuery(
+        id: "page:${pageKind.id}:${pageKind.revision}:${root.$1}",
+        target: root.$2,
+      ),
+  ];
+  ref.watch(
+    realmEditorCatalogLeaseProvider(
+      RealmEditorCatalogRequest(
+        types: roots.toSet(),
+        subtypeQueries: queries.toSet(),
+      ),
+    ),
   );
-  cache.request(
-    RealmEditorCatalogRequest(types: {target}, subtypeQueries: {query}),
+  return cache.states.map(
+    (state) => state._pageElementTypes(roots, queries.map((query) => query.id)),
   );
-  return cache.states.map((state) => state._pageElementTypes(query.id));
 }
 
 extension on RealmEditorCatalogState {
-  PageElementTypesState _pageElementTypes(String queryId) {
+  PageElementTypesState _pageElementTypes(
+    Iterable<ResolvedTypeRef> roots,
+    Iterable<String> queryIds,
+  ) {
     final current = snapshot;
-    final result = current?.subtypeResults[queryId];
-    if (result != null) {
-      final registry = TypeRegistry(current!.catalog);
-      final concrete = result.matches.where((reference) {
-        final resolved = registry.resolveExact(reference).valueOrNull;
-        return resolved?.isConcrete ?? false;
-      });
+    final results = queryIds
+        .map((id) => current?.subtypeResults[id])
+        .whereType<RealmEditorSubtypeResult>()
+        .toList();
+    if (current != null && results.length == queryIds.length) {
+      final registry = TypeRegistry(current.catalog);
+      final concrete = [...roots, ...results.expand((result) => result.matches)]
+          .where((reference) {
+            final resolved = registry.resolveExact(reference).valueOrNull;
+            return resolved?.isConcrete ?? false;
+          });
       return PageElementTypesReady(concrete.toSet());
     }
     return switch (this) {
@@ -81,11 +94,4 @@ extension on RealmEditorCatalogState {
       _ => const PageElementTypesLoading(),
     };
   }
-}
-
-extension on String {
-  ResolvedTypeRef get _typewriterEntryType => ResolvedTypeRef(
-    id: QualifiedTypeId(namespace: "typewriter/v1", name: this),
-    revision: 1,
-  );
 }

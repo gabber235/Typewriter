@@ -1,6 +1,7 @@
 package com.typewritermc.types.ksp
 
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSName
@@ -101,6 +102,19 @@ val KspTypeGraphConverterTest by testSuite {
         result.graph.definitions shouldBe emptyList()
     }
 
+    test("string serialized domain types use the logical string representation") {
+        val result =
+            KspTypeGraphConverter().convert(
+                type(classDeclaration("example.Identifier", listOf(annotation("com.typewritermc.types.TypewriterString")))),
+            ) as KspTypeConversionResult.Success
+
+        val root = result.graph.root as TypeExpression.Named
+        root.reference.id shouldBe TypeId.Qualified("example", "Identifier")
+        result.graph.definitions
+            .single()
+            .representation shouldBe TypeExpression.StringType()
+    }
+
     test("extension API converts KSP types and extracts successful graphs") {
         val result = classType("kotlin.String").toTypewriterGraph()
 
@@ -128,7 +142,10 @@ private fun type(
         every { isSuspendFunctionType } returns false
     }
 
-private fun classDeclaration(qualifiedName: String): KSClassDeclaration {
+private fun classDeclaration(
+    qualifiedName: String,
+    annotations: List<KSAnnotation> = emptyList(),
+): KSClassDeclaration {
     val packageName = qualifiedName.substringBeforeLast('.', "example")
     val simpleName = qualifiedName.substringAfterLast('.')
     return mockk {
@@ -139,10 +156,15 @@ private fun classDeclaration(qualifiedName: String): KSClassDeclaration {
         every { superTypes } returns emptySequence()
         every { declarations } returns emptySequence()
         every { getAllProperties() } returns emptySequence()
-        every { annotations } returns emptySequence()
+        every { this@mockk.annotations } answers { annotations.asSequence() }
         every { modifiers } returns emptySet()
         every { classKind } returns ClassKind.CLASS
     }
+}
+
+private fun annotation(qualifiedName: String): KSAnnotation {
+    val reference = mockk<KSTypeReference> { every { resolve() } returns type(classDeclaration(qualifiedName)) }
+    return mockk { every { annotationType } returns reference }
 }
 
 private fun property(

@@ -3,8 +3,7 @@ package com.typewritermc.realm
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.discovery.DeploymentDiscoverySnapshot
 import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.realm.routes.RealmEditorCatalogSnapshot
-import com.typewritermc.realm.routes.RealmElementCatalogSnapshot
+import com.typewritermc.pages.PageCatalog
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,25 +32,12 @@ class RealmDiscoverySnapshotStore {
     }
 
     fun current(): RealmDiscoverySnapshot? = snapshots.value
-
-    fun editorCatalog(): RealmEditorCatalogSnapshot? =
-        current()?.let {
-            RealmEditorCatalogSnapshot(
-                generation = it.discovery.generation.value,
-                types = it.discovery.types,
-                presentations = it.presentations,
-                capabilities = it.capabilities,
-                presentationDiagnostics = it.presentationDiagnostics,
-            )
-        }
-
-    fun elements(): RealmElementCatalogSnapshot? =
-        current()?.let { RealmElementCatalogSnapshot(it.discovery.generation.value, it.elements) }
 }
 
 data class RealmDiscoverySnapshot(
     val discovery: DeploymentDiscoverySnapshot,
     val elements: ElementCatalog,
+    val pages: PageCatalog = PageCatalog(emptyList(), emptyList()),
     val presentations: List<skirout.editor.v1.presentation.PresentationDefinition> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val presentationDiagnostics: List<com.typewritermc.presentation.PresentationDiagnostic> = emptyList(),

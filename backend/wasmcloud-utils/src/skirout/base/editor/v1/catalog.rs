@@ -183,6 +183,9 @@ pub struct CatalogFetchSuccess {
     pub capability_definitions: Vec<crate::skirout::base::editor::v1::capability::CapabilityDefinition>,
     pub subtype_results: Vec<SubtypeResult>,
     pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub element_entries: Vec<crate::skirout::base::editor::v1::element_catalog::ElementCatalogEntry>,
+    pub page_entries: Vec<crate::skirout::base::editor::v1::page_catalog::PageCatalogEntry>,
+    pub page_diagnostics: Vec<crate::skirout::base::editor::v1::page_catalog::PageDiagnostic>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogFetchSuccess>>,
 }
@@ -455,6 +458,9 @@ fn initialize_module_serializers() {
                 (*a).add_field("capability_definitions", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::capability::CapabilityDefinition::serializer()), "", |x: &CatalogFetchSuccess| &x.capability_definitions, |x: &mut CatalogFetchSuccess, v| x.capability_definitions = v);
                 (*a).add_field("subtype_results", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SubtypeResult::_adapter())), "", |x: &CatalogFetchSuccess| &x.subtype_results, |x: &mut CatalogFetchSuccess, v| x.subtype_results = v);
                 (*a).add_field("diagnostics", 6, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &CatalogFetchSuccess| &x.diagnostics, |x: &mut CatalogFetchSuccess, v| x.diagnostics = v);
+                (*a).add_field("element_entries", 7, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::element_catalog::ElementCatalogEntry::serializer()), "", |x: &CatalogFetchSuccess| &x.element_entries, |x: &mut CatalogFetchSuccess, v| x.element_entries = v);
+                (*a).add_field("page_entries", 8, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::page_catalog::PageCatalogEntry::serializer()), "", |x: &CatalogFetchSuccess| &x.page_entries, |x: &mut CatalogFetchSuccess, v| x.page_entries = v);
+                (*a).add_field("page_diagnostics", 9, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::page_catalog::PageDiagnostic::serializer()), "", |x: &CatalogFetchSuccess| &x.page_diagnostics, |x: &mut CatalogFetchSuccess, v| x.page_diagnostics = v);
                 (*a).finalize();
             }
             unsafe {

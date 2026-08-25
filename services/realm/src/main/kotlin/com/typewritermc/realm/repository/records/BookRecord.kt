@@ -2,11 +2,15 @@ package com.typewritermc.realm.repository.records
 
 import com.surrealdb.RecordId
 import com.surrealdb.Value
+import com.typewritermc.library.Book
+import com.typewritermc.library.LibraryName
+import com.typewritermc.library.ResourceRevision
 import com.typewritermc.realm.repository.BookCreateResult
 import com.typewritermc.realm.repository.BookUpdateResult
-import com.typewritermc.realm.repository.utils.toSkirRecordId
-import skirout.kernel.v1.color.Color
-import skirout.library.v1.book.Book
+import com.typewritermc.realm.repository.utils.toBookId
+import com.typewritermc.realm.repository.utils.toTagId
+import com.typewritermc.types.Color
+import com.typewritermc.types.Icon
 
 internal data class BookRecord(
     val id: RecordId = RecordId("book", ""),
@@ -18,12 +22,12 @@ internal data class BookRecord(
 ) {
     fun toBook(): Book =
         Book(
-            bookId = id.toSkirRecordId(),
-            revision = revision,
-            title = title,
-            icon = icon,
-            color = Color(argb = color.toInt()),
-            tagIds = tags.map(RecordId::toSkirRecordId),
+            id = id.toBookId(),
+            revision = ResourceRevision(revision),
+            title = LibraryName(title),
+            icon = Icon.parse(icon),
+            color = Color(argb = color.toUInt()),
+            tags = tags.mapTo(linkedSetOf(), RecordId::toTagId),
         )
 
     companion object {
@@ -51,10 +55,10 @@ internal data class BookCreateOutputRecord(
 
     private fun requireBook(): BookRecord = book ?: invalidBookOutput("create outcome '$kind' requires a book")
 
-    private fun requireTagIds(): List<skirout.kernel.v1.record_id.RecordId> =
+    private fun requireTagIds() =
         tagIds
             ?.takeIf(List<*>::isNotEmpty)
-            ?.map(RecordId::toSkirRecordId)
+            ?.mapTo(linkedSetOf(), RecordId::toTagId)
             ?: invalidBookOutput("create outcome '$kind' requires tag ids")
 }
 
@@ -80,10 +84,10 @@ internal data class BookUpdateOutputRecord(
 
     private fun requireBook(): BookRecord = book ?: invalidBookOutput("update outcome '$kind' requires a book")
 
-    private fun requireTagIds(): List<skirout.kernel.v1.record_id.RecordId> =
+    private fun requireTagIds() =
         tagIds
             ?.takeIf(List<*>::isNotEmpty)
-            ?.map(RecordId::toSkirRecordId)
+            ?.mapTo(linkedSetOf(), RecordId::toTagId)
             ?: invalidBookOutput("update outcome '$kind' requires tag ids")
 }
 

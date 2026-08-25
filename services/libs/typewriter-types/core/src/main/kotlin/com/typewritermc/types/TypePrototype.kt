@@ -57,15 +57,23 @@ interface AbstractTypePrototype<T : Any> : TypePrototype<T> {
 /** Owns the immutable prototype graph for one assembled deployment. */
 class TypePrototypeRegistry(
     prototypes: Collection<TypePrototype<*>>,
+    definitions: Collection<TypeDefinition> = prototypes.map(TypePrototype<*>::definition),
 ) {
     private val all = prototypes.toList()
     private val byReference = all.associateBy(TypePrototype<*>::type)
     private val byRuntimeType = all.associateBy(TypePrototype<*>::runtimeType)
     private val concrete = all.filterIsInstance<ConcreteTypePrototype<*>>()
+    private val definitionsByReference = definitions.associateBy(TypeDefinition::id)
 
     init {
         require(byReference.size == all.size) { "Type prototype references must be unique." }
         require(byRuntimeType.size == all.size) { "Type prototype runtime classes must be unique." }
+        require(definitionsByReference.size == definitions.size) { "Type definitions must be unique." }
+        all.forEach { prototype ->
+            require(definitionsByReference[prototype.type] == prototype.definition) {
+                "Type prototype ${prototype.type} must match its catalog definition."
+            }
+        }
     }
 
     val serializersModule: SerializersModule = buildSerializersModule()
@@ -93,7 +101,9 @@ class TypePrototypeRegistry(
             .filter { prototype -> prototype.definition.isSubtypeOf(parent.id, emptySet()) }
             .sortedBy { it.type.toString() }
 
-    internal fun definition(reference: ResolvedTypeRef): TypeDefinition = require(reference.copy(arguments = emptyList())).definition
+    internal fun definition(reference: ResolvedTypeRef): TypeDefinition =
+        definitionsByReference[reference.copy(arguments = emptyList())]
+            ?: error("Type definition is unavailable: $reference")
 
     internal fun concrete(reference: ResolvedTypeRef): ConcreteTypePrototype<*> =
         require(reference) as? ConcreteTypePrototype<*>

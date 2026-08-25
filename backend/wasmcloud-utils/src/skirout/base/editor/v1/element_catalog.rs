@@ -328,55 +328,12 @@ impl AvailabilityExpression {
 }
 
 // ==============================================================================
-// enum ElementKind
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ElementKind {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementKind>>),
-    Entry,
-    Cue,
-}
-
-impl Default for ElementKind {
-    fn default() -> Self {
-        ElementKind::Unknown(None)
-    }
-}
-
-impl ElementKind {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementKind> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementKind>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ElementKind| match x {
-                        ElementKind::Unknown(_) => 0,
-                        ElementKind::Entry => 1,
-                        ElementKind::Cue => 2,
-                    },
-                    |u| ElementKind::Unknown(Some(u)),
-                    |x: &ElementKind| match x { ElementKind::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/element_catalog.skir",
-                    "ElementKind",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementKind> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ElementKind::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct ElementDescriptor
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ElementDescriptor {
     pub element_type_id: ElementTypeId,
-    pub kind: ElementKind,
     pub type_: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
     pub name: String,
     pub description: String,
@@ -574,133 +531,11 @@ impl ElementCatalogEntry {
 }
 
 // ==============================================================================
-// struct ElementCatalogRequest
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementCatalogRequest {
-    pub expected_generation: Option<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementCatalogRequest>>,
-}
-
-impl ElementCatalogRequest {
-    pub fn default_ref() -> &'static ElementCatalogRequest {
-        static D: std::sync::LazyLock<ElementCatalogRequest> = std::sync::LazyLock::new(ElementCatalogRequest::default);
-        &D
-    }
-}
-
-impl ElementCatalogRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementCatalogRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementCatalogRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/element_catalog.skir",
-                    "ElementCatalogRequest",
-                    "",
-                    |x: &ElementCatalogRequest| &x._unrecognized,
-                    |x: &mut ElementCatalogRequest, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementCatalogRequest> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementCatalogRequest::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ElementCatalogSuccess
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ElementCatalogSuccess {
-    pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub entries: Vec<ElementCatalogEntry>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ElementCatalogSuccess>>,
-}
-
-impl ElementCatalogSuccess {
-    pub fn default_ref() -> &'static ElementCatalogSuccess {
-        static D: std::sync::LazyLock<ElementCatalogSuccess> = std::sync::LazyLock::new(ElementCatalogSuccess::default);
-        &D
-    }
-}
-
-impl ElementCatalogSuccess {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ElementCatalogSuccess> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ElementCatalogSuccess>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/element_catalog.skir",
-                    "ElementCatalogSuccess",
-                    "",
-                    |x: &ElementCatalogSuccess| &x._unrecognized,
-                    |x: &mut ElementCatalogSuccess, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementCatalogSuccess> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ElementCatalogSuccess::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum ElementCatalogResult
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ElementCatalogResult {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ElementCatalogResult>>),
-    Success(Box<ElementCatalogSuccess>),
-    GenerationMismatch(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
-    Unavailable(Vec<String>),
-}
-
-impl Default for ElementCatalogResult {
-    fn default() -> Self {
-        ElementCatalogResult::Unknown(None)
-    }
-}
-
-impl ElementCatalogResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ElementCatalogResult> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ElementCatalogResult>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ElementCatalogResult| match x {
-                        ElementCatalogResult::Unknown(_) => 0,
-                        ElementCatalogResult::Success(_) => 1,
-                        ElementCatalogResult::GenerationMismatch(_) => 2,
-                        ElementCatalogResult::Unavailable(_) => 3,
-                    },
-                    |u| ElementCatalogResult::Unknown(Some(u)),
-                    |x: &ElementCatalogResult| match x { ElementCatalogResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/element_catalog.skir",
-                    "ElementCatalogResult",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ElementCatalogResult> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ElementCatalogResult::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct StoredElementEnvelope
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StoredElementEnvelope {
-    pub id: ElementInstanceId,
     pub element_type: ElementTypeId,
     pub schema_revision: i32,
     pub value: crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope,
@@ -787,21 +622,14 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ElementKind> = ElementKind::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("entry", 1, 1, "", ElementKind::Entry);
-                (*a).add_constant_variant("cue", 2, 2, "", ElementKind::Cue);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ElementDescriptor> = ElementDescriptor::_adapter() as *const _ as *mut _;
                 (*a).add_field("element_type_id", 0, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &ElementDescriptor| &x.element_type_id, |x: &mut ElementDescriptor, v| x.element_type_id = v);
-                (*a).add_field("kind", 1, crate::skir_client::internal::enum_serializer_from_static(ElementKind::_adapter()), "", |x: &ElementDescriptor| &x.kind, |x: &mut ElementDescriptor, v| x.kind = v);
-                (*a).add_field("type", 2, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementDescriptor| &x.type_, |x: &mut ElementDescriptor, v| x.type_ = v);
-                (*a).add_field("name", 3, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.name, |x: &mut ElementDescriptor, v| x.name = v);
-                (*a).add_field("description", 4, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.description, |x: &mut ElementDescriptor, v| x.description = v);
-                (*a).add_field("icon", 5, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &ElementDescriptor| &x.icon, |x: &mut ElementDescriptor, v| x.icon = v);
-                (*a).add_field("color", 6, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &ElementDescriptor| &x.color, |x: &mut ElementDescriptor, v| x.color = v);
-                (*a).add_field("availability", 7, crate::skir_client::internal::enum_serializer_from_static(AvailabilityExpression::_adapter()), "", |x: &ElementDescriptor| &x.availability, |x: &mut ElementDescriptor, v| x.availability = v);
+                (*a).add_field("type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ElementDescriptor| &x.type_, |x: &mut ElementDescriptor, v| x.type_ = v);
+                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.name, |x: &mut ElementDescriptor, v| x.name = v);
+                (*a).add_field("description", 3, crate::skir_client::Serializer::string(), "", |x: &ElementDescriptor| &x.description, |x: &mut ElementDescriptor, v| x.description = v);
+                (*a).add_field("icon", 4, crate::skirout::base::kernel::v1::icon::Icon::serializer(), "", |x: &ElementDescriptor| &x.icon, |x: &mut ElementDescriptor, v| x.icon = v);
+                (*a).add_field("color", 5, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &ElementDescriptor| &x.color, |x: &mut ElementDescriptor, v| x.color = v);
+                (*a).add_field("availability", 6, crate::skir_client::internal::enum_serializer_from_static(AvailabilityExpression::_adapter()), "", |x: &ElementDescriptor| &x.availability, |x: &mut ElementDescriptor, v| x.availability = v);
                 (*a).finalize();
             }
             unsafe {
@@ -829,48 +657,12 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementCatalogRequest> = ElementCatalogRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("expected_generation", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer()), "", |x: &ElementCatalogRequest| &x.expected_generation, |x: &mut ElementCatalogRequest, v| x.expected_generation = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ElementCatalogSuccess> = ElementCatalogSuccess::_adapter() as *const _ as *mut _;
-                (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &ElementCatalogSuccess| &x.generation, |x: &mut ElementCatalogSuccess, v| x.generation = v);
-                (*a).add_field("entries", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ElementCatalogEntry::_adapter())), "", |x: &ElementCatalogSuccess| &x.entries, |x: &mut ElementCatalogSuccess, v| x.entries = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ElementCatalogResult> = ElementCatalogResult::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ElementCatalogSuccess::_adapter()), "", |v| ElementCatalogResult::Success(Box::new(v)), |x| match x { ElementCatalogResult::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("generation_mismatch", 2, 2, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |v| ElementCatalogResult::GenerationMismatch(Box::new(v)), |x| match x { ElementCatalogResult::GenerationMismatch(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unavailable", 3, 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |v| ElementCatalogResult::Unavailable(v), |x| match x { ElementCatalogResult::Unavailable(v) => v, _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<StoredElementEnvelope> = StoredElementEnvelope::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skir_client::internal::struct_serializer_from_static(ElementInstanceId::_adapter()), "", |x: &StoredElementEnvelope| &x.id, |x: &mut StoredElementEnvelope, v| x.id = v);
-                (*a).add_field("element_type", 1, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &StoredElementEnvelope| &x.element_type, |x: &mut StoredElementEnvelope, v| x.element_type = v);
-                (*a).add_field("schema_revision", 2, crate::skir_client::Serializer::int32(), "", |x: &StoredElementEnvelope| &x.schema_revision, |x: &mut StoredElementEnvelope, v| x.schema_revision = v);
-                (*a).add_field("value", 3, crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer(), "", |x: &StoredElementEnvelope| &x.value, |x: &mut StoredElementEnvelope, v| x.value = v);
+                (*a).add_field("element_type", 0, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &StoredElementEnvelope| &x.element_type, |x: &mut StoredElementEnvelope, v| x.element_type = v);
+                (*a).add_field("schema_revision", 1, crate::skir_client::Serializer::int32(), "", |x: &StoredElementEnvelope| &x.schema_revision, |x: &mut StoredElementEnvelope, v| x.schema_revision = v);
+                (*a).add_field("value", 2, crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer(), "", |x: &StoredElementEnvelope| &x.value, |x: &mut StoredElementEnvelope, v| x.value = v);
                 (*a).finalize();
             }
         });
     let _ = *INIT;
-}
-
-// ==============================================================================
-// Methods
-// ==============================================================================
-
-pub fn fetch_element_catalog_method() -> &'static crate::skir_client::Method<ElementCatalogRequest, ElementCatalogResult> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<ElementCatalogRequest, ElementCatalogResult>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "FetchElementCatalog".to_string(),
-            number: 910004_i64,
-            request_serializer: ElementCatalogRequest::serializer(),
-            response_serializer: ElementCatalogResult::serializer(),
-            doc: "".to_string(),
-        }
-    });
-    &*METHOD
 }

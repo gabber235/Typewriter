@@ -3,6 +3,7 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.pages.PageCatalog
 import com.typewritermc.realm.outbox.RealmOutboxPublisher
 import com.typewritermc.realm.outbox.SurrealRealmOutbox
 import com.typewritermc.realm.repository.SurrealBookRepository
@@ -11,7 +12,6 @@ import com.typewritermc.realm.repository.SurrealTagRepository
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmEditorCatalogSource
-import com.typewritermc.realm.routes.RealmElementCatalogSource
 import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.schema.RealmDatabaseProvider
@@ -39,7 +39,7 @@ import java.time.Clock
 class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val editorCatalog: RealmEditorCatalogSource,
-    private val elementCatalog: RealmElementCatalogSource,
+    private val pageDefinitions: PageCatalog,
     private val presentationSearch: RealmPresentationSearchSource,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
@@ -72,7 +72,7 @@ class Realm(
                     SurrealPageRepository(connected, outbox),
                     SurrealTagRepository(connected, outbox),
                     editorCatalog,
-                    elementCatalog,
+                    pageDefinitions,
                     presentationSearch,
                     capabilityInvocations,
                 )

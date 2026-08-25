@@ -157,8 +157,18 @@ val ImprintPluginTest by testSuite {
 
     test("engine Shadow JAR bundles core capabilities and one merged manifest") {
         val fixture = fixture("engineCore", "base", "capability", "engine")
-        fixture.writeBuild("engineCore", javaLibraryBuild())
+        fixture.writeBuild(
+            "engineCore",
+            """
+            plugins { id("com.typewritermc.imprint") }
+            typewriter { engineCore() }
+            """.trimIndent(),
+        )
         fixture.write("engineCore/src/main/java/fixture/core/CoreType.java", javaType("fixture.core", "CoreType"))
+        fixture.write(
+            "engineCore/src/main/resources/$IMPRINT_CONTRIBUTIONS_PATH/types/pages.cbor",
+            "core pages",
+        )
         fixture.writeBuild("base", capabilityBuild("typewritermc:base"))
         fixture.write("base/src/main/java/fixture/base/BaseType.java", javaType("fixture.base", "BaseType"))
         fixture.writeBuild(
@@ -204,8 +214,13 @@ val ImprintPluginTest by testSuite {
         jar.entries().count { it == IMPRINT_MANIFEST_PATH } shouldBe 1
         manifest.resolvedCapabilities.map { it.id.value } shouldContainExactly
             listOf("typewritermc:base", "typewritermc:items")
+        val coreContribution = manifest.contributions.single { it.name == "core/pages.cbor" }
+        coreContribution.origin.value shouldBe "paper"
+        coreContribution.sourcePart shouldBe "main"
+        coreContribution.producer shouldBe "types"
+        coreContribution.payload.decodeToString() shouldBe "core pages"
         manifest.contributions
-            .single()
+            .single { it.name == "items.cbor" }
             .payload
             .decodeToString() shouldBe "items"
     }

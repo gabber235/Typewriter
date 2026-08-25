@@ -20,16 +20,14 @@ import com.typewritermc.services.libs.communicator.contract.WatchContract
 import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.CatalogWatchUpdate
-import skirout.editor.v1.catalog.FetchEditorCatalog
-import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
 import skirout.editor.v1.capability.InvokeRealmCommand
 import skirout.editor.v1.capability.InvokeRealmComputation
-import skirout.editor.v1.element_catalog.ElementCatalogResult
-import skirout.editor.v1.element_catalog.FetchElementCatalog
+import skirout.editor.v1.catalog.CatalogFetchResult
+import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.FetchEditorCatalog
+import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.library.v1.book.CreateBook
@@ -41,6 +39,8 @@ import skirout.library.v1.book.WatchBookRequest
 import skirout.library.v1.book.WatchBookResponse
 import skirout.library.v1.book.WatchBooks
 import skirout.library.v1.book.WatchBooksResponse
+import skirout.library.v1.page.ChangePageKind
+import skirout.library.v1.page.ChangePageKindResponse
 import skirout.library.v1.page.ChangePagesChapters
 import skirout.library.v1.page.ChangePagesChaptersResponse
 import skirout.library.v1.page.CreatePage
@@ -87,13 +87,6 @@ internal class LibraryContracts(
             CatalogWatchUpdate.createInitial(value = "unavailable"),
             catalogWatchResponseClassifier(),
         )
-    val fetchElementCatalog =
-        unary(
-            FetchElementCatalog,
-            "editor.elements.fetch",
-            ElementCatalogResult.UnavailableWrapper(listOf("Realm element catalog fetch failed")),
-            elementCatalogResponseClassifier(),
-        )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
     val cancelRealmPresentationSearch =
         unary(
@@ -106,7 +99,9 @@ internal class LibraryContracts(
             InvokeRealmComputation,
             "editor.capability.computation.invoke",
             ComputationResult.createUnavailable(
-                invocationId = skirout.editor.v1.capability.InvocationId(value = ""),
+                invocationId =
+                    skirout.editor.v1.capability
+                        .InvocationId(value = ""),
                 diagnostics = emptyList(),
             ),
         )
@@ -115,7 +110,9 @@ internal class LibraryContracts(
             InvokeRealmCommand,
             "editor.capability.command.invoke",
             CommandResult.createUnavailable(
-                invocationId = skirout.editor.v1.capability.InvocationId(value = ""),
+                invocationId =
+                    skirout.editor.v1.capability
+                        .InvocationId(value = ""),
                 diagnostics = emptyList(),
             ),
         )
@@ -159,6 +156,7 @@ internal class LibraryContracts(
             "pages.chapters",
             ChangePagesChaptersResponse.createInternalError(),
         )
+    val changePageKind = unary(ChangePageKind, "page.kind.change", ChangePageKindResponse.createInternalError())
 
     val watchTags =
         watch(
@@ -216,24 +214,6 @@ internal class LibraryContracts(
             updateFilter = updateFilter,
         )
 }
-
-private fun elementCatalogResponseClassifier(): ResponseClassifier<ElementCatalogResult> =
-    ResponseClassifier { response ->
-        val outcome =
-            when (response) {
-                is ElementCatalogResult.SuccessWrapper -> ResponseOutcome.SUCCESS
-                is ElementCatalogResult.UnavailableWrapper -> ResponseOutcome.INTERNAL_ERROR
-                else -> ResponseOutcome.DOMAIN_ERROR
-            }
-        ResponseClassification(
-            outcome,
-            ResponseVariant.of(
-                response.kind.name
-                    .lowercase()
-                    .replace('_', '-'),
-            ),
-        )
-    }
 
 internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> = realmRequestAddress(suffix)
 

@@ -1,10 +1,11 @@
 package com.typewritermc.discovery.runtime
 
 import com.typewritermc.discovery.AssembledTypeDiscovery
+import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomainId
 import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.ExecutableBinding
+import com.typewritermc.discovery.KeyedExecutableBinding
 import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.KoinApplication
@@ -14,7 +15,7 @@ import java.net.URL
 import java.net.URLClassLoader
 
 interface GeneratedDiscoveryModule {
-    fun module(): Module
+    fun module(contribution: ContributionKey): Module
 }
 
 interface RuntimeScope {
@@ -82,8 +83,8 @@ class DiscoveryModuleLoader {
             val modules =
                 discovery.executableBindings
                     .asSequence()
-                    .filter { it.domain == domain }
-                    .sortedBy(ExecutableBinding::localName)
+                    .filter { it.binding.domain == domain }
+                    .sortedBy { it.binding.localName }
                     .map { loadModule(classLoader, it) }
                     .toList()
             application =
@@ -102,8 +103,9 @@ class DiscoveryModuleLoader {
 
     private fun loadModule(
         classLoader: ClassLoader,
-        binding: ExecutableBinding,
+        keyed: KeyedExecutableBinding,
     ): Module {
+        val binding = keyed.binding
         val providerClass = Class.forName(binding.moduleProviderClass, true, classLoader)
         require(GeneratedDiscoveryModule::class.java.isAssignableFrom(providerClass)) {
             "Discovery module provider ${binding.moduleProviderClass} does not implement GeneratedDiscoveryModule."
@@ -115,6 +117,6 @@ class DiscoveryModuleLoader {
         ) {
             "Discovery module provider ${binding.moduleProviderClass} requires a public zero argument constructor."
         }
-        return (constructor.newInstance() as GeneratedDiscoveryModule).module()
+        return (constructor.newInstance() as GeneratedDiscoveryModule).module(keyed.key)
     }
 }

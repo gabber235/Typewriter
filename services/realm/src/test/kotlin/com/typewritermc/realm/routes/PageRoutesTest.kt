@@ -2,7 +2,9 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.realm.repository.createBook
 import com.typewritermc.realm.repository.createPage
+import com.typewritermc.realm.repository.getPage
 import com.typewritermc.realm.repository.recordId
+import com.typewritermc.realm.repository.searchPages
 import com.typewritermc.realm.repository.successValue
 import com.typewritermc.realm.repository.updatePage
 import de.infix.testBalloon.framework.core.testSuite
@@ -12,19 +14,21 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import skirout.kernel.v1.color.Color
+import skirout.library.v1.page.ChangePageKindRequest
+import skirout.library.v1.page.ChangePageKindResponse
 import skirout.library.v1.page.ChangePagesChaptersRequest
 import skirout.library.v1.page.ChangePagesChaptersResponse
 import skirout.library.v1.page.CreatePageRequest
 import skirout.library.v1.page.CreatePageResponse
 import skirout.library.v1.page.DeletePageRequest
 import skirout.library.v1.page.DeletePageResponse
-import skirout.library.v1.page.PageType
 import skirout.library.v1.page.SearchPagesRequest
 import skirout.library.v1.page.SearchPagesResponse
 import skirout.library.v1.page.UpdatePageRequest
 import skirout.library.v1.page.UpdatePageResponse
 import skirout.library.v1.page.WatchPageRequest
 import skirout.library.v1.page.WatchPageResponse
+import com.typewritermc.realm.TestPageKinds as PageType
 
 val PageRoutesTest by testSuite {
     test("page search classifies invalid book identifiers and missing books") {
@@ -119,7 +123,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = recordId("tag", "wrong"),
                             name = "page_name",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = null,
                             priority = null,
                         ),
@@ -132,7 +136,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = recordId("book", "missing"),
                             name = "page_name",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = null,
                             priority = null,
                         ),
@@ -164,7 +168,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = book.bookId,
                             name = "page_one",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = "act.one",
                             priority = 1,
                         ),
@@ -198,7 +202,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = book.bookId,
                             name = "default_page",
-                            type = PageType.SEQUENCE,
+                            kind = PageType.SEQUENCE,
                             chapter = null,
                             priority = null,
                         ),
@@ -231,7 +235,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = book.bookId,
                             name = " ",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = null,
                             priority = null,
                         ),
@@ -244,7 +248,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = book.bookId,
                             name = "valid_page",
-                            type = PageType.UNKNOWN,
+                            kind = PageType.UNKNOWN,
                             chapter = null,
                             priority = null,
                         ),
@@ -353,8 +357,8 @@ val PageRoutesTest by testSuite {
                         "page.update",
                         UpdatePageRequest(
                             pageId = page.pageId,
+                            expectedRevision = page.revision,
                             name = "page_two",
-                            type = PageType.SCENE,
                             chapter = null,
                             priority = 2,
                         ),
@@ -393,8 +397,8 @@ val PageRoutesTest by testSuite {
                         "page.update",
                         UpdatePageRequest(
                             pageId = page.pageId,
+                            expectedRevision = page.revision,
                             name = null,
-                            type = null,
                             chapter = null,
                             priority = null,
                         ),
@@ -402,7 +406,42 @@ val PageRoutesTest by testSuite {
                         UpdatePageResponse.serializer,
                     )
 
-                response shouldBe UpdatePageResponse.SuccessWrapper(page)
+                val updated = page.copy(revision = page.revision + 1)
+                response shouldBe UpdatePageResponse.SuccessWrapper(updated)
+                fixture.repositories.pages.getPage(page.pageId) shouldBe updated
+            }
+        }
+    }
+
+    test("page kind changes validate the target and expose unavailable conversion") {
+        runTest {
+            RouteFixture().use { fixture ->
+                val book =
+                    fixture.repositories.books
+                        .createBook("kind_book", "book", Color(argb = 0), emptyList())
+                        .successValue()
+                val page =
+                    fixture.repositories.pages
+                        .createPage(book.bookId, "kind_page", PageType.STATIC, "", 0)
+                        .successValue()
+
+                val unsupported =
+                    fixture.request(
+                        "page.kind.change",
+                        ChangePageKindRequest(pageId = page.pageId, target = PageType.SCENE),
+                        ChangePageKindRequest.serializer,
+                        ChangePageKindResponse.serializer,
+                    )
+                val unknown =
+                    fixture.request(
+                        "page.kind.change",
+                        ChangePageKindRequest(pageId = page.pageId, target = PageType.UNKNOWN),
+                        ChangePageKindRequest.serializer,
+                        ChangePageKindResponse.serializer,
+                    )
+
+                unsupported.kind shouldBe ChangePageKindResponse.Kind.CONVERSION_UNAVAILABLE_WRAPPER
+                unknown.kind shouldBe ChangePageKindResponse.Kind.VALIDATION_ERROR_WRAPPER
                 fixture.repositories.pages.getPage(page.pageId) shouldBe page
             }
         }
@@ -429,30 +468,15 @@ val PageRoutesTest by testSuite {
                         "page.update",
                         UpdatePageRequest(
                             pageId = page.pageId,
+                            expectedRevision = page.revision,
                             name = " ",
-                            type = null,
                             chapter = null,
                             priority = null,
                         ),
                         UpdatePageRequest.serializer,
                         UpdatePageResponse.serializer,
                     )
-                val unknownType =
-                    fixture.request(
-                        "page.update",
-                        UpdatePageRequest(
-                            pageId = page.pageId,
-                            name = null,
-                            type = PageType.UNKNOWN,
-                            chapter = null,
-                            priority = null,
-                        ),
-                        UpdatePageRequest.serializer,
-                        UpdatePageResponse.serializer,
-                    )
-
                 blankName.kind shouldBe UpdatePageResponse.Kind.VALIDATION_ERROR_WRAPPER
-                unknownType.kind shouldBe UpdatePageResponse.Kind.VALIDATION_ERROR_WRAPPER
                 fixture.repositories.pages.getPage(page.pageId) shouldBe page
                 fixture.publishedTo("page.watch") shouldBe emptyList()
             }
@@ -679,7 +703,7 @@ val PageRoutesTest by testSuite {
                         CreatePageRequest(
                             bookId = book.bookId,
                             name = "committed_page",
-                            type = PageType.STATIC,
+                            kind = PageType.STATIC,
                             chapter = null,
                             priority = null,
                         ),
@@ -704,8 +728,8 @@ val PageRoutesTest by testSuite {
                         "page.update",
                         UpdatePageRequest(
                             pageId = recordId("tag", "wrong"),
+                            expectedRevision = 1,
                             name = null,
-                            type = null,
                             chapter = null,
                             priority = null,
                         ),
@@ -717,8 +741,8 @@ val PageRoutesTest by testSuite {
                         "page.update",
                         UpdatePageRequest(
                             pageId = recordId("page", "missing"),
+                            expectedRevision = 1,
                             name = null,
-                            type = null,
                             chapter = null,
                             priority = null,
                         ),
