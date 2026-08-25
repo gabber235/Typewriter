@@ -1,6 +1,6 @@
 import "dart:async";
 
-import "package:flutter/material.dart";
+import "package:flutter/material.dart" hide Page;
 import "package:flutter/services.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/fa6_solid.dart";
@@ -9,6 +9,7 @@ import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const entrySelectionOperations = <SelectionOperation>[
+  EntryDeleteOperation(),
   EntryLinkWithOperation(),
   EntryLinkWithDuplicateOperation(),
   EntryDuplicateOperation(),
@@ -190,15 +191,24 @@ class EntryDuplicateOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selected = ref.read(selectedProvider).requireValue;
     if (selected.isEmpty) return;
-    // ignore: unused_local_variable
     final entries = selected.whereType<EntrySelection>().toList(
       growable: false,
     );
-
-    // TODO: Implement duplication:
-    // 1) Create a copy with new ID.
-    // 2) Add to current page.
-    // 3) Select new entry and refresh.
+    final pageIds = {
+      for (final entry in entries)
+        ref.read(pageEntryCacheProvider)[entry.id.id]!.pageId,
+    };
+    if (pageIds.length != 1) {
+      throw ApiException.badRequest(
+        "Entries from different pages cannot be duplicated together",
+      );
+    }
+    final duplicated = await ref
+        .read(pageElementsProvider(pageIds.single).notifier)
+        .duplicateAll(entries.map((entry) => entry.id.id).toList());
+    ref
+        .read(selectionProvider.notifier)
+        .selectAll(duplicated.map(EntryIdentifier.new).toList());
   }
 
   @override
@@ -223,6 +233,82 @@ class EntryDuplicateOperation extends ActivatorShortcutOperation {
         foregroundColor: WidgetStateProperty.all(color.on(context)),
       ),
     ),
+  );
+}
+
+class EntryDeleteOperation extends IntentShortcutOperation {
+  const EntryDeleteOperation();
+
+  @override
+  String get name => "Delete";
+
+  @override
+  String get description => "Delete selected entries";
+
+  @override
+  Type get intent => DeleteIntent;
+
+  @override
+  bool canExecuteOn(List<Selectable> selection) =>
+      selection.allAre<EntrySelection>();
+
+  @override
+  FutureOr<void> executeOn(WidgetRef ref) async {
+    final selected = ref.read(selectedProvider).requireValue;
+    final entries = selected.whereType<EntrySelection>().toList();
+    if (entries.isEmpty) return;
+    final pageIds = {
+      for (final entry in entries)
+        ref.read(pageEntryCacheProvider)[entry.id.id]!.pageId,
+    };
+    if (pageIds.length != 1) {
+      throw ApiException.badRequest(
+        "Entries from different pages cannot be deleted together",
+      );
+    }
+    await ref
+        .read(pageElementsProvider(pageIds.single).notifier)
+        .deleteAll(entries.map((entry) => entry.id.id).toList());
+    ref
+        .read(selectionProvider.notifier)
+        .unselectAll(entries.map((entry) => entry.id).toList());
+  }
+
+  @override
+  MenuItem menuItem(WidgetRef ref) => MenuItem(
+    icon: const Icon(Icons.delete),
+    label: name,
+    color: Theme.of(ref.context).colorScheme.error,
+    onPressed: () => executeOn(ref),
+  );
+
+  @override
+  Widget inspectorButton(List<Selectable> selection) => Consumer(
+    builder: (context, ref, _) {
+      final scheme = Theme.of(context).colorScheme;
+      return OperationButton.filledIcon(
+        operation: this,
+        icon: const Icon(Icons.delete_outline, size: 16),
+        label: Text(
+          selection.length > 1 ? "Delete (${selection.length})" : "Delete",
+        ),
+        onPressed: () {
+          showConfirmationDialogue(
+            context: context,
+            title: "Delete ${selection.length} item(s)?",
+            content: "This action cannot be undone.",
+            confirmText: "Delete",
+            confirmColor: scheme.error,
+            onConfirmColor: scheme.onError,
+            onConfirm: () async => executeOn(ref),
+          );
+        },
+        style: FilledButton.styleFrom(
+          foregroundColor: scheme.onError,
+          backgroundColor: scheme.error,
+        ),
+      );
+    },
   );
 }
 
@@ -252,15 +338,62 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
   FutureOr<void> executeOn(WidgetRef ref) async {
     final selected = ref.read(selectedProvider).requireValue;
     if (selected.isEmpty) return;
-    // ignore: unused_local_variable
     final entries = selected.whereType<EntrySelection>().toList(
       growable: false,
     );
-
-    // TODO: Implement move:
-    // 1) Open page selector.
-    // 2) Persist move to selected page.
-    // 3) Refresh UI.
+    final cached = ref.read(pageEntryCacheProvider);
+    final sourcePageIds = {
+      for (final entry in entries) cached[entry.id.id]!.pageId,
+    };
+    if (sourcePageIds.length != 1) {
+      throw ApiException.badRequest(
+        "Entries from different pages cannot be moved together",
+      );
+    }
+    final placementKinds = {
+      for (final entry in entries)
+        cached[entry.id.id]!.definition.placement.kind,
+    };
+    if (placementKinds.length != 1) {
+      throw ApiException.badRequest(
+        "Graph and timeline entries cannot be moved together",
+      );
+    }
+    final books = await ref.read(booksProvider.future);
+    final pages =
+        (await Future.wait([
+              for (final book in books)
+                ref.read(bookPagesProvider(book.bookId, "").future),
+            ]))
+            .expand((values) => values)
+            .where((page) {
+              if (page.pageId.id == sourcePageIds.single) return false;
+              final editor = ref
+                  .read(realmEditorCatalogProvider)
+                  .value
+                  ?.snapshot
+                  ?.pageCatalog
+                  .definitions[page.kind]
+                  ?.editor;
+              return switch (placementKinds.single) {
+                EntryPlacementKind.graph => editor is RealmGraphPageEditor,
+                EntryPlacementKind.timelineEntry =>
+                  editor is RealmTimelinePageEditor,
+              };
+            })
+            .toList(growable: false);
+    if (!ref.context.mounted) return;
+    final target = await _selectTargetPage(ref.context, pages);
+    if (target == null) return;
+    await ref
+        .read(pageElementsProvider(sourcePageIds.single).notifier)
+        .moveEntriesToPage(
+          entries.map((entry) => entry.id.id).toList(growable: false),
+          target.pageId.id,
+        );
+    ref
+        .read(selectionProvider.notifier)
+        .unselectAll(entries.map((entry) => entry.id).toList(growable: false));
   }
 
   @override
@@ -284,6 +417,29 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
         backgroundColor: WidgetStateProperty.all(color),
         foregroundColor: WidgetStateProperty.all(color.on(context)),
       ),
+    ),
+  );
+}
+
+Future<Page?> _selectTargetPage(BuildContext context, List<Page> pages) {
+  return showDialog<Page>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: const Text("Move to page"),
+      children: pages.isEmpty
+          ? const [
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Text("No compatible target pages"),
+              ),
+            ]
+          : [
+              for (final page in pages)
+                SimpleDialogOption(
+                  onPressed: () => Navigator.of(context).pop(page),
+                  child: Text(page.name.formatted),
+                ),
+            ],
     ),
   );
 }

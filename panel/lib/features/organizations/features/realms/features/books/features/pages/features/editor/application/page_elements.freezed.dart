@@ -55,12 +55,11 @@ extension PageElementPatterns on PageElement {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PageElementEntry value)?  entry,TResult Function( PageElementGroup value)?  group,TResult Function( PageElementCue value)?  cue,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PageElementEntry value)?  entry,TResult Function( PageElementCue value)?  cue,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case PageElementEntry() when entry != null:
-return entry(_that);case PageElementGroup() when group != null:
-return group(_that);case PageElementCue() when cue != null:
+return entry(_that);case PageElementCue() when cue != null:
 return cue(_that);case _:
   return orElse();
 
@@ -79,12 +78,11 @@ return cue(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PageElementEntry value)  entry,required TResult Function( PageElementGroup value)  group,required TResult Function( PageElementCue value)  cue,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PageElementEntry value)  entry,required TResult Function( PageElementCue value)  cue,}){
 final _that = this;
 switch (_that) {
 case PageElementEntry():
-return entry(_that);case PageElementGroup():
-return group(_that);case PageElementCue():
+return entry(_that);case PageElementCue():
 return cue(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -102,12 +100,11 @@ return cue(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PageElementEntry value)?  entry,TResult? Function( PageElementGroup value)?  group,TResult? Function( PageElementCue value)?  cue,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PageElementEntry value)?  entry,TResult? Function( PageElementCue value)?  cue,}){
 final _that = this;
 switch (_that) {
 case PageElementEntry() when entry != null:
-return entry(_that);case PageElementGroup() when group != null:
-return group(_that);case PageElementCue() when cue != null:
+return entry(_that);case PageElementCue() when cue != null:
 return cue(_that);case _:
   return null;
 
@@ -125,11 +122,10 @@ return cue(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PageEntry entry)?  entry,TResult Function( String id,  String name,  EntryPlacement placement)?  group,TResult Function( Cue cue)?  cue,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PageEntry entry)?  entry,TResult Function( Cue cue)?  cue,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PageElementEntry() when entry != null:
-return entry(_that.entry);case PageElementGroup() when group != null:
-return group(_that.id,_that.name,_that.placement);case PageElementCue() when cue != null:
+return entry(_that.entry);case PageElementCue() when cue != null:
 return cue(_that.cue);case _:
   return orElse();
 
@@ -148,11 +144,10 @@ return cue(_that.cue);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PageEntry entry)  entry,required TResult Function( String id,  String name,  EntryPlacement placement)  group,required TResult Function( Cue cue)  cue,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PageEntry entry)  entry,required TResult Function( Cue cue)  cue,}) {final _that = this;
 switch (_that) {
 case PageElementEntry():
-return entry(_that.entry);case PageElementGroup():
-return group(_that.id,_that.name,_that.placement);case PageElementCue():
+return entry(_that.entry);case PageElementCue():
 return cue(_that.cue);case _:
   throw StateError('Unexpected subclass');
 
@@ -170,11 +165,10 @@ return cue(_that.cue);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PageEntry entry)?  entry,TResult? Function( String id,  String name,  EntryPlacement placement)?  group,TResult? Function( Cue cue)?  cue,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PageEntry entry)?  entry,TResult? Function( Cue cue)?  cue,}) {final _that = this;
 switch (_that) {
 case PageElementEntry() when entry != null:
-return entry(_that.entry);case PageElementGroup() when group != null:
-return group(_that.id,_that.name,_that.placement);case PageElementCue() when cue != null:
+return entry(_that.entry);case PageElementCue() when cue != null:
 return cue(_that.cue);case _:
   return null;
 
@@ -188,7 +182,7 @@ return cue(_that.cue);case _:
 
 class PageElementEntry implements PageElement {
   const PageElementEntry({required this.entry});
-  
+
 
  final  PageEntry entry;
 
@@ -251,7 +245,7 @@ as PageEntry,
 @override
 @pragma('vm:prefer-inline')
 $PageEntryCopyWith<$Res> get entry {
-  
+
   return $PageEntryCopyWith<$Res>(_self.entry, (value) {
     return _then(_self.copyWith(entry: value));
   });
@@ -261,88 +255,9 @@ $PageEntryCopyWith<$Res> get entry {
 /// @nodoc
 
 
-class PageElementGroup implements PageElement {
-  const PageElementGroup({required this.id, required this.name, required this.placement}): assert(id != "", 'ID must not be empty.');
-  
-
- final  String id;
- final  String name;
- final  EntryPlacement placement;
-
-/// Create a copy of PageElement
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$PageElementGroupCopyWith<PageElementGroup> get copyWith => _$PageElementGroupCopyWithImpl<PageElementGroup>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageElementGroup&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.placement, placement) || other.placement == placement));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,id,name,placement);
-
-@override
-String toString() {
-  return 'PageElement.group(id: $id, name: $name, placement: $placement)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $PageElementGroupCopyWith<$Res> implements $PageElementCopyWith<$Res> {
-  factory $PageElementGroupCopyWith(PageElementGroup value, $Res Function(PageElementGroup) _then) = _$PageElementGroupCopyWithImpl;
-@useResult
-$Res call({
- String id, String name, EntryPlacement placement
-});
-
-
-$EntryPlacementCopyWith<$Res> get placement;
-
-}
-/// @nodoc
-class _$PageElementGroupCopyWithImpl<$Res>
-    implements $PageElementGroupCopyWith<$Res> {
-  _$PageElementGroupCopyWithImpl(this._self, this._then);
-
-  final PageElementGroup _self;
-  final $Res Function(PageElementGroup) _then;
-
-/// Create a copy of PageElement
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? placement = null,}) {
-  return _then(PageElementGroup(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,placement: null == placement ? _self.placement : placement // ignore: cast_nullable_to_non_nullable
-as EntryPlacement,
-  ));
-}
-
-/// Create a copy of PageElement
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$EntryPlacementCopyWith<$Res> get placement {
-  
-  return $EntryPlacementCopyWith<$Res>(_self.placement, (value) {
-    return _then(_self.copyWith(placement: value));
-  });
-}
-}
-
-/// @nodoc
-
-
 class PageElementCue implements PageElement {
   const PageElementCue({required this.cue});
-  
+
 
  final  Cue cue;
 
@@ -405,7 +320,7 @@ as Cue,
 @override
 @pragma('vm:prefer-inline')
 $CueCopyWith<$Res> get cue {
-  
+
   return $CueCopyWith<$Res>(_self.cue, (value) {
     return _then(_self.copyWith(cue: value));
   });

@@ -12,6 +12,17 @@ export "skirout/kernel/v1/record_id.dart";
 export "skirout/library/v1/book.dart";
 export "skirout/library/v1/page.dart";
 export "skirout/library/v1/tag.dart";
+export "skirout/library/v2/authoring.dart"
+    hide
+        Book,
+        Book_mutable,
+        Book_orMutable,
+        Page,
+        Page_mutable,
+        Page_orMutable,
+        Tag,
+        Tag_mutable,
+        Tag_orMutable;
 export "skirout/organization/v1/join_codes.dart";
 export "skirout/organization/v1/join_request.dart";
 export "skirout/organization/v1/member.dart";

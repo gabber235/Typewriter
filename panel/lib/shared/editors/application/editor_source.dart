@@ -6,7 +6,11 @@ abstract interface class EditorSource implements Listenable {
 
   EditorValue value(DataPath path);
 
-  EditorMutationResult update(DataPath path, DataValue value);
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  });
 
   void refreshDocument(EditorDocument document);
 

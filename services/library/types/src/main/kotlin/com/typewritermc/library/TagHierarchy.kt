@@ -23,8 +23,9 @@ class TagHierarchy(
             if (!visited.add(currentId)) continue
 
             val current = tagsById[currentId] ?: return null
-            if (candidate in current.parents) return true
-            pending.addAll(current.parents)
+            val parentIds = current.parents.mapTo(linkedSetOf()) { it.tagId() }
+            if (candidate in parentIds) return true
+            pending.addAll(parentIds)
         }
         return false
     }
@@ -35,7 +36,7 @@ class TagHierarchy(
     ): Boolean {
         if (child == parent) return false
         val childTag = tagsById[child] ?: return false
-        if (parent !in tagsById || parent in childTag.parents) return false
+        if (parent !in tagsById || parent in childTag.parents.map { it.tagId() }) return false
         return isAncestor(child, parent) == false && isAncestor(parent, child) == false
     }
 }

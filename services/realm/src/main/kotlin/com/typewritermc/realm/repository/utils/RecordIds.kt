@@ -2,16 +2,22 @@ package com.typewritermc.realm.repository.utils
 
 import com.surrealdb.Id
 import com.surrealdb.Value
+import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.library.BookId
 import com.typewritermc.library.PageId
-import com.typewritermc.library.RecordIdKey
-import com.typewritermc.library.RecordIdValue
+import com.typewritermc.library.Tag
 import com.typewritermc.library.TagId
+import com.typewritermc.library.tagId
+import com.typewritermc.types.RecordIdKey
+import com.typewritermc.types.RecordIdValue
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import skirout.kernel.v1.errors.InvalidRecordIdError
 import skirout.kernel.v1.record_id.ObjectRecordIdKey
 import skirout.kernel.v1.record_id.ObjectRecordIdValue
 import skirout.kernel.v1.record_id.RecordId
 import java.util.UUID
+import kotlin.uuid.Uuid
 import skirout.kernel.v1.record_id.RecordIdKey as SkirRecordIdKey
 import skirout.kernel.v1.record_id.RecordIdValue as SkirRecordIdValue
 
@@ -38,11 +44,24 @@ internal fun RecordId.toPageId(): PageId {
     return PageId(key.toLibraryKey())
 }
 
+internal fun RecordId.toElementInstanceId(): ElementInstanceId {
+    requireTable("element")
+    val value = key.toLibraryKey()
+    require(value is RecordIdKey.String) { "Element record ids must use string keys." }
+    return ElementInstanceId(Uuid.parseHex(value.value))
+}
+
+internal fun RecordId.toResourceId(): ResourceId = ResourceId(table, key.toLibraryKey())
+
 internal fun BookId.toSkirRecordId(): RecordId = RecordId(table = "book", key = key.toSkirKey())
 
 internal fun TagId.toSkirRecordId(): RecordId = RecordId(table = "tag", key = key.toSkirKey())
 
 internal fun PageId.toSkirRecordId(): RecordId = RecordId(table = "page", key = key.toSkirKey())
+
+internal fun Ref<*>.toSkirRecordId(): RecordId = RecordId(table = id.table, key = id.key.toSkirKey())
+
+internal fun ResourceId.toSkirRecordId(): RecordId = RecordId(table = table, key = key.toSkirKey())
 
 internal fun BookId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("book")
 
@@ -50,7 +69,15 @@ internal fun TagId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("
 
 internal fun PageId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("page")
 
+internal fun ElementInstanceId.surrealId(): com.surrealdb.RecordId = com.surrealdb.RecordId("element", value.toHexString())
+
+internal fun Ref<*>.surrealId(): com.surrealdb.RecordId = id.key.toSurrealRecordId(id.table)
+
+internal fun ResourceId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId(table)
+
 internal fun Iterable<TagId>.surrealTagIds(): List<com.surrealdb.RecordId> = map(TagId::surrealId)
+
+internal fun Iterable<Ref<Tag>>.surrealTagRefs(): List<com.surrealdb.RecordId> = map { it.tagId().surrealId() }
 
 internal fun RecordId.surrealId(expectedTable: String): com.surrealdb.RecordId {
     requireTable(expectedTable)
@@ -79,11 +106,19 @@ internal fun com.surrealdb.RecordId.toPageId(): PageId {
     return PageId(id.toLibraryKey())
 }
 
+internal fun com.surrealdb.RecordId.toElementInstanceId(): ElementInstanceId {
+    require(table == "element") { "Expected an element record id, received $table." }
+    require(id.isString) { "Element record ids must use string keys." }
+    return ElementInstanceId(Uuid.parseHex(id.string))
+}
+
 internal fun com.surrealdb.RecordId.toSkirRecordId(): RecordId =
     RecordId(
         table = table,
         key = id.toLibraryKey().toSkirKey(),
     )
+
+internal fun com.surrealdb.RecordId.toResourceId(): ResourceId = ResourceId(table, id.toLibraryKey())
 
 private fun RecordId.requireTable(expectedTable: String) {
     require(table == expectedTable) { "Expected a $expectedTable record id, received $table." }

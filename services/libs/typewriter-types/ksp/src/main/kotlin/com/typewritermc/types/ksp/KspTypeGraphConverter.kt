@@ -189,7 +189,7 @@ private class ConversionContext(
         path: List<String>,
     ): TypeExpression? {
         val identity =
-            runCatching { identityPolicy.identity(declaration) }
+            runCatching { identity(declaration) }
                 .getOrElse { return failure(path, it.message ?: "Could not assign a Typewriter identity.") }
         val arguments =
             type.arguments.mapIndexed { index, argument ->
@@ -209,7 +209,7 @@ private class ConversionContext(
         path: List<String>,
     ): TypeExpression? {
         val identity =
-            runCatching { identityPolicy.identity(declaration) }
+            runCatching { identity(declaration) }
                 .getOrElse { return failure(path, it.message ?: "Could not assign a Typewriter identity.") }
         val arguments =
             type.arguments.mapIndexed { index, argument ->
@@ -226,6 +226,12 @@ private class ConversionContext(
         }
         return TypeExpression.Named(identity.withArguments(arguments.filterNotNull()))
     }
+
+    private fun identity(declaration: KSClassDeclaration): ResolvedTypeRef =
+        when (declaration.qualifiedName?.asString()) {
+            CANONICAL_REF_TYPE -> CANONICAL_REF_REFERENCE
+            else -> identityPolicy.identity(declaration)
+        }
 
     private fun buildDefinition(
         declaration: KSClassDeclaration,
@@ -406,6 +412,8 @@ private val ResolvedTypeRef.sortKey: String
         }
 
 private const val TYPEWRITER_STRING_ANNOTATION = "com.typewritermc.types.TypewriterString"
+private const val CANONICAL_REF_TYPE = "com.typewritermc.types.Ref"
+private val CANONICAL_REF_REFERENCE = ResolvedTypeRef(TypeId.Qualified("typewriter/v1", "Ref"), revision = 1)
 
 private val PRIMITIVE_ARRAYS =
     mapOf(

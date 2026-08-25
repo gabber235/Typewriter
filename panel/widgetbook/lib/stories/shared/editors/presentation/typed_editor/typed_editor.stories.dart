@@ -131,8 +131,11 @@ class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   EditorValue value(DataPath path) => _state;
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) =>
-      EditorMutationResult.applied(value);
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) => EditorMutationResult.applied(value);
 
   @override
   void refreshDocument(EditorDocument document) {}

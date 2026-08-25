@@ -6,16 +6,16 @@ import com.typewritermc.types.ConcreteTypePrototype
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.Icon
+import com.typewritermc.types.Referenceable
 import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypedValueEnvelope
 import com.typewritermc.types.TypewriterString
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.uuid.Uuid
 
-interface Element {
+interface Element : Referenceable {
     val id: ElementInstanceId
 }
 
@@ -130,17 +130,6 @@ data class ElementDescriptor(
 
 interface ElementPrototype<E : Element> : ConcreteTypePrototype<E> {
     val descriptor: ElementDescriptor
-}
-
-@Serializable
-data class StoredElementEnvelope(
-    val elementType: ElementTypeId,
-    val schemaRevision: Int,
-    val value: TypedValueEnvelope,
-) {
-    init {
-        require(schemaRevision > 0) { "Stored element schema revisions must be positive." }
-    }
 }
 
 fun ElementDescriptor.isAvailable(facts: DeploymentFacts): Boolean = availability.evaluate(facts)

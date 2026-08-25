@@ -2,6 +2,10 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/page.dart"
+    as wire_v1;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v2/authoring.dart"
+    as wire_v2;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "pages.freezed.dart";
@@ -22,7 +26,7 @@ abstract class Page with _$Page {
 
   const Page._();
 
-  factory Page.fromSkir(skir.Page page) => Page(
+  factory Page.fromSkir(wire_v1.Page page) => Page(
     pageId: page.pageId,
     revision: page.revision,
     bookId: page.bookId,
@@ -32,7 +36,17 @@ abstract class Page with _$Page {
     priority: page.priority,
   );
 
-  skir.Page toSkir() => skir.Page(
+  factory Page.fromV2(wire_v2.Page page) => Page(
+    pageId: page.id,
+    revision: page.revision,
+    bookId: page.book,
+    name: page.name,
+    kind: PageKindRef.fromSkir(page.kind),
+    chapter: page.chapter,
+    priority: page.priority,
+  );
+
+  wire_v1.Page toSkir() => wire_v1.Page(
     pageId: this.pageId,
     revision: revision,
     bookId: this.bookId,
@@ -47,6 +61,7 @@ abstract class Page with _$Page {
 class BookPages extends _$BookPages {
   @override
   Future<List<Page>> build(skir.RecordId bookId, String search) async {
+    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.page));
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
@@ -84,6 +99,7 @@ class BookPages extends _$BookPages {
 class Pages extends _$Pages {
   @override
   Stream<Page> build(skir.RecordId pageId) async* {
+    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.page));
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
@@ -142,12 +158,17 @@ class Pages extends _$Pages {
         priority: priority ?? currentPage.priority,
       ),
     );
-    final request = skir.UpdatePageRequest(
-      pageId: currentPage.pageId,
-      expectedRevision: currentPage.revision,
-      name: name,
-      chapter: chapter,
-      priority: priority,
+    final request = skir.UpdatePagesRequest(
+      batchId: uuid.v4(),
+      pages: [
+        skir.PageUpdate(
+          id: currentPage.pageId,
+          expectedRevision: currentPage.revision,
+          name: name ?? currentPage.name,
+          chapter: chapter ?? currentPage.chapter,
+          priority: priority ?? currentPage.priority,
+        ),
+      ],
     );
 
     try {
@@ -155,29 +176,26 @@ class Pages extends _$Pages {
         RealmServiceAddress(
           organizationId: organizationId,
           realmId: realmId,
-        ).request("page.update"),
-        skir.UpdatePageRequest.serializer.toBytes(request),
-        skir.UpdatePageResponse.serializer,
+        ).request("page.update.v2"),
+        skir.UpdatePagesRequest.serializer.toBytes(request),
+        skir.UpdatePagesResponse.serializer,
       );
 
       switch (response) {
-        case skir.UpdatePageResponse_unknown():
+        case skir.UpdatePagesResponse_unknown():
           throw ApiException.unknownResponseMessage();
-        case skir.UpdatePageResponse_internalErrorWrapper():
+        case skir.UpdatePagesResponse_internalErrorWrapper():
           throw ApiException.internalServerError();
-        case skir.UpdatePageResponse_successWrapper(:final value):
-          state = AsyncData(Page.fromSkir(value));
-        case skir.UpdatePageResponse_conflictErrorWrapper(:final value):
-          state = AsyncData(Page.fromSkir(value.actual));
+        case skir.UpdatePagesResponse_successWrapper(:final value):
+          state = AsyncData(Page.fromV2(value.single));
+        case skir.UpdatePagesResponse_conflictWrapper(:final value):
+          final actual = value.single.actual;
+          if (actual != null) state = AsyncData(Page.fromV2(actual));
           throw ApiException.conflict(
             "The page changed while it was being edited",
           );
-        case skir.UpdatePageResponse_pageNotFoundErrorWrapper():
-          throw ApiException.notFound("Page");
-        case skir.UpdatePageResponse_validationErrorWrapper(:final value):
-          throw _pageValidationException(value);
-        case skir.UpdatePageResponse_invalidRecordIdErrorWrapper(:final value):
-          throw ApiException.invalidRecordId(value);
+        case skir.UpdatePagesResponse_invalidWrapper(:final value):
+          throw ApiException.badRequest(value.join("; "));
       }
     } on ApiException catch (failure) {
       if (failure.code != 409) state = previousState;
@@ -194,18 +212,4 @@ skir.RecordId? pageId(Ref ref) {
   final id = ref.watch(routeParamProvider("pageId"));
   if (id == null) return null;
   return recordId("page:$id");
-}
-
-ApiException _pageValidationException(skir.PageValidationError error) {
-  return switch (error.kind) {
-    skir.PageValidationError_kind.unknown =>
-      ApiException.unknownResponseMessage(),
-    skir.PageValidationError_kind.nameRequiredConst => ApiException.badRequest(
-      "Page name is required",
-    ),
-    skir.PageValidationError_kind.pageKindUnknownConst =>
-      ApiException.badRequest("Page kind is unknown"),
-    skir.PageValidationError_kind.pageKindRevisionUnknownConst =>
-      ApiException.badRequest("Page kind revision is unknown"),
-  };
 }

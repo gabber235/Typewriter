@@ -5,10 +5,13 @@ import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v2/authoring.dart"
+    as wire_v2;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-const _updateSubject = "service.to.realm1.organization.org1.realm.book.update";
+const _updateSubject =
+    "service.to.realm1.organization.org1.realm.book.update.v2";
 const _listenSubject = "service.from.realm1.organization.org1.realm.book.watch";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
@@ -147,8 +150,8 @@ void main() {
     final delayed = _book(title: "Delayed", revision: 2);
     nats.registerHandler(_updateSubject, (data) {
       notifier.observe(newest);
-      return skir.UpdateBookResponse.serializer.toBytes(
-        skir.UpdateBookResponse.wrapSuccess(delayed.toSkir()),
+      return wire_v2.UpdateBooksResponse.serializer.toBytes(
+        wire_v2.UpdateBooksResponse.wrapSuccess([_wireBook(delayed)]),
       );
     });
 
@@ -160,7 +163,61 @@ void main() {
     expect((result as MutationSuccess).revision, newest.revision);
     expect(container.read(booksProvider).requireValue, [newest]);
   });
+
+  test("typed Book conflict installs canonical server state", () async {
+    final nats = MockNatsClient();
+    final current = _book();
+    final canonical = _book(title: "Remote", revision: 3);
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(_organizationId),
+        realmIdProvider.overrideWithValue(_realmId),
+        natsProvider.overrideWithValue(nats),
+        panelTelemetryProvider.overrideWithValue(
+          const AsyncData(NoopPanelTelemetry()),
+        ),
+        booksProvider.overrideWith(() => _SeededBooks([current])),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(nats.dispose);
+    final subscription = container.listen(booksProvider, (_, _) {});
+    addTearDown(subscription.close);
+    await container.read(booksProvider.future);
+    nats.registerHandler(
+      _updateSubject,
+      (data) => wire_v2.UpdateBooksResponse.serializer.toBytes(
+        wire_v2.UpdateBooksResponse.wrapConflict([
+          wire_v2.BookConflict(
+            id: current.bookId,
+            expectedRevision: current.revision,
+            actual: _wireBook(canonical),
+          ),
+        ]),
+      ),
+    );
+
+    final result = await container
+        .read(booksProvider.notifier)
+        .updateBook(current.copyWith(title: "Requested"));
+
+    expect(result, isA<MutationConflict>());
+    expect((result as MutationConflict).actualRevision, 3);
+    final observed = container.read(booksProvider).requireValue.single;
+    expect(observed.bookId, canonical.bookId);
+    expect(observed.revision, canonical.revision);
+    expect(observed.title, canonical.title);
+  });
 }
+
+wire_v2.Book _wireBook(Book book) => wire_v2.Book(
+  id: book.bookId,
+  revision: book.revision,
+  title: book.title,
+  icon: book.icon,
+  color: book.color.toSkirColor(),
+  tags: book.tagIds,
+);
 
 void _emit(MockNatsClient nats, skir.WatchBooksResponse response) {
   nats.emitMessageOnSubject(

@@ -15,7 +15,7 @@ abstract class Book with _$Book {
 
   const Book._();
 
-  factory Book.fromSkir(skir.Book book) => Book(
+  factory Book.fromSkir(wire_v1.Book book) => Book(
     bookId: book.bookId,
     revision: book.revision,
     title: book.title,
@@ -24,7 +24,16 @@ abstract class Book with _$Book {
     tagIds: book.tagIds.toList(),
   );
 
-  skir.Book toSkir() => skir.Book(
+  factory Book.fromV2(wire_v2.Book book) => Book(
+    bookId: book.id,
+    revision: book.revision,
+    title: book.title,
+    icon: book.icon,
+    color: book.color.toFlutterColor(),
+    tagIds: book.tags.toList(),
+  );
+
+  wire_v1.Book toSkir() => wire_v1.Book(
     bookId: this.bookId,
     revision: revision,
     title: title,

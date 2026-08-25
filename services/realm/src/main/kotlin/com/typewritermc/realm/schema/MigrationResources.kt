@@ -98,4 +98,4 @@ private fun String.sha256(): String =
     MessageDigest
         .getInstance("SHA-256")
         .digest(toByteArray(Charsets.UTF_8))
-        .joinToString("") { byte -> "%02x".format(byte) }
+        .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }

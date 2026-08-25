@@ -4,7 +4,7 @@ import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.ExecutableEntry
 import com.typewritermc.elements.TypewriterElement
-import com.typewritermc.library.PageRef
+import com.typewritermc.types.Ref
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 )
 data class SyntheticPageReferenceEntry(
     override val id: ElementInstanceId,
-    val page: PageRef<SyntheticPageKind>,
+    val page: Ref<SyntheticPageKind>,
 ) : ExecutableEntry {
     context(context: EntryExecutionContext)
     override suspend fun execute() = Unit

@@ -13,13 +13,8 @@ DEFINE FIELD OVERWRITE name ON page TYPE string
         RETURN true;
     };
 
-DEFINE FIELD OVERWRITE book ON page TYPE record<book> REFERENCE
-    ASSERT {
-        IF !record::exists($value) {
-            THROW "book-not-found-error"
-        };
-        RETURN true;
-    };
+DEFINE FIELD OVERWRITE book ON page
+    COMPUTED array::first(<-contains_page<-book);
 
 DEFINE FIELD OVERWRITE kind ON page
     TYPE { id: string, revision: int };

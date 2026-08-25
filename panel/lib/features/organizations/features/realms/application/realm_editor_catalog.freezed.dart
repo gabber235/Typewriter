@@ -208,7 +208,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 class _RealmEditorCatalogRoute extends RealmEditorCatalogRoute {
   const _RealmEditorCatalogRoute({required this.organizationId, required this.realmId}): super._();
-  
+
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
@@ -341,7 +341,7 @@ as RealmPageCatalog,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-  
+
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });
@@ -350,7 +350,7 @@ $TypeCatalogCopyWith<$Res> get catalog {
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get generation {
-  
+
   return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
     return _then(_self.copyWith(generation: value));
   });
@@ -502,7 +502,7 @@ return $default(_that.catalog,_that.generation,_that.presentations,_that.convers
 
 class _RealmEditorCatalogSnapshot implements RealmEditorCatalogSnapshot {
   const _RealmEditorCatalogSnapshot({required this.catalog, required this.generation, final  Map<PresentationId, PresentationDefinition> presentations = const {}, final  Map<ConversionId, ConversionDefinition> conversions = const {}, final  Map<CapabilityId, CapabilityDefinition> capabilities = const {}, final  Map<String, RealmEditorSubtypeResult> subtypeResults = const {}, final  List<TypeDiagnostic> diagnostics = const [], final  Map<String, RealmElementCatalogEntry> elements = const {}, this.pageCatalog = const RealmPageCatalog()}): _presentations = presentations,_conversions = conversions,_capabilities = capabilities,_subtypeResults = subtypeResults,_diagnostics = diagnostics,_elements = elements;
-  
+
 
 @override final  TypeCatalog catalog;
 @override final  CatalogGeneration generation;
@@ -617,7 +617,7 @@ as RealmPageCatalog,
 @override
 @pragma('vm:prefer-inline')
 $TypeCatalogCopyWith<$Res> get catalog {
-  
+
   return $TypeCatalogCopyWith<$Res>(_self.catalog, (value) {
     return _then(_self.copyWith(catalog: value));
   });
@@ -626,7 +626,7 @@ $TypeCatalogCopyWith<$Res> get catalog {
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get generation {
-  
+
   return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
     return _then(_self.copyWith(generation: value));
   });
@@ -813,7 +813,7 @@ return unavailable(_that.diagnostics);case _:
 
 class RealmEditorCatalogFetched implements RealmEditorCatalogFetchResult {
   const RealmEditorCatalogFetched(this.snapshot);
-  
+
 
  final  RealmEditorCatalogSnapshot snapshot;
 
@@ -876,7 +876,7 @@ as RealmEditorCatalogSnapshot,
 @override
 @pragma('vm:prefer-inline')
 $RealmEditorCatalogSnapshotCopyWith<$Res> get snapshot {
-  
+
   return $RealmEditorCatalogSnapshotCopyWith<$Res>(_self.snapshot, (value) {
     return _then(_self.copyWith(snapshot: value));
   });
@@ -888,7 +888,7 @@ $RealmEditorCatalogSnapshotCopyWith<$Res> get snapshot {
 
 class RealmEditorCatalogGenerationMismatch implements RealmEditorCatalogFetchResult {
   const RealmEditorCatalogGenerationMismatch(this.currentGeneration);
-  
+
 
  final  CatalogGeneration currentGeneration;
 
@@ -951,7 +951,7 @@ as CatalogGeneration,
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get currentGeneration {
-  
+
   return $CatalogGenerationCopyWith<$Res>(_self.currentGeneration, (value) {
     return _then(_self.copyWith(currentGeneration: value));
   });
@@ -963,7 +963,7 @@ $CatalogGenerationCopyWith<$Res> get currentGeneration {
 
 class RealmEditorCatalogFetchUnavailable implements RealmEditorCatalogFetchResult {
   const RealmEditorCatalogFetchUnavailable(final  List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {
@@ -1195,7 +1195,7 @@ return unavailable(_that.diagnostics);case _:
 
 class RealmEditorCatalogInvalidated implements RealmEditorCatalogWatchEvent {
   const RealmEditorCatalogInvalidated(this.generation);
-  
+
 
  final  CatalogGeneration generation;
 
@@ -1258,7 +1258,7 @@ as CatalogGeneration,
 @override
 @pragma('vm:prefer-inline')
 $CatalogGenerationCopyWith<$Res> get generation {
-  
+
   return $CatalogGenerationCopyWith<$Res>(_self.generation, (value) {
     return _then(_self.copyWith(generation: value));
   });
@@ -1270,7 +1270,7 @@ $CatalogGenerationCopyWith<$Res> get generation {
 
 class RealmEditorCatalogWatchUnavailable implements RealmEditorCatalogWatchEvent {
   const RealmEditorCatalogWatchUnavailable(final  List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-  
+
 
  final  List<TypeDiagnostic> _diagnostics;
  List<TypeDiagnostic> get diagnostics {

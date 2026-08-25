@@ -2,6 +2,7 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.RuntimeRegistrar
+import com.typewritermc.engine.ActivatedCompiledContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
 import kotlinx.coroutines.CoroutineScope
@@ -13,12 +14,13 @@ class ReloadableEngineRuntime(
     private val registrars: List<RuntimeRegistrar>,
     private val parentScope: CoroutineScope,
     private val contentGateway: EngineContentGateway? = null,
+    private val contentDelivery: EngineContentDelivery? = null,
 ) : StagedHostedRuntime {
     private val mutableHealth = MutableStateFlow<RuntimeHealth>(RuntimeHealth.Staged)
     override val health: StateFlow<RuntimeHealth> = mutableHealth
     private var deployment: DiscoveryDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
-    private var lastContentRevision: ContentRevision? = null
+    private var lastContent: ActivatedCompiledContent? = null
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
@@ -28,8 +30,9 @@ class ReloadableEngineRuntime(
             with(replacement) {
                 registrars.forEach { it.register() }
             }
-            lastContentRevision?.let { revision -> contentGateway?.apply(revision) }
+            lastContent?.let { content -> contentGateway?.apply(content) }
             scope = replacement
+            contentDelivery?.start { content -> applyContent(content) }
             mutableHealth.value = RuntimeHealth.Healthy
         } catch (failure: Throwable) {
             runCatching { replacement.close() }.exceptionOrNull()?.let(failure::addSuppressed)
@@ -38,19 +41,20 @@ class ReloadableEngineRuntime(
         }
     }
 
-    suspend fun applyContent(revision: ContentRevision): ContentApplicationResult {
+    suspend fun applyContent(content: ActivatedCompiledContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
-        val current = lastContentRevision
-        if (current != null && revision.revision <= current.revision) {
-            return ContentApplicationResult.Ignored(current.revision)
+        val current = lastContent
+        if (current != null && content.activationRevision <= current.activationRevision) {
+            return ContentApplicationResult.Ignored(current.activationRevision, current.content.manifest.digest)
         }
         val gateway = contentGateway ?: return ContentApplicationResult.Unsupported
-        gateway.apply(revision)
-        lastContentRevision = revision
-        return ContentApplicationResult.Applied(revision.revision)
+        gateway.apply(content)
+        lastContent = content
+        return ContentApplicationResult.Applied(content.activationRevision, content.content.manifest.digest)
     }
 
     override suspend fun quiesce() {
+        contentDelivery?.stop()
         val active = scope ?: return
         scope = null
         active.close()

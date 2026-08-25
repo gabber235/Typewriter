@@ -174,6 +174,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             clock,
                             get(),
                             get(),
+                            get(),
                             capabilityInvocations = get(),
                         )
                     }

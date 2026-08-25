@@ -74,9 +74,10 @@ sealed class EditorActionResult {
 }
 
 final class LocalEditorActionResult extends EditorActionResult {
-  const LocalEditorActionResult(this.mutation);
+  const LocalEditorActionResult(this.mutation, {this.structuralMutation});
 
   final TypedMutationResult mutation;
+  final EditorStructuralMutation? structuralMutation;
 }
 
 final class RealmEditorActionResult extends EditorActionResult {

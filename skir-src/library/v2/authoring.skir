@@ -1,0 +1,696 @@
+import { DataPath } from "editor/v1/path.skir";
+import {
+  ResolvedTypeRef,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+import { Color } from "kernel/v1/color.skir";
+import { PageKindRef } from "kernel/v1/page_kind.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+struct GraphPlacement {
+  x: int32;
+  y: int32;
+  width: int32;
+  height: int32;
+}
+
+struct TimelineEntryPlacement {
+  track_index: int32;
+}
+
+struct TimelineSegmentPlacement {
+  start_frame: int32;
+  end_frame: int32;
+}
+
+struct TimelineKeyframePlacement {
+  frame: int32;
+}
+
+enum ElementPlacement {
+  graph_v1: GraphPlacement;
+  timeline_entry_v1: TimelineEntryPlacement;
+  timeline_segment_v1: TimelineSegmentPlacement;
+  timeline_keyframe_v1: TimelineKeyframePlacement;
+}
+
+struct Book {
+  id: RecordId;
+  revision: int64;
+  title: string;
+  icon: string;
+  color: Color;
+  tags: [RecordId];
+}
+
+struct Tag {
+  id: RecordId;
+  revision: int64;
+  name: string;
+  color: Color;
+  parents: [RecordId];
+  placement: GraphPlacement;
+}
+
+struct Page {
+  id: RecordId;
+  revision: int64;
+  book: RecordId;
+  name: string;
+  kind: PageKindRef;
+  chapter: string;
+  priority: int32;
+}
+
+struct PageElement {
+  id: RecordId;
+  revision: int64;
+  element_type: string;
+  schema_revision: int32;
+  name: string;
+  value: TypedValue;
+  placement: ElementPlacement;
+}
+
+struct PageReference {
+  source: RecordId;
+  slot: string;
+  target: RecordId;
+}
+
+struct ResourceSummary {
+  id: RecordId;
+  name: string?;
+  element_type: string?;
+  page: RecordId?;
+  exists: bool;
+}
+
+struct PageDiagnostic {
+  code: string;
+  message: string;
+  element: RecordId?;
+  slot: string?;
+  target: RecordId?;
+}
+
+enum PageCompileStatus {
+  not_compiled;
+  active: struct {
+    manifest_id: string;
+  };
+  blocked: struct {
+    last_active_manifest_id: string?;
+    diagnostic_count: int32;
+  };
+}
+
+struct PageDocument {
+  revision: string;
+  page: Page;
+  elements: [PageElement];
+  references: [PageReference];
+  cross_page_targets: [ResourceSummary];
+  cross_page_sources: [ResourceSummary];
+  diagnostics: [PageDiagnostic];
+  compile_status: PageCompileStatus;
+}
+
+method GetPageDocument(
+  struct {
+    page_id: RecordId;
+  }
+): enum {
+  success: PageDocument;
+  page_not_found: struct {
+    page_id: RecordId;
+  };
+  invalid_request: struct {
+    diagnostics: [string];
+  };
+  internal_error: struct {
+    message: string;
+  };
+} = 920001;
+
+enum PageInvalidationReason {
+  execution;
+  layout;
+}
+
+struct PageDocumentInvalidation {
+  batch_id: string;
+  revision: int64;
+  page_ids: [RecordId];
+  reason: PageInvalidationReason;
+}
+
+method WatchPageDocuments(
+  struct {
+    page_ids: [RecordId];
+  }
+): enum {
+  initial;
+  invalidated: PageDocumentInvalidation;
+  invalid_request: struct {
+    diagnostics: [string];
+  };
+  internal_error: struct {
+    message: string;
+  };
+} = 920020;
+
+enum LibraryResourceKind {
+  book;
+  page;
+  tag;
+}
+
+struct LibraryInvalidation {
+  batch_id: string;
+  revision: int64;
+  resources: [LibraryResourceKind];
+}
+
+method WatchLibraryInvalidations(
+  struct {}
+): enum {
+  initial: struct {
+    revision: int64;
+  };
+  invalidated: LibraryInvalidation;
+  internal_error: struct {
+    message: string;
+  };
+} = 920022;
+
+struct CompiledBlobPointer {
+  digest: string;
+  size: int64;
+}
+
+struct CompiledShardPointer {
+  shard_digest: string;
+  blob: CompiledBlobPointer;
+}
+
+struct CompiledContentActivation {
+  activation_revision: int64;
+  manifest_digest: string;
+  manifest: CompiledBlobPointer;
+  shards: [CompiledShardPointer];
+}
+
+method WatchCompiledContent(
+  struct {}
+): enum {
+  initial: struct {
+    activation: CompiledContentActivation?;
+  };
+  activated: CompiledContentActivation;
+  internal_error: struct {
+    message: string;
+  };
+} = 920021;
+
+struct SetValueMutation {
+  path: DataPath;
+  value: TypedValue;
+}
+
+struct InsertListItemsMutation {
+  path: DataPath;
+  index: int32;
+  values: [TypedValue];
+}
+
+struct RemoveListItemsMutation {
+  path: DataPath;
+  index: int32;
+  count: int32;
+}
+
+struct ReorderListItemsMutation {
+  path: DataPath;
+  source_index: int32;
+  count: int32;
+  destination_index: int32;
+}
+
+struct DuplicateListItemsMutation {
+  path: DataPath;
+  source_index: int32;
+  count: int32;
+  destination_index: int32;
+}
+
+struct PutMapEntry {
+  key: TypedValue;
+  value: TypedValue;
+}
+
+struct PutMapEntriesMutation {
+  path: DataPath;
+  entries: [PutMapEntry];
+}
+
+struct RemoveMapEntriesMutation {
+  path: DataPath;
+  keys: [TypedValue];
+}
+
+struct ReplaceConcreteTypeMutation {
+  path: DataPath;
+  concrete_type: ResolvedTypeRef;
+  value: TypedValue;
+}
+
+enum ElementValueMutation {
+  set_value: SetValueMutation;
+  insert_list_items: InsertListItemsMutation;
+  remove_list_items: RemoveListItemsMutation;
+  reorder_list_items: ReorderListItemsMutation;
+  duplicate_list_items: DuplicateListItemsMutation;
+  put_map_entries: PutMapEntriesMutation;
+  remove_map_entries: RemoveMapEntriesMutation;
+  replace_concrete_type: ReplaceConcreteTypeMutation;
+}
+
+struct ElementValueUpdate {
+  id: RecordId;
+  expected_revision: int64;
+  name: string;
+  mutations: [ElementValueMutation];
+}
+
+struct ElementBatchConflict {
+  id: RecordId;
+  expected_revision: int64;
+  actual_revision: int64?;
+}
+
+struct BatchSuccess {
+  batch_id: string;
+  affected_pages: [RecordId];
+}
+
+method UpdateElementValues(
+  struct {
+    batch_id: string;
+    updates: [ElementValueUpdate];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920002;
+
+struct GraphElementMove {
+  id: RecordId;
+  expected_revision: int64;
+  x: int32;
+  y: int32;
+}
+
+method MoveGraphElements(
+  struct {
+    batch_id: string;
+    moves: [GraphElementMove];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920003;
+
+struct GraphElementResize {
+  id: RecordId;
+  expected_revision: int64;
+  width: int32;
+  height: int32;
+}
+
+method ResizeGraphElements(
+  struct {
+    batch_id: string;
+    resizes: [GraphElementResize];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920004;
+
+struct ElementDeletion {
+  id: RecordId;
+  expected_revision: int64;
+}
+
+method DeleteElements(
+  struct {
+    batch_id: string;
+    deletions: [ElementDeletion];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920005;
+
+struct PageCreate {
+  id: RecordId;
+  book: RecordId;
+  name: string;
+  kind: PageKindRef;
+  chapter: string;
+  priority: int32;
+}
+
+struct PageUpdate {
+  id: RecordId;
+  expected_revision: int64;
+  name: string;
+  chapter: string;
+  priority: int32;
+}
+
+struct PageDeletion {
+  id: RecordId;
+  expected_revision: int64;
+}
+
+struct PageConflict {
+  id: RecordId;
+  expected_revision: int64;
+  actual: Page?;
+}
+
+method CreatePages(
+  struct {
+    batch_id: string;
+    pages: [PageCreate];
+  }
+): enum {
+  success: [Page];
+  conflict: [PageConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920006;
+
+method UpdatePages(
+  struct {
+    batch_id: string;
+    pages: [PageUpdate];
+  }
+): enum {
+  success: [Page];
+  conflict: [PageConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920007;
+
+method DeletePages(
+  struct {
+    batch_id: string;
+    pages: [PageDeletion];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [PageConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920008;
+
+struct ElementCreate {
+  id: RecordId;
+  page: RecordId;
+  element_type: string;
+  schema_revision: int32;
+  name: string;
+  value: TypedValue;
+  placement: ElementPlacement;
+}
+
+method CreateElements(
+  struct {
+    batch_id: string;
+    elements: [ElementCreate];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920009;
+
+struct ElementPageMove {
+  id: RecordId;
+  expected_revision: int64;
+  page: RecordId;
+  placement: ElementPlacement;
+}
+
+method MoveElementsToPages(
+  struct {
+    batch_id: string;
+    moves: [ElementPageMove];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920010;
+
+struct CueTimingUpdate {
+  id: RecordId;
+  expected_revision: int64;
+  placement: ElementPlacement;
+}
+
+method UpdateCueTimings(
+  struct {
+    batch_id: string;
+    updates: [CueTimingUpdate];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920011;
+
+struct ReferenceRewrite {
+  source: RecordId;
+  target: RecordId;
+}
+
+struct ElementDuplicate {
+  source_id: RecordId;
+  expected_revision: int64;
+  new_id: RecordId;
+  page: RecordId;
+  name: string;
+  placement: ElementPlacement;
+  reference_rewrites: [ReferenceRewrite];
+}
+
+method DuplicateElements(
+  struct {
+    batch_id: string;
+    elements: [ElementDuplicate];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [ElementBatchConflict];
+  invalid: [PageDiagnostic];
+  internal_error: struct {
+    message: string;
+  };
+} = 920012;
+
+struct PageMove {
+  id: RecordId;
+  expected_revision: int64;
+  book: RecordId;
+  chapter: string;
+  priority: int32;
+}
+
+method MovePages(
+  struct {
+    batch_id: string;
+    pages: [PageMove];
+  }
+): enum {
+  success: [Page];
+  conflict: [PageConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920013;
+
+struct BookCreate {
+  id: RecordId;
+  title: string;
+  icon: string;
+  color: Color;
+  tags: [RecordId];
+}
+
+struct BookUpdate {
+  id: RecordId;
+  expected_revision: int64;
+  title: string;
+  icon: string;
+  color: Color;
+  tags: [RecordId];
+}
+
+struct BookDeletion {
+  id: RecordId;
+  expected_revision: int64;
+}
+
+struct BookConflict {
+  id: RecordId;
+  expected_revision: int64;
+  actual: Book?;
+}
+
+method CreateBooks(
+  struct {
+    batch_id: string;
+    books: [BookCreate];
+  }
+): enum {
+  success: [Book];
+  conflict: [BookConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920014;
+
+method UpdateBooks(
+  struct {
+    batch_id: string;
+    books: [BookUpdate];
+  }
+): enum {
+  success: [Book];
+  conflict: [BookConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920015;
+
+method DeleteBooks(
+  struct {
+    batch_id: string;
+    books: [BookDeletion];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [BookConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920016;
+
+struct TagCreate {
+  id: RecordId;
+  name: string;
+  color: Color;
+  parents: [RecordId];
+  placement: GraphPlacement;
+}
+
+struct TagUpdate {
+  id: RecordId;
+  expected_revision: int64;
+  name: string;
+  color: Color;
+  parents: [RecordId];
+  placement: GraphPlacement;
+}
+
+struct TagDeletion {
+  id: RecordId;
+  expected_revision: int64;
+}
+
+struct TagConflict {
+  id: RecordId;
+  expected_revision: int64;
+  actual: Tag?;
+}
+
+method CreateTags(
+  struct {
+    batch_id: string;
+    tags: [TagCreate];
+  }
+): enum {
+  success: [Tag];
+  conflict: [TagConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920017;
+
+method UpdateTags(
+  struct {
+    batch_id: string;
+    tags: [TagUpdate];
+  }
+): enum {
+  success: [Tag];
+  conflict: [TagConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920018;
+
+method DeleteTags(
+  struct {
+    batch_id: string;
+    tags: [TagDeletion];
+  }
+): enum {
+  success: BatchSuccess;
+  conflict: [TagConflict];
+  invalid: [string];
+  internal_error: struct {
+    message: string;
+  };
+} = 920019;

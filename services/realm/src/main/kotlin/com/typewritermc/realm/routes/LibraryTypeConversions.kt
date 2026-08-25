@@ -9,6 +9,7 @@ import com.typewritermc.library.PageKindId
 import com.typewritermc.library.PageKindRef
 import com.typewritermc.library.ResourceRevision
 import com.typewritermc.library.Tag
+import com.typewritermc.library.ref
 import com.typewritermc.realm.repository.utils.toBookId
 import com.typewritermc.realm.repository.utils.toPageId
 import com.typewritermc.realm.repository.utils.toSkirRecordId
@@ -39,7 +40,7 @@ internal fun SkirBook.toLibrary(): Book =
         title = LibraryName(title),
         icon = Icon.parse(icon),
         color = color.toLibrary(),
-        tags = tagIds.mapTo(linkedSetOf()) { it.toTagId() },
+        tags = tagIds.mapTo(linkedSetOf()) { it.toTagId().ref() },
     )
 
 internal fun Tag.toSkir(): SkirTag =
@@ -58,7 +59,7 @@ internal fun SkirTag.toLibrary(): Tag =
         revision = ResourceRevision(revision),
         name = LibraryName(name),
         color = color.toLibrary(),
-        parents = parentIds.mapTo(linkedSetOf()) { it.toTagId() },
+        parents = parentIds.mapTo(linkedSetOf()) { it.toTagId().ref() },
         placement = placement.toLibrary(),
     )
 
@@ -66,7 +67,7 @@ internal fun Page.toSkir(): SkirPage =
     SkirPage(
         pageId = id.toSkirRecordId(),
         revision = revision.value,
-        bookId = bookId.toSkirRecordId(),
+        bookId = book.toSkirRecordId(),
         name = name.value,
         kind = kind.toSkir(),
         chapter = chapter.value,
@@ -77,7 +78,7 @@ internal fun SkirPage.toLibrary(): Page =
     Page(
         id = pageId.toPageId(),
         revision = ResourceRevision(revision),
-        bookId = bookId.toBookId(),
+        book = bookId.toBookId().ref(),
         name = LibraryName(name),
         kind = kind.toLibrary(),
         chapter = ChapterPath.parse(chapter),

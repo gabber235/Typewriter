@@ -84,14 +84,22 @@ class SelectionEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) {
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
     _synchronize(notify: false);
     final validation = _selection
         .map((target) => target.validate(path, value))
         .aggregateEditorMutationsFor(path);
     if (validation is! AppliedEditorMutation) return validation;
     for (final target in _selection) {
-      _targets[target.id]!.source.update(path, value);
+      _targets[target.id]!.source.update(
+        path,
+        value,
+        structuralMutation: structuralMutation,
+      );
     }
     return validation;
   }

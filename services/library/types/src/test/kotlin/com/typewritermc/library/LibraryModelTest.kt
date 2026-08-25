@@ -1,37 +1,10 @@
 package com.typewritermc.library
 
-import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.types.Color
 import de.infix.testBalloon.framework.core.testSuite
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.Json
-import kotlin.uuid.Uuid
 
 val LibraryModelTest by testSuite {
-    test("page references preserve simple and composite record ids") {
-        val references =
-            listOf(
-                PageRef<PageKind>(PageId("simple")),
-                PageRef<PageKind>(
-                    PageId(
-                        RecordIdKey.Array(
-                            listOf(
-                                RecordIdValue.String("chapter"),
-                                RecordIdValue.Number(7),
-                            ),
-                        ),
-                    ),
-                ),
-                PageRef<PageKind>(PageId("~literal")),
-            )
-
-        references.forEach { reference ->
-            val encoded = Json.encodeToString(PageRefSerializer, reference)
-            Json.decodeFromString(PageRefSerializer, encoded) shouldBe reference
-        }
-    }
-
     test("chapter replacement respects segment boundaries") {
         ChapterPath.parse("act.one.deep").replacePrefix(
             ChapterPath.parse("act.one"),
@@ -44,8 +17,8 @@ val LibraryModelTest by testSuite {
 
     test("tag hierarchy rejects cycles and redundant links") {
         val root = tag("root")
-        val child = tag("child", setOf(root.id))
-        val leaf = tag("leaf", setOf(child.id))
+        val child = tag("child", setOf(root.id.ref()))
+        val leaf = tag("leaf", setOf(child.id.ref()))
         val hierarchy = TagHierarchy(listOf(root, child, leaf))
 
         hierarchy.isAncestor(root.id, leaf.id) shouldBe true
@@ -53,28 +26,11 @@ val LibraryModelTest by testSuite {
         hierarchy.canLink(leaf.id, root.id) shouldBe false
         hierarchy.canLink(leaf.id, TagId("missing")) shouldBe false
     }
-
-    test("timeline tracks and snapshot page contents are unique") {
-        val elementId = ElementInstanceId(Uuid.parseHex("00000000000000000000000000000001"))
-        shouldThrow<IllegalArgumentException> {
-            PageLayout.Timeline(listOf(elementId, elementId))
-        }
-
-        shouldThrow<IllegalArgumentException> {
-            LibrarySnapshot(
-                revision = LibraryRevision(1),
-                books = emptyList(),
-                tags = emptyList(),
-                pages = emptyList(),
-                contents = listOf(PageContents(PageId("missing"), emptyList(), PageLayout.Timeline(emptyList()))),
-            )
-        }
-    }
 }
 
 private fun tag(
     id: String,
-    parents: Set<TagId> = emptySet(),
+    parents: Set<com.typewritermc.types.Ref<Tag>> = emptySet(),
 ): Tag =
     Tag(
         id = TagId(id),

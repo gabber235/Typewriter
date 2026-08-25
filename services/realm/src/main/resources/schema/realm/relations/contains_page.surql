@@ -1,0 +1,6 @@
+DEFINE TABLE OVERWRITE contains_page SCHEMAFULL
+    TYPE RELATION FROM book TO page ENFORCED
+    PERMISSIONS NONE;
+
+DEFINE INDEX OVERWRITE contains_page_unique_page
+    ON contains_page FIELDS out UNIQUE;

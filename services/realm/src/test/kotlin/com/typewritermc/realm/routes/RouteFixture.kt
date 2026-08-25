@@ -1,8 +1,11 @@
 package com.typewritermc.realm.routes
 
 import build.skir.Serializer
+import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
 import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.RepositoryFixture
+import com.typewritermc.realm.repository.SurrealLibraryBatchRepository
+import com.typewritermc.realm.repository.SurrealPageDocumentRepository
 import com.typewritermc.realm.testPageCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
@@ -30,6 +33,7 @@ internal class RouteFixture(
     decorateBooks: (BookRepository) -> BookRepository = { it },
 ) : AutoCloseable {
     val repositories = RepositoryFixture()
+    val compiledContent = SurrealCompiledContentRepository(repositories.database)
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
@@ -40,6 +44,11 @@ internal class RouteFixture(
                 decorateBooks(repositories.books),
                 repositories.pages,
                 repositories.tags,
+                SurrealLibraryBatchRepository(repositories.database),
+                repositories.elements,
+                repositories.elementTypeGraphs,
+                SurrealPageDocumentRepository(repositories.database) { null },
+                compiledContent,
                 editorCatalog,
                 testPageCatalog(),
                 presentationSearch,

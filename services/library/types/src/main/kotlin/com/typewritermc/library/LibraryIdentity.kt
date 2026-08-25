@@ -1,5 +1,7 @@
 package com.typewritermc.library
 
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
 @JvmInline
@@ -7,7 +9,7 @@ import kotlinx.serialization.Serializable
 value class BookId(
     val key: RecordIdKey,
 ) {
-    constructor(value: String) : this(RecordIdKey.String(value))
+    constructor(value: String) : this(com.typewritermc.types.RecordIdKey.String(value))
 }
 
 @JvmInline
@@ -15,7 +17,7 @@ value class BookId(
 value class TagId(
     val key: RecordIdKey,
 ) {
-    constructor(value: String) : this(RecordIdKey.String(value))
+    constructor(value: String) : this(com.typewritermc.types.RecordIdKey.String(value))
 }
 
 @JvmInline
@@ -30,16 +32,27 @@ value class ResourceRevision(
 
 @JvmInline
 @Serializable
-value class LibraryRevision(
-    val value: Long,
-) {
-    init {
-        require(value >= 1) { "Library revisions must be positive." }
-    }
-}
-
-@JvmInline
-@Serializable
 value class LibraryName(
     val value: String,
 )
+
+fun BookId.ref(): Ref<Book> = Ref(ResourceId("book", key))
+
+fun TagId.ref(): Ref<Tag> = Ref(ResourceId("tag", key))
+
+fun PageId.ref(): Ref<Page> = Ref(ResourceId("page", key))
+
+fun Ref<Book>.bookId(): BookId {
+    require(id.table == "book") { "Book references must target the book table." }
+    return BookId(id.key)
+}
+
+fun Ref<Tag>.tagId(): TagId {
+    require(id.table == "tag") { "Tag references must target the tag table." }
+    return TagId(id.key)
+}
+
+fun Ref<Page>.pageId(): PageId {
+    require(id.table == "page") { "Page references must target the page table." }
+    return PageId(id.key)
+}

@@ -5,11 +5,15 @@ import "package:flutter_test/flutter_test.dart" hide Tags;
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v2/authoring.dart"
+    as wire_v2;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-const _updateSubject = "service.to.realm1.organization.org1.realm.tag.update";
-const _deleteSubject = "service.to.realm1.organization.org1.realm.tag.delete";
+const _updateSubject =
+    "service.to.realm1.organization.org1.realm.tag.update.v2";
+const _deleteSubject =
+    "service.to.realm1.organization.org1.realm.tag.delete.v2";
 const _listenSubject = "service.from.realm1.organization.org1.realm.tag.watch";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
@@ -22,6 +26,22 @@ Tag _tag({String name = "Current", int revision = 1}) => Tag(
   parentIds: const [],
   placement: const Placement(x: 0, y: 0, width: 4, height: 1),
 );
+
+extension on Tag {
+  wire_v2.Tag toV2() => wire_v2.Tag(
+    id: tagId,
+    revision: revision,
+    name: name,
+    color: color.toSkirColor(),
+    parents: parentIds,
+    placement: wire_v2.GraphPlacement(
+      x: placement.x,
+      y: placement.y,
+      width: placement.width,
+      height: placement.height,
+    ),
+  );
+}
 
 class _SeededTags extends Tags {
   _SeededTags(this.tags);
@@ -147,8 +167,8 @@ void main() {
     final delayed = _tag(name: "Delayed", revision: 2);
     nats.registerHandler(_updateSubject, (data) {
       notifier.observe(newest);
-      return skir.UpdateTagResponse.serializer.toBytes(
-        skir.UpdateTagResponse.wrapSuccess(delayed.toSkir()),
+      return skir.UpdateTagsResponse.serializer.toBytes(
+        skir.UpdateTagsResponse.wrapSuccess([delayed.toV2()]),
       );
     });
 

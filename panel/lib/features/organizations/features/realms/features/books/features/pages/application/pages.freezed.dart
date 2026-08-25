@@ -222,7 +222,7 @@ return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_
 
 class _Page extends Page {
   const _Page({required this.pageId, required this.revision, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
-  
+
 
 @override final  skir.RecordId pageId;
 @override final  int revision;

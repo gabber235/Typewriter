@@ -16,7 +16,10 @@ class EntryScene extends HookConsumerWidget {
       name: "elements",
       builder: (elements) {
         if (elements.isEmpty) {
-          return EmptyEntryPage();
+          return EmptyEntryPage(
+            pageId: pageId,
+            placementKind: EntryPlacementKind.timelineEntry,
+          );
         }
 
         return HookBuilder(
@@ -40,19 +43,38 @@ class EntryScene extends HookConsumerWidget {
               "Scene track count must match page entry count.",
             );
 
-            return Timeline(
-              data: sceneView.timelineData,
-              resolveTargets: (draggedId) {
-                final roots = _resolveCues(
-                  ref: ref,
-                  pageId: pageId,
-                  primaryCueId: draggedId?.id,
-                  elementsById: elementsById,
-                );
-                return roots.map(TimelineIdentifier.new).toList();
-              },
-              onElementsCommited: (changes) =>
-                  _commitSceneBatch(ref: ref, pageId: pageId, changes: changes),
+            return Stack(
+              children: [
+                Timeline(
+                  data: sceneView.timelineData,
+                  resolveTargets: (draggedId) {
+                    final roots = _resolveCues(
+                      ref: ref,
+                      pageId: pageId,
+                      primaryCueId: draggedId?.id,
+                      elementsById: elementsById,
+                    );
+                    return roots.map(TimelineIdentifier.new).toList();
+                  },
+                  onElementsCommited: (changes) => _commitSceneBatch(
+                    ref: ref,
+                    pageId: pageId,
+                    changes: changes,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: PageDiagnosticsBanner(pageId: pageId),
+                ),
+                Positioned(
+                  right: context.spacing.space2,
+                  bottom: context.spacing.space2,
+                  child: AddEntryButton(
+                    pageId: pageId,
+                    placementKind: EntryPlacementKind.timelineEntry,
+                  ),
+                ),
+              ],
             );
           },
         );

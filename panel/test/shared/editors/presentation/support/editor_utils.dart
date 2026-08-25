@@ -40,7 +40,11 @@ final class TestEditorSource extends ChangeNotifier implements EditorSource {
   EditorValue value(DataPath path) => _value.readEditorValue(path);
 
   @override
-  EditorMutationResult update(DataPath path, DataValue value) {
+  EditorMutationResult update(
+    DataPath path,
+    DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
     lastUpdatedPath = path;
     final validation = rootType.validateEditorMutation(
       path,

@@ -135,6 +135,18 @@ void main() {
       expect(first.distanceSquaredTo(second), 10000);
     });
 
+    test("preserves timeline entry placement through serialization", () {
+      const placement = EntryPlacement(
+        x: 3,
+        y: 0,
+        width: 1,
+        height: 1,
+        kind: EntryPlacementKind.timelineEntry,
+      );
+
+      expect(EntryPlacement.fromJson(placement.toJson()), placement);
+    });
+
     test("exposes the identifier for every page entry state", () {
       final definition = EntryDefinition(
         id: "defined",

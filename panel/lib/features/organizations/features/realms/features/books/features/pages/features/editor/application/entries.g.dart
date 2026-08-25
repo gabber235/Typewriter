@@ -12,6 +12,9 @@ _EntryPlacement _$EntryPlacementFromJson(Map<String, dynamic> json) =>
       y: (json['y'] as num).toInt(),
       width: (json['width'] as num).toInt(),
       height: (json['height'] as num).toInt(),
+      kind:
+          $enumDecodeNullable(_$EntryPlacementKindEnumMap, json['kind']) ??
+          EntryPlacementKind.graph,
     );
 
 Map<String, dynamic> _$EntryPlacementToJson(_EntryPlacement instance) =>
@@ -20,7 +23,13 @@ Map<String, dynamic> _$EntryPlacementToJson(_EntryPlacement instance) =>
       'y': instance.y,
       'width': instance.width,
       'height': instance.height,
+      'kind': _$EntryPlacementKindEnumMap[instance.kind]!,
     };
+
+const _$EntryPlacementKindEnumMap = {
+  EntryPlacementKind.graph: 'graph',
+  EntryPlacementKind.timelineEntry: 'timelineEntry',
+};
 
 CustomEntryMetadata _$CustomEntryMetadataFromJson(Map<String, dynamic> json) =>
     CustomEntryMetadata(name: json['name'] as String, data: json['data']);
@@ -77,7 +86,7 @@ final class EntryProvider
   }
 }
 
-String _$entryHash() => r'ad350444d2088bc221f9ce43f91bee29395ddfbb';
+String _$entryHash() => r'95dbba43826a68160e5e41c30c72b4c95d6dba7f';
 
 final class EntryFamily extends $Family
     with

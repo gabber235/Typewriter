@@ -5,8 +5,14 @@ import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.discovery.runtime.RuntimeScope
+import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.engine.ActivatedCompiledContent
+import com.typewritermc.engine.CompiledContentBundle
+import com.typewritermc.engine.CompiledManifest
+import com.typewritermc.engine.ContentDigest
 import com.typewritermc.types.TypePrototypeRegistry
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.TestScope
@@ -45,17 +51,42 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("content revisions remain monotonic") {
+    test("compiled content activation revisions remain monotonic") {
         runTest {
             val revisions = mutableListOf<Long>()
             val fixture = runtime(emptyList(), revisions)
             fixture.runtime.activate()
 
-            fixture.runtime.applyContent(ContentRevision(1, byteArrayOf(1))) shouldBe ContentApplicationResult.Applied(1)
-            fixture.runtime.applyContent(ContentRevision(1, byteArrayOf(2))) shouldBe ContentApplicationResult.Ignored(1)
-            fixture.runtime.applyContent(ContentRevision(2, byteArrayOf(3))) shouldBe ContentApplicationResult.Applied(2)
+            fixture.runtime.applyContent(content(1, '1')) shouldBe
+                ContentApplicationResult.Applied(1, ContentDigest("1".repeat(64)))
+            fixture.runtime.applyContent(content(1, '2')) shouldBe
+                ContentApplicationResult.Ignored(1, ContentDigest("1".repeat(64)))
+            fixture.runtime.applyContent(content(2, '3')) shouldBe
+                ContentApplicationResult.Applied(2, ContentDigest("3".repeat(64)))
             revisions shouldContainExactly listOf(1L, 2L)
             fixture.runtime.stop()
+        }
+    }
+
+    test("assembly failure retains the active content snapshot") {
+        runTest {
+            val gateway =
+                AssemblingEngineContentGateway(
+                    EngineContentAssembler(ElementCatalog(emptyList()), TypePrototypeRegistry(emptyList())),
+                )
+            val active = content(1, '4')
+            gateway.apply(active)
+
+            shouldThrow<IllegalArgumentException> {
+                gateway.apply(
+                    active.copy(
+                        activationRevision = 2,
+                        content = active.content.copy(manifest = active.content.manifest.copy(formatRevision = 2)),
+                    ),
+                )
+            }
+
+            gateway.snapshot.value?.manifest shouldBe active.content.manifest
         }
     }
 
@@ -90,9 +121,23 @@ private fun TestScope.runtime(
             deployment = deployment,
             registrars = registrars,
             parentScope = this,
-            contentGateway = revisions?.let { values -> EngineContentGateway { values += it.revision } },
+            contentGateway = revisions?.let { values -> EngineContentGateway { values += it.activationRevision } },
         ),
         classLoader,
+    )
+}
+
+private fun content(
+    revision: Long,
+    digestCharacter: Char,
+): ActivatedCompiledContent {
+    val digest = ContentDigest(digestCharacter.toString().repeat(64))
+    return ActivatedCompiledContent(
+        revision,
+        CompiledContentBundle(
+            CompiledManifest(1, digest, "realm:$revision", "catalog:1", emptyList()),
+            emptyList(),
+        ),
     )
 }
 

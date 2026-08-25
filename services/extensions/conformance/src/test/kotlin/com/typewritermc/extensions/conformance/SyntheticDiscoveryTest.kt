@@ -26,7 +26,8 @@ import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.EntryOutput
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.PageId
-import com.typewritermc.library.PageRef
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
@@ -152,7 +153,7 @@ val SyntheticDiscoveryTest by testSuite {
         val source =
             SyntheticPageReferenceEntry(
                 elementId("00000000000000000000000000000003"),
-                PageRef<SyntheticPageKind>(PageId("page:opening")),
+                Ref<SyntheticPageKind>(ResourceId("page", PageId("page:opening").key)),
             )
 
         val encoded = with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.encode(source) }

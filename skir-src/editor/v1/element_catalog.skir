@@ -2,7 +2,6 @@ import {
   DeclaredTypeId,
   ResolvedTypeRef,
 } from "editor/v1/type_catalog.skir";
-import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
 import { Color } from "kernel/v1/color.skir";
 import { Icon } from "kernel/v1/icon.skir";
 
@@ -64,10 +63,4 @@ struct ElementCatalogEntry(811100011) {
   descriptor: ElementDescriptor = 2;
   eligibility: ElementEligibility = 3;
   available: bool = 4;
-}
-
-struct StoredElementEnvelope(811100012) {
-  element_type: ElementTypeId = 0;
-  schema_revision: int32 = 1;
-  value: TypedValueEnvelope = 2;
 }

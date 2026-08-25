@@ -11,15 +11,15 @@ abstract class Placement with _$Placement {
 
   const Placement._();
 
-  factory Placement.fromSkir(skir.Placement placement) => Placement(
+  factory Placement.fromSkir(wire_v1.Placement placement) => Placement(
     x: placement.x,
     y: placement.y,
     width: placement.width,
     height: placement.height,
   );
 
-  skir.Placement toSkir() =>
-      skir.Placement(x: x, y: y, width: width, height: height);
+  wire_v1.Placement toSkir() =>
+      wire_v1.Placement(x: x, y: y, width: width, height: height);
 }
 
 @freezed
@@ -36,7 +36,7 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromSkir(skir.Tag tag) => Tag(
+  factory Tag.fromSkir(wire_v1.Tag tag) => Tag(
     tagId: tag.tagId,
     revision: tag.revision,
     name: tag.name,
@@ -45,7 +45,21 @@ abstract class Tag with _$Tag {
     placement: Placement.fromSkir(tag.placement),
   );
 
-  skir.Tag toSkir() => skir.Tag(
+  factory Tag.fromV2(wire_v2.Tag tag) => Tag(
+    tagId: tag.id,
+    revision: tag.revision,
+    name: tag.name,
+    color: tag.color.toFlutterColor(),
+    parentIds: tag.parents.toList(),
+    placement: Placement(
+      x: tag.placement.x,
+      y: tag.placement.y,
+      width: tag.placement.width,
+      height: tag.placement.height,
+    ),
+  );
+
+  wire_v1.Tag toSkir() => wire_v1.Tag(
     tagId: tagId,
     revision: revision,
     name: name,

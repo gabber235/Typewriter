@@ -9,11 +9,22 @@ val RealmSchemaResourcesTest by testSuite {
         MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe
             listOf(
                 "book/book.surql",
+                "compile/compiled_page_shard.surql",
+                "compile/compiled_manifest.surql",
+                "compile/active_compiled_manifest.surql",
+                "compile/authoring_head.surql",
+                "compile/collaboration_head.surql",
+                "compile/compile_attempt.surql",
+                "element/element.surql",
+                "element/authoring_batch.surql",
                 "kernel/color.surql",
                 "kernel/id.surql",
                 "outbox/outbox.surql",
                 "page/page.surql",
                 "relations/bears.surql",
+                "relations/contains_element.surql",
+                "relations/contains_page.surql",
+                "relations/element_reference.surql",
                 "relations/inherits.surql",
                 "tag/tag.surql",
             )

@@ -13,6 +13,8 @@ dependencies {
     api("com.typewritermc:library-types")
     api("com.typewritermc:page-types")
     api(libs.kotlin.coroutines.core)
+    implementation("com.typewritermc:service-communicator-skir")
+    implementation(libs.kotlin.serialize.json)
     testImplementation("com.typewritermc:loader-api")
     testImplementation(libs.kotlin.coroutines.test)
 }

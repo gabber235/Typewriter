@@ -82,6 +82,7 @@ final class EditorCommit {
     required this.localRevision,
     required this.rootValue,
     required this.changedPaths,
+    this.mutations = const [],
     this.group,
   }) : assert(expectedRevision >= 0, "Expected revision must not be negative."),
        assert(localRevision >= 0, "Local revision must not be negative.");
@@ -90,5 +91,104 @@ final class EditorCommit {
   final int localRevision;
   final DataValue rootValue;
   final Set<DataPath> changedPaths;
+  final List<EditorStructuralMutation> mutations;
   final String? group;
+}
+
+sealed class EditorStructuralMutation {
+  const EditorStructuralMutation(this.path);
+
+  final DataPath path;
+
+  EditorStructuralMutation prefixedBy(DataPath prefix) {
+    final next = prefix.followedBy(path);
+    return switch (this) {
+      EditorSetValue(:final value) => EditorSetValue(next, value),
+      EditorInsertListItems(:final index, :final values) =>
+        EditorInsertListItems(next, index, values),
+      EditorRemoveListItems(:final index, :final count) =>
+        EditorRemoveListItems(next, index, count),
+      EditorReorderListItems(
+        :final sourceIndex,
+        :final count,
+        :final destinationIndex,
+      ) =>
+        EditorReorderListItems(next, sourceIndex, count, destinationIndex),
+      EditorDuplicateListItems(
+        :final sourceIndex,
+        :final count,
+        :final destinationIndex,
+      ) =>
+        EditorDuplicateListItems(next, sourceIndex, count, destinationIndex),
+      EditorPutMapEntries(:final entries) => EditorPutMapEntries(next, entries),
+      EditorRemoveMapEntries(:final keys) => EditorRemoveMapEntries(next, keys),
+      EditorReplaceConcreteType(:final concreteType, :final value) =>
+        EditorReplaceConcreteType(next, concreteType, value),
+    };
+  }
+}
+
+final class EditorSetValue extends EditorStructuralMutation {
+  const EditorSetValue(super.path, this.value);
+
+  final DataValue value;
+}
+
+final class EditorInsertListItems extends EditorStructuralMutation {
+  const EditorInsertListItems(super.path, this.index, this.values);
+
+  final int index;
+  final List<DataValue> values;
+}
+
+final class EditorRemoveListItems extends EditorStructuralMutation {
+  const EditorRemoveListItems(super.path, this.index, this.count);
+
+  final int index;
+  final int count;
+}
+
+final class EditorReorderListItems extends EditorStructuralMutation {
+  const EditorReorderListItems(
+    super.path,
+    this.sourceIndex,
+    this.count,
+    this.destinationIndex,
+  );
+
+  final int sourceIndex;
+  final int count;
+  final int destinationIndex;
+}
+
+final class EditorDuplicateListItems extends EditorStructuralMutation {
+  const EditorDuplicateListItems(
+    super.path,
+    this.sourceIndex,
+    this.count,
+    this.destinationIndex,
+  );
+
+  final int sourceIndex;
+  final int count;
+  final int destinationIndex;
+}
+
+final class EditorPutMapEntries extends EditorStructuralMutation {
+  const EditorPutMapEntries(super.path, this.entries);
+
+  final List<DataMapEntry> entries;
+}
+
+final class EditorRemoveMapEntries extends EditorStructuralMutation {
+  const EditorRemoveMapEntries(super.path, this.keys);
+
+  final List<DataValue> keys;
+}
+
+final class EditorReplaceConcreteType extends EditorStructuralMutation {
+  const EditorReplaceConcreteType(super.path, this.concreteType, this.value);
+
+  final ResolvedTypeRef concreteType;
+  final DataValue value;
 }

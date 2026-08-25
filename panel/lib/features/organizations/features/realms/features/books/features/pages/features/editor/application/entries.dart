@@ -12,26 +12,28 @@ part "entries.g.dart";
 class Entry extends _$Entry {
   @override
   Future<EntryDefinition?> build(String entryId) async {
-    // TODO: Fetch entry from the backend
-    throw UnimplementedError();
+    return ref.watch(pageEntryCacheProvider)[entryId]?.definition;
   }
 
   Future<void> updateFieldValue(DataPath path, DataValue value) async {
     state.ensureReady();
 
-    // TODO: Implement optimistic updates
-
-    // TODO: Make backend call to update field value for this entry
-    throw UnimplementedError();
+    final cached = ref.read(pageEntryCacheProvider)[entryId];
+    if (cached == null) throw ApiException.notFound("Entry");
+    await ref
+        .read(pageElementsProvider(cached.pageId).notifier)
+        .updateEntryFieldValue(entryId, path, value);
+    state = AsyncData(ref.read(pageEntryCacheProvider)[entryId]?.definition);
   }
 
   Future<void> moveToPage(String pageId) async {
     state.ensureReady();
-
-    // TODO: Implement optimistic updates
-
-    // TODO: Make backend call to move this entry to a different page
-    throw UnimplementedError();
+    final cached = ref.read(pageEntryCacheProvider)[entryId];
+    if (cached == null) throw ApiException.notFound("Entry");
+    if (cached.pageId == pageId) return;
+    await ref
+        .read(pageElementsProvider(cached.pageId).notifier)
+        .moveEntriesToPage([entryId], pageId);
   }
 }
 
@@ -80,6 +82,7 @@ abstract class EntryDefinition with _$EntryDefinition {
     required RecordValue data,
     required List<ElementLink> inwardEdges,
     required List<ElementLink> outwardEdges,
+    @Default(1) int revision,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
 }
@@ -93,11 +96,14 @@ abstract class EntryPlacement with _$EntryPlacement {
     required int y,
     required int width,
     required int height,
+    @Default(EntryPlacementKind.graph) EntryPlacementKind kind,
   }) = _EntryPlacement;
 
   factory EntryPlacement.fromJson(Map<String, dynamic> json) =>
       _$EntryPlacementFromJson(json);
 }
+
+enum EntryPlacementKind { graph, timelineEntry }
 
 @Freezed(unionKey: "_kind")
 abstract class EntryMetadata with _$EntryMetadata {
@@ -220,7 +226,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     typeCatalog: typeCatalog,
     presentations: presentations,
     confirmedValue: definition.data,
-    revision: 0,
+    revision: definition.revision,
   );
 
   @override
@@ -236,14 +242,20 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
   }
 
   @override
-  Future<TypedMutationResult> commit(EditorCommit commit) => Future.value(
-    TypedMutationResult.unavailable([
-      const TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
-        message: "Entry persistence is not available yet",
-      ),
-    ]),
-  );
+  Future<TypedMutationResult> commit(EditorCommit commit) async {
+    final cached = ref.read(pageEntryCacheProvider)[id.id];
+    if (cached == null) {
+      return TypedMutationResult.unavailable([
+        const TypeDiagnostic(
+          code: TypeDiagnosticCode.invalidValue,
+          message: "The entry is not in a loaded page document",
+        ),
+      ]);
+    }
+    return ref
+        .read(pageElementsProvider(cached.pageId).notifier)
+        .commitElementValue(id.id, commit);
+  }
 
   @override
   int get hashCode => id.hashCode;

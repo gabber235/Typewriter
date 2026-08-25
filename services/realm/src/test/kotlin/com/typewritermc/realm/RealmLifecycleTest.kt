@@ -3,7 +3,20 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.loader.api.artifact.ArtifactDigest
+import com.typewritermc.loader.api.artifact.BlobChunk
+import com.typewritermc.loader.api.artifact.BlobMetadata
+import com.typewritermc.loader.api.artifact.BlobResult
+import com.typewritermc.loader.api.artifact.BlobWriteSession
+import com.typewritermc.loader.api.artifact.PublishResult
+import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
+import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
+import com.typewritermc.loader.api.artifact.SharedArtifactId
+import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
+import com.typewritermc.loader.api.artifact.SharedArtifactRevision
+import com.typewritermc.loader.api.artifact.SharedCatalogRevision
+import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.realm.routes.UnavailableRealmEditorCatalogSource
 import com.typewritermc.realm.routes.UnavailableRealmPresentationSearchSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
@@ -20,7 +33,6 @@ import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -37,6 +49,8 @@ val RealmLifecycleTest by testSuite {
             val fixture = RealmLifecycleFixture(this)
             try {
                 fixture.start()
+                runCurrent()
+                fixture.artifactWrites shouldBe 1
                 val first = fixture.session(1)
                 fixture.messaging.value = first.session
                 runCurrent()
@@ -90,11 +104,13 @@ private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
 ) {
     private val telemetry = TelemetryTestHarness.create()
-    private val sharedArtifacts = mockk<SharedArtifactAccess>(relaxed = true)
+    private val sharedArtifacts = InMemorySharedArtifacts()
     val messaging = MutableStateFlow<HostedMessagingSession?>(null)
     val delayScheduler = FakeDelayScheduler()
     var databaseOpen = false
         private set
+    val artifactWrites: Int
+        get() = sharedArtifacts.completedWrites
     private val host =
         object : HostedRuntimeHost {
             override val messaging = this@RealmLifecycleFixture.messaging
@@ -118,6 +134,7 @@ private class RealmLifecycleFixture(
                     scope = scope,
                     telemetry = telemetry.telemetry,
                 ),
+            discoverySnapshots = RealmDiscoverySnapshotStore(),
             host = host,
         )
 
@@ -145,6 +162,73 @@ private class RealmLifecycleFixture(
             telemetry.close()
         }
     }
+}
+
+private class InMemorySharedArtifacts : SharedArtifactAccess {
+    private val artifacts = mutableMapOf<ArtifactDigest, ByteArray>()
+    private val writes = mutableMapOf<TransferId, PendingBlobWrite>()
+    var completedWrites = 0
+        private set
+
+    override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
+        artifacts[digest]
+            ?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) }
+            ?: BlobResult.NotFound
+
+    override suspend fun read(
+        digest: ArtifactDigest,
+        offset: Long,
+        maximumBytes: Int,
+    ): BlobResult<BlobChunk> {
+        val value = artifacts[digest] ?: return BlobResult.NotFound
+        val start = offset.toInt().coerceAtMost(value.size)
+        val end = (start + maximumBytes).coerceAtMost(value.size)
+        return BlobResult.Success(BlobChunk(offset, value.copyOfRange(start, end), end == value.size))
+    }
+
+    override suspend fun beginWrite(
+        transfer: TransferId,
+        expected: BlobMetadata,
+    ): BlobResult<BlobWriteSession> {
+        writes[transfer] = PendingBlobWrite(expected)
+        return BlobResult.Success(BlobWriteSession(transfer, expected, 0))
+    }
+
+    override suspend fun write(
+        transfer: TransferId,
+        offset: Long,
+        bytes: ByteArray,
+    ): BlobResult<Long> {
+        val pending = writes.getValue(transfer)
+        if (pending.bytes.size.toLong() != offset) return BlobResult.Conflict("Unexpected write offset.")
+        pending.bytes += bytes
+        return BlobResult.Success(pending.bytes.size.toLong())
+    }
+
+    override suspend fun complete(transfer: TransferId): BlobResult<BlobMetadata> {
+        val pending = writes.remove(transfer) ?: return BlobResult.NotFound
+        if (ArtifactDigest.sha256(pending.bytes) != pending.expected.digest) {
+            return BlobResult.Invalid("Digest mismatch.")
+        }
+        artifacts[pending.expected.digest] = pending.bytes
+        completedWrites++
+        return BlobResult.Success(pending.expected)
+    }
+
+    override suspend fun publish(command: PublishSharedArtifact): PublishResult = error("Catalog writes are not used.")
+
+    override suspend fun delete(
+        id: SharedArtifactId,
+        expectedRevision: SharedArtifactRevision,
+        provenance: SharedArtifactProvenance,
+    ): PublishResult = error("Catalog deletes are not used.")
+
+    override suspend fun catalog() = SharedArtifactCatalog(SharedCatalogRevision(0), emptyList())
+
+    private data class PendingBlobWrite(
+        val expected: BlobMetadata,
+        var bytes: ByteArray = byteArrayOf(),
+    )
 }
 
 private data class TestSession(

@@ -531,46 +531,6 @@ impl ElementCatalogEntry {
 }
 
 // ==============================================================================
-// struct StoredElementEnvelope
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct StoredElementEnvelope {
-    pub element_type: ElementTypeId,
-    pub schema_revision: i32,
-    pub value: crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StoredElementEnvelope>>,
-}
-
-impl StoredElementEnvelope {
-    pub fn default_ref() -> &'static StoredElementEnvelope {
-        static D: std::sync::LazyLock<StoredElementEnvelope> = std::sync::LazyLock::new(StoredElementEnvelope::default);
-        &D
-    }
-}
-
-impl StoredElementEnvelope {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<StoredElementEnvelope> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<StoredElementEnvelope>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/element_catalog.skir",
-                    "StoredElementEnvelope",
-                    "",
-                    |x: &StoredElementEnvelope| &x._unrecognized,
-                    |x: &mut StoredElementEnvelope, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<StoredElementEnvelope> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(StoredElementEnvelope::_adapter())
-    }
-}
-
-// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -654,13 +614,6 @@ fn initialize_module_serializers() {
                 (*a).add_field("descriptor", 2, crate::skir_client::internal::struct_serializer_from_static(ElementDescriptor::_adapter()), "", |x: &ElementCatalogEntry| &x.descriptor, |x: &mut ElementCatalogEntry, v| x.descriptor = v);
                 (*a).add_field("eligibility", 3, crate::skir_client::internal::enum_serializer_from_static(ElementEligibility::_adapter()), "", |x: &ElementCatalogEntry| &x.eligibility, |x: &mut ElementCatalogEntry, v| x.eligibility = v);
                 (*a).add_field("available", 4, crate::skir_client::Serializer::bool(), "", |x: &ElementCatalogEntry| &x.available, |x: &mut ElementCatalogEntry, v| x.available = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<StoredElementEnvelope> = StoredElementEnvelope::_adapter() as *const _ as *mut _;
-                (*a).add_field("element_type", 0, crate::skir_client::internal::struct_serializer_from_static(ElementTypeId::_adapter()), "", |x: &StoredElementEnvelope| &x.element_type, |x: &mut StoredElementEnvelope, v| x.element_type = v);
-                (*a).add_field("schema_revision", 1, crate::skir_client::Serializer::int32(), "", |x: &StoredElementEnvelope| &x.schema_revision, |x: &mut StoredElementEnvelope, v| x.schema_revision = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer(), "", |x: &StoredElementEnvelope| &x.value, |x: &mut StoredElementEnvelope, v| x.value = v);
                 (*a).finalize();
             }
         });

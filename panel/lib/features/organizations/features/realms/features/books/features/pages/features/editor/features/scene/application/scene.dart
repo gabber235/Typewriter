@@ -18,6 +18,7 @@ abstract class Cue with _$Cue {
     required RecordValue data,
     required List<ElementLink> inwardLinks,
     required List<ElementLink> outwardLinks,
+    @Default(1) int revision,
   }) = Segment;
 
   @Assert("id != \"\"", "ID must not be empty.")
@@ -28,6 +29,7 @@ abstract class Cue with _$Cue {
     required ElementDefinition elementDefinition,
     required RecordValue data,
     required List<ElementLink> inwardLinks,
+    @Default(1) int revision,
   }) = Keyframe;
 }
 
@@ -119,7 +121,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
     typeCatalog: typeCatalog,
     presentations: presentations,
     confirmedValue: cue.data,
-    revision: 0,
+    revision: cue.revision,
   );
 
   @override
@@ -132,24 +134,9 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
 
   @override
   Future<TypedMutationResult> commit(EditorCommit commit) async {
-    final notifier = ref.read(pageElementsProvider(id.pageId).notifier);
-    for (final path in commit.changedPaths) {
-      final value = path.read(commit.rootValue).valueOrNull;
-      if (value == null) {
-        return TypedMutationResult.invalid([
-          TypeDiagnostic(
-            code: TypeDiagnosticCode.invalidPath,
-            message: "The Cue field could not be resolved",
-            path: path,
-          ),
-        ]);
-      }
-      await notifier.updateCueFieldValue(id.id, path, value);
-    }
-    return TypedMutationResult.success(
-      revision: commit.localRevision,
-      value: commit.rootValue,
-    );
+    return ref
+        .read(pageElementsProvider(id.pageId).notifier)
+        .commitElementValue(id.id, commit);
   }
 
   @override
