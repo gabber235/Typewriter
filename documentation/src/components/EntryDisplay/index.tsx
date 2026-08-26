@@ -19,14 +19,18 @@ export function capitalize(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+/** Names come in as `snake_case` or `camelCase` paths, the panel shows them as words. */
 export function format(value: string) {
     return value
         .split(".")
-        .map((e) => capitalize(e))
-        .join(" | ")
-        .split("_")
-        .map((e) => capitalize(e))
-        .join(" ");
+        .map((part) =>
+            part
+                .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+                .split(/[_\s]+/)
+                .map((word) => capitalize(word))
+                .join(" ")
+        )
+        .join(" | ");
 }
 
 export default function EntryDisplay({ pages = [], referencePages = [] }: EntryDisplayProps) {
