@@ -1,4 +1,4 @@
-import { blueprints, CustomField, defaultValue, Entry, FieldInfo, findEntry, getModifier, ListField, MapField, ObjectField, Page, PrimitiveField, } from "@site/src/libs/data";
+import { AlgebraicField, blueprints, CustomField, customShape, defaultValue, Entry, FieldInfo, findEntry, getModifier, ListField, MapField, ObjectField, Page, PrimitiveField, } from "@site/src/libs/data";
 import { format } from "@site/src/components/EntryDisplay";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { createContext, useContext, useState } from "react";
@@ -159,6 +159,16 @@ function FieldInspector({
                     pages={pages}
                 />
             </div>
+        );
+    }
+    if (type === "algebraic") {
+        return (
+            <AlgebraicFieldInspector
+                fieldInfo={fieldInfo as AlgebraicField}
+                path={path}
+                value={fieldValue}
+                pages={pages}
+            />
         );
     }
     if (type === "custom") {
@@ -348,6 +358,60 @@ function ObjectFieldInspector({
     );
 }
 
+function AlgebraicFieldInspector({
+    fieldInfo,
+    path,
+    value,
+    pages,
+}: {
+    fieldInfo: AlgebraicField;
+    path: string;
+    value: any;
+    pages: Page[];
+}) {
+    const caseName = value?.case;
+    const caseInfo = fieldInfo.cases[caseName];
+    if (caseInfo == null) {
+        return (
+            <div className="text-red-500 dark:text-red-400 text-xs">
+                Unknown case: {String(caseName)}
+            </div>
+        );
+    }
+    const color = getModifier(caseInfo, "color")?.data ?? "#6b7280";
+    const icon = getModifier(caseInfo, "icon")?.data ?? "mdi:shape-outline";
+    const casePath = `${path}.value`;
+    return (
+        <div className="flex flex-col space-y-1 w-full">
+            <FieldHeader name={path} />
+            <div
+                className="text-white text-xs rounded-md p-2 flex items-center w-full"
+                style={{ backgroundColor: color }}
+            >
+                <Icon icon={icon} className="w-5 h-5 mr-2" />
+                {format(caseName)}
+            </div>
+            <div className="pl-2">
+                {caseInfo.kind === "object" ? (
+                    <ObjectFieldInspector
+                        fieldInfo={caseInfo as ObjectField}
+                        path={casePath}
+                        value={value?.value}
+                        pages={pages}
+                    />
+                ) : (
+                    <FieldInspector
+                        fieldInfo={caseInfo}
+                        path={casePath}
+                        value={value?.value}
+                        pages={pages}
+                    />
+                )}
+            </div>
+        </div>
+    );
+}
+
 function CustomFieldInspector({
     fieldInfo,
     path,
@@ -366,8 +430,16 @@ function CustomFieldInspector({
     if (editor === "item") {
         return <ItemField {...value} path={path} />;
     }
-    if (editor === "location" || editor === "vector") {
+    if (editor === "location" || editor === "vector" || editor === "position") {
         return <LocationField value={{ ...value }} field={fieldInfo} path={path} />;
+    }
+    if (editor === "var") {
+        return (
+            <VarField fieldInfo={fieldInfo} path={path} value={value} pages={pages} />
+        );
+    }
+    if (editor === "color") {
+        return <ColorField fieldInfo={fieldInfo} value={value} path={path} />;
     }
     if (editor === "duration") {
         return <DurationField duration={value} path={path} />;
@@ -397,9 +469,144 @@ function CustomFieldInspector({
     if (editor === "skin") {
         return <SkinFieldEditor path={path} value={value} />;
     }
+    // Editors without their own display still wrap a shape that can be shown as it is stored.
+    const shape = customShape(fieldInfo);
+    if (shape != null) {
+        return (
+            <FieldInspector
+                fieldInfo={shape}
+                path={path}
+                value={value}
+                pages={pages}
+            />
+        );
+    }
     return (
         <div className="text-red-500 dark:text-red-400 text-xs">
             Unknown custom editor: {editor}
+        </div>
+    );
+}
+
+function isBackedVar(value: any): boolean {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        value["_kind"] === "backed"
+    );
+}
+
+function VarField({
+    fieldInfo,
+    path,
+    value,
+    pages,
+}: {
+    fieldInfo: CustomField;
+    path: string;
+    value: any;
+    pages: Page[];
+}) {
+    const shape = customShape(fieldInfo);
+    if (!isBackedVar(value)) {
+        if (shape == null) {
+            return <SimpleValueField value={value} icon="mdi:variable" name={path} />;
+        }
+        return (
+            <FieldInspector
+                fieldInfo={shape}
+                path={path}
+                value={value}
+                pages={pages}
+            />
+        );
+    }
+
+    return (
+        <div className="flex flex-col space-y-1 w-full">
+            <FieldHeader name={path} />
+            <div className="rounded-md border-2 border-dashed border-green-500 border-opacity-70 bg-green-500 bg-opacity-10 p-2 space-y-2">
+                <EntryReferenceCard entryId={value.ref} pages={pages} />
+                <VarDataInspector
+                    entryId={value.ref}
+                    data={value.data}
+                    path={path}
+                    pages={pages}
+                />
+            </div>
+        </div>
+    );
+}
+
+function VarDataInspector({
+    entryId,
+    data,
+    path,
+    pages,
+}: {
+    entryId: string;
+    data: any;
+    path: string;
+    pages: Page[];
+}) {
+    if (data == null) return null;
+    const entry = findEntry(pages, entryId);
+    const dataFieldInfo = entry
+        ? blueprints.get(entry.type)?.variableDataBlueprint
+        : undefined;
+    if (dataFieldInfo != null) {
+        return (
+            <FieldInspector
+                fieldInfo={dataFieldInfo}
+                path={`${path}.data`}
+                value={data}
+                pages={pages}
+            />
+        );
+    }
+    if (typeof data === "object" && Object.keys(data).length === 0) return null;
+    return (
+        <SimpleValueField
+            value={JSON.stringify(data)}
+            icon="mdi:code-json"
+            name={`${path}.data`}
+        />
+    );
+}
+
+function ColorField({
+    fieldInfo,
+    value,
+    path,
+}: {
+    fieldInfo: CustomField;
+    value: any;
+    path: string;
+}) {
+    if (typeof value !== "number") {
+        return <SimpleValueField value={value} icon="mdi:palette" name={path} />;
+    }
+    const withAlpha = getModifier(fieldInfo, "with_alpha") != null;
+    const argb = value >>> 0;
+    const alpha = (argb >>> 24) & 0xff;
+    const red = (argb >>> 16) & 0xff;
+    const green = (argb >>> 8) & 0xff;
+    const blue = argb & 0xff;
+    const channel = (part: number) => part.toString(16).padStart(2, "0").toUpperCase();
+    const hex = `#${withAlpha ? channel(alpha) : ""}${channel(red)}${channel(green)}${channel(blue)}`;
+    return (
+        <div className="flex flex-col space-y-1 w-full">
+            <FieldHeader name={path} />
+            <div className="rounded-md bg-[#0000000d] dark:bg-[#00000033] p-2 text-gray-700 dark:text-white text-xs w-full flex items-center">
+                <div
+                    className="w-5 h-5 mr-2 rounded-sm border border-solid border-black border-opacity-20"
+                    style={{
+                        backgroundColor: `rgba(${red}, ${green}, ${blue}, ${withAlpha ? alpha / 255 : 1})`,
+                    }}
+                />
+                {hex}
+            </div>
         </div>
     );
 }
@@ -413,15 +620,27 @@ function EntryReferenceField({
     pages: Page[];
     path: string;
 }) {
+    return (
+        <div className="flex flex-col space-y-1">
+            <FieldHeader name={path} />
+            <EntryReferenceCard entryId={entryId} pages={pages} />
+        </div>
+    );
+}
+
+function EntryReferenceCard({
+    entryId,
+    pages,
+}: {
+    entryId: any;
+    pages: Page[];
+}) {
     if (!entryId) {
         return (
-            <div className="flex flex-col space-y-1">
-                <FieldHeader name={path} />
-                <SimpleValueField
-                    value="No Entry Referenced"
-                    icon="material-symbols:link-off"
-                />
-            </div>
+            <SimpleValueField
+                value="No Entry Referenced"
+                icon="material-symbols:link-off"
+            />
         );
     }
     const entry = findEntry(pages, entryId);
@@ -440,20 +659,17 @@ function EntryReferenceField({
         );
 
     return (
-        <div className="flex flex-col space-y-1">
-            <FieldHeader name={path} />
-            <div
-                className="text-white text-xs rounded-md p-2"
-                style={{ backgroundColor: blueprint.color }}
-            >
-                <div className="flex items-center">
-                    <Icon icon={blueprint.icon} className="w-5 h-5 mr-2" />
-                    <div className="flex flex-col items-start">
-                        <span className="text-sm">{format(entry.name)}</span>
-                        <span className="text-[10px] opacity-70 m-0">
-                            {format(blueprint.name)}
-                        </span>
-                    </div>
+        <div
+            className="text-white text-xs rounded-md p-2"
+            style={{ backgroundColor: blueprint.color }}
+        >
+            <div className="flex items-center">
+                <Icon icon={blueprint.icon} className="w-5 h-5 mr-2" />
+                <div className="flex flex-col items-start">
+                    <span className="text-sm">{format(entry.name)}</span>
+                    <span className="text-[10px] opacity-70 m-0">
+                        {format(blueprint.name)}
+                    </span>
                 </div>
             </div>
         </div>
@@ -551,6 +767,7 @@ interface LocationFieldProps {
     path: string;
 }
 interface LocationField {
+    world?: string;
     x: number;
     y: number;
     z: number;
@@ -558,7 +775,7 @@ interface LocationField {
     pitch: number;
 }
 function LocationField({ value, field, path }: LocationFieldProps) {
-    const { x, y, z, yaw, pitch } = value;
+    const { world, x, y, z, yaw, pitch } = value;
     if (isNaN(x) || isNaN(y) || isNaN(z)) return null;
     const hasRotation =
         field != null && getModifier(field, "with_rotation") != null;
@@ -566,6 +783,7 @@ function LocationField({ value, field, path }: LocationFieldProps) {
     return (
         <div className="w-full flex flex-col space-y-2">
             <FieldHeader name={path} />
+            {world && <SimpleValueField value={world} icon="mdi:earth" />}
             <div className="flex items-start w-full space-x-2">
                 <CordPropertyField value={x} display="X" color="text-red-500" />
                 <CordPropertyField value={y} display="Y" color="text-green-500" />
@@ -684,12 +902,26 @@ interface OptionalFieldProps {
     pages: Page[];
 }
 
+/**
+ * Newer adapter data gives the optional editor the whole `{ enabled, value }` wrapper,
+ * older data gives it the wrapped field directly.
+ */
+function optionalInnerField(field: CustomField): FieldInfo | undefined {
+    const shape = customShape(field);
+    if (shape == null || shape.kind !== "object") return shape;
+    const fields = (shape as ObjectField).fields;
+    const keys = Object.keys(fields);
+    if (keys.length === 2 && keys.includes("enabled") && keys.includes("value")) {
+        return fields.value;
+    }
+    return shape;
+}
+
 function OptionalField({ value, field, path, pages }: OptionalFieldProps) {
     if (value == null) return null;
-    const fieldInfo = field.fieldInfo;
+    const fieldInfo = optionalInnerField(field);
     if (fieldInfo == null) return null;
     const enabled = value.enabled;
-    const seperator = path.length > 0 ? "." : "";
     return (
         <div
             className={
@@ -706,7 +938,7 @@ function OptionalField({ value, field, path, pages }: OptionalFieldProps) {
             />
             <FieldInspector
                 fieldInfo={fieldInfo}
-                path={`${path}${seperator}value`}
+                path={path}
                 value={value.value}
                 pages={pages}
             />

@@ -17,6 +17,8 @@ export interface Blueprint {
     tags: string[];
     color: string;
     icon: string;
+    /** Only on variable entries, describing the data a `var` field stores next to the reference. */
+    variableDataBlueprint?: FieldInfo;
 }
 
 export interface Modifier {
@@ -48,6 +50,16 @@ export function fieldsWithModifier(field: FieldInfo, modifierName: string, path:
     } else if (field.kind === "map") {
         const mapField = field as MapField;
         fieldsWithModifier(mapField.value, modifierName, `${path}${seperator}*`).forEach((m, p) => modifiers.set(p, m));
+    } else if (field.kind === "algebraic") {
+        const algebraicField = field as AlgebraicField;
+        for (const caseField of Object.values(algebraicField.cases)) {
+            fieldsWithModifier(caseField, modifierName, `${path}${seperator}value`).forEach((m, p) => modifiers.set(p, m));
+        }
+    } else if (field.kind === "custom") {
+        const shape = customShape(field as CustomField);
+        if (shape != null) {
+            fieldsWithModifier(shape, modifierName, path).forEach((m, p) => modifiers.set(p, m));
+        }
     }
 
     return modifiers;
@@ -89,11 +101,23 @@ export interface ObjectField extends FieldInfo {
     fields: { [key: string]: FieldInfo };
 }
 
+export interface AlgebraicField extends FieldInfo {
+    kind: 'algebraic';
+    cases: { [key: string]: FieldInfo };
+}
+
 export interface CustomField extends FieldInfo {
     kind: 'custom';
     editor: string;
     default: any;
+    shape?: FieldInfo;
+    /** Adapter data generated before the shape rename still calls it `fieldInfo`. */
     fieldInfo?: FieldInfo;
+}
+
+/** The field the custom editor wraps, or undefined when the editor stores a value the editor itself defines. */
+export function customShape(field: CustomField): FieldInfo | undefined {
+    return field.shape ?? field.fieldInfo;
 }
 
 const primitiveDefaults = {
@@ -139,6 +163,12 @@ export function defaultValue(field: FieldInfo): any {
         return Object.fromEntries(
             Object.entries((field as ObjectField).fields).map(([key, subField]) => [key, defaultValue(subField)])
         );
+    }
+    if (field.kind === "algebraic") {
+        const cases = (field as AlgebraicField).cases;
+        if (isRecord(field.default) && field.default.case in cases) return field.default;
+        const [name, caseField] = Object.entries(cases)[0];
+        return { case: name, value: defaultValue(caseField) };
     }
     return field.default;
 }
