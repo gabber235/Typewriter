@@ -60,6 +60,7 @@ export function getModifier(field: FieldInfo, modifierName: string): Modifier | 
 export interface FieldInfo {
     kind: string;
     modifiers: Modifier[];
+    default?: any;
 }
 
 export interface PrimitiveField extends FieldInfo {
@@ -93,6 +94,53 @@ export interface CustomField extends FieldInfo {
     editor: string;
     default: any;
     fieldInfo?: FieldInfo;
+}
+
+const primitiveDefaults = {
+    string: "",
+    integer: 0,
+    double: 0.0,
+    boolean: false,
+};
+
+function matchesPrimitive(type: PrimitiveField["type"], value: any): boolean {
+    if (type === "string") return typeof value === "string";
+    if (type === "boolean") return typeof value === "boolean";
+    return typeof value === "number";
+}
+
+function isRecord(value: any): boolean {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * The value the panel would show for a field that an entry does not have,
+ * mirroring how the app fills in fields that a blueprint gained after the entry was written.
+ */
+export function defaultValue(field: FieldInfo): any {
+    if (field.kind === "primitive") {
+        const type = (field as PrimitiveField).type;
+        if (matchesPrimitive(type, field.default)) return field.default;
+        return primitiveDefaults[type];
+    }
+    if (field.kind === "enum") {
+        const values = (field as EnumField).values;
+        if (values.includes(field.default)) return field.default;
+        return values[0];
+    }
+    if (field.kind === "list") {
+        return Array.isArray(field.default) ? field.default : [];
+    }
+    if (field.kind === "map") {
+        return isRecord(field.default) ? field.default : {};
+    }
+    if (field.kind === "object") {
+        if (isRecord(field.default)) return field.default;
+        return Object.fromEntries(
+            Object.entries((field as ObjectField).fields).map(([key, subField]) => [key, defaultValue(subField)])
+        );
+    }
+    return field.default;
 }
 
 

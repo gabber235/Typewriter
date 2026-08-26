@@ -1,4 +1,4 @@
-import { blueprints, CustomField, Entry, FieldInfo, findEntry, getModifier, ListField, MapField, ObjectField, Page, PrimitiveField, } from "@site/src/libs/data";
+import { blueprints, CustomField, defaultValue, Entry, FieldInfo, findEntry, getModifier, ListField, MapField, ObjectField, Page, PrimitiveField, } from "@site/src/libs/data";
 import { format } from "@site/src/components/EntryDisplay";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { createContext, useContext, useState } from "react";
@@ -114,24 +114,26 @@ function FieldInspector({
     pages: Page[];
 }) {
     const type = fieldInfo.kind;
+    // Entries stored before the blueprint gained a field have no value for it, the app shows the default there.
+    const fieldValue = value === undefined ? defaultValue(fieldInfo) : value;
     if (type === "primitive") {
         return (
             <PrimitiveFieldInspector
                 fieldInfo={fieldInfo as PrimitiveField}
                 path={path}
-                value={value}
+                value={fieldValue}
             />
         );
     }
     if (type === "enum") {
-        return <EnumFieldInspector value={value} path={path} />;
+        return <EnumFieldInspector value={fieldValue} path={path} />;
     }
     if (type === "list") {
         return (
             <ListFieldInspector
                 fieldInfo={fieldInfo as ListField}
                 path={path}
-                value={value}
+                value={fieldValue}
                 pages={pages}
             />
         );
@@ -141,7 +143,7 @@ function FieldInspector({
             <MapFieldInspector
                 fieldInfo={fieldInfo as MapField}
                 path={path}
-                value={value}
+                value={fieldValue}
                 pages={pages}
             />
         );
@@ -153,7 +155,7 @@ function FieldInspector({
                 <ObjectFieldInspector
                     fieldInfo={fieldInfo as ObjectField}
                     path={path}
-                    value={value}
+                    value={fieldValue}
                     pages={pages}
                 />
             </div>
@@ -164,7 +166,7 @@ function FieldInspector({
             <CustomFieldInspector
                 fieldInfo={fieldInfo as CustomField}
                 path={path}
-                value={value}
+                value={fieldValue}
                 pages={pages}
             />
         );
@@ -233,6 +235,7 @@ function ListFieldInspector({
 }) {
     const { defaultExpanded } = useContext(InspectorContext);
     const [isOpen, setIsOpen] = useState(defaultExpanded);
+    const items = Array.isArray(value) ? value : [];
     const pathParts = path.split(".");
     const lastPathPart = pathParts[pathParts.length - 1];
     return (
@@ -249,18 +252,18 @@ function ListFieldInspector({
                 <FieldHeader name={path} />
                 {!isOpen && (
                     <div className="w-full text-gray-500 dark:text-gray-400 text-xs">
-                        ({value.length} item{value.length != 1 ? "s" : ""})
+                        ({items.length} item{items.length != 1 ? "s" : ""})
                     </div>
                 )}
             </div>
             {isOpen && (
                 <div className={`overflow-hidden pl-3 space-y-3`}>
-                    {value.length === 0 && (
+                    {items.length === 0 && (
                         <div className="text-gray-500 dark:text-gray-400 text-xs">
                             No {lastPathPart} found
                         </div>
                     )}
-                    {value.map((item, index) => (
+                    {items.map((item, index) => (
                         <div key={index} className="flex flex-col space-y-1">
                             <div className="w-full text-sm">
                                 <FieldInspector
@@ -293,7 +296,7 @@ function MapFieldInspector({
         <div className="flex flex-col space-y-1">
             <FieldHeader name={path} />
             <div className="flex flex-col space-y-1 w-full">
-                {Object.entries(value).map(([key, value]) => (
+                {Object.entries(value ?? {}).map(([key, value]) => (
                     <div key={key} className="flex flex-col space-y-1">
                         <div className="w-full text-sm">
                             <FieldInspector
@@ -335,7 +338,7 @@ function ObjectFieldInspector({
                         <FieldInspector
                             fieldInfo={field}
                             path={`${path}${seperator}${key}`}
-                            value={value[key]}
+                            value={value?.[key]}
                             pages={pages}
                         />
                     </div>
@@ -473,7 +476,7 @@ interface ItemProperty<T> {
 }
 
 function ItemField(props: ItemFieldProps) {
-    const anyEnabled = Object.values(props).some((prop) => prop.enabled);
+    const anyEnabled = Object.values(props).some((prop) => prop?.enabled);
     return (
         <div className="flex flex-col space-y-1">
             <FieldHeader name={props.path} />
@@ -483,7 +486,7 @@ function ItemField(props: ItemFieldProps) {
                         No item data found
                     </div>
                 )}
-                {props.material.enabled && (
+                {props.material?.enabled && (
                     <div>
                         Material
                         <SimpleValueField
@@ -492,7 +495,7 @@ function ItemField(props: ItemFieldProps) {
                         />
                     </div>
                 )}
-                {props.amount.enabled && (
+                {props.amount?.enabled && (
                     <div>
                         Amount
                         <SimpleValueField
@@ -501,7 +504,7 @@ function ItemField(props: ItemFieldProps) {
                         />
                     </div>
                 )}
-                {props.name.enabled && (
+                {props.name?.enabled && (
                     <div>
                         Name
                         <SimpleValueField
@@ -510,7 +513,7 @@ function ItemField(props: ItemFieldProps) {
                         />
                     </div>
                 )}
-                {props.lore.enabled && (
+                {props.lore?.enabled && (
                     <div>
                         Lore
                         <SimpleValueField
@@ -519,7 +522,7 @@ function ItemField(props: ItemFieldProps) {
                         />
                     </div>
                 )}
-                {props.flags.enabled && (
+                {props.flags?.enabled && (
                     <div>
                         Flags
                         <SimpleValueField
@@ -528,7 +531,7 @@ function ItemField(props: ItemFieldProps) {
                         />
                     </div>
                 )}
-                {props.nbt.enabled && (
+                {props.nbt?.enabled && (
                     <div>
                         NBT
                         <SimpleValueField
