@@ -42,6 +42,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityTargetEvent
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent
+import org.bukkit.event.player.PlayerKickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.SkullMeta
 import org.bukkit.potion.PotionEffect
@@ -206,8 +207,6 @@ class CameraCinematicAction(
             originalState = state(
                 listOfNotNull(
                     LOCATION,
-                    ALLOW_FLIGHT,
-                    FLYING,
                     EffectStateProvider(INVISIBILITY),
                     VELOCITY.takeIf { entry.advancedCameraSettings.restoreVelocity }
                 )
@@ -215,9 +214,9 @@ class CameraCinematicAction(
             context[PlayerPositionOverride] = position
         }
 
+        sendFakeFlight()
+
         Dispatchers.Sync.switchContext {
-            allowFlight = true
-            isFlying = true
             addPotionEffect(PotionEffect(INVISIBILITY, INFINITE_DURATION, 0, false, false))
 
             // TODO: Remove this and the release in teardown once the visibility extension is
@@ -253,7 +252,15 @@ class CameraCinematicAction(
             if (it.target?.uniqueId != player?.uniqueId) return@listen
             it.isCancelled = true
         }
+        plugin.listen<PlayerKickEvent>(listener = listener!!) {
+            if (it.player.uniqueId != player?.uniqueId) return@listen
+            // Faked flight leaves the server believing the player cannot fly, which is what the
+            // floating check disconnects them for.
+            if (it.cause != PlayerKickEvent.Cause.FLYING_PLAYER) return@listen
+            it.isCancelled = true
+        }
         interceptor = this.interceptPackets {
+            keepFakeFlight()
             // If the player is a bedrock player, we don't want to modify the location.
             if (isFloodgate) return@interceptPackets
             keepFakeInventory()
@@ -295,6 +302,7 @@ class CameraCinematicAction(
             originalState?.let {
                 restore(it)
             }
+            sendRealAbilities()
             // Revealed only after the player is restored, so nobody sees them reappear at the
             // camera's position.
             playerHides.release(this@CameraCinematicAction)
@@ -389,8 +397,7 @@ private class DisplayCameraAction(
         setupPath(segment)
 
         player.teleportAsync(path.first().position.toBukkitLocation()).await()
-        player.allowFlight = true
-        player.isFlying = true
+        player.sendFakeFlight()
 
         entity.spawn(path.first().position.toPacketLocation())
         entity.addViewer(player.uniqueId)
@@ -463,8 +470,7 @@ private class TeleportCameraAction(
         val position = path.interpolate(frame)
         Dispatchers.Sync.switchContext {
             player.teleport(position.toBukkitLocation())
-            player.allowFlight = true
-            player.isFlying = true
+            player.sendFakeFlight()
         }
     }
 
