@@ -30,16 +30,26 @@ final class PageKindId implements PageKindId_orMutable {
   final _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PageKindId({required _core.String value}) => PageKindId._(value);
+  factory PageKindId({
+    required _core.String value,
+  }) => PageKindId._(
+    value,
+  );
 
-  PageKindId._(this.value);
+  PageKindId._(
+    this.value,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageKindId._("");
+  static final defaultInstance = PageKindId._(
+    "",
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageKindId_mutable mutable() => PageKindId_mutable._("");
+  static PageKindId_mutable mutable() => PageKindId_mutable._(
+    "",
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -47,22 +57,23 @@ final class PageKindId implements PageKindId_orMutable {
   PageKindId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PageKindId_mutable toMutable() => PageKindId_mutable._(this.value);
+  PageKindId_mutable toMutable() => PageKindId_mutable._(
+    this.value,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PageKindId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.value];
+  _core.List get _equality_proxy => [
+    this.value,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -100,11 +111,15 @@ final class PageKindId_mutable implements PageKindId_orMutable {
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  PageKindId_mutable._(this.value);
+  PageKindId_mutable._(
+    this.value,
+  );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PageKindId toFrozen() => PageKindId(value: this.value).._u = this._u;
+  PageKindId toFrozen() => PageKindId(
+    value: this.value,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -129,17 +144,28 @@ final class PageKindRef implements PageKindRef_orMutable {
   factory PageKindRef({
     required PageKindId_orMutable id,
     required _core.int revision,
-  }) => PageKindRef._(id.toFrozen(), revision);
+  }) => PageKindRef._(
+    id.toFrozen(),
+    revision,
+  );
 
-  PageKindRef._(this.id, this.revision);
+  PageKindRef._(
+    this.id,
+    this.revision,
+  );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PageKindRef._(PageKindId.defaultInstance, 0);
+  static final defaultInstance = PageKindRef._(
+    PageKindId.defaultInstance,
+    0,
+  );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PageKindRef_mutable mutable() =>
-      PageKindRef_mutable._(PageKindId.defaultInstance, 0);
+  static PageKindRef_mutable mutable() => PageKindRef_mutable._(
+    PageKindId.defaultInstance,
+    0,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -147,30 +173,31 @@ final class PageKindRef implements PageKindRef_orMutable {
   PageKindRef toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PageKindRef_mutable toMutable() =>
-      PageKindRef_mutable._(this.id, this.revision);
+  PageKindRef_mutable toMutable() => PageKindRef_mutable._(
+    this.id,
+    this.revision,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PageKindRef) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.id, this.revision];
+  _core.List get _equality_proxy => [
+    this.id,
+    this.revision,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PageKindRef` instances.
-  static _skir.StructSerializer<PageKindRef, PageKindRef_mutable>
-  get serializer {
+  static _skir.StructSerializer<PageKindRef, PageKindRef_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -212,7 +239,10 @@ final class PageKindRef_mutable implements PageKindRef_orMutable {
   _core.int revision;
   _skir.internal__UnrecognizedFields? _u;
 
-  PageKindRef_mutable._(this.id, this.revision);
+  PageKindRef_mutable._(
+    this.id,
+    this.revision,
+  );
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -227,6 +257,8 @@ final class PageKindRef_mutable implements PageKindRef_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PageKindRef toFrozen() =>
-      PageKindRef(id: this.id, revision: this.revision).._u = this._u;
+  PageKindRef toFrozen() => PageKindRef(
+    id: this.id,
+    revision: this.revision,
+  ).._u = this._u;
 }

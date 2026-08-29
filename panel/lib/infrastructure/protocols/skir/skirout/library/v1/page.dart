@@ -123,10 +123,7 @@ final class Page implements Page_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Page) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -255,8 +252,7 @@ final class Page_mutable implements Page_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -267,8 +263,7 @@ final class Page_mutable implements Page_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -279,8 +274,7 @@ final class Page_mutable implements Page_orMutable {
     if (value is _lib_kernel_v1_page_kind.PageKindRef_mutable) {
       return value;
     } else {
-      return this.kind = (value as _lib_kernel_v1_page_kind.PageKindRef)
-          .toMutable();
+      return this.kind = (value as _lib_kernel_v1_page_kind.PageKindRef).toMutable();
     }
   }
 
@@ -315,14 +309,11 @@ final class Page_mutable implements Page_orMutable {
 sealed class PageValidationError {
   /// Constant indicating an unknown `PageValidationError`.
   /// Default value for fields of type `PageValidationError`.
-  static const PageValidationError unknown =
-      PageValidationError_unknown._instance;
+  static const PageValidationError unknown = PageValidationError_unknown._instance;
 
   static const nameRequired = _PageValidationError_consts.nameRequiredConst;
-  static const pageKindUnknown =
-      _PageValidationError_consts.pageKindUnknownConst;
-  static const pageKindRevisionUnknown =
-      _PageValidationError_consts.pageKindRevisionUnknownConst;
+  static const pageKindUnknown = _PageValidationError_consts.pageKindUnknownConst;
+  static const pageKindRevisionUnknown = _PageValidationError_consts.pageKindRevisionUnknownConst;
 
   /// Returns the kind of variant held by this PageValidationError.
   PageValidationError_kind get kind;
@@ -356,16 +347,15 @@ sealed class PageValidationError {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/page.skir:PageValidationError",
-        doc: "",
-        unknownInstance: PageValidationError_unknown._instance,
-        enumInstance: PageValidationError.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PageValidationError_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/page.skir:PageValidationError",
+    doc: "",
+    unknownInstance: PageValidationError_unknown._instance,
+    enumInstance: PageValidationError.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PageValidationError_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `PageValidationError`.
@@ -395,16 +385,13 @@ final class PageValidationError_unknown implements PageValidationError {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PageValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PageValidationError.serializer);
 }
 
 enum _PageValidationError_consts implements PageValidationError {
   nameRequiredConst(PageValidationError_kind.nameRequiredConst),
   pageKindUnknownConst(PageValidationError_kind.pageKindUnknownConst),
-  pageKindRevisionUnknownConst(
-    PageValidationError_kind.pageKindRevisionUnknownConst,
-  );
+  pageKindRevisionUnknownConst(PageValidationError_kind.pageKindRevisionUnknownConst);
 
   @_core.override
   final PageValidationError_kind kind;
@@ -412,8 +399,7 @@ enum _PageValidationError_consts implements PageValidationError {
   const _PageValidationError_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PageValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, PageValidationError.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -438,9 +424,15 @@ final class SearchPagesRequest implements SearchPagesRequest_orMutable {
   factory SearchPagesRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
     required _core.String? search,
-  }) => SearchPagesRequest._(bookId.toFrozen(), search);
+  }) => SearchPagesRequest._(
+    bookId.toFrozen(),
+    search,
+  );
 
-  SearchPagesRequest._(this.bookId, this.search);
+  SearchPagesRequest._(
+    this.bookId,
+    this.search,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchPagesRequest._(
@@ -461,30 +453,31 @@ final class SearchPagesRequest implements SearchPagesRequest_orMutable {
   SearchPagesRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchPagesRequest_mutable toMutable() =>
-      SearchPagesRequest_mutable._(this.bookId, this.search);
+  SearchPagesRequest_mutable toMutable() => SearchPagesRequest_mutable._(
+    this.bookId,
+    this.search,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchPagesRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.bookId, this.search];
+  _core.List get _equality_proxy => [
+    this.bookId,
+    this.search,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchPagesRequest` instances.
-  static _skir.StructSerializer<SearchPagesRequest, SearchPagesRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<SearchPagesRequest, SearchPagesRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -499,7 +492,9 @@ final class SearchPagesRequest implements SearchPagesRequest_orMutable {
         "search",
         "search",
         1,
-        _skir.Serializers.optional(_skir.Serializers.string),
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
         "",
         (it) => it.search,
         (it, v) => it.search = v,
@@ -526,7 +521,10 @@ final class SearchPagesRequest_mutable implements SearchPagesRequest_orMutable {
   _core.String? search;
   _skir.internal__UnrecognizedFields? _u;
 
-  SearchPagesRequest_mutable._(this.bookId, this.search);
+  SearchPagesRequest_mutable._(
+    this.bookId,
+    this.search,
+  );
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -535,16 +533,16 @@ final class SearchPagesRequest_mutable implements SearchPagesRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SearchPagesRequest toFrozen() =>
-      SearchPagesRequest(bookId: this.bookId, search: this.search)
-        .._u = this._u;
+  SearchPagesRequest toFrozen() => SearchPagesRequest(
+    bookId: this.bookId,
+    search: this.search,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -558,17 +556,20 @@ sealed class SearchPagesResponse_BookNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class SearchPagesResponse_BookNotFoundError
-    implements SearchPagesResponse_BookNotFoundError_orMutable {
+final class SearchPagesResponse_BookNotFoundError implements SearchPagesResponse_BookNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchPagesResponse_BookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => SearchPagesResponse_BookNotFoundError._(bookId.toFrozen());
+  }) => SearchPagesResponse_BookNotFoundError._(
+    bookId.toFrozen(),
+  );
 
-  SearchPagesResponse_BookNotFoundError._(this.bookId);
+  SearchPagesResponse_BookNotFoundError._(
+    this.bookId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchPagesResponse_BookNotFoundError._(
@@ -577,10 +578,9 @@ final class SearchPagesResponse_BookNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SearchPagesResponse_BookNotFoundError_mutable mutable() =>
-      SearchPagesResponse_BookNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static SearchPagesResponse_BookNotFoundError_mutable mutable() => SearchPagesResponse_BookNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -588,33 +588,29 @@ final class SearchPagesResponse_BookNotFoundError
   SearchPagesResponse_BookNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchPagesResponse_BookNotFoundError_mutable toMutable() =>
-      SearchPagesResponse_BookNotFoundError_mutable._(this.bookId);
+  SearchPagesResponse_BookNotFoundError_mutable toMutable() => SearchPagesResponse_BookNotFoundError_mutable._(
+    this.bookId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchPagesResponse_BookNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.bookId];
+  _core.List get _equality_proxy => [
+    this.bookId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchPagesResponse_BookNotFoundError` instances.
-  static _skir.StructSerializer<
-    SearchPagesResponse_BookNotFoundError,
-    SearchPagesResponse_BookNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<SearchPagesResponse_BookNotFoundError, SearchPagesResponse_BookNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -635,20 +631,20 @@ final class SearchPagesResponse_BookNotFoundError
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SearchPagesResponse_BookNotFoundError_mutable it) =>
-        it.toFrozen(),
+    toFrozen: (SearchPagesResponse_BookNotFoundError_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
 /// Mutable version of [SearchPagesResponse_BookNotFoundError].
-final class SearchPagesResponse_BookNotFoundError_mutable
-    implements SearchPagesResponse_BookNotFoundError_orMutable {
+final class SearchPagesResponse_BookNotFoundError_mutable implements SearchPagesResponse_BookNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  SearchPagesResponse_BookNotFoundError_mutable._(this.bookId);
+  SearchPagesResponse_BookNotFoundError_mutable._(
+    this.bookId,
+  );
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -657,15 +653,15 @@ final class SearchPagesResponse_BookNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SearchPagesResponse_BookNotFoundError toFrozen() =>
-      SearchPagesResponse_BookNotFoundError(bookId: this.bookId).._u = this._u;
+  SearchPagesResponse_BookNotFoundError toFrozen() => SearchPagesResponse_BookNotFoundError(
+    bookId: this.bookId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -687,39 +683,40 @@ final class SearchPagesResponse_BookNotFoundError_mutable
 sealed class SearchPagesResponse {
   /// Constant indicating an unknown `SearchPagesResponse`.
   /// Default value for fields of type `SearchPagesResponse`.
-  static const SearchPagesResponse unknown =
-      SearchPagesResponse_unknown._instance;
+  static const SearchPagesResponse unknown = SearchPagesResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory SearchPagesResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => SearchPagesResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory SearchPagesResponse.createInternalError() =>
-      SearchPagesResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory SearchPagesResponse.createInternalError() => SearchPagesResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'success' variant wrapping around the given value.
-  factory SearchPagesResponse.wrapSuccess(_core.Iterable<Page> value) =>
-      SearchPagesResponse_successWrapper._(value);
+  factory SearchPagesResponse.wrapSuccess(
+    _core.Iterable<Page> value
+  ) => SearchPagesResponse_successWrapper._(value);
 
   /// Create a 'book_not_found_error' variant wrapping around the given value.
   factory SearchPagesResponse.wrapBookNotFoundError(
-    SearchPagesResponse_BookNotFoundError value,
+    SearchPagesResponse_BookNotFoundError value
   ) => SearchPagesResponse_bookNotFoundErrorWrapper._(value);
 
   /// Same as `wrapBookNotFoundError(SearchPagesResponse_BookNotFoundError(...))`.
   factory SearchPagesResponse.createBookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
   }) => SearchPagesResponse.wrapBookNotFoundError(
-    SearchPagesResponse_BookNotFoundError(bookId: bookId),
+    SearchPagesResponse_BookNotFoundError(
+      bookId: bookId,
+    )
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory SearchPagesResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => SearchPagesResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -730,7 +727,7 @@ sealed class SearchPagesResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this SearchPagesResponse.
@@ -753,7 +750,9 @@ sealed class SearchPagesResponse {
         2,
         "success",
         "wrapSuccess",
-        _skir.Serializers.iterable(Page.serializer),
+        _skir.Serializers.iterable(
+          Page.serializer,
+        ),
         "",
         SearchPagesResponse_successWrapper._,
         (it) => it.value,
@@ -784,16 +783,15 @@ sealed class SearchPagesResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/page.skir:SearchPagesResponse",
-        doc: "",
-        unknownInstance: SearchPagesResponse_unknown._instance,
-        enumInstance: SearchPagesResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: SearchPagesResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/page.skir:SearchPagesResponse",
+    doc: "",
+    unknownInstance: SearchPagesResponse_unknown._instance,
+    enumInstance: SearchPagesResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: SearchPagesResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `SearchPagesResponse`.
@@ -824,8 +822,7 @@ final class SearchPagesResponse_unknown implements SearchPagesResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, SearchPagesResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, SearchPagesResponse.serializer);
 }
 
 sealed class _SearchPagesResponse_wrapper implements SearchPagesResponse {
@@ -841,23 +838,19 @@ sealed class _SearchPagesResponse_wrapper implements SearchPagesResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, SearchPagesResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, SearchPagesResponse.serializer);
 }
 
-final class SearchPagesResponse_internalErrorWrapper
-    extends _SearchPagesResponse_wrapper {
+final class SearchPagesResponse_internalErrorWrapper extends _SearchPagesResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   SearchPagesResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  SearchPagesResponse_kind get kind =>
-      SearchPagesResponse_kind.internalErrorWrapper;
+  SearchPagesResponse_kind get kind => SearchPagesResponse_kind.internalErrorWrapper;
 }
 
-final class SearchPagesResponse_successWrapper
-    extends _SearchPagesResponse_wrapper {
+final class SearchPagesResponse_successWrapper extends _SearchPagesResponse_wrapper {
   final _core.Iterable<Page> value;
 
   SearchPagesResponse_successWrapper._(this.value);
@@ -866,26 +859,22 @@ final class SearchPagesResponse_successWrapper
   SearchPagesResponse_kind get kind => SearchPagesResponse_kind.successWrapper;
 }
 
-final class SearchPagesResponse_bookNotFoundErrorWrapper
-    extends _SearchPagesResponse_wrapper {
+final class SearchPagesResponse_bookNotFoundErrorWrapper extends _SearchPagesResponse_wrapper {
   final SearchPagesResponse_BookNotFoundError value;
 
   SearchPagesResponse_bookNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  SearchPagesResponse_kind get kind =>
-      SearchPagesResponse_kind.bookNotFoundErrorWrapper;
+  SearchPagesResponse_kind get kind => SearchPagesResponse_kind.bookNotFoundErrorWrapper;
 }
 
-final class SearchPagesResponse_invalidRecordIdErrorWrapper
-    extends _SearchPagesResponse_wrapper {
+final class SearchPagesResponse_invalidRecordIdErrorWrapper extends _SearchPagesResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   SearchPagesResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  SearchPagesResponse_kind get kind =>
-      SearchPagesResponse_kind.invalidRecordIdErrorWrapper;
+  SearchPagesResponse_kind get kind => SearchPagesResponse_kind.invalidRecordIdErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -906,9 +895,13 @@ final class WatchPageRequest implements WatchPageRequest_orMutable {
 
   factory WatchPageRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable pageId,
-  }) => WatchPageRequest._(pageId.toFrozen());
+  }) => WatchPageRequest._(
+    pageId.toFrozen(),
+  );
 
-  WatchPageRequest._(this.pageId);
+  WatchPageRequest._(
+    this.pageId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchPageRequest._(
@@ -927,30 +920,29 @@ final class WatchPageRequest implements WatchPageRequest_orMutable {
   WatchPageRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchPageRequest_mutable toMutable() =>
-      WatchPageRequest_mutable._(this.pageId);
+  WatchPageRequest_mutable toMutable() => WatchPageRequest_mutable._(
+    this.pageId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchPageRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.pageId];
+  _core.List get _equality_proxy => [
+    this.pageId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchPageRequest` instances.
-  static _skir.StructSerializer<WatchPageRequest, WatchPageRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<WatchPageRequest, WatchPageRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "page_id",
@@ -982,7 +974,9 @@ final class WatchPageRequest_mutable implements WatchPageRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable pageId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchPageRequest_mutable._(this.pageId);
+  WatchPageRequest_mutable._(
+    this.pageId,
+  );
 
   /// If the value of [pageId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
@@ -991,15 +985,15 @@ final class WatchPageRequest_mutable implements WatchPageRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchPageRequest toFrozen() =>
-      WatchPageRequest(pageId: this.pageId).._u = this._u;
+  WatchPageRequest toFrozen() => WatchPageRequest(
+    pageId: this.pageId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1013,17 +1007,20 @@ sealed class WatchPageResponse_PageNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchPageResponse_PageNotFoundError
-    implements WatchPageResponse_PageNotFoundError_orMutable {
+final class WatchPageResponse_PageNotFoundError implements WatchPageResponse_PageNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId pageId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchPageResponse_PageNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable pageId,
-  }) => WatchPageResponse_PageNotFoundError._(pageId.toFrozen());
+  }) => WatchPageResponse_PageNotFoundError._(
+    pageId.toFrozen(),
+  );
 
-  WatchPageResponse_PageNotFoundError._(this.pageId);
+  WatchPageResponse_PageNotFoundError._(
+    this.pageId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchPageResponse_PageNotFoundError._(
@@ -1032,10 +1029,9 @@ final class WatchPageResponse_PageNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchPageResponse_PageNotFoundError_mutable mutable() =>
-      WatchPageResponse_PageNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static WatchPageResponse_PageNotFoundError_mutable mutable() => WatchPageResponse_PageNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1043,33 +1039,29 @@ final class WatchPageResponse_PageNotFoundError
   WatchPageResponse_PageNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchPageResponse_PageNotFoundError_mutable toMutable() =>
-      WatchPageResponse_PageNotFoundError_mutable._(this.pageId);
+  WatchPageResponse_PageNotFoundError_mutable toMutable() => WatchPageResponse_PageNotFoundError_mutable._(
+    this.pageId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchPageResponse_PageNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.pageId];
+  _core.List get _equality_proxy => [
+    this.pageId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchPageResponse_PageNotFoundError` instances.
-  static _skir.StructSerializer<
-    WatchPageResponse_PageNotFoundError,
-    WatchPageResponse_PageNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WatchPageResponse_PageNotFoundError, WatchPageResponse_PageNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "page_id",
@@ -1097,12 +1089,13 @@ final class WatchPageResponse_PageNotFoundError
 }
 
 /// Mutable version of [WatchPageResponse_PageNotFoundError].
-final class WatchPageResponse_PageNotFoundError_mutable
-    implements WatchPageResponse_PageNotFoundError_orMutable {
+final class WatchPageResponse_PageNotFoundError_mutable implements WatchPageResponse_PageNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable pageId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchPageResponse_PageNotFoundError_mutable._(this.pageId);
+  WatchPageResponse_PageNotFoundError_mutable._(
+    this.pageId,
+  );
 
   /// If the value of [pageId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
@@ -1111,15 +1104,15 @@ final class WatchPageResponse_PageNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.pageId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchPageResponse_PageNotFoundError toFrozen() =>
-      WatchPageResponse_PageNotFoundError(pageId: this.pageId).._u = this._u;
+  WatchPageResponse_PageNotFoundError toFrozen() => WatchPageResponse_PageNotFoundError(
+    pageId: this.pageId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1147,18 +1140,18 @@ sealed class WatchPageResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchPageResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchPageResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchPageResponse.createInternalError() =>
-      WatchPageResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory WatchPageResponse.createInternalError() => WatchPageResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'initial' variant wrapping around the given value.
-  factory WatchPageResponse.wrapInitial(Page value) =>
-      WatchPageResponse_initialWrapper._(value);
+  factory WatchPageResponse.wrapInitial(
+    Page value
+  ) => WatchPageResponse_initialWrapper._(value);
 
   /// Same as `wrapInitial(Page(...))`.
   factory WatchPageResponse.createInitial({
@@ -1178,12 +1171,13 @@ sealed class WatchPageResponse {
       kind: kind,
       chapter: chapter,
       priority: priority,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchPageResponse.wrapUpdate(Page value) =>
-      WatchPageResponse_updateWrapper._(value);
+  factory WatchPageResponse.wrapUpdate(
+    Page value
+  ) => WatchPageResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Page(...))`.
   factory WatchPageResponse.createUpdate({
@@ -1203,12 +1197,12 @@ sealed class WatchPageResponse {
       kind: kind,
       chapter: chapter,
       priority: priority,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchPageResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchPageResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -1216,24 +1210,29 @@ sealed class WatchPageResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchPageResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Create a 'page_not_found_error' variant wrapping around the given value.
   factory WatchPageResponse.wrapPageNotFoundError(
-    WatchPageResponse_PageNotFoundError value,
+    WatchPageResponse_PageNotFoundError value
   ) => WatchPageResponse_pageNotFoundErrorWrapper._(value);
 
   /// Same as `wrapPageNotFoundError(WatchPageResponse_PageNotFoundError(...))`.
   factory WatchPageResponse.createPageNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable pageId,
   }) => WatchPageResponse.wrapPageNotFoundError(
-    WatchPageResponse_PageNotFoundError(pageId: pageId),
+    WatchPageResponse_PageNotFoundError(
+      pageId: pageId,
+    )
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory WatchPageResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => WatchPageResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1244,7 +1243,7 @@ sealed class WatchPageResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this WatchPageResponse.
@@ -1318,16 +1317,15 @@ sealed class WatchPageResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/page.skir:WatchPageResponse",
-        doc: "",
-        unknownInstance: WatchPageResponse_unknown._instance,
-        enumInstance: WatchPageResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WatchPageResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/page.skir:WatchPageResponse",
+    doc: "",
+    unknownInstance: WatchPageResponse_unknown._instance,
+    enumInstance: WatchPageResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchPageResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchPageResponse`.
@@ -1360,8 +1358,7 @@ final class WatchPageResponse_unknown implements WatchPageResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchPageResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchPageResponse.serializer);
 }
 
 sealed class _WatchPageResponse_wrapper implements WatchPageResponse {
@@ -1377,23 +1374,19 @@ sealed class _WatchPageResponse_wrapper implements WatchPageResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchPageResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchPageResponse.serializer);
 }
 
-final class WatchPageResponse_internalErrorWrapper
-    extends _WatchPageResponse_wrapper {
+final class WatchPageResponse_internalErrorWrapper extends _WatchPageResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchPageResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchPageResponse_kind get kind =>
-      WatchPageResponse_kind.internalErrorWrapper;
+  WatchPageResponse_kind get kind => WatchPageResponse_kind.internalErrorWrapper;
 }
 
-final class WatchPageResponse_initialWrapper
-    extends _WatchPageResponse_wrapper {
+final class WatchPageResponse_initialWrapper extends _WatchPageResponse_wrapper {
   final Page value;
 
   WatchPageResponse_initialWrapper._(this.value);
@@ -1420,42 +1413,44 @@ final class WatchPageResponse_removeWrapper extends _WatchPageResponse_wrapper {
   WatchPageResponse_kind get kind => WatchPageResponse_kind.removeWrapper;
 }
 
-final class WatchPageResponse_pageNotFoundErrorWrapper
-    extends _WatchPageResponse_wrapper {
+final class WatchPageResponse_pageNotFoundErrorWrapper extends _WatchPageResponse_wrapper {
   final WatchPageResponse_PageNotFoundError value;
 
   WatchPageResponse_pageNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  WatchPageResponse_kind get kind =>
-      WatchPageResponse_kind.pageNotFoundErrorWrapper;
+  WatchPageResponse_kind get kind => WatchPageResponse_kind.pageNotFoundErrorWrapper;
 }
 
-final class WatchPageResponse_invalidRecordIdErrorWrapper
-    extends _WatchPageResponse_wrapper {
+final class WatchPageResponse_invalidRecordIdErrorWrapper extends _WatchPageResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   WatchPageResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  WatchPageResponse_kind get kind =>
-      WatchPageResponse_kind.invalidRecordIdErrorWrapper;
+  WatchPageResponse_kind get kind => WatchPageResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-final _skir.Method<SearchPagesRequest, SearchPagesResponse> searchPagesMethod =
-    _skir.Method(
-      "SearchPages",
-      247484,
-      SearchPagesRequest.serializer,
-      SearchPagesResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  SearchPagesRequest,
+  SearchPagesResponse
+> searchPagesMethod =
+  _skir.Method(
+    "SearchPages",
+    247484,
+    SearchPagesRequest.serializer,
+    SearchPagesResponse.serializer,
+    "",
+  );
 
-final _skir.Method<WatchPageRequest, WatchPageResponse> watchPageMethod =
-    _skir.Method(
-      "WatchPage",
-      247485,
-      WatchPageRequest.serializer,
-      WatchPageResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  WatchPageRequest,
+  WatchPageResponse
+> watchPageMethod =
+  _skir.Method(
+    "WatchPage",
+    247485,
+    WatchPageRequest.serializer,
+    WatchPageResponse.serializer,
+    "",
+  );

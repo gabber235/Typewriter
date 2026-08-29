@@ -12,11 +12,11 @@
 //
 // To install the Skir client library, run:
 //   cargo add skir-client
+pub mod topology;
 pub mod status;
 pub mod service;
+pub mod registration;
 pub mod organization;
 pub mod lifecycle;
-pub mod artifact;
-pub mod registration;
-pub mod topology;
 pub mod identity;
+pub mod artifact;

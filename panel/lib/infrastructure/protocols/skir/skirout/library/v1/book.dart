@@ -114,10 +114,7 @@ final class Book implements Book_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Book) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -236,8 +233,7 @@ final class Book_mutable implements Book_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
@@ -256,10 +252,7 @@ final class Book_mutable implements Book_orMutable {
   /// Otherwise, makes a mutable copy, assigns it back to [tagIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableTagIds {
     final value = this.tagIds;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_kernel_v1_record_id.RecordId_orMutable
-        >) {
+    if (value is _skir.internal__MutableList<_lib_kernel_v1_record_id.RecordId_orMutable>) {
       return value;
     } else {
       return this.tagIds = _skir.internal__MutableList([...value]);
@@ -295,8 +288,7 @@ final class Book_mutable implements Book_orMutable {
 sealed class BookValidationError {
   /// Constant indicating an unknown `BookValidationError`.
   /// Default value for fields of type `BookValidationError`.
-  static const BookValidationError unknown =
-      BookValidationError_unknown._instance;
+  static const BookValidationError unknown = BookValidationError_unknown._instance;
 
   static const titleRequired = _BookValidationError_consts.titleRequiredConst;
   static const iconRequired = _BookValidationError_consts.iconRequiredConst;
@@ -326,16 +318,15 @@ sealed class BookValidationError {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/book.skir:BookValidationError",
-        doc: "",
-        unknownInstance: BookValidationError_unknown._instance,
-        enumInstance: BookValidationError.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: BookValidationError_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/book.skir:BookValidationError",
+    doc: "",
+    unknownInstance: BookValidationError_unknown._instance,
+    enumInstance: BookValidationError.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: BookValidationError_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `BookValidationError`.
@@ -364,8 +355,7 @@ final class BookValidationError_unknown implements BookValidationError {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BookValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BookValidationError.serializer);
 }
 
 enum _BookValidationError_consts implements BookValidationError {
@@ -378,8 +368,7 @@ enum _BookValidationError_consts implements BookValidationError {
   const _BookValidationError_consts(this.kind);
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, BookValidationError.serializer);
+  _core.String toString() => _skir.internal__stringify(this, BookValidationError.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -417,10 +406,7 @@ final class WatchBooksRequest implements WatchBooksRequest_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBooksRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
@@ -432,8 +418,7 @@ final class WatchBooksRequest implements WatchBooksRequest_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBooksRequest` instances.
-  static _skir.StructSerializer<WatchBooksRequest, WatchBooksRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<WatchBooksRequest, WatchBooksRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -482,27 +467,27 @@ final class WatchBooksRequest_mutable implements WatchBooksRequest_orMutable {
 sealed class WatchBooksResponse {
   /// Constant indicating an unknown `WatchBooksResponse`.
   /// Default value for fields of type `WatchBooksResponse`.
-  static const WatchBooksResponse unknown =
-      WatchBooksResponse_unknown._instance;
+  static const WatchBooksResponse unknown = WatchBooksResponse_unknown._instance;
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchBooksResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchBooksResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchBooksResponse.createInternalError() =>
-      WatchBooksResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory WatchBooksResponse.createInternalError() => WatchBooksResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'list' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapList(_core.Iterable<Book> value) =>
-      WatchBooksResponse_listWrapper._(value);
+  factory WatchBooksResponse.wrapList(
+    _core.Iterable<Book> value
+  ) => WatchBooksResponse_listWrapper._(value);
 
   /// Create a 'add' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapAdd(Book value) =>
-      WatchBooksResponse_addWrapper._(value);
+  factory WatchBooksResponse.wrapAdd(
+    Book value
+  ) => WatchBooksResponse_addWrapper._(value);
 
   /// Same as `wrapAdd(Book(...))`.
   factory WatchBooksResponse.createAdd({
@@ -520,12 +505,13 @@ sealed class WatchBooksResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchBooksResponse.wrapUpdate(Book value) =>
-      WatchBooksResponse_updateWrapper._(value);
+  factory WatchBooksResponse.wrapUpdate(
+    Book value
+  ) => WatchBooksResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBooksResponse.createUpdate({
@@ -543,12 +529,12 @@ sealed class WatchBooksResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchBooksResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchBooksResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -556,7 +542,10 @@ sealed class WatchBooksResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchBooksResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Returns the kind of variant held by this WatchBooksResponse.
@@ -579,7 +568,9 @@ sealed class WatchBooksResponse {
         2,
         "list",
         "wrapList",
-        _skir.Serializers.iterable(Book.serializer),
+        _skir.Serializers.iterable(
+          Book.serializer,
+        ),
         "",
         WatchBooksResponse_listWrapper._,
         (it) => it.value,
@@ -620,16 +611,15 @@ sealed class WatchBooksResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/book.skir:WatchBooksResponse",
-        doc: "",
-        unknownInstance: WatchBooksResponse_unknown._instance,
-        enumInstance: WatchBooksResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WatchBooksResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/book.skir:WatchBooksResponse",
+    doc: "",
+    unknownInstance: WatchBooksResponse_unknown._instance,
+    enumInstance: WatchBooksResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchBooksResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchBooksResponse`.
@@ -661,8 +651,7 @@ final class WatchBooksResponse_unknown implements WatchBooksResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchBooksResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchBooksResponse.serializer);
 }
 
 sealed class _WatchBooksResponse_wrapper implements WatchBooksResponse {
@@ -678,19 +667,16 @@ sealed class _WatchBooksResponse_wrapper implements WatchBooksResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchBooksResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchBooksResponse.serializer);
 }
 
-final class WatchBooksResponse_internalErrorWrapper
-    extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_internalErrorWrapper extends _WatchBooksResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchBooksResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchBooksResponse_kind get kind =>
-      WatchBooksResponse_kind.internalErrorWrapper;
+  WatchBooksResponse_kind get kind => WatchBooksResponse_kind.internalErrorWrapper;
 }
 
 final class WatchBooksResponse_listWrapper extends _WatchBooksResponse_wrapper {
@@ -711,8 +697,7 @@ final class WatchBooksResponse_addWrapper extends _WatchBooksResponse_wrapper {
   WatchBooksResponse_kind get kind => WatchBooksResponse_kind.addWrapper;
 }
 
-final class WatchBooksResponse_updateWrapper
-    extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_updateWrapper extends _WatchBooksResponse_wrapper {
   final Book value;
 
   WatchBooksResponse_updateWrapper._(this.value);
@@ -721,8 +706,7 @@ final class WatchBooksResponse_updateWrapper
   WatchBooksResponse_kind get kind => WatchBooksResponse_kind.updateWrapper;
 }
 
-final class WatchBooksResponse_removeWrapper
-    extends _WatchBooksResponse_wrapper {
+final class WatchBooksResponse_removeWrapper extends _WatchBooksResponse_wrapper {
   final _lib_kernel_v1_record_id.RecordId value;
 
   WatchBooksResponse_removeWrapper._(this.value);
@@ -749,9 +733,13 @@ final class WatchBookRequest implements WatchBookRequest_orMutable {
 
   factory WatchBookRequest({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => WatchBookRequest._(bookId.toFrozen());
+  }) => WatchBookRequest._(
+    bookId.toFrozen(),
+  );
 
-  WatchBookRequest._(this.bookId);
+  WatchBookRequest._(
+    this.bookId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchBookRequest._(
@@ -770,30 +758,29 @@ final class WatchBookRequest implements WatchBookRequest_orMutable {
   WatchBookRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchBookRequest_mutable toMutable() =>
-      WatchBookRequest_mutable._(this.bookId);
+  WatchBookRequest_mutable toMutable() => WatchBookRequest_mutable._(
+    this.bookId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBookRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.bookId];
+  _core.List get _equality_proxy => [
+    this.bookId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBookRequest` instances.
-  static _skir.StructSerializer<WatchBookRequest, WatchBookRequest_mutable>
-  get serializer {
+  static _skir.StructSerializer<WatchBookRequest, WatchBookRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -825,7 +812,9 @@ final class WatchBookRequest_mutable implements WatchBookRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchBookRequest_mutable._(this.bookId);
+  WatchBookRequest_mutable._(
+    this.bookId,
+  );
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -834,15 +823,15 @@ final class WatchBookRequest_mutable implements WatchBookRequest_orMutable {
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchBookRequest toFrozen() =>
-      WatchBookRequest(bookId: this.bookId).._u = this._u;
+  WatchBookRequest toFrozen() => WatchBookRequest(
+    bookId: this.bookId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -856,17 +845,20 @@ sealed class WatchBookResponse_BookNotFoundError_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchBookResponse_BookNotFoundError
-    implements WatchBookResponse_BookNotFoundError_orMutable {
+final class WatchBookResponse_BookNotFoundError implements WatchBookResponse_BookNotFoundError_orMutable {
   @_core.override
   final _lib_kernel_v1_record_id.RecordId bookId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchBookResponse_BookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
-  }) => WatchBookResponse_BookNotFoundError._(bookId.toFrozen());
+  }) => WatchBookResponse_BookNotFoundError._(
+    bookId.toFrozen(),
+  );
 
-  WatchBookResponse_BookNotFoundError._(this.bookId);
+  WatchBookResponse_BookNotFoundError._(
+    this.bookId,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = WatchBookResponse_BookNotFoundError._(
@@ -875,10 +867,9 @@ final class WatchBookResponse_BookNotFoundError
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchBookResponse_BookNotFoundError_mutable mutable() =>
-      WatchBookResponse_BookNotFoundError_mutable._(
-        _lib_kernel_v1_record_id.RecordId.defaultInstance,
-      );
+  static WatchBookResponse_BookNotFoundError_mutable mutable() => WatchBookResponse_BookNotFoundError_mutable._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+  );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -886,33 +877,29 @@ final class WatchBookResponse_BookNotFoundError
   WatchBookResponse_BookNotFoundError toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchBookResponse_BookNotFoundError_mutable toMutable() =>
-      WatchBookResponse_BookNotFoundError_mutable._(this.bookId);
+  WatchBookResponse_BookNotFoundError_mutable toMutable() => WatchBookResponse_BookNotFoundError_mutable._(
+    this.bookId,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchBookResponse_BookNotFoundError) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.bookId];
+  _core.List get _equality_proxy => [
+    this.bookId,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchBookResponse_BookNotFoundError` instances.
-  static _skir.StructSerializer<
-    WatchBookResponse_BookNotFoundError,
-    WatchBookResponse_BookNotFoundError_mutable
-  >
-  get serializer {
+  static _skir.StructSerializer<WatchBookResponse_BookNotFoundError, WatchBookResponse_BookNotFoundError_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "book_id",
@@ -940,12 +927,13 @@ final class WatchBookResponse_BookNotFoundError
 }
 
 /// Mutable version of [WatchBookResponse_BookNotFoundError].
-final class WatchBookResponse_BookNotFoundError_mutable
-    implements WatchBookResponse_BookNotFoundError_orMutable {
+final class WatchBookResponse_BookNotFoundError_mutable implements WatchBookResponse_BookNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable bookId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchBookResponse_BookNotFoundError_mutable._(this.bookId);
+  WatchBookResponse_BookNotFoundError_mutable._(
+    this.bookId,
+  );
 
   /// If the value of [bookId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
@@ -954,15 +942,15 @@ final class WatchBookResponse_BookNotFoundError_mutable
     if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
       return value;
     } else {
-      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId)
-          .toMutable();
+      return this.bookId = (value as _lib_kernel_v1_record_id.RecordId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchBookResponse_BookNotFoundError toFrozen() =>
-      WatchBookResponse_BookNotFoundError(bookId: this.bookId).._u = this._u;
+  WatchBookResponse_BookNotFoundError toFrozen() => WatchBookResponse_BookNotFoundError(
+    bookId: this.bookId,
+  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -990,18 +978,18 @@ sealed class WatchBookResponse {
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
+    _lib_kernel_v1_errors.InternalError value
   ) => WatchBookResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchBookResponse.createInternalError() =>
-      WatchBookResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
+  factory WatchBookResponse.createInternalError() => WatchBookResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
 
   /// Create a 'initial' variant wrapping around the given value.
-  factory WatchBookResponse.wrapInitial(Book value) =>
-      WatchBookResponse_initialWrapper._(value);
+  factory WatchBookResponse.wrapInitial(
+    Book value
+  ) => WatchBookResponse_initialWrapper._(value);
 
   /// Same as `wrapInitial(Book(...))`.
   factory WatchBookResponse.createInitial({
@@ -1019,12 +1007,13 @@ sealed class WatchBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    ),
+    )
   );
 
   /// Create a 'update' variant wrapping around the given value.
-  factory WatchBookResponse.wrapUpdate(Book value) =>
-      WatchBookResponse_updateWrapper._(value);
+  factory WatchBookResponse.wrapUpdate(
+    Book value
+  ) => WatchBookResponse_updateWrapper._(value);
 
   /// Same as `wrapUpdate(Book(...))`.
   factory WatchBookResponse.createUpdate({
@@ -1042,12 +1031,12 @@ sealed class WatchBookResponse {
       icon: icon,
       color: color,
       tagIds: tagIds,
-    ),
+    )
   );
 
   /// Create a 'remove' variant wrapping around the given value.
   factory WatchBookResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
+    _lib_kernel_v1_record_id.RecordId value
   ) => WatchBookResponse_removeWrapper._(value);
 
   /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
@@ -1055,24 +1044,29 @@ sealed class WatchBookResponse {
     required _core.String table,
     required _lib_kernel_v1_record_id.RecordIdKey key,
   }) => WatchBookResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+    _lib_kernel_v1_record_id.RecordId(
+      table: table,
+      key: key,
+    )
   );
 
   /// Create a 'book_not_found_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapBookNotFoundError(
-    WatchBookResponse_BookNotFoundError value,
+    WatchBookResponse_BookNotFoundError value
   ) => WatchBookResponse_bookNotFoundErrorWrapper._(value);
 
   /// Same as `wrapBookNotFoundError(WatchBookResponse_BookNotFoundError(...))`.
   factory WatchBookResponse.createBookNotFoundError({
     required _lib_kernel_v1_record_id.RecordId_orMutable bookId,
   }) => WatchBookResponse.wrapBookNotFoundError(
-    WatchBookResponse_BookNotFoundError(bookId: bookId),
+    WatchBookResponse_BookNotFoundError(
+      bookId: bookId,
+    )
   );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory WatchBookResponse.wrapInvalidRecordIdError(
-    _lib_kernel_v1_errors.InvalidRecordIdError value,
+    _lib_kernel_v1_errors.InvalidRecordIdError value
   ) => WatchBookResponse_invalidRecordIdErrorWrapper._(value);
 
   /// Same as `wrapInvalidRecordIdError(_lib_kernel_v1_errors.InvalidRecordIdError(...))`.
@@ -1083,7 +1077,7 @@ sealed class WatchBookResponse {
     _lib_kernel_v1_errors.InvalidRecordIdError(
       expectedTable: expectedTable,
       givenTables: givenTables,
-    ),
+    )
   );
 
   /// Returns the kind of variant held by this WatchBookResponse.
@@ -1157,16 +1151,15 @@ sealed class WatchBookResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "library/v1/book.skir:WatchBookResponse",
-        doc: "",
-        unknownInstance: WatchBookResponse_unknown._instance,
-        enumInstance: WatchBookResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: WatchBookResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "library/v1/book.skir:WatchBookResponse",
+    doc: "",
+    unknownInstance: WatchBookResponse_unknown._instance,
+    enumInstance: WatchBookResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: WatchBookResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
 }
 
 /// The kind of variant held by a `WatchBookResponse`.
@@ -1199,8 +1192,7 @@ final class WatchBookResponse_unknown implements WatchBookResponse {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchBookResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchBookResponse.serializer);
 }
 
 sealed class _WatchBookResponse_wrapper implements WatchBookResponse {
@@ -1216,23 +1208,19 @@ sealed class _WatchBookResponse_wrapper implements WatchBookResponse {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, WatchBookResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, WatchBookResponse.serializer);
 }
 
-final class WatchBookResponse_internalErrorWrapper
-    extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_internalErrorWrapper extends _WatchBookResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   WatchBookResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind =>
-      WatchBookResponse_kind.internalErrorWrapper;
+  WatchBookResponse_kind get kind => WatchBookResponse_kind.internalErrorWrapper;
 }
 
-final class WatchBookResponse_initialWrapper
-    extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_initialWrapper extends _WatchBookResponse_wrapper {
   final Book value;
 
   WatchBookResponse_initialWrapper._(this.value);
@@ -1259,42 +1247,44 @@ final class WatchBookResponse_removeWrapper extends _WatchBookResponse_wrapper {
   WatchBookResponse_kind get kind => WatchBookResponse_kind.removeWrapper;
 }
 
-final class WatchBookResponse_bookNotFoundErrorWrapper
-    extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_bookNotFoundErrorWrapper extends _WatchBookResponse_wrapper {
   final WatchBookResponse_BookNotFoundError value;
 
   WatchBookResponse_bookNotFoundErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind =>
-      WatchBookResponse_kind.bookNotFoundErrorWrapper;
+  WatchBookResponse_kind get kind => WatchBookResponse_kind.bookNotFoundErrorWrapper;
 }
 
-final class WatchBookResponse_invalidRecordIdErrorWrapper
-    extends _WatchBookResponse_wrapper {
+final class WatchBookResponse_invalidRecordIdErrorWrapper extends _WatchBookResponse_wrapper {
   final _lib_kernel_v1_errors.InvalidRecordIdError value;
 
   WatchBookResponse_invalidRecordIdErrorWrapper._(this.value);
 
   @_core.override
-  WatchBookResponse_kind get kind =>
-      WatchBookResponse_kind.invalidRecordIdErrorWrapper;
+  WatchBookResponse_kind get kind => WatchBookResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-final _skir.Method<WatchBooksRequest, WatchBooksResponse> watchBooksMethod =
-    _skir.Method(
-      "WatchBooks",
-      216867,
-      WatchBooksRequest.serializer,
-      WatchBooksResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  WatchBooksRequest,
+  WatchBooksResponse
+> watchBooksMethod =
+  _skir.Method(
+    "WatchBooks",
+    216867,
+    WatchBooksRequest.serializer,
+    WatchBooksResponse.serializer,
+    "",
+  );
 
-final _skir.Method<WatchBookRequest, WatchBookResponse> watchBookMethod =
-    _skir.Method(
-      "WatchBook",
-      452891,
-      WatchBookRequest.serializer,
-      WatchBookResponse.serializer,
-      "",
-    );
+final _skir.Method<
+  WatchBookRequest,
+  WatchBookResponse
+> watchBookMethod =
+  _skir.Method(
+    "WatchBook",
+    452891,
+    WatchBookRequest.serializer,
+    WatchBookResponse.serializer,
+    "",
+  );
