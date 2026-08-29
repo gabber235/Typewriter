@@ -44,7 +44,6 @@ dependencies {
     imprintExtensionApi(project(":extension-types"))
     imprintExtensionApi("com.typewritermc:library-types")
     imprintExtensionApi("com.typewritermc:page-types")
-    imprintProcessors("com.typewritermc:typewriter-types-codegen")
     imprintProcessors("com.typewritermc:element-codegen")
     imprintProcessors("com.typewritermc:presentation-codegen")
     imprintProcessors("com.typewritermc:page-codegen")

@@ -1,1 +1,2 @@
 com.typewritermc.discovery.codegen.TypewriterRegistrarProcessorProvider
+com.typewritermc.types.codegen.TypewriterTypeProcessorProvider

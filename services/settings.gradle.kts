@@ -16,7 +16,6 @@ val serviceBuilds =
             listOf(
                 ":typewriter-types-core",
                 ":typewriter-types-ksp",
-                ":typewriter-types-codegen",
                 ":typewriter-types-skir",
             ),
         ),
