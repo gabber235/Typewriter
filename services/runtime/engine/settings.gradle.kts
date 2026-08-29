@@ -1,17 +1,17 @@
 pluginManagement {
-    includeBuild("../build-logic")
-    includeBuild("../imprint")
+    includeBuild("../../build-logic")
+    includeBuild("../../imprint")
 }
 
 includeBuild("../loader")
-includeBuild("../discovery")
-includeBuild("../elements")
-includeBuild("../library")
-includeBuild("../pages")
-includeBuild("../presentation")
+includeBuild("../../domain/discovery")
+includeBuild("../../domain/elements")
+includeBuild("../../domain/library")
+includeBuild("../../domain/pages")
+includeBuild("../../domain/presentation")
 includeBuild("../realm-capabilities")
-includeBuild("../libs/typewriter-types")
-includeBuild("../imprint")
+includeBuild("../../domain/typewriter-types")
+includeBuild("../../imprint")
 
 plugins {
     id("com.typewritermc.settings-conventions")

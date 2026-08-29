@@ -1,5 +1,5 @@
 pluginManagement {
-    includeBuild("../build-logic")
+    includeBuild("../../build-logic")
 }
 
 plugins {
@@ -8,9 +8,9 @@ plugins {
 
 rootProject.name = "loader"
 
-includeBuild("../libs/service-registrar")
-includeBuild("../imprint")
-includeBuild("../discovery")
+includeBuild("../../platform/service-registrar")
+includeBuild("../../imprint")
+includeBuild("../../domain/discovery")
 
 include(":loader-api", ":loader-core", ":loader-standalone", ":loader-paper")
 project(":loader-api").projectDir = file("api")

@@ -1,13 +1,13 @@
 pluginManagement {
-    includeBuild("../build-logic")
+    includeBuild("../../build-logic")
 }
 
 includeBuild("../discovery")
 includeBuild("../elements")
-includeBuild("../imprint")
+includeBuild("../../imprint")
 includeBuild("../library")
-includeBuild("../libs/codegen-utils")
-includeBuild("../libs/typewriter-types")
+includeBuild("../../tooling/codegen-utils")
+includeBuild("../typewriter-types")
 
 plugins {
     id("com.typewritermc.settings-conventions")

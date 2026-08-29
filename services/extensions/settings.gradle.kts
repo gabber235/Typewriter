@@ -3,15 +3,15 @@ pluginManagement {
     includeBuild("../imprint")
 }
 
-includeBuild("../libs/codegen-utils")
-includeBuild("../libs/typewriter-types")
-includeBuild("../discovery")
-includeBuild("../elements")
-includeBuild("../library")
-includeBuild("../presentation")
-includeBuild("../pages")
-includeBuild("../realm-capabilities")
-includeBuild("../engine")
+includeBuild("../tooling/codegen-utils")
+includeBuild("../domain/typewriter-types")
+includeBuild("../domain/discovery")
+includeBuild("../domain/elements")
+includeBuild("../domain/library")
+includeBuild("../domain/presentation")
+includeBuild("../domain/pages")
+includeBuild("../runtime/realm-capabilities")
+includeBuild("../runtime/engine")
 includeBuild("../imprint")
 
 plugins {
@@ -20,6 +20,5 @@ plugins {
 
 rootProject.name = "extensions"
 
-include(":extension-types", ":conformance-extension")
-project(":extension-types").projectDir = file("types")
+include(":conformance-extension")
 project(":conformance-extension").projectDir = file("conformance")

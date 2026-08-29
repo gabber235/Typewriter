@@ -35,12 +35,12 @@
     "realm",
     "services",
     "services/build-logic",
-    "services/libs/service-communicator",
-    "services/libs/service-http",
-    "services/libs/service-registrar",
-    "services/libs/service-telemetry",
-    "services/libs/service-utils",
-    "services/realm",
+    "services/platform/service-communicator",
+    "services/platform/service-http",
+    "services/platform/service-registrar",
+    "services/platform/service-telemetry",
+    "services/platform/service-utils",
+    "services/runtime/realm",
     "skir"
   ],
   "scopeRequiredForTypes": ["feat", "fix", "refactor", "perf"]

@@ -16,7 +16,7 @@ Run Kotlin formatting checks from the same directory:
 build-logic/gradlew ktlintCheck
 ```
 
-Each included build can also be checked through its own wrapper. For example, run `./gradlew check` from `services/realm`, or use the Typewriter types wrapper with `gradlew` project selection for builds that do not own a wrapper.
+Each included build can also be checked through its own wrapper. For example, run `./gradlew check` from `services/runtime/realm`, or use the Typewriter types wrapper with `gradlew` project selection for builds that do not own a wrapper.
 
 ## Discovery development
 

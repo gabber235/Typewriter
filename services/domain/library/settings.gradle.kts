@@ -1,10 +1,10 @@
 pluginManagement {
-    includeBuild("../build-logic")
+    includeBuild("../../build-logic")
 }
 
 includeBuild("../discovery")
 includeBuild("../elements")
-includeBuild("../libs/typewriter-types")
+includeBuild("../typewriter-types")
 
 plugins {
     id("com.typewritermc.settings-conventions")

@@ -39,9 +39,9 @@ tasks.register("assembleDevelopmentArtifacts") {
     doLast {
         val sources =
             listOf(
-                file("realm/build/libs"),
-                file("engine/runtimes/paper/build/libs"),
-                file("engine/runtimes/panel/build/libs"),
+                file("runtime/realm/build/libs"),
+                file("runtime/engine/runtimes/paper/build/libs"),
+                file("runtime/engine/runtimes/panel/build/libs"),
                 file("extensions/conformance/build/libs"),
             ).map { directory ->
                 directory.listFiles()

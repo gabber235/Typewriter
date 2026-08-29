@@ -2,8 +2,8 @@ pluginManagement {
     includeBuild("../../build-logic")
 }
 
-includeBuild("../service-communicator")
-includeBuild("../codegen-utils")
+includeBuild("../../platform/service-communicator")
+includeBuild("../../tooling/codegen-utils")
 
 plugins {
     id("com.typewritermc.settings-conventions")

@@ -20,4 +20,4 @@ project(":service-integration-sdk-client").projectDir = file("client")
 project(":service-integration-sdk-messaging").projectDir = file("messaging")
 project(":service-integration-sdk-testing").projectDir = file("testing")
 
-includeBuild("../service-file-transfer")
+includeBuild("../../platform/service-file-transfer")

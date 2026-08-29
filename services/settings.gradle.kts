@@ -1,18 +1,18 @@
 rootProject.name = "services"
 
 data class ServiceBuild(
-    val name: String,
     val path: String,
     val checkedProjects: List<String>,
-)
+) {
+    val name: String = path.substringAfterLast("/")
+}
 
 val serviceBuilds =
     listOf(
-        ServiceBuild("codegen-utils", "libs/codegen-utils", listOf(":")),
-        ServiceBuild("service-utils", "libs/service-utils", listOf(":")),
+        ServiceBuild("tooling/codegen-utils", listOf(":")),
+        ServiceBuild("platform/service-utils", listOf(":")),
         ServiceBuild(
-            "typewriter-types",
-            "libs/typewriter-types",
+            "domain/typewriter-types",
             listOf(
                 ":typewriter-types-core",
                 ":typewriter-types-ksp",
@@ -20,34 +20,28 @@ val serviceBuilds =
             ),
         ),
         ServiceBuild(
-            "discovery",
-            "discovery",
+            "domain/discovery",
             listOf(":discovery-model", ":discovery-runtime", ":discovery-codegen", ":discovery-testing"),
         ),
         ServiceBuild(
-            "elements",
-            "elements",
+            "domain/elements",
             listOf(":element-types", ":element-codegen", ":element-testing"),
         ),
-        ServiceBuild("library", "library", listOf(":library-types")),
+        ServiceBuild("domain/library", listOf(":library-types")),
         ServiceBuild(
-            "presentation",
-            "presentation",
+            "domain/presentation",
             listOf(":presentation-types", ":presentation-codegen", ":presentation-testing"),
         ),
         ServiceBuild(
-            "pages",
-            "pages",
+            "domain/pages",
             listOf(":page-types", ":page-codegen", ":page-testing"),
         ),
         ServiceBuild(
-            "realm-capabilities",
-            "realm-capabilities",
+            "runtime/realm-capabilities",
             listOf(":realm-capability-types", ":realm-capability-codegen", ":realm-capability-testing"),
         ),
         ServiceBuild(
-            "service-telemetry",
-            "libs/service-telemetry",
+            "platform/service-telemetry",
             listOf(
                 ":service-telemetry-core",
                 ":service-telemetry-console",
@@ -56,13 +50,11 @@ val serviceBuilds =
             ),
         ),
         ServiceBuild(
-            "service-http",
-            "libs/service-http",
+            "platform/service-http",
             listOf(":service-http-core", ":service-http-jdk", ":service-http-testing"),
         ),
         ServiceBuild(
-            "service-communicator",
-            "libs/service-communicator",
+            "platform/service-communicator",
             listOf(
                 ":service-communicator-core",
                 ":service-communicator-nats",
@@ -72,8 +64,7 @@ val serviceBuilds =
             ),
         ),
         ServiceBuild(
-            "service-registrar",
-            "libs/service-registrar",
+            "platform/service-registrar",
             listOf(
                 ":service-registrar-core",
                 ":service-registrar-runtime",
@@ -84,8 +75,7 @@ val serviceBuilds =
             ),
         ),
         ServiceBuild(
-            "service-file-transfer",
-            "libs/service-file-transfer",
+            "platform/service-file-transfer",
             listOf(
                 ":service-file-transfer-core",
                 ":service-file-transfer-messaging",
@@ -95,8 +85,7 @@ val serviceBuilds =
             ),
         ),
         ServiceBuild(
-            "service-integration-sdk",
-            "libs/service-integration-sdk",
+            "sdk/service-integration-sdk",
             listOf(
                 ":service-integration-sdk-types",
                 ":service-integration-sdk-client",
@@ -104,20 +93,17 @@ val serviceBuilds =
                 ":service-integration-sdk-testing",
             ),
         ),
-        ServiceBuild("realm", "realm", listOf(":")),
+        ServiceBuild("runtime/realm", listOf(":")),
         ServiceBuild(
-            "imprint",
             "imprint",
             listOf(":imprint-model", ":imprint-gradle-plugin", ":imprint-testing"),
         ),
         ServiceBuild(
-            "loader",
-            "loader",
+            "runtime/loader",
             listOf(":loader-api", ":loader-core", ":loader-standalone", ":loader-paper"),
         ),
         ServiceBuild(
-            "engine",
-            "engine",
+            "runtime/engine",
             listOf(
                 ":engine-types",
                 ":engine-core",
@@ -132,22 +118,20 @@ val serviceBuilds =
         ),
         ServiceBuild(
             "extensions",
-            "extensions",
-            listOf(":extension-types", ":conformance-extension"),
+            listOf(":conformance-extension"),
         ),
     )
 
 val declaredPaths = serviceBuilds.map(ServiceBuild::path).toSet()
 val discoveredPaths =
-    buildSet {
-        file("libs").listFiles()
-            ?.filter { it.resolve("settings.gradle.kts").isFile }
-            ?.mapTo(this) { "libs/${it.name}" }
-        settingsDir.listFiles()
-            ?.filter { it.isDirectory && it.name != "build-logic" && it.name != "libs" }
-            ?.filter { it.resolve("settings.gradle.kts").isFile }
-            ?.mapTo(this) { it.name }
-    }
+    settingsDir
+        .walkTopDown()
+        .onEnter { directory ->
+            directory == settingsDir || directory.name !in setOf(".gradle", "build", "build-logic")
+        }
+        .filter { it.name == "settings.gradle.kts" && it.parentFile != settingsDir }
+        .map { it.parentFile.relativeTo(settingsDir).invariantSeparatorsPath }
+        .toSet()
 val missingPaths = declaredPaths - discoveredPaths
 val unknownPaths = discoveredPaths - declaredPaths
 
