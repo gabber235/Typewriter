@@ -1,4 +1,4 @@
-package com.typewritermc.loader.standalone
+package com.typewritermc.loader
 
 import com.typewritermc.services.libs.registrar.ServiceRole
 import de.infix.testBalloon.framework.core.testSuite
@@ -53,4 +53,4 @@ val LoaderSettingsTest by testSuite {
     }
 }
 
-private fun profile(name: String): Path = Path.of("config", "$name.properties")
+private fun profile(name: String): Path = Path.of("..", "standalone", "config", "$name.properties")

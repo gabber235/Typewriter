@@ -1,8 +1,5 @@
-package com.typewritermc.loader.standalone
+package com.typewritermc.loader
 
-import com.typewritermc.loader.LoaderService
-import com.typewritermc.loader.LoaderServiceFactory
-import com.typewritermc.loader.RegistrarLoaderService
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactOutboxPublisher
@@ -31,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /** Assembles the loader owned registration and NATS runtime for one host process. */
-class DefaultLoaderServiceFactory(
+internal class DefaultLoaderServiceFactory(
     private val configuration: RegistrarConfiguration,
     private val telemetry: ServiceTelemetry,
     private val openTelemetry: OpenTelemetry,

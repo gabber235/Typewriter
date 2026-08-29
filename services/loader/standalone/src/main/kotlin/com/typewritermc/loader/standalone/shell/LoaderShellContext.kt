@@ -1,6 +1,6 @@
 package com.typewritermc.loader.standalone.shell
 
-import com.typewritermc.loader.standalone.LOADER_VERSION
+import com.typewritermc.loader.LOADER_VERSION
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.atomic.AtomicBoolean

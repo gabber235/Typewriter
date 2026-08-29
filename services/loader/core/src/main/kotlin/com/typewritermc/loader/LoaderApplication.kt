@@ -1,13 +1,8 @@
-package com.typewritermc.loader.standalone
+package com.typewritermc.loader
 
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.VersionConstraint
-import com.typewritermc.loader.HostEntrypoint
-import com.typewritermc.loader.HostIdentityStore
-import com.typewritermc.loader.LoaderBootstrap
-import com.typewritermc.loader.LoaderServiceFactory
-import com.typewritermc.loader.RunningHost
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.deployment.HostId
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
@@ -17,7 +12,6 @@ import com.typewritermc.loader.rollout.ArtifactHostAssignment
 import com.typewritermc.loader.rollout.ArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.BackendArtifactHostAssignmentSource
 import com.typewritermc.loader.rollout.RealmId
-import com.typewritermc.loader.standalone.shell.LoaderConsoleLogOutput
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.koin.serviceTelemetryModule
 import io.opentelemetry.api.OpenTelemetry
@@ -92,12 +86,11 @@ internal class ArtifactLoaderBootstrap(
     }
 }
 
-/** Owns the isolated Koin container and loader bootstrap for one standalone or Paper entrypoint lifetime. */
+/** Owns the isolated dependency container and loader bootstrap for one host entrypoint lifetime. */
 class LoaderApplication internal constructor(
     private val application: KoinApplication,
     val bootstrap: LoaderBootstrap,
     val telemetry: ServiceTelemetry,
-    val console: LoaderConsoleLogOutput,
 ) : AutoCloseable {
     override fun close() {
         application.close()
@@ -105,22 +98,19 @@ class LoaderApplication internal constructor(
 }
 
 /**
- * Creates the minimal local loader application used by scaffold development entrypoints.
+ * Creates the loader application shared by standalone and embedded host entrypoints.
  *
- * The local control plane requests no children. Runtime staging therefore fails explicitly until a deployment source is
- * configured, rather than pretending an unavailable runtime started successfully.
+ * The caller must close the returned application after its host stops.
  */
-fun localLoaderApplication(): LoaderApplication = createLocalLoaderApplication()
+fun loaderApplication(logOutput: LoaderLogOutput): LoaderApplication = createLoaderApplication(logOutput)
 
-private fun createLocalLoaderApplication(): LoaderApplication {
+private fun createLoaderApplication(logOutput: LoaderLogOutput): LoaderApplication {
     val settings = LoaderSettings.system()
-    val console = LoaderConsoleLogOutput()
-    val openTelemetry = loaderOpenTelemetry(console, settings.telemetryConfiguration())
+    val openTelemetry = loaderOpenTelemetry(logOutput, settings.telemetryConfiguration())
     val application =
         koinApplication {
             modules(
                 module {
-                    single { console }
                     single<OpenTelemetry> { openTelemetry } onClose { it?.let(::closeLoaderOpenTelemetry) }
                     single { settings.registrarConfiguration() }
                     single<LoaderServiceFactory> { DefaultLoaderServiceFactory(get(), get(), get()) }
@@ -129,5 +119,5 @@ private fun createLocalLoaderApplication(): LoaderApplication {
                 serviceTelemetryModule("com.typewritermc.loader", LOADER_VERSION),
             )
         }
-    return LoaderApplication(application, application.koin.get(), application.koin.get(), application.koin.get())
+    return LoaderApplication(application, application.koin.get(), application.koin.get())
 }

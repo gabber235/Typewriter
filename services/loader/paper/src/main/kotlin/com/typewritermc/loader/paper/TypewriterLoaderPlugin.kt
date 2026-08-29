@@ -1,9 +1,9 @@
 package com.typewritermc.loader.paper
 
 import com.typewritermc.loader.HostEntrypoint
+import com.typewritermc.loader.LoaderApplication
 import com.typewritermc.loader.RunningHost
-import com.typewritermc.loader.standalone.LoaderApplication
-import com.typewritermc.loader.standalone.localLoaderApplication
+import com.typewritermc.loader.loaderApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,9 +25,9 @@ class TypewriterLoaderPlugin : JavaPlugin() {
 
     override fun onEnable() {
         scope.launch {
-            val loaderApplication = localLoaderApplication()
-            application = loaderApplication
-            host = loaderApplication.bootstrap.start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
+            val createdApplication = loaderApplication { logger.info(it) }
+            application = createdApplication
+            host = createdApplication.bootstrap.start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
         }
     }
 

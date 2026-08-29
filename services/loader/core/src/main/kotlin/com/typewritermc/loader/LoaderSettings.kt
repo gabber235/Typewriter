@@ -1,4 +1,4 @@
-package com.typewritermc.loader.standalone
+package com.typewritermc.loader
 
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.ServiceRole

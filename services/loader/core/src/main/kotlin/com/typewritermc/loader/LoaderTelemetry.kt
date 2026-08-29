@@ -1,4 +1,4 @@
-package com.typewritermc.loader.standalone
+package com.typewritermc.loader
 
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecordExporter
@@ -20,8 +20,13 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
 import java.util.concurrent.TimeUnit
 
+/** Receives formatted loader telemetry on the logging surface owned by a host entrypoint. */
+fun interface LoaderLogOutput {
+    fun write(line: String)
+}
+
 internal fun loaderOpenTelemetry(
-    console: ConsoleLogOutput,
+    logOutput: LoaderLogOutput,
     configuration: LoaderTelemetryConfiguration,
 ): OpenTelemetrySdk {
     val resource =
@@ -41,7 +46,9 @@ internal fun loaderOpenTelemetry(
         SdkLoggerProvider
             .builder()
             .setResource(resource)
-            .addLogRecordProcessor(SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(console)))
+            .addLogRecordProcessor(
+                SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(ConsoleLogOutput(logOutput::write))),
+            )
 
     configuration.otlpEndpoint?.let { endpoint ->
         val spanExporter = OtlpGrpcSpanExporter.builder().setEndpoint(endpoint).build()
@@ -65,7 +72,7 @@ internal fun loaderOpenTelemetry(
         .build()
 }
 
-fun closeLoaderOpenTelemetry(openTelemetry: OpenTelemetry) {
+internal fun closeLoaderOpenTelemetry(openTelemetry: OpenTelemetry) {
     val sdk = openTelemetry as? OpenTelemetrySdk ?: return
     sdk.sdkTracerProvider.forceFlush().join(10, TimeUnit.SECONDS)
     sdk.sdkLoggerProvider.forceFlush().join(10, TimeUnit.SECONDS)

@@ -8,7 +8,6 @@ repositories {
 
 dependencies {
     implementation(project(":loader-core"))
-    implementation(project(":loader-standalone"))
     compileOnly(libs.paper.api)
     testImplementation(libs.paper.api)
 }

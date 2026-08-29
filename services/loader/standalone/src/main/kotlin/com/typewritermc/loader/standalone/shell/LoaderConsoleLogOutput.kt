@@ -2,10 +2,10 @@
 
 package com.typewritermc.loader.standalone.shell
 
-import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
+import com.typewritermc.loader.LoaderLogOutput
 import org.jline.reader.LineReader
 
-class LoaderConsoleLogOutput : ConsoleLogOutput {
+class LoaderConsoleLogOutput : LoaderLogOutput {
     @Volatile
     private var reader: LineReader? = null
 

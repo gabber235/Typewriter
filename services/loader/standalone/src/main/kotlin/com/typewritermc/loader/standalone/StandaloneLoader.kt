@@ -2,6 +2,7 @@ package com.typewritermc.loader.standalone
 
 import com.typewritermc.loader.HostEntrypoint
 import com.typewritermc.loader.LoaderBootstrap
+import com.typewritermc.loader.loaderApplication
 import com.typewritermc.loader.standalone.shell.LoaderConsoleLogOutput
 import com.typewritermc.loader.standalone.shell.LoaderShell
 import com.typewritermc.loader.standalone.shell.LoaderShellContext
@@ -25,8 +26,9 @@ object StandaloneLoader {
     fun main(args: Array<String>) {
         runBlocking {
             val workDirectory = args.firstOrNull()?.let(::Path) ?: Path.of("typewriter")
-            localLoaderApplication().use { application ->
-                run(workDirectory, application.bootstrap, application.telemetry, application.console)
+            val console = LoaderConsoleLogOutput()
+            loaderApplication(console).use { application ->
+                run(workDirectory, application.bootstrap, application.telemetry, console)
             }
         }
     }
