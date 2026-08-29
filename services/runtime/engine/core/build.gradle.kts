@@ -6,16 +6,13 @@ plugins {
 }
 
 dependencies {
-    api(project(":engine-types"))
-    compileOnlyApi("com.typewritermc:loader-api")
-    api("com.typewritermc:discovery-runtime")
-    api("com.typewritermc:element-types")
-    api("com.typewritermc:library-types")
-    api("com.typewritermc:page-types")
+    api(project(":engine-api"))
+    compileOnlyApi(project(":loader-api"))
+    api(project(":typewriter-api"))
     api(libs.kotlin.coroutines.core)
-    implementation("com.typewritermc:service-communicator-skir")
+    implementation(project(":messaging"))
     implementation(libs.kotlin.serialize.json)
-    testImplementation("com.typewritermc:loader-api")
+    testImplementation(project(":loader-api"))
     testImplementation(libs.kotlin.coroutines.test)
 }
 

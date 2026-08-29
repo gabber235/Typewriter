@@ -6,8 +6,8 @@ import com.typewritermc.services.libs.registrar.ReadySession
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarSnapshot
 import com.typewritermc.services.libs.registrar.RegistrarStopResult
-import com.typewritermc.services.libs.registrar.ServiceRegistrar
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.sdk.TypewriterService
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
@@ -40,33 +40,29 @@ interface LoaderService : LoaderServiceConnection {
 
 /** Adapts the shared registrar to the loader service lifecycle. */
 class RegistrarLoaderService(
-    private val registrar: ServiceRegistrar,
+    private val service: TypewriterService,
     override val openTelemetry: OpenTelemetry,
     override val telemetry: ServiceTelemetry,
     private val sharedArtifactAccess: (String) -> SharedArtifactAccess,
     private val close: suspend () -> Unit = {},
 ) : LoaderService {
-    override val states: StateFlow<RegistrarSnapshot> = registrar.states
+    override val states: StateFlow<RegistrarSnapshot> = service.states
 
-    override suspend fun start(): RegistrarResult<ReadySession> {
-        val started = registrar.start()
-        if (started is RegistrarResult.Failure) return started
-        return registrar.awaitReady()
-    }
+    override suspend fun start(): RegistrarResult<ReadySession> = service.start()
 
     override suspend fun communicatorFor(connectionGeneration: Long): RegistrarResult<Communicator> =
-        registrar.communicatorFor(connectionGeneration)
+        service.communicatorFor(connectionGeneration)
 
-    override suspend fun rotateAuthorization(): RegistrarResult<Long> = registrar.rotateAuthorization()
+    override suspend fun rotateAuthorization(): RegistrarResult<Long> = service.rotateAuthorization()
 
     override suspend fun releaseAuthorizationRotation(connectionGeneration: Long): RegistrarResult<Unit> =
-        registrar.releaseAuthorizationRotation(connectionGeneration)
+        service.releaseAuthorizationRotation(connectionGeneration)
 
     override fun sharedArtifacts(realmId: String): SharedArtifactAccess = sharedArtifactAccess(realmId)
 
     override suspend fun stop(): RegistrarStopResult =
         try {
-            registrar.stop()
+            service.stop()
         } finally {
             close()
         }

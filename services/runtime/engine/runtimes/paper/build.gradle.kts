@@ -8,8 +8,8 @@ val loaderPlugin = configurations.create("loaderPlugin")
 
 dependencies {
     imprintEngineCore(project(":engine-core"))
-    imprintHostApi("com.typewritermc:loader-api")
-    loaderPlugin("com.typewritermc:loader:development")
+    imprintHostApi(project(":loader-api"))
+    loaderPlugin(project(":loader-distribution"))
     testImplementation(libs.kotlin.coroutines.test)
 }
 

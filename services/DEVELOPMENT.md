@@ -1,31 +1,62 @@
 # Service development
 
-The services composite contains the current Kotlin implementation. Its builds are independent Gradle roots composed through `services/settings.gradle.kts`.
+`services/` is one Gradle multiproject build. `build-logic` and `imprint` are the only included builds because Gradle needs both while configuring normal projects.
+
+## Project ownership
+
+- `protocol` owns generated Kotlin Skir contracts.
+
+- `typewriter-api` owns the shared programming model used by Realm, engines, capabilities, and extensions.
+
+- `typewriter-codegen` owns every Typewriter KSP processor. Every Imprint artifact receives it automatically.
+
+- `service-sdk` owns the supported service identity, organization binding, authentication, messaging, status, and shutdown lifecycle.
+
+- `messaging`, `file-transfer`, and `telemetry` own the supported platform implementations and their deterministic test utilities.
+
+- Loader projects remain separate because their API, core, standalone, Paper, and distribution classpaths differ.
+
+- Engine projects remain separate when they represent an API, runtime artifact, capability artifact, or distinct classpath.
+
+Realm remains one deployable project.
 
 ## Verification
 
-Run the complete service verification from `services`:
+Run complete service verification from `services/`:
 
 ```shell
-build-logic/gradlew check
+./gradlew check ktlintCheck
 ```
 
-Run Kotlin formatting checks from the same directory:
+Build canonical development artifacts:
 
 ```shell
-build-logic/gradlew ktlintCheck
+./gradlew assembleDevelopmentArtifacts
 ```
 
-Each included build can also be checked through its own wrapper. For example, run `./gradlew check` from `services/runtime/realm`, or use the Typewriter types wrapper with `gradlew` project selection for builds that do not own a wrapper.
+Verify the Loader distribution:
+
+```shell
+./gradlew :loader-distribution:verifyDistribution
+```
+
+Regenerate contracts from the repository root:
+
+```shell
+bunx --no-install skir format --ci
+bunx --no-install skir gen
+```
+
+Never add another nested Gradle root for a normal service project. `services/settings.gradle.kts` rejects it.
 
 ## Discovery development
 
 Imprint assembles one canonical manifest for each artifact. KSP processors contribute static metadata and generated module providers. Realm discovery loads only Realm bindings. Execution discovery loads only execution bindings. Each deployment owns an isolated Koin application and classloader.
 
-The conformance extension is the complete development proof. It verifies declared type identities, qualified abstract parents, generated prototypes, element descriptors, source part eligibility, generated registrars, generated facets, and ordinary panel engine targeting.
-
-There is no development artifact filename protocol. There is also no shared publication directory. Local deployment assembly must consume canonical Imprint manifests and explicit artifact packages.
+The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, generated facets, and engine targeting.
 
 ## Runtime status
 
-The loader and Realm lifecycle contracts remain available. Production deployment selection and artifact staging are not yet connected to the new discovery package factory. Do not describe local runtime startup as complete until that connection exists.
+The Loader and Realm lifecycle contracts remain available. Production Realm assignment for third party services is not implemented. Do not simulate it in `service-sdk`. It requires a complete protocol, backend, authorization, SDK, and test slice.
+
+Production deployment selection and artifact staging are not yet connected to the new discovery package factory. Do not describe local runtime startup as complete until that connection exists.

@@ -15,19 +15,17 @@ import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.KeyedTypeContribution
 import com.typewritermc.discovery.ProducerId
+import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.EntryExecutionContext
 import com.typewritermc.elements.EntryOutput
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.library.PageId
-import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
 import com.typewritermc.pages.PageProvider
 import com.typewritermc.presentation.PresentationCatalogAssembler
 import com.typewritermc.presentation.PresentationProvider
@@ -35,6 +33,8 @@ import com.typewritermc.types.CatalogAbstractTypePrototype
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.Ref
+import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDecodingContext
 import com.typewritermc.types.TypeEncodingContext
 import com.typewritermc.types.TypeExpression
@@ -153,7 +153,7 @@ val SyntheticDiscoveryTest by testSuite {
         val source =
             SyntheticPageReferenceEntry(
                 elementId("00000000000000000000000000000003"),
-                Ref<SyntheticPageKind>(ResourceId("page", PageId("page:opening").key)),
+                Ref<SyntheticPageKind>(ResourceId("page", PageId("opening").key)),
             )
 
         val encoded = with(CodecContext(registry)) { SyntheticPageReferenceEntryElementPrototype.encode(source) }

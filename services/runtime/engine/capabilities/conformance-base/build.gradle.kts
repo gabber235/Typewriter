@@ -5,10 +5,8 @@ plugins {
 }
 
 dependencies {
-    api(project(":engine-types"))
-    implementation("com.typewritermc:discovery-runtime")
-    implementation("com.typewritermc:element-types")
-    implementation("com.typewritermc:page-types")
+    api(project(":engine-api"))
+    implementation(project(":typewriter-api"))
 }
 
 typewriter {

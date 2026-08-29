@@ -9,6 +9,6 @@ dependencies {
     implementation(libs.clikt)
     implementation(libs.jline)
     testImplementation(libs.kotlin.coroutines.test)
-    testImplementation("com.typewritermc:service-telemetry-testing")
+    testImplementation(project(":telemetry"))
     testImplementation(libs.mockk)
 }

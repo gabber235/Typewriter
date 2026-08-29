@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     imprintEngineCore(project(":engine-core"))
-    imprintHostApi("com.typewritermc:loader-api")
+    imprintHostApi(project(":loader-api"))
 }
 
 typewriter {

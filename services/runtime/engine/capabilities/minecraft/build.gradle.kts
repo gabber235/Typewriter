@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":engine-types"))
+    api(project(":engine-api"))
 }
 
 typewriter {

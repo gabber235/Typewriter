@@ -20,7 +20,7 @@ dependencies {
     api(libs.kotlin.coroutines.core)
     api(libs.kotlin.serialize.core)
     api("com.typewritermc:imprint-model")
-    api("com.typewritermc:service-communicator-core")
+    api(project(":messaging"))
     api(platform(libs.opentelemetry.bom))
     api(libs.opentelemetry.api)
 }
