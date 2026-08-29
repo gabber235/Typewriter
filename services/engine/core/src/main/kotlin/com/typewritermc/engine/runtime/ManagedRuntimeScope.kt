@@ -17,7 +17,7 @@ class ManagedRuntimeScope(
     parent: CoroutineScope,
     override val prototypes: TypePrototypeRegistry,
     override val facts: DeploymentFacts,
-) : com.typewritermc.discovery.runtime.RuntimeScope {
+) : com.typewritermc.discovery.RuntimeScope {
     private val job = SupervisorJob(parent.coroutineContext[Job])
     override val coroutineScope = CoroutineScope(parent.coroutineContext + job)
     private val cleanups = mutableListOf<suspend () -> Unit>()

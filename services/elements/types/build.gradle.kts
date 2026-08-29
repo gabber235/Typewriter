@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     api("com.typewritermc:discovery-model")
-    api("com.typewritermc:discovery-runtime")
     api("com.typewritermc:typewriter-types-core")
     api(libs.kotlin.coroutines.core)
     implementation(libs.kotlin.serialize.cbor)

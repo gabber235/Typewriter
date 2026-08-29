@@ -2,9 +2,9 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
-import com.typewritermc.discovery.runtime.RuntimeScope
 import com.typewritermc.elements.ElementCatalog
 import com.typewritermc.engine.ActivatedCompiledContent
 import com.typewritermc.engine.CompiledContentBundle

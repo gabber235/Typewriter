@@ -1,6 +1,6 @@
 package com.typewritermc.elements
 
-import com.typewritermc.discovery.runtime.RuntimeScope
+import com.typewritermc.discovery.RuntimeScope
 
 interface EntryOutput {
     suspend fun send(value: Any)

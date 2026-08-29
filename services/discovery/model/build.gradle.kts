@@ -7,6 +7,7 @@ plugins {
 dependencies {
     api("com.typewritermc:imprint-model")
     api("com.typewritermc:typewriter-types-core")
+    api(libs.kotlin.coroutines.core)
     api(libs.kotlin.serialize.core)
     implementation(libs.kotlin.serialize.cbor)
     testImplementation(libs.bundles.basic.test)

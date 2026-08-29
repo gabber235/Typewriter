@@ -40,6 +40,7 @@ typewriter {
 }
 
 dependencies {
+    add("commonImplementation", "com.typewritermc:discovery-runtime")
     imprintExtensionApi(project(":extension-types"))
     imprintExtensionApi("com.typewritermc:library-types")
     imprintExtensionApi("com.typewritermc:page-types")
@@ -50,6 +51,7 @@ dependencies {
     imprintProcessors("com.typewritermc:realm-capability-codegen")
     imprintProcessors("com.typewritermc:discovery-codegen")
     testImplementation(project(":extension-types"))
+    testImplementation("com.typewritermc:discovery-runtime")
     testImplementation("com.typewritermc:library-types")
     testImplementation("com.typewritermc:page-types")
 }

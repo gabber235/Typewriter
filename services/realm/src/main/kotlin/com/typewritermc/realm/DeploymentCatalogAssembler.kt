@@ -1,4 +1,4 @@
-package com.typewritermc.elements
+package com.typewritermc.realm
 
 import com.typewritermc.discovery.ArtifactCatalogEntry
 import com.typewritermc.discovery.AssembledTypeDiscovery
@@ -11,6 +11,9 @@ import com.typewritermc.discovery.Eligibility
 import com.typewritermc.discovery.SourcePartEligibilityResolver
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
+import com.typewritermc.elements.ElementCatalog
+import com.typewritermc.elements.ElementCatalogAssembler
+import com.typewritermc.elements.ElementContributionReader
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest

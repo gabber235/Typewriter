@@ -26,11 +26,11 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.ExecutableBinding
+import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.TypeDiscoveryContribution
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
+import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.discovery.runtime.GeneratedDiscoveryModule
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
-import com.typewritermc.discovery.runtime.TypewriterRegistrar
 
 class TypewriterRegistrarProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =

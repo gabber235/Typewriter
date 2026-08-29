@@ -7,7 +7,6 @@ import com.typewritermc.discovery.DiscoveryDomainId
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.KeyedExecutableBinding
 import com.typewritermc.types.TypePrototypeRegistry
-import kotlinx.coroutines.CoroutineScope
 import org.koin.core.KoinApplication
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
@@ -17,29 +16,6 @@ import java.net.URLClassLoader
 interface GeneratedDiscoveryModule {
     fun module(contribution: ContributionKey): Module
 }
-
-interface RuntimeScope {
-    val coroutineScope: CoroutineScope
-    val prototypes: TypePrototypeRegistry
-    val facts: DeploymentFacts
-
-    fun own(cleanup: suspend () -> Unit)
-
-    fun <Resource : AutoCloseable> own(resource: Resource): Resource
-}
-
-interface RuntimeRegistrar {
-    context(scope: RuntimeScope)
-    suspend fun register()
-}
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class TypewriterRegistrar(
-    val id: String,
-    val realm: Boolean = false,
-    val execution: Boolean = true,
-)
 
 data class DiscoveryArtifactPackage(
     val artifacts: List<URL>,

@@ -13,7 +13,6 @@ import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.elements.DeploymentCatalogAssembler
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH

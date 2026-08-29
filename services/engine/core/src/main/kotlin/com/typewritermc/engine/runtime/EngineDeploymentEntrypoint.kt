@@ -3,12 +3,12 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.Eligibility
+import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.SourcePartCatalogEntry
 import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
 import com.typewritermc.discovery.runtime.ManifestDiscoveryReader
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.elements.ElementCatalogAssembler
 import com.typewritermc.elements.ElementContributionReader
 import com.typewritermc.imprint.EngineManifest

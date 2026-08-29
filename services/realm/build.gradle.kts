@@ -21,6 +21,7 @@ dependencies {
     imprintHostApi("com.typewritermc:loader-api")
     implementation("com.typewritermc:engine-types")
     implementation("com.typewritermc:discovery-model")
+    implementation("com.typewritermc:discovery-runtime")
     implementation("com.typewritermc:element-types")
     implementation("com.typewritermc:library-types")
     implementation("com.typewritermc:presentation-types")

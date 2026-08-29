@@ -1,7 +1,7 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
 import com.typewritermc.engine.ActivatedCompiledContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime

@@ -19,7 +19,7 @@ import com.typewritermc.discovery.TypeContributionAssembler
 import com.typewritermc.discovery.TypeDiscoveryContributionCodec
 import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
 import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
+import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeFacet
 import com.typewritermc.elements.EntryExecutionContext

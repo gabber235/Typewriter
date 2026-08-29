@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    api("com.typewritermc:discovery-runtime")
+    api("com.typewritermc:discovery-model")
     api("com.typewritermc:element-types")
     api("com.typewritermc:presentation-types")
     api("com.typewritermc:realm-capability-types")

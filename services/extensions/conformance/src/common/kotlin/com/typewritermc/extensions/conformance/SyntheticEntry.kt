@@ -11,9 +11,9 @@ import com.typewritermc.capability.RealmSearch
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchRequest
 import com.typewritermc.capability.realmSearch
-import com.typewritermc.discovery.runtime.RuntimeRegistrar
-import com.typewritermc.discovery.runtime.RuntimeScope
-import com.typewritermc.discovery.runtime.TypewriterRegistrar
+import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementRuntimeContext
 import com.typewritermc.elements.ElementRuntimeFacet

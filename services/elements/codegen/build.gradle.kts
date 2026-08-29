@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":element-types"))
     implementation("com.typewritermc:codegen-utils")
     implementation("com.typewritermc:discovery-model")
+    implementation("com.typewritermc:discovery-runtime")
     implementation("com.typewritermc:imprint-model")
     implementation("com.typewritermc:typewriter-types-ksp")
     implementation(libs.ksp.api)
