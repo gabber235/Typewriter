@@ -97,9 +97,12 @@ private class PlayerSidebarDisplay(
             .parsePlaceholders(player)
             .splitComponents()
 
-        if (lines != lastLines || title != lastTitle) {
-            refreshSidebar(title, lines)
+        if (title != lastTitle) {
+            updateTitle(title)
             lastTitle = title
+        }
+        if (lines != lastLines) {
+            updateLines(lines)
             lastLines = lines
         }
     }
@@ -134,20 +137,24 @@ private class PlayerSidebarDisplay(
         ).sendPacketTo(player)
     }
 
-    private fun refreshSidebar(title: String, lines: List<Component>) {
-        val packet = WrapperPlayServerScoreboardObjective(
+    private fun updateTitle(title: String) {
+        WrapperPlayServerScoreboardObjective(
             SCOREBOARD_OBJECTIVE,
             WrapperPlayServerScoreboardObjective.ObjectiveMode.UPDATE,
             title.asMini(),
             WrapperPlayServerScoreboardObjective.RenderType.INTEGER,
             ScoreFormat.blankScore(),
-        )
-        packet.sendPacketTo(player)
+        ).sendPacketTo(player)
+    }
 
-        val displayPacket = WrapperPlayServerDisplayScoreboard(1, SCOREBOARD_OBJECTIVE)
-        displayPacket.sendPacketTo(player)
-
-
+    /**
+     * Sends the lines that changed.
+     *
+     * The objective itself is left alone. Re-announcing it, or which slot it is displayed in, tells
+     * a client to set the whole sidebar up again, and a Bedrock client reached through Geyser
+     * rebuilds its scores from scratch when that happens.
+     */
+    private fun updateLines(lines: List<Component>) {
         for ((index, line) in lines.withIndex().take(MAX_LINES)) {
             val lastLine = lastLines.getOrNull(index)
             if (lastLine == line) continue
