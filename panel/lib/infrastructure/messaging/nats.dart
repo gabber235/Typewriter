@@ -176,23 +176,27 @@ extension RefNatsExtension on Ref {
       if (!subscribed) {
         return;
       }
-      await telemetry.traceNats(
+      final initial = await telemetry.traceNats(
         subject: subject,
         payloadSize: requestBytes.length,
-        operationName: "publish",
-        operation: (header) => client.pub(
+        operationName: "request",
+        operation: (header) => client.request(
           subject,
           requestBytes,
-          replyTo: listenSubject,
           header: header,
+          timeout: _requestTimeout,
         ),
       );
 
       TData? lastData;
-      await for (final msg in sub.stream.timeoutFirstValue(
-        _requestTimeout,
-        message: "No response received for '$subject' within $_requestTimeout",
-      )) {
+      if (!subscribed) {
+        return;
+      }
+      final initialData = transformer(null, serializer.fromBytes(initial.data));
+      lastData = initialData;
+      controller.add(initialData);
+
+      await for (final msg in sub.stream) {
         final response = transformer(lastData, serializer.fromBytes(msg.data));
         controller.add(response);
         lastData = response;

@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _watchSubject = "cloud.to.user.user1.organization.org1.topology.watch";
-const _listenSubject = "cloud.from.organization.org1.topology";
+const _listenSubject = "cloud.from.organization.org1.topology.watch";
 const _configureSubject =
     "cloud.to.user.user1.organization.org1.topology.configure";
 final _organizationId = recordId("organization:org1");
@@ -57,6 +57,16 @@ Future<void> _waitFor(bool Function() condition) async {
 void main() {
   test("topology watch reduces lists, updates, and removals", () async {
     final nats = MockNatsClient();
+    nats.registerHandler(
+      _watchSubject,
+      (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+        skir.WatchOrganizationTopologyResponse.createList(
+          hosts: [],
+          realms: [],
+          engines: [],
+        ),
+      ),
+    );
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
@@ -75,14 +85,14 @@ void main() {
     addTearDown(subscription.close);
     await _waitFor(
       () =>
-          nats.publications.isNotEmpty &&
+          nats.requests.isNotEmpty &&
           nats.subscriptionSubjects.contains(_listenSubject),
     );
 
-    expect(nats.publications.single.subject, _watchSubject);
+    expect(nats.requests.single.subject, _watchSubject);
     expect(
       skir.WatchOrganizationTopologyRequest.serializer.fromBytes(
-        nats.publications.single.data,
+        nats.requests.single.data,
       ),
       isA<skir.WatchOrganizationTopologyRequest>(),
     );
@@ -173,7 +183,12 @@ void main() {
             execution: execution,
           );
 
-      expect(nats.requests.single.subject, _configureSubject);
+      expect(
+        nats.requests
+            .singleWhere((request) => request.subject == _configureSubject)
+            .subject,
+        _configureSubject,
+      );
       expect(decoded!.hostId, _host().hostId);
       expect(decoded!.expectedRevision, 1);
       expect(decoded!.execution, execution);

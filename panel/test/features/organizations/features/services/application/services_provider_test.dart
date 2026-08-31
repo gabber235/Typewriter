@@ -30,6 +30,12 @@ Future<void> _waitFor(bool Function() condition) async {
 
 class _Harness {
   _Harness() {
+    nats.registerHandler(
+      _publishSubject,
+      (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
+        skir.WatchOrganizationServicesResponse.wrapList([]),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
@@ -51,7 +57,7 @@ class _Harness {
 
   Future<void> start() => _waitFor(
     () =>
-        nats.publications.isNotEmpty &&
+        nats.requests.isNotEmpty &&
         nats.subscriptionSubjects.contains(_listenSubject),
   );
 
@@ -119,14 +125,13 @@ void main() {
 
     tearDown(() => harness.dispose());
 
-    test("publishes decoded request and subscribes to exact subject", () {
-      final publication = harness.nats.publications.single;
-      expect(publication.subject, _publishSubject);
-      expect(publication.replyTo, _listenSubject);
+    test("requests initial data and subscribes to exact subject", () {
+      final request = harness.nats.requests.single;
+      expect(request.subject, _publishSubject);
       expect(harness.nats.subscriptionSubjects, contains(_listenSubject));
       expect(
         skir.WatchOrganizationServicesRequest.serializer.fromBytes(
-          publication.data,
+          request.data,
         ),
         isA<skir.WatchOrganizationServicesRequest>(),
       );
@@ -249,6 +254,7 @@ void main() {
 
       expect(await container.read(servicesProvider.future), isEmpty);
       expect(nats.publications, isEmpty);
+      expect(nats.requests, isEmpty);
       expect(nats.subscriptionSubjects, isEmpty);
     });
   }

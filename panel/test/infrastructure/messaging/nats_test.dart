@@ -259,8 +259,17 @@ void main() {
       mockClient.dispose();
     });
 
-    test("injects trace headers on the initial Skir publication", () async {
+    test("injects trace headers on the initial Skir request", () async {
       const listenSubject = "test.responses";
+      mockClient.registerHandler(
+        "test.watch",
+        (_) => skir.GetSentinelCredentialsResponse.serializer.toBytes(
+          skir.GetSentinelCredentialsResponse.createSuccess(
+            jwt: "test-jwt",
+            seed: "test-seed",
+          ),
+        ),
+      );
       final stream = container
           .read(_testRefProvider)
           .watchRequest(
@@ -272,31 +281,29 @@ void main() {
           );
       final firstResponse = stream.first;
 
-      while (mockClient.publications.isEmpty) {
+      while (mockClient.requests.isEmpty) {
         await Future<void>.delayed(Duration.zero);
       }
 
-      final publication = mockClient.publications.single;
-      expect(publication.subject, "test.watch");
-      expect(publication.replyTo, listenSubject);
-      expect(publication.header?.get("traceparent"), startsWith("00-4bf92f"));
-      expect(publication.header?.get("tracestate"), "vendor=value");
-
-      mockClient.emitMessageOnSubject(
-        listenSubject,
-        skir.GetSentinelCredentialsResponse.serializer.toBytes(
-          skir.GetSentinelCredentialsResponse.createSuccess(
-            jwt: "test-jwt",
-            seed: "test-seed",
-          ),
-        ),
-      );
+      final request = mockClient.requests.single;
+      expect(request.subject, "test.watch");
+      expect(request.header?.get("traceparent"), startsWith("00-4bf92f"));
+      expect(request.header?.get("tracestate"), "vendor=value");
 
       expect(await firstResponse, isA<skir.GetSentinelCredentialsResponse>());
     });
 
     test("unsubscribes when the response stream is canceled", () async {
       const listenSubject = "test.cancel.responses";
+      mockClient.registerHandler(
+        "test.cancel",
+        (_) => skir.GetSentinelCredentialsResponse.serializer.toBytes(
+          skir.GetSentinelCredentialsResponse.createSuccess(
+            jwt: "test-jwt",
+            seed: "test-seed",
+          ),
+        ),
+      );
       final stream = container
           .read(_testRefProvider)
           .watchRequest(
@@ -308,7 +315,7 @@ void main() {
           );
       final subscription = stream.listen(null);
 
-      while (mockClient.publications.isEmpty) {
+      while (mockClient.requests.isEmpty) {
         await Future<void>.delayed(Duration.zero);
       }
 

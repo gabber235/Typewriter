@@ -15,7 +15,8 @@ class OrganizationTopologyStream extends _$OrganizationTopologyStream {
     yield* ref.watchRequest(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.topology.watch",
-      listenSubject: "cloud.from.organization.${organizationId.id}.topology",
+      listenSubject:
+          "cloud.from.organization.${organizationId.id}.topology.watch",
       requestBytes: skir.WatchOrganizationTopologyRequest.serializer.toBytes(
         request,
       ),
