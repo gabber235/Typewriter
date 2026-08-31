@@ -40,14 +40,18 @@ val MAX_PLATFORM_THREADS = Runtime.getRuntime().availableProcessors() * 2
 
 private object CachedThreadPoolDispatcher : TypewriterDispatcher(
     ThreadPoolExecutor(
-        0,
+        // A pool behind an unbounded queue never grows past its core size: a task that arrives while
+        // every core thread is busy is queued rather than given a thread of its own, so the maximum
+        // is only ever reached by a pool whose queue can refuse work. Both sizes have to be the
+        // target, and the threads are allowed to time out to keep the pool cheap when it is idle.
+        MAX_PLATFORM_THREADS,
         MAX_PLATFORM_THREADS,
         60L,
         TimeUnit.SECONDS,
         LinkedBlockingQueue(),
         Thread.ofPlatform().daemon(true).name("TypewriterPoolThread-", 1)
             .factory(),
-    ).asCoroutineDispatcher()
+    ).apply { allowCoreThreadTimeOut(true) }.asCoroutineDispatcher()
 )
 
 val Dispatchers.UntickedAsync: CoroutineDispatcher get() = CachedThreadPoolDispatcher
