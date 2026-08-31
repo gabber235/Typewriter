@@ -37,12 +37,12 @@ pub async fn handle(
                 organization_id: $service.organization,
                 owned_realm: IF $host = NONE { NONE } ELSE {
                     array::first(SELECT VALUE id FROM realm_instance WHERE owner_host_id = $host.id)
-                } END,
+                },
                 attached_realm: IF $host = NONE { NONE } ELSE {
                     array::first(SELECT VALUE realm_id FROM engine_instance WHERE owner_host_id = $host.id)
-                } END,
+                },
             }
-        } END;
+        };
         "#,
     )
     .bind("service_id", service_id)
@@ -51,7 +51,7 @@ pub async fn handle(
     .error_with_slug("service-messaging-scope-query-failed")?;
 
     let scope: Option<MessagingScopeRecord> = result
-        .take()
+        .parse()
         .error_with_slug("service-messaging-scope-decode-failed")?;
 
     Ok(match scope {
