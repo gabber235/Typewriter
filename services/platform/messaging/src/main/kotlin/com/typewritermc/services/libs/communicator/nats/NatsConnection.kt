@@ -83,7 +83,7 @@ class NatsConnection internal constructor(
     /** Deliberately disconnects the old client and reconnects using freshly loaded providers. */
     suspend fun reconnect(): NatsLifecycleResult =
         lifecycle.withLock {
-            val old = checkNotNull(activeClient) { "NATS connection is not connected" }
+            val old = activeClient ?: return@withLock connectNew(NatsConnectionState.Reconnecting)
             mutableState.value = NatsConnectionState.Reconnecting
             cancelMonitor()
             try {

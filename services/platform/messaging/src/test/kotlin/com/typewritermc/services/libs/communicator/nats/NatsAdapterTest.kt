@@ -14,6 +14,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -174,6 +175,24 @@ val NatsAdapterTest by testSuite {
         firstClient.events.shouldContainExactly("connect", "disconnect")
         replacementClient.events.shouldContainExactly("connect", "drain", "disconnect")
         connection.shutdown() shouldBe NatsLifecycleResult.Success
+    }
+
+    test("reconnect creates a fresh client when no active client remains") {
+        val failedClient = FakeClient(connectResult = Result.failure(IllegalStateException("closed")))
+        val replacementClient = FakeClient()
+        val clients = ArrayDeque(listOf(failedClient, replacementClient))
+        val connection =
+            NatsConnection(
+                { NatsConnectionConfiguration("nats://localhost") },
+                { NatsAuthentication() },
+                { _, _ -> clients.removeFirst() },
+            )
+
+        connection.connect().shouldBeInstanceOf<NatsLifecycleResult.Failure>()
+        connection.reconnect() shouldBe NatsLifecycleResult.Success
+        connection.state.value shouldBe NatsConnectionState.Connected
+        failedClient.events.shouldContainExactly("connect", "disconnect")
+        replacementClient.events.shouldContainExactly("connect")
     }
 
     test("shutdown preserves drain failure and suppressed disconnect failure") {
