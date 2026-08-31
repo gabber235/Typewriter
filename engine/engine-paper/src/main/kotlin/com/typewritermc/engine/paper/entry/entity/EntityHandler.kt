@@ -4,7 +4,10 @@ import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.event.PacketListenerAbstract
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play
+import com.github.retrooper.packetevents.protocol.player.InteractionHand
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientAttack
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity.InteractAction
 import com.typewritermc.engine.paper.entry.AudienceManager
 import com.typewritermc.engine.paper.events.AsyncEntityDefinitionInteract
 import com.typewritermc.engine.paper.events.AsyncFakeEntityInteract
@@ -30,13 +33,12 @@ class EntityHandler : PacketListenerAbstract(), KoinComponent {
 
     override fun onPacketReceive(event: PacketReceiveEvent?) {
         if (event == null) return
-        if (event.packetType != Play.Client.INTERACT_ENTITY) return
-        val packet = WrapperPlayClientInteractEntity(event)
+        val interaction = event.entityInteraction() ?: return
 
         val player = event.getPlayer<Player>()
-        val entityId = packet.entityId
+        val entityId = interaction.entityId
 
-        AsyncFakeEntityInteract(player, entityId, packet.hand, packet.action).callEvent()
+        AsyncFakeEntityInteract(player, entityId, interaction.hand, interaction.action).callEvent()
 
         val display = audienceManager
             .findDisplays(AudienceEntityDisplay::class)
@@ -49,13 +51,46 @@ class EntityHandler : PacketListenerAbstract(), KoinComponent {
             entityId,
             definition,
             instance,
-            packet.hand,
-            packet.action,
-            packet.isSneaking.orElse(false)
+            interaction.hand,
+            interaction.action,
+            interaction.shift,
         ).callEvent()
     }
 
     fun shutdown() {
         PacketEvents.getAPI().eventManager.unregisterListener(this)
     }
+}
+
+/** What a player did to an entity. */
+private data class EntityInteraction(
+    val entityId: Int,
+    val hand: InteractionHand,
+    val action: InteractAction,
+    val shift: Boolean,
+)
+
+/**
+ * Reads the interaction out of [this], or null when it is not one.
+ *
+ * Up to 1.21.11 an attack is the interact packet carrying the attack action. 26.1 gave the attack a
+ * packet of its own and dropped the action from the interact one, which PacketEvents reports as
+ * INTERACT_AT for every version from there on, so on those servers an attack only ever arrives here.
+ */
+private fun PacketReceiveEvent.entityInteraction(): EntityInteraction? = when (packetType) {
+    Play.Client.INTERACT_ENTITY -> WrapperPlayClientInteractEntity(this).let {
+        EntityInteraction(it.entityId, it.hand, it.action, it.isSneaking.orElse(false))
+    }
+
+    Play.Client.ATTACK -> WrapperPlayClientAttack(this).let {
+        // The attack packet carries neither of these, so they come off the player instead.
+        EntityInteraction(
+            it.entityId,
+            InteractionHand.MAIN_HAND,
+            InteractAction.ATTACK,
+            getPlayer<Player>().isSneaking,
+        )
+    }
+
+    else -> null
 }
