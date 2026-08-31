@@ -78,8 +78,9 @@ async fn attached_service_receives_only_its_realm_permissions(
         ["service:engine_one", "organization:writers"]
     );
     let publish = &response.permissions.publish.allow;
-    assert!(publish.contains(&"service.to.service.engine_one.execution.watch".into()));
-    assert!(publish.contains(&"service.to.service.engine_one.execution.report".into()));
+    assert!(publish.contains(&"cloud.to.service.engine_one.execution.watch".into()));
+    assert!(publish.contains(&"cloud.to.service.engine_one.execution.register".into()));
+    assert!(publish.contains(&"cloud.to.service.engine_one.execution.report".into()));
     assert!(publish.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
     for suffix in [
         "shared.catalog.fetch",
@@ -100,7 +101,7 @@ async fn attached_service_receives_only_its_realm_permissions(
         )));
     }
     let subscribe = &response.permissions.subscribe.allow;
-    assert!(subscribe.contains(&"service.from.service.engine_one.execution.watch".into()));
+    assert!(subscribe.contains(&"cloud.from.service.engine_one.execution.watch".into()));
     for suffix in ["probe", "command", "status"] {
         assert!(subscribe.contains(&format!(
             "typewriter.organization.writers.realm.quests.hosts.{suffix}"
@@ -115,7 +116,7 @@ async fn attached_service_receives_only_its_realm_permissions(
     }
     assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
     assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
-    assert!(subscribe.iter().all(|subject| !subject.contains(".realm.")));
+    assert!(subscribe.iter().all(|subject| !subject.ends_with(".realm.>")));
     Ok(())
 }
 

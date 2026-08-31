@@ -738,6 +738,88 @@ impl HostExecutionConfiguration {
 }
 
 // ==============================================================================
+// struct RegisterServiceHostRequest
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RegisterServiceHostRequest {
+    pub entrypoint: String,
+    pub can_host_realm: bool,
+    pub supported_engines: Vec<SupportedEngine>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RegisterServiceHostRequest>>,
+}
+
+impl RegisterServiceHostRequest {
+    pub fn default_ref() -> &'static RegisterServiceHostRequest {
+        static D: std::sync::LazyLock<RegisterServiceHostRequest> = std::sync::LazyLock::new(RegisterServiceHostRequest::default);
+        &D
+    }
+}
+
+impl RegisterServiceHostRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "service/v1/topology.skir",
+                    "RegisterServiceHostRequest",
+                    "",
+                    |x: &RegisterServiceHostRequest| &x._unrecognized,
+                    |x: &mut RegisterServiceHostRequest, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegisterServiceHostRequest> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RegisterServiceHostRequest::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum RegisterServiceHostResponse
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RegisterServiceHostResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<RegisterServiceHostResponse>>),
+    Success(Box<ServiceHost>),
+    InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
+}
+
+impl Default for RegisterServiceHostResponse {
+    fn default() -> Self {
+        RegisterServiceHostResponse::Unknown(None)
+    }
+}
+
+impl RegisterServiceHostResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &RegisterServiceHostResponse| match x {
+                        RegisterServiceHostResponse::Unknown(_) => 0,
+                        RegisterServiceHostResponse::Success(_) => 1,
+                        RegisterServiceHostResponse::InternalError(_) => 2,
+                    },
+                    |u| RegisterServiceHostResponse::Unknown(Some(u)),
+                    |x: &RegisterServiceHostResponse| match x { RegisterServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "service/v1/topology.skir",
+                    "RegisterServiceHostResponse",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegisterServiceHostResponse> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(RegisterServiceHostResponse::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct ConfigureServiceHostRequest
 // ==============================================================================
 
@@ -1715,6 +1797,19 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest> = RegisterServiceHostRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("entrypoint", 0, crate::skir_client::Serializer::string(), "", |x: &RegisterServiceHostRequest| &x.entrypoint, |x: &mut RegisterServiceHostRequest, v| x.entrypoint = v);
+                (*a).add_field("can_host_realm", 1, crate::skir_client::Serializer::bool(), "", |x: &RegisterServiceHostRequest| &x.can_host_realm, |x: &mut RegisterServiceHostRequest, v| x.can_host_realm = v);
+                (*a).add_field("supported_engines", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SupportedEngine::_adapter())), "", |x: &RegisterServiceHostRequest| &x.supported_engines, |x: &mut RegisterServiceHostRequest, v| x.supported_engines = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse> = RegisterServiceHostResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |v| RegisterServiceHostResponse::Success(Box::new(v)), |x| match x { RegisterServiceHostResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| RegisterServiceHostResponse::InternalError(Box::new(v)), |x| match x { RegisterServiceHostResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest> = ConfigureServiceHostRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("host_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ConfigureServiceHostRequest| &x.host_id, |x: &mut ConfigureServiceHostRequest, v| x.host_id = v);
                 (*a).add_field("expected_revision", 1, crate::skir_client::Serializer::int64(), "", |x: &ConfigureServiceHostRequest| &x.expected_revision, |x: &mut ConfigureServiceHostRequest, v| x.expected_revision = v);
@@ -1849,6 +1944,19 @@ fn initialize_module_serializers() {
 // ==============================================================================
 // Methods
 // ==============================================================================
+
+pub fn register_service_host_method() -> &'static crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse>> = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "RegisterServiceHost".to_string(),
+            number: 934206_i64,
+            request_serializer: RegisterServiceHostRequest::serializer(),
+            response_serializer: RegisterServiceHostResponse::serializer(),
+            doc: "".to_string(),
+        }
+    });
+    &*METHOD
+}
 
 pub fn configure_service_host_method() -> &'static crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse> {
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>> = std::sync::LazyLock::new(|| {

@@ -90,6 +90,13 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
+    RegisterServiceHostResponse {
+        success: Success,
+        errors {}
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
     ConfigureServiceHostResponse {
         success: Success,
         errors {

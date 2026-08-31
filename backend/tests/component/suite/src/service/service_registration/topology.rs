@@ -8,8 +8,8 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, HostExecutionConfiguration, HostedEngineConfiguration,
     HostedRealmConfiguration, ReportHostExecutionRequest, ReportHostExecutionResponse,
-    GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse, WatchHostExecutionRequest,
-    WatchHostExecutionResponse,
+    GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse, RegisterServiceHostRequest,
+    RegisterServiceHostResponse, SupportedEngine, WatchHostExecutionRequest, WatchHostExecutionResponse,
     WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
 };
 
@@ -17,6 +17,50 @@ use super::{ServiceRegistration, database, request};
 
 const ORGANIZATION_TOPOLOGY_SUBJECT: &str = "typewriter.to.organization.test_org.topology.watch";
 const HOST_EXECUTION_SUBJECT: &str = "typewriter.to.service.host_service.execution.watch";
+
+#[component_test(ServiceRegistration)]
+async fn register_host_is_idempotent_and_publishes_new_topology(
+    context: &mut TestContext<ServiceRegistration>,
+) -> TestResult {
+    seed_host_service(context, "host_service").await?;
+    context
+        .messaging_mock()?
+        .expect_publish(ORGANIZATION_TOPOLOGY_SUBJECT);
+
+    let request_value = RegisterServiceHostRequest {
+        entrypoint: "PAPER".into(),
+        can_host_realm: true,
+        supported_engines: vec![SupportedEngine {
+            engine_id: "typewritermc:paper".into(),
+            _unrecognized: None,
+        }],
+        _unrecognized: None,
+    };
+    for _ in 0..2 {
+        let response: RegisterServiceHostResponse = request(
+            context,
+            "typewriter.from.service.host_service.execution.register",
+            &request_value,
+            RegisterServiceHostRequest::serializer(),
+            RegisterServiceHostResponse::serializer(),
+        )
+        .await?;
+        let RegisterServiceHostResponse::Success(host) = response else {
+            anyhow::bail!("expected registered host");
+        };
+        assert_eq!(host.revision, 1);
+        assert_eq!(host.entrypoint, "PAPER");
+        assert_eq!(host.supported_engines, request_value.supported_engines);
+    }
+
+    assert_jm!(
+        database(context)?
+            .query_json("RETURN array::len(SELECT * FROM service_host WHERE service_id = service:host_service)")
+            .await?,
+        1
+    );
+    Ok(())
+}
 
 #[component_test(ServiceRegistration)]
 async fn messaging_scope_reports_exact_owned_and_attached_realm(
@@ -536,9 +580,23 @@ async fn seed_host(
     service_id: &str,
     entrypoint: &str,
 ) -> anyhow::Result<()> {
+    seed_host_service(context, service_id).await?;
     database(context)?
         .seed(format!(
-            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', role = {{ type: 'host', version: '1.0.0' }}, organization = organization:test_org; CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper' }}]",
+            "CREATE service_host:{host_id} SET service_id = service:{service_id}, entrypoint = '{entrypoint}', can_host_realm = true, supported_engines = [{{ engine_id: 'paper' }}]",
+        ))
+        .execute()
+        .await?;
+    Ok(())
+}
+
+async fn seed_host_service(
+    context: &TestContext<ServiceRegistration>,
+    service_id: &str,
+) -> anyhow::Result<()> {
+    database(context)?
+        .seed(format!(
+            "CREATE user:actor SET name = 'actor'; CREATE user:other SET name = 'other'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE organization:other_org SET name = 'other_org', founder = user:other; CREATE service:{service_id} SET name = '{service_id}', role = {{ type: 'host', version: '1.0.0' }}, organization = organization:test_org",
         ))
         .execute()
         .await?;

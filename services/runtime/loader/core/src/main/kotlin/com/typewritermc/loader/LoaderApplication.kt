@@ -59,7 +59,7 @@ internal class ArtifactLoaderBootstrap(
             )
         val localRealmId = settings.getOrNull("TYPEWRITER_LOCAL_REALM_ID")
         if (entrypoint != HostEntrypoint.STANDALONE || localRealmId == null) {
-            return BackendArtifactHostAssignmentSource(service, panelEngine)
+            return BackendArtifactHostAssignmentSource(service, panelEngine, entrypoint)
         }
         return ArtifactHostAssignmentSource {
             if (entrypoint == HostEntrypoint.STANDALONE) {

@@ -11,6 +11,7 @@ mod configure_topology;
 mod heartbeat;
 mod host_execution;
 mod messaging_scope;
+mod register_host;
 mod shutdown;
 mod status;
 mod unbind;
@@ -63,6 +64,7 @@ async fn handle_message_async(msg: types::BrokerMessage) -> Result<(), otel_wasi
         "{user_services}.unbind" => async unbind::handle_unbind,
         "{user_topology}.configure" => async configure_topology::handle_configure,
         "{user_topology}.watch" => async watch_topology::handle_watch,
+        "{host_execution}.register" => async register_host::handle,
         "{host_execution}.watch" => async host_execution::handle_watch,
         "{host_execution}.report" => async host_execution::handle_report,
     )

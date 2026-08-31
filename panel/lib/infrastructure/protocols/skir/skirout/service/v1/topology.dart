@@ -2784,6 +2784,333 @@ final class HostExecutionConfiguration_mutable implements HostExecutionConfigura
 }
 
 // -----------------------------------------------------------------------------
+// struct RegisterServiceHostRequest
+// -----------------------------------------------------------------------------
+
+sealed class RegisterServiceHostRequest_orMutable {
+  _core.String get entrypoint;
+  _core.bool get canHostRealm;
+  _core.Iterable<SupportedEngine_orMutable> get supportedEngines;
+
+  RegisterServiceHostRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class RegisterServiceHostRequest implements RegisterServiceHostRequest_orMutable {
+  @_core.override
+  final _core.String entrypoint;
+  @_core.override
+  final _core.bool canHostRealm;
+  @_core.override
+  final _core.Iterable<SupportedEngine> supportedEngines;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RegisterServiceHostRequest({
+    required _core.String entrypoint,
+    required _core.bool canHostRealm,
+    required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
+  }) => RegisterServiceHostRequest._(
+    entrypoint,
+    canHostRealm,
+    _skir.internal__frozenMappedCopy(supportedEngines, (it) => it.toFrozen()),
+  );
+
+  RegisterServiceHostRequest._(
+    this.entrypoint,
+    this.canHostRealm,
+    this.supportedEngines,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RegisterServiceHostRequest._(
+    "",
+    false,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RegisterServiceHostRequest_mutable mutable() => RegisterServiceHostRequest_mutable._(
+    "",
+    false,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RegisterServiceHostRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RegisterServiceHostRequest_mutable toMutable() => RegisterServiceHostRequest_mutable._(
+    this.entrypoint,
+    this.canHostRealm,
+    this.supportedEngines,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RegisterServiceHostRequest) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.entrypoint,
+    this.canHostRealm,
+    this.supportedEngines,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RegisterServiceHostRequest` instances.
+  static _skir.StructSerializer<RegisterServiceHostRequest, RegisterServiceHostRequest_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "entrypoint",
+        "entrypoint",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.entrypoint,
+        (it, v) => it.entrypoint = v,
+      );
+      _serializerBuilder.addField(
+        "can_host_realm",
+        "canHostRealm",
+        1,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.canHostRealm,
+        (it, v) => it.canHostRealm = v,
+      );
+      _serializerBuilder.addField(
+        "supported_engines",
+        "supportedEngines",
+        2,
+        _skir.Serializers.iterable(
+          SupportedEngine.serializer,
+        ),
+        "",
+        (it) => it.supportedEngines,
+        (it, v) => it.supportedEngines = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:RegisterServiceHostRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RegisterServiceHostRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RegisterServiceHostRequest].
+final class RegisterServiceHostRequest_mutable implements RegisterServiceHostRequest_orMutable {
+  _core.String entrypoint;
+  _core.bool canHostRealm;
+  _core.Iterable<SupportedEngine_orMutable> supportedEngines;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RegisterServiceHostRequest_mutable._(
+    this.entrypoint,
+    this.canHostRealm,
+    this.supportedEngines,
+  );
+
+  /// If the value of [supportedEngines] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
+  _core.List<SupportedEngine_orMutable> get mutableSupportedEngines {
+    final value = this.supportedEngines;
+    if (value is _skir.internal__MutableList<SupportedEngine_orMutable>) {
+      return value;
+    } else {
+      return this.supportedEngines = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RegisterServiceHostRequest toFrozen() => RegisterServiceHostRequest(
+    entrypoint: this.entrypoint,
+    canHostRealm: this.canHostRealm,
+    supportedEngines: this.supportedEngines,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum RegisterServiceHostResponse
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case RegisterServiceHostResponse_unknown(): { ... }
+///     case RegisterServiceHostResponse_success(:var value): { ... }
+///     case RegisterServiceHostResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class RegisterServiceHostResponse {
+  /// Constant indicating an unknown `RegisterServiceHostResponse`.
+  /// Default value for fields of type `RegisterServiceHostResponse`.
+  static const RegisterServiceHostResponse unknown = RegisterServiceHostResponse_unknown._instance;
+
+  /// Create a 'success' variant wrapping around the given value.
+  factory RegisterServiceHostResponse.wrapSuccess(
+    ServiceHost value
+  ) => RegisterServiceHostResponse_successWrapper._(value);
+
+  /// Same as `wrapSuccess(ServiceHost(...))`.
+  factory RegisterServiceHostResponse.createSuccess({
+    required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
+    required _core.String entrypoint,
+    required _core.bool canHostRealm,
+    required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
+    required ReconciledRevision_orMutable topologyRevision,
+    required HostRuntimeState_orMutable state,
+  }) => RegisterServiceHostResponse.wrapSuccess(
+    ServiceHost(
+      hostId: hostId,
+      serviceId: serviceId,
+      revision: revision,
+      entrypoint: entrypoint,
+      canHostRealm: canHostRealm,
+      supportedEngines: supportedEngines,
+      topologyRevision: topologyRevision,
+      state: state,
+    )
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory RegisterServiceHostResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value
+  ) => RegisterServiceHostResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory RegisterServiceHostResponse.createInternalError() => RegisterServiceHostResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError()
+  );
+
+  /// Returns the kind of variant held by this RegisterServiceHostResponse.
+  RegisterServiceHostResponse_kind get kind;
+
+  /// Serializer for `RegisterServiceHostResponse` instances.
+  static _skir.EnumSerializer<RegisterServiceHostResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "success",
+        "wrapSuccess",
+        ServiceHost.serializer,
+        "",
+        RegisterServiceHostResponse_successWrapper._,
+        (it) => it.value,
+        ordinal: RegisterServiceHostResponse_kind.successWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        RegisterServiceHostResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: RegisterServiceHostResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "service/v1/topology.skir:RegisterServiceHostResponse",
+    doc: "",
+    unknownInstance: RegisterServiceHostResponse_unknown._instance,
+    enumInstance: RegisterServiceHostResponse.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: RegisterServiceHostResponse_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `RegisterServiceHostResponse`.
+enum RegisterServiceHostResponse_kind {
+  unknown(0),
+  successWrapper(1),
+  internalErrorWrapper(2);
+
+  final _core.int _ordinal;
+
+  const RegisterServiceHostResponse_kind(this._ordinal);
+}
+
+final class RegisterServiceHostResponse_unknown implements RegisterServiceHostResponse {
+  static const _instance = RegisterServiceHostResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const RegisterServiceHostResponse_unknown._() : _u = null;
+  RegisterServiceHostResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  RegisterServiceHostResponse_kind get kind => RegisterServiceHostResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is RegisterServiceHostResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, RegisterServiceHostResponse.serializer);
+}
+
+sealed class _RegisterServiceHostResponse_wrapper implements RegisterServiceHostResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _RegisterServiceHostResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, RegisterServiceHostResponse.serializer);
+}
+
+final class RegisterServiceHostResponse_successWrapper extends _RegisterServiceHostResponse_wrapper {
+  final ServiceHost value;
+
+  RegisterServiceHostResponse_successWrapper._(this.value);
+
+  @_core.override
+  RegisterServiceHostResponse_kind get kind => RegisterServiceHostResponse_kind.successWrapper;
+}
+
+final class RegisterServiceHostResponse_internalErrorWrapper extends _RegisterServiceHostResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  RegisterServiceHostResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  RegisterServiceHostResponse_kind get kind => RegisterServiceHostResponse_kind.internalErrorWrapper;
+}
+
+// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostRequest
 // -----------------------------------------------------------------------------
 
@@ -5911,6 +6238,18 @@ final class GetServiceMessagingScopeResponse_internalErrorWrapper extends _GetSe
   @_core.override
   GetServiceMessagingScopeResponse_kind get kind => GetServiceMessagingScopeResponse_kind.internalErrorWrapper;
 }
+
+final _skir.Method<
+  RegisterServiceHostRequest,
+  RegisterServiceHostResponse
+> registerServiceHostMethod =
+  _skir.Method(
+    "RegisterServiceHost",
+    934206,
+    RegisterServiceHostRequest.serializer,
+    RegisterServiceHostResponse.serializer,
+    "",
+  );
 
 final _skir.Method<
   ConfigureServiceHostRequest,

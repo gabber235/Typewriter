@@ -108,6 +108,17 @@ struct HostExecutionConfiguration {
   primary_engine: HostedEngineConfiguration?;
 }
 
+method RegisterServiceHost(
+  struct {
+    entrypoint: string;
+    can_host_realm: bool;
+    supported_engines: [SupportedEngine];
+  }
+): enum {
+  success: ServiceHost;
+  internal_error: InternalError;
+} = 934206;
+
 method ConfigureServiceHost(
   struct {
     host_id: RecordId;

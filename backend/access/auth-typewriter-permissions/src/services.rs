@@ -58,9 +58,10 @@ pub async fn handle_service(
     allow_subscribe.push(format!(
         "cloud.from.service.{service_id}.registration.bound"
     ));
-    allow_publish.push(format!("service.to.service.{service_id}.execution.watch"));
-    allow_publish.push(format!("service.to.service.{service_id}.execution.report"));
-    allow_subscribe.push(format!("service.from.service.{service_id}.execution.watch"));
+    allow_publish.push(format!("cloud.to.service.{service_id}.execution.watch"));
+    allow_publish.push(format!("cloud.to.service.{service_id}.execution.register"));
+    allow_publish.push(format!("cloud.to.service.{service_id}.execution.report"));
+    allow_subscribe.push(format!("cloud.from.service.{service_id}.execution.watch"));
     main_attribute!("auth.permissions.category.registration" = true);
 
     match status {
