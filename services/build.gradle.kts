@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.bundling.Jar
+
 plugins {
     base
 }
@@ -10,6 +12,17 @@ val internalPlatformProjects =
     )
 
 internalPlatformProjects.map(::project).forEach { it.version = "1000.0.0" }
+
+val loaderProjects =
+    listOf(
+        ":loader-api",
+        ":loader-core",
+        ":loader-standalone",
+        ":loader-paper",
+        ":loader-distribution",
+    )
+
+loaderProjects.map(::project).forEach { it.version = "1000.0.0" }
 
 subprojects.forEach { serviceProject ->
     serviceProject.pluginManager.withPlugin("com.typewritermc.imprint") {
@@ -31,31 +44,26 @@ val artifactInboxRoot =
     providers.gradleProperty("typewriterArtifactInbox").map(::file).orElse(
         layout.buildDirectory.dir("development/artifacts/inbox").map { it.asFile },
     )
+val developmentArtifactTarget = artifactInboxRoot.map { it.resolve("development") }
 
 tasks.register("assembleDevelopmentArtifacts") {
+    val developmentArtifactTasks =
+        listOf(
+            project(":realm").tasks.named<Jar>("shadowJar"),
+            project(":engine-paper").tasks.named<Jar>("shadowJar"),
+            project(":engine-panel").tasks.named<Jar>("shadowJar"),
+            project(":conformance-extension").tasks.named<Jar>("jar"),
+        )
+    val developmentArtifactFiles = developmentArtifactTasks.map { it.flatMap(Jar::getArchiveFile) }
+
     group = "typewriter"
     description = "Builds development artifacts and publishes complete JARs into an artifact inbox."
-    dependsOn(
-        project(":realm").tasks.named("shadowJar"),
-        project(":engine-paper").tasks.named("shadowJar"),
-        project(":engine-panel").tasks.named("shadowJar"),
-        project(":conformance-extension").tasks.named("jar"),
-    )
-    outputs.dir(artifactInboxRoot)
+    dependsOn(developmentArtifactTasks)
+    inputs.files(developmentArtifactFiles)
+    outputs.dir(developmentArtifactTarget)
     doLast {
-        val sources =
-            listOf(
-                file("runtime/realm/build/libs"),
-                file("runtime/engine/runtimes/paper/build/libs"),
-                file("runtime/engine/runtimes/panel/build/libs"),
-                file("extensions/conformance/build/libs"),
-            ).map { directory ->
-                directory.listFiles()
-                    ?.filter { it.isFile && it.extension == "jar" && !it.name.contains("plain") }
-                    ?.maxByOrNull(File::lastModified)
-                    ?: error("Expected a canonical development artifact in $directory.")
-            }
-        val target = artifactInboxRoot.get().resolve("development").also(File::mkdirs)
+        val sources = developmentArtifactFiles.map { it.get().asFile }
+        val target = developmentArtifactTarget.get().also(File::mkdirs)
         val expectedNames = sources.mapTo(mutableSetOf(), File::getName)
         target.listFiles()
             ?.filter { it.isFile && it.extension == "jar" && it.name !in expectedNames }
