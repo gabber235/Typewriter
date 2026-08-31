@@ -21,6 +21,7 @@ import org.bukkit.Particle
 import org.bukkit.entity.Player
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.time.toKotlinDuration
@@ -77,7 +78,7 @@ class ParticleAudienceFilter(
     val speed: Var<Double>,
     val delay: Var<Duration>,
 ) : AudienceFilter(ref), TickableDisplay {
-    val nextTimes = mutableMapOf<UUID, Instant>()
+    private val nextTimes = ConcurrentHashMap<UUID, Instant>()
 
     override fun filter(player: Player): Boolean {
         val distanceSquared = player.position.distanceSquared(position.get(player)) ?: Double.MAX_VALUE
@@ -91,7 +92,10 @@ class ParticleAudienceFilter(
             .filter { it.refresh() }
             .filter { nextTimes.getOrPut(it.uniqueId) { now } <= now }
             .forEach { player ->
-                nextTimes.computeIfPresent(player.uniqueId) { _, time -> time + delay.get(player).toKotlinDuration() }
+                // Counted from now rather than from the time that just came due. A player who was
+                // out of the audience for a while has one far in the past, and stepping it forward
+                // by a single delay at a time would fire once a tick until it caught up.
+                nextTimes[player.uniqueId] = now + delay.get(player).toKotlinDuration()
 
                 val context = player.interactionContext
 
@@ -107,5 +111,10 @@ class ParticleAudienceFilter(
                     true,
                 ) sendPacketTo player
             }
+    }
+
+    override fun onPlayerFilterRemoved(player: Player) {
+        super.onPlayerFilterRemoved(player)
+        nextTimes.remove(player.uniqueId)
     }
 }
