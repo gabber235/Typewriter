@@ -16,6 +16,7 @@ import com.typewritermc.engine.paper.utils.Color
 import com.typewritermc.engine.paper.utils.Sound
 import com.typewritermc.engine.paper.utils.isFloodgate
 import com.typewritermc.engine.paper.utils.replaceTagPlaceholders
+import com.typewritermc.entity.entries.data.minecraft.CustomNameProperty
 import com.typewritermc.entity.entries.data.minecraft.display.BillboardConstraintProperty
 import com.typewritermc.entity.entries.data.minecraft.display.Scale3DProperty
 import com.typewritermc.entity.entries.data.minecraft.display.TranslationProperty
@@ -68,13 +69,14 @@ class NamedEntityDefinition(
 
 class NamedEntity(
     player: Player,
-    private var displayName: Var<String>,
+    private val displayName: Var<String>,
     private val baseEntity: FakeEntity,
     definition: Ref<out EntityDefinitionEntry>,
     billboardConstraint: BillboardConstraints = BillboardConstraints.CENTER,
 ) : FakeEntity(player) {
     private val hologram = TextDisplayEntity(player)
     private val indicatorEntity = InteractionIndicatorEntity(player, definition)
+    private var customName: String? = null
 
     override val entityId: Int
         get() = baseEntity.entityId
@@ -98,11 +100,13 @@ class NamedEntity(
     }
 
     override fun applyProperties(properties: List<EntityProperty>) {
-        baseEntity.consumeProperties(properties)
+        // The plate above the entity is where the name is shown, so the base entity is not given one
+        // of its own on top of it.
+        baseEntity.consumeProperties(properties.filterNot { it is CustomNameProperty })
         properties.forEach { property ->
             when (property) {
-                is DisplayNameProperty -> {
-                    displayName = property.displayName
+                is CustomNameProperty -> {
+                    customName = property.customName.takeIf { it.isNotBlank() }
                 }
 
                 is BackgroundColorProperty -> applyTextDisplayProperty(property)
@@ -131,11 +135,11 @@ class NamedEntity(
 
     private fun hologram(): String {
         val other = property(LinesProperty::class)?.lines ?: ""
-        val displayName = this.displayName
+        val name = customName ?: displayName.get(player)
 
         return namePlate.parsePlaceholders(player).replaceTagPlaceholders(
             "other" to other,
-            "display_name" to displayName.get(player).parsePlaceholders(player),
+            "display_name" to name.parsePlaceholders(player),
         ).trim()
     }
 

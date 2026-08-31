@@ -30,6 +30,11 @@ class CustomNameData(
     override fun build(player: Player): CustomNameProperty = CustomNameProperty(customName.get(player))
 }
 
+/**
+ * The name an entity carries, as the custom name data set it.
+ *
+ * A blank name means the entity was not given one and falls back to the name on its definition.
+ */
 data class CustomNameProperty(val customName: String) : EntityProperty {
     companion object : SinglePropertyCollectorSupplier<CustomNameProperty>(CustomNameProperty::class)
 }

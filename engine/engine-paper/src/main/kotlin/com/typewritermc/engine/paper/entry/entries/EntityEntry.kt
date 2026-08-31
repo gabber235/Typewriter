@@ -76,14 +76,7 @@ interface EntityInstanceEntry : AudienceFilterEntry, SoundSourceEntry, SpeakerEn
     val definition: Ref<out EntityDefinitionEntry>
 
     override val displayName: Var<String>
-        get() = ComputeVar { player, context ->
-            (ref().findDisplay<AudienceDisplay>() as? AudienceEntityDisplay)
-                ?.property<DisplayNameProperty>(player.uniqueId)
-                ?.displayName
-                ?.get(player, context)
-                ?: definition.get()?.displayName?.get(player, context)
-                ?: ""
-        }
+        get() = definition.get()?.displayName ?: ConstVar("")
 
     override val sound: Var<Sound>
         get() = definition.get()?.sound ?: ConstVar(Sound.EMPTY)
