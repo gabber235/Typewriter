@@ -10,10 +10,10 @@ class TypewriterPanel extends HookConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(appearanceProvider);
 
-    return RouteAccessBinding(
-      access: router.access,
-      builder: (context) => EagerInitialization(
-        child: MaterialApp.router(
+    return EagerInitialization(
+      child: RouteAccessBinding(
+        access: router.access,
+        builder: (context) => MaterialApp.router(
           title: "Typewriter",
           theme: buildTheme(Brightness.light),
           darkTheme: buildTheme(Brightness.dark),
