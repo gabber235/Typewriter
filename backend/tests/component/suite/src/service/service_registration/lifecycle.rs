@@ -21,7 +21,10 @@ fn service_update_matches(body: &[u8], expected_status: ServiceStatus) -> bool {
     service.service_id.key.to_string() == "bound_service"
         && service
             .state
-            .is_some_and(|state| state.status == expected_status)
+            .is_some_and(|state| {
+                state.status == expected_status
+                    && state.last_seen > std::time::SystemTime::UNIX_EPOCH
+            })
 }
 
 #[component_test(ServiceRegistration)]

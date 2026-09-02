@@ -53,7 +53,7 @@ class Services extends _$Services {
         skir.WatchOrganizationServicesResponse_addWrapper(:final value) ||
         skir.WatchOrganizationServicesResponse_updateWrapper(
           :final value,
-        ) => _upsertCanonicalService(previous, Service.fromSkir(value)).values,
+        ) => _upsertWatchedService(previous, Service.fromSkir(value)).values,
         skir.WatchOrganizationServicesResponse_removeWrapper(:final value) =>
           previous?.where((service) => service.serviceId != value).toList() ??
               [],

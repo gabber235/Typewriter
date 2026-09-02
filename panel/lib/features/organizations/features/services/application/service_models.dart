@@ -206,3 +206,23 @@ enum ServiceStateStatus {
   identityOf: (service) => "Service ${service.serviceId.id}",
   entityName: "Service",
 );
+
+({List<Service> values, Service canonical}) _upsertWatchedService(
+  List<Service>? values,
+  Service incoming,
+) {
+  final current = values?.firstWhereOrNull(
+    (service) => service.serviceId == incoming.serviceId,
+  );
+  if (current?.revision == incoming.revision &&
+      current?.copyWith(state: incoming.state) == incoming) {
+    return (
+      values: [
+        for (final service in values!)
+          if (service.serviceId == incoming.serviceId) incoming else service,
+      ],
+      canonical: incoming,
+    );
+  }
+  return _upsertCanonicalService(values, incoming);
+}

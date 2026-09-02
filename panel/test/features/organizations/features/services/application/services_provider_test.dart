@@ -214,6 +214,31 @@ void main() {
       );
     });
 
+    test("accepts equal revision heartbeat state updates", () async {
+      final current = _service("one").copyWith(
+        state: ServiceState(
+          status: ServiceStateStatus.offline,
+          lastSeen: DateTime.utc(2025, 1, 1),
+        ),
+      );
+      final heartbeat = current.copyWith(
+        state: ServiceState(
+          status: ServiceStateStatus.online,
+          lastSeen: DateTime.utc(2025, 1, 1, 0, 1),
+        ),
+      );
+      await harness.emit(
+        skir.WatchOrganizationServicesResponse.wrapList([current.toSkir()]),
+      );
+
+      expect(
+        await harness.emit(
+          skir.WatchOrganizationServicesResponse.wrapUpdate(heartbeat.toSkir()),
+        ),
+        [heartbeat],
+      );
+    });
+
     test("maps internal and unknown errors", () async {
       expect(
         await harness.emitError(
