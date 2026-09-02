@@ -6,6 +6,7 @@ use wasmcloud_utils::skir::base::service::v1::{
         BindServiceRequest, BindServiceResponse, ServiceBoundNotification, UnbindServiceRequest,
         UnbindServiceResponse,
     },
+    topology::WatchOrganizationTopologyResponse,
 };
 
 use super::{ServiceRegistration, database, request};
@@ -31,6 +32,18 @@ fn bound_notification_matches(body: &[u8]) -> bool {
         .is_ok_and(|notification| {
             notification.organization_id == "test_org"
                 && notification.organization_name.as_deref() == Some("test_org")
+        })
+}
+
+fn topology_removal_matches(body: &[u8], table: &str, key: &str) -> bool {
+    WatchOrganizationTopologyResponse::serializer()
+        .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
+        .is_ok_and(|response| {
+            matches!(
+                response,
+                WatchOrganizationTopologyResponse::ResourceRemoved(resource_id)
+                    if resource_id.table == table && resource_id.key.to_string() == key
+            )
         })
 }
 
@@ -162,18 +175,18 @@ async fn valid_registration_binds_service_and_publishes_both_views(
 }
 
 #[component_test(ServiceRegistration)]
-async fn unbind_removes_organization_and_publishes_removal(
+async fn unbind_removes_service_and_topology_from_organization_views(
     context: &mut TestContext<ServiceRegistration>,
 ) -> TestResult {
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bound SET name = 'bound', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service_host:bound SET service_id = service:bound, entrypoint = 'PAPER', can_host_realm = true, supported_engines = [{ engine_id: 'paper' }]; CREATE realm_instance:bound SET owner_host_id = service_host:bound, target_engine = { engine_id: 'paper', version_constraint: '^1' }; CREATE engine_instance:bound SET owner_host_id = service_host:bound, realm_id = realm_instance:bound, target = { engine_id: 'paper', version_constraint: '^1' }",
         )
         .execute()
         .await?;
-    context
-        .messaging_mock()?
+    let messaging = context.messaging_mock()?;
+    messaging
         .expect_publish("typewriter.to.organization.test_org.services.watch")
         .body_matches(|body| {
             WatchOrganizationServicesResponse::serializer()
@@ -187,6 +200,15 @@ async fn unbind_removes_organization_and_publishes_removal(
                     )
                 })
         });
+    messaging
+        .expect_publish("typewriter.to.organization.test_org.topology.watch")
+        .body_matches(|body| topology_removal_matches(body, "engine_instance", "bound"));
+    messaging
+        .expect_publish("typewriter.to.organization.test_org.topology.watch")
+        .body_matches(|body| topology_removal_matches(body, "realm_instance", "bound"));
+    messaging
+        .expect_publish("typewriter.to.organization.test_org.topology.watch")
+        .body_matches(|body| topology_removal_matches(body, "service_host", "bound"));
 
     let response: UnbindServiceResponse = request(
         context,
@@ -204,10 +226,10 @@ async fn unbind_removes_organization_and_publishes_removal(
     assert_jm!(
         database
             .query_json(
-                "RETURN { organization_is_none: (SELECT VALUE organization FROM ONLY service:bound) = NONE, registration_is_none: (SELECT VALUE registration FROM ONLY service:bound) = NONE }",
+                "RETURN { organization_is_none: (SELECT VALUE organization FROM ONLY service:bound) = NONE, registration_is_none: (SELECT VALUE registration FROM ONLY service:bound) = NONE, host_exists: record::exists(service_host:bound), realm_exists: record::exists(realm_instance:bound), engine_exists: record::exists(engine_instance:bound) }",
             )
             .await?,
-        { "organization_is_none": true, "registration_is_none": true }
+        { "organization_is_none": true, "registration_is_none": true, "host_exists": true, "realm_exists": true, "engine_exists": true }
     );
     Ok(())
 }
