@@ -93,4 +93,4 @@ private fun LoaderSettings.samplerConfiguration(): LoaderSamplerConfiguration {
     }
 }
 
-private const val CONFIGURATION_FILE_SETTING = "LOADER_CONFIG_FILE"
+private const val CONFIGURATION_FILE_SETTING = "TYPEWRITER_CONFIG_FILE"

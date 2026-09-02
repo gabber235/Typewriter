@@ -38,7 +38,7 @@ internal class RealmSettings(
     }
 }
 
-private const val CONFIGURATION_FILE_SETTING = "REALM_CONFIG_FILE"
+private const val CONFIGURATION_FILE_SETTING = "TYPEWRITER_CONFIG_FILE"
 
 private fun Map<String, String>.nonBlank(name: String): String? = get(name)?.takeIf(String::isNotBlank)
 

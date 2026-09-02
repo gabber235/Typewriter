@@ -42,9 +42,9 @@ tasks.runServer {
     pluginJars.from(loaderPlugin)
     dependsOn(stagePaperDevelopmentArtifacts)
     environment(
-        "LOADER_CONFIG_FILE",
+        "TYPEWRITER_CONFIG_FILE",
         rootProject.layout.projectDirectory
-            .file("runtime/loader/standalone/config/local.properties")
+            .file("runtime/config/local.properties")
             .asFile.absolutePath,
     )
 }

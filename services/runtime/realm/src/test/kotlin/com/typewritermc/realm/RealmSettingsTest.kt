@@ -22,6 +22,14 @@ val RealmSettingsTest by testSuite {
         configuration.diagnosticLevel shouldBe RealmDiagnosticLevel.WARN
     }
 
+    test("production profile supplies Realm settings") {
+        val settings = RealmSettings.fromFile(profile("production"))
+
+        settings.get("REALM_DB_ENDPOINT_TYPE") shouldBe "embedded"
+        settings.get("REALM_DB_ENGINE") shouldBe "surrealkv"
+        settings.get("REALM_DB_PATH") shouldBe "database/realm"
+    }
+
     test("process settings override the selected profile") {
         val settings =
             RealmSettings(
@@ -50,4 +58,4 @@ val RealmSettingsTest by testSuite {
     }
 }
 
-private fun profile(name: String): Path = Path.of("config", "$name.properties")
+private fun profile(name: String): Path = Path.of("..", "config", "$name.properties")

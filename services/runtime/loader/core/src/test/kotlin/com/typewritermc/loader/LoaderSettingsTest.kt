@@ -24,6 +24,14 @@ val LoaderSettingsTest by testSuite {
             )
     }
 
+    test("production profile supplies registration and NATS settings") {
+        val configuration = LoaderSettings.fromFile(profile("production")).registrarConfiguration()
+
+        configuration.identityIssueUri shouldBe URI("https://api.typewritermc.com/service/identity/issue")
+        configuration.oauthTokenUri shouldBe URI("https://auth.typewritermc.com/application/o/token/")
+        configuration.natsServerUri shouldBe URI("nats://nats.seamlezz.com:4222")
+    }
+
     test("process settings override the loader profile") {
         val settings =
             LoaderSettings(
@@ -53,4 +61,4 @@ val LoaderSettingsTest by testSuite {
     }
 }
 
-private fun profile(name: String): Path = Path.of("..", "standalone", "config", "$name.properties")
+private fun profile(name: String): Path = Path.of("..", "..", "config", "$name.properties")
