@@ -367,6 +367,18 @@ sealed interface BlockingStatus {
     }
 }
 
+/**
+ * Sends [message] back to this player the way it was taken off the wire.
+ *
+ * A component read out of a packet is built by PacketEvents, and the values it hangs on an item
+ * hover are PacketEvents' own. Bukkit hands those to Paper to convert into its own, which fails on
+ * the netty thread once the packet is already on its way out, so the write is lost with nothing but
+ * a console error. Writing it with the same library that read it keeps that conversion out of the
+ * way.
+ */
+private fun Player.resend(message: Component) =
+    WrapperPlayServerSystemChatMessage(false, message) sendPacketTo this
+
 internal interface Message : KoinComponent {
     val message: Component
     val darkenMessage: Component
@@ -416,7 +428,7 @@ internal interface Message : KoinComponent {
 
         override fun send(player: Player) {
             resendTokenRegistry.issue(player.uniqueId, message)
-            player.sendMessage(message)
+            player.resend(message)
         }
 
         override fun withEstimatedSize(size: Int): Message = copy(estimatedNBTSize = size)
@@ -447,7 +459,7 @@ internal interface Message : KoinComponent {
                 packet!!.sendPacketTo(player)
                 packet = null // Clear the packet to prevent resending
             } else {
-                player.sendMessage(message)
+                player.resend(message)
             }
         }
 
