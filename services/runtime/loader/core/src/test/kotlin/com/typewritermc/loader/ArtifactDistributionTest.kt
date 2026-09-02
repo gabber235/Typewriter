@@ -44,14 +44,17 @@ import com.typewritermc.loader.rollout.ParticipantStateChanged
 import com.typewritermc.loader.rollout.ParticipantStatus
 import com.typewritermc.loader.rollout.ProbeParticipantStatus
 import com.typewritermc.loader.rollout.ProbeRealmHosts
+import com.typewritermc.loader.rollout.ProjectionReference
 import com.typewritermc.loader.rollout.RealmHostPresence
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RetainedProjection
+import com.typewritermc.loader.rollout.RolloutAttempt
 import com.typewritermc.loader.rollout.RolloutCommand
 import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
 import com.typewritermc.loader.rollout.toArtifactHostAssignment
+import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import de.infix.testBalloon.framework.core.testSuite
@@ -489,15 +492,55 @@ val ArtifactDistributionTest by testSuite {
         val assignment =
             WatchHostExecutionResponse
                 .createDesired(topologyRevision = 1, realm = realm, engine = engine)
-                .toArtifactHostAssignment(panel)
+                .toArtifactHostAssignment(panel, "service-id")
 
         assignment?.realmId shouldBe RealmId("realm")
         assignment?.roles shouldBe RuntimePlacement.entries.toSet()
         assignment?.primaryEngine?.id shouldBe ArtifactId("typewritermc:paper")
         assignment?.intent?.panelEngine shouldBe panel
+        assignment?.topologyRevision shouldBe 1
+        assignment?.serviceId shouldBe "service-id"
         WatchHostExecutionResponse
             .createDesired(topologyRevision = 2, realm = null, engine = null)
             .toArtifactHostAssignment(panel) shouldBe null
+    }
+
+    test("participant health maps to backend execution state") {
+        val hostId = HostId("host")
+        val generation = DeploymentGeneration(1)
+        val reference =
+            ProjectionReference(
+                realmId = RealmId("realm"),
+                generation = generation,
+                hostId = hostId,
+                blob = ArtifactDigest.sha256("projection".encodeToByteArray()),
+                runtimeVersions = mapOf(RuntimePlacement.PRIMARY_ENGINE to ArtifactVersion("1.2.3")),
+            )
+        val status =
+            ParticipantStatus.Active(
+                attempt = RolloutAttempt(1, generation),
+                hostId = hostId,
+                current = ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
+                retained = RetainedProjection.None,
+            )
+        val now = Instant.parse("2026-09-02T00:00:00Z")
+
+        status.toChildRuntimeState(now, RuntimePlacement.PRIMARY_ENGINE) shouldBe
+            ChildRuntimeState(
+                status = ChildRuntimeStatus.ACTIVE,
+                activeArtifactVersion = "1.2.3",
+                message = null,
+                updatedAt = now,
+            )
+        status
+            .copy(current = status.current.copy(health = RuntimeHealthSnapshot.Unhealthy(listOf("probe failed"))))
+            .toChildRuntimeState(now, RuntimePlacement.PRIMARY_ENGINE) shouldBe
+            ChildRuntimeState(
+                status = ChildRuntimeStatus.FAILED,
+                activeArtifactVersion = "1.2.3",
+                message = "probe failed",
+                updatedAt = now,
+            )
     }
 
     test("inbox reconciliation preserves accepted content across unstable and malformed replacements") {

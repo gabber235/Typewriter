@@ -39,6 +39,7 @@ data class ProjectionReference(
     val generation: DeploymentGeneration,
     val hostId: HostId,
     val blob: ArtifactDigest,
+    val runtimeVersions: Map<RuntimePlacement, ArtifactVersion> = emptyMap(),
 )
 
 @Serializable

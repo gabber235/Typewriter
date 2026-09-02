@@ -42,7 +42,13 @@ class BlobProjectionRepository(
             }
             blobs.complete(transfer).requireSuccess()
         }
-        return ProjectionReference(RealmId(projection.realmId), projection.generation, projection.hostId, digest)
+        return ProjectionReference(
+            RealmId(projection.realmId),
+            projection.generation,
+            projection.hostId,
+            digest,
+            projection.runtimes.associate { it.placement to it.artifact.coordinate.version },
+        )
     }
 
     override suspend fun fetch(reference: ProjectionReference): HostDeploymentProjection {

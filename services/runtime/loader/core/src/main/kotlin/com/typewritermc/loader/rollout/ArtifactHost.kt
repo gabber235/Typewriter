@@ -55,6 +55,8 @@ data class ArtifactHostAssignment(
     val roles: Set<RuntimePlacement>,
     val primaryEngine: PrimaryEngineTarget? = null,
     val intent: RealmLoaderIntent? = null,
+    val topologyRevision: Long? = null,
+    val serviceId: String? = null,
 ) {
     init {
         if (RuntimePlacement.REALM in roles) {
@@ -219,6 +221,12 @@ internal class AssignmentRuntime(
     private val scope: CoroutineScope,
 ) {
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
+    private val executionReporter =
+        if (assignment.topologyRevision != null && assignment.serviceId != null) {
+            BackendHostExecutionReporter(assignment.topologyRevision, assignment.serviceId, assignment.roles, mutableMessaging)
+        } else {
+            null
+        }
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
     private val projections = BlobProjectionRepository(sharedArtifacts)
     private val participant =
@@ -233,7 +241,10 @@ internal class AssignmentRuntime(
             },
             projections,
             VerifiedArtifactCache(sharedArtifacts, localBlobs),
-            ReconnectingParticipantStatePublisher(mutableMessaging),
+            ReportingParticipantStatePublisher(
+                ReconnectingParticipantStatePublisher(mutableMessaging),
+                executionReporter,
+            ),
             scope,
             telemetry = telemetry,
         )
@@ -258,6 +269,7 @@ internal class AssignmentRuntime(
         val previous = router
         router = replacement
         mutableMessaging.value = session
+        if (session != null) executionReporter?.reportCurrent()
         coordinator?.cancelAndJoin()
         coordinator =
             session?.takeIf { rolloutState != null }?.let { current ->
@@ -425,6 +437,16 @@ private class ReconnectingParticipantStatePublisher(
     override suspend fun publish(event: ParticipantStateChanged) {
         val session = sessions.value ?: return
         CommunicatorParticipantStatePublisher(session.organizationId, session.communicator).publish(event)
+    }
+}
+
+private class ReportingParticipantStatePublisher(
+    private val delegate: ParticipantStatePublisher,
+    private val reporter: BackendHostExecutionReporter?,
+) : ParticipantStatePublisher {
+    override suspend fun publish(event: ParticipantStateChanged) {
+        delegate.publish(event)
+        reporter?.report(event.status)
     }
 }
 
