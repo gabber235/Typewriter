@@ -41,6 +41,7 @@ import org.bukkit.event.entity.EntityDamageByBlockEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.player.PlayerKickEvent
 import org.geysermc.geyser.api.connection.GeyserConnection
 import java.util.*
 
@@ -108,9 +109,9 @@ class LockInteractionBound(
 
     private suspend fun setup() {
         require(playerState == null)
-        playerState = player.state(LOCATION, FLYING, ALLOW_FLIGHT)
-        player.allowFlight = true
-        player.isFlying = true
+        // Flight is not captured. The bound only tells the client it can fly, so there is none to put back.
+        playerState = player.state(LOCATION)
+        player.sendFakeFlight()
         // For bedrock players we don't need to fake the inventory as we already hide the hotbar and item.
         if (!player.isFloodgate) {
             player.fakeClearInventory()
@@ -127,6 +128,7 @@ class LockInteractionBound(
         }
 
         interceptor = player.interceptPackets {
+            keepFakeFlight()
             Play.Client.PLAYER_INPUT { event ->
                 val packet = WrapperPlayClientPlayerInput(event)
                 if (packet.isForward || packet.isBackward || packet.isLeft || packet.isRight) {
@@ -196,6 +198,7 @@ class LockInteractionBound(
             // Revealed only after the player is restored, so nobody sees them reappear at the
             // position the bound moved them to.
             player.restore(playerState)
+            player.sendRealAbilities()
             playerHides.release(this@LockInteractionBound)
             playerState = null
         }
@@ -215,6 +218,16 @@ class LockInteractionBound(
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDamaged(event: EntityDamageByBlockEvent) = onPlayerDamaged(event as EntityDamageEvent)
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onPlayerKicked(event: PlayerKickEvent) {
+        if (event.player.uniqueId != player.uniqueId) return
+        if (player.boundState == InteractionBoundState.IGNORING) return
+        // Faked flight leaves the server believing the player cannot fly, which is what the floating
+        // check disconnects them for.
+        if (event.cause != PlayerKickEvent.Cause.FLYING_PLAYER) return
+        event.isCancelled = true
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerDeath(event: PlayerDeathEvent) {

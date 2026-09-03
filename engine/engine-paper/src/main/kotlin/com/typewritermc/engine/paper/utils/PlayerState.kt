@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.protocol.item.type.ItemTypes
 import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.resources.ResourceLocation
 import com.github.retrooper.packetevents.util.Dummy
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerAbilities
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems
@@ -212,4 +213,58 @@ fun InterceptionBundle.keepFakeInventory() {
         packet.item = if (packet.slot in 0..8) fakeAir
         else com.github.retrooper.packetevents.protocol.item.ItemStack.EMPTY
     }
+}
+
+/**
+ * Tells this client it can fly, without the server handing out flight.
+ *
+ * Holding a player still in the air with [Player.setAllowFlight] puts real flight on them, which
+ * every other plugin can read back. Plugins that hand out flight themselves take that for flight of
+ * their own and can leave the player owed flight long after Typewriter is done with them. Only the
+ * client has to believe it, so only the client is told.
+ *
+ * Hold it with [keepFakeFlight] and end it with [sendRealAbilities].
+ */
+fun Player.sendFakeFlight() = sendAbilities(flying = true, flightAllowed = true)
+
+/**
+ * Puts this client back on the abilities the player actually has, ending [sendFakeFlight].
+ *
+ * Call it once the [keepFakeFlight] interception is cancelled and the player is standing where they
+ * are meant to end up. The interception rewrites this packet back into the faked flight while it is
+ * still up, and a player who is put back on real abilities in mid air drops out of it.
+ */
+fun Player.sendRealAbilities() = sendAbilities(flying = isFlying, flightAllowed = allowFlight)
+
+private fun Player.sendAbilities(flying: Boolean, flightAllowed: Boolean) {
+    WrapperPlayServerPlayerAbilities(
+        isInvulnerable || gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR,
+        flying,
+        flightAllowed,
+        gameMode == GameMode.CREATIVE,
+        flySpeed.asPacketSpeed(),
+        walkSpeed.asPacketSpeed(),
+    ) sendPacketTo this
+}
+
+/** Bukkit reports a player's speeds at twice what the abilities packet carries. */
+private fun Float.asPacketSpeed() = this / 2
+
+/**
+ * Keeps a client held up by [sendFakeFlight] in the air.
+ *
+ * Anything writing the player's flight, speed or game mode makes the server send the abilities they
+ * really have, which would drop them out of the air halfway through. The client announces its own
+ * flight toggles as well, and the server answers those with the real abilities again.
+ *
+ * Add it to the bundle the caller intercepts with once [sendFakeFlight] has gone out, and keep that
+ * bundle for as long as the player is held. Cancelling it is what lets [sendRealAbilities] through.
+ */
+fun InterceptionBundle.keepFakeFlight() {
+    PacketType.Play.Server.PLAYER_ABILITIES { event ->
+        val packet = WrapperPlayServerPlayerAbilities(event)
+        packet.isFlying = true
+        packet.isFlightAllowed = true
+    }
+    !PacketType.Play.Client.PLAYER_ABILITIES
 }
