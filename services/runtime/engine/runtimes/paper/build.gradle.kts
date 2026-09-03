@@ -8,7 +8,7 @@ val loaderPlugin =
     configurations.create("loaderPlugin") {
         isTransitive = false
     }
-val paperRunDirectory = rootProject.layout.projectDirectory.dir("../build/development/paper")
+val paperRunDirectory = rootProject.layout.projectDirectory.dir("./build/development/paper")
 val paperDevelopmentInbox = paperRunDirectory.dir("plugins/TypewriterLoader/artifacts/inbox/development")
 val assembleDevelopmentArtifacts = rootProject.tasks.named("assembleDevelopmentArtifacts")
 val stagePaperDevelopmentArtifacts =
