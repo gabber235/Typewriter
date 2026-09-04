@@ -10,9 +10,9 @@ import "support/join_requests_test_support.dart";
 
 void main() {
   group("Organization join request command errors", () {
-    late MockNatsClient mockNats;
+    late FakeNatsClient mockNats;
 
-    setUp(() => mockNats = MockNatsClient());
+    setUp(() => mockNats = FakeNatsClient());
     tearDown(() => mockNats.dispose());
 
     Matcher apiException(int code, String message) => isA<ApiException>()

@@ -6,6 +6,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _listenSubject = "service.from.realm1.organization.org1.realm.page.watch";
+const _requestSubject = "service.to.realm1.organization.org1.realm.page.watch";
+const _invalidationRequestSubject =
+    "service.to.realm1.organization.org1.realm.library.invalidate.watch.v2";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
 final _pageId = recordId("page:page1");
@@ -33,6 +36,19 @@ Future<void> _pumpUntil(
 
 class _PageWatchHarness {
   _PageWatchHarness() {
+    nats
+      ..registerHandler(
+        _requestSubject,
+        (_) => skir.WatchPageResponse.serializer.toBytes(
+          skir.WatchPageResponse.wrapInitial(_page().toSkir()),
+        ),
+      )
+      ..registerHandler(
+        _invalidationRequestSubject,
+        (_) => skir.WatchLibraryInvalidationsResponse.serializer.toBytes(
+          skir.WatchLibraryInvalidationsResponse.createInitial(revision: 0),
+        ),
+      );
     container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(_organizationId),
@@ -47,7 +63,7 @@ class _PageWatchHarness {
     );
   }
 
-  final MockNatsClient nats = MockNatsClient();
+  final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
   late final ProviderSubscription<AsyncValue<Page>> subscription;
   AsyncValue<Page> state = const AsyncLoading();
@@ -57,20 +73,18 @@ class _PageWatchHarness {
     _ => null,
   };
 
-  Future<void> start() => _pumpUntil(
-    () =>
-        nats.publications.isNotEmpty &&
-        nats.subscriptionSubjects.contains(_listenSubject),
-    reason: "Page watch did not subscribe",
-  );
+  Future<void> start() => _pumpUntil(() {
+    if (state.hasError) fail("Page watch failed: ${state.error}");
+    return nats.requests.isNotEmpty &&
+        nats.subscriptionSubjects.contains(_listenSubject);
+  }, reason: "Page watch did not subscribe");
 
   Future<void> restart() async {
-    final publicationCount = nats.publications.length;
+    final requestCount = nats.requests.length;
     container.invalidate(pagesProvider(_pageId));
     await _pumpUntil(
       () =>
-          nats.publications.length > publicationCount &&
-          state is AsyncLoading<Page> &&
+          nats.requests.length > requestCount &&
           nats.subscriptionSubjects.contains(_listenSubject),
       reason: "Page watch did not restart",
     );

@@ -56,17 +56,17 @@ Future<void> _waitFor(bool Function() condition) async {
 
 void main() {
   test("topology watch reduces lists, updates, and removals", () async {
-    final nats = MockNatsClient();
-    nats.registerHandler(
-      _watchSubject,
-      (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
-        skir.WatchOrganizationTopologyResponse.createList(
-          hosts: [],
-          realms: [],
-          engines: [],
+    final nats = FakeNatsClient()
+      ..registerHandler(
+        _watchSubject,
+        (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+          skir.WatchOrganizationTopologyResponse.createList(
+            hosts: [],
+            realms: [],
+            engines: [],
+          ),
         ),
-      ),
-    );
+      );
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
@@ -92,7 +92,7 @@ void main() {
     expect(nats.requests.single.subject, _watchSubject);
     expect(
       skir.WatchOrganizationTopologyRequest.serializer.fromBytes(
-        nats.requests.single.data,
+        nats.requests.single.payload,
       ),
       isA<skir.WatchOrganizationTopologyRequest>(),
     );
@@ -150,7 +150,7 @@ void main() {
   test(
     "host configuration sends the generated transactional request",
     () async {
-      final nats = MockNatsClient();
+      final nats = FakeNatsClient();
       skir.ConfigureServiceHostRequest? decoded;
       nats.registerHandler(_configureSubject, (data) {
         decoded = skir.ConfigureServiceHostRequest.serializer.fromBytes(data);

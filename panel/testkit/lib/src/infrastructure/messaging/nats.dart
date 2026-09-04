@@ -1,224 +1,162 @@
 import "dart:async";
 import "dart:typed_data";
 
-import "package:dart_nats/dart_nats.dart";
-import "package:mocktail/mocktail.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
-class MockNatsPublication {
-  MockNatsPublication({
+final class FakeNatsRequest {
+  FakeNatsRequest({
     required this.subject,
-    required Uint8List data,
-    required this.replyTo,
-    required this.header,
-  }) : data = Uint8List.fromList(data);
-
-  final String? subject;
-  final Uint8List data;
-  final String? replyTo;
-  final Header? header;
-}
-
-class MockNatsRequest {
-  MockNatsRequest({
-    required this.subject,
-    required Uint8List data,
-    required this.header,
-  }) : data = Uint8List.fromList(data);
+    required Uint8List payload,
+    required Map<String, String> headers,
+    required this.timeout,
+  }) : payload = Uint8List.fromList(payload).asUnmodifiableView(),
+       headers = Map.unmodifiable(headers);
 
   final String subject;
-  final Uint8List data;
-  final Header? header;
+  final Uint8List payload;
+  final Map<String, String> headers;
+  final Duration timeout;
 }
 
-class MockNatsClient extends Mock implements Client {
-  final Map<String, Uint8List Function(Uint8List)> _handlers = {};
-  final Map<int, MockSubscription<dynamic>> _subscriptions = {};
-  Status _status = Status.connected;
-  final StreamController<Status> _statusController =
-      StreamController<Status>.broadcast();
+final class FakeNatsClient implements NatsClient {
+  final Map<String, FutureOr<Uint8List> Function(Uint8List)> _handlers = {};
+  final Map<int, FakeNatsSubscription> _subscriptions = {};
+  final StreamController<NatsConnectionState> _connectionStateController =
+      StreamController<NatsConnectionState>.broadcast(sync: true);
 
-  int _sidCounter = 0;
+  NatsConnectionState _connectionState = const NatsConnected();
+  int _subscriptionCounter = 0;
+  bool _closed = false;
 
-  final List<MockNatsPublication> publications = [];
-  final List<MockNatsRequest> requests = [];
+  final List<FakeNatsRequest> requests = [];
 
   Iterable<String> get subscriptionSubjects =>
       _subscriptions.values.map((subscription) => subscription.subject);
 
   @override
-  Status get status => _status;
+  NatsConnectionState get connectionState => _connectionState;
 
   @override
-  Stream<Status> get statusStream => _statusController.stream;
+  Stream<NatsConnectionState> get connectionStateChanges =>
+      _connectionStateController.stream;
 
-  @override
-  bool get connected => _status == Status.connected;
-
-  void setStatus(Status newStatus) {
-    _status = newStatus;
-    _statusController.add(newStatus);
+  void setConnectionState(NatsConnectionState connectionState) {
+    _connectionState = connectionState;
+    if (!_connectionStateController.isClosed) {
+      _connectionStateController.add(connectionState);
+    }
   }
 
   void registerHandler(
     String subject,
-    Uint8List Function(Uint8List requestData) handler,
+    FutureOr<Uint8List> Function(Uint8List requestData) handler,
   ) {
     _handlers[subject] = handler;
   }
 
-  void emitMessage(int sid, Uint8List data) {
-    if (_subscriptions.containsKey(sid)) {
-      final sub = _subscriptions[sid]!;
-      final message = Message(sub.subject, sid, data, this);
-      sub.addMessage(message);
-    }
-  }
-
-  void emitMessageOnSubject(String subject, Uint8List data) {
-    for (final sub in _subscriptions.values.where(
-      (subscription) => subscription.subject == subject,
-    )) {
-      final message = Message(sub.subject, sub.sid, data, this);
-      sub.addMessage(message);
-    }
-  }
-
   @override
-  Future<Message<T>> request<T>(
-    String subj,
-    Uint8List data, {
-    Duration timeout = const Duration(seconds: 2),
-    T Function(String)? jsonDecoder,
-    Header? header,
+  Future<NatsMessage> request(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+    Duration timeout = const Duration(seconds: 10),
   }) async {
-    requests.add(MockNatsRequest(subject: subj, data: data, header: header));
-    if (_status != Status.connected) {
-      throw NatsException("request error: client not connected");
-    }
-
-    if (!_handlers.containsKey(subj)) {
-      throw TimeoutException("No handler for subject: $subj", timeout);
-    }
-
-    final responseData = _handlers[subj]!(data);
-    return Message<T>(subj, 0, responseData, this, jsonDecoder: jsonDecoder);
-  }
-
-  @override
-  Future<bool> pub(
-    String? subject,
-    Uint8List data, {
-    String? replyTo,
-    bool? buffer,
-    Header? header,
-  }) async {
-    if (_status != Status.connected && !(buffer ?? true)) {
-      return false;
-    }
-    publications.add(
-      MockNatsPublication(
+    requests.add(
+      FakeNatsRequest(
         subject: subject,
-        data: data,
-        replyTo: replyTo,
-        header: header,
+        payload: payload,
+        headers: headers,
+        timeout: timeout,
       ),
     );
-    return true;
-  }
-
-  @override
-  Subscription<T> sub<T>(
-    String subject, {
-    String? queueGroup,
-    T Function(String)? jsonDecoder,
-  }) {
-    _sidCounter++;
-    final sub = MockSubscription<T>(_sidCounter, subject);
-    _subscriptions[_sidCounter] = sub;
-    return sub;
-  }
-
-  @override
-  bool unSub(Subscription<dynamic> s) {
-    if (_subscriptions.containsKey(s.sid)) {
-      _subscriptions[s.sid]!.closeStream();
-      _subscriptions.remove(s.sid);
-      return true;
+    if (_connectionState is! NatsConnected) {
+      throw const NatsClientException(
+        kind: NatsFailureKind.unavailable,
+        message: "NATS client is not connected",
+      );
     }
-    return false;
+    final handler = _handlers[subject];
+    if (handler == null) {
+      throw TimeoutException("No handler for subject: $subject", timeout);
+    }
+    return NatsMessage(await handler(Uint8List.fromList(payload)));
   }
 
-  bool _disposed = false;
+  @override
+  Future<FakeNatsSubscription> subscribe(String subject) async {
+    if (_connectionState is NatsClosed) {
+      throw const NatsClientException(
+        kind: NatsFailureKind.closed,
+        message: "NATS client is closed",
+      );
+    }
+    final subscription = FakeNatsSubscription(
+      id: ++_subscriptionCounter,
+      subject: subject,
+      onUnsubscribe: _removeSubscription,
+    );
+    _subscriptions[subscription.id] = subscription;
+    return subscription;
+  }
+
+  void emitMessage(int id, Uint8List payload) {
+    _subscriptions[id]?.add(payload);
+  }
+
+  void emitMessageOnSubject(String subject, Uint8List payload) {
+    for (final subscription in _subscriptions.values.toList()) {
+      if (subscription.subject == subject) subscription.add(payload);
+    }
+  }
+
+  void _removeSubscription(int id) {
+    _subscriptions.remove(id);
+  }
 
   @override
   Future<void> close() async {
-    if (_disposed) return;
-    _status = Status.closed;
-    if (!_statusController.isClosed) {
-      _statusController.add(Status.closed);
+    if (_closed) return;
+    _closed = true;
+    setConnectionState(const NatsClosed());
+    final subscriptions = _subscriptions.values.toList();
+    for (final subscription in subscriptions) {
+      await subscription.unsubscribe();
     }
-    for (final sub in _subscriptions.values) {
-      sub.closeStream();
-    }
-    _subscriptions.clear();
+    await _connectionStateController.close();
   }
 
-  void dispose() {
-    if (_disposed) return;
-    _disposed = true;
-    close();
-    _statusController.close();
-  }
+  Future<void> dispose() => close();
 }
 
-class MockSubscription<T> implements Subscription<T> {
-  @override
-  final int sid;
+final class FakeNatsSubscription implements NatsSubscription {
+  FakeNatsSubscription({
+    required this.id,
+    required this.subject,
+    required void Function(int id) onUnsubscribe,
+  }) : _onUnsubscribe = onUnsubscribe;
 
-  @override
+  final int id;
   final String subject;
-
-  final StreamController<Message<T>> _controller =
-      StreamController<Message<T>>.broadcast();
-
-  MockSubscription(this.sid, this.subject);
-
-  @override
-  Stream<Message<T>> get stream => _controller.stream;
+  final void Function(int id) _onUnsubscribe;
+  final StreamController<NatsMessage> _controller =
+      StreamController<NatsMessage>.broadcast();
+  bool _closed = false;
 
   @override
-  String? get queueGroup => null;
+  Stream<NatsMessage> get messages => _controller.stream;
 
   @override
-  void add(Message<dynamic> msg) {
-    _controller.add(msg as Message<T>);
-  }
+  Future<void> get done => _controller.done;
 
-  void addMessage(Message<dynamic> msg) {
-    _controller.add(msg as Message<T>);
+  void add(Uint8List payload) {
+    if (!_closed) _controller.add(NatsMessage(payload));
   }
 
   @override
-  Future<void> close() async {
-    if (!_controller.isClosed) {
-      await _controller.close();
-    }
+  Future<void> unsubscribe() async {
+    if (_closed) return;
+    _closed = true;
+    _onUnsubscribe(id);
+    await _controller.close();
   }
-
-  @override
-  Future<void> drain() async {
-    await close();
-  }
-
-  void closeStream() {
-    if (!_controller.isClosed) {
-      _controller.close();
-    }
-  }
-
-  @override
-  bool unSub() => true;
-
-  @override
-  T Function(String)? jsonDecoder;
 }

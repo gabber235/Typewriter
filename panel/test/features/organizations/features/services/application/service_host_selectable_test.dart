@@ -149,7 +149,7 @@ class _Harness {
   });
 
   static Future<_Harness> create() async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
     final service = Service(
       serviceId: recordId("service:paper"),
       revision: 1,
@@ -232,7 +232,7 @@ class _Harness {
     );
   }
 
-  final MockNatsClient nats;
+  final FakeNatsClient nats;
   final ProviderContainer container;
   final Service service;
   final skir.ServiceHost host;

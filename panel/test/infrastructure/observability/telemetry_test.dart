@@ -24,7 +24,7 @@ void main() {
       payloadSize: 3,
       operationName: "request",
       operation: (header) async {
-        expect(header, isNull);
+        expect(header, isEmpty);
         return Uint8List.fromList([1, 2, 3]);
       },
     );
@@ -54,10 +54,10 @@ void main() {
       operationName: "request",
       operation: (header) async {
         expect(
-          header?.get("traceparent"),
+          header["traceparent"],
           matches(RegExp(r"^00-[0-9a-f]{32}-[0-9a-f]{16}-01$")),
         );
-        expect(header?.get("tracestate"), isNull);
+        expect(header["tracestate"], isNull);
       },
     );
   });

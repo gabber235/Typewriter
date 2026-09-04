@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'nats.dart';
+part of 'nats_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -8,6 +8,53 @@ part of 'nats.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+
+@ProviderFor(natsClientFactory)
+final natsClientFactoryProvider = NatsClientFactoryProvider._();
+
+final class NatsClientFactoryProvider
+    extends
+        $FunctionalProvider<
+          NatsClientFactory,
+          NatsClientFactory,
+          NatsClientFactory
+        >
+    with $Provider<NatsClientFactory> {
+  NatsClientFactoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsClientFactoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$natsClientFactoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<NatsClientFactory> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NatsClientFactory create(Ref ref) {
+    return natsClientFactory(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NatsClientFactory value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NatsClientFactory>(value),
+    );
+  }
+}
+
+String _$natsClientFactoryHash() => r'1c0582e7a874e091f3f55ad289b386b471ca7651';
 
 @ProviderFor(panelHttpClient)
 final panelHttpClientProvider = PanelHttpClientProvider._();
@@ -50,12 +97,8 @@ final class PanelHttpClientProvider
 
 String _$panelHttpClientHash() => r'7135e3872b268ca83f0cf2cb03ecc737f66a43d1';
 
-/// Fetches the sentinel credentials from the API.
-
 @ProviderFor(sentinelCredentials)
 final sentinelCredentialsProvider = SentinelCredentialsProvider._();
-
-/// Fetches the sentinel credentials from the API.
 
 final class SentinelCredentialsProvider
     extends
@@ -67,7 +110,6 @@ final class SentinelCredentialsProvider
     with
         $FutureModifier<skir.GetSentinelCredentialsResponse_Success>,
         $FutureProvider<skir.GetSentinelCredentialsResponse_Success> {
-  /// Fetches the sentinel credentials from the API.
   SentinelCredentialsProvider._()
     : super(
         from: null,
@@ -99,7 +141,7 @@ String _$sentinelCredentialsHash() =>
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
 
-final class NatsProvider extends $NotifierProvider<Nats, Client> {
+final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   NatsProvider._()
     : super(
         from: null,
@@ -119,27 +161,27 @@ final class NatsProvider extends $NotifierProvider<Nats, Client> {
   Nats create() => Nats();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Client value) {
+  Override overrideWithValue(NatsClient value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Client>(value),
+      providerOverride: $SyncValueProvider<NatsClient>(value),
     );
   }
 }
 
-String _$natsHash() => r'a9bd99853a183cfa59a85f73fd3e8266e7c3814b';
+String _$natsHash() => r'4ba08fe612ce973633013ce67e9af3211661997e';
 
-abstract class _$Nats extends $Notifier<Client> {
-  Client build();
+abstract class _$Nats extends $Notifier<NatsClient> {
+  NatsClient build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<Client, Client>;
+    final ref = this.ref as $Ref<NatsClient, NatsClient>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Client, Client>,
-              Client,
+              AnyNotifier<NatsClient, NatsClient>,
+              NatsClient,
               Object?,
               Object?
             >;
@@ -147,50 +189,51 @@ abstract class _$Nats extends $Notifier<Client> {
   }
 }
 
-@ProviderFor(NatsStatus)
-final natsStatusProvider = NatsStatusProvider._();
+@ProviderFor(NatsLifecycle)
+final natsLifecycleProvider = NatsLifecycleProvider._();
 
-final class NatsStatusProvider extends $NotifierProvider<NatsStatus, Status> {
-  NatsStatusProvider._()
+final class NatsLifecycleProvider
+    extends $NotifierProvider<NatsLifecycle, NatsConnectionState> {
+  NatsLifecycleProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'natsStatusProvider',
+        name: r'natsLifecycleProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$natsStatusHash();
+  String debugGetCreateSourceHash() => _$natsLifecycleHash();
 
   @$internal
   @override
-  NatsStatus create() => NatsStatus();
+  NatsLifecycle create() => NatsLifecycle();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Status value) {
+  Override overrideWithValue(NatsConnectionState value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Status>(value),
+      providerOverride: $SyncValueProvider<NatsConnectionState>(value),
     );
   }
 }
 
-String _$natsStatusHash() => r'01597be429d7e0b9cd3acf4ddf29582d96174e0b';
+String _$natsLifecycleHash() => r'ebd1432b5da4db9d6ddf3c83acbd23bf33b8f31f';
 
-abstract class _$NatsStatus extends $Notifier<Status> {
-  Status build();
+abstract class _$NatsLifecycle extends $Notifier<NatsConnectionState> {
+  NatsConnectionState build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<Status, Status>;
+    final ref = this.ref as $Ref<NatsConnectionState, NatsConnectionState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Status, Status>,
-              Status,
+              AnyNotifier<NatsConnectionState, NatsConnectionState>,
+              NatsConnectionState,
               Object?,
               Object?
             >;

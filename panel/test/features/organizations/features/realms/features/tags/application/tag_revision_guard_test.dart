@@ -14,7 +14,10 @@ const _updateSubject =
     "service.to.realm1.organization.org1.realm.tag.update.v2";
 const _deleteSubject =
     "service.to.realm1.organization.org1.realm.tag.delete.v2";
+const _watchSubject = "service.to.realm1.organization.org1.realm.tag.watch";
 const _listenSubject = "service.from.realm1.organization.org1.realm.tag.watch";
+const _invalidationSubject =
+    "service.to.realm1.organization.org1.realm.library.invalidate.watch.v2";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
 
@@ -70,7 +73,8 @@ void main() {
     final previousErrorHandler = FlutterError.onError;
     FlutterError.onError = errors.add;
     addTearDown(() => FlutterError.onError = previousErrorHandler);
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
+    _registerWatchHandlers(nats);
     final container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(_organizationId),
@@ -88,9 +92,10 @@ void main() {
     _emit(nats, skir.WatchTagsResponse.wrapList([current.toSkir()]));
     await _waitFor(
       () =>
-          container.read(tagsProvider).value?.single.revision ==
+          container.read(tagsProvider).value?.singleOrNull?.revision ==
               current.revision &&
-          container.read(tagsProvider).value?.single.name == current.name,
+          container.read(tagsProvider).value?.singleOrNull?.name ==
+              current.name,
     );
 
     _emit(
@@ -116,7 +121,8 @@ void main() {
   });
 
   test("replayed Tag remove remains absent", () async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
+    _registerWatchHandlers(nats);
     final container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(_organizationId),
@@ -145,7 +151,7 @@ void main() {
   });
 
   test("delayed Tag mutation cannot replace a newer observation", () async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
     late _SeededTags notifier;
     final container = ProviderContainer.test(
       overrides: [
@@ -188,7 +194,7 @@ void main() {
       final previousErrorHandler = FlutterError.onError;
       FlutterError.onError = reports.add;
       addTearDown(() => FlutterError.onError = previousErrorHandler);
-      final nats = MockNatsClient();
+      final nats = FakeNatsClient();
       late _SeededTags notifier;
       final container = ProviderContainer.test(
         overrides: [
@@ -234,7 +240,7 @@ void main() {
       final previousErrorHandler = FlutterError.onError;
       FlutterError.onError = reports.add;
       addTearDown(() => FlutterError.onError = previousErrorHandler);
-      final nats = MockNatsClient();
+      final nats = FakeNatsClient();
       late _SeededTags notifier;
       final container = ProviderContainer.test(
         overrides: [
@@ -270,9 +276,25 @@ void main() {
   );
 }
 
-void _emit(MockNatsClient nats, skir.WatchTagsResponse response) {
+void _emit(FakeNatsClient nats, skir.WatchTagsResponse response) {
   nats.emitMessageOnSubject(
     _listenSubject,
     skir.WatchTagsResponse.serializer.toBytes(response),
   );
+}
+
+void _registerWatchHandlers(FakeNatsClient nats) {
+  nats
+    ..registerHandler(
+      _watchSubject,
+      (_) => skir.WatchTagsResponse.serializer.toBytes(
+        skir.WatchTagsResponse.wrapList([]),
+      ),
+    )
+    ..registerHandler(
+      _invalidationSubject,
+      (_) => skir.WatchLibraryInvalidationsResponse.serializer.toBytes(
+        skir.WatchLibraryInvalidationsResponse.createInitial(revision: 0),
+      ),
+    );
 }

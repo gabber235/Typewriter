@@ -33,7 +33,7 @@ final class ServicesProvider
   Services create() => Services();
 }
 
-String _$servicesHash() => r'fecf437195d43ce94024d8e9944124daf50459ae';
+String _$servicesHash() => r'47bcd9872c7e5ce2115f22408b897ddc7311c174';
 
 abstract class _$Services extends $StreamNotifier<List<Service>> {
   Stream<List<Service>> build();
@@ -153,7 +153,7 @@ final class OrganizationTopologyStreamProvider
 }
 
 String _$organizationTopologyStreamHash() =>
-    r'87197ebbb36f66ac841a9ed6b5ae03dab829d433';
+    r'77c4991c1eabadba5982768b4604fc8a97f6adf7';
 
 abstract class _$OrganizationTopologyStream
     extends $StreamNotifier<OrganizationTopology> {

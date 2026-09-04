@@ -7,10 +7,10 @@ import "support/members_test_support.dart";
 
 void main() {
   group("OrganizationMembers authentication", () {
-    late MockNatsClient mockNats;
+    late FakeNatsClient mockNats;
 
     setUp(() {
-      mockNats = MockNatsClient();
+      mockNats = FakeNatsClient();
     });
 
     tearDown(() {

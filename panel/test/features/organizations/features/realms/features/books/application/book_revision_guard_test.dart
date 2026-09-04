@@ -12,7 +12,10 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _updateSubject =
     "service.to.realm1.organization.org1.realm.book.update.v2";
+const _watchSubject = "service.to.realm1.organization.org1.realm.book.watch";
 const _listenSubject = "service.from.realm1.organization.org1.realm.book.watch";
+const _invalidationSubject =
+    "service.to.realm1.organization.org1.realm.library.invalidate.watch.v2";
 final _organizationId = recordId("organization:org1");
 final _realmId = recordId("service:realm1");
 
@@ -52,7 +55,8 @@ void main() {
     final previousErrorHandler = FlutterError.onError;
     FlutterError.onError = errors.add;
     addTearDown(() => FlutterError.onError = previousErrorHandler);
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
+    _registerWatchHandlers(nats);
     final container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(_organizationId),
@@ -70,9 +74,10 @@ void main() {
     _emit(nats, skir.WatchBooksResponse.wrapList([current.toSkir()]));
     await _waitFor(
       () =>
-          container.read(booksProvider).value?.single.revision ==
+          container.read(booksProvider).value?.singleOrNull?.revision ==
               current.revision &&
-          container.read(booksProvider).value?.single.title == current.title,
+          container.read(booksProvider).value?.singleOrNull?.title ==
+              current.title,
     );
 
     _emit(
@@ -98,7 +103,8 @@ void main() {
   });
 
   test("replayed Book remove remains absent", () async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
+    _registerWatchHandlers(nats);
     final container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(_organizationId),
@@ -128,7 +134,7 @@ void main() {
   });
 
   test("delayed Book mutation cannot replace a newer observation", () async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
     late _SeededBooks notifier;
     final container = ProviderContainer.test(
       overrides: [
@@ -165,7 +171,7 @@ void main() {
   });
 
   test("typed Book conflict installs canonical server state", () async {
-    final nats = MockNatsClient();
+    final nats = FakeNatsClient();
     final current = _book();
     final canonical = _book(title: "Remote", revision: 3);
     final container = ProviderContainer.test(
@@ -219,9 +225,25 @@ wire_v2.Book _wireBook(Book book) => wire_v2.Book(
   tags: book.tagIds,
 );
 
-void _emit(MockNatsClient nats, skir.WatchBooksResponse response) {
+void _emit(FakeNatsClient nats, skir.WatchBooksResponse response) {
   nats.emitMessageOnSubject(
     _listenSubject,
     skir.WatchBooksResponse.serializer.toBytes(response),
   );
+}
+
+void _registerWatchHandlers(FakeNatsClient nats) {
+  nats
+    ..registerHandler(
+      _watchSubject,
+      (_) => skir.WatchBooksResponse.serializer.toBytes(
+        skir.WatchBooksResponse.wrapList([]),
+      ),
+    )
+    ..registerHandler(
+      _invalidationSubject,
+      (_) => skir.WatchLibraryInvalidationsResponse.serializer.toBytes(
+        skir.WatchLibraryInvalidationsResponse.createInitial(revision: 0),
+      ),
+    );
 }

@@ -50,7 +50,7 @@ class _Harness {
     );
   }
 
-  final MockNatsClient nats = MockNatsClient();
+  final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
   late final ProviderSubscription<AsyncValue<List<Service>>> subscription;
   AsyncValue<List<Service>> value = const AsyncLoading();
@@ -131,7 +131,7 @@ void main() {
       expect(harness.nats.subscriptionSubjects, contains(_listenSubject));
       expect(
         skir.WatchOrganizationServicesRequest.serializer.fromBytes(
-          request.data,
+          request.payload,
         ),
         isA<skir.WatchOrganizationServicesRequest>(),
       );
@@ -261,7 +261,7 @@ void main() {
     (userId: "user1", organizationId: null),
   ]) {
     test("null watch guard yields empty without publication", () async {
-      final nats = MockNatsClient();
+      final nats = FakeNatsClient();
       final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => auth.userId),
@@ -278,7 +278,6 @@ void main() {
       addTearDown(subscription.close);
 
       expect(await container.read(servicesProvider.future), isEmpty);
-      expect(nats.publications, isEmpty);
       expect(nats.requests, isEmpty);
       expect(nats.subscriptionSubjects, isEmpty);
     });
