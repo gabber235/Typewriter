@@ -20,7 +20,7 @@ part "books.g.dart";
 class Books extends _$Books {
   @override
   Stream<List<Book>> build() async* {
-    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.book));
+    ref.invalidateOnLibraryChange(skir.LibraryResourceKind.book);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null || organizationId == null) {

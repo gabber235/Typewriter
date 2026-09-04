@@ -59,7 +59,7 @@ final class LibraryInvalidationsProvider
 }
 
 String _$libraryInvalidationsHash() =>
-    r'02dbf6843520ed2de9ca85d34bef8a74fc6e228a';
+    r'595062bbf74dc6fb27d29828b41876cc03cc2d43';
 
 final class LibraryInvalidationsFamily extends $Family
     with $FunctionalFamilyOverride<Stream<int>, skir.LibraryResourceKind> {

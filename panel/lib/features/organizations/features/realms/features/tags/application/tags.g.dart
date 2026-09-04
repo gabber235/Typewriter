@@ -32,7 +32,7 @@ final class TagsProvider extends $StreamNotifierProvider<Tags, List<Tag>> {
   Tags create() => Tags();
 }
 
-String _$tagsHash() => r'b559dc1a46a9a14d6c9628857402b874aa68a1ce';
+String _$tagsHash() => r'affcfb3f336002e65d196b51012924940ea2deb2';
 
 abstract class _$Tags extends $StreamNotifier<List<Tag>> {
   Stream<List<Tag>> build();

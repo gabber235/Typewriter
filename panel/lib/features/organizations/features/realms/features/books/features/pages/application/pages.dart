@@ -61,7 +61,7 @@ abstract class Page with _$Page {
 class BookPages extends _$BookPages {
   @override
   Future<List<Page>> build(skir.RecordId bookId, String search) async {
-    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.page));
+    ref.invalidateOnLibraryChange(skir.LibraryResourceKind.page);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");
@@ -99,7 +99,7 @@ class BookPages extends _$BookPages {
 class Pages extends _$Pages {
   @override
   Stream<Page> build(skir.RecordId pageId) async* {
-    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.page));
+    ref.invalidateOnLibraryChange(skir.LibraryResourceKind.page);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null) throw ApiException.badRequest("No realm selected");

@@ -32,7 +32,7 @@ final class BooksProvider extends $StreamNotifierProvider<Books, List<Book>> {
   Books create() => Books();
 }
 
-String _$booksHash() => r'06034085ab48751596407171d0323360e93b2f92';
+String _$booksHash() => r'44519b554b9fb025a94914a12baffe2122cad55e';
 
 abstract class _$Books extends $StreamNotifier<List<Book>> {
   Stream<List<Book>> build();

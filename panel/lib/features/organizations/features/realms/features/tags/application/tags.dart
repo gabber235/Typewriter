@@ -21,7 +21,7 @@ part "tag_inheritance_presentation.dart";
 class Tags extends _$Tags {
   @override
   Stream<List<Tag>> build() async* {
-    ref.watch(libraryInvalidationsProvider(skir.LibraryResourceKind.tag));
+    ref.invalidateOnLibraryChange(skir.LibraryResourceKind.tag);
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (realmId == null || organizationId == null) {
