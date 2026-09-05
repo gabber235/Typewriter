@@ -79,6 +79,26 @@ private val routerEvent =
     )
 
 val CommunicatorRouterTest by testSuite {
+    test("concrete route subscriptions avoid wildcard permissions") {
+        runTest {
+            val fixture =
+                routerFixture(
+                    communicatorRoutes {
+                        unaryAt(routerUnary, RouterTarget("alpha")) { "ok" }
+                    },
+                    this,
+                )
+            fixture.use { fixture ->
+                fixture.router.start() shouldBe RouterResult.Success
+                fixture.fake.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Subscribe>()
+                    .single()
+                    .pattern.value shouldBe "router.alpha.get"
+                fixture.router.stop() shouldBe RouterResult.Success
+            }
+        }
+    }
+
     test("DSL validates parallelism and duplicate patterns before subscribing") {
         runTest {
             shouldThrow<IllegalArgumentException> { communicatorRoutes { unary(routerUnary, parallelism = 0) { "x" } } }

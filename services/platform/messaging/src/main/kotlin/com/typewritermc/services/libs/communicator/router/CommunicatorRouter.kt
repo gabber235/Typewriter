@@ -174,12 +174,33 @@ class CommunicatorRoutesBuilder internal constructor() {
         router.unary(contract, handler, message)
     }
 
+    /** Registers a unary route subscribed at one concrete address. */
+    fun <A : Any, Q : Any, R : Any> unaryAt(
+        contract: UnaryContract<A, Q, R>,
+        address: A,
+        parallelism: Int? = null,
+        consumerGroup: ConsumerGroup? = null,
+        handler: UnaryHandler<A, Q, R>,
+    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message ->
+        router.unary(contract, handler, message)
+    }
+
     /** Registers a fanout request route without a consumer group. */
     fun <A : Any, Q : Any, R : Any> scatter(
         contract: ScatterContract<A, Q, R>,
         parallelism: Int? = null,
         handler: ScatterHandler<A, Q, R>,
     ) = add(parallelism, contract.requestAddress.subscriptionPattern, null) { router, message ->
+        router.scatter(contract, handler, message)
+    }
+
+    /** Registers a scatter route subscribed at one concrete address. */
+    fun <A : Any, Q : Any, R : Any> scatterAt(
+        contract: ScatterContract<A, Q, R>,
+        address: A,
+        parallelism: Int? = null,
+        handler: ScatterHandler<A, Q, R>,
+    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, null) { router, message ->
         router.scatter(contract, handler, message)
     }
 
@@ -193,6 +214,17 @@ class CommunicatorRoutesBuilder internal constructor() {
         router.event(contract, handler, message)
     }
 
+    /** Registers an event route subscribed at one concrete address. */
+    fun <A : Any, E : Any> eventAt(
+        contract: EventContract<A, E>,
+        address: A,
+        parallelism: Int? = null,
+        consumerGroup: ConsumerGroup? = null,
+        handler: EventHandler<A, E>,
+    ) = add(parallelism, contract.address.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message ->
+        router.event(contract, handler, message)
+    }
+
     /** Registers a watch route. */
     fun <A : Any, Q : Any, I : Any, U : Any> watch(
         contract: WatchContract<A, Q, I, U>,
@@ -200,6 +232,17 @@ class CommunicatorRoutesBuilder internal constructor() {
         consumerGroup: ConsumerGroup? = null,
         handler: WatchHandler<A, Q, I, U>,
     ) = add(parallelism, contract.requestAddress.subscriptionPattern, consumerGroup) { router, message ->
+        router.watch(contract, handler, message)
+    }
+
+    /** Registers a watch route subscribed at one concrete request address. */
+    fun <A : Any, Q : Any, I : Any, U : Any> watchAt(
+        contract: WatchContract<A, Q, I, U>,
+        address: A,
+        parallelism: Int? = null,
+        consumerGroup: ConsumerGroup? = null,
+        handler: WatchHandler<A, Q, I, U>,
+    ) = add(parallelism, contract.requestAddress.subscribedAt(address).subscriptionPattern, consumerGroup) { router, message ->
         router.watch(contract, handler, message)
     }
 
