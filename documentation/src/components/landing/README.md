@@ -110,6 +110,33 @@ landing pages are built, plus the conversion literature they lean on. Read on
 26. **Refactoring UI** (refactoringui.com) — dual CTA ("two free chapters" /
     "buy"), objections answered in an FAQ, price stated on the page.
 
+### Mobile pass (read 2026-09-05)
+
+27. **NN/g, Carousels on Mobile Devices** and **Smashing, Usability Guidelines
+    for Better Carousels UX** — a half-visible next item is the strongest swipe
+    cue, dots are weak, keep slides under half the screen height, give the
+    scroller keyboard access. Drove the peeking tile row in "The panel" and the
+    decision to use a segmented strip, not a carousel, for the four outcomes.
+28. **NN/g, Accordions on Mobile / Defer Secondary Content for Mobile** —
+    show the short version first with a way to see more; never collapse the
+    one thing everyone needs. Drove the excerpt-plus-`<details>` code in "For
+    developers" and the always-visible help links in "Before you start".
+29. **W3C, Understanding SC 1.4.10 Reflow** — code is exempt from reflow, so a
+    `<pre>` may scroll sideways inside its frame. Reason the phone excerpt does
+    not wrap.
+30. **NN/g, Visual Hierarchy; F-Shaped Pattern; Scrolling and Attention** —
+    at most three type sizes, front-loaded headings, 74% of viewing time in the
+    first two screens. Drove the spec line of large values and the shortened
+    questions.
+31. **Smashing, The Thumb Zone; WCAG 2.5.8 Target Size; Baymard, Line Length**
+    — 44px targets via padding rather than bigger visuals, interactive items in
+    the reachable band, 50–75 characters per line. Applied to every footer
+    link, tab, summary and the answer widths.
+32. **Live audits at 375px of supabase.com, docs.stripe.com, resend.com,
+    vercel.com, raycast.com, obsidian.md** — code on phones is `pre` +
+    horizontal scroll at 13–14px; compatibility is terse platform names, not
+    footnotes; product shots go edge to edge rather than shrinking.
+
 ### What was extracted
 
 - **Section order.** Hero (headline, subhead, two CTAs, product shot) → what
@@ -140,6 +167,11 @@ landing pages are built, plus the conversion literature they lean on. Read on
   only proof is checkable: extension and entry counts from the source, the
   licence name, the GitHub link, the Discord link, and sponsor avatars that
   already appear in the project README.
+- **Mobile.** Every section is checked at 320/375/414 with no horizontal
+  overflow, nothing under 12px and 44px targets. "How it works" keeps its
+  pictures inline below `lg` instead of the sticky stage; "Player memory" is
+  hidden below `lg`; the hotspots legend replaces popovers on stages under
+  420px.
 - **Objections.** FAQ answers: is it free, do I need to code, which servers,
   is 1.0 ready (it is in development), do I host the panel.
 
@@ -148,13 +180,14 @@ landing pages are built, plus the conversion literature they lean on. Read on
 | # | Section | Why it exists | Component |
 |---|---------|---------------|-----------|
 | 1 | Hero | Value proposition, primary/secondary actions and the product in the first viewport | `hero/` |
-| 2 | What you build | Four things people make, one sentence and one mockup each; nothing tries to imitate the panel or the game | `outcomes/` |
+| 2 | What you build | Four things people make, one sentence and one mockup each; nothing tries to imitate the panel or the game. Desktop: tab list + autoplaying stage; phones: stage, a four-segment strip, one swapping sentence; autoplay pauses off-screen | `outcomes/` |
 | 3 | How it works | Removes the "what do I actually do" uncertainty in three steps; scroll-driven: the current step lights up, a progress line fills, and one sticky stage swaps to that step's picture | `howitworks/` |
-| 4 | The panel | One annotated page-editor screenshot (four pins), then three uniform tiles: timeline, search, dark/light compare | `editor/` + `:::hotspots` + `:::compare` |
-| 5 | Player memory | Why stories react to players: a screenplay of one NPC across three beats (NPC left with an orange name, player right) with a margin ledger of what was stored (purple = changed, the panel's fact colour), then the six kinds of fact as a flat spec list; no cards, icons or code | `memory/` |
-| 6 | For developers | Real `@Entry` code first (wider, left), with Expressive Code marker labels naming what each part becomes; extension entry counts as dot-leader rows, integrations as one sentence, develop-docs link | `developers/` |
-| 7 | Before you start | Requirements as dot-leader rows on the left (server, Java, PacketEvents, client, price, licence), the remaining objections as flattened `:::details` rows on the right; one section instead of two | `start/` + `:::details` in MDX |
-| 8 | Get started | Flat closing band under a rule: one large line, the two actions, sponsors beside them with a "Sponsor the project" link; no card, no glow | `cta/` |
+| 4 | The panel | One annotated page-editor screenshot (four pins; below 420px the hotspots legend shows instead of popovers and the image bleeds edge to edge), then three uniform tiles: timeline, search, dark/light compare. Below `sm` the tiles are a scroll-snap row with the next tile peeking | `editor/` + `:::hotspots` + `:::compare` |
+| 5 | Player memory | Why stories react to players: a screenplay of one NPC across three beats (NPC left with an orange name, player right) with a margin ledger of what was stored (purple = changed, the panel's fact colour), then the six kinds of fact as a flat spec list; no cards, icons or code. Desktop only (`desktopOnly` on the section): too long for a phone | `memory/` |
+| 6 | For developers | Real `@Entry` code first (wider, left), with Expressive Code marker labels naming what each part becomes; extension entry counts as dot-leader rows, integrations as one sentence, develop-docs link. Phones flip the order: prose, a seven-line excerpt that scrolls sideways, the whole class behind a `<details>`, then the list; the code is authored once and rendered twice | `developers/` |
+| 7 | Before you start | A spec line of six large mono values (Paper, Java, PacketEvents, players install nothing, hosted panel, free) answers "will it run"; four `:::details` questions below with hairlines between items only; help links always visible. Opening an answer never changes the desktop height | `start/` + `:::details` in MDX |
+| 8 | Get started | Flat closing band under a rule: one large line, the two actions (full width on phones), sponsors beside them with a "Sponsor the project" link; no card, no glow | `cta/` |
+| 9 | Site footer | Shared with every page (`src/components/footer/SiteFooter.astro`, rendered by `pageframe/PageFrame.astro` under sidebar, content and TOC so it spans the full viewport like Vercel's docs): brand with the Mojang disclaimer as its tagline, three link groups (Documentation, Community, Project) mirroring the 0.9 docs footer. A container query switches two columns to one row on phones | `footer/` |
 
 Shared pieces: `shell/` (page wrapper), `section/` (eyebrow + h2 + lead) and
 `shared/` (button and text styles).

@@ -13,10 +13,13 @@ function initSteps(root: HTMLElement): void {
 	if (!elements) return;
 	root.dataset.stepsReady = "true";
 
-	moveMediaToStage(elements);
+	if (elements.staged) moveMediaToStage(elements);
 	activate(elements, 0);
 	observe(elements);
 }
+
+// Matches the `lg` breakpoint where the layout gains the second column.
+const STAGE_QUERY = "(min-width: 64rem)";
 
 function resolve(root: HTMLElement): StepsElements | null {
 	const stage = root.querySelector<HTMLElement>("[data-steps-stage]");
@@ -28,7 +31,8 @@ function resolve(root: HTMLElement): StepsElements | null {
 	);
 	if (!stage || !line || !fill || steps.length === 0) return null;
 	if (steps.length !== panels.length) return null;
-	return { root, steps, panels, stage, line, fill };
+	const staged = window.matchMedia(STAGE_QUERY).matches;
+	return { root, staged, steps, panels, stage, line, fill };
 }
 
 function moveMediaToStage({ stage, panels }: StepsElements): void {
@@ -84,10 +88,14 @@ function activate(elements: StepsElements, index: number): void {
 		step.toggleAttribute("data-active", i === index);
 		step.toggleAttribute("data-passed", i < index);
 	});
-	elements.panels.forEach((panel, i) => {
+	if (elements.staged) showPanel(elements, index);
+	positionFill(elements);
+}
+
+function showPanel({ panels }: StepsElements, index: number): void {
+	panels.forEach((panel, i) => {
 		panel.className = `${s.panel} ${i === index ? s.panelActive : s.panelHidden}`;
 	});
-	positionFill(elements);
 }
 
 function markerCenter(step: HTMLElement | undefined, listTop: number): number {

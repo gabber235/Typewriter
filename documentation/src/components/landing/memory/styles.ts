@@ -15,7 +15,7 @@ export const memoryStyles = {
 		"m-0 font-[family-name:var(--font-sans)] text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--on-surface-variant)]",
 	headNote: `m-0 mt-1 font-[family-name:var(--font-reading)] text-sm text-[var(--on-surface-variant)] [&>b]:font-semibold [&>b]:${purple}`,
 	beats: "m-0 list-none p-0 lg:col-span-2",
-	beat: "grid grid-cols-1 gap-x-12 gap-y-6 border-t border-[var(--sl-color-hairline)] pt-5 pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-12",
+	beat: "grid grid-cols-1 gap-x-12 gap-y-5 border-t border-[var(--sl-color-hairline)] pt-5 pb-8 lg:gap-y-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-12",
 	when: "m-0 font-[family-name:var(--font-sans)] text-base font-bold uppercase tracking-[0.12em] text-[var(--sl-color-white)] lg:col-span-2",
 	where: "font-normal text-[var(--on-surface-variant)]",
 	// NPC turns sit left, the player's answers right, like a chat log.
@@ -26,7 +26,7 @@ export const memoryStyles = {
 	cueSpeaker:
 		"text-[var(--material-orange-300)] [[data-theme=light]_&]:text-[var(--material-deep-orange-900)]",
 	cuePlayer: "text-[var(--on-surface-variant)]",
-	line: "m-0 font-[family-name:var(--font-mono)] text-lg leading-relaxed text-[var(--sl-color-white)]",
+	line: "m-0 font-[family-name:var(--font-mono)] text-base leading-relaxed text-[var(--sl-color-white)] sm:text-lg",
 	reply:
 		"m-0 font-[family-name:var(--font-mono)] text-base leading-relaxed text-[var(--sl-color-text)]",
 	ledger:

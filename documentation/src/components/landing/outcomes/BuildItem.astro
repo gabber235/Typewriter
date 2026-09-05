@@ -9,7 +9,7 @@ const { title, mockup } = Astro.props;
 const id = crypto.randomUUID();
 ---
 
-<li class={s.item} role="presentation">
+<li class={s.item} role="presentation" data-build-item>
   <button
     type="button"
     role="tab"
@@ -20,11 +20,11 @@ const id = crypto.randomUUID();
     tabindex="-1"
     data-build-tab>
     <span class={s.tabTitle}>{title}</span>
-    <span class={s.tabText}><slot /></span>
-    <span class={s.progress} data-build-progress hidden aria-hidden="true">
-      <span class={s.progressFill}></span>
-    </span>
   </button>
+  <div class={s.tabText} data-build-text><slot /></div>
+  <span class={s.progress} data-build-progress hidden aria-hidden="true">
+    <span class={s.progressFill}></span>
+  </span>
   <div
     id={`build-panel-${id}`}
     class={s.media}

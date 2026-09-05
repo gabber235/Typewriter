@@ -22,8 +22,14 @@ function initBuild(root: HTMLElement): void {
 	root.dataset.buildReady = "true";
 
 	moveMediaToStage(elements);
-	const state: BuildState = { active: -1, timer: 0, paused: false };
+	const state: BuildState = {
+		active: -1,
+		timer: 0,
+		paused: false,
+		offscreen: true,
+	};
 	bind(elements, state);
+	watch(elements, state);
 	show(elements, state, 0);
 	sync(elements, state);
 }
@@ -36,8 +42,11 @@ function resolve(root: HTMLElement): BuildElements | null {
 	const panels = Array.from(
 		root.querySelectorAll<HTMLElement>("[data-build-panel]"),
 	);
+	const progress = Array.from(
+		root.querySelectorAll<HTMLElement>("[data-build-progress]"),
+	);
 	if (!stage || tabs.length === 0 || tabs.length !== panels.length) return null;
-	return { root, tabs, panels, stage };
+	return { root, tabs, panels, progress, stage };
 }
 
 function moveMediaToStage({ stage, panels }: BuildElements): void {
@@ -109,8 +118,8 @@ function show(elements: BuildElements, state: BuildState, index: number): void {
 		const selected = i === index;
 		tab.setAttribute("aria-selected", String(selected));
 		tab.tabIndex = selected ? 0 : -1;
-		const progress = tab.querySelector<HTMLElement>("[data-build-progress]");
-		if (progress) progress.hidden = !selected;
+		const bar = elements.progress[i];
+		if (bar) bar.hidden = !selected;
 	});
 
 	elements.panels.forEach((panel, i) => {
@@ -119,8 +128,30 @@ function show(elements: BuildElements, state: BuildState, index: number): void {
 }
 
 function shouldRun(state: BuildState): boolean {
-	if (state.paused || document.hidden) return false;
+	if (state.paused || state.offscreen || document.hidden) return false;
 	return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// Phones scroll the section out of sight long before the timer matters, and the
+// sections below the hero are `content-visibility:auto`, so only rotate on screen.
+function watch(elements: BuildElements, state: BuildState): void {
+	if (!("IntersectionObserver" in window)) {
+		state.offscreen = false;
+		return;
+	}
+	const observer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				state.offscreen = !entry.isIntersecting;
+			}
+			sync(elements, state);
+		},
+		{ threshold: 0 },
+	);
+	observer.observe(elements.root);
+	document.addEventListener("astro:before-swap", () => observer.disconnect(), {
+		once: true,
+	});
 }
 
 function intervalMs(root: HTMLElement): number {
@@ -162,9 +193,9 @@ function restart(elements: BuildElements, state: BuildState): void {
 }
 
 // Re-inserting the fill restarts its CSS animation from zero.
-function restartProgress({ tabs }: BuildElements): void {
-	for (const tab of tabs) {
-		const fill = tab.querySelector<HTMLElement>("[data-build-progress] > span");
+function restartProgress({ progress }: BuildElements): void {
+	for (const bar of progress) {
+		const fill = bar.firstElementChild;
 		if (!fill) continue;
 		fill.replaceWith(fill.cloneNode(true));
 	}

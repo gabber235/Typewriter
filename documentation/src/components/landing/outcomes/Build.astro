@@ -26,6 +26,21 @@ const { label, interval = 5 } = Astro.props;
     [data-build] [data-build-panel] {
       display: block;
     }
+    [data-build] [data-build-list] {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    [data-build] [data-build-item] {
+      display: block;
+    }
+    [data-build] [data-build-text] {
+      visibility: visible;
+      opacity: 1;
+    }
+    [data-build] [data-build-progress] {
+      display: none;
+    }
   </style>
 </noscript>
 

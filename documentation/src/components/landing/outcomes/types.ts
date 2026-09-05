@@ -15,6 +15,7 @@ export interface BuildElements {
 	root: HTMLElement;
 	tabs: HTMLButtonElement[];
 	panels: HTMLElement[];
+	progress: HTMLElement[];
 	stage: HTMLElement;
 }
 
@@ -22,4 +23,5 @@ export interface BuildState {
 	active: number;
 	timer: number;
 	paused: boolean;
+	offscreen: boolean;
 }

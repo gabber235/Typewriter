@@ -8,6 +8,9 @@ interface Props {
 const { label } = Astro.props;
 ---
 
-<ul class:list={["m-0 list-none p-0", s.tiles]} aria-label={label}>
+<ul
+  class:list={["m-0 list-none p-0", s.tiles]}
+  aria-label={label}
+  tabindex="0">
   <slot />
 </ul>

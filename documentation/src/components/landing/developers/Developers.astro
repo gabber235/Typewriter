@@ -13,15 +13,28 @@ const others = extensions.filter((extension) => !extension.entries);
 const otherNames = new Intl.ListFormat("en", { type: "conjunction" }).format(
 	others.map((extension) => extension.name),
 );
+
+// The same frame has to sit in the page on a desktop and inside the phone
+// disclosure, and a slot renders once, so render it to HTML and place it twice.
+const codeHtml = await Astro.slots.render("default");
 ---
 
 <div class={s.grid}>
-  <div class={s.code}>
-    <slot />
+  <div class={s.column}>
+    <div class={s.excerpt}><slot name="excerpt" /></div>
+    <details class={s.disclosure}>
+      <summary class={s.summary}>
+        <span class={s.caret} aria-hidden="true"></span>
+        <span class={s.summaryClosed}>Show the whole class</span>
+        <span class={s.summaryOpen}>Hide the whole class</span>
+      </summary>
+      <div class={s.body}><Fragment set:html={codeHtml} /></div>
+    </details>
+    <div class={s.code}><Fragment set:html={codeHtml} /></div>
   </div>
   <div class={s.copy}>
-    <div class={l.body}><slot name="text" /></div>
-    <div>
+    <div class:list={[l.body, s.text]}><slot name="text" /></div>
+    <div class={s.list}>
       <p class={s.listLabel} id="extensions-label">Ships with</p>
       <dl class={s.rows} aria-labelledby="extensions-label">
         {
@@ -36,7 +49,7 @@ const otherNames = new Intl.ListFormat("en", { type: "conjunction" }).format(
       </dl>
       {others.length > 0 && <p class={s.more}>Plus integrations for {otherNames}.</p>}
     </div>
-    <a class={l.textLink} href={docsCta.href}>
+    <a class:list={[l.textLink, s.link]} href={docsCta.href}>
       {docsCta.label}
       <Icon name="arrow" class="size-4" />
     </a>

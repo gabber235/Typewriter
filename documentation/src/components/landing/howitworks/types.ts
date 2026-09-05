@@ -13,6 +13,8 @@ export interface StepsProps {
 
 export interface StepsElements {
 	root: HTMLElement;
+	/** Pictures live in the shared stage (lg and up) rather than inline. */
+	staged: boolean;
 	steps: HTMLElement[];
 	panels: HTMLElement[];
 	stage: HTMLElement;

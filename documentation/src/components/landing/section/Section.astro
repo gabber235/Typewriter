@@ -13,13 +13,17 @@ const {
 	align = "start",
 	width = "full",
 	band = false,
+	desktopOnly = false,
 } = Astro.props;
 
 const headingId = `${id}-title`;
 const hasLeadSlot = Astro.slots.has("lead");
 ---
 
-<section id={id} aria-labelledby={headingId} class:list={[s.section, band && s.band]}>
+<section
+  id={id}
+  aria-labelledby={headingId}
+  class:list={[s.section, band && s.band, desktopOnly && s.desktopOnly]}>
   <div class={l.container}>
     <div
       class:list={[

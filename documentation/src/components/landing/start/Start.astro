@@ -1,13 +1,13 @@
 ---
+import { getSiteVariables } from "@components/variables/site-variables";
 import Requirements from "./Requirements.astro";
 import { startStyles as s } from "./styles";
+
+const vars = getSiteVariables();
 ---
 
-<div class={s.grid}>
-  <div>
-    <p class={s.label} id="start-requirements">Requirements</p>
-    <Requirements />
-  </div>
+<Requirements />
+<div class={s.below}>
   <div>
     <p class={s.label} id="start-questions">Questions</p>
     <div
@@ -17,5 +17,12 @@ import { startStyles as s } from "./styles";
       data-questions>
       <slot />
     </div>
+  </div>
+  <div class={s.help}>
+    <p class={s.label}>Anything else</p>
+    <p class={s.helpText}>
+      Questions get answered on the <a href={vars.discord}>Discord</a>; bugs
+      and feature requests go to <a href={vars.issues}>GitHub issues</a>.
+    </p>
   </div>
 </div>

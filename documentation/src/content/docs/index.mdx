@@ -11,7 +11,7 @@ next: false
 
 import { CtaBand } from '@components/landing/cta';
 import { Developers } from '@components/landing/developers';
-import { Tile, Tiles } from '@components/landing/editor';
+import { Screenshot, Tile, Tiles } from '@components/landing/editor';
 import { ChatIllustration, Step, Steps } from '@components/landing/howitworks';
 import { IntroAnimation } from '@components/intro';
 import { Beat, Recall, Script } from '@components/landing/memory';
@@ -132,6 +132,8 @@ Players talk to your NPCs in chat, pick options, complete objectives and watch s
   lead="Sign in, open your realm, and every book, page and entry is a click away. Nothing to install. Click a pin to see what each part of the editor does."
 >
 
+<Screenshot>
+
 ::::hotspots[The page editor for a sequence page]
 ![Wireframe mockup of the page editor: page tree on the left, a graph of connected elements in the middle, the inspector on the right.](../../assets/mockups/panel-pages.png)
 
@@ -140,6 +142,8 @@ Players talk to your NPCs in chat, pick options, complete objectives and watch s
 3. [82%, 41%] **Inspector** — the fields of the selected element, rendered from the extension's definition.
 4. [22%, 96%] **Shortcuts** — the panel is keyboard first. :kbd[Shift+M] moves, :kbd[Shift+R] resizes, :kbd[Ctrl+H] to :kbd[Ctrl+L] switch panes, :kbd[Esc] returns to Normal mode.
 ::::
+
+</Screenshot>
 
 <Tiles label="More about the editor">
 <Tile
@@ -186,6 +190,7 @@ The panel follows your system theme, and so do these docs. Drag the handle to co
   eyebrow="Player memory"
   title="Stories that remember each player"
   band
+  desktopOnly
 >
 <Fragment slot="lead">
 
@@ -291,6 +296,21 @@ An :term[extension] is a JAR of Kotlin classes marked `@Entry`. The panel reads 
 
 </Fragment>
 
+<Fragment slot="excerpt">
+
+```kotlin title="ExampleActionEntry.kt"
+@Entry("example_action", "An example action entry.", Colors.RED, "material-symbols:touch-app-rounded")
+class ExampleActionEntry(
+    override val name: String = "",
+) : ActionEntry {
+    override fun ActionTrigger.execute() {
+        // Do something with the player
+    }
+}
+```
+
+</Fragment>
+
 ```kotlin title="ExampleActionEntry.kt" wrap {"Shown in the panel":2-3} {"Fields in the inspector":5-10} {"Runs on the server":12-15}
 package com.example.myextension
 
@@ -318,7 +338,7 @@ class ExampleActionEntry(
   id="before-you-start"
   eyebrow="Before you start"
   title="Runs on a plain Paper server"
-  lead="Drop the plugin into plugins/ next to PacketEvents and start the server. Players need nothing, the panel needs nothing installed."
+  lead="Drop the plugin into plugins/ next to PacketEvents and start the server. Folia is not supported."
   band
 >
 
@@ -332,16 +352,12 @@ No. Everything on this page is built in the panel by placing entries and connect
 Not yet. Typewriter 1.0 is in active development: the new panel, the realm service and these docs are being built in the open. Expect gaps, and ask on the [Discord](:var[discord]) for the current state before moving a live server to it.
 :::
 
-:::details[Do I have to host the panel myself?]{name=faq}
+:::details[Do I host the panel?]{name=faq}
 No. The 1.0 panel is a hosted web app. You sign in, create an organization and a realm, and connect servers to it with a registration token. The plugin is the only thing you run.
 :::
 
 :::details[Is it open source?]{name=faq}
 It is source-available. The code is on [GitHub](:var[github]) under the Typewriter Software License, which allows use and contribution but not redistribution or modification outside the project.
-:::
-
-:::details[Where do I get help?]{name=faq}
-Questions get answered on the [Discord](:var[discord]); bugs and feature requests go to [GitHub issues](:var[issues]).
 :::
 
 </Start>

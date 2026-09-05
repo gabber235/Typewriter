@@ -1,6 +1,7 @@
 export const sectionStyles = {
 	section: "py-16 sm:py-20 lg:py-24",
 	band: "bg-[var(--surface)]",
+	desktopOnly: "max-lg:hidden",
 	header: "mb-10 flex flex-col sm:mb-12",
 	headerStart: "items-start text-left",
 	headerCenter: "items-center text-center [&>*]:mx-auto",

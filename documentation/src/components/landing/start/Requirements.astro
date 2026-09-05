@@ -7,49 +7,29 @@ import type { Requirement } from "./types";
 const vars = getSiteVariables();
 
 const requirements: Requirement[] = [
-	{
-		label: "Server",
-		value: `Paper ${vars.paper}`,
-		note: "Folia is not supported.",
-	},
+	{ label: "Server", value: `Paper ${vars.paper}` },
 	{ label: "Runtime", value: `Java ${vars.java}` },
-	{
-		label: "Dependency",
-		value: "PacketEvents",
-		note: "Installed as a separate plugin.",
-		href: vars.packetevents,
-	},
-	{
-		label: "Client",
-		value: "Nothing",
-		note: "Vanilla players see everything.",
-	},
-	{ label: "Price", value: "Free to use" },
-	{
-		label: "Source",
-		value: "On GitHub",
-		note: "Typewriter Software License: use it and contribute, but no redistribution or forks outside the project.",
-		href: `${vars.github}/blob/develop/LICENSE`,
-	},
+	{ label: "Dependency", value: "PacketEvents", href: vars.packetevents },
+	{ label: "Players install", value: "Nothing" },
+	{ label: "Panel", value: "Hosted" },
+	{ label: "Price", value: "Free" },
 ];
 ---
 
-<dl class={s.rows}>
+<dl class={s.spec}>
   {
     requirements.map((requirement) => (
-      <div class={s.item}>
-        <dt class={s.key}>{requirement.label}</dt>
-        <span class={s.leader} aria-hidden="true" />
-        <dd class={s.value}>
+      <div class={s.specItem}>
+        <dt class={s.specLabel}>{requirement.label}</dt>
+        <dd class={s.specValue}>
           {requirement.href ? (
-            <a class={s.link} href={requirement.href}>
+            <a class={s.specLink} href={requirement.href}>
               {requirement.value}
             </a>
           ) : (
             requirement.value
           )}
         </dd>
-        {requirement.note && <dd class={s.note}>{requirement.note}</dd>}
       </div>
     ))
   }
