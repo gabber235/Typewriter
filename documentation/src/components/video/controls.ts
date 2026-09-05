@@ -53,6 +53,18 @@ export function initVideoPlayer(container: HTMLElement) {
 
 	let savedVolume = 1;
 	let indicatorTimeout: ReturnType<typeof setTimeout> | null = null;
+	let inView = false;
+	let userPaused = false;
+
+	const hasAudio = video.dataset.audio === "true";
+	// Pages reached through the client router are parsed with DOMParser, and
+	// Chromium does not apply a parsed `muted` attribute in that case; without
+	// the muted state the autoplay policy rejects play().
+	if (!hasAudio) video.muted = true;
+
+	function attemptPlay() {
+		video?.play().catch(() => {});
+	}
 
 	function showCenterIcon(icon: string, persist: boolean) {
 		if (!centerIcon) return;
@@ -72,17 +84,20 @@ export function initVideoPlayer(container: HTMLElement) {
 	function updatePlayIcon() {
 		if (!playBtnIcon || !video) return;
 		playBtnIcon.innerHTML = video.paused ? playIcon : pauseIcon;
+		playBtn?.setAttribute("aria-label", video.paused ? "Play" : "Pause");
 	}
 
 	function updateVolumeIcon() {
 		if (!volumeBtnIcon || !video) return;
-		if (video.muted || video.volume === 0) {
+		const muted = video.muted || video.volume === 0;
+		if (muted) {
 			volumeBtnIcon.innerHTML = volumeMutedIcon;
 		} else if (video.volume < 0.5) {
 			volumeBtnIcon.innerHTML = volumeLowIcon;
 		} else {
 			volumeBtnIcon.innerHTML = volumeHighIcon;
 		}
+		volumeBtn?.setAttribute("aria-label", muted ? "Unmute" : "Mute");
 	}
 
 	function updateProgress() {
@@ -90,6 +105,11 @@ export function initVideoPlayer(container: HTMLElement) {
 		const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
 		progressFill.style.width = `${pct}%`;
 		progressThumb.style.left = `${pct}%`;
+		progressTrack?.setAttribute("aria-valuenow", String(Math.round(pct)));
+		progressTrack?.setAttribute(
+			"aria-valuetext",
+			`${formatTime(video.currentTime)} of ${formatTime(video.duration || 0)}`,
+		);
 	}
 
 	function updateTimestamp() {
@@ -103,16 +123,48 @@ export function initVideoPlayer(container: HTMLElement) {
 		if (!fullscreenIcon_) return;
 		const isFs = document.fullscreenElement === container;
 		fullscreenIcon_.innerHTML = isFs ? exitFullscreenIcon : fullscreenIcon;
+		fullscreenBtn?.setAttribute(
+			"aria-label",
+			isFs ? "Exit fullscreen" : "Enter fullscreen",
+		);
 	}
 
-	// Play / Pause
-	playBtn.addEventListener("click", () => {
-		video.paused ? video.play() : video.pause();
+	function seekBy(seconds: number) {
+		if (!video?.duration) return;
+		video.currentTime = Math.max(
+			0,
+			Math.min(video.duration, video.currentTime + seconds),
+		);
+		updateProgress();
+		updateTimestamp();
+	}
+
+	// Arrow keys seek in 5s steps (10s with Shift), Home/End jump to the ends.
+	progressTrack.addEventListener("keydown", (e: KeyboardEvent) => {
+		const step = e.shiftKey ? 10 : 5;
+		const actions: Record<string, () => void> = {
+			ArrowLeft: () => seekBy(-step),
+			ArrowDown: () => seekBy(-step),
+			ArrowRight: () => seekBy(step),
+			ArrowUp: () => seekBy(step),
+			Home: () => seekBy(-Infinity),
+			End: () => seekBy(Infinity),
+		};
+		const action = actions[e.key];
+		if (!action) return;
+		e.preventDefault();
+		action();
 	});
 
-	video.addEventListener("click", () => {
-		video.paused ? video.play() : video.pause();
-	});
+	function togglePlayback() {
+		if (!video) return;
+		userPaused = !video.paused;
+		if (video.paused) attemptPlay();
+		else video.pause();
+	}
+
+	playBtn.addEventListener("click", togglePlayback);
+	video.addEventListener("click", togglePlayback);
 
 	video.addEventListener("play", () => {
 		updatePlayIcon();
@@ -182,15 +234,16 @@ export function initVideoPlayer(container: HTMLElement) {
 
 			if (!ch.label) continue;
 
-			const label = document.createElement("span");
+			const label = document.createElement("button");
+			label.type = "button";
 			label.className =
-				"absolute -translate-x-1/2 whitespace-nowrap text-white/90 text-[10px] leading-tight cursor-pointer hover:text-white transition-colors duration-150 px-6 py-1 bg-black/40 hover:bg-black/20 rounded-sm";
+				"absolute -translate-x-1/2 min-h-6 whitespace-nowrap text-white/90 text-[10px] leading-tight cursor-pointer hover:text-white transition-colors duration-150 px-6 py-1 bg-black/40 hover:bg-black/20 rounded-sm";
 			label.style.left = `${midPct}%`;
 			label.textContent = ch.label;
 			label.title = ch.label;
 
 			const seekTime = ch.time;
-			label.addEventListener("mousedown", (e) => e.stopPropagation());
+			label.addEventListener("pointerdown", (e) => e.stopPropagation());
 			label.addEventListener("click", () => {
 				if (video) video.currentTime = seekTime;
 			});
@@ -246,23 +299,26 @@ export function initVideoPlayer(container: HTMLElement) {
 	let isSeeking = false;
 	let wasPlaying = false;
 
-	progressTrack.addEventListener("mousedown", (e) => {
+	// Pointer events so touch drags scrub too, not just mouse drags.
+	progressTrack.addEventListener("pointerdown", (e) => {
 		isSeeking = true;
 		wasPlaying = !video.paused;
 		if (wasPlaying) video.pause();
 		seekFromEvent(e);
 	});
 
-	document.addEventListener("mousemove", (e) => {
+	document.addEventListener("pointermove", (e) => {
 		if (!isSeeking) return;
 		seekFromEvent(e);
 	});
 
-	document.addEventListener("mouseup", () => {
+	const endSeek = () => {
 		if (!isSeeking) return;
 		isSeeking = false;
 		if (wasPlaying) video.play();
-	});
+	};
+	document.addEventListener("pointerup", endSeek);
+	document.addEventListener("pointercancel", endSeek);
 
 	// Volume
 	if (volumeBtn && volumeBtnIcon) {
@@ -283,20 +339,39 @@ export function initVideoPlayer(container: HTMLElement) {
 		if (!volumeFill || !video) return;
 		const vol = video.muted ? 0 : video.volume;
 		volumeFill.style.width = `${vol * 100}%`;
+		volumeTrack?.setAttribute("aria-valuenow", String(Math.round(vol * 100)));
+	}
+
+	function setVolume(pct: number) {
+		if (!video) return;
+		const vol = Math.max(0, Math.min(1, pct));
+		video.volume = vol;
+		video.muted = vol === 0;
+		savedVolume = vol || savedVolume;
+		updateVolumeIcon();
+		updateVolumeFill();
 	}
 
 	if (volumeTrack) {
 		volumeTrack.addEventListener("click", (e) => {
 			const rect = volumeTrack.getBoundingClientRect();
-			const pct = Math.max(
-				0,
-				Math.min(1, (e.clientX - rect.left) / rect.width),
-			);
-			video.volume = pct;
-			video.muted = pct === 0;
-			savedVolume = pct || savedVolume;
-			updateVolumeIcon();
-			updateVolumeFill();
+			setVolume((e.clientX - rect.left) / rect.width);
+		});
+
+		volumeTrack.addEventListener("keydown", (e: KeyboardEvent) => {
+			const current = video.muted ? 0 : video.volume;
+			const actions: Record<string, () => void> = {
+				ArrowLeft: () => setVolume(current - 0.1),
+				ArrowDown: () => setVolume(current - 0.1),
+				ArrowRight: () => setVolume(current + 0.1),
+				ArrowUp: () => setVolume(current + 0.1),
+				Home: () => setVolume(0),
+				End: () => setVolume(1),
+			};
+			const action = actions[e.key];
+			if (!action) return;
+			e.preventDefault();
+			action();
 		});
 	}
 
@@ -313,18 +388,28 @@ export function initVideoPlayer(container: HTMLElement) {
 		document.addEventListener("fullscreenchange", updateFullscreenIcon);
 	}
 
-	// Viewport autoplay for muted (non-audio) videos
-	const hasAudio = video.dataset.audio === "true";
-
 	if (!hasAudio) {
 		const observer = new IntersectionObserver(
 			([entry]) => {
-				if (!entry || !video) return;
-				entry.isIntersecting ? video.play() : video.pause();
+				if (!entry) return;
+				inView = entry.isIntersecting;
+				if (!inView) return video.pause();
+				if (!userPaused) attemptPlay();
 			},
 			{ threshold: 0.5 },
 		);
 		observer.observe(video);
+		document.addEventListener("visibilitychange", resumeWhenVisible);
+	}
+
+	// Browsers pause muted playback in hidden tabs and do not resume it.
+	function resumeWhenVisible() {
+		if (!video?.isConnected) {
+			document.removeEventListener("visibilitychange", resumeWhenVisible);
+			return;
+		}
+		if (document.hidden || !inView || userPaused) return;
+		attemptPlay();
 	}
 
 	// Init state

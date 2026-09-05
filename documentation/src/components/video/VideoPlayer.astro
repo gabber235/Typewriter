@@ -46,31 +46,51 @@ const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
     <div class={s.centerIcon} data-center-icon set:html={playIcon} />
   </div>
 
-  <!-- Progress bar: always visible at bottom, lifts on hover -->
-  <div class={s.progressTrack} data-progress-track data-chapters={chaptersJson}>
+  <!-- Progress bar: always visible at bottom, lifts on hover/focus. A slider
+       so keyboard users can seek (arrow keys) without a pointer. -->
+  <div
+    class={s.progressTrack}
+    data-progress-track
+    data-chapters={chaptersJson}
+    tabindex="0"
+    role="slider"
+    aria-label="Seek"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0">
     <div class={s.progressFill} data-progress-fill></div>
     <div class={s.progressThumb} data-progress-thumb></div>
-    <div class={s.chapterLabels} data-chapter-labels></div>
   </div>
+  <!-- Chapter buttons live beside the slider, not inside it: an interactive
+       slider must not contain other focusable controls. -->
+  <div class={s.chapterLabels} data-chapter-labels></div>
 
-  <!-- Overlay with controls: visible on hover -->
-  <div class={s.overlay}>
+  <!-- Overlay with controls: visible on hover, focus, and always on touch -->
+  <div class={s.overlay} data-video-overlay>
     <div class={s.controls}>
       <div class={s.controlsLeft}>
-        <button class={s.btn} data-play-btn aria-label="Play/Pause">
+        <button class={s.btn} type="button" data-play-btn aria-label="Play">
           <span class={s.btnIcon} data-play-icon set:html={playIcon} />
         </button>
 
         <div class:list={[s.volumeGroup, "group/vol"]}>
-          <button class={s.btn} data-volume-btn aria-label="Toggle mute">
+          <button class={s.btn} type="button" data-volume-btn aria-label="Mute">
             <span
               class={s.btnIcon}
               data-volume-icon
               set:html={volumeHighIcon}
             />
           </button>
-          <div class={s.volumeSlider}>
-            <div class={s.volumeTrack} data-volume-track>
+          <div class={s.volumeSlider} data-volume-slider>
+            <div
+              class={s.volumeTrack}
+              data-volume-track
+              tabindex="0"
+              role="slider"
+              aria-label="Volume"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="100">
               <div class={s.volumeFill} data-volume-fill style="width:100%">
               </div>
             </div>
@@ -81,7 +101,11 @@ const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
       </div>
 
       <div class={s.controlsRight}>
-        <button class={s.btn} data-fullscreen-btn aria-label="Fullscreen">
+        <button
+          class={s.btn}
+          type="button"
+          data-fullscreen-btn
+          aria-label="Enter fullscreen">
           <span
             class={s.btnIcon}
             data-fullscreen-icon
@@ -92,6 +116,28 @@ const chaptersJson = chapters.length > 0 ? JSON.stringify(chapters) : undefined;
     </div>
   </div>
 </div>
+
+<style is:global>
+  /* No hover on touch screens: keep the controls, scrubber and volume slider
+     permanently revealed instead of behind a hover-only affordance. */
+  @media (hover: none) {
+    [data-video-player] [data-video-overlay] {
+      translate: 0 0;
+      pointer-events: auto;
+    }
+    [data-video-player] [data-progress-track] {
+      translate: 0 -2.5rem;
+      height: 0.375rem;
+    }
+    [data-video-player] [data-progress-thumb],
+    [data-video-player] [data-chapter-labels] {
+      opacity: 1;
+    }
+    [data-video-player] [data-volume-slider] {
+      width: 4rem;
+    }
+  }
+</style>
 
 <script>
   import { initVideoPlayer } from "./controls";
