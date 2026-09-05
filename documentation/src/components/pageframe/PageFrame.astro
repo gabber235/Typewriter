@@ -1,5 +1,6 @@
 ---
 import { categoryForRoute } from "@lib/categories";
+import SiteFooter from "../footer/SiteFooter.astro";
 
 const { hasSidebar, id } = Astro.locals.starlightRoute;
 
@@ -16,42 +17,53 @@ const sidebarPersistName = `sidebar-${categoryForRoute(id).id}`;
     class="fixed top-0 left-0 right-0 z-50 h-14 px-4 p-2 bg-(--surface) overflow-hidden print:hidden">
     <slot name="header" />
   </header>
-  {
-    /* A plain wrapper: the Sidebar component renders the actual <nav>
-       landmark, and nesting a second identically-labelled <nav> around it
-       made screen readers announce "Main navigation" twice. */
-    hasSidebar && (
-      <div
-        data-astro-transition-persist={sidebarPersistName}
-        class="print:hidden">
-        {/* Backdrop overlay for mobile drawer */}
+  {/* The pane is the scroll container for everything under the header. On
+      wide screens the sidebar is a sticky column inside it, so it scrolls
+      away with the content and the site footer can run the full width. */}
+  <div
+    class="content-pane fixed top-14 right-0 bottom-0 left-0 z-40 bg-(--surface) overflow-y-auto print:static print:overflow-visible">
+    <div class="flex min-h-full flex-col">
+      <div class="flex flex-1">
+        {
+          /* A plain wrapper: the Sidebar component renders the actual <nav>
+             landmark, and nesting a second identically-labelled <nav> around it
+             made screen readers announce "Main navigation" twice. */
+          hasSidebar && (
+            <div
+              data-astro-transition-persist={sidebarPersistName}
+              class="print:hidden md:contents">
+              {/* Backdrop overlay for mobile drawer */}
+              <div
+                id="sidebar-backdrop"
+                class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-45 opacity-0 invisible transition-opacity duration-200 md:hidden"
+                aria-hidden="true"
+              />
+              {/* Closed offset is the drawer height plus the 3.5rem header, so
+                  its bottom edge parks exactly at the top of the viewport instead
+                  of peeking out above the header. */}
+              <div
+                id="starlight__sidebar"
+                class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3.5rem)] md:sticky md:top-0 md:left-auto md:right-auto md:h-[calc(100vh-3.5rem)] md:w-xs md:shrink-0 md:max-h-none md:translate-y-0 md:translate-x-0 md:rounded-none transition-transform duration-300 md:visible md:z-30">
+                <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 md:pb-4">
+                  <slot name="sidebar" />
+                </div>
+                <div class="flex justify-center py-2 md:hidden sticky bottom-0 bg-(--surface)">
+                  <div class="w-12 h-1 bg-gray-400 dark:bg-gray-600 rounded-full" />
+                </div>
+              </div>
+            </div>
+          )
+        }
         <div
-          id="sidebar-backdrop"
-          class="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-45 opacity-0 invisible transition-opacity duration-200 md:hidden"
-          aria-hidden="true"
-        />
-        {/* Closed offset is the drawer height plus the 3.5rem header, so its
-            bottom edge parks exactly at the top of the viewport instead of
-            peeking out above the header. */}
-        <div
-          id="starlight__sidebar"
-          class="fixed top-14 left-0 right-0 bottom-auto z-60 overflow-y-auto bg-(--surface) max-h-[calc(85vh-3rem)] rounded-b-2xl translate-y-[calc(-100%-3.5rem)] md:top-14 md:bottom-0 md:left-0 md:right-auto md:w-xs md:max-h-none md:h-auto md:translate-y-0 md:translate-x-0 md:rounded-none transition-transform duration-300 md:visible md:z-30">
-          <div class="flex flex-col h-full min-h-max gap-4 pt-1 px-1 pb-1 md:pb-4">
-            <slot name="sidebar" />
-          </div>
-          <div class="flex justify-center py-2 md:hidden sticky bottom-0 bg-(--surface)">
-            <div class="w-12 h-1 bg-gray-400 dark:bg-gray-600 rounded-full" />
-          </div>
+          class:list={[
+            "min-w-0 flex-1 bg-(--surface-container-lowest)",
+            hasSidebar && "md:rounded-tl-2xl",
+          ]}>
+          <slot />
         </div>
       </div>
-    )
-  }
-  <div
-    class:list={[
-      "content-pane fixed top-14 right-0 bottom-0 left-0 z-40 bg-(--surface-container-lowest) overflow-y-auto print:static print:overflow-visible",
-      hasSidebar && "md:left-80 md:rounded-tl-2xl print:left-0",
-    ]}>
-    <slot />
+      <SiteFooter rule={!hasSidebar} />
+    </div>
   </div>
 </div>
 

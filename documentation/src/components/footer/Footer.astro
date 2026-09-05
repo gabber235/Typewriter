@@ -1,5 +1,4 @@
 ---
-import { landingStyles as l } from "../landing/shared/styles";
 import Pagination from "../pagination/Pagination.astro";
 import { avatarUrl, type Editor, getEditors } from "./git-editors";
 import { pencilIcon } from "./icons";
@@ -26,27 +25,28 @@ const shownOthers = others.slice(0, MAX_AVATARS);
 const overflow = others.length - shownOthers.length;
 
 const formattedDate = lastUpdated
-	? new Intl.DateTimeFormat(lang, { dateStyle: "long" }).format(lastUpdated)
+	? new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(lastUpdated)
 	: undefined;
 
 const showByline = lastUpdated !== undefined && lastEditor !== undefined;
 const showMeta = !isSplash && (editUrl !== undefined || showByline);
+const { prev, next } = Astro.locals.starlightRoute.pagination;
+const hasPagination = Boolean(prev || next);
 
 // Transparent stand-in so the browser never contacts GitHub's CDN on page
 // load — the real avatar URL sits in data-avatar-src until the footer
 // scrolls near the viewport (see the script below).
 const AVATAR_PLACEHOLDER =
 	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'/%3E";
-
-const year = new Date().getFullYear();
 ---
 
-{/* The homepage is full-bleed, so the footer borrows the landing container. */}
-<footer class:list={[s.container, isSplash && l.container]}>
+{/* Page meta only: previous/next, edit link, byline. The site footer itself
+    is rendered by PageFrame under all columns. */}
+<footer class={s.container}>
 	<Pagination />
 	{
 		showMeta && (
-			<div class={s.meta}>
+			<div class:list={[s.meta, !hasPagination && s.metaRule]}>
 				{editUrl && (
 					<a href={editUrl} class={s.editLink}>
 						<span class={s.editIcon} aria-hidden="true" set:html={pencilIcon} />
@@ -56,31 +56,33 @@ const year = new Date().getFullYear();
 				{showByline && lastUpdated && lastEditor && (
 					<div class={s.byline}>
 						<p class={s.updated}>
-							Last updated{" "}
-							<time datetime={lastUpdated.toISOString()}>{formattedDate}</time>
-							{" by "}
-							{lastEditor.login ? (
-								<a
-									href={`https://github.com/${lastEditor.login}`}
-									class={s.author}>
-									<img
-										src={AVATAR_PLACEHOLDER}
-										data-avatar-src={avatarUrl(lastEditor.login)}
-										alt=""
-										width="24"
-										height="24"
-										class={s.authorAvatar}
-									/>
-									{lastEditor.name}
-								</a>
-							) : (
-								<span class={s.author}>
-									<span class={s.fallback}>
-										{lastEditor.name.charAt(0).toUpperCase()}
+							Updated{" "}
+							<time datetime={lastUpdated.toISOString()}>{formattedDate}</time>{" "}
+							<span class={s.byAuthor}>
+								by
+								{lastEditor.login ? (
+									<a
+										href={`https://github.com/${lastEditor.login}`}
+										class={s.author}>
+										<img
+											src={AVATAR_PLACEHOLDER}
+											data-avatar-src={avatarUrl(lastEditor.login)}
+											alt=""
+											width="24"
+											height="24"
+											class={s.authorAvatar}
+										/>
+										{lastEditor.name}
+									</a>
+								) : (
+									<span class={s.author}>
+										<span class={s.fallback}>
+											{lastEditor.name.charAt(0).toUpperCase()}
+										</span>
+										{lastEditor.name}
 									</span>
-									{lastEditor.name}
-								</span>
-							)}
+								)}
+							</span>
 						</p>
 						{others.length > 0 && (
 							<div class={s.others}>
@@ -122,10 +124,6 @@ const year = new Date().getFullYear();
 			</div>
 		)
 	}
-	<p class:list={[s.legal, !showMeta && s.legalRule]}>
-		© {year} Typewriter. Not an official Minecraft product. Not approved by or
-		associated with Mojang or Microsoft.
-	</p>
 </footer>
 
 <script>

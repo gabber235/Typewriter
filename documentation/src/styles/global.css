@@ -195,6 +195,18 @@
 }
 
 @layer utilities {
+	/* The table of contents scrolls inside the content pane like the sidebar
+	   does, so it ends with the article instead of floating over the
+	   full-width site footer. */
+	@media (min-width: 72em) {
+		.right-sidebar {
+			position: sticky;
+			top: 0;
+			height: calc(100vh - 3.5rem);
+			padding-top: 1rem;
+		}
+	}
+
 	.text-label-large {
 		font-family: var(--font-mono);
 		font-size: 14px;

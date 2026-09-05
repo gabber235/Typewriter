@@ -1,0 +1,53 @@
+---
+/// <reference path="../../../node_modules/@astrojs/starlight/virtual.d.ts" />
+/// <reference path="../../../node_modules/@astrojs/starlight/virtual-internal.d.ts" />
+import { logos } from "virtual:starlight/user-images";
+import { BASE_PATH } from "@lib/base-path";
+import { footerGroups } from "./links";
+import { footerStyles as s } from "./styles";
+
+interface Props {
+	/** Draw a hairline above the band; off when a sidebar column ends above it. */
+	rule?: boolean;
+}
+
+const { rule = true } = Astro.props;
+const { siteTitle } = Astro.locals.starlightRoute;
+---
+
+{/* Rendered by PageFrame below the sidebar and content, so it spans the
+    whole viewport like a site footer should; the inner container lines the
+    columns up with the landing page's. */}
+<footer class:list={[s.site, rule && s.siteRule]}>
+  <div class={s.siteInner}>
+  <div class={s.siteGrid}>
+    <div class={s.brand}>
+      <a href={BASE_PATH} class={s.brandLink}>
+        {logos.dark && <img class:list={[s.brandLogo, "light:hidden"]} src={logos.dark.src} alt="" width={logos.dark.width} height={logos.dark.height} loading="lazy" />}
+        {logos.light && <img class:list={[s.brandLogo, "dark:hidden"]} src={logos.light.src} alt="" width={logos.light.width} height={logos.light.height} loading="lazy" />}
+        <span translate="no">{siteTitle}</span>
+      </a>
+      <p class={s.tagline}>
+        Not an official Minecraft product. Not approved by or associated with
+        Mojang or Microsoft.
+      </p>
+    </div>
+    {
+      footerGroups.map((group) => (
+        <nav class={s.group} aria-label={group.title}>
+          <p class={s.groupTitle}>{group.title}</p>
+          <ul class={s.groupList}>
+            {group.links.map((link) => (
+              <li>
+                <a class={s.groupLink} href={link.href}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+  </div>
+  </div>
+</footer>

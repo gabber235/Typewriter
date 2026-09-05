@@ -1,18 +1,20 @@
+// One-line previous/next links that share a row height and type scale with the
+// edit link and byline under them, so the four read as one list of page actions.
 export const paginationStyles = {
 	container:
-		"not-content mt-12 grid grid-cols-2 gap-3 border-t border-[var(--sl-color-hairline-shade)] pt-8 sm:gap-4 print:hidden",
+		"not-content mt-12 grid grid-cols-2 gap-x-6 border-t border-[var(--sl-color-hairline)] pt-4 print:hidden",
 
-	link: "group flex min-w-0 flex-col gap-1 rounded-xl border border-[var(--sl-color-gray-5)] bg-[var(--surface-container)]/40 p-3 no-underline transition-[border-color,background-color,transform] duration-200 hover:border-[var(--color-primary)] sm:gap-2 sm:p-4",
-	linkPrev: "col-start-1 items-start text-start",
-	linkNext: "col-start-2 items-end text-end",
+	link: "group flex min-h-11 min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-sm no-underline",
+	linkPrev: "col-start-1 justify-start text-start",
+	linkNext: "col-start-2 justify-end text-end",
 
 	eyebrow:
-		"flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--on-surface-variant)]",
+		"flex items-center gap-1 font-[family-name:var(--font-sans)] text-[var(--on-surface-variant)]",
 
 	title:
-		"max-w-full break-words text-sm font-semibold leading-snug text-[var(--sl-color-white)] transition-colors duration-200 group-hover:text-[var(--color-primary)] sm:text-lg",
+		"max-w-full break-words font-[family-name:var(--font-sans)] font-semibold leading-snug text-[var(--sl-color-white)] transition-colors duration-200 group-hover:text-[var(--color-primary)]",
 
-	icon: "inline-flex transition-transform duration-200",
-	iconPrev: "group-hover:-translate-x-1",
-	iconNext: "group-hover:translate-x-1",
+	icon: "inline-flex transition-transform duration-200 motion-reduce:transition-none",
+	iconPrev: "group-hover:-translate-x-0.5",
+	iconNext: "group-hover:translate-x-0.5",
 } as const;
