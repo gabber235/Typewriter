@@ -1,0 +1,460 @@
+import { DataPath } from "editor/v1/path.skir";
+import {
+  ResolvedTypeRef,
+  TypedValue,
+} from "editor/v1/type_catalog.skir";
+import { Color } from "kernel/v1/color.skir";
+import { PageKindRef } from "kernel/v1/page_kind.skir";
+import { RecordId } from "kernel/v1/record_id.skir";
+
+// Internal authoring protocol shared by the panel and Realm.
+// Resource snapshots and applied batches are authoritative; change notifications
+// are best effort and may be missing or repeated.
+// Resource IDs use their matching table: book, tag, page, or element.
+// Element instance IDs use opaque string keys.
+
+struct GraphPlacement(812200001) {
+  x: int32 = 0;
+  y: int32 = 1;
+  width: int32 = 2;
+  height: int32 = 3;
+}
+
+struct TimelineEntryPlacement(812200002) {
+  track_index: int32 = 0;
+}
+
+struct TimelineSegmentPlacement(812200003) {
+  start_frame: int32 = 0;
+  end_frame: int32 = 1;
+}
+
+struct TimelineKeyframePlacement(812200004) {
+  frame: int32 = 0;
+}
+
+enum ElementPlacement(812200005) {
+  graph: GraphPlacement = 1;
+  timeline_entry: TimelineEntryPlacement = 2;
+  timeline_segment: TimelineSegmentPlacement = 3;
+  timeline_keyframe: TimelineKeyframePlacement = 4;
+}
+
+struct Book(812200006) {
+  id: RecordId = 0;
+  title: string = 1;
+  icon: string = 2;
+  color: Color = 3;
+  tags: [RecordId] = 4;
+}
+
+struct Tag(812200007) {
+  id: RecordId = 0;
+  name: string = 1;
+  color: Color = 2;
+  parents: [RecordId] = 3;
+  placement: GraphPlacement = 4;
+}
+
+struct Page(812200008) {
+  id: RecordId = 0;
+  book: RecordId = 1;
+  name: string = 2;
+  kind: PageKindRef = 3;
+  chapter: string = 4;
+  priority: int32 = 5;
+}
+
+struct PageElement(812200009) {
+  id: RecordId = 0;
+  page: RecordId = 1;
+  element_type: string = 2;
+  schema_revision: int32 = 3;
+  name: string = 4;
+  value: TypedValue = 5;
+  placement: ElementPlacement = 6;
+}
+
+struct PageReference(812200010) {
+  source: RecordId = 0;
+  slot: string = 1;
+  target: RecordId = 2;
+}
+
+struct ResourceSummary(812200011) {
+  id: RecordId = 0;
+  name: string? = 1;
+  element_type: string? = 2;
+  page: RecordId? = 3;
+  exists: bool = 4;
+}
+
+struct PageDiagnostic(812200012) {
+  code: string = 0;
+  message: string = 1;
+  element: RecordId? = 2;
+  slot: string? = 3;
+  target: RecordId? = 4;
+}
+
+enum PageCompileStatus(812200013) {
+  not_compiled = 1;
+  active: struct {
+    manifest_id: string = 0;
+  } = 2;
+  blocked: struct {
+    last_active_manifest_id: string? = 0;
+    diagnostic_count: int32 = 1;
+  } = 3;
+}
+
+struct PageDocument(812200014) {
+  page: Page = 0;
+  elements: [PageElement] = 1;
+  references: [PageReference] = 2;
+  cross_page_targets: [ResourceSummary] = 3;
+  cross_page_sources: [ResourceSummary] = 4;
+  diagnostics: [PageDiagnostic] = 5;
+  compile_status: PageCompileStatus = 6;
+}
+
+struct LibrarySnapshot(812200015) {
+  books: [Book] = 0;
+  tags: [Tag] = 1;
+}
+
+struct BookPagesSnapshot(812200016) {
+  book_id: RecordId = 0;
+  book: Book? = 1;
+  pages: [Page] = 2;
+}
+
+struct PageDocumentSnapshot(812200017) {
+  page_id: RecordId = 0;
+  document: PageDocument? = 1;
+}
+
+enum AuthoringSnapshotScope(812200018) {
+  library = 1;
+  book: struct {
+    book_id: RecordId = 0;
+  } = 2;
+  page: struct {
+    page_id: RecordId = 0;
+  } = 3;
+}
+
+enum AuthoringSnapshotSlice(812200019) {
+  library: LibrarySnapshot = 1;
+  book: BookPagesSnapshot = 2;
+  page: PageDocumentSnapshot = 3;
+}
+
+/// All requested slices describe one consistent point in the Realm sequence.
+/// A missing book or page is represented by a null resource in its slice.
+struct AuthoringSnapshot(812200020) {
+  sequence: int64 = 0;
+  slices: [AuthoringSnapshotSlice] = 1;
+}
+
+enum AuthoringResourceRef(812200021) {
+  book: RecordId = 1;
+  tag: RecordId = 2;
+  page: RecordId = 3;
+  element: RecordId = 4;
+}
+
+enum AuthoringResourceChange(812200022) {
+  upsert_book: Book = 1;
+  remove_book: RecordId = 2;
+  upsert_tag: Tag = 3;
+  remove_tag: RecordId = 4;
+  upsert_page: Page = 5;
+  remove_page: RecordId = 6;
+  upsert_element: PageElement = 7;
+  remove_element: RecordId = 8;
+}
+
+/// One committed batch. Sequence numbers advance across the whole Realm,
+/// including resources outside the client's acquired scopes.
+/// Ignore already observed sequences and refresh snapshots when a gap appears.
+struct AuthoringChanged(812200023) {
+  sequence: int64 = 0;
+  batch_id: string = 1;
+  changes: [AuthoringResourceChange] = 2;
+  indirectly_affected_resources: [AuthoringResourceRef] = 3;
+}
+
+struct StringChange(812200024) {
+  expected: string = 0;
+  value: string = 1;
+}
+
+struct Int32Change(812200025) {
+  expected: int32 = 0;
+  value: int32 = 1;
+}
+
+struct ColorChange(812200026) {
+  expected: Color = 0;
+  value: Color = 1;
+}
+
+struct RecordIdChange(812200027) {
+  expected: RecordId = 0;
+  value: RecordId = 1;
+}
+
+struct RecordIdListChange(812200028) {
+  expected: [RecordId] = 0;
+  value: [RecordId] = 1;
+}
+
+struct ElementPlacementChange(812200029) {
+  expected: ElementPlacement = 0;
+  value: ElementPlacement = 1;
+}
+
+struct SetValueMutation(812200030) {
+  path: DataPath = 0;
+  value: TypedValue = 1;
+}
+
+struct InsertListItemsMutation(812200031) {
+  path: DataPath = 0;
+  index: int32 = 1;
+  values: [TypedValue] = 2;
+}
+
+struct RemoveListItemsMutation(812200032) {
+  path: DataPath = 0;
+  index: int32 = 1;
+  count: int32 = 2;
+}
+
+struct ReorderListItemsMutation(812200033) {
+  path: DataPath = 0;
+  source_index: int32 = 1;
+  count: int32 = 2;
+  destination_index: int32 = 3;
+}
+
+struct DuplicateListItemsMutation(812200034) {
+  path: DataPath = 0;
+  source_index: int32 = 1;
+  count: int32 = 2;
+  destination_index: int32 = 3;
+}
+
+struct PutMapEntry(812200035) {
+  key: TypedValue = 0;
+  value: TypedValue = 1;
+}
+
+struct PutMapEntriesMutation(812200036) {
+  path: DataPath = 0;
+  entries: [PutMapEntry] = 1;
+}
+
+struct RemoveMapEntriesMutation(812200037) {
+  path: DataPath = 0;
+  keys: [TypedValue] = 1;
+}
+
+struct ReplaceConcreteTypeMutation(812200038) {
+  path: DataPath = 0;
+  concrete_type: ResolvedTypeRef = 1;
+  value: TypedValue = 2;
+}
+
+enum ElementValueMutation(812200039) {
+  set_value: SetValueMutation = 1;
+  insert_list_items: InsertListItemsMutation = 2;
+  remove_list_items: RemoveListItemsMutation = 3;
+  reorder_list_items: ReorderListItemsMutation = 4;
+  duplicate_list_items: DuplicateListItemsMutation = 5;
+  put_map_entries: PutMapEntriesMutation = 6;
+  remove_map_entries: RemoveMapEntriesMutation = 7;
+  replace_concrete_type: ReplaceConcreteTypeMutation = 8;
+}
+
+/// Compares the logical value at the mutation path before applying the mutation.
+/// Earlier value mutations in the same operation are visible to this comparison.
+struct ExpectedElementValueMutation(812200040) {
+  expected: TypedValue = 0;
+  mutation: ElementValueMutation = 1;
+}
+
+struct CreateBook(812200041) {
+  book: Book = 0;
+}
+
+struct PatchBook(812200042) {
+  id: RecordId = 0;
+  title: StringChange? = 1;
+  icon: StringChange? = 2;
+  color: ColorChange? = 3;
+  tags: RecordIdListChange? = 4;
+}
+
+struct DeleteBook(812200043) {
+  id: RecordId = 0;
+}
+
+struct CreateTag(812200044) {
+  tag: Tag = 0;
+}
+
+struct PatchTag(812200045) {
+  id: RecordId = 0;
+  name: StringChange? = 1;
+  color: ColorChange? = 2;
+  parents: RecordIdListChange? = 3;
+  x: Int32Change? = 4;
+  y: Int32Change? = 5;
+  width: Int32Change? = 6;
+  height: Int32Change? = 7;
+}
+
+struct DeleteTag(812200046) {
+  id: RecordId = 0;
+}
+
+struct CreatePage(812200047) {
+  page: Page = 0;
+}
+
+struct PatchPage(812200048) {
+  id: RecordId = 0;
+  book: RecordIdChange? = 1;
+  name: StringChange? = 2;
+  chapter: StringChange? = 3;
+  priority: Int32Change? = 4;
+}
+
+struct DeletePage(812200049) {
+  id: RecordId = 0;
+}
+
+struct CreateElement(812200050) {
+  element: PageElement = 0;
+}
+
+struct PatchElement(812200051) {
+  id: RecordId = 0;
+  page: RecordIdChange? = 1;
+  name: StringChange? = 2;
+  placement: ElementPlacementChange? = 3;
+  value_mutations: [ExpectedElementValueMutation] = 4;
+}
+
+struct ReferenceRewrite(812200052) {
+  source: RecordId = 0;
+  target: RecordId = 1;
+}
+
+struct DuplicateElement(812200053) {
+  source_id: RecordId = 0;
+  expected_value: TypedValue = 1;
+  new_id: RecordId = 2;
+  page: RecordId = 3;
+  name: string = 4;
+  placement: ElementPlacement = 5;
+  reference_rewrites: [ReferenceRewrite] = 6;
+}
+
+struct DeleteElement(812200054) {
+  id: RecordId = 0;
+}
+
+/// Patches compare only supplied properties, allowing independent fields to merge.
+/// Book tags and tag parents compare as sets. Deletes have no expected value guard.
+enum AuthoringOperation(812200055) {
+  create_book: CreateBook = 1;
+  patch_book: PatchBook = 2;
+  delete_book: DeleteBook = 3;
+  create_tag: CreateTag = 4;
+  patch_tag: PatchTag = 5;
+  delete_tag: DeleteTag = 6;
+  create_page: CreatePage = 7;
+  patch_page: PatchPage = 8;
+  delete_page: DeletePage = 9;
+  create_element: CreateElement = 10;
+  patch_element: PatchElement = 11;
+  duplicate_element: DuplicateElement = 12;
+  delete_element: DeleteElement = 13;
+}
+
+enum AuthoringPropertyValue(812200056) {
+  string: string = 1;
+  signed_thirty_two: int32 = 2;
+  color: Color = 3;
+  record_id: RecordId = 4;
+  record_ids: [RecordId] = 5;
+  element_placement: ElementPlacement = 6;
+  typed_value: TypedValue = 7;
+}
+
+struct PropertyConflict(812200057) {
+  resource: AuthoringResourceRef = 0;
+  path: DataPath = 1;
+  expected: AuthoringPropertyValue? = 2;
+  actual: AuthoringPropertyValue? = 3;
+}
+
+/// No operations from the rejected batch are committed.
+/// Refresh snapshots to obtain current resource values before retrying.
+struct AuthoringConflict(812200058) {
+  conflicts: [PropertyConflict] = 0;
+}
+
+struct AuthoringDiagnostic(812200059) {
+  code: string = 0;
+  message: string = 1;
+  resource: AuthoringResourceRef? = 2;
+  path: DataPath? = 3;
+}
+
+struct AuthoringInvalid(812200060) {
+  diagnostics: [AuthoringDiagnostic] = 0;
+}
+
+/// Repeated scopes are read once. An empty scope list returns only the sequence.
+struct GetAuthoringSnapshotRequest(812200061) {
+  scopes: [AuthoringSnapshotScope] = 0;
+}
+
+enum GetAuthoringSnapshotResponse(812200062) {
+  success: AuthoringSnapshot = 1;
+  invalid: AuthoringInvalid = 2;
+  internal_error: struct {
+    message: string = 0;
+  } = 3;
+}
+
+/// Operations execute in order within one atomic transaction.
+/// A batch must be nonempty and contain at most one operation per target resource.
+/// Batch IDs must not be blank. Reuse an ID only for an identical request.
+/// Replaying a committed batch
+/// returns its original sequence and changes without applying its operations again.
+struct ApplyAuthoringBatchRequest(812200063) {
+  batch_id: string = 0;
+  operations: [AuthoringOperation] = 1;
+}
+
+enum ApplyAuthoringBatchResponse(812200064) {
+  applied: AuthoringChanged = 1;
+  conflict: AuthoringConflict = 2;
+  invalid: AuthoringInvalid = 3;
+  internal_error: struct {
+    message: string = 0;
+  } = 4;
+}
+
+method GetAuthoringSnapshot(
+  GetAuthoringSnapshotRequest
+): GetAuthoringSnapshotResponse = 920001;
+
+method ApplyAuthoringBatch(
+  ApplyAuthoringBatchRequest
+): ApplyAuthoringBatchResponse = 920002;

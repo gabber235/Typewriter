@@ -17,4 +17,5 @@ pub mod member;
 pub mod join_request;
 pub mod organization;
 pub mod user;
+pub mod presence;
 pub mod join_codes;

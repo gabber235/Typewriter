@@ -1,0 +1,29 @@
+struct CompiledBlobPointer(812300001) {
+  digest: string = 0;
+  size: int64 = 1;
+}
+
+struct CompiledShardPointer(812300002) {
+  shard_digest: string = 0;
+  blob: CompiledBlobPointer = 1;
+}
+
+struct CompiledContentActivation(812300003) {
+  activation_revision: int64 = 0;
+  manifest_digest: string = 1;
+  manifest: CompiledBlobPointer = 2;
+  shards: [CompiledShardPointer] = 3;
+}
+
+method WatchCompiledContent(
+  struct {}
+): enum {
+  initial: struct {
+    activation: CompiledContentActivation? = 0;
+  } = 1;
+  activated: CompiledContentActivation = 2;
+  blocked: struct {} = 3;
+  internal_error: struct {
+    message: string = 0;
+  } = 4;
+} = 920003;
