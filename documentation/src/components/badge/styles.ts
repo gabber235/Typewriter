@@ -7,15 +7,17 @@ export const badgeConfig: Record<
 	BadgeVariant,
 	{ text: string; classes: string }
 > = {
+	// Light-mode text uses the 900 shades: the 500/700 tones are ~2.2:1 on
+	// their own tinted chips, the dark ones are 6.5:1 and 5:1.
 	new: {
 		text: "New",
 		classes:
-			"bg-[var(--material-green-500)]/20 text-[var(--material-green-500)] dark:bg-[var(--material-green-500)]/10 dark:text-[var(--material-green-500)]",
+			"bg-[var(--material-green-500)]/20 text-[var(--material-green-900)] dark:bg-[var(--material-green-500)]/10 dark:text-[var(--material-green-500)]",
 	},
 	experimental: {
 		text: "Experimental",
 		classes:
-			"bg-[var(--material-orange-700)]/10 text-[var(--material-orange-700)] dark:bg-[var(--material-orange-700)]/10 dark:text-[var(--material-orange-700)]",
+			"bg-[var(--material-orange-700)]/10 text-[var(--material-deep-orange-900)] dark:bg-[var(--material-orange-700)]/10 dark:text-[var(--material-orange-700)]",
 	},
 	deprecated: {
 		text: "Deprecated",

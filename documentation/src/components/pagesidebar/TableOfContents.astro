@@ -15,7 +15,7 @@ const { toc } = Astro.locals.starlightRoute;
         
         <!-- Progress Pill (always visible at top) -->
         <div class="toc-progress-pill">
-          <span class="pill-title">{Astro.locals.t("tableOfContents.onThisPage")}</span>
+          <span class="pill-title" id="starlight__on-this-page">{Astro.locals.t("tableOfContents.onThisPage")}</span>
             <div class="pill-progress-ring">
               <svg viewBox="0 0 36 36">
                 <circle
@@ -51,7 +51,7 @@ const { toc } = Astro.locals.starlightRoute;
       <!-- Back to Top Button (fixed bottom right) -->
       <!-- Starts hidden so it doesn't flash in before the scroll handler runs. -->
       <button
-        class="back-to-top-pill-fixed hidden"
+        class="back-to-top-pill-fixed hidden print:hidden"
         aria-label="Back to top"
         type="button">
         <svg viewBox="0 0 20 20" fill="currentColor">

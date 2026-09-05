@@ -29,7 +29,7 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
           <div class="toc-link-wrapper relative">
             <a
               href={"#" + topItem.slug}
-              class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10"
+              class="flex items-center gap-2 py-1.5 pr-2 text-xs text-(--on-surface-variant) no-underline leading-snug transition-all duration-200 hover:text-(--sl-color-white) relative z-10"
               style="padding-left: 1.25rem;">
               <span class="relative">{pageTitle}</span>
             </a>
@@ -37,7 +37,7 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
         ) : (
           <a
             href={"#" + topItem.slug}
-            class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4">
+            class="flex justify-between items-center gap-4 no-underline transition-colors duration-200 focus:-outline-offset-4">
             <span class="flex-1">{pageTitle}</span>
           </a>
         )}
@@ -64,7 +64,7 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
                 <div class="toc-link-wrapper relative">
                   <a
                     href={"#" + heading.slug}
-                    class="flex items-center gap-2 py-1.5 pr-2 text-xs text-gray-400 no-underline leading-snug transition-all duration-200 hover:text-white relative z-10"
+                    class="flex items-center gap-2 py-1.5 pr-2 text-xs text-(--on-surface-variant) no-underline leading-snug transition-all duration-200 hover:text-(--sl-color-white) relative z-10"
                     style={`padding-left: calc(${depth}rem + 1.25rem);`}>
                     <span class="relative">{heading.text}</span>
                   </a>
@@ -72,7 +72,7 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
               ) : (
                 <a
                   href={"#" + heading.slug}
-                  class="flex justify-between items-center gap-4 text-gray-400 no-underline transition-colors duration-200 hover:text-white focus:-outline-offset-4">
+                  class="flex justify-between items-center gap-4 no-underline transition-colors duration-200 focus:-outline-offset-4">
                   <span class="flex-1">{heading.text}</span>
                 </a>
               )}
@@ -135,8 +135,9 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
     z-index: 2;
   }
 
+  /* Full accent rather than a 60% tint: the tint was ~2.8:1 in both themes. */
   a[data-parent-active="true"] {
-    color: rgba(var(--color-primary-rgb), 0.6) !important;
+    color: var(--color-primary) !important;
     font-weight: 450;
   }
 
@@ -199,11 +200,11 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
   .is-mobile[data-depth="2"] a {
     padding-left: 48px;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.6);
   }
 
   :root[data-theme="light"] .is-mobile[data-depth="2"] a {
-    color: rgba(0, 0, 0, 0.5);
+    color: rgba(0, 0, 0, 0.62);
   }
 
   .is-mobile[data-depth="2"] a::before {
@@ -215,11 +216,11 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
   .is-mobile[data-depth="3"] a {
     padding-left: 64px;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.6);
   }
 
   :root[data-theme="light"] .is-mobile[data-depth="3"] a {
-    color: rgba(0, 0, 0, 0.4);
+    color: rgba(0, 0, 0, 0.62);
   }
 
   .is-mobile[data-depth="3"] a::before {
@@ -278,7 +279,7 @@ const otherItems = toc.filter((h) => h.slug !== "_top");
 
   /* Parent active state */
   .is-mobile a[data-parent-active="true"] {
-    color: rgba(var(--color-primary-rgb), 0.7) !important;
+    color: var(--color-primary) !important;
   }
 
   .is-mobile a[data-parent-active="true"]::before {

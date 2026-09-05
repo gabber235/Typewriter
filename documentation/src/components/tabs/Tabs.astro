@@ -15,8 +15,12 @@ const id = crypto.randomUUID();
   data-tabs-id={id}
   data-default-tab={defaultTab}
   data-sync-key={syncKey ?? undefined}>
-  <div class:list={["relative", s.bar]} role="tablist">
-    <div class={s.pill} data-tab-pill aria-hidden="true"></div>
+  {/* The bar scrolls inside this wrapper on narrow screens instead of forcing
+      the whole content pane to scroll sideways. */}
+  <div class={s.barScroller}>
+    <div class:list={["relative", s.bar]} role="tablist">
+      <div class={s.pill} data-tab-pill aria-hidden="true"></div>
+    </div>
   </div>
 
   <div class={s.panels} data-tab-panels>

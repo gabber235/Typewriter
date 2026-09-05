@@ -1,6 +1,8 @@
 export const tabStyles = {
 	container: "not-content my-6",
 
+	barScroller: "max-w-full overflow-x-auto",
+
 	bar: "inline-flex items-center gap-1 rounded-full p-1 bg-[var(--surface-container)]/50",
 
 	pill: "absolute top-1 bottom-1 left-0 rounded-full bg-[rgba(var(--color-primary-rgb),0.12)] transition-[transform,width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",

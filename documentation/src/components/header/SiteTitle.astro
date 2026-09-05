@@ -12,6 +12,8 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
   style="height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));"
   class="flex items-center gap-2 max-w-full text-(--sl-text-h4) hover:text-(--color-primary) duration-200 font-extrabold no-underline whitespace-nowrap min-w-0">
   {
+    /* The logo is decorative here: the site title text next to it (visible,
+       or sr-only when the logo replaces it) already names the link. */
     config.logo && logos.dark && (
       <>
         <img
@@ -19,7 +21,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
             "light:hidden print:hidden w-auto max-w-full object-contain rounded-lg": true,
             ...(!("src" in config.logo) ? {} : {}),
           }}
-          alt={config.logo.alt}
+          alt=""
           src={logos.dark.src}
           width={logos.dark.width}
           height={logos.dark.height}
@@ -31,7 +33,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
         {!("src" in config.logo) && (
           <img
             class="dark:hidden print:block w-auto max-w-full object-contain rounded-lg"
-            alt={config.logo.alt}
+            alt=""
             src={logos.light?.src}
             width={logos.light?.width}
             height={logos.light?.height}

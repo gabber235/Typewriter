@@ -25,6 +25,9 @@
 :root {
 	--color-primary: #009fff;
 	--color-primary-rgb: 0, 159, 255;
+	/* Text placed on a --color-primary fill; dark in both themes because the
+	   brand blue is a light colour (7.4:1 with this, 2.7:1 with white). */
+	--on-primary: #141218;
 	--color-secondary: var(--material-orange-500);
 	--secondary-container: var(--material-deep-orange-700);
 	--on-secondary-container: var(--material-white);
@@ -36,10 +39,20 @@
 	--surface-container: #1f1d23;
 }
 :root[data-theme="light"] {
+	/* #009fff is only 2.8:1 on white — below AA for text (4.5:1) and even for
+	   focus rings/borders (3:1). This darker shade of the same hue passes
+	   4.5:1 on every light surface it is used on (white, --surface and
+	   --surface-container), so links, active nav items, tabs and rings all
+	   stay on-brand while being readable. */
+	--color-primary: #0369a1;
+	--color-primary-rgb: 3, 105, 161;
+	/* The darker light-mode primary flips the button text: white is 5.9:1
+	   on it, the dark default only 3.2:1. */
+	--on-primary: var(--material-white);
 	--secondary-container: var(--material-orange-accent-100);
 	--on-secondary-container: var(--material-deep-orange-700);
 	--surface: var(--material-grey-100);
-	--on-surface-variant: #6c6d76;
+	--on-surface-variant: #63646c;
 	--surface-container-lowest: var(--material-white);
 	--surface-container: #f3edf7;
 }
@@ -59,7 +72,11 @@
 	--sl-color-gray-5: var(--material-blue-grey-700);
 	--sl-color-gray-6: var(--material-grey-900);
 	--sl-color-black: var(--surface-container-lowest);
-	--sl-color-hairline-shade: var(--material-grey-900);
+	/* Dividers, card borders and the steps connector. grey-900 was 1.0:1
+	   against the #1f2123 content pane, i.e. invisible. */
+	--sl-color-hairline-light: var(--material-grey-700);
+	--sl-color-hairline: var(--material-grey-800);
+	--sl-color-hairline-shade: var(--material-grey-800);
 	--sl-color-text: var(--material-grey-200);
 	--sl-content-width: 100%;
 }
@@ -84,10 +101,55 @@
 	--sl-color-gray-7: var(--material-grey-50);
 	--sl-color-black: var(--material-white);
 	--sl-color-text-invert: var(--sl-color-black);
-	--sl-color-bg-inline-code: var(--sl-color-gray-6);
-	--sl-color-hairline-light: var(--sl-color-gray-6);
-	--sl-color-hairline-shade: var(--sl-color-gray-6);
+	--sl-color-bg-inline-code: var(--material-blue-grey-50);
+	/* grey-50 on white was practically invisible (1.03:1). */
+	--sl-color-hairline-light: var(--material-grey-200);
+	--sl-color-hairline: var(--material-grey-300);
+	--sl-color-hairline-shade: var(--material-grey-300);
 	--sl-color-text: var(--material-grey-800);
+}
+
+/* ############################## */
+/* Accessibility baseline         */
+/* ############################## */
+/* One consistent, high-contrast focus ring for every control. Lives in the
+   lowest layer so component utilities (e.g. the search button's ring) can
+   still override it. */
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+
+	/* Blanket opt-out for the sidebar/TOC/tab/video transitions that are set
+	   inline or via utilities and have no reduced-motion variant of their own.
+	   Near-zero rather than zero so `transitionend` listeners still fire. */
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		::before,
+		::after {
+			/* biome-ignore-start lint/complexity/noImportantStyles: must beat inline transition styles set by the sidebar script */
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+			/* biome-ignore-end lint/complexity/noImportantStyles: must beat inline transition styles set by the sidebar script */
+		}
+	}
+}
+
+/* Starlight fixes its menu button to the top-right corner, where it sat on
+   top of the theme toggle. The custom header already places it in flow. */
+[data-mobile-menu-toggle-wrapper] starlight-menu-button button {
+	position: static;
+}
+
+/* Keep the fixed, self-scrolling layout from printing a single viewport. */
+@media print {
+	.content-pane {
+		position: static;
+		overflow: visible;
+	}
 }
 
 /* ############################## */

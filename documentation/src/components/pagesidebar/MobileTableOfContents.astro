@@ -12,8 +12,8 @@ const { toc } = Astro.locals.starlightRoute;
       
       <!-- Mobile TOC Navigation -->
       <nav
-        aria-labelledby="starlight__on-this-page--mobile"
-        class="mobile-toc-container">
+        aria-label={Astro.locals.t("tableOfContents.onThisPage")}
+        class="mobile-toc-container print:hidden">
         
         <!-- Backdrop for dropdown -->
         <div class="mobile-toc-backdrop" aria-hidden="true"></div>
@@ -22,7 +22,7 @@ const { toc } = Astro.locals.starlightRoute;
         <div class="mobile-toc-dropdown">
           <div class="dropdown-header">
             <span class="dropdown-title">On this page</span>
-            <button class="close-btn" aria-label="Close table of contents">
+            <button class="close-btn" type="button" aria-label="Close table of contents">
               <svg viewBox="0 0 20 20" fill="currentColor">
                 <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
               </svg>
@@ -34,7 +34,7 @@ const { toc } = Astro.locals.starlightRoute;
         </div>
         
         <!-- Pill Indicator (always visible) -->
-        <button class="mobile-toc-pill" id="starlight__on-this-page--mobile" aria-label="Open table of contents" aria-expanded="false">
+        <button class="mobile-toc-pill" id="starlight__on-this-page--mobile" type="button" aria-label="Open table of contents" aria-expanded="false">
           <svg class="pill-progress-ring" viewBox="0 0 36 36">
             <circle
               class="pill-progress-bg"
@@ -101,7 +101,7 @@ const { toc } = Astro.locals.starlightRoute;
     --toc-bg: rgba(255, 255, 255, 0.95);
     --toc-border: rgba(0, 0, 0, 0.08);
     --toc-text: rgba(0, 0, 0, 0.85);
-    --toc-text-muted: rgba(0, 0, 0, 0.5);
+    --toc-text-muted: rgba(0, 0, 0, 0.62);
     --toc-shadow: 0 4px 32px rgba(0, 0, 0, 0.12),
                   0 1px 8px rgba(0, 0, 0, 0.06),
                   inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -134,6 +134,8 @@ const { toc } = Astro.locals.starlightRoute;
   /* Pill Button          */
   /* ==================== */
   .mobile-toc-pill {
+    /* anchors the absolutely positioned percentage inside the ring */
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;

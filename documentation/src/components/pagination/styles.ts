@@ -10,7 +10,7 @@ export const paginationStyles = {
 		"flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--on-surface-variant)]",
 
 	title:
-		"max-w-full truncate text-sm font-semibold leading-snug text-[var(--sl-color-white)] transition-colors duration-200 group-hover:text-[var(--color-primary)] sm:overflow-visible sm:whitespace-normal sm:text-lg",
+		"max-w-full break-words text-sm font-semibold leading-snug text-[var(--sl-color-white)] transition-colors duration-200 group-hover:text-[var(--color-primary)] sm:text-lg",
 
 	icon: "inline-flex transition-transform duration-200",
 	iconPrev: "group-hover:-translate-x-1",

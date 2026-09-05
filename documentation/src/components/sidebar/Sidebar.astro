@@ -578,6 +578,16 @@ const sidebarWithBadges = await processSidebarBadges(
     const getToggle = () =>
       document.querySelector<HTMLElement>("starlight-menu-button");
 
+    // Starlight tracks the expanded state on its custom element; assistive
+    // tech reads it from the <button>, so mirror it there too.
+    function setToggleExpanded(expanded: boolean) {
+      const toggle = getToggle();
+      if (!toggle) return;
+      const value = String(expanded);
+      toggle.setAttribute("aria-expanded", value);
+      toggle.querySelector("button")?.setAttribute("aria-expanded", value);
+    }
+
     let isOpen = false;
     let touchStartY = 0;
     let touchStartX = 0;
@@ -590,12 +600,12 @@ const sidebarWithBadges = await processSidebarBadges(
       const backdrop = getBackdrop();
       if (!sidebar || !backdrop) return;
       isOpen = true;
-      sidebar.classList.remove("translate-y-[calc(-100%-3rem)]");
+      sidebar.classList.remove("translate-y-[calc(-100%-3.5rem)]");
       sidebar.classList.add("translate-y-0");
       backdrop.classList.remove("invisible", "opacity-0");
       backdrop.classList.add("visible", "opacity-100");
       document.body.style.overflow = "hidden";
-      getToggle()?.setAttribute("aria-expanded", "true");
+      setToggleExpanded(true);
     }
 
     function closeDrawer() {
@@ -603,7 +613,7 @@ const sidebarWithBadges = await processSidebarBadges(
       const backdrop = getBackdrop();
       isOpen = false;
       if (sidebar) {
-        sidebar.classList.add("translate-y-[calc(-100%-3rem)]");
+        sidebar.classList.add("translate-y-[calc(-100%-3.5rem)]");
         sidebar.classList.remove("translate-y-0");
         sidebar.style.transform = "";
       }
@@ -612,7 +622,7 @@ const sidebarWithBadges = await processSidebarBadges(
         backdrop.classList.remove("visible", "opacity-100");
       }
       document.body.style.overflow = "";
-      getToggle()?.setAttribute("aria-expanded", "false");
+      setToggleExpanded(false);
     }
 
     function toggleDrawer() {

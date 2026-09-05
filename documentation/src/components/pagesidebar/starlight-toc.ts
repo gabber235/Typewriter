@@ -108,6 +108,9 @@ export class StarlightTOC extends HTMLElement {
 						this.scrollContainer,
 					);
 					window.history.pushState(null, "", link.hash);
+					// Headings aren't focusable by default; without this the focus
+					// call is a no-op and keyboard users stay in the TOC.
+					targetElement.tabIndex = -1;
 					targetElement.focus({ preventScroll: true });
 				}
 			});
@@ -378,6 +381,7 @@ export class StarlightTOC extends HTMLElement {
 				// Focus the main heading for accessibility
 				const mainHeading = document.querySelector("h1");
 				if (mainHeading) {
+					mainHeading.tabIndex = -1;
 					mainHeading.focus({ preventScroll: true });
 				}
 			});

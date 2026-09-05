@@ -31,7 +31,7 @@ const devWarning = Astro.locals.t("search.devWarning");
     aria-label={searchLabel}
     aria-keyshortcuts="Control+K"
     class="group flex items-center gap-2 h-10 border-0 bg-transparent text-(--sl-color-gray-1) cursor-pointer text-xl
-           md:border md:border-(--sl-color-gray-5) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
+           md:border md:border-(--sl-color-gray-4) md:rounded-lg md:ps-3 md:pe-2 md:bg-(--sl-color-black) md:text-(--sl-color-gray-2) md:text-sm md:w-full md:max-w-10/12
            md:hover:border-(--sl-color-gray-2) md:hover:text-white
            md:focus-visible:outline-none md:focus-visible:ring-2 md:focus-visible:ring-(--sl-color-accent) md:focus-visible:ring-offset-2 md:focus-visible:ring-offset-(--sl-color-black)
            transition-all duration-200 ease-out">
@@ -50,7 +50,7 @@ const devWarning = Astro.locals.t("search.devWarning");
     </svg>
     <span class="hidden md:block" aria-hidden="true">{searchLabel}</span>
     <kbd
-      class="hidden md:inline-flex items-center gap-1 ms-auto rounded px-1.5 py-0.5 text-xs bg-(--sl-color-gray-6) text-(--sl-color-gray-3) font-mono
+      class="hidden md:inline-flex items-center gap-1 ms-auto rounded px-1.5 py-0.5 text-xs bg-(--sl-color-gray-6) text-(--sl-color-gray-2) font-mono
              transition-colors duration-200 group-hover:bg-(--sl-color-gray-5) group-hover:text-(--sl-color-gray-1)"
       style="display: none;">
       <kbd class="font-mono">{ctrlKey}</kbd><kbd class="font-mono">K</kbd>
@@ -594,7 +594,7 @@ const devWarning = Astro.locals.t("search.devWarning");
   }
 
   .starlight-search .pagefind-ui__search-input::placeholder {
-    color: var(--sl-color-gray-4);
+    color: var(--on-surface-variant);
   }
 
   /* Clear button - hide text, show icon */
@@ -770,7 +770,7 @@ const devWarning = Astro.locals.t("search.devWarning");
   .starlight-search .pagefind-ui__result-excerpt {
     font-size: calc(0.9375rem * var(--pagefind-ui-scale));
     overflow-wrap: anywhere;
-    color: var(--sl-color-gray-3);
+    color: var(--on-surface-variant);
     line-height: 1.6;
   }
 
@@ -796,7 +796,7 @@ const devWarning = Astro.locals.t("search.devWarning");
 
   /* Message styling */
   .starlight-search .pagefind-ui__message {
-    color: var(--sl-color-gray-3);
+    color: var(--on-surface-variant);
     text-align: center;
     padding: 2rem 1rem;
   }

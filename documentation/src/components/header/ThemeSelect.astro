@@ -6,9 +6,9 @@
   <button
     class="theme-toggle"
     id="theme-toggle"
-    title="Toggles light & dark"
-    aria-label="auto"
-    aria-live="polite">
+    type="button"
+    title="Toggle light & dark theme"
+    aria-label="Toggle light & dark theme">
     <svg
       class="sun-and-moon"
       aria-hidden="true"
@@ -195,9 +195,11 @@
     document.documentElement.dataset.theme = resolvedTheme;
     storeTheme(theme);
 
-    // Update aria-label
+    // Name the action the button performs next, not the current state.
+    const label = `Switch to ${resolvedTheme === "light" ? "dark" : "light"} theme`;
     document.querySelectorAll("#theme-toggle").forEach((btn) => {
-      btn.setAttribute("aria-label", theme);
+      btn.setAttribute("aria-label", label);
+      btn.setAttribute("title", label);
     });
   }
 

@@ -46,11 +46,16 @@ export function throttleRAF(callback: () => void): () => void {
 	};
 }
 
+// The CSS scroll-behavior override doesn't reach scrollTo({behavior}) calls.
+export const scrollBehavior = (): ScrollBehavior =>
+	matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
 export function smoothScrollToElement(
 	element: HTMLElement,
 	offset = 0,
 	scrollContainer?: HTMLElement | null,
 ): void {
+	const behavior = scrollBehavior();
 	if (scrollContainer) {
 		const containerRect = scrollContainer.getBoundingClientRect();
 		const elementRect = element.getBoundingClientRect();
@@ -60,12 +65,12 @@ export function smoothScrollToElement(
 				elementRect.top -
 				containerRect.top -
 				offset,
-			behavior: "smooth",
+			behavior,
 		});
 	} else {
 		window.scrollTo({
 			top: element.getBoundingClientRect().top + window.scrollY - offset,
-			behavior: "smooth",
+			behavior,
 		});
 	}
 }
