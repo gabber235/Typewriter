@@ -18,10 +18,16 @@ const styles = variantStyles[type];
 const displayTitle = title ?? defaultTitles[type];
 ---
 
-<aside class:list={[asideClasses.container, styles.border, styles.bg]}>
+{/* role="note": a callout inside the prose, not a page-level complementary
+    landmark (which every unlabeled <aside> would otherwise register as). */}
+<aside
+  role="note"
+  aria-label={displayTitle}
+  class:list={[asideClasses.container, styles.border, styles.bg]}>
   <div class={asideClasses.header}>
     <span
       class:list={[asideClasses.icon, styles.text]}
+      aria-hidden="true"
       set:html={icons[type]}
     />
     {
@@ -30,7 +36,7 @@ const displayTitle = title ?? defaultTitles[type];
       )
     }
   </div>
-  <div class:list={[asideClasses.content, styles.text]}>
+  <div class={asideClasses.content}>
     <slot />
   </div>
 </aside>

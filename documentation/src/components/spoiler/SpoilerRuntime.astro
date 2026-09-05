@@ -1,0 +1,35 @@
+---
+// Carries the spoiler client script; included once from Head.astro.
+//
+// Sections ship closed in the HTML, so without JavaScript the gate would be a
+// dead end: the <noscript> rules drop the blur, the size containment and the
+// gate card. `is:inline` keeps Astro from hoisting the stylesheet out of the
+// <noscript>.
+---
+
+<noscript>
+	<style is:inline>
+		[data-spoiler] [data-spoiler-shell] {
+			contain: none !important;
+			min-height: 0 !important;
+		}
+		[data-spoiler] [data-spoiler-content] {
+			filter: none !important;
+			opacity: 1 !important;
+			pointer-events: auto !important;
+			user-select: auto !important;
+		}
+		[data-spoiler] [data-spoiler-gate],
+		[data-spoiler] [data-spoiler-bar] {
+			display: none !important;
+		}
+	</style>
+</noscript>
+
+<script>
+	import { setupSpoilers } from "./spoiler";
+
+	setupSpoilers();
+	document.addEventListener("astro:page-load", setupSpoilers);
+	document.addEventListener("astro:after-swap", setupSpoilers);
+</script>

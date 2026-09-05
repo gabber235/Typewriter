@@ -55,7 +55,11 @@ export const icons: Record<AsideVariant, string> = {
 	performance: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>`,
 };
 
-// Using Material Design colors from colors.css
+// Using Material Design colors from colors.css. `text` colours the icon and
+// title only; the 500-series accents sit at 2-3:1 on their 10% tint in light
+// mode and several of them (red, pink, purple, blue-grey) also fail in dark
+// mode, so each variant carries a 4.5:1+ shade per theme (dark shade for
+// light mode, light shade for dark mode) while the border keeps the accent.
 export const variantStyles: Record<
 	AsideVariant,
 	{ border: string; bg: string; text: string }
@@ -63,61 +67,63 @@ export const variantStyles: Record<
 	info: {
 		border: "border-[var(--material-blue-500)]",
 		bg: "bg-[var(--material-blue-500)]/10",
-		text: "text-[var(--material-blue-500)]",
+		text: "text-[var(--material-blue-800)] dark:text-[var(--material-blue-300)]",
 	},
 	warning: {
 		border: "border-[var(--material-orange-500)]",
 		bg: "bg-[var(--material-orange-500)]/10",
-		text: "text-[var(--material-orange-500)]",
+		text: "text-[var(--material-deep-orange-900)] dark:text-[var(--material-orange-500)]",
 	},
 	danger: {
 		border: "border-[var(--material-red-500)]",
 		bg: "bg-[var(--material-red-500)]/10",
-		text: "text-[var(--material-red-500)]",
+		text: "text-[var(--material-red-900)] dark:text-[var(--material-red-300)]",
 	},
 	success: {
 		border: "border-[var(--material-green-500)]",
 		bg: "bg-[var(--material-green-500)]/10",
-		text: "text-[var(--material-green-500)]",
+		text: "text-[var(--material-green-900)] dark:text-[var(--material-green-500)]",
 	},
 	tip: {
 		border: "border-[var(--material-cyan-500)]",
 		bg: "bg-[var(--material-cyan-500)]/10",
-		text: "text-[var(--material-cyan-500)]",
+		text: "text-[var(--material-cyan-900)] dark:text-[var(--material-cyan-500)]",
 	},
 	note: {
 		border: "border-[var(--material-blue-grey-500)]",
 		bg: "bg-[var(--material-blue-grey-500)]/10",
-		text: "text-[var(--material-blue-grey-500)]",
+		text: "text-[var(--material-blue-grey-800)] dark:text-[var(--material-blue-grey-300)]",
 	},
 	example: {
 		border: "border-[var(--material-purple-400)]",
 		bg: "bg-[var(--material-purple-400)]/10",
-		text: "text-[var(--material-purple-400)]",
+		text: "text-[var(--material-purple-800)] dark:text-[var(--material-purple-200)]",
 	},
 	experimental: {
 		border: "border-[var(--material-orange-700)]",
 		bg: "bg-[var(--material-orange-700)]/10",
-		text: "text-[var(--material-orange-700)]",
+		text: "text-[var(--material-deep-orange-900)] dark:text-[var(--material-orange-700)]",
 	},
 	deprecated: {
 		border: "border-[var(--material-brown-200)]",
 		bg: "bg-[var(--material-brown-300)]/10",
-		text: "text-[var(--material-brown-200)]",
+		text: "text-[var(--material-brown-800)] dark:text-[var(--material-brown-200)]",
 	},
 	bug: {
 		border: "border-[var(--material-pink-500)]",
 		bg: "bg-[var(--material-pink-500)]/10",
-		text: "text-[var(--material-pink-500)]",
+		text: "text-[var(--material-pink-900)] dark:text-[var(--material-pink-200)]",
 	},
 	performance: {
 		border: "border-[var(--material-amber-500)]",
 		bg: "bg-[var(--material-amber-500)]/10",
-		text: "text-[var(--material-amber-500)]",
+		text: "text-[var(--material-brown-700)] dark:text-[var(--material-amber-500)]",
 	},
 };
 
-// Shared class strings matching Flutter design (full border, rounded corners)
+// Shared class strings matching Flutter design (full border, rounded corners).
+// Body copy inherits the page text colour: tinting a whole paragraph in the
+// accent can't reach 4.5:1 on the tinted background in either theme.
 export const asideClasses = {
 	container: "my-4 rounded-lg border px-4 py-2.5",
 	header: "flex items-center gap-3",

@@ -46,12 +46,16 @@ export const remarkAside: Plugin<[], Root> = () => {
 
 			// Create the aside structure using hast properties
 			// Layout: container > header (icon + title) + content
+			// role="note": a callout inside the prose, not a page-level
+			// complementary landmark (see Aside.astro).
 			const aside = {
 				type: "paragraph",
 				data: {
 					hName: "aside",
 					hProperties: {
 						class: `${asideClasses.container} ${styles.border} ${styles.bg}`,
+						role: "note",
+						"aria-label": title,
 					},
 				},
 				children: [
@@ -66,7 +70,7 @@ export const remarkAside: Plugin<[], Root> = () => {
 						children: [
 							{
 								type: "html",
-								value: `<span class="${asideClasses.icon} ${styles.text}">${icons[variant]}</span>`,
+								value: `<span class="${asideClasses.icon} ${styles.text}" aria-hidden="true">${icons[variant]}</span>`,
 							},
 							{
 								type: "paragraph",
@@ -90,7 +94,7 @@ export const remarkAside: Plugin<[], Root> = () => {
 						data: {
 							hName: "div",
 							hProperties: {
-								class: `${asideClasses.content} ${styles.text}`,
+								class: asideClasses.content,
 							},
 						},
 						children: node.children,
