@@ -1,0 +1,48 @@
+---
+import { buildStyles as s } from "./styles";
+import type { BuildProps } from "./types";
+
+interface Props extends BuildProps {}
+
+const { label, interval = 5 } = Astro.props;
+---
+
+<div
+  class={s.root}
+  data-build
+  style={`--build-interval:${interval}s`}
+  aria-roledescription="carousel">
+  <ul class={s.list} role="tablist" aria-label={label} data-build-list>
+    <slot />
+  </ul>
+  <div class={s.stage} data-build-stage></div>
+</div>
+
+<noscript>
+  <style is:inline>
+    [data-build] [data-build-stage] {
+      display: none;
+    }
+    [data-build] [data-build-panel] {
+      display: block;
+    }
+  </style>
+</noscript>
+
+<style is:global>
+  @keyframes build-progress {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { setupBuild } from "./outcomes";
+
+  document.addEventListener("astro:page-load", setupBuild);
+  document.addEventListener("astro:after-swap", setupBuild);
+</script>

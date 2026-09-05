@@ -1,0 +1,26 @@
+---
+import { landingStyles as l } from "../shared/styles";
+import { memoryStyles as s } from "./styles";
+import type { RecallProps } from "./types";
+
+interface Props extends RecallProps {}
+
+const { title, lead, items } = Astro.props;
+---
+
+<div class={s.recall}>
+  <div class={s.recallHeader}>
+    <h3 class={l.h3}>{title}</h3>
+    <p class={l.muted}>{lead}</p>
+  </div>
+  <dl class={s.recallList}>
+    {
+      items.map((item) => (
+        <div class={s.recallItem}>
+          <dt class={s.recallTitle}>{item.title}</dt>
+          <dd class={s.recallBody}>{item.text}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>

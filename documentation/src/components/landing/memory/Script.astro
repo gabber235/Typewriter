@@ -1,0 +1,26 @@
+---
+import { memoryStyles as s } from "./styles";
+import type { ScriptProps } from "./types";
+
+interface Props extends ScriptProps {}
+
+const { label } = Astro.props;
+---
+
+<div class={s.script}>
+  <div class={s.columns}>
+    <div class={s.head} aria-hidden="true">
+      <p class={s.headTitle}>Script</p>
+      <p class={s.headNote}>One page in the panel, played three times.</p>
+    </div>
+    <div class={s.head} aria-hidden="true">
+      <p class={s.headTitle}>Player file</p>
+      <p class={s.headNote}>
+        What Typewriter has stored so far. <b>Purple</b> changed in this beat.
+      </p>
+    </div>
+    <ol class={s.beats} aria-label={label}>
+      <slot />
+    </ol>
+  </div>
+</div>

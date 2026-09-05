@@ -1,0 +1,29 @@
+---
+import Crop from "../shared/Crop.astro";
+import { landingStyles as l } from "../shared/styles";
+import { stepStyles as s } from "./styles";
+import type { StepProps } from "./types";
+
+interface Props extends StepProps {}
+
+const { number, title, mockup } = Astro.props;
+---
+
+<li class={s.step} data-step>
+  <span class={s.marker} aria-hidden="true">{number}</span>
+  <div class={s.text}>
+    <h3 class={l.h3}>
+      <span class="sr-only">Step {number}: </span>{title}
+    </h3>
+    <div class={l.body}><slot /></div>
+    <div class={s.media} data-step-media>
+      {
+        mockup ? (
+          <Crop {...mockup} widths={[640, 960, 1280]} sizes="(min-width: 64rem) 40rem, calc(100vw - 2.5rem)" />
+        ) : (
+          <slot name="media" />
+        )
+      }
+    </div>
+  </div>
+</li>

@@ -3,6 +3,10 @@ export const footerStyles = {
 
 	meta: "mt-10 flex flex-col items-start gap-4 border-t border-[var(--sl-color-hairline)] pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6",
 
+	legal:
+		"m-0 mt-8 font-[family-name:var(--font-sans)] text-xs leading-relaxed text-[var(--on-surface-variant)]",
+	legalRule: "border-t border-[var(--sl-color-hairline)] pt-5",
+
 	editLink:
 		"flex items-center gap-1.5 text-sm font-medium text-[var(--sl-color-white)] no-underline transition-colors duration-200 hover:text-[var(--color-primary)]",
 	editIcon: "inline-flex",

@@ -1,0 +1,40 @@
+---
+import Crop from "../shared/Crop.astro";
+import { buildStyles as s } from "./styles";
+import type { BuildItemProps } from "./types";
+
+interface Props extends BuildItemProps {}
+
+const { title, mockup } = Astro.props;
+const id = crypto.randomUUID();
+---
+
+<li class={s.item} role="presentation">
+  <button
+    type="button"
+    role="tab"
+    id={`build-tab-${id}`}
+    class={s.tab}
+    aria-selected="false"
+    aria-controls={`build-panel-${id}`}
+    tabindex="-1"
+    data-build-tab>
+    <span class={s.tabTitle}>{title}</span>
+    <span class={s.tabText}><slot /></span>
+    <span class={s.progress} data-build-progress hidden aria-hidden="true">
+      <span class={s.progressFill}></span>
+    </span>
+  </button>
+  <div
+    id={`build-panel-${id}`}
+    class={s.media}
+    role="tabpanel"
+    aria-labelledby={`build-tab-${id}`}
+    data-build-panel>
+    <Crop
+      {...mockup}
+      widths={[720, 1200]}
+      sizes="(min-width: 64rem) 40rem, calc(100vw - 2.5rem)"
+    />
+  </div>
+</li>

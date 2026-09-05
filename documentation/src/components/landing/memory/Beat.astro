@@ -1,0 +1,42 @@
+---
+import { ledgerStyles as lg } from "../shared/styles";
+import { memoryStyles as s } from "./styles";
+import type { BeatProps } from "./types";
+
+interface Props extends BeatProps {}
+
+const { when, where, speaker, line, reply, remembers } = Astro.props;
+---
+
+<li class={s.beat}>
+  <h3 class={s.when}>
+    {when}<span class={s.where}><span aria-hidden="true"> · </span>{where}</span>
+  </h3>
+  <div class={s.dialogue}>
+    <div class={s.turnNpc}>
+      <p class:list={[s.cue, s.cueSpeaker]}>{speaker}</p>
+      <p class={s.line}>{line}</p>
+    </div>
+    <div class={s.turnPlayer}>
+      <p class:list={[s.cue, s.cuePlayer]}>Player</p>
+      <p class={s.reply}>{reply}</p>
+    </div>
+  </div>
+  <div class={s.ledger}>
+    <p class={s.ledgerLabel}>Player file</p>
+    <dl class={s.rows}>
+      {
+        remembers.map((row) => (
+          <div class:list={[lg.row, s.row, row.changed ? s.rowChanged : s.rowMuted]}>
+            <dt class={lg.key}>{row.key}</dt>
+            <span class={lg.leader} aria-hidden="true" />
+            <dd class:list={[lg.value, row.changed && s.valueChanged]}>
+              {row.value}
+              {row.changed && <span class="sr-only">, changed</span>}
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</li>

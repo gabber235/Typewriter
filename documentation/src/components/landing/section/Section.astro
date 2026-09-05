@@ -1,0 +1,44 @@
+---
+import { landingStyles as l } from "../shared/styles";
+import { sectionStyles as s } from "./styles";
+import type { SectionProps } from "./types";
+
+interface Props extends SectionProps {}
+
+const {
+	id,
+	title,
+	eyebrow,
+	lead,
+	align = "start",
+	width = "full",
+	band = false,
+} = Astro.props;
+
+const headingId = `${id}-title`;
+const hasLeadSlot = Astro.slots.has("lead");
+---
+
+<section id={id} aria-labelledby={headingId} class:list={[s.section, band && s.band]}>
+  <div class={l.container}>
+    <div
+      class:list={[
+        s.header,
+        align === "center" ? s.headerCenter : s.headerStart,
+      ]}>
+      {eyebrow && <p class={l.eyebrow}>{eyebrow}</p>}
+      <h2 id={headingId} class={l.h2}>{title}</h2>
+      {lead && <p class={l.lead}>{lead}</p>}
+      {
+        hasLeadSlot && (
+          <div class:list={[l.lead, l.body]}>
+            <slot name="lead" />
+          </div>
+        )
+      }
+    </div>
+    <div class:list={[width === "narrow" && s.narrow]}>
+      <slot />
+    </div>
+  </div>
+</section>

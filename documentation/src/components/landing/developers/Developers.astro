@@ -1,0 +1,44 @@
+---
+import Icon from "../shared/Icon.astro";
+import { landingStyles as l, ledgerStyles as lg } from "../shared/styles";
+import { developersStyles as s } from "./styles";
+import type { DevelopersProps } from "./types";
+
+interface Props extends DevelopersProps {}
+
+const { extensions, docsCta } = Astro.props;
+
+const counted = extensions.filter((extension) => extension.entries);
+const others = extensions.filter((extension) => !extension.entries);
+const otherNames = new Intl.ListFormat("en", { type: "conjunction" }).format(
+	others.map((extension) => extension.name),
+);
+---
+
+<div class={s.grid}>
+  <div class={s.code}>
+    <slot />
+  </div>
+  <div class={s.copy}>
+    <div class={l.body}><slot name="text" /></div>
+    <div>
+      <p class={s.listLabel} id="extensions-label">Ships with</p>
+      <dl class={s.rows} aria-labelledby="extensions-label">
+        {
+          counted.map((extension) => (
+            <div class={lg.row}>
+              <dt class={lg.key}>{extension.name}</dt>
+              <span class={lg.leader} aria-hidden="true" />
+              <dd class={lg.value}>{extension.entries} entries</dd>
+            </div>
+          ))
+        }
+      </dl>
+      {others.length > 0 && <p class={s.more}>Plus integrations for {otherNames}.</p>}
+    </div>
+    <a class={l.textLink} href={docsCta.href}>
+      {docsCta.label}
+      <Icon name="arrow" class="size-4" />
+    </a>
+  </div>
+</div>

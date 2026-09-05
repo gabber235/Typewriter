@@ -1,0 +1,42 @@
+---
+import { Image } from "astro:assets";
+import { cropStyles as s } from "./crop-styles";
+import { focusStyle } from "./focus";
+import type { Mockup } from "./types";
+
+interface Props extends Mockup {
+	sizes: string;
+	widths: number[];
+	class?: string;
+}
+
+const {
+	src,
+	alt,
+	focus,
+	position,
+	sizes,
+	widths,
+	class: className,
+} = Astro.props;
+
+const style = [
+	focus ? focusStyle(focus) : "",
+	position ? `object-position:${position}` : "",
+]
+	.filter(Boolean)
+	.join(";");
+---
+
+<div class:list={[s.frame, className]}>
+  <Image
+    src={src}
+    alt={alt}
+    widths={widths}
+    sizes={sizes}
+    loading="lazy"
+    decoding="async"
+    class:list={[s.image, focus && s.zoomed]}
+    style={style || undefined}
+  />
+</div>

@@ -1,0 +1,28 @@
+---
+import Crop from "../shared/Crop.astro";
+import { landingStyles as l } from "../shared/styles";
+import { editorStyles as s } from "./styles";
+import type { TileProps } from "./types";
+
+interface Props extends TileProps {}
+
+const { title, mockup } = Astro.props;
+---
+
+<li class={s.tile}>
+  <div class={s.tileMedia}>
+    {
+      mockup ? (
+        <Crop
+          {...mockup}
+          widths={[480, 800]}
+          sizes="(min-width: 48rem) 22rem, calc(100vw - 2.5rem)"
+        />
+      ) : (
+        <slot name="media" />
+      )
+    }
+  </div>
+  <h3 class={l.h3}>{title}</h3>
+  <div class={s.tileBody}><slot /></div>
+</li>

@@ -1,0 +1,24 @@
+---
+import { chatStyles as c } from "../shared/styles";
+import { stepStyles as s } from "./styles";
+---
+
+{/* A schematic of a chat dialogue with options; not a screenshot. */}
+<figure
+  class={s.illustration}
+  role="img"
+  aria-label="Illustration of an in-game chat dialogue: a blacksmith greets the player and offers two numbered options, the first one selected.">
+  <p class={s.illustrationLabel} aria-hidden="true">Illustration</p>
+  <p class={c.line} aria-hidden="true">
+    <span class={c.speaker}>Blacksmith:</span> You look like someone who
+    can swing a hammer. Want work?
+  </p>
+  <p class:list={[c.option, c.optionActive]} aria-hidden="true">
+    <span class={c.key}>1</span>
+    <span><span class={c.caret}>▸</span> What do you need done?</span>
+  </p>
+  <p class={c.option} aria-hidden="true">
+    <span class={c.key}>2</span>
+    <span>Not today.</span>
+  </p>
+</figure>

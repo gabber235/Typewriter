@@ -1,0 +1,48 @@
+---
+import { landingStyles as l } from "../shared/styles";
+import { stepStyles as s } from "./styles";
+import type { StepsProps } from "./types";
+
+interface Props extends StepsProps {}
+
+const { cta } = Astro.props;
+---
+
+<div class={s.root} data-steps>
+  <div class={s.grid}>
+    <div class={s.stage} data-steps-stage></div>
+    <ol class={s.list} data-steps-list>
+      <span class={s.line} data-steps-line aria-hidden="true"></span>
+      <span class={s.fill} data-steps-fill aria-hidden="true"></span>
+      <slot />
+    </ol>
+  </div>
+  {
+    cta && (
+      <p class={s.cta}>
+        <a class={l.textLink} href={cta.href}>
+          {cta.label} <span aria-hidden="true">→</span>
+        </a>
+      </p>
+    )
+  }
+</div>
+
+<noscript>
+  <style is:inline>
+    [data-steps] [data-steps-stage],
+    [data-steps] [data-steps-fill] {
+      display: none;
+    }
+    [data-steps] [data-step-media] {
+      display: block;
+    }
+  </style>
+</noscript>
+
+<script>
+  import { setupSteps } from "./steps";
+
+  document.addEventListener("astro:page-load", setupSteps);
+  document.addEventListener("astro:after-swap", setupSteps);
+</script>

@@ -1,4 +1,5 @@
 ---
+import { landingStyles as l } from "../landing/shared/styles";
 import Pagination from "../pagination/Pagination.astro";
 import { avatarUrl, type Editor, getEditors } from "./git-editors";
 import { pencilIcon } from "./icons";
@@ -36,16 +37,19 @@ const showMeta = !isSplash && (editUrl !== undefined || showByline);
 // scrolls near the viewport (see the script below).
 const AVATAR_PLACEHOLDER =
 	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'/%3E";
+
+const year = new Date().getFullYear();
 ---
 
-<footer class={s.container}>
+{/* The homepage is full-bleed, so the footer borrows the landing container. */}
+<footer class:list={[s.container, isSplash && l.container]}>
 	<Pagination />
 	{
 		showMeta && (
 			<div class={s.meta}>
 				{editUrl && (
 					<a href={editUrl} class={s.editLink}>
-						<span class={s.editIcon} set:html={pencilIcon} />
+						<span class={s.editIcon} aria-hidden="true" set:html={pencilIcon} />
 						Edit this page
 					</a>
 				)}
@@ -118,6 +122,10 @@ const AVATAR_PLACEHOLDER =
 			</div>
 		)
 	}
+	<p class:list={[s.legal, !showMeta && s.legalRule]}>
+		© {year} Typewriter. Not an official Minecraft product. Not approved by or
+		associated with Mojang or Microsoft.
+	</p>
 </footer>
 
 <script>

@@ -1,0 +1,13 @@
+---
+import { editorStyles as s } from "./styles";
+
+interface Props {
+	label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<ul class:list={["m-0 list-none p-0", s.tiles]} aria-label={label}>
+  <slot />
+</ul>

@@ -1,9 +1,40 @@
 /* The homepage opts out of the narrow `40vw` reading column that
    `global.css` sets for prose docs at >=1152px — a full-bleed marketing
    layout needs the full viewport width. Scoped to `.tw-home` (set by
-   `src/components/home/Home.astro`) so no other page is affected. */
+   `src/components/landing/shell/Landing.astro`) so no other page is affected. */
 body:has(.tw-home) {
 	--sl-content-width: 100%;
+}
+
+/* `.tw-home` is `not-content`, so Starlight's prose styles stay out. The
+   directives rendered inside it (details, hotspots, kbd, terms, code) bring
+   their own classes; these few rules cover the plain markdown they contain. */
+.tw-home details p {
+	margin: 0;
+	font-family: var(--font-reading);
+	line-height: 1.65;
+}
+
+.tw-home details p + p {
+	margin-top: 0.75rem;
+}
+
+.tw-home :not([data-questions]) > details + details {
+	margin-top: 0.75rem;
+}
+
+.tw-home a:not([class]) {
+	color: var(--color-primary);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.tw-home :is(details, .tw-prose) :not(pre) > code {
+	padding: 0.1em 0.35em;
+	border-radius: 0.25rem;
+	background: var(--sl-color-bg-inline-code);
+	font-family: var(--font-mono);
+	font-size: 0.875em;
 }
 
 /* Below-the-fold homepage sections skip layout/paint until scrolled near —

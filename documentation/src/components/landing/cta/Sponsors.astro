@@ -1,0 +1,53 @@
+---
+import Icon from "../shared/Icon.astro";
+import { landingStyles as l } from "../shared/styles";
+import { PRIVATE_SPONSORS, sponsors } from "./data";
+import { ctaStyles as s } from "./styles";
+
+interface Props {
+	href: string;
+}
+
+const { href } = Astro.props;
+
+const ordered = [...sponsors].sort(
+	(a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)),
+);
+const total = sponsors.length + PRIVATE_SPONSORS;
+const avatarPx = (featured?: boolean) => (featured ? 48 : 36);
+---
+
+<div class={s.sponsors}>
+  <p class={s.sponsorsLabel} id="sponsors-label">
+    Development is supported by {total} sponsors
+  </p>
+  <ul class={s.sponsorsList} aria-labelledby="sponsors-label">
+    {
+      ordered.map((sponsor) => (
+        <li>
+          <a
+            class={s.sponsorLink}
+            href={`https://github.com/${sponsor.login}`}
+            aria-label={`${sponsor.name} on GitHub`}>
+            <img
+              class:list={[
+                s.sponsorAvatar,
+                sponsor.featured ? s.avatarFeatured : s.avatarRegular,
+              ]}
+              src={`https://github.com/${sponsor.login}.png?size=${avatarPx(sponsor.featured) * 2}`}
+              alt=""
+              width={avatarPx(sponsor.featured)}
+              height={avatarPx(sponsor.featured)}
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <a class={l.textLink} href={href}>
+    Sponsor the project
+    <Icon name="arrow" class="size-4" />
+  </a>
+</div>

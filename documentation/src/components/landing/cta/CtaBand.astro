@@ -1,0 +1,34 @@
+---
+import { Icon as StarlightIcon } from "@astrojs/starlight/components";
+import Icon from "../shared/Icon.astro";
+import { landingStyles as l } from "../shared/styles";
+import Sponsors from "./Sponsors.astro";
+import { ctaStyles as s } from "./styles";
+import type { CtaBandProps } from "./types";
+
+interface Props extends CtaBandProps {}
+
+const { title, primaryCta, secondaryCta, sponsorHref } = Astro.props;
+---
+
+<section class={s.section} aria-labelledby="cta-title">
+  <div class={l.container}>
+    <div class={s.grid}>
+      <div class={s.copy}>
+        <h2 id="cta-title" class={s.title}>{title}</h2>
+        <div class={s.body}><slot /></div>
+        <div class={s.actions}>
+          <a class={l.buttonPrimary} href={primaryCta.href}>
+            {primaryCta.label}
+            <Icon name="arrow" class="size-4" />
+          </a>
+          <a class={l.buttonSecondary} href={secondaryCta.href}>
+            <StarlightIcon name="discord" class={l.icon} />
+            {secondaryCta.label}
+          </a>
+        </div>
+      </div>
+      <Sponsors href={sponsorHref} />
+    </div>
+  </div>
+</section>
