@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.logs.LogRecordBuilder
 import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.context.Context
+import org.slf4j.ILoggerFactory
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
@@ -46,8 +47,14 @@ class OpenTelemetryLogbackAppender(
 fun installOpenTelemetryLogback(
     openTelemetry: OpenTelemetry,
     minimumLevel: Level,
+): AutoCloseable = installOpenTelemetryLogback(openTelemetry, minimumLevel, LoggerFactory.getILoggerFactory())
+
+internal fun installOpenTelemetryLogback(
+    openTelemetry: OpenTelemetry,
+    minimumLevel: Level,
+    loggerFactory: ILoggerFactory,
 ): AutoCloseable {
-    val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+    val loggerContext = loggerFactory as? LoggerContext ?: return AutoCloseable {}
     val root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
     val previousLevel = root.level
     root

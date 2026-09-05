@@ -14,8 +14,17 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
+import org.slf4j.helpers.NOPLoggerFactory
 
 val OpenTelemetryLogbackAppenderTest by testSuite {
+    test("ignores a non Logback SLF4J backend") {
+        val sdk = OpenTelemetrySdk.builder().build()
+
+        installOpenTelemetryLogback(sdk, Level.WARN, NOPLoggerFactory()).close()
+
+        sdk.close()
+    }
+
     test("bridges enabled diagnostics with active trace context") {
         val exporter = InMemoryLogRecordExporter.create()
         val loggerProvider =
