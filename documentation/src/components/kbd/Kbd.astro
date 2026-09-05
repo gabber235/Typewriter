@@ -1,0 +1,40 @@
+---
+import { keyCap, parseChords } from "./keys";
+import { kbdStyles as s } from "./styles";
+
+interface Props {
+	/** Chord syntax identical to the `:kbd[]` directive, e.g. `"Ctrl+K"`. */
+	keys: string;
+}
+
+const { keys } = Astro.props;
+const chords = parseChords(keys);
+---
+
+<kbd class={s.group}>
+  {
+    chords.map((chord, chordIndex) => (
+      <Fragment>
+        {chordIndex > 0 && <span class={s.chord}>then</span>}
+        {chord.map((key, keyIndex) => {
+          const cap = keyCap(key);
+          return (
+            <Fragment>
+              {keyIndex > 0 && <span class={s.plus}>+</span>}
+              <kbd class={s.cap}>
+                {cap.spoken ? (
+                  <Fragment>
+                    <span aria-hidden="true">{cap.glyph}</span>
+                    <span class={s.srOnly}>{cap.spoken}</span>
+                  </Fragment>
+                ) : (
+                  cap.glyph
+                )}
+              </kbd>
+            </Fragment>
+          );
+        })}
+      </Fragment>
+    ))
+  }
+</kbd>

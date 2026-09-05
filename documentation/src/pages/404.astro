@@ -1,0 +1,32 @@
+---
+// A `<StarlightPage>` outside the docs content collection: it gets the same
+// header, footer and theming as every other page without competing with
+// `[...slug]`'s routing for the "404" id (see `disable404Route` in
+// astro.config.mjs).
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { Landing } from "../components/landing/shell";
+import { NotFound } from "../components/notfound";
+import { BASE_PATH } from "../lib/base-path";
+
+const frontmatter = {
+	title: "404",
+	description:
+		"This page doesn't exist. Check the URL, search the docs, or head back home.",
+	template: "splash" as const,
+	tableOfContents: false,
+	lastUpdated: false,
+	prev: false,
+	next: false,
+	pagefind: false,
+};
+---
+
+<StarlightPage frontmatter={frontmatter}>
+  <Landing>
+    <NotFound
+      primaryCta={{ label: "Get started", href: `${BASE_PATH}docs/` }}
+      secondaryCta={{ label: "Go home", href: BASE_PATH }}
+      searchKeys="Ctrl+K"
+    />
+  </Landing>
+</StarlightPage>

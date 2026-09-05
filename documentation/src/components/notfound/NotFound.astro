@@ -1,0 +1,47 @@
+---
+import { Kbd } from "../kbd";
+import Icon from "../landing/shared/Icon.astro";
+import { landingStyles as l } from "../landing/shared/styles";
+import type { Cta } from "../landing/shared/types";
+import { notFoundStyles as s } from "./styles";
+
+interface Props {
+	primaryCta: Cta;
+	secondaryCta: Cta;
+	/** Chord syntax identical to the `:kbd[]` directive, shown as a search hint. */
+	searchKeys: string;
+}
+
+const { primaryCta, secondaryCta, searchKeys } = Astro.props;
+---
+
+<div class={s.root}>
+  <p class={s.code}>
+    <span aria-hidden="true">404</span>
+    <span class={s.cursor} aria-hidden="true"></span>
+    <span class="sr-only">Page not found</span>
+  </p>
+  <h1 class={s.title}>This page hasn't been written yet.</h1>
+  <p class={s.lead}>
+    Every page belongs to a book, and this one isn't in ours. It may have
+    moved, or it may not exist at all.
+  </p>
+  <div class={s.actions}>
+    <a class={l.buttonPrimary} href={primaryCta.href}>
+      {primaryCta.label}
+      <Icon name="arrow" class="size-4" />
+    </a>
+    <a class={l.buttonSecondary} href={secondaryCta.href}>
+      {secondaryCta.label}
+    </a>
+  </div>
+  <p class={s.hint}>Or press <Kbd keys={searchKeys} /> to search the docs.</p>
+</div>
+
+<style is:global>
+  @keyframes notfound-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+</style>

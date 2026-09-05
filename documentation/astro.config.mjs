@@ -38,6 +38,10 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: "Typewriter",
+			// A dedicated `src/pages/404.astro` (via `<StarlightPage>`) replaces the
+			// injected route; keeping both would race the same content collection
+			// entry through `[...slug]` and log a route-priority warning at build.
+			disable404Route: true,
 			logo: {
 				src: "./src/assets/logo.png",
 				alt: "Typewriter Logo",
