@@ -30,9 +30,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import skirout.library.v2.authoring.WatchCompiledContent
-import skirout.library.v2.authoring.WatchCompiledContentRequest
-import skirout.library.v2.authoring.WatchCompiledContentResponse
+import skirout.library.v1.compiled_content.WatchCompiledContent
+import skirout.library.v1.compiled_content.WatchCompiledContentRequest
+import skirout.library.v1.compiled_content.WatchCompiledContentResponse
 
 interface EngineContentDelivery {
     val health: StateFlow<EngineContentDeliveryHealth>
@@ -138,16 +138,16 @@ private fun compiledContentWatch(address: RealmServiceAddress) =
     skirWatchContract(
         method = WatchCompiledContent,
         updateSerializer = WatchCompiledContentResponse.serializer,
-        name = OperationName.of("compiled.content.watch.v2"),
-        requestAddress = realmRequestAddress("compiled.content.watch.v2").subscribedAt(address),
-        updateAddress = realmEventAddress("compiled.content.watch.v2"),
+        name = OperationName.of("compiled.content.watch"),
+        requestAddress = realmRequestAddress("compiled.content.watch").subscribedAt(address),
+        updateAddress = realmEventAddress("compiled.content.watch"),
         initialPolicy =
             ResponsePolicy(
                 WatchCompiledContentResponse.createInternalError(message = "Compiled content watch failed"),
                 compiledContentResponseClassifier,
             ),
         updateClassifier = compiledContentResponseClassifier,
-        failureSlug = ErrorSlug.of("compiled-content-watch-v2-failed"),
+        failureSlug = ErrorSlug.of("compiled-content-watch-failed"),
     )
 
 private val compiledContentResponseClassifier =
@@ -165,7 +165,7 @@ private val compiledContentResponseClassifier =
         ResponseClassification(outcome, ResponseVariant.of(response.kind.name.lowercase()))
     }
 
-private fun skirout.library.v2.authoring.CompiledContentActivation.toDomain() =
+private fun skirout.library.v1.compiled_content.CompiledContentActivation.toDomain() =
     CompiledContentActivation(
         activationRevision = activationRevision,
         manifestDigest = ContentDigest(manifestDigest),
@@ -173,4 +173,4 @@ private fun skirout.library.v2.authoring.CompiledContentActivation.toDomain() =
         shards = shards.map { CompiledShardPointer(ContentDigest(it.shardDigest), it.blob.toDomain()) },
     )
 
-private fun skirout.library.v2.authoring.CompiledBlobPointer.toDomain() = CompiledBlobPointer(ContentDigest(digest), size)
+private fun skirout.library.v1.compiled_content.CompiledBlobPointer.toDomain() = CompiledBlobPointer(ContentDigest(digest), size)
