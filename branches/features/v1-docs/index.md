@@ -1,0 +1,386 @@
+---
+title: Home
+description: Typewriter is a free Paper plugin plus a web panel for building NPC
+  dialogues, quests, scenes and living NPCs without code, and for extending them
+  in Kotlin.
+editUrl: false
+head: []
+tableOfContents: false
+template: splash
+lastUpdated: false
+prev: false
+next: false
+sidebar:
+  hidden: false
+  attrs: {}
+pagefind: true
+draft: false
+---
+
+import { CtaBand } from '@components/landing/cta';
+import { Developers } from '@components/landing/developers';
+import { Screenshot, Tile, Tiles } from '@components/landing/editor';
+import { ChatIllustration, Step, Steps } from '@components/landing/howitworks';
+import { IntroAnimation } from '@components/intro';
+import { Beat, Recall, Script } from '@components/landing/memory';
+import { Start } from '@components/landing/start';
+import { Section } from '@components/landing/section';
+import { Landing } from '@components/landing/shell';
+import { Build, BuildItem } from '@components/landing/outcomes';
+import { getSiteVariables } from '@components/variables/site-variables';
+import { BASE_PATH } from '@lib/base-path';
+import panelConnect from '@assets/mockups/panel-connect.png';
+import panelLibrary from '@assets/mockups/panel-library.png';
+import panelInspector from '@assets/mockups/panel-inspector.png';
+import panelManifest from '@assets/mockups/panel-manifest.png';
+import panelPages from '@assets/mockups/panel-pages.png';
+import panelScene from '@assets/mockups/panel-scene.png';
+import panelSearch from '@assets/mockups/panel-search.png';
+
+export const vars = getSiteVariables();
+
+<Landing>
+
+<IntroAnimation
+  primaryCta={{ label: 'Get Started', href: `${BASE_PATH}docs/`, icon: 'arrow' }}
+  secondaryCta={{ label: 'Join Discord', href: vars.discord, icon: 'discord' }}
+/>
+
+<Section
+  id="what-you-build"
+  eyebrow="What you build"
+  title="Dialogue, quests, scenes and NPCs"
+  lead="Each one is a page in the panel. Pick a page type, place entries on it, connect them."
+>
+
+<Build label="What you build with Typewriter">
+<BuildItem
+    title="Dialogue"
+    mockup={{ src: panelPages, alt: 'Wireframe of a sequence page: an event element connected to dialogue and action elements, with the inspector open.' }}
+  >
+
+NPCs talk in chat, players answer with options, and each answer can lead somewhere else.
+
+</BuildItem>
+<BuildItem
+    title="Quests"
+    mockup={{ src: panelManifest, alt: 'Wireframe of a manifest page: a tree of audience elements that stay active while their condition holds.' }}
+  >
+
+Objectives count kills, distance and blocks, show progress in the sidebar, and hand over to the next objective when done.
+
+</BuildItem>
+<BuildItem
+    title="Scenes"
+    mockup={{ src: panelScene, alt: 'Wireframe of the scene editor: entry tracks with cue spans and keyframes on a frame ruler.' }}
+  >
+
+Camera moves, titles, particles and spoken lines on one timeline, timed to the frame.
+
+</BuildItem>
+<BuildItem
+    title="NPCs"
+    mockup={{ src: panelInspector, alt: 'Wireframe of a selected element next to its inspector fields.' }}
+  >
+
+Define an NPC once, then place instances that patrol a road network, look at players and react when clicked.
+
+</BuildItem>
+</Build>
+
+</Section>
+
+<Section
+  id="how-it-works"
+  eyebrow="How it works"
+  title="Three steps from a fresh server to a talking NPC"
+  band
+>
+
+<Steps cta={{ label: 'Start with the install guide', href: `${BASE_PATH}docs/` }}>
+<Step
+    number={1}
+    title="Connect your server to a realm"
+    mockup={{
+      src: panelConnect,
+      alt: 'Wireframe mockup of the panel’s Services page with the Connect a Service dialog open: a ten-cell token field with seven cells filled, and a Connect button.',
+    }}
+  >
+
+Install the plugin next to PacketEvents and start the server. The console prints a ten-character registration token; paste it into the panel under **Services → Connect a Service** and the server joins your :term[realm].
+
+</Step>
+<Step
+    number={2}
+    title="Build pages in the panel"
+    mockup={{
+      src: panelLibrary,
+      alt: 'Wireframe mockup of the Library: a grid of eight coloured book covers, the first one selected, with its details in the inspector.',
+    }}
+  >
+
+Create a :term[book] in the Library, add :term[pages], and place entries on them. Sequence pages hold dialogue and actions, scene pages hold timed cues, manifest pages hold audiences that stay active while a condition is true.
+
+</Step>
+<Step number={3} title="Play it on your server">
+
+Players talk to your NPCs in chat, pick options, complete objectives and watch scenes on the server connected to the realm. Nothing to install on the client.
+
+<ChatIllustration slot="media" />
+
+</Step>
+</Steps>
+
+</Section>
+
+<Section
+  id="editor"
+  eyebrow="The panel"
+  title="One editor for graphs and timelines"
+  lead="Sign in, open your realm, and every book, page and entry is a click away. Nothing to install. Click a pin to see what each part of the editor does."
+>
+
+<Screenshot>
+
+::::hotspots[The page editor for a sequence page]
+![Wireframe mockup of the page editor: page tree on the left, a graph of connected elements in the middle, the inspector on the right.](../../assets/mockups/panel-pages.png)
+
+1. [9%, 27%] **Pages by chapter** — every page in the book, grouped into chapters. The search box above filters them.
+2. [29%, 34%] **Event element** — something the player did. Its arrows are :term[triggers]: when this finishes, the next element runs.
+3. [82%, 41%] **Inspector** — the fields of the selected element, rendered from the extension's definition.
+4. [22%, 96%] **Shortcuts** — the panel is keyboard first. :kbd[Shift+M] moves, :kbd[Shift+R] resizes, :kbd[Ctrl+H] to :kbd[Ctrl+L] switch panes, :kbd[Esc] returns to Normal mode.
+::::
+
+</Screenshot>
+
+<Tiles label="More about the editor">
+<Tile
+    title="Scenes on a timeline"
+    mockup={{
+      src: panelScene,
+      alt: 'Wireframe mockup of the scene editor: entry tracks on the left, cue spans and keyframe diamonds along a frame ruler, the cue inspector on the right.',
+    }}
+  >
+
+Scene pages swap the graph for a timeline: one track per entry, :term[cues] placed by frame, twenty frames per second.
+
+</Tile>
+<Tile
+    title="Search with selectors"
+    mockup={{
+      src: panelSearch,
+      alt: 'Wireframe mockup of the search palette: a query with a selector chip, filter chips and five colour-coded results.',
+    }}
+  >
+
+Press :kbd[S] or :kbd[/] and search the whole realm with `key:value` selectors. Results group into entries, definitions, pages, books and tags.
+
+</Tile>
+<Tile title="Dark or light">
+<Fragment slot="media">
+
+:::compare[Dark|Light]{start=55}
+![Wireframe mockup of the page editor in the dark theme.](../../assets/mockups/panel-pages.png)
+![Wireframe mockup of the page editor in the light theme.](../../assets/mockups/panel-pages-light.png)
+:::
+
+</Fragment>
+
+The panel follows your system theme, and so do these docs. Drag the handle to compare.
+
+</Tile>
+</Tiles>
+
+</Section>
+
+<Section
+  id="memory"
+  eyebrow="Player memory"
+  title="Stories that remember each player"
+  band
+  desktopOnly
+>
+<Fragment slot="lead">
+
+Every player gets their own version of your story. One page can greet a stranger, thank the person who brought the iron and turn away someone who already claimed the reward. Typewriter stores :term[facts] per player; :term[criteria] read them before an entry runs and :term[modifiers] change them afterwards.
+
+</Fragment>
+
+<Script label="One blacksmith, three moments in a player's story">
+<Beat
+  when="Day 1"
+  where="The forge"
+  speaker="Blacksmith"
+  line="You look like someone who can swing a hammer. Bring me five iron ingots and there's coin in it for you."
+  reply="I'll find them."
+  remembers={[
+    { key: 'Iron job', value: 'started', changed: true },
+    { key: 'Ingots handed in', value: '0 of 5', changed: true },
+  ]}
+/>
+<Beat
+  when="Day 1"
+  where="Later"
+  speaker="Blacksmith"
+  line="Five ingots, as promised. Here, take these coins and get yourself a warm meal."
+  reply="Pleasure doing business."
+  remembers={[
+    { key: 'Iron job', value: 'done', changed: true },
+    { key: 'Ingots handed in', value: '5 of 5', changed: true },
+    { key: 'Reward paid', value: 'today', changed: true },
+  ]}
+/>
+<Beat
+  when="Day 2"
+  where="The forge"
+  speaker="Blacksmith"
+  line="Back already? The forge is stocked until tomorrow. Try the notice board by the market."
+  reply="Until tomorrow, then."
+  remembers={[
+    { key: 'Iron job', value: 'done' },
+    { key: 'Reward paid', value: 'yesterday', changed: true },
+    { key: 'Next job in', value: '6 h', changed: true },
+  ]}
+/>
+</Script>
+
+<Recall
+  title="What it can remember"
+  lead="Each is a fact entry you add once, the purple ones in the panel. Typewriter keeps the values per player, per world or for the whole server, and saves them for you."
+  items={[
+    {
+      title: 'Forever',
+      text: 'Joined before, finished the quest, took the reward: kept until you reset it.',
+    },
+    {
+      title: 'Until logout',
+      text: 'Time played this session, warnings given tonight: gone when the player leaves.',
+    },
+    {
+      title: 'For a set time',
+      text: 'The guard stays angry for twenty minutes, then forgets about it.',
+    },
+    {
+      title: 'Counting down',
+      text: 'Daily rewards and cooldowns keep ticking while the player is offline.',
+    },
+    {
+      title: 'On a schedule',
+      text: 'Weekly resets and shop opening hours, cleared by a cron expression.',
+    },
+    {
+      title: 'Read from the world',
+      text: 'Items in the inventory, balance, permissions, WorldGuard region: looked up live, nothing stored.',
+    },
+  ]}
+/>
+
+</Section>
+
+<Section
+  id="developers"
+  eyebrow="For developers"
+  title="Every entry is a Kotlin class"
+>
+
+<Developers
+  extensions={[
+    { name: 'Basic', entries: 190 },
+    { name: 'Entity', entries: 235 },
+    { name: 'Quest', entries: 24 },
+    { name: 'RoadNetwork', entries: 11 },
+    { name: 'Vault' },
+    { name: 'WorldGuard' },
+    { name: 'Citizens' },
+    { name: 'MythicMobs' },
+    { name: 'RPGRegions' },
+    { name: 'SuperiorSkyblock' },
+  ]}
+  docsCta={{ label: 'Read the develop docs', href: `${BASE_PATH}develop/` }}
+>
+<Fragment slot="text">
+
+An :term[extension] is a JAR of Kotlin classes marked `@Entry`. The panel reads the annotation for the name, description, colour and icon, turns the constructor parameters into inspector fields, and the server runs the body. The ten extensions that ship with Typewriter, about five hundred entries, are written exactly like this one.
+
+</Fragment>
+
+<Fragment slot="excerpt">
+
+```kotlin title="ExampleActionEntry.kt"
+@Entry("example_action", "An example action entry.", Colors.RED, "material-symbols:touch-app-rounded")
+class ExampleActionEntry(
+    override val name: String = "",
+) : ActionEntry {
+    override fun ActionTrigger.execute() {
+        // Do something with the player
+    }
+}
+```
+
+</Fragment>
+
+```kotlin title="ExampleActionEntry.kt" wrap {"Shown in the panel":2-3} {"Fields in the inspector":5-10} {"Runs on the server":12-15}
+package com.example.myextension
+
+@Entry("example_action", "An example action entry.", Colors.RED, "material-symbols:touch-app-rounded")
+class ExampleActionEntry(
+
+    override val id: String = "",
+    override val name: String = "",
+    override val criteria: List<Criteria> = emptyList(),
+    override val modifiers: List<Modifier> = emptyList(),
+    override val triggers: List<Ref<TriggerableEntry>> = emptyList(),
+) : ActionEntry {
+
+    override fun ActionTrigger.execute() {
+        // Do something with the player
+    }
+}
+```
+
+</Developers>
+
+</Section>
+
+<Section
+  id="before-you-start"
+  eyebrow="Before you start"
+  title="Runs on a plain Paper server"
+  lead="Drop the plugin into plugins/ next to PacketEvents and start the server. Folia is not supported."
+  band
+>
+
+<Start>
+
+:::details[Do I need to know how to code?]{name=faq}
+No. Everything on this page is built in the panel by placing entries and connecting them. Kotlin only comes in when you write your own extension because the shipped entries do not cover a case.
+:::
+
+:::details[Is 1.0 ready to use?]{name=faq}
+Not yet. Typewriter 1.0 is in active development: the new panel, the realm service and these docs are being built in the open. Expect gaps, and ask on the [Discord](:var[discord]) for the current state before moving a live server to it.
+:::
+
+:::details[Do I host the panel?]{name=faq}
+No. The 1.0 panel is a hosted web app. You sign in, create an organization and a realm, and connect servers to it with a registration token. The plugin is the only thing you run.
+:::
+
+:::details[Is it open source?]{name=faq}
+It is source-available. The code is on [GitHub](:var[github]) under the Typewriter Software License, which allows use and contribution but not redistribution or modification outside the project.
+:::
+
+</Start>
+
+</Section>
+
+<CtaBand
+  title="Your first talking NPC is an evening's work."
+  primaryCta={{ label: 'Get started', href: `${BASE_PATH}docs/` }}
+  secondaryCta={{ label: 'Join the Discord', href: vars.discord }}
+  sponsorHref={vars.sponsors}
+>
+
+Install the plugin, connect a realm and build your first page. The docs start where this page ends.
+
+</CtaBand>
+
+</Landing>

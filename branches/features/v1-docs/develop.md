@@ -1,0 +1,32 @@
+---
+title: Develop
+description: Developer documentation for Typewriter 1.0. Nothing is written yet;
+  this page marks the section.
+editUrl: true
+head: []
+template: doc
+sidebar:
+  hidden: false
+  attrs: {}
+pagefind: true
+draft: false
+---
+
+:::tldr
+This section will explain how to build a Typewriter :term[extension] in Kotlin: project setup with the module plugin, the :term[entry] families, :term[interactions], querying, triggering and dependency injection.
+:::
+
+## What will live here
+
+- **Extensions**: what an extension is and what it can add to the engine.
+- **Getting started**: a Gradle project with the module plugin, building the JAR and loading it with :cmd[/tw reload].
+- **Entries**: trigger, static, manifest and cinematic entries (the code name for :term[scene] cues), with a guide for picking the right base type.
+- **Engine APIs**: interactions, querying, triggering and dependency injection.
+
+## Before you begin
+
+- JDK :var[java] or newer and an IDE with Kotlin support.
+- Working knowledge of Gradle and the Paper API.
+- Typewriter :var[latest] on a Paper :var[paper] test server.
+
+Pages in this section use the same [writing syntax](../docs/01-syntax.md) as the user documentation.
