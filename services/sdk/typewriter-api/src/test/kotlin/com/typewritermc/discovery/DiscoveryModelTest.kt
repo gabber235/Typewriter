@@ -136,7 +136,67 @@ val DiscoveryModelTest by testSuite {
 
         assembled.executableBindings shouldBe listOf(KeyedExecutableBinding(key, binding))
     }
+
+    test("identical executable bindings from bundled engine core are deduplicated") {
+        val panelKey =
+            ContributionKey(
+                ArtifactId("typewritermc:panel"),
+                "main",
+                ProducerId("types"),
+                ContributionName("core/pages.cbor"),
+            )
+        val paperKey = panelKey.copy(origin = ArtifactId("typewritermc:paper"))
+        val binding = ExecutableBinding("pages", DiscoveryDomains.Realm, "example.GeneratedPageModule")
+
+        val assembled =
+            TypeContributionAssembler.assemble(
+                listOf(
+                    keyedContribution(paperKey, binding),
+                    keyedContribution(panelKey, binding),
+                ),
+            )
+
+        assembled.executableBindings shouldBe listOf(KeyedExecutableBinding(panelKey, binding))
+    }
+
+    test("different executable providers with the same identity conflict") {
+        val firstKey =
+            ContributionKey(
+                ArtifactId("example:first"),
+                "main",
+                ProducerId("types"),
+                ContributionName("pages.cbor"),
+            )
+        val secondKey = firstKey.copy(origin = ArtifactId("example:second"))
+
+        shouldThrow<IllegalArgumentException> {
+            TypeContributionAssembler.assemble(
+                listOf(
+                    keyedContribution(
+                        firstKey,
+                        ExecutableBinding("pages", DiscoveryDomains.Realm, "example.FirstPageModule"),
+                    ),
+                    keyedContribution(
+                        secondKey,
+                        ExecutableBinding("pages", DiscoveryDomains.Realm, "example.SecondPageModule"),
+                    ),
+                ),
+            )
+        }
+    }
 }
+
+private fun keyedContribution(
+    key: ContributionKey,
+    binding: ExecutableBinding,
+) = KeyedTypeContribution(
+    key,
+    TypeDiscoveryContribution(
+        definitions = emptyList(),
+        prototypeBindings = emptyList(),
+        executableBindings = listOf(binding),
+    ),
+)
 
 private fun contribution(
     name: String,

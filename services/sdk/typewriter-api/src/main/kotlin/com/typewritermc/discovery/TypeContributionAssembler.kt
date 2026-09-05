@@ -52,7 +52,7 @@ object TypeContributionAssembler {
                 val identity = binding.domain to binding.localName
                 val candidate = KeyedExecutableBinding(keyed.key, binding)
                 val previous = executableBindings.putIfAbsent(identity, candidate)
-                require(previous == null || previous == candidate) {
+                require(previous == null || previous.binding == binding) {
                     "Conflicting executable binding $identity from ${previous?.key} and ${keyed.key}."
                 }
             }
