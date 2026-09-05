@@ -1,0 +1,11 @@
+---
+// Renders nothing: carries the client script, included once from Head.astro.
+---
+
+<script>
+	import { setupCompare } from "./compare";
+
+	setupCompare();
+	document.addEventListener("astro:after-swap", setupCompare);
+	document.addEventListener("astro:page-load", setupCompare);
+</script>

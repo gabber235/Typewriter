@@ -1,0 +1,19 @@
+<script is:inline>
+  // Runs while <head> is parsed, before any figure exists, so the legends that
+  // CSS keeps visible for no-JS readers never flash in. The ClientRouter
+  // re-syncs <html> attributes on navigation, hence the re-mark after a swap.
+  (() => {
+    const mark = () => document.documentElement.classList.add("hotspots-js");
+    mark();
+    document.addEventListener("astro:after-swap", mark);
+  })();
+</script>
+
+<script>
+  import { setupHotspots } from "./hotspots";
+
+  // `astro:after-swap` covers view-transition navigations, `astro:page-load`
+  // the initial load; setup is idempotent so the double fire is harmless.
+  document.addEventListener("astro:after-swap", setupHotspots);
+  document.addEventListener("astro:page-load", setupHotspots);
+</script>

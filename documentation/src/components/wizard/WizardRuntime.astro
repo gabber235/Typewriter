@@ -1,0 +1,8 @@
+<script>
+	import { setupWizards } from "./wizard";
+
+	// `astro:after-swap` covers view-transition navigations, `astro:page-load`
+	// the initial load; setup is idempotent so the double fire is harmless.
+	document.addEventListener("astro:after-swap", setupWizards);
+	document.addEventListener("astro:page-load", setupWizards);
+</script>
