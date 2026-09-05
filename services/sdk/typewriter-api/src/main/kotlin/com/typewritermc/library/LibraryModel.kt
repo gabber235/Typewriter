@@ -2,7 +2,6 @@ package com.typewritermc.library
 
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementRevision
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.types.Color
@@ -17,7 +16,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Book(
     val id: BookId,
-    val revision: ResourceRevision,
     val title: LibraryName,
     val icon: Icon,
     val color: Color,
@@ -27,7 +25,6 @@ data class Book(
 @Serializable
 data class Tag(
     val id: TagId,
-    val revision: ResourceRevision,
     val name: LibraryName,
     val color: Color,
     val parents: Set<Ref<Tag>>,
@@ -37,7 +34,6 @@ data class Tag(
 @Serializable
 data class Page(
     val id: PageId,
-    val revision: ResourceRevision,
     val book: Ref<Book>,
     val name: LibraryName,
     val kind: PageKindRef,
@@ -53,19 +49,8 @@ data class GridPlacement(
     val height: Int,
 )
 
-@JvmInline
-@Serializable
-value class PageDocumentRevision(
-    val value: String,
-) {
-    init {
-        require(value.isNotBlank()) { "Page document revisions must not be blank." }
-    }
-}
-
 @Serializable
 data class PageDocument(
-    val revision: PageDocumentRevision,
     val page: Page,
     val elements: List<PageDocumentElement>,
     val references: List<PageReference>,
@@ -87,7 +72,6 @@ data class PageDocument(
 @Serializable
 data class PageDocumentElement(
     val id: ElementInstanceId,
-    val revision: ElementRevision,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
     val name: String,

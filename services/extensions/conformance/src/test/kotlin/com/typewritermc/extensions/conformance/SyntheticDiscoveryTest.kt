@@ -46,7 +46,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.uuid.Uuid
 
 val SyntheticDiscoveryTest by testSuite {
     test("generates the element descriptor and stable concrete identity") {
@@ -356,7 +355,7 @@ val SyntheticDiscoveryTest by testSuite {
 
 private fun declaredContribution() = typeContribution("declared.cbor")
 
-private fun elementId(value: String) = ElementInstanceId(Uuid.parseHex(value))
+private fun elementId(value: String) = ElementInstanceId(value)
 
 private fun typeContribution(name: String) =
     TypeDiscoveryContributionCodec.decode(

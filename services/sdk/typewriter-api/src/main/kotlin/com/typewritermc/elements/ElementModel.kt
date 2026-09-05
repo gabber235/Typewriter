@@ -13,7 +13,6 @@ import com.typewritermc.types.TypewriterString
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
-import kotlin.uuid.Uuid
 
 interface Element : Referenceable {
     val id: ElementInstanceId
@@ -42,7 +41,7 @@ value class ElementTypeId(
 @Serializable(with = ElementInstanceIdSerializer::class)
 @TypewriterString
 value class ElementInstanceId(
-    val value: Uuid,
+    val value: String,
 )
 
 @Target(AnnotationTarget.CLASS)

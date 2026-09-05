@@ -100,12 +100,14 @@ class ReferenceAssembler {
 }
 
 sealed interface ReferenceAssemblyResult {
+    val value: DataValue
+
     data class Success(
-        val value: DataValue,
+        override val value: DataValue,
     ) : ReferenceAssemblyResult
 
     data class Failure(
-        val value: DataValue,
+        override val value: DataValue,
         val diagnostics: List<ReferenceDiagnostic>,
     ) : ReferenceAssemblyResult
 }

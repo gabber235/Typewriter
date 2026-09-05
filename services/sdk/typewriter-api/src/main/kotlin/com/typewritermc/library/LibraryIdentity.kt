@@ -28,19 +28,19 @@ value class TagId(
 
 @JvmInline
 @Serializable
-value class ResourceRevision(
-    val value: Long,
-) {
-    init {
-        require(value >= 1) { "Resource revisions must be positive." }
-    }
-}
-
-@JvmInline
-@Serializable
 value class LibraryName(
     val value: String,
-)
+) {
+    init {
+        require(value.length >= 3 && value.matches(PATTERN)) {
+            "Library names must contain lowercase alphanumeric segments separated by single underscores."
+        }
+    }
+
+    private companion object {
+        val PATTERN = Regex("^[a-z0-9]+(_[a-z0-9]+)*$")
+    }
+}
 
 fun BookId.ref(): Ref<Book> = Ref(ResourceId("book", key))
 

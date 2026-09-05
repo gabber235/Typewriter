@@ -10,7 +10,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class StoredElement(
     val id: ElementInstanceId,
-    val revision: ElementRevision,
     val elementType: ElementTypeId,
     val schemaRevision: Int,
     val name: String,
@@ -51,16 +50,6 @@ data class StoredReference(
     val target: ResourceId,
     val expectedType: TypeExpression,
 )
-
-@JvmInline
-@Serializable
-value class ElementRevision(
-    val value: Long,
-) {
-    init {
-        require(value >= 1) { "Element revisions must be positive." }
-    }
-}
 
 @Serializable
 sealed interface ElementPlacement {
@@ -111,4 +100,4 @@ sealed interface ElementPlacement {
     }
 }
 
-fun <T : Element> ElementInstanceId.ref(): Ref<T> = Ref(ResourceId("element", value.toHexString()))
+fun <T : Element> ElementInstanceId.ref(): Ref<T> = Ref(ResourceId("element", value))

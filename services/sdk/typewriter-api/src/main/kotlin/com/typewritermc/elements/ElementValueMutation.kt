@@ -117,6 +117,15 @@ sealed interface ElementValueMutationResult {
 class ElementValueMutator(
     private val decomposer: ReferenceDecomposer = ReferenceDecomposer(),
 ) {
+    fun read(
+        graph: TypeGraph,
+        stored: StoredElementValue,
+        path: ElementValuePath,
+    ): DataValue {
+        val logical = ReferenceAssembler().assemble(graph, stored).value
+        return ValueTarget.resolve(graph, logical, stored.valueWithSlots, path).logical
+    }
+
     fun apply(
         graph: TypeGraph,
         stored: StoredElementValue,
@@ -397,13 +406,6 @@ private fun TypeExpression.materialize(
     }
     return current
 }
-
-private val ReferenceAssemblyResult.value: DataValue
-    get() =
-        when (this) {
-            is ReferenceAssemblyResult.Success -> value
-            is ReferenceAssemblyResult.Failure -> value
-        }
 
 private fun DataValue.slots(): Set<ReferenceSlotId> =
     buildSet {

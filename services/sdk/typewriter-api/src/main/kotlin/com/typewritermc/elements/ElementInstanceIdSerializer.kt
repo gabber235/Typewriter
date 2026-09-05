@@ -6,7 +6,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlin.uuid.Uuid
 
 object ElementInstanceIdSerializer : KSerializer<ElementInstanceId> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("ElementInstanceId", PrimitiveKind.STRING)
@@ -15,8 +14,8 @@ object ElementInstanceIdSerializer : KSerializer<ElementInstanceId> {
         encoder: Encoder,
         value: ElementInstanceId,
     ) {
-        encoder.encodeString(value.value.toHexString())
+        encoder.encodeString(value.value)
     }
 
-    override fun deserialize(decoder: Decoder): ElementInstanceId = ElementInstanceId(Uuid.parseHex(decoder.decodeString()))
+    override fun deserialize(decoder: Decoder): ElementInstanceId = ElementInstanceId(decoder.decodeString())
 }
