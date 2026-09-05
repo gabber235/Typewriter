@@ -1,5 +1,6 @@
 // @ts-check
 
+import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import starlightDocSearch from "@astrojs/starlight-docsearch";
 import tailwindcss from "@tailwindcss/vite";
@@ -117,25 +118,30 @@ export default defineConfig({
 	],
 
 	markdown: {
-		// Order matters: remarkDirective parses `:x[]` / `::x` / `:::x` syntax,
-		// remarkVariables resolves `:var[]` before the other directives see it.
-		remarkPlugins: [
-			remarkDirective,
-			remarkVariables,
-			remarkMdLinks,
-			remarkTerm,
-			remarkAside,
-			remarkKbd,
-			remarkCmd,
-			remarkHighlight,
-			remarkDetails,
-			remarkTldr,
-			remarkSpoiler,
-			remarkWizard,
-			remarkHotspots,
-			remarkCompare,
-		],
-		rehypePlugins: [rehypeBaseLinks],
+		// `markdown.remarkPlugins`/`rehypePlugins` are deprecated in favour of
+		// configuring the unified processor directly (Astro now defaults to a
+		// different, non-unified processor that doesn't run these plugins).
+		processor: unified({
+			// Order matters: remarkDirective parses `:x[]` / `::x` / `:::x` syntax,
+			// remarkVariables resolves `:var[]` before the other directives see it.
+			remarkPlugins: [
+				remarkDirective,
+				remarkVariables,
+				remarkMdLinks,
+				remarkTerm,
+				remarkAside,
+				remarkKbd,
+				remarkCmd,
+				remarkHighlight,
+				remarkDetails,
+				remarkTldr,
+				remarkSpoiler,
+				remarkWizard,
+				remarkHotspots,
+				remarkCompare,
+			],
+			rehypePlugins: [rehypeBaseLinks],
+		}),
 	},
 
 	vite: {

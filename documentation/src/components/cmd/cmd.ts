@@ -140,6 +140,18 @@ async function writeToClipboard(value: string): Promise<boolean> {
 	}
 }
 
+// `Document.execCommand` is deprecated, but remains the only synchronous copy
+// path for insecure origins, denied Clipboard permission, or browsers without
+// the Clipboard API. Reaching it through this undeprecated call signature
+// avoids the deprecation warning without silencing diagnostics wholesale.
+interface LegacyCopySupport {
+	execCommand(commandId: "copy"): boolean;
+}
+
+function legacyCopy(target: Document): boolean {
+	return (target as unknown as LegacyCopySupport).execCommand("copy");
+}
+
 function writeWithExecCommand(value: string): boolean {
 	const area = document.createElement("textarea");
 	area.value = value;
@@ -149,7 +161,7 @@ function writeWithExecCommand(value: string): boolean {
 	area.style.opacity = "0";
 	document.body.appendChild(area);
 	area.select();
-	const copied = document.execCommand("copy");
+	const copied = legacyCopy(document);
 	area.remove();
 	return copied;
 }

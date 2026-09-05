@@ -178,7 +178,7 @@ function finish(
  * One coordinated motion: the root's height, the content's blur/dim and the
  * gate's opacity/scale all run on the same duration and easing.
  */
-function animateTo(parts: SpoilerParts, open: boolean): Promise<boolean> {
+async function animateTo(parts: SpoilerParts, open: boolean): Promise<boolean> {
 	const from = snapshot(parts);
 	cancelRunning(parts.root);
 	applyState(parts, open);
@@ -189,9 +189,8 @@ function animateTo(parts: SpoilerParts, open: boolean): Promise<boolean> {
 	const animations = startAnimations(parts, from, to, duration);
 	running.set(parts.root, animations);
 
-	return settle(animations, duration).then(() =>
-		finish(parts, animations, open),
-	);
+	await settle(animations, duration);
+	return finish(parts, animations, open);
 }
 
 function setOpen(
