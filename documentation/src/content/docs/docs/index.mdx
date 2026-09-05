@@ -1,15 +1,21 @@
 ---
-title: Overview
-description: Learn how to set up Typewriter and build interactive quests, NPC dialogues, and cinematic sequences on your server.
+title: Documentation
+description: The user documentation for Typewriter 1.0. Nothing is written yet; the syntax reference shows how pages will be built.
 ---
 
-Welcome to the Typewriter documentation. This section covers everything you need to install Typewriter, configure it through the web panel, and build interactive experiences on your server.
+:::tldr
+Typewriter 1.0 is being documented from scratch. This section will cover installing the plugin, working in the web panel and building stories. For now it holds the [writing syntax](./01-syntax.md) reference that every future page is built with.
+:::
 
-## Where to start
+## What will live here
 
-- [What is Typewriter?](./01-typewiter) — an introduction to the plugin and its core concepts.
-- [Layout](./02-layout) — how the web panel is organized.
-- [Guides](./guides/) — step-by-step walkthroughs for common tasks.
-- [Reference](./reference/) — detailed descriptions of individual features.
+- **Getting started**: installing the plugin, connecting your server to a :term[realm], the panel layout.
+- **Creating stories**: interactions, :term[scenes], facts, entities, quests and road networks, as step-by-step tutorials.
+- **Concepts**: :term[organizations], :term[books], :term[pages], :term[entries], :term[triggers], :term[facts] and :term[criteria] explained once, properly.
+- **Helpful features** and **troubleshooting**.
 
-Building extensions or integrating with Typewriter from code? Head over to the [Develop](../develop/) section.
+## Writing a page
+
+Every page is Markdown with a small set of custom directives on top: keycaps, copyable commands, site variables, glossary terms, collapsibles, gated sections, decision wizards, annotated screenshots and comparison sliders. The [syntax reference](./01-syntax.md) shows each one with its source and the rendered result on a single page.
+
+Building extensions instead? Head to the [developer documentation](../develop/index.mdx).
