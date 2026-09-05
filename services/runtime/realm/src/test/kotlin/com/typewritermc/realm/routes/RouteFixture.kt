@@ -2,11 +2,7 @@ package com.typewritermc.realm.routes
 
 import build.skir.Serializer
 import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
-import com.typewritermc.realm.repository.BookRepository
 import com.typewritermc.realm.repository.RepositoryFixture
-import com.typewritermc.realm.repository.SurrealLibraryBatchRepository
-import com.typewritermc.realm.repository.SurrealPageDocumentRepository
-import com.typewritermc.realm.testPageCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -24,13 +20,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
-import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
     editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
     presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
-    decorateBooks: (BookRepository) -> BookRepository = { it },
 ) : AutoCloseable {
     val repositories = RepositoryFixture()
     val compiledContent = SurrealCompiledContentRepository(repositories.database)
@@ -41,18 +35,11 @@ internal class RouteFixture(
     private val router: CommunicatorRouter =
         communicator.createRouter(
             RealmRouteFactory(
-                decorateBooks(repositories.books),
-                repositories.pages,
-                repositories.tags,
-                SurrealLibraryBatchRepository(repositories.database),
-                repositories.elements,
-                repositories.elementTypeGraphs,
-                SurrealPageDocumentRepository(repositories.database) { null },
-                compiledContent,
-                editorCatalog,
-                testPageCatalog(),
-                presentationSearch,
-            ).create(RealmAddress("realm", "organization")),
+                authoring = repositories.authoring,
+                compiledContent = compiledContent,
+                editorCatalog = editorCatalog,
+                presentationSearch = presentationSearch,
+            ).create(RealmAddress("realm", "organization"), communicator),
             scope,
         )
     private var replySequence = 0
@@ -91,19 +78,7 @@ internal class RouteFixture(
                 }
                 error("Reply wait ended unexpectedly")
             }
-        publishOutbox()
         return responseSerializer.fromBytes(publication.message.payload.toByteArray())
-    }
-
-    private suspend fun publishOutbox() {
-        while (true) {
-            val pending = repositories.outbox.pending(100)
-            if (pending.isEmpty()) return
-            pending.forEach { row ->
-                communicator.publishEncoded(row.event)
-                repositories.outbox.markPublished(row.id, Instant.now())
-            }
-        }
     }
 
     fun publishedTo(suffix: String) =

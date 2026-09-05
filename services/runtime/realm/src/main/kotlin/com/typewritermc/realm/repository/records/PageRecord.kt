@@ -5,7 +5,6 @@ import com.surrealdb.Value
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.LibraryName
 import com.typewritermc.library.Page
-import com.typewritermc.library.ResourceRevision
 import com.typewritermc.library.ref
 import com.typewritermc.realm.repository.utils.pageKindRef
 import com.typewritermc.realm.repository.utils.toBookId
@@ -13,7 +12,6 @@ import com.typewritermc.realm.repository.utils.toPageId
 
 internal data class PageRecord(
     val id: RecordId = RecordId("page", ""),
-    val revision: Long = 1,
     val book: RecordId = RecordId("book", ""),
     val name: String = "",
     val kind: PageKindRecord = PageKindRecord(),
@@ -23,7 +21,6 @@ internal data class PageRecord(
     fun toPage(): Page =
         Page(
             id = id.toPageId(),
-            revision = ResourceRevision(revision),
             book = book.toBookId().ref(),
             name = LibraryName(name),
             kind = kind.toPageKindRef(),

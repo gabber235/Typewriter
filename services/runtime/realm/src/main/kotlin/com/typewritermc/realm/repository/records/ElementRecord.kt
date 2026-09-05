@@ -2,7 +2,6 @@ package com.typewritermc.realm.repository.records
 
 import com.surrealdb.Value
 import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementRevision
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.elements.ReferenceSlotId
 import com.typewritermc.elements.StoredElement
@@ -37,7 +36,6 @@ internal object ElementRecordParser {
                 pages[id] = objectValue.get("page").getRecordId()
                 StoredElement(
                     id = id,
-                    revision = ElementRevision(objectValue.get("revision").getLong()),
                     elementType = ElementTypeId(DeclaredTypeId.parse(objectValue.get("element_type").getString())),
                     schemaRevision = objectValue.get("schema_revision").getLong().toInt(),
                     name = objectValue.get("name").getString(),

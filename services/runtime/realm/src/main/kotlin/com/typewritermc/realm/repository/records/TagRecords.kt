@@ -4,7 +4,6 @@ import com.surrealdb.RecordId
 import com.surrealdb.Value
 import com.typewritermc.library.GridPlacement
 import com.typewritermc.library.LibraryName
-import com.typewritermc.library.ResourceRevision
 import com.typewritermc.library.Tag
 import com.typewritermc.library.ref
 import com.typewritermc.realm.repository.utils.toTagId
@@ -22,7 +21,6 @@ internal data class PlacementRecord(
 @Suppress("PropertyName")
 internal data class TagRecord(
     val id: RecordId = RecordId("tag", ""),
-    val revision: Long = 1,
     val name: String = "",
     val color: Long = 0L,
     val placement: PlacementRecord = PlacementRecord(),
@@ -31,7 +29,6 @@ internal data class TagRecord(
     fun toTag(): Tag =
         Tag(
             id = id.toTagId(),
-            revision = ResourceRevision(revision),
             name = LibraryName(name),
             color = Color(argb = color.toUInt()),
             parents = parent_tags.mapTo(linkedSetOf()) { it.toTagId().ref() },

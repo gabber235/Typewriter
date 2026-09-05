@@ -1,10 +1,6 @@
 DEFINE TABLE OVERWRITE page SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
-DEFINE FIELD OVERWRITE revision ON page TYPE int
-    DEFAULT 1
-    ASSERT $value >= 1;
-
 DEFINE FIELD OVERWRITE name ON page TYPE string
     ASSERT {
         IF !fn::is_id($value) {

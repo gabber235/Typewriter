@@ -2,7 +2,6 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementRevision
 import com.typewritermc.elements.ElementTypeId
 import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.library.BookId
@@ -12,17 +11,14 @@ import com.typewritermc.library.Page
 import com.typewritermc.library.PageDocument
 import com.typewritermc.library.PageDocumentDiagnostic
 import com.typewritermc.library.PageDocumentElement
-import com.typewritermc.library.PageDocumentRevision
 import com.typewritermc.library.PageId
 import com.typewritermc.library.PageKindId
 import com.typewritermc.library.PageKindRef
-import com.typewritermc.library.ResourceRevision
 import com.typewritermc.library.ref
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
-import kotlin.uuid.Uuid
 
 val PageCompilerTest by testSuite {
     test("graph coordinate changes reuse the same page shard") {
@@ -62,13 +58,11 @@ val PageCompilerTest by testSuite {
 
 private fun document(placement: ElementPlacement): PageDocument =
     PageDocument(
-        revision = PageDocumentRevision("document"),
         page =
             Page(
                 id = PageId("page"),
-                revision = ResourceRevision(1),
                 book = BookId("book").ref(),
-                name = LibraryName("Page"),
+                name = LibraryName("page"),
                 kind = PageKindRef(PageKindId(DeclaredTypeId.parse("50000000000000000000000000000001")), 1),
                 chapter = ChapterPath.Root,
                 priority = 0,
@@ -77,7 +71,6 @@ private fun document(placement: ElementPlacement): PageDocument =
             listOf(
                 PageDocumentElement(
                     id = ELEMENT_ID,
-                    revision = ElementRevision(1),
                     elementType = ELEMENT_TYPE,
                     schemaRevision = 1,
                     name = "Element",
@@ -91,5 +84,5 @@ private fun document(placement: ElementPlacement): PageDocument =
         diagnostics = emptyList(),
     )
 
-private val ELEMENT_ID = ElementInstanceId(Uuid.parseHex("60000000000000000000000000000001"))
+private val ELEMENT_ID = ElementInstanceId("kd9pn4fa2s7m8q3v6x0z")
 private val ELEMENT_TYPE = ElementTypeId(DeclaredTypeId.parse("60000000000000000000000000000002"))

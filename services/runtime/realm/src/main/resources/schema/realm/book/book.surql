@@ -1,10 +1,6 @@
 DEFINE TABLE OVERWRITE book SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
-DEFINE FIELD OVERWRITE revision ON book TYPE int
-    DEFAULT 1
-    ASSERT $value >= 1;
-
 DEFINE FIELD OVERWRITE title ON book TYPE string
     ASSERT {
         IF !fn::is_id($value) {

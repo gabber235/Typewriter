@@ -9,8 +9,6 @@ import com.typewritermc.engine.CompiledManifest
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.library.PageId
-import com.typewritermc.realm.outbox.OutboxEvent
-import com.typewritermc.realm.outbox.RealmOutbox
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.realm.repository.utils.surrealId
 import kotlinx.serialization.builtins.ListSerializer
@@ -42,8 +40,8 @@ interface CompiledContentRepository {
 
 class SurrealCompiledContentRepository(
     private val database: Surreal,
-    private val outbox: RealmOutbox? = null,
-    private val encodeActivation: (CompiledContentActivation) -> List<OutboxEvent> = { emptyList() },
+    private val onActivated: suspend (CompiledContentActivation) -> Unit = {},
+    private val onBlocked: suspend () -> Unit = {},
 ) : CompiledContentRepository {
     override suspend fun findShard(inputFingerprint: ContentDigest): CompiledPageShard? =
         database
@@ -89,6 +87,7 @@ class SurrealCompiledContentRepository(
         database.inTransaction { transaction ->
             transaction.createAttempt(sourceRevision, catalogRevision, pages, "blocked", diagnostics, manifest = null)
         }
+        onBlocked()
     }
 
     override suspend fun publish(
@@ -127,7 +126,6 @@ class SurrealCompiledContentRepository(
                             "activation_payload" to json.encodeToString(CompiledContentActivation.serializer(), activation),
                         ),
                     ).take(0)
-                outbox?.enqueue(transaction, encodeActivation(activation))
                 transaction.createAttempt(
                     manifest.sourceRevision,
                     manifest.catalogRevision,
@@ -138,7 +136,7 @@ class SurrealCompiledContentRepository(
                 )
                 true
             }
-        if (published) outbox?.signalPending()
+        if (published) onActivated(activation)
         return published
     }
 }

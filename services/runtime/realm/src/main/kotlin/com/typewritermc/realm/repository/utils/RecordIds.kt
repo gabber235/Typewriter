@@ -48,7 +48,7 @@ internal fun RecordId.toElementInstanceId(): ElementInstanceId {
     requireTable("element")
     val value = key.toLibraryKey()
     require(value is RecordIdKey.String) { "Element record ids must use string keys." }
-    return ElementInstanceId(Uuid.parseHex(value.value))
+    return ElementInstanceId(value.value)
 }
 
 internal fun RecordId.toResourceId(): ResourceId = ResourceId(table, key.toLibraryKey())
@@ -69,7 +69,7 @@ internal fun TagId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("
 
 internal fun PageId.surrealId(): com.surrealdb.RecordId = key.toSurrealRecordId("page")
 
-internal fun ElementInstanceId.surrealId(): com.surrealdb.RecordId = com.surrealdb.RecordId("element", value.toHexString())
+internal fun ElementInstanceId.surrealId(): com.surrealdb.RecordId = com.surrealdb.RecordId("element", value)
 
 internal fun Ref<*>.surrealId(): com.surrealdb.RecordId = id.key.toSurrealRecordId(id.table)
 
@@ -109,7 +109,7 @@ internal fun com.surrealdb.RecordId.toPageId(): PageId {
 internal fun com.surrealdb.RecordId.toElementInstanceId(): ElementInstanceId {
     require(table == "element") { "Expected an element record id, received $table." }
     require(id.isString) { "Element record ids must use string keys." }
-    return ElementInstanceId(Uuid.parseHex(id.string))
+    return ElementInstanceId(id.string)
 }
 
 internal fun com.surrealdb.RecordId.toSkirRecordId(): RecordId =

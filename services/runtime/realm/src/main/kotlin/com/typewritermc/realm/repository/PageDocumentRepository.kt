@@ -12,7 +12,6 @@ import com.typewritermc.library.PageCompileStatus
 import com.typewritermc.library.PageDocument
 import com.typewritermc.library.PageDocumentDiagnostic
 import com.typewritermc.library.PageDocumentElement
-import com.typewritermc.library.PageDocumentRevision
 import com.typewritermc.library.PageId
 import com.typewritermc.library.PageReference
 import com.typewritermc.library.ResourceSummary
@@ -29,7 +28,6 @@ import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeExpression
 import com.typewritermc.types.TypeGraph
-import java.security.MessageDigest
 
 interface PageDocumentRepository {
     suspend fun getPageDocument(pageId: PageId): PageDocument?
@@ -52,6 +50,11 @@ class SurrealPageDocumentRepository(
 ) : PageDocumentRepository {
     override suspend fun getPageDocument(pageId: PageId): PageDocument? =
         database.inTransaction { transaction -> load(transaction, pageId, catalog()) }
+
+    internal fun load(
+        transaction: Transaction,
+        pageId: PageId,
+    ): PageDocument? = load(transaction, pageId, catalog())
 
     override suspend fun getAuthoringSnapshot(): AuthoringSnapshot =
         database.inTransaction { transaction ->
@@ -113,16 +116,15 @@ class SurrealPageDocumentRepository(
                 .map { id -> summariesById[id] ?: ResourceSummary(id, null, exists = false) }
         val reverseSourceIds = loadReverseSourceIds(transaction, localIds)
         val crossPageSources = loadSummaries(transaction, reverseSourceIds.map(ElementInstanceId::resourceId))
-        val revision = documentRevision(source.page.revision.value, source.elements, references, targetSummaries)
+        val compileStatus = loadCompileStatus(transaction, source.page.id, diagnostics.size)
         return PageDocument(
-            revision = revision,
             page = source.page,
             elements = elements,
             references = references,
             crossPageTargets = crossPageTargets,
             crossPageSources = crossPageSources,
             diagnostics = diagnostics,
-            compileStatus = loadCompileStatus(transaction, source.page.id, diagnostics.size),
+            compileStatus = compileStatus,
         )
     }
 
@@ -272,7 +274,7 @@ private fun StoredElement.assemble(
                 }
             }
         }
-    return PageDocumentElement(id, revision, elementType, schemaRevision, name, logicalValue, placement)
+    return PageDocumentElement(id, elementType, schemaRevision, name, logicalValue, placement)
 }
 
 private fun parseSummary(value: Value): ResourceSummary {
@@ -295,42 +297,4 @@ private fun com.surrealdb.Object.optionalString(name: String): String? = get(nam
 
 private fun Value.optionalString(): String? = takeUnless { it.isNone || it.isNull }?.getString()
 
-private fun ElementInstanceId.resourceId(): ResourceId = ResourceId("element", value.toHexString())
-
-private fun documentRevision(
-    pageRevision: Long,
-    elements: List<StoredElement>,
-    references: List<PageReference>,
-    summaries: List<ResourceSummary>,
-): PageDocumentRevision {
-    val facts =
-        buildString {
-            append(pageRevision)
-            elements.sortedBy { it.id.value.toHexString() }.forEach {
-                append(
-                    '|',
-                ).append(it.id.value).append(':').append(it.revision.value)
-            }
-            references.sortedBy { "${it.source.value}:${it.slot.value}" }.forEach {
-                append('|')
-                    .append(it.source.value)
-                    .append(':')
-                    .append(it.slot.value)
-                    .append(':')
-                    .append(it.target.referenceString())
-            }
-            summaries.sortedBy { it.id.referenceString() }.forEach {
-                append('|')
-                    .append(it.id.referenceString())
-                    .append(':')
-                    .append(it.name)
-                    .append(':')
-                    .append(it.page?.id?.referenceString())
-            }
-        }
-    val digest =
-        MessageDigest.getInstance("SHA-256").digest(facts.toByteArray()).joinToString("") {
-            "%02x".format(it.toInt() and 0xff)
-        }
-    return PageDocumentRevision(digest)
-}
+private fun ElementInstanceId.resourceId(): ResourceId = ResourceId("element", value)

@@ -35,6 +35,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
@@ -44,16 +45,37 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val RealmLifecycleTest by testSuite {
+    test("startup waits until Realm responders are registered") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val startup = async { fixture.start() }
+                runCurrent()
+
+                fixture.databaseOpen shouldBe true
+                startup.isCompleted shouldBe false
+
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+                runCurrent()
+
+                startup.await()
+                session.transport.activeSubscriptionCount shouldBeGreaterThan 0
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
     test("messaging replacement preserves the Realm runtime and swaps routers") {
         runTest {
             val fixture = RealmLifecycleFixture(this)
             try {
+                val first = fixture.session(1)
+                fixture.messaging.value = first.session
                 fixture.start()
                 runCurrent()
                 fixture.artifactWrites shouldBe 1
-                val first = fixture.session(1)
-                fixture.messaging.value = first.session
-                runCurrent()
                 val routeCount = first.transport.activeSubscriptionCount
                 routeCount shouldBeGreaterThan 0
 
@@ -70,13 +92,13 @@ val RealmLifecycleTest by testSuite {
         }
     }
 
-    test("failed router replacement retains the healthy router until retry succeeds") {
+    test("failed router replacement closes the old router before retry succeeds") {
         runTest {
             val fixture = RealmLifecycleFixture(this)
             try {
-                fixture.start()
                 val first = fixture.session(1)
                 fixture.messaging.value = first.session
+                fixture.start()
                 runCurrent()
                 val routeCount = first.transport.activeSubscriptionCount
 
@@ -85,7 +107,7 @@ val RealmLifecycleTest by testSuite {
                 fixture.messaging.value = second.session
                 runCurrent()
 
-                first.transport.activeSubscriptionCount shouldBe routeCount
+                first.transport.activeSubscriptionCount shouldBe 0
                 second.transport.activeSubscriptionCount shouldBe 0
                 fixture.delayScheduler.awaitRequest()
                 fixture.delayScheduler.resume()
@@ -96,6 +118,110 @@ val RealmLifecycleTest by testSuite {
             } finally {
                 fixture.close()
             }
+        }
+    }
+
+    test("terminal route loss is retried within the active messaging session") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val session = fixture.session(1)
+                fixture.messaging.value = session.session
+                fixture.start()
+                val routeCount = session.transport.activeSubscriptionCount
+
+                session.transport.deliver(
+                    com.typewritermc.services.libs.communicator.transport.TransportDelivery.Failure(
+                        TransportError.Unavailable(IllegalStateException("connection lost")),
+                    ),
+                )
+                runCurrent()
+
+                session.transport.activeSubscriptionCount shouldBe 0
+                fixture.delayScheduler.awaitRequest()
+                fixture.delayScheduler.resume()
+                runCurrent()
+
+                session.transport.activeSubscriptionCount shouldBe routeCount
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
+    test("disconnect closes responders and reconnect installs one replacement") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val first = fixture.session(1)
+                fixture.messaging.value = first.session
+                fixture.start()
+                val routeCount = first.transport.activeSubscriptionCount
+
+                fixture.messaging.value = null
+                runCurrent()
+                first.transport.activeSubscriptionCount shouldBe 0
+
+                val second = fixture.session(2)
+                fixture.messaging.value = second.session
+                runCurrent()
+                second.transport.activeSubscriptionCount shouldBe routeCount
+
+                val third = fixture.session(3)
+                fixture.messaging.value = third.session
+                runCurrent()
+                second.transport.activeSubscriptionCount shouldBe 0
+                third.transport.activeSubscriptionCount shouldBe routeCount
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
+    test("replacement cancellation closes the superseded router without duplicates") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            try {
+                val closeStarted = Channel<Unit>(Channel.UNLIMITED)
+                val allowClose = Channel<Unit>(Channel.UNLIMITED)
+                val first = fixture.session(1)
+                first.transport.closeSubscriptionWith(1) {
+                    closeStarted.send(Unit)
+                    allowClose.receive()
+                }
+                fixture.messaging.value = first.session
+                fixture.start()
+                val routeCount = first.transport.activeSubscriptionCount
+
+                val second = fixture.session(2)
+                fixture.messaging.value = second.session
+                closeStarted.receive()
+
+                val third = fixture.session(3)
+                fixture.messaging.value = third.session
+                allowClose.send(Unit)
+                runCurrent()
+
+                first.transport.activeSubscriptionCount shouldBe 0
+                second.transport.activeSubscriptionCount shouldBe 0
+                third.transport.activeSubscriptionCount shouldBe routeCount
+            } finally {
+                fixture.close()
+            }
+        }
+    }
+
+    test("shutdown closes every Realm responder") {
+        runTest {
+            val fixture = RealmLifecycleFixture(this)
+            val session = fixture.session(1)
+            fixture.messaging.value = session.session
+            fixture.start()
+
+            fixture.close()
+
+            session.transport.activeSubscriptionCount shouldBe 0
+            fixture.databaseOpen shouldBe false
         }
     }
 }
@@ -121,13 +247,11 @@ private class RealmLifecycleFixture(
         Realm(
             databaseProvider = TestDatabaseProvider({ databaseOpen = true }, { databaseOpen = false }),
             editorCatalog = UnavailableRealmEditorCatalogSource(),
-            pageDefinitions = testPageCatalog(),
             presentationSearch = UnavailableRealmPresentationSearchSource(),
             scope = scope,
             telemetry = telemetry.telemetry,
             retryPolicy = RetryPolicy.fixed(1.seconds),
             delayScheduler = delayScheduler,
-            clock = java.time.Clock.systemUTC(),
             catalogInvalidations =
                 RealmCatalogInvalidationProcess(
                     snapshots = RealmDiscoverySnapshotStore(),

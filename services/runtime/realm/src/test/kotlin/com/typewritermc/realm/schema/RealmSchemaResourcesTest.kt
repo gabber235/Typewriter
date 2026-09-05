@@ -19,7 +19,6 @@ val RealmSchemaResourcesTest by testSuite {
                 "element/authoring_batch.surql",
                 "kernel/color.surql",
                 "kernel/id.surql",
-                "outbox/outbox.surql",
                 "page/page.surql",
                 "relations/bears.surql",
                 "relations/contains_element.surql",

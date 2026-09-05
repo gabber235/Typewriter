@@ -55,7 +55,6 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.dsl.onClose
 import java.nio.file.Path
-import java.time.Clock
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.ZipFile
 import kotlin.time.Duration.Companion.seconds
@@ -70,7 +69,6 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
         try {
             val configuration = RealmSettings.system().applicationConfiguration().resolveAgainst(context.directories.state)
             val delayScheduler = CoroutineDelayScheduler
-            val clock = Clock.systemUTC()
             val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
             logback =
                 installOpenTelemetryLogback(
@@ -167,10 +165,8 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             get(),
                             get(),
                             get(),
-                            get(),
                             routeRetryPolicy,
                             delayScheduler,
-                            clock,
                             get(),
                             get(),
                             get(),

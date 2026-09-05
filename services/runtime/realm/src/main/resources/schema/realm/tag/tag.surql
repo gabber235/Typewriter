@@ -1,10 +1,6 @@
 DEFINE TABLE OVERWRITE tag SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
-DEFINE FIELD OVERWRITE revision ON tag TYPE int
-    DEFAULT 1
-    ASSERT $value >= 1;
-
 DEFINE FIELD OVERWRITE name ON tag TYPE string
     ASSERT {
         IF !fn::is_id($value) {

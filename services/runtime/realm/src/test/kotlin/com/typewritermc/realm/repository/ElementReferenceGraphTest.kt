@@ -57,7 +57,6 @@ private fun com.surrealdb.Response.consumeAll() {
 private const val ELEMENT_FIXTURES =
     """
     CREATE element:source CONTENT {
-        revision: 1,
         element_type: 'test:entry',
         schema_revision: 1,
         name: 'Source',
@@ -65,7 +64,6 @@ private const val ELEMENT_FIXTURES =
         placement: { kind: 'graph_v1', x: 0, y: 0, width: 1, height: 1 }
     };
     CREATE element:target CONTENT {
-        revision: 1,
         element_type: 'test:entry',
         schema_revision: 1,
         name: 'Target',

@@ -2,28 +2,21 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.elements.ElementInstanceId
 import com.typewritermc.elements.ElementPlacement
-import com.typewritermc.elements.ElementRevision
 import com.typewritermc.elements.ElementTypeId
-import com.typewritermc.elements.ReferenceDecomposer
-import com.typewritermc.elements.ReferenceSlotId
-import com.typewritermc.elements.StoredElement
 import com.typewritermc.elements.ref
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.CompiledContentActivation
 import com.typewritermc.engine.CompiledShardPointer
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.TestPageKinds
+import com.typewritermc.realm.repository.AuthoringBatch
+import com.typewritermc.realm.repository.AuthoringElement
+import com.typewritermc.realm.repository.AuthoringOperation
 import com.typewritermc.realm.repository.BatchId
-import com.typewritermc.realm.repository.CreateElementsCommand
-import com.typewritermc.realm.repository.ElementBatchResult
-import com.typewritermc.realm.repository.ElementCreation
 import com.typewritermc.realm.repository.PageDocumentCatalog
 import com.typewritermc.realm.repository.RepositoryFixture
 import com.typewritermc.realm.repository.SurrealPageDocumentRepository
-import com.typewritermc.realm.repository.createBook
-import com.typewritermc.realm.repository.createPage
-import com.typewritermc.realm.repository.successValue
-import com.typewritermc.realm.repository.utils.toPageId
+import com.typewritermc.realm.routes.toLibrary
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.ResolvedTypeRef
@@ -34,8 +27,6 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import skirout.kernel.v1.color.Color
-import kotlin.uuid.Uuid
 import com.typewritermc.library.ref as pageRef
 
 val RealmCompilerTest by testSuite {
@@ -66,22 +57,23 @@ val RealmCompilerTest by testSuite {
             RepositoryFixture().use { fixture ->
                 val stablePage = fixture.compilePage("stable")
                 val invalidPage = fixture.compilePage("invalid")
-                val content = SurrealCompiledContentRepository(fixture.database)
+                var blockedSignals = 0
+                val content =
+                    SurrealCompiledContentRepository(
+                        fixture.database,
+                        onBlocked = { blockedSignals++ },
+                    )
                 val documents = SurrealPageDocumentRepository(fixture.database) { null }
                 val compiler = RealmCompiler(content, testArtifacts)
                 val active = compiler.compile(compilerSnapshot(fixture), "catalog:1") as RealmCompileResult.Activated
-                fixture.elements.createElements(
-                    CreateElementsCommand(
-                        BatchId("invalid-compile-seed"),
-                        listOf(ElementCreation(invalidPage.pageRef(), danglingElement())),
-                    ),
-                )
+                fixture.createDanglingElement(invalidPage, "invalid-compile-seed")
 
                 val blocked = compiler.compile(compilerSnapshot(fixture), "catalog:1") as RealmCompileResult.Blocked
 
                 blocked.diagnostics.any { it.code == "dangling-reference" } shouldBe true
                 blocked.activeManifest?.digest shouldBe active.manifest.digest
                 content.activeManifest()?.digest shouldBe active.manifest.digest
+                blockedSignals shouldBe 1
             }
         }
     }
@@ -95,13 +87,7 @@ val RealmCompilerTest by testSuite {
                 val artifacts =
                     CompiledArtifactPublisher { revision, manifest, shards ->
                         uploads++
-                        fixture.elements
-                            .createElements(
-                                CreateElementsCommand(
-                                    BatchId("stale-after-upload"),
-                                    listOf(ElementCreation(page.pageRef(), danglingElement())),
-                                ),
-                            ) as ElementBatchResult.Success
+                        fixture.createDanglingElement(page, "stale-after-upload")
                         testArtifacts.store(revision, manifest, shards)
                     }
                 val content = SurrealCompiledContentRepository(fixture.database)
@@ -149,33 +135,37 @@ private suspend fun compilerSnapshot(fixture: RepositoryFixture) =
     SurrealPageDocumentRepository(fixture.database) { null }.getAuthoringSnapshot()
 
 private suspend fun RepositoryFixture.compilePage(name: String): com.typewritermc.library.PageId {
-    val book = books.createBook("${name}_compile_book", name, Color(argb = 0), emptyList()).successValue()
-    return pages
-        .createPage(book.bookId, "${name}_compile_page", TestPageKinds.STATIC, "", 0)
-        .successValue()
-        .pageId
-        .toPageId()
+    val book = createBook("${name}_compile_book", name)
+    return createPage("${name}_compile_page", book.id, TestPageKinds.STATIC.toLibrary()).id
 }
 
-private fun danglingElement(): StoredElement {
-    val value =
-        ReferenceDecomposer { ReferenceSlotId("missing") }.decompose(
-            TypeGraph(REFERENCE_TYPE, emptyList()),
-            DataValue.StringValue(MISSING_ID.ref<com.typewritermc.elements.Element>().id.referenceString()),
-        )
-    return StoredElement(
-        id = INVALID_ID,
-        revision = ElementRevision(1),
-        elementType = INVALID_TYPE,
-        schemaRevision = 1,
-        name = "Invalid",
-        value = value,
-        placement = ElementPlacement.Graph(0, 0, 1, 1),
+private suspend fun RepositoryFixture.createDanglingElement(
+    page: com.typewritermc.library.PageId,
+    batchId: String,
+) {
+    registerElementType(INVALID_TYPE, TypeGraph(REFERENCE_TYPE, emptyList()))
+    authoring.apply(
+        AuthoringBatch(
+            BatchId(batchId),
+            listOf(
+                AuthoringOperation.CreateElement(
+                    AuthoringElement(
+                        id = INVALID_ID,
+                        page = page.pageRef(),
+                        elementType = INVALID_TYPE,
+                        schemaRevision = 1,
+                        name = "Invalid",
+                        value = DataValue.StringValue(MISSING_ID.ref<com.typewritermc.elements.Element>().id.referenceString()),
+                        placement = ElementPlacement.Graph(0, 0, 1, 1),
+                    ),
+                ),
+            ),
+        ),
     )
 }
 
-private val INVALID_ID = ElementInstanceId(Uuid.parseHex("70000000000000000000000000000001"))
-private val MISSING_ID = ElementInstanceId(Uuid.parseHex("70000000000000000000000000000002"))
+private val INVALID_ID = ElementInstanceId("70000000000000000000000000000001")
+private val MISSING_ID = ElementInstanceId("70000000000000000000000000000002")
 private val INVALID_TYPE = ElementTypeId(DeclaredTypeId.parse("70000000000000000000000000000003"))
 private val REFERENCE_TYPE =
     TypeExpression.Named(

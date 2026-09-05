@@ -4,7 +4,6 @@ import com.surrealdb.RecordId
 import com.surrealdb.Value
 import com.typewritermc.library.Book
 import com.typewritermc.library.LibraryName
-import com.typewritermc.library.ResourceRevision
 import com.typewritermc.library.ref
 import com.typewritermc.realm.repository.utils.toBookId
 import com.typewritermc.realm.repository.utils.toTagId
@@ -13,7 +12,6 @@ import com.typewritermc.types.Icon
 
 internal data class BookRecord(
     val id: RecordId = RecordId("book", ""),
-    val revision: Long = 1,
     val title: String = "",
     val icon: String = "",
     val color: Long = 0L,
@@ -22,7 +20,6 @@ internal data class BookRecord(
     fun toBook(): Book =
         Book(
             id = id.toBookId(),
-            revision = ResourceRevision(revision),
             title = LibraryName(title),
             icon = Icon.parse(icon),
             color = Color(argb = color.toUInt()),

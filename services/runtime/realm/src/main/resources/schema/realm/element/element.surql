@@ -1,10 +1,6 @@
 DEFINE TABLE OVERWRITE element SCHEMAFULL TYPE NORMAL
     PERMISSIONS NONE;
 
-DEFINE FIELD OVERWRITE revision ON element TYPE int
-    DEFAULT 1
-    ASSERT $value >= 1;
-
 DEFINE FIELD OVERWRITE element_type ON element TYPE string;
 
 DEFINE FIELD OVERWRITE schema_revision ON element TYPE int

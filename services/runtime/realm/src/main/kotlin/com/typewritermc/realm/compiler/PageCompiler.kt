@@ -44,7 +44,7 @@ class PageCompiler(
             return PageCompileResult.Blocked(fingerprint, diagnostics)
         }
         val elements =
-            document.elements.sortedBy { it.id.value.toHexString() }.map { element ->
+            document.elements.sortedBy { it.id.value }.map { element ->
                 CompiledElement(
                     key = CompiledElementKey(SourceElementKey(element.id.ref()), CompilationContext.Root),
                     sourceId = element.id,
@@ -83,7 +83,7 @@ class PageCompiler(
                 append("|kind:").append(document.page.kind.id).append(':').append(document.page.kind.revision)
                 append("|chapter:").append(document.page.chapter)
                 append("|priority:").append(document.page.priority)
-                document.elements.sortedBy { it.id.value.toHexString() }.forEach { appendElement(it) }
+                document.elements.sortedBy { it.id.value }.forEach { appendElement(it) }
                 document.references.sortedBy(PageReference::stableKey).forEach { appendReference(it) }
                 document.crossPageTargets.sortedBy { it.id.referenceString() }.forEach { appendSummary(it) }
             },
@@ -91,8 +91,7 @@ class PageCompiler(
 }
 
 private fun StringBuilder.appendElement(element: PageDocumentElement) {
-    append("|element:").append(element.id.value.toHexString())
-    append(':').append(element.revision.value)
+    append("|element:").append(element.id.value)
     append(':').append(element.elementType.value)
     append(':').append(element.schemaRevision)
     append(':').append(element.name.length).append(':').append(element.name)
@@ -120,7 +119,7 @@ private fun shardFacts(
     buildString {
         append("page:").append(page).append("|input:").append(fingerprint.value)
         elements.forEach { element ->
-            append("|compiled:").append(element.sourceId.value.toHexString())
+            append("|compiled:").append(element.sourceId.value)
             append(':').append(element.elementType.value)
             append(':').append(element.schemaRevision)
             append(':').append(element.name)
@@ -129,7 +128,7 @@ private fun shardFacts(
         }
     }
 
-private fun PageReference.stableKey(): String = "${source.value.toHexString()}:${slot.value}"
+private fun PageReference.stableKey(): String = "${source.value}:${slot.value}"
 
 private fun ElementPlacement.executionFacts(): String =
     when (this) {
