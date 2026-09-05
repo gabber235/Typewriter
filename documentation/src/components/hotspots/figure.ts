@@ -1,7 +1,8 @@
 import { itemIn, setActive, stageOf } from "./pairs";
 import { closePopoverInside } from "./popover";
 
-const MIN_STAGE_WIDTH = 240;
+// Below this the pins crowd and popovers barely fit, so phones get the legend.
+const MIN_STAGE_WIDTH = 420;
 const PING_DURATION = 1400;
 const PING_STAGGER = 150;
 
