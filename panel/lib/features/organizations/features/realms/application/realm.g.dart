@@ -48,15 +48,19 @@ final class RealmIdProvider
   }
 }
 
-String _$realmIdHash() => r'b5a53b8148bc725c81264d33431670fd5da2a607';
+String _$realmIdHash() => r'ffb152dbb33d651fc8a22b7ec72cdcb852832b60';
 
 @ProviderFor(selectedRealm)
 final selectedRealmProvider = SelectedRealmProvider._();
 
 final class SelectedRealmProvider
     extends
-        $FunctionalProvider<AsyncValue<Service?>, Service?, FutureOr<Service?>>
-    with $FutureModifier<Service?>, $FutureProvider<Service?> {
+        $FunctionalProvider<
+          AsyncValue<TopologyRealm?>,
+          TopologyRealm?,
+          FutureOr<TopologyRealm?>
+        >
+    with $FutureModifier<TopologyRealm?>, $FutureProvider<TopologyRealm?> {
   SelectedRealmProvider._()
     : super(
         from: null,
@@ -73,16 +77,17 @@ final class SelectedRealmProvider
 
   @$internal
   @override
-  $FutureProviderElement<Service?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<TopologyRealm?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<Service?> create(Ref ref) {
+  FutureOr<TopologyRealm?> create(Ref ref) {
     return selectedRealm(ref);
   }
 }
 
-String _$selectedRealmHash() => r'52c7cdbcd54e832ff7316e07bad84f4ec27c9a32';
+String _$selectedRealmHash() => r'c519620c0a77a2ee3ece7e8496937fb6a3d5ca59';
 
 @ProviderFor(realms)
 final realmsProvider = RealmsProvider._();
@@ -90,11 +95,13 @@ final realmsProvider = RealmsProvider._();
 final class RealmsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Service>>,
-          List<Service>,
-          FutureOr<List<Service>>
+          AsyncValue<List<TopologyRealm>>,
+          List<TopologyRealm>,
+          FutureOr<List<TopologyRealm>>
         >
-    with $FutureModifier<List<Service>>, $FutureProvider<List<Service>> {
+    with
+        $FutureModifier<List<TopologyRealm>>,
+        $FutureProvider<List<TopologyRealm>> {
   RealmsProvider._()
     : super(
         from: null,
@@ -111,17 +118,17 @@ final class RealmsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Service>> $createElement(
+  $FutureProviderElement<List<TopologyRealm>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Service>> create(Ref ref) {
+  FutureOr<List<TopologyRealm>> create(Ref ref) {
     return realms(ref);
   }
 }
 
-String _$realmsHash() => r'ed7e28e4f95f33cf44d5e3ea8d82d914c9796313';
+String _$realmsHash() => r'a6a67271ad2071acc9794999988313a29132975d';
 
 @ProviderFor(realmConnection)
 final realmConnectionProvider = RealmConnectionProvider._();
@@ -162,7 +169,7 @@ final class RealmConnectionProvider
   }
 }
 
-String _$realmConnectionHash() => r'03fd58db72aa6a5bcb5647e9c97821de9590dd36';
+String _$realmConnectionHash() => r'9f88d82c3bc14249fa4a14555d9bc978ec857615';
 
 @ProviderFor(realmInteraction)
 final realmInteractionProvider = RealmInteractionProvider._();

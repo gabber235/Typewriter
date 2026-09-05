@@ -154,7 +154,29 @@ final class NatsCoreClient implements NatsClient {
             : core.NatsHeaders(entries: headers.entries),
         timeout: timeout,
       );
-      return NatsMessage(response.payload);
+      return NatsMessage(response.payload, subject: response.subject);
+    } on NatsClientException {
+      rethrow;
+    } on Object catch (error, stackTrace) {
+      Error.throwWithStackTrace(_translate(error, stackTrace), stackTrace);
+    }
+  }
+
+  @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+  }) async {
+    try {
+      final connection = await _readyConnection();
+      await connection.publish(
+        subject,
+        payload,
+        headers: headers.isEmpty
+            ? null
+            : core.NatsHeaders(entries: headers.entries),
+      );
     } on NatsClientException {
       rethrow;
     } on Object catch (error, stackTrace) {
@@ -207,7 +229,8 @@ final class _NatsCoreSubscription implements NatsSubscription {
   @override
   Stream<NatsMessage> get messages => _subscription.messages.transform(
     StreamTransformer.fromHandlers(
-      handleData: (message, sink) => sink.add(NatsMessage(message.payload)),
+      handleData: (message, sink) =>
+          sink.add(NatsMessage(message.payload, subject: message.subject)),
       handleError: (error, stackTrace, sink) =>
           sink.addError(_translate(error, stackTrace), stackTrace),
     ),

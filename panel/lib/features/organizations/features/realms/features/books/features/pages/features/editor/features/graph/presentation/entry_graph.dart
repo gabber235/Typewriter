@@ -105,7 +105,13 @@ class EntryGraph extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final elements = ref.watch(pageElementsProvider(pageId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return const SizedBox.shrink();
+    }
+    final provider = pageElementsProvider(organizationId, realmId, pageId);
+    final elements = ref.watch(provider);
 
     return elements(
       name: "elements",
@@ -124,17 +130,13 @@ class EntryGraph extends HookConsumerWidget {
                 final changed = changes
                     .map((entry) => (entry.id.id, entry.x, entry.y))
                     .toList(growable: false);
-                ref
-                    .read(pageElementsProvider(pageId).notifier)
-                    .moveAll(changed);
+                ref.read(provider.notifier).moveAll(changed);
               },
               onElementsResized: (changes) {
                 final changed = changes
                     .map((entry) => (entry.id.id, entry.width, entry.height))
                     .toList(growable: false);
-                ref
-                    .read(pageElementsProvider(pageId).notifier)
-                    .resizeAll(changed);
+                ref.read(provider.notifier).resizeAll(changed);
               },
             ),
             Align(

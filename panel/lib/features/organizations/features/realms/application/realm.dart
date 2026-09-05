@@ -36,21 +36,23 @@ abstract class RealmInteractionState with _$RealmInteractionState {
 skir.RecordId? realmId(Ref ref) {
   final id = ref.watch(routeParamProvider("realmId"));
   if (id == null) return null;
-  return recordId("service:$id");
+  return recordId("realm_instance:$id");
 }
 
 @riverpod
-Future<Service?> selectedRealm(Ref ref) async {
+Future<TopologyRealm?> selectedRealm(Ref ref) async {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
-  final services = await ref.watch(servicesProvider.future);
-  return services.firstWhereOrNull((s) => s.serviceId == id);
+  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  return topology.realmInstances.firstWhereOrNull(
+    (realm) => realm.realmId == id,
+  );
 }
 
 @riverpod
-Future<List<Service>> realms(Ref ref) async {
-  final services = await ref.watch(servicesProvider.future);
-  return services.where((service) => service.isRealm).toList();
+Future<List<TopologyRealm>> realms(Ref ref) async {
+  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  return topology.realmInstances;
 }
 
 @riverpod
@@ -63,7 +65,7 @@ Stream<RealmConnectionState> realmConnection(Ref ref) async* {
 
   yield RealmConnectionState.checking;
 
-  Service? realm;
+  TopologyRealm? realm;
   try {
     realm = await ref.watch(selectedRealmProvider.future);
   } on Object {
@@ -76,17 +78,12 @@ Stream<RealmConnectionState> realmConnection(Ref ref) async* {
     return;
   }
 
-  if (!realm.isOnline) {
+  if (realm.state.status != TopologyRuntimeStatus.active) {
     yield RealmConnectionState.offline;
     return;
   }
 
   yield RealmConnectionState.online;
-  final delay = realm.nextTimeout.difference(DateTime.now());
-  if (delay > Duration.zero) {
-    await Future<void>.delayed(delay);
-  }
-  yield RealmConnectionState.offline;
 }
 
 @riverpod

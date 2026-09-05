@@ -183,7 +183,7 @@ class ServicesGraph extends ConsumerWidget {
       available: connected,
       nextRefresh: service?.nextTimeout ?? _distantRefresh,
       onDoubleTap: connected && host != null
-          ? () => _openRealm(context, ref, host.serviceId)
+          ? () => _openRealm(context, ref, realm.realmId)
           : null,
     );
   }
@@ -212,19 +212,10 @@ class ServicesGraph extends ConsumerWidget {
     );
   }
 
-  void _openRealm(
-    BuildContext context,
-    WidgetRef ref,
-    skir.RecordId serviceId,
-  ) {
+  void _openRealm(BuildContext context, WidgetRef ref, skir.RecordId realmId) {
     final organizationId = ref.read(organizationIdProvider);
     if (organizationId == null) return;
-    context.router.navigate(
-      OrganizationRoute(
-        organizationId: organizationId.id,
-        children: [RealmRoute(realmId: serviceId.id)],
-      ),
-    );
+    context.router.navigate(realmNavigationRoute(organizationId, realmId));
   }
 }
 

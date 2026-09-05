@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Page {
 
- skir.RecordId get pageId; int get revision; skir.RecordId get bookId; String get name; PageKindRef get kind; String get chapter; int get priority;
+ skir.RecordId get pageId; int get authoringSequence; skir.RecordId get bookId; String get name; PageKindRef get kind; String get chapter; int get priority;
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PageCopyWith<Page> get copyWith => _$PageCopyWithImpl<Page>(this as Page, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pageId,revision,bookId,name,kind,chapter,priority);
+int get hashCode => Object.hash(runtimeType,pageId,authoringSequence,bookId,name,kind,chapter,priority);
 
 @override
 String toString() {
-  return 'Page(pageId: $pageId, revision: $revision, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
+  return 'Page(pageId: $pageId, authoringSequence: $authoringSequence, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $PageCopyWith<$Res>  {
   factory $PageCopyWith(Page value, $Res Function(Page) _then) = _$PageCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId pageId, int revision, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
+ skir.RecordId pageId, int authoringSequence, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
@@ -62,10 +62,10 @@ class _$PageCopyWithImpl<$Res>
 
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? pageId = null,Object? revision = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? pageId = null,Object? authoringSequence = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(_self.copyWith(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -165,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int revision,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
-return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   return orElse();
 
 }
@@ -186,10 +186,10 @@ return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int revision,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)  $default,) {final _that = this;
 switch (_that) {
 case _Page():
-return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +206,10 @@ return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId pageId,  int revision,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId pageId,  int authoringSequence,  skir.RecordId bookId,  String name,  PageKindRef kind,  String chapter,  int priority)?  $default,) {final _that = this;
 switch (_that) {
 case _Page() when $default != null:
-return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
+return $default(_that.pageId,_that.authoringSequence,_that.bookId,_that.name,_that.kind,_that.chapter,_that.priority);case _:
   return null;
 
 }
@@ -221,11 +221,11 @@ return $default(_that.pageId,_that.revision,_that.bookId,_that.name,_that.kind,_
 
 
 class _Page extends Page {
-  const _Page({required this.pageId, required this.revision, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
+  const _Page({required this.pageId, required this.authoringSequence, required this.bookId, required this.name, required this.kind, required this.chapter, required this.priority}): assert(name != "", 'Name must not be empty.'),super._();
 
 
 @override final  skir.RecordId pageId;
-@override final  int revision;
+@override final  int authoringSequence;
 @override final  skir.RecordId bookId;
 @override final  String name;
 @override final  PageKindRef kind;
@@ -242,16 +242,16 @@ _$PageCopyWith<_Page> get copyWith => __$PageCopyWithImpl<_Page>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Page&&(identical(other.pageId, pageId) || other.pageId == pageId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.name, name) || other.name == name)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.chapter, chapter) || other.chapter == chapter)&&(identical(other.priority, priority) || other.priority == priority));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pageId,revision,bookId,name,kind,chapter,priority);
+int get hashCode => Object.hash(runtimeType,pageId,authoringSequence,bookId,name,kind,chapter,priority);
 
 @override
 String toString() {
-  return 'Page(pageId: $pageId, revision: $revision, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
+  return 'Page(pageId: $pageId, authoringSequence: $authoringSequence, bookId: $bookId, name: $name, kind: $kind, chapter: $chapter, priority: $priority)';
 }
 
 
@@ -262,7 +262,7 @@ abstract mixin class _$PageCopyWith<$Res> implements $PageCopyWith<$Res> {
   factory _$PageCopyWith(_Page value, $Res Function(_Page) _then) = __$PageCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId pageId, int revision, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
+ skir.RecordId pageId, int authoringSequence, skir.RecordId bookId, String name, PageKindRef kind, String chapter, int priority
 });
 
 
@@ -279,10 +279,10 @@ class __$PageCopyWithImpl<$Res>
 
 /// Create a copy of Page
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? pageId = null,Object? revision = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? pageId = null,Object? authoringSequence = null,Object? bookId = null,Object? name = null,Object? kind = null,Object? chapter = null,Object? priority = null,}) {
   return _then(_Page(
 pageId: null == pageId ? _self.pageId : pageId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable

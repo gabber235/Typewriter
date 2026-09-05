@@ -77,7 +77,7 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
     rootType: NamedType(tagInspectorTypeRef),
     typeCatalog: _tagInspectorCatalog,
     confirmedValue: _data,
-    revision: tag.revision,
+    revision: tag.authoringSequence,
     mergePolicies: {DataPath.root.field("parents"): EditorMergePolicy.set},
     collections: [tagCollection],
     presentations: [_tagInspectorPresentation],
@@ -129,7 +129,7 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
         ]),
       );
     }
-    return ref.read(tagsProvider.notifier).updateTag(next);
+    return ref.read(tagsProvider.notifier).updateTag(next, expected: tag);
   }
 
   @override
@@ -181,7 +181,7 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
       return null;
     }
     return tag.copyWith(
-      revision: expectedRevision,
+      authoringSequence: expectedRevision,
       name: name.value,
       color: decodedColor,
       parentIds: parentIds,

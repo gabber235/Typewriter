@@ -91,7 +91,7 @@ Tag _tag(
 }) {
   return Tag(
     tagId: identifier.tagId,
-    revision: 1,
+    authoringSequence: 1,
     name: name,
     color: Colors.blue,
     parentIds: parentIds,
@@ -107,19 +107,17 @@ class _DelayedTags extends Tags {
   int updateCount = 0;
 
   @override
-  Stream<List<Tag>> build() async* {
-    yield initialTags;
-  }
+  Future<List<Tag>> build() async => initialTags;
 
   @override
-  Future<TypedMutationResult> updateTag(Tag tag) async {
+  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
     updateCount++;
     await _gate.future;
     state = AsyncData(
       state.requireValue.upsertByKey((value) => value.tagId, tag),
     );
     return TypedMutationResult.success(
-      revision: tag.revision,
+      revision: tag.authoringSequence,
       value: StringValue(tag.name),
     );
   }

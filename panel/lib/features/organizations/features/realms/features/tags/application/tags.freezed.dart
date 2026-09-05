@@ -280,7 +280,7 @@ as int,
 /// @nodoc
 mixin _$Tag {
 
- skir.RecordId get tagId; int get revision; String get name; Color get color; List<skir.RecordId> get parentIds; Placement get placement;
+ skir.RecordId get tagId; int get authoringSequence; String get name; Color get color; List<skir.RecordId> get parentIds; Placement get placement;
 /// Create a copy of Tag
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -291,16 +291,16 @@ $TagCopyWith<Tag> get copyWith => _$TagCopyWithImpl<Tag>(this as Tag, _$identity
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Tag&&(identical(other.tagId, tagId) || other.tagId == tagId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.parentIds, parentIds)&&(identical(other.placement, placement) || other.placement == placement));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Tag&&(identical(other.tagId, tagId) || other.tagId == tagId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.parentIds, parentIds)&&(identical(other.placement, placement) || other.placement == placement));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,tagId,revision,name,color,const DeepCollectionEquality().hash(parentIds),placement);
+int get hashCode => Object.hash(runtimeType,tagId,authoringSequence,name,color,const DeepCollectionEquality().hash(parentIds),placement);
 
 @override
 String toString() {
-  return 'Tag(tagId: $tagId, revision: $revision, name: $name, color: $color, parentIds: $parentIds, placement: $placement)';
+  return 'Tag(tagId: $tagId, authoringSequence: $authoringSequence, name: $name, color: $color, parentIds: $parentIds, placement: $placement)';
 }
 
 
@@ -311,7 +311,7 @@ abstract mixin class $TagCopyWith<$Res>  {
   factory $TagCopyWith(Tag value, $Res Function(Tag) _then) = _$TagCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId tagId, int revision, String name, Color color, List<skir.RecordId> parentIds, Placement placement
+ skir.RecordId tagId, int authoringSequence, String name, Color color, List<skir.RecordId> parentIds, Placement placement
 });
 
 
@@ -328,10 +328,10 @@ class _$TagCopyWithImpl<$Res>
 
 /// Create a copy of Tag
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? tagId = null,Object? revision = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? tagId = null,Object? authoringSequence = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = null,}) {
   return _then(_self.copyWith(
 tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,parentIds: null == parentIds ? _self.parentIds : parentIds // ignore: cast_nullable_to_non_nullable
@@ -430,10 +430,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId tagId,  int revision,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId tagId,  int authoringSequence,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Tag() when $default != null:
-return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentIds,_that.placement);case _:
+return $default(_that.tagId,_that.authoringSequence,_that.name,_that.color,_that.parentIds,_that.placement);case _:
   return orElse();
 
 }
@@ -451,10 +451,10 @@ return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentId
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId tagId,  int revision,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId tagId,  int authoringSequence,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)  $default,) {final _that = this;
 switch (_that) {
 case _Tag():
-return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentIds,_that.placement);case _:
+return $default(_that.tagId,_that.authoringSequence,_that.name,_that.color,_that.parentIds,_that.placement);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -471,10 +471,10 @@ return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentId
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId tagId,  int revision,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId tagId,  int authoringSequence,  String name,  Color color,  List<skir.RecordId> parentIds,  Placement placement)?  $default,) {final _that = this;
 switch (_that) {
 case _Tag() when $default != null:
-return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentIds,_that.placement);case _:
+return $default(_that.tagId,_that.authoringSequence,_that.name,_that.color,_that.parentIds,_that.placement);case _:
   return null;
 
 }
@@ -486,11 +486,11 @@ return $default(_that.tagId,_that.revision,_that.name,_that.color,_that.parentId
 
 
 class _Tag extends Tag {
-  const _Tag({required this.tagId, required this.revision, required this.name, required this.color, required final  List<skir.RecordId> parentIds, required this.placement}): assert(name != "", 'Name must not be empty.'),_parentIds = parentIds,super._();
+  const _Tag({required this.tagId, required this.authoringSequence, required this.name, required this.color, required final  List<skir.RecordId> parentIds, required this.placement}): assert(name != "", 'Name must not be empty.'),_parentIds = parentIds,super._();
   
 
 @override final  skir.RecordId tagId;
-@override final  int revision;
+@override final  int authoringSequence;
 @override final  String name;
 @override final  Color color;
  final  List<skir.RecordId> _parentIds;
@@ -512,16 +512,16 @@ _$TagCopyWith<_Tag> get copyWith => __$TagCopyWithImpl<_Tag>(this, _$identity);
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Tag&&(identical(other.tagId, tagId) || other.tagId == tagId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._parentIds, _parentIds)&&(identical(other.placement, placement) || other.placement == placement));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Tag&&(identical(other.tagId, tagId) || other.tagId == tagId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.name, name) || other.name == name)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._parentIds, _parentIds)&&(identical(other.placement, placement) || other.placement == placement));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,tagId,revision,name,color,const DeepCollectionEquality().hash(_parentIds),placement);
+int get hashCode => Object.hash(runtimeType,tagId,authoringSequence,name,color,const DeepCollectionEquality().hash(_parentIds),placement);
 
 @override
 String toString() {
-  return 'Tag(tagId: $tagId, revision: $revision, name: $name, color: $color, parentIds: $parentIds, placement: $placement)';
+  return 'Tag(tagId: $tagId, authoringSequence: $authoringSequence, name: $name, color: $color, parentIds: $parentIds, placement: $placement)';
 }
 
 
@@ -532,7 +532,7 @@ abstract mixin class _$TagCopyWith<$Res> implements $TagCopyWith<$Res> {
   factory _$TagCopyWith(_Tag value, $Res Function(_Tag) _then) = __$TagCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId tagId, int revision, String name, Color color, List<skir.RecordId> parentIds, Placement placement
+ skir.RecordId tagId, int authoringSequence, String name, Color color, List<skir.RecordId> parentIds, Placement placement
 });
 
 
@@ -549,10 +549,10 @@ class __$TagCopyWithImpl<$Res>
 
 /// Create a copy of Tag
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? tagId = null,Object? revision = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? tagId = null,Object? authoringSequence = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = null,}) {
   return _then(_Tag(
 tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as Color,parentIds: null == parentIds ? _self._parentIds : parentIds // ignore: cast_nullable_to_non_nullable

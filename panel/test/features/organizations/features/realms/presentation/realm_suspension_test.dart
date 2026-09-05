@@ -104,15 +104,22 @@ void main() {
   });
 
   testWidgets("shows offline realm details", (tester) async {
-    final realm = Service(
-      serviceId: recordId("service:test"),
+    final realm = TopologyRealm(
+      realmId: recordId("realm:test"),
+      ownerHost: TopologyOwnerHost(
+        id: recordId("service:test"),
+        name: "story_realm",
+      ),
       revision: 1,
-      name: "story_realm",
-      role: CustomServiceRole(name: "realm", version: "1"),
-      createdAt: DateTime.utc(2026),
-      state: ServiceState(
-        status: ServiceStateStatus.offline,
-        lastSeen: DateTime.now().subtract(const Duration(minutes: 4)),
+      targetEngine: const TopologyEngineTarget(
+        engineId: "typewritermc:paper",
+        versionConstraint: "*",
+      ),
+      state: TopologyRuntimeState(
+        status: TopologyRuntimeStatus.absent,
+        activeArtifactVersion: null,
+        message: null,
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 4)),
       ),
     );
 

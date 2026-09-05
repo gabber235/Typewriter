@@ -197,15 +197,7 @@ List<ElementDefinition> availableElementDefinitions(Ref ref) {
   if (snapshot == null) return const [];
   return snapshot.elements.values
       .where((entry) => entry.eligible && entry.available)
-      .map(
-        (entry) => ElementDefinition(
-          rootType: entry.definition.type,
-          name: entry.definition.name,
-          description: entry.definition.description,
-          icon: entry.definition.icon,
-          color: entry.definition.color,
-        ),
-      )
+      .map((entry) => entry.definition.toElementDefinition())
       .toList(growable: false);
 }
 

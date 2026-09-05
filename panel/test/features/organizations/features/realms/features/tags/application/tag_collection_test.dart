@@ -14,14 +14,14 @@ class _Tags extends Tags {
   final List<Tag> tags;
 
   @override
-  Stream<List<Tag>> build() => Stream.value(tags);
+  Future<List<Tag>> build() async => tags;
 }
 
 final _refProvider = Provider<Ref>((ref) => ref);
 
 Tag _tag(String id, {List<String> parents = const []}) => Tag(
   tagId: recordId("tag:$id"),
-  revision: 1,
+  authoringSequence: 1,
   name: id,
   color: Colors.blue,
   parentIds: parents.map((parent) => recordId("tag:$parent")).toList(),

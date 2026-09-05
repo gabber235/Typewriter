@@ -194,18 +194,21 @@ class EntryDuplicateOperation extends ActivatorShortcutOperation {
     final entries = selected.whereType<EntrySelection>().toList(
       growable: false,
     );
-    final pageIds = {
-      for (final entry in entries)
-        ref.read(pageEntryCacheProvider)[entry.id.id]!.pageId,
-    };
+    final cached = _cachedEntries(ref, entries);
+    final pageIds = {for (final entry in cached) entry.pageId};
     if (pageIds.length != 1) {
       throw ApiException.badRequest(
         "Entries from different pages cannot be duplicated together",
       );
     }
-    final duplicated = await ref
-        .read(pageElementsProvider(pageIds.single).notifier)
-        .duplicateAll(entries.map((entry) => entry.id.id).toList());
+    final duplicated = await ref.withReadyPageElements(pageIds.single, (
+      elements,
+    ) {
+      _requireEntriesOnPage(ref, entries, pageIds.single);
+      return elements.duplicateAll(
+        entries.map((entry) => entry.id.id).toList(),
+      );
+    });
     ref
         .read(selectionProvider.notifier)
         .selectAll(duplicated.map(EntryIdentifier.new).toList());
@@ -257,18 +260,17 @@ class EntryDeleteOperation extends IntentShortcutOperation {
     final selected = ref.read(selectedProvider).requireValue;
     final entries = selected.whereType<EntrySelection>().toList();
     if (entries.isEmpty) return;
-    final pageIds = {
-      for (final entry in entries)
-        ref.read(pageEntryCacheProvider)[entry.id.id]!.pageId,
-    };
+    final cached = _cachedEntries(ref, entries);
+    final pageIds = {for (final entry in cached) entry.pageId};
     if (pageIds.length != 1) {
       throw ApiException.badRequest(
         "Entries from different pages cannot be deleted together",
       );
     }
-    await ref
-        .read(pageElementsProvider(pageIds.single).notifier)
-        .deleteAll(entries.map((entry) => entry.id.id).toList());
+    await ref.withReadyPageElements(pageIds.single, (elements) {
+      _requireEntriesOnPage(ref, entries, pageIds.single);
+      return elements.deleteAll(entries.map((entry) => entry.id.id).toList());
+    });
     ref
         .read(selectionProvider.notifier)
         .unselectAll(entries.map((entry) => entry.id).toList());
@@ -341,18 +343,15 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
     final entries = selected.whereType<EntrySelection>().toList(
       growable: false,
     );
-    final cached = ref.read(pageEntryCacheProvider);
-    final sourcePageIds = {
-      for (final entry in entries) cached[entry.id.id]!.pageId,
-    };
+    final cached = _cachedEntries(ref, entries);
+    final sourcePageIds = {for (final entry in cached) entry.pageId};
     if (sourcePageIds.length != 1) {
       throw ApiException.badRequest(
         "Entries from different pages cannot be moved together",
       );
     }
     final placementKinds = {
-      for (final entry in entries)
-        cached[entry.id.id]!.definition.placement.kind,
+      for (final entry in cached) entry.definition.placement.kind,
     };
     if (placementKinds.length != 1) {
       throw ApiException.badRequest(
@@ -385,12 +384,13 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
     if (!ref.context.mounted) return;
     final target = await _selectTargetPage(ref.context, pages);
     if (target == null) return;
-    await ref
-        .read(pageElementsProvider(sourcePageIds.single).notifier)
-        .moveEntriesToPage(
-          entries.map((entry) => entry.id.id).toList(growable: false),
-          target.pageId.id,
-        );
+    await ref.withReadyPageElements(sourcePageIds.single, (elements) {
+      _requireEntriesOnPage(ref, entries, sourcePageIds.single);
+      return elements.moveEntriesToPage(
+        entries.map((entry) => entry.id.id).toList(growable: false),
+        target.pageId.id,
+      );
+    });
     ref
         .read(selectionProvider.notifier)
         .unselectAll(entries.map((entry) => entry.id).toList(growable: false));
@@ -419,6 +419,34 @@ class EntryMoveToPageOperation extends ActivatorShortcutOperation {
       ),
     ),
   );
+}
+
+List<CachedPageEntry> _cachedEntries(
+  WidgetRef ref,
+  List<EntrySelection> entries,
+) {
+  final organizationId = ref.read(organizationIdProvider);
+  final realmId = ref.read(realmIdProvider);
+  if (organizationId == null) throw ApiException.noOrganization();
+  if (realmId == null) throw ApiException.badRequest("No realm selected");
+  final index = ref
+      .read(realmEntryIndexProvider(organizationId, realmId))
+      .requireValue;
+  return [
+    for (final entry in entries)
+      index[entry.id.id] ?? (throw ApiException.notFound("Entry")),
+  ];
+}
+
+void _requireEntriesOnPage(
+  WidgetRef ref,
+  List<EntrySelection> entries,
+  String expectedPageId,
+) {
+  final current = _cachedEntries(ref, entries);
+  if (current.any((entry) => entry.pageId != expectedPageId)) {
+    throw ApiException.conflict("An entry moved to another page");
+  }
 }
 
 Future<Page?> _selectTargetPage(BuildContext context, List<Page> pages) {

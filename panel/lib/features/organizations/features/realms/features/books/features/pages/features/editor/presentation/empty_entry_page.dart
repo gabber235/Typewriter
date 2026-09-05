@@ -121,9 +121,10 @@ Future<void> showAddEntryDialog(
     ),
   );
   if (selected == null) return;
-  final ids = await ref
-      .read(pageElementsProvider(pageId).notifier)
-      .createEntries([selected], placementKind);
+  final ids = await ref.withReadyPageElements(
+    pageId,
+    (elements) => elements.createEntries([selected], placementKind),
+  );
   ref
       .read(selectionProvider.notifier)
       .selectAll(ids.map(EntryIdentifier.new).toList(growable: false));

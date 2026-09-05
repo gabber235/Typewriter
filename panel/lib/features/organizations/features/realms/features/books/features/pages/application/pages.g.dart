@@ -50,7 +50,7 @@ final class BookPagesProvider
   }
 }
 
-String _$bookPagesHash() => r'249d3cc55ea6d06741906f8c5e052cb21607e409';
+String _$bookPagesHash() => r'5f58cca5e5e7babc8565bef5ded4b69a7162c188';
 
 final class BookPagesFamily extends $Family
     with
@@ -102,7 +102,7 @@ abstract class _$BookPages extends $AsyncNotifier<List<Page>> {
 @ProviderFor(Pages)
 final pagesProvider = PagesFamily._();
 
-final class PagesProvider extends $StreamNotifierProvider<Pages, Page> {
+final class PagesProvider extends $AsyncNotifierProvider<Pages, Page> {
   PagesProvider._({
     required PagesFamily super.from,
     required skir.RecordId super.argument,
@@ -139,7 +139,7 @@ final class PagesProvider extends $StreamNotifierProvider<Pages, Page> {
   }
 }
 
-String _$pagesHash() => r'b8f3e423fd667c4f0eeb9bd795bf99b5fdc0629b';
+String _$pagesHash() => r'9849099229125c56f172e4737caae22cbb35ac76';
 
 final class PagesFamily extends $Family
     with
@@ -147,7 +147,7 @@ final class PagesFamily extends $Family
           Pages,
           AsyncValue<Page>,
           Page,
-          Stream<Page>,
+          FutureOr<Page>,
           skir.RecordId
         > {
   PagesFamily._()
@@ -166,11 +166,11 @@ final class PagesFamily extends $Family
   String toString() => r'pagesProvider';
 }
 
-abstract class _$Pages extends $StreamNotifier<Page> {
+abstract class _$Pages extends $AsyncNotifier<Page> {
   late final _$args = ref.$arg as skir.RecordId;
   skir.RecordId get pageId => _$args;
 
-  Stream<Page> build(skir.RecordId pageId);
+  FutureOr<Page> build(skir.RecordId pageId);
   @$mustCallSuper
   @override
   void runBuild() {

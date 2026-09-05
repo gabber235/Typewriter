@@ -24,9 +24,18 @@ class AddPageDialogue extends HookConsumerWidget {
     if (bookId == null) {
       throw Exception("Book ID not found");
     }
-    final pageId = await ref
-        .read(booksProvider.notifier)
-        .createPage(bookId, name, kind, chapter, priority);
+    final pageId = newResourceId(AuthoringResource.page);
+    final result = await ref.readAuthoringSession().notifier.createPage(
+      skir.Page(
+        id: pageId,
+        book: bookId,
+        name: name,
+        kind: kind.toSkir(),
+        chapter: chapter,
+        priority: priority,
+      ),
+    );
+    result.requireApplied(conflictMessage: "The page already exists");
 
     if (!autoNavigate) return pageId.id;
     unawaited(router.push(RouteRoute(pageId: pageId.id)));
@@ -208,90 +217,6 @@ class AddPageDialogue extends HookConsumerWidget {
                 },
           label: const Text("Add"),
           icon: const Icones(Fa6Solid.plus),
-        ),
-      ],
-    );
-  }
-}
-
-class RenamePageDialogue extends HookConsumerWidget {
-  const RenamePageDialogue({
-    required this.pageId,
-    required this.oldName,
-    super.key,
-  });
-
-  final skir.RecordId pageId;
-  final String oldName;
-
-  Future<void> _renamePage(WidgetRef ref, String newName) async {
-    final router = ref.read(appRouterProvider);
-    await ref.read(pagesProvider(pageId).notifier).updatePage(name: newName);
-    if (ref.read(pageIdProvider) == pageId) return;
-    unawaited(router.push(RouteRoute(pageId: pageId.id)));
-  }
-
-  /// Validates the proposed name for a page.
-  /// A name is invalid if it is empty or if it already exists.
-  String? _validateName(String text) {
-    if (text.isEmpty) {
-      return "Name cannot be empty";
-    }
-
-    if (text == oldName) {
-      return "Name cannot be the same";
-    }
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final name = useState(oldName);
-    final isNameValid = useState(false);
-    final buttonController = useLoadingButtonController();
-
-    return AlertDialog(
-      title: Text("Rename ${oldName.formatted}"),
-      content: ValidatedTextField<String>(
-        autofocus: EditorTextFieldAutoFocus.textField,
-        value: name.value,
-        name: "Page Name",
-        icon: Ph.book_fill,
-        validator: (value) {
-          final validation = _validateName(value);
-          isNameValid.value = validation == null;
-          return validation;
-        },
-        inputFormatters: [
-          ...identifierInputFormats.toTextInputFormatters(),
-          FilteringTextInputFormatter.singleLineFormatter,
-        ],
-        onChanged: (value) => name.value = value,
-        onSubmitted: (_) => buttonController.trigger(),
-      ),
-      actions: [
-        TextButton.icon(
-          icon: const Icones(Fa6Solid.xmark),
-          label: const Text("Cancel"),
-          style: TextButton.styleFrom(
-            foregroundColor: Theme.of(context).textTheme.bodySmall?.color,
-          ),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        LoadingButton.filledIcon(
-          onPressed: !isNameValid.value
-              ? null
-              : () async {
-                  final navigator = Navigator.of(context);
-                  await _renamePage(ref, name.value);
-                  navigator.pop(true);
-                },
-          label: const Text("Rename"),
-          icon: const Icones(Mingcute.pencil_fill),
-          style: FilledButton.styleFrom(
-            foregroundColor: context.colors.onWarning,
-            backgroundColor: context.colors.warning,
-          ),
         ),
       ],
     );

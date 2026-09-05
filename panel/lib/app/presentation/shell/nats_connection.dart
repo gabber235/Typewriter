@@ -16,6 +16,7 @@ class RequiredNatsConnection extends HookConsumerWidget {
     }
 
     final connectionState = ref.watch(natsLifecycleProvider);
+    ref.watch(organizationPresenceProvider);
     switch (connectionState) {
       case NatsConnecting() || NatsReconnecting():
         return const LoadingScreen();

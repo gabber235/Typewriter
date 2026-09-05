@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Book {
 
- skir.RecordId get bookId; int get revision; String get title; String get icon; Color get color; List<skir.RecordId> get tagIds;
+ skir.RecordId get bookId; int get authoringSequence; String get title; String get icon; Color get color; List<skir.RecordId> get tagIds;
 /// Create a copy of Book
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $BookCopyWith<Book> get copyWith => _$BookCopyWithImpl<Book>(this as Book, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Book&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.title, title) || other.title == title)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.tagIds, tagIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Book&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.title, title) || other.title == title)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other.tagIds, tagIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,bookId,revision,title,icon,color,const DeepCollectionEquality().hash(tagIds));
+int get hashCode => Object.hash(runtimeType,bookId,authoringSequence,title,icon,color,const DeepCollectionEquality().hash(tagIds));
 
 @override
 String toString() {
-  return 'Book(bookId: $bookId, revision: $revision, title: $title, icon: $icon, color: $color, tagIds: $tagIds)';
+  return 'Book(bookId: $bookId, authoringSequence: $authoringSequence, title: $title, icon: $icon, color: $color, tagIds: $tagIds)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $BookCopyWith<$Res>  {
   factory $BookCopyWith(Book value, $Res Function(Book) _then) = _$BookCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId bookId, int revision, String title, String icon, Color color, List<skir.RecordId> tagIds
+ skir.RecordId bookId, int authoringSequence, String title, String icon, Color color, List<skir.RecordId> tagIds
 });
 
 
@@ -62,10 +62,10 @@ class _$BookCopyWithImpl<$Res>
 
 /// Create a copy of Book
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bookId = null,Object? revision = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bookId = null,Object? authoringSequence = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
   return _then(_self.copyWith(
 bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
@@ -155,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId bookId,  int revision,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId bookId,  int authoringSequence,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Book() when $default != null:
-return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_that.tagIds);case _:
+return $default(_that.bookId,_that.authoringSequence,_that.title,_that.icon,_that.color,_that.tagIds);case _:
   return orElse();
 
 }
@@ -176,10 +176,10 @@ return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId bookId,  int revision,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId bookId,  int authoringSequence,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)  $default,) {final _that = this;
 switch (_that) {
 case _Book():
-return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_that.tagIds);case _:
+return $default(_that.bookId,_that.authoringSequence,_that.title,_that.icon,_that.color,_that.tagIds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +196,10 @@ return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId bookId,  int revision,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId bookId,  int authoringSequence,  String title,  String icon,  Color color,  List<skir.RecordId> tagIds)?  $default,) {final _that = this;
 switch (_that) {
 case _Book() when $default != null:
-return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_that.tagIds);case _:
+return $default(_that.bookId,_that.authoringSequence,_that.title,_that.icon,_that.color,_that.tagIds);case _:
   return null;
 
 }
@@ -211,11 +211,11 @@ return $default(_that.bookId,_that.revision,_that.title,_that.icon,_that.color,_
 
 
 class _Book extends Book {
-  const _Book({required this.bookId, required this.revision, required this.title, required this.icon, required this.color, required final  List<skir.RecordId> tagIds}): assert(title != "", 'Title must not be empty.'),assert(icon != "", 'Icon must not be empty.'),_tagIds = tagIds,super._();
+  const _Book({required this.bookId, required this.authoringSequence, required this.title, required this.icon, required this.color, required final  List<skir.RecordId> tagIds}): assert(title != "", 'Title must not be empty.'),assert(icon != "", 'Icon must not be empty.'),_tagIds = tagIds,super._();
   
 
 @override final  skir.RecordId bookId;
-@override final  int revision;
+@override final  int authoringSequence;
 @override final  String title;
 @override final  String icon;
 @override final  Color color;
@@ -237,16 +237,16 @@ _$BookCopyWith<_Book> get copyWith => __$BookCopyWithImpl<_Book>(this, _$identit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Book&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.title, title) || other.title == title)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._tagIds, _tagIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Book&&(identical(other.bookId, bookId) || other.bookId == bookId)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence)&&(identical(other.title, title) || other.title == title)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.color, color) || other.color == color)&&const DeepCollectionEquality().equals(other._tagIds, _tagIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,bookId,revision,title,icon,color,const DeepCollectionEquality().hash(_tagIds));
+int get hashCode => Object.hash(runtimeType,bookId,authoringSequence,title,icon,color,const DeepCollectionEquality().hash(_tagIds));
 
 @override
 String toString() {
-  return 'Book(bookId: $bookId, revision: $revision, title: $title, icon: $icon, color: $color, tagIds: $tagIds)';
+  return 'Book(bookId: $bookId, authoringSequence: $authoringSequence, title: $title, icon: $icon, color: $color, tagIds: $tagIds)';
 }
 
 
@@ -257,7 +257,7 @@ abstract mixin class _$BookCopyWith<$Res> implements $BookCopyWith<$Res> {
   factory _$BookCopyWith(_Book value, $Res Function(_Book) _then) = __$BookCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId bookId, int revision, String title, String icon, Color color, List<skir.RecordId> tagIds
+ skir.RecordId bookId, int authoringSequence, String title, String icon, Color color, List<skir.RecordId> tagIds
 });
 
 
@@ -274,10 +274,10 @@ class __$BookCopyWithImpl<$Res>
 
 /// Create a copy of Book
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bookId = null,Object? revision = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? bookId = null,Object? authoringSequence = null,Object? title = null,Object? icon = null,Object? color = null,Object? tagIds = null,}) {
   return _then(_Book(
 bookId: null == bookId ? _self.bookId : bookId // ignore: cast_nullable_to_non_nullable
-as skir.RecordId,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as skir.RecordId,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable

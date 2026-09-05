@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Cue {
 
- String get id; ElementDefinition get elementDefinition; RecordValue get data; List<ElementLink> get inwardLinks; int get revision;
+ String get id; ElementDefinition get elementDefinition; RecordValue get data; List<ElementLink> get inwardLinks; int get authoringSequence;
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CueCopyWith<Cue> get copyWith => _$CueCopyWithImpl<Cue>(this as Cue, _$identity
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Cue&&(identical(other.id, id) || other.id == id)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardLinks, inwardLinks)&&(identical(other.revision, revision) || other.revision == revision));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Cue&&(identical(other.id, id) || other.id == id)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other.inwardLinks, inwardLinks)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,elementDefinition,data,const DeepCollectionEquality().hash(inwardLinks),revision);
+int get hashCode => Object.hash(runtimeType,id,elementDefinition,data,const DeepCollectionEquality().hash(inwardLinks),authoringSequence);
 
 @override
 String toString() {
-  return 'Cue(id: $id, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, revision: $revision)';
+  return 'Cue(id: $id, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, authoringSequence: $authoringSequence)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $CueCopyWith<$Res>  {
   factory $CueCopyWith(Cue value, $Res Function(Cue) _then) = _$CueCopyWithImpl;
 @useResult
 $Res call({
- String id, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, int revision
+ String id, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, int authoringSequence
 });
 
 
@@ -62,13 +62,13 @@ class _$CueCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? revision = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? authoringSequence = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
 as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as RecordValue,inwardLinks: null == inwardLinks ? _self.inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
-as List<ElementLink>,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -166,11 +166,11 @@ return keyframe(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int revision)?  segment,TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int revision)?  keyframe,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int authoringSequence)?  segment,TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int authoringSequence)?  keyframe,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case Segment() when segment != null:
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.revision);case Keyframe() when keyframe != null:
-return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.revision);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.authoringSequence);case Keyframe() when keyframe != null:
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.authoringSequence);case _:
   return orElse();
 
 }
@@ -188,11 +188,11 @@ return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.in
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int revision)  segment,required TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int revision)  keyframe,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int authoringSequence)  segment,required TResult Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int authoringSequence)  keyframe,}) {final _that = this;
 switch (_that) {
 case Segment():
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.revision);case Keyframe():
-return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.revision);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.authoringSequence);case Keyframe():
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.authoringSequence);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,11 +209,11 @@ return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.in
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int revision)?  segment,TResult? Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int revision)?  keyframe,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String id,  int startFrame,  int endFrame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  List<ElementLink> outwardLinks,  int authoringSequence)?  segment,TResult? Function( String id,  int frame,  ElementDefinition elementDefinition,  RecordValue data,  List<ElementLink> inwardLinks,  int authoringSequence)?  keyframe,}) {final _that = this;
 switch (_that) {
 case Segment() when segment != null:
-return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.revision);case Keyframe() when keyframe != null:
-return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.revision);case _:
+return segment(_that.id,_that.startFrame,_that.endFrame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.outwardLinks,_that.authoringSequence);case Keyframe() when keyframe != null:
+return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.inwardLinks,_that.authoringSequence);case _:
   return null;
 
 }
@@ -225,7 +225,7 @@ return keyframe(_that.id,_that.frame,_that.elementDefinition,_that.data,_that.in
 
 
 class Segment implements Cue {
-  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, this.revision = 1}): assert(id != "", 'ID must not be empty.'),assert(startFrame >= 0, 'Start frame must not be negative.'),assert(endFrame >= startFrame, 'End frame must not precede start frame.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks;
+  const Segment({required this.id, required this.startFrame, required this.endFrame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks, required final  List<ElementLink> outwardLinks, this.authoringSequence = 0}): assert(id != "", 'ID must not be empty.'),assert(startFrame >= 0, 'Start frame must not be negative.'),assert(endFrame >= startFrame, 'End frame must not precede start frame.'),_inwardLinks = inwardLinks,_outwardLinks = outwardLinks;
 
 
 @override final  String id;
@@ -247,7 +247,7 @@ class Segment implements Cue {
   return EqualUnmodifiableListView(_outwardLinks);
 }
 
-@override@JsonKey() final  int revision;
+@override@JsonKey() final  int authoringSequence;
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
@@ -259,16 +259,16 @@ $SegmentCopyWith<Segment> get copyWith => _$SegmentCopyWithImpl<Segment>(this, _
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment&&(identical(other.id, id) || other.id == id)&&(identical(other.startFrame, startFrame) || other.startFrame == startFrame)&&(identical(other.endFrame, endFrame) || other.endFrame == endFrame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks)&&(identical(other.revision, revision) || other.revision == revision));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment&&(identical(other.id, id) || other.id == id)&&(identical(other.startFrame, startFrame) || other.startFrame == startFrame)&&(identical(other.endFrame, endFrame) || other.endFrame == endFrame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&const DeepCollectionEquality().equals(other._outwardLinks, _outwardLinks)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,startFrame,endFrame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks),revision);
+int get hashCode => Object.hash(runtimeType,id,startFrame,endFrame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks),const DeepCollectionEquality().hash(_outwardLinks),authoringSequence);
 
 @override
 String toString() {
-  return 'Cue.segment(id: $id, startFrame: $startFrame, endFrame: $endFrame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, revision: $revision)';
+  return 'Cue.segment(id: $id, startFrame: $startFrame, endFrame: $endFrame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, outwardLinks: $outwardLinks, authoringSequence: $authoringSequence)';
 }
 
 
@@ -279,7 +279,7 @@ abstract mixin class $SegmentCopyWith<$Res> implements $CueCopyWith<$Res> {
   factory $SegmentCopyWith(Segment value, $Res Function(Segment) _then) = _$SegmentCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int startFrame, int endFrame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks, int revision
+ String id, int startFrame, int endFrame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, List<ElementLink> outwardLinks, int authoringSequence
 });
 
 
@@ -296,7 +296,7 @@ class _$SegmentCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? startFrame = null,Object? endFrame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? outwardLinks = null,Object? revision = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? startFrame = null,Object? endFrame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? outwardLinks = null,Object? authoringSequence = null,}) {
   return _then(Segment(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,startFrame: null == startFrame ? _self.startFrame : startFrame // ignore: cast_nullable_to_non_nullable
@@ -305,7 +305,7 @@ as int,elementDefinition: null == elementDefinition ? _self.elementDefinition : 
 as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as RecordValue,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
 as List<ElementLink>,outwardLinks: null == outwardLinks ? _self._outwardLinks : outwardLinks // ignore: cast_nullable_to_non_nullable
-as List<ElementLink>,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -326,7 +326,7 @@ $ElementDefinitionCopyWith<$Res> get elementDefinition {
 
 
 class Keyframe implements Cue {
-  const Keyframe({required this.id, required this.frame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks, this.revision = 1}): assert(id != "", 'ID must not be empty.'),assert(frame >= 0, 'Frame must not be negative.'),_inwardLinks = inwardLinks;
+  const Keyframe({required this.id, required this.frame, required this.elementDefinition, required this.data, required final  List<ElementLink> inwardLinks, this.authoringSequence = 0}): assert(id != "", 'ID must not be empty.'),assert(frame >= 0, 'Frame must not be negative.'),_inwardLinks = inwardLinks;
 
 
 @override final  String id;
@@ -340,7 +340,7 @@ class Keyframe implements Cue {
   return EqualUnmodifiableListView(_inwardLinks);
 }
 
-@override@JsonKey() final  int revision;
+@override@JsonKey() final  int authoringSequence;
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
@@ -352,16 +352,16 @@ $KeyframeCopyWith<Keyframe> get copyWith => _$KeyframeCopyWithImpl<Keyframe>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Keyframe&&(identical(other.id, id) || other.id == id)&&(identical(other.frame, frame) || other.frame == frame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&(identical(other.revision, revision) || other.revision == revision));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Keyframe&&(identical(other.id, id) || other.id == id)&&(identical(other.frame, frame) || other.frame == frame)&&(identical(other.elementDefinition, elementDefinition) || other.elementDefinition == elementDefinition)&&(identical(other.data, data) || other.data == data)&&const DeepCollectionEquality().equals(other._inwardLinks, _inwardLinks)&&(identical(other.authoringSequence, authoringSequence) || other.authoringSequence == authoringSequence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,frame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks),revision);
+int get hashCode => Object.hash(runtimeType,id,frame,elementDefinition,data,const DeepCollectionEquality().hash(_inwardLinks),authoringSequence);
 
 @override
 String toString() {
-  return 'Cue.keyframe(id: $id, frame: $frame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, revision: $revision)';
+  return 'Cue.keyframe(id: $id, frame: $frame, elementDefinition: $elementDefinition, data: $data, inwardLinks: $inwardLinks, authoringSequence: $authoringSequence)';
 }
 
 
@@ -372,7 +372,7 @@ abstract mixin class $KeyframeCopyWith<$Res> implements $CueCopyWith<$Res> {
   factory $KeyframeCopyWith(Keyframe value, $Res Function(Keyframe) _then) = _$KeyframeCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int frame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, int revision
+ String id, int frame, ElementDefinition elementDefinition, RecordValue data, List<ElementLink> inwardLinks, int authoringSequence
 });
 
 
@@ -389,14 +389,14 @@ class _$KeyframeCopyWithImpl<$Res>
 
 /// Create a copy of Cue
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? frame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? revision = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? frame = null,Object? elementDefinition = null,Object? data = null,Object? inwardLinks = null,Object? authoringSequence = null,}) {
   return _then(Keyframe(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,frame: null == frame ? _self.frame : frame // ignore: cast_nullable_to_non_nullable
 as int,elementDefinition: null == elementDefinition ? _self.elementDefinition : elementDefinition // ignore: cast_nullable_to_non_nullable
 as ElementDefinition,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as RecordValue,inwardLinks: null == inwardLinks ? _self._inwardLinks : inwardLinks // ignore: cast_nullable_to_non_nullable
-as List<ElementLink>,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as List<ElementLink>,authoringSequence: null == authoringSequence ? _self.authoringSequence : authoringSequence // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

@@ -18,7 +18,7 @@ abstract class Cue with _$Cue {
     required RecordValue data,
     required List<ElementLink> inwardLinks,
     required List<ElementLink> outwardLinks,
-    @Default(1) int revision,
+    @Default(0) int authoringSequence,
   }) = Segment;
 
   @Assert("id != \"\"", "ID must not be empty.")
@@ -29,7 +29,7 @@ abstract class Cue with _$Cue {
     required ElementDefinition elementDefinition,
     required RecordValue data,
     required List<ElementLink> inwardLinks,
-    @Default(1) int revision,
+    @Default(0) int authoringSequence,
   }) = Keyframe;
 }
 
@@ -43,7 +43,17 @@ class CueIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable<CueIdentifier>> create(Ref ref) {
-    final asyncElements = ref.watch(pageElementsProvider(pageId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return AsyncValue.error(
+        ApiException.badRequest("No realm selected"),
+        StackTrace.current,
+      );
+    }
+    final asyncElements = ref.watch(
+      pageElementsProvider(organizationId, realmId, pageId),
+    );
     return asyncElements.when(
       data: (elements) {
         Cue? cue;
@@ -121,7 +131,7 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
     typeCatalog: typeCatalog,
     presentations: presentations,
     confirmedValue: cue.data,
-    revision: cue.revision,
+    revision: cue.authoringSequence,
   );
 
   @override
@@ -134,9 +144,10 @@ class CueSelection extends InspectableSelectable<CueIdentifier> {
 
   @override
   Future<TypedMutationResult> commit(EditorCommit commit) async {
-    return ref
-        .read(pageElementsProvider(id.pageId).notifier)
-        .commitElementValue(id.id, commit);
+    return ref.withReadyPageElements(
+      id.pageId,
+      (elements) => elements.commitElementValue(id.id, commit),
+    );
   }
 
   @override

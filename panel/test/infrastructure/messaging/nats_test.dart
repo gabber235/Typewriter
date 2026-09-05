@@ -36,6 +36,13 @@ final class _PendingSubscribeNatsClient implements NatsClient {
   }
 
   @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+  }) => throw UnsupportedError("Not used by this test");
+
+  @override
   Future<NatsSubscription> subscribe(String subject) =>
       _pendingSubscription.future;
 
@@ -80,6 +87,13 @@ final class _ControlledCloseNatsClient implements NatsClient {
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+  }) => throw UnsupportedError("Not used by this test");
+
+  @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
   }) => throw UnsupportedError("Not used by this test");
 
   @override

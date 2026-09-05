@@ -12,7 +12,7 @@ class RealmSelector extends HookConsumerWidget {
     final realmsAsync = ref.watch(realmsProvider);
     final selectedRealmAsync = ref.watch(selectedRealmProvider);
 
-    return SelectorPopupWithSelection<Service>(
+    return SelectorPopupWithSelection<TopologyRealm>(
       itemsAsync: realmsAsync,
       selectedAsync: selectedRealmAsync,
       name: "realms",
@@ -20,13 +20,15 @@ class RealmSelector extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            selected?.icon ?? Icons.cloud,
+            Icons.cloud,
             size: 16,
-            color: selected?.color ?? context.colors.contentDisabled,
+            color: selected == null
+                ? context.colors.contentDisabled
+                : realmServiceRoleColor,
           ),
           SizedBox(width: context.spacing.space2),
           Text(
-            selected?.displayName ?? "Select Realm",
+            selected?.ownerHost.name.formatted ?? "Select Realm",
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -47,9 +49,9 @@ class _RealmMenuContent extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final List<Service> realms;
-  final Service? selectedRealm;
-  final void Function(Service) onDismiss;
+  final List<TopologyRealm> realms;
+  final TopologyRealm? selectedRealm;
+  final void Function(TopologyRealm) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,7 +59,7 @@ class _RealmMenuContent extends HookConsumerWidget {
 
     final filteredRealms = realms.where((realm) {
       if (searchQuery.value.isEmpty) return true;
-      return realm.displayName.toLowerCase().contains(
+      return realm.ownerHost.name.toLowerCase().contains(
         searchQuery.value.toLowerCase(),
       );
     }).toList();
@@ -80,7 +82,7 @@ class _RealmMenuContent extends HookConsumerWidget {
 
               return _RealmMenuItem(
                 realm: realm,
-                isSelected: realm.serviceId == selectedRealm?.serviceId,
+                isSelected: realm.realmId == selectedRealm?.realmId,
                 onDismiss: onDismiss,
               );
             },
@@ -99,15 +101,14 @@ class _RealmMenuItem extends HookConsumerWidget {
     required this.onDismiss,
   });
 
-  final Service realm;
+  final TopologyRealm realm;
   final bool isSelected;
-  final void Function(Service) onDismiss;
+  final void Function(TopologyRealm) onDismiss;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onColor = realm.color.on(context);
-
-    useRefreshAt(realm.nextTimeout);
+    final onColor = realmServiceRoleColor.on(context);
+    final isOnline = realm.state.status == TopologyRuntimeStatus.active;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -116,32 +117,32 @@ class _RealmMenuItem extends HookConsumerWidget {
       ),
       child: Material(
         borderRadius: context.shapes.mediumBorderRadius,
-        color: isSelected ? realm.color : null,
+        color: isSelected ? realmServiceRoleColor : null,
         child: Surface(
-          color: isSelected ? realm.color : Surface.colorOf(context),
+          color: isSelected ? realmServiceRoleColor : Surface.colorOf(context),
           child: ListTile(
             dense: true,
             leading: Icon(
-              realm.icon,
+              Icons.cloud,
               size: 20,
-              color: isSelected ? onColor : realm.color,
+              color: isSelected ? onColor : realmServiceRoleColor,
             ),
             title: Text(
-              realm.displayName,
+              realm.ownerHost.name.formatted,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 fontSize: 14,
                 color: isSelected ? onColor : null,
               ),
             ),
             subtitle: StatusIndicator(
-              isOnline: realm.isOnline,
-              lastSeen: realm.lastSeen,
+              isOnline: isOnline,
+              lastSeen: realm.state.updatedAt,
               dotColor: isSelected
                   ? onColor
-                  : _statusDotColor(context, realm.isOnline),
+                  : _statusDotColor(context, isOnline),
               textColor: isSelected
                   ? onColor.withValues(alpha: 0.7)
-                  : _statusTextColor(context, realm.isOnline),
+                  : _statusTextColor(context, isOnline),
             ),
             trailing: Icon(
               Icons.arrow_forward_ios,
@@ -154,7 +155,7 @@ class _RealmMenuItem extends HookConsumerWidget {
               context.router.navigate(
                 OrganizationRoute(
                   organizationId: orgId.id,
-                  children: [RealmRoute(realmId: realm.serviceId.id)],
+                  children: [RealmRoute(realmId: realm.realmId.id)],
                 ),
               );
               onDismiss(realm);

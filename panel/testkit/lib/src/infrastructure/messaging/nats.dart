@@ -18,6 +18,14 @@ final class FakeNatsRequest {
   final Duration timeout;
 }
 
+final class FakeNatsPublication {
+  FakeNatsPublication(this.subject, Uint8List payload)
+    : payload = Uint8List.fromList(payload).asUnmodifiableView();
+
+  final String subject;
+  final Uint8List payload;
+}
+
 final class FakeNatsClient implements NatsClient {
   final Map<String, FutureOr<Uint8List> Function(Uint8List)> _handlers = {};
   final Map<int, FakeNatsSubscription> _subscriptions = {};
@@ -29,6 +37,7 @@ final class FakeNatsClient implements NatsClient {
   bool _closed = false;
 
   final List<FakeNatsRequest> requests = [];
+  final List<FakeNatsPublication> publications = [];
 
   Iterable<String> get subscriptionSubjects =>
       _subscriptions.values.map((subscription) => subscription.subject);
@@ -79,7 +88,25 @@ final class FakeNatsClient implements NatsClient {
     if (handler == null) {
       throw TimeoutException("No handler for subject: $subject", timeout);
     }
-    return NatsMessage(await handler(Uint8List.fromList(payload)));
+    return NatsMessage(
+      await handler(Uint8List.fromList(payload)),
+      subject: subject,
+    );
+  }
+
+  @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+  }) async {
+    if (_connectionState is! NatsConnected) {
+      throw const NatsClientException(
+        kind: NatsFailureKind.unavailable,
+        message: "NATS client is not connected",
+      );
+    }
+    publications.add(FakeNatsPublication(subject, payload));
   }
 
   @override
@@ -105,8 +132,22 @@ final class FakeNatsClient implements NatsClient {
 
   void emitMessageOnSubject(String subject, Uint8List payload) {
     for (final subscription in _subscriptions.values.toList()) {
-      if (subscription.subject == subject) subscription.add(payload);
+      if (_subjectMatches(subscription.subject, subject)) {
+        subscription.add(payload, subject: subject);
+      }
     }
+  }
+
+  bool _subjectMatches(String pattern, String subject) {
+    final patternTokens = pattern.split(".");
+    final subjectTokens = subject.split(".");
+    for (var index = 0; index < patternTokens.length; index++) {
+      final token = patternTokens[index];
+      if (token == ">") return true;
+      if (index >= subjectTokens.length) return false;
+      if (token != "*" && token != subjectTokens[index]) return false;
+    }
+    return patternTokens.length == subjectTokens.length;
   }
 
   void _removeSubscription(int id) {
@@ -148,8 +189,10 @@ final class FakeNatsSubscription implements NatsSubscription {
   @override
   Future<void> get done => _controller.done;
 
-  void add(Uint8List payload) {
-    if (!_closed) _controller.add(NatsMessage(payload));
+  void add(Uint8List payload, {String? subject}) {
+    if (!_closed) {
+      _controller.add(NatsMessage(payload, subject: subject ?? this.subject));
+    }
   }
 
   @override

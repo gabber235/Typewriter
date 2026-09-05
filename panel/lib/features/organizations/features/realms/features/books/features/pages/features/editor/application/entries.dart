@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -12,28 +14,60 @@ part "entries.g.dart";
 class Entry extends _$Entry {
   @override
   Future<EntryDefinition?> build(String entryId) async {
-    return ref.watch(pageEntryCacheProvider)[entryId]?.definition;
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null) throw ApiException.noOrganization();
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    final index = ref.watch(realmEntryIndexProvider(organizationId, realmId));
+    return switch (index) {
+      AsyncData(:final value) => value[entryId]?.definition,
+      AsyncError(:final error, :final stackTrace) => Error.throwWithStackTrace(
+        error,
+        stackTrace,
+      ),
+      AsyncLoading() => Completer<EntryDefinition?>().future,
+    };
   }
 
   Future<void> updateFieldValue(DataPath path, DataValue value) async {
     state.ensureReady();
 
-    final cached = ref.read(pageEntryCacheProvider)[entryId];
+    final cached = _cachedEntry;
     if (cached == null) throw ApiException.notFound("Entry");
-    await ref
-        .read(pageElementsProvider(cached.pageId).notifier)
-        .updateEntryFieldValue(entryId, path, value);
-    state = AsyncData(ref.read(pageEntryCacheProvider)[entryId]?.definition);
+    await ref.withReadyPageElements(cached.pageId, (elements) {
+      _requireCurrentEntry(cached.pageId);
+      return elements.updateEntryFieldValue(entryId, path, value);
+    });
+    state = AsyncData(_cachedEntry?.definition);
   }
 
   Future<void> moveToPage(String pageId) async {
     state.ensureReady();
-    final cached = ref.read(pageEntryCacheProvider)[entryId];
+    final cached = _cachedEntry;
     if (cached == null) throw ApiException.notFound("Entry");
     if (cached.pageId == pageId) return;
-    await ref
-        .read(pageElementsProvider(cached.pageId).notifier)
-        .moveEntriesToPage([entryId], pageId);
+    await ref.withReadyPageElements(cached.pageId, (elements) {
+      _requireCurrentEntry(cached.pageId);
+      return elements.moveEntriesToPage([entryId], pageId);
+    });
+  }
+
+  CachedPageEntry? get _cachedEntry {
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    if (organizationId == null || realmId == null) return null;
+    return ref
+        .read(realmEntryIndexProvider(organizationId, realmId))
+        .value?[entryId];
+  }
+
+  CachedPageEntry _requireCurrentEntry(String expectedPageId) {
+    final current = _cachedEntry;
+    if (current == null) throw ApiException.notFound("Entry");
+    if (current.pageId != expectedPageId) {
+      throw ApiException.conflict("The entry moved to another page");
+    }
+    return current;
   }
 }
 
@@ -82,7 +116,7 @@ abstract class EntryDefinition with _$EntryDefinition {
     required RecordValue data,
     required List<ElementLink> inwardEdges,
     required List<ElementLink> outwardEdges,
-    @Default(1) int revision,
+    @Default(0) int authoringSequence,
     @Default([]) List<EntryMetadata> metadata,
   }) = _EntryDefinition;
 }
@@ -226,7 +260,7 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
     typeCatalog: typeCatalog,
     presentations: presentations,
     confirmedValue: definition.data,
-    revision: definition.revision,
+    revision: definition.authoringSequence,
   );
 
   @override
@@ -243,7 +277,13 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
 
   @override
   Future<TypedMutationResult> commit(EditorCommit commit) async {
-    final cached = ref.read(pageEntryCacheProvider)[id.id];
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
+    final cached = organizationId == null || realmId == null
+        ? null
+        : ref
+              .read(realmEntryIndexProvider(organizationId, realmId))
+              .value?[id.id];
     if (cached == null) {
       return TypedMutationResult.unavailable([
         const TypeDiagnostic(
@@ -252,9 +292,22 @@ class EntrySelection extends InspectableSelectable<EntryIdentifier> {
         ),
       ]);
     }
-    return ref
-        .read(pageElementsProvider(cached.pageId).notifier)
-        .commitElementValue(id.id, commit);
+    return ref.withReadyPageElements(cached.pageId, (elements) {
+      final activeOrganizationId = ref.read(organizationIdProvider);
+      final activeRealmId = ref.read(realmIdProvider);
+      final current = activeOrganizationId == null || activeRealmId == null
+          ? null
+          : ref
+                .read(
+                  realmEntryIndexProvider(activeOrganizationId, activeRealmId),
+                )
+                .value?[id.id];
+      if (current == null) throw ApiException.notFound("Entry");
+      if (current.pageId != cached.pageId) {
+        throw ApiException.conflict("The entry moved to another page");
+      }
+      return elements.commitElementValue(id.id, commit);
+    });
   }
 
   @override

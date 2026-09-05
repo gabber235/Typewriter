@@ -17,6 +17,16 @@ abstract class ElementDefinition with _$ElementDefinition {
   }) = _ElementDefinition;
 }
 
+extension DiscoveredElementDefinitionConversion on DiscoveredElementDefinition {
+  ElementDefinition toElementDefinition() => ElementDefinition(
+    rootType: type,
+    name: name,
+    description: description,
+    icon: icon,
+    color: color,
+  );
+}
+
 @freezed
 abstract class ElementDeprecation with _$ElementDeprecation {
   const factory ElementDeprecation({@Default("") String reason}) =

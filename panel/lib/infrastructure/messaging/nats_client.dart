@@ -88,9 +88,10 @@ final class NatsClientConfiguration {
 }
 
 final class NatsMessage {
-  NatsMessage(Uint8List payload)
+  NatsMessage(Uint8List payload, {this.subject = ""})
     : payload = Uint8List.fromList(payload).asUnmodifiableView();
 
+  final String subject;
   final Uint8List payload;
 }
 
@@ -112,6 +113,12 @@ abstract interface class NatsClient {
     Uint8List payload, {
     Map<String, String> headers = const {},
     Duration timeout = const Duration(seconds: 10),
+  });
+
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
   });
 
   Future<NatsSubscription> subscribe(String subject);

@@ -2,7 +2,13 @@ import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/iconoir.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
+    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
 
@@ -14,7 +20,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -45,7 +51,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -77,7 +83,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -107,7 +113,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -138,9 +144,7 @@ void main() {
         final notifier = _TestPageElements(_nestedRootResizeSceneElements());
 
         await tester.pumpTestApp(
-          overrides: [
-            pageElementsProvider("page").overrideWith(() => notifier),
-          ],
+          overrides: _pageElementOverrides(notifier),
           child: const SizedBox(
             width: 1600,
             height: 900,
@@ -173,7 +177,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElementsWithSibling());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -207,7 +211,7 @@ void main() {
       final notifier = _TestPageElements(_multiRootSceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -247,7 +251,7 @@ void main() {
       final notifier = _TestPageElements(_multiRootSceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -286,7 +290,7 @@ void main() {
       final notifier = _TestPageElements(_adjacentRootSceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -327,7 +331,7 @@ void main() {
       final notifier = _TestPageElements(_sceneElements());
 
       await tester.pumpTestApp(
-        overrides: [pageElementsProvider("page").overrideWith(() => notifier)],
+        overrides: _pageElementOverrides(notifier),
         child: const SizedBox(
           width: 1600,
           height: 900,
@@ -364,14 +368,29 @@ void main() {
 }
 
 class _TestPageElements extends PageElements {
-  _TestPageElements(this.initialElements);
+  _TestPageElements(this.initialElements) {
+    nats.registerHandler(
+      _snapshotSubject,
+      (_) => wire.GetAuthoringSnapshotResponse.serializer.toBytes(
+        wire.GetAuthoringSnapshotResponse.createSuccess(
+          sequence: 1,
+          slices: const [],
+        ),
+      ),
+    );
+  }
 
   final List<PageElement> initialElements;
+  final FakeNatsClient nats = FakeNatsClient();
   final List<List<(String, int, int)>> updateCalls = [];
   final List<List<(String, int, int)>> resizeCalls = [];
 
   @override
-  Future<List<PageElement>> build(String pageId) async => initialElements;
+  Future<List<PageElement>> build(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+    String pageId,
+  ) async => initialElements;
 
   @override
   Future<void> updateCues(List<(String, int, int)> changed) async {
@@ -404,6 +423,29 @@ class _TestPageElements extends PageElements {
     return false;
   }
 }
+
+final _testOrganization = recordId("organization:test");
+final _testRealm = recordId("service:test");
+final _testPageElementsProvider = pageElementsProvider(
+  _testOrganization,
+  _testRealm,
+  "page",
+);
+
+List<Override> _pageElementOverrides(_TestPageElements notifier) => [
+  natsProvider.overrideWithValue(notifier.nats),
+  organizationIdProvider.overrideWithValue(_testOrganization),
+  realmIdProvider.overrideWithValue(_testRealm),
+  _testPageElementsProvider.overrideWith(() => notifier),
+  pageDocumentHealthProvider(
+    _testOrganization,
+    _testRealm,
+    recordId("page:page"),
+  ).overrideWithValue(null),
+];
+
+const _snapshotSubject =
+    "service.to.test.organization.test.realm.library.authoring.snapshot.get";
 
 List<PageElement> _sceneElements() {
   return [

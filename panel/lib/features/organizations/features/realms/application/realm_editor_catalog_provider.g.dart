@@ -366,4 +366,4 @@ final class AvailableElementDefinitionsProvider
 }
 
 String _$availableElementDefinitionsHash() =>
-    r'6b65727c2c4228ceeb9b2f73db1eb1ffd12cdc1c';
+    r'd898191de647937a90584eb81e62ae72aaeb4bc4';

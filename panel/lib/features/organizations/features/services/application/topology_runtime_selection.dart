@@ -48,16 +48,10 @@ class _RealmInstanceSelectable
 
   void _open() {
     final organization = service?.organization;
-    final serviceId = host?.serviceId;
-    if (!canOpen || organization == null || serviceId == null) return;
+    if (!canOpen || organization == null) return;
     ref
         .read(appRouterProvider)
-        .navigate(
-          OrganizationRoute(
-            organizationId: organization.id,
-            children: [RealmRoute(realmId: serviceId.id)],
-          ),
-        );
+        .navigate(realmNavigationRoute(organization, realm.realmId));
   }
 
   @override
@@ -75,6 +69,14 @@ class _RealmInstanceSelectable
   Future<TypedMutationResult> commit(EditorCommit commit) =>
       Future.value(invalidMutation("Realm runtime state is read only"));
 }
+
+OrganizationRoute realmNavigationRoute(
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) => OrganizationRoute(
+  organizationId: organizationId.id,
+  children: [RealmRoute(realmId: realmId.id)],
+);
 
 /// Exposes execution engine deployment state through the shared inspector.
 ///

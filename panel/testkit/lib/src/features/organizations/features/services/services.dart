@@ -107,7 +107,7 @@ List<Override> servicesProviderOverrides({
 
 List<Override> realmProviderOverrides() => [
   realmIdProvider.overrideWith(
-    (ref) => ref.watch(realmsProvider).value?.firstOrNull?.serviceId,
+    (ref) => ref.watch(realmsProvider).value?.firstOrNull?.realmId,
   ),
   selectedRealmProvider.overrideWith(
     (ref) async => (await ref.watch(realmsProvider.future)).firstOrNull,

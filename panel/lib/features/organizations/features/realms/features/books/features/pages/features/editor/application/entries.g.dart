@@ -86,7 +86,7 @@ final class EntryProvider
   }
 }
 
-String _$entryHash() => r'95dbba43826a68160e5e41c30c72b4c95d6dba7f';
+String _$entryHash() => r'cf714024b8c810f2e32bfc90dd6d11683ae2b6db';
 
 final class EntryFamily extends $Family
     with

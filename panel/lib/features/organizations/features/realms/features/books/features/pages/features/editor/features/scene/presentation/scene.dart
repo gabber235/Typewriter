@@ -10,7 +10,14 @@ class EntryScene extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pageElements = ref.watch(pageElementsProvider(pageId));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return const SizedBox.shrink();
+    }
+    final pageElements = ref.watch(
+      pageElementsProvider(organizationId, realmId, pageId),
+    );
 
     return pageElements(
       name: "elements",
@@ -126,9 +133,10 @@ Future<void> _commitSceneBatch({
       (change.id.id, change.startFrame, change.endFrame),
   ];
 
-  return ref
-      .read(pageElementsProvider(pageId).notifier)
-      .updateCues(changedCues);
+  return ref.withReadyPageElements(
+    pageId,
+    (elements) => elements.updateCues(changedCues),
+  );
 }
 
 class _SceneViewData {

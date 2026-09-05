@@ -59,7 +59,7 @@ List<Tag> _generateRawTags(int count) {
     tags.add(
       Tag(
         tagId: recordId("tag:${faker.guid.guid()}"),
-        revision: 1,
+        authoringSequence: 1,
         name: faker.lorem
             .words(random.integer(3, min: 1))
             .join(" ")
@@ -78,7 +78,7 @@ List<Tag> _generateRawTags(int count) {
 Tag generateRandomTag() {
   return Tag(
     tagId: recordId("tag:${faker.guid.guid()}"),
-    revision: 1,
+    authoringSequence: 1,
     name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
@@ -98,14 +98,12 @@ class TagsMock extends Tags {
   final List<Tag>? specificTags;
 
   @override
-  Stream<List<Tag>> build() async* {
+  Future<List<Tag>> build() async {
     if (specificTags != null) {
-      yield specificTags!;
-      return;
+      return specificTags!;
     }
 
-    final tags = await displayState.generateBatch(generateTagBatch);
-    yield tags;
+    return displayState.generateBatch(generateTagBatch);
   }
 
   @override
@@ -122,7 +120,7 @@ class TagsMock extends Tags {
 
     final newTag = Tag(
       tagId: recordId("tag:${faker.guid.guid()}"),
-      revision: 1,
+      authoringSequence: 1,
       name: name,
       color: color ?? safeColors.randomElement(),
       parentIds: parentIds,
@@ -134,16 +132,18 @@ class TagsMock extends Tags {
   }
 
   @override
-  Future<TypedMutationResult> updateTag(Tag tag) async {
+  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
     final tags = await future;
-    final canonical = tag.copyWith(revision: tag.revision + 1);
+    final canonical = tag.copyWith(
+      authoringSequence: tag.authoringSequence + 1,
+    );
     state = AsyncData(
       tags
           .map((value) => value.tagId == tag.tagId ? canonical : value)
           .toList(),
     );
     return TypedMutationResult.success(
-      revision: canonical.revision,
+      revision: canonical.authoringSequence,
       value: canonical.inspectorValue,
     );
   }

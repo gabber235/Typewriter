@@ -8,6 +8,21 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  test(
+    "Realm navigation keeps the Realm ID distinct from its host service",
+    () {
+      final route = realmNavigationRoute(
+        recordId("organization:test"),
+        recordId("realm_instance:adventure"),
+      );
+      final realmRoute = route.initialChildren!.single;
+
+      expect(route.rawPathParams["organizationId"], "test");
+      expect(realmRoute.rawPathParams["realmId"], "adventure");
+      expect(realmRoute.rawPathParams["realmId"], isNot("paper-eu"));
+    },
+  );
+
   testWidgets("registration control stacks within a narrow content pane", (
     tester,
   ) async {

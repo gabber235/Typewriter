@@ -26,9 +26,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            await ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: newChapter);
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: pageId,
+              chapter: skir.StringChange(expected: chapter, value: newChapter),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -78,9 +80,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            await ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: newChapter);
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: pageId,
+              chapter: skir.StringChange(expected: chapter, value: newChapter),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -167,11 +171,15 @@ class _PageTile extends HookConsumerWidget {
       builder: (context, entryCandidateData, entryRejectedData) {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => true,
-          onAcceptWithDetails: (details) {
-            final pageId = details.data.pageId;
-            ref
-                .read(pagesProvider(pageId).notifier)
-                .updatePage(chapter: chapter);
+          onAcceptWithDetails: (details) async {
+            final result = await ref.readAuthoringSession().notifier.patchPage(
+              id: details.data.pageId,
+              chapter: skir.StringChange(
+                expected: details.data.chapter,
+                value: chapter,
+              ),
+            );
+            result.requireApplied(conflictMessage: "The page chapter changed");
           },
           builder: (context, pageCandidateData, rejectedData) {
             final isAccepting =
@@ -198,7 +206,7 @@ class _PageTile extends HookConsumerWidget {
                   child: ContextMenuRegion(
                     items: _contextMenuItems(ref),
                     child: Draggable<PageDrag>(
-                      data: PageDrag(pageId: pageId),
+                      data: PageDrag(pageId: pageId, chapter: chapter),
                       feedback: Surface(
                         color: Surface.colorOf(context),
                         child: Material(

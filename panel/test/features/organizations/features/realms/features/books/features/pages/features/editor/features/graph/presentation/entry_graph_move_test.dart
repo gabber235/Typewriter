@@ -10,6 +10,8 @@ void main() {
   testWidgets(
     "moves selected definition and no elementDefinition entries together",
     (tester) async {
+      final organizationId = recordId("organization:test");
+      final realmId = recordId("service:test");
       final definition = generateRandomEntryDefinition().copyWith(
         id: "definition",
         name: "Definition Entry",
@@ -31,8 +33,15 @@ void main() {
       await tester.pumpTestApp(
         settle: false,
         overrides: [
+          organizationIdProvider.overrideWithValue(organizationId),
+          realmIdProvider.overrideWithValue(realmId),
           ...pageElementsProviderOverrides(overwriteElements: elements),
           ...entryProviderOverrides(definition: definition),
+          pageDocumentHealthProvider(
+            organizationId,
+            realmId,
+            recordId("page:page"),
+          ).overrideWithValue(null),
         ],
         child: const SizedBox(
           width: 800,

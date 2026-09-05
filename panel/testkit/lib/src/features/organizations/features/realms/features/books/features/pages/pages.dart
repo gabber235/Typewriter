@@ -51,7 +51,7 @@ Page generateRandomPage([PageType? pageType]) {
 
   return Page(
     pageId: recordId("page:${faker.guid.guid()}"),
-    revision: 1,
+    authoringSequence: 1,
     bookId: recordId("book:${faker.guid.guid()}"),
     name: pageName,
     kind: type.kind,
@@ -90,23 +90,13 @@ class PagesMock extends Pages {
   final PageType? pageType;
 
   @override
-  Stream<Page> build(skir.RecordId pageId) async* {
+  Future<Page> build(skir.RecordId pageId) async {
     await Future<void>.delayed(50.ms);
     if (page != null) {
-      yield page!;
-      return;
+      return page!;
     }
     final randomPage = generateRandomPage(pageType);
-    yield randomPage.copyWith(pageId: pageId);
-  }
-
-  @override
-  Future<void> updatePage({
-    String? name,
-    String? chapter,
-    int? priority,
-  }) async {
-    await Future<void>.delayed(200.ms);
+    return randomPage.copyWith(pageId: pageId);
   }
 }
 
@@ -124,7 +114,11 @@ class PageElementsMock extends PageElements {
   final List<PageElement>? overwriteElements;
 
   @override
-  Future<List<PageElement>> build(String pageId) async {
+  Future<List<PageElement>> build(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+    String pageId,
+  ) async {
     await Future<void>.delayed(100.ms);
     if (overwriteElements != null) return overwriteElements!;
     if (pageType == PageType.scene) {
@@ -168,10 +162,15 @@ class EntryMock extends Entry {
     await Future<void>.delayed(200.ms);
     if (definition != null) return definition;
 
+    final organizationId = ref.read(organizationIdProvider);
+    final realmId = ref.read(realmIdProvider);
     final currentPageId = ref.read(pageIdProvider);
+    if (organizationId == null || realmId == null || currentPageId == null) {
+      return null;
+    }
 
     final pageElements = await ref.read(
-      pageElementsProvider(currentPageId?.id ?? "").future,
+      pageElementsProvider(organizationId, realmId, currentPageId.id).future,
     );
 
     final pageElement = pageElements.firstWhereOrNull(

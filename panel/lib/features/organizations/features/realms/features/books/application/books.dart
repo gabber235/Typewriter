@@ -4,10 +4,8 @@ import "package:freezed_annotation/freezed_annotation.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/book.dart"
-    as wire_v1;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v2/authoring.dart"
-    as wire_v2;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/library/v1/authoring.dart"
+    as wire;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "book_model.dart";
@@ -19,43 +17,21 @@ part "books.g.dart";
 @riverpod
 class Books extends _$Books {
   @override
-  Stream<List<Book>> build() async* {
-    ref.invalidateOnLibraryChange(skir.LibraryResourceKind.book);
+  Future<List<Book>> build() async {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
-    if (realmId == null || organizationId == null) {
-      yield [];
-      return;
+    if (organizationId == null || realmId == null) {
+      return [];
     }
-
-    final request = skir.WatchBooksRequest();
-    final address = RealmServiceAddress(
-      organizationId: organizationId,
-      realmId: realmId,
+    final provider = authoringSessionProvider(organizationId, realmId);
+    ref.listen(provider, (_, value) {
+      if (value.sequence != null) state = AsyncData(_projectBooks(value));
+    });
+    final lease = ref.watch(
+      authoringLibraryScopeProvider(organizationId, realmId),
     );
-    yield* ref.watchRequest(
-      subject: address.request("book.watch"),
-      listenSubject: address.event("book.watch"),
-      requestBytes: skir.WatchBooksRequest.serializer.toBytes(request),
-      serializer: skir.WatchBooksResponse.serializer,
-      transformer: (previous, response) {
-        switch (response) {
-          case skir.WatchBooksResponse_unknown():
-            throw ApiException.unknownResponseMessage();
-          case skir.WatchBooksResponse_internalErrorWrapper():
-            throw ApiException.internalServerError();
-          case skir.WatchBooksResponse_listWrapper(:final value):
-            return value.map(Book.fromSkir).toList();
-          case skir.WatchBooksResponse_addWrapper(:final value):
-            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
-          case skir.WatchBooksResponse_updateWrapper(:final value):
-            return _upsertCanonicalBook(previous, Book.fromSkir(value)).values;
-          case skir.WatchBooksResponse_removeWrapper(:final value):
-            return previous?.where((book) => book.bookId != value).toList() ??
-                [];
-        }
-      },
-    );
+    await lease.ready;
+    return _projectBooks(ref.read(provider));
   }
 
   Future<Book> createBook({
@@ -65,263 +41,92 @@ class Books extends _$Books {
     List<skir.RecordId> tagIds = const [],
   }) async {
     state.ensureReady();
-    final previousState = state;
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    if (organizationId == null) throw ApiException.noOrganization();
-
-    final request = skir.CreateBooksRequest(
-      batchId: uuid.v4(),
-      books: [
-        skir.BookCreate(
-          id: recordId("book:${uuid.v4()}"),
-          title: title,
-          icon: icon ?? "mdi:book",
-          color: (color ?? Colors.grey).toSkirColor(),
-          tags: tagIds,
-        ),
-      ],
+    final book = Book(
+      bookId: newResourceId(AuthoringResource.book),
+      authoringSequence: ref.readAuthoringSession().state.sequence ?? 0,
+      title: title,
+      icon: icon ?? "mdi:book",
+      color: color ?? Colors.grey,
+      tagIds: tagIds,
     );
-
+    state = AsyncData([...state.requireValue, book]);
     try {
-      final response = await ref.requestSkir(
-        RealmServiceAddress(
-          organizationId: organizationId,
-          realmId: realmId,
-        ).request("book.create.v2"),
-        skir.CreateBooksRequest.serializer.toBytes(request),
-        skir.CreateBooksResponse.serializer,
+      final response = await ref.readAuthoringSession().notifier.createBook(
+        book.toWire(),
       );
-      switch (response) {
-        case skir.CreateBooksResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-        case skir.CreateBooksResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.CreateBooksResponse_conflictWrapper():
-          throw ApiException.conflict("The book already exists");
-        case skir.CreateBooksResponse_invalidWrapper(:final value):
-          throw ApiException.badRequest(value.join("; "));
-        case skir.CreateBooksResponse_successWrapper(:final value):
-          final book = Book.fromV2(value.single);
-          final upsert = _upsertCanonicalBook(state.requireValue, book);
-          state = AsyncData(upsert.values);
-          return upsert.canonical;
-      }
-    } on Object catch (_) {
-      state = previousState;
+      response.requireApplied(conflictMessage: "The book already exists");
+      return book;
+    } on Object {
+      _replaceFromSession();
       rethrow;
     }
   }
 
-  Future<TypedMutationResult> updateBook(Book book) async {
+  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
     state.ensureReady();
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    if (organizationId == null) throw ApiException.noOrganization();
-
-    final request = skir.UpdateBooksRequest(
-      batchId: uuid.v4(),
-      books: [
-        skir.BookUpdate(
-          id: book.bookId,
-          expectedRevision: book.revision,
-          title: book.title,
-          icon: book.icon,
-          color: book.color.toSkirColor(),
-          tags: book.tagIds,
-        ),
-      ],
-    );
-
+    final before =
+        expected ??
+        state.requireValue.firstWhere((value) => value.bookId == book.bookId);
+    state = AsyncData([
+      for (final current in state.requireValue)
+        if (current.bookId == book.bookId) book else current,
+    ]);
     try {
-      final response = await ref.requestSkir(
-        RealmServiceAddress(
-          organizationId: organizationId,
-          realmId: realmId,
-        ).request("book.update.v2"),
-        skir.UpdateBooksRequest.serializer.toBytes(request),
-        skir.UpdateBooksResponse.serializer,
+      final response = await ref.readAuthoringSession().notifier.patchBook(
+        book,
+        expected: before,
       );
       switch (response) {
-        case skir.UpdateBooksResponse_unknown():
-          return unavailableMutation("The server returned an unknown response");
-        case skir.UpdateBooksResponse_internalErrorWrapper():
-          return unavailableMutation("The server could not update the book");
-        case skir.UpdateBooksResponse_conflictWrapper(:final value):
-          final actual = value.single.actual;
-          if (actual == null) {
-            return unavailableMutation(
-              "The book no longer exists",
-              targetDeleted: true,
-            );
-          }
-          final actualBook = Book.fromV2(actual);
-          final upsert = _upsertCanonicalBook(state.requireValue, actualBook);
-          state = AsyncData(upsert.values);
-          return TypedMutationResult.conflict(
-            expectedRevision: book.revision,
-            actualRevision: actualBook.revision,
-            actualValue: actualBook.inspectorValue,
-          );
-        case skir.UpdateBooksResponse_invalidWrapper(:final value):
-          return invalidMutation(value.join("; "));
-        case skir.UpdateBooksResponse_successWrapper(:final value):
-          final updatedBook = Book.fromV2(value.single);
-          final upsert = _upsertCanonicalBook(state.requireValue, updatedBook);
-          state = AsyncData(upsert.values);
+        case wire.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
           return TypedMutationResult.success(
-            revision: upsert.canonical.revision,
-            value: upsert.canonical.inspectorValue,
+            revision: value.sequence,
+            value: book.inspectorValue,
+          );
+        case wire.ApplyAuthoringBatchResponse_conflictWrapper():
+          return _bookConflict(before);
+        case wire.ApplyAuthoringBatchResponse_invalidWrapper() ||
+            wire.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
+            wire.ApplyAuthoringBatchResponse_unknown():
+          _replaceFromSession();
+          return response.toMutationFailure(
+            unavailableMessage: "The book update could not be completed",
           );
       }
-    } on Object catch (_) {
+    } on Object {
+      _replaceFromSession();
       return unavailableMutation("The book update could not be completed");
     }
   }
 
-  Future<skir.RecordId> createPage(
-    skir.RecordId bookId,
-    String name,
-    PageKindRef kind,
-    String chapter,
-    int priority,
-  ) async {
-    state.ensureReady();
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    if (organizationId == null) throw ApiException.noOrganization();
-
-    final pageId = recordId("page:${uuid.v4()}");
-    final request = skir.CreatePagesRequest(
-      batchId: uuid.v4(),
-      pages: [
-        skir.PageCreate(
-          id: pageId,
-          book: bookId,
-          name: name,
-          kind: kind.toSkir(),
-          chapter: chapter,
-          priority: priority,
-        ),
-      ],
+  TypedMutationResult _bookConflict(Book expected) {
+    final session = ref.readAuthoringSession();
+    final canonical = session.state.books[expected.bookId];
+    if (canonical == null) {
+      return unavailableMutation(
+        "The book no longer exists",
+        targetDeleted: true,
+      );
+    }
+    final actual = Book.fromWire(canonical, session.state.sequence ?? 0);
+    state = AsyncData([
+      for (final book in state.requireValue)
+        if (book.bookId == actual.bookId) actual else book,
+    ]);
+    return TypedMutationResult.conflict(
+      expectedRevision: expected.authoringSequence,
+      actualRevision: actual.authoringSequence,
+      actualValue: actual.inspectorValue,
     );
-    final response = await ref.requestSkir(
-      RealmServiceAddress(
-        organizationId: organizationId,
-        realmId: realmId,
-      ).request("page.create.v2"),
-      skir.CreatePagesRequest.serializer.toBytes(request),
-      skir.CreatePagesResponse.serializer,
-    );
-
-    return switch (response) {
-      skir.CreatePagesResponse_unknown() =>
-        throw ApiException.unknownResponseMessage(),
-      skir.CreatePagesResponse_internalErrorWrapper() =>
-        throw ApiException.internalServerError(),
-      skir.CreatePagesResponse_conflictWrapper() => throw ApiException.conflict(
-        "The page already exists",
-      ),
-      skir.CreatePagesResponse_invalidWrapper(:final value) =>
-        throw ApiException.badRequest(value.join("; ")),
-      skir.CreatePagesResponse_successWrapper() => pageId,
-    };
   }
 
-  Future<void> deletePage(skir.RecordId pageId) async {
-    state.ensureReady();
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    if (organizationId == null) throw ApiException.noOrganization();
-
-    final page = await ref.read(pagesProvider(pageId).future);
-    final request = skir.DeletePagesRequest(
-      batchId: uuid.v4(),
-      pages: [skir.PageDeletion(id: pageId, expectedRevision: page.revision)],
-    );
-    final response = await ref.requestSkir(
-      RealmServiceAddress(
-        organizationId: organizationId,
-        realmId: realmId,
-      ).request("page.delete.v2"),
-      skir.DeletePagesRequest.serializer.toBytes(request),
-      skir.DeletePagesResponse.serializer,
-    );
-    switch (response) {
-      case skir.DeletePagesResponse_unknown():
-        throw ApiException.unknownResponseMessage();
-      case skir.DeletePagesResponse_internalErrorWrapper():
-        throw ApiException.internalServerError();
-      case skir.DeletePagesResponse_conflictWrapper():
-        throw ApiException.conflict("The page changed before deletion");
-      case skir.DeletePagesResponse_invalidWrapper(:final value):
-        throw ApiException.badRequest(value.join("; "));
-      case skir.DeletePagesResponse_successWrapper():
-    }
+  void _replaceFromSession() {
+    state = AsyncData(_projectBooks(ref.readAuthoringSession().state));
   }
+}
 
-  Future<void> changePagesChapters(
-    skir.RecordId bookId,
-    String oldChapter,
-    String newChapter,
-  ) async {
-    state.ensureReady();
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    if (organizationId == null) throw ApiException.noOrganization();
-
-    final pages = await ref.read(bookPagesProvider(bookId, "").future);
-    final changed = pages.where(
-      (page) =>
-          page.chapter == oldChapter || page.chapter.startsWith("$oldChapter."),
-    );
-    if (changed.isEmpty) return;
-    String replacement(String chapter) {
-      final suffix = chapter.substring(oldChapter.length);
-      if (newChapter.isEmpty && suffix.startsWith(".")) {
-        return suffix.substring(1);
-      }
-      return "$newChapter$suffix";
-    }
-
-    final request = skir.UpdatePagesRequest(
-      batchId: uuid.v4(),
-      pages: [
-        for (final page in changed)
-          skir.PageUpdate(
-            id: page.pageId,
-            expectedRevision: page.revision,
-            name: page.name,
-            chapter: replacement(page.chapter),
-            priority: page.priority,
-          ),
-      ],
-    );
-    final response = await ref.requestSkir(
-      RealmServiceAddress(
-        organizationId: organizationId,
-        realmId: realmId,
-      ).request("page.update.v2"),
-      skir.UpdatePagesRequest.serializer.toBytes(request),
-      skir.UpdatePagesResponse.serializer,
-    );
-    switch (response) {
-      case skir.UpdatePagesResponse_unknown():
-        throw ApiException.unknownResponseMessage();
-      case skir.UpdatePagesResponse_internalErrorWrapper():
-        throw ApiException.internalServerError();
-      case skir.UpdatePagesResponse_conflictWrapper():
-        throw ApiException.conflict(
-          "A page changed while chapters were moving",
-        );
-      case skir.UpdatePagesResponse_invalidWrapper(:final value):
-        throw ApiException.badRequest(value.join("; "));
-      case skir.UpdatePagesResponse_successWrapper():
-    }
-  }
+List<Book> _projectBooks(AuthoringSessionState value) {
+  final sequence = value.sequence ?? 0;
+  return value.books.values
+      .map((book) => Book.fromWire(book, sequence))
+      .toList();
 }

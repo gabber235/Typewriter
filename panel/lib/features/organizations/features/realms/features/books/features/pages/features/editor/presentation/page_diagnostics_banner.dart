@@ -9,7 +9,18 @@ class PageDiagnosticsBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final health = ref.watch(pageDocumentHealthCacheProvider)[pageId];
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    if (organizationId == null || realmId == null) {
+      return const SizedBox.shrink();
+    }
+    final health = ref.watch(
+      pageDocumentHealthProvider(
+        organizationId,
+        realmId,
+        recordId("page:$pageId"),
+      ),
+    );
     if (health == null ||
         (!health.compileBlocked && health.diagnostics.isEmpty)) {
       return const SizedBox.shrink();

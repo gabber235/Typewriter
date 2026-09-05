@@ -13,7 +13,7 @@ class RealmSuspensionBarrier extends StatelessWidget {
   });
 
   final RealmInteractionState interaction;
-  final Service? realm;
+  final TopologyRealm? realm;
   final VoidCallback? onRetry;
   final Widget child;
 
@@ -80,7 +80,7 @@ class _RealmSuspensionVeil extends StatelessWidget {
   });
 
   final RealmConnectionState connectionState;
-  final Service? realm;
+  final TopologyRealm? realm;
   final VoidCallback? onRetry;
 
   @override
@@ -127,7 +127,7 @@ class _ConnectionCard extends StatelessWidget {
   });
 
   final RealmConnectionState connectionState;
-  final Service? realm;
+  final TopologyRealm? realm;
   final VoidCallback? onRetry;
 
   @override
@@ -163,7 +163,7 @@ class _ConnectionCard extends StatelessWidget {
                         SizedBox(height: context.spacing.space4),
                         StatusIndicator(
                           isOnline: false,
-                          lastSeen: realm!.lastSeen,
+                          lastSeen: realm?.state.updatedAt,
                           dotColor: context.colors.offline,
                           textColor: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -206,7 +206,7 @@ class _ConnectionCard extends StatelessWidget {
     RealmConnectionState.offline => (
       title: "Realm connection lost",
       description:
-          "Changes to '${realm?.displayName ?? "this realm"}' are paused. Everything will resume automatically when the connection returns.",
+          "Changes to '${realm?.ownerHost.name.formatted ?? "this realm"}' are paused. Everything will resume automatically when the connection returns.",
     ),
     RealmConnectionState.unavailable => (
       title: "Realm unavailable",
