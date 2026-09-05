@@ -1,0 +1,100 @@
+---
+difficulty: Easy
+---
+
+# Transform Tools
+
+The editor's hotbar is laid out in two groups. On the left sit the editing tools: the wand (golden axe), **Move**
+(piston), **Rotate** (clock), and **Resize** (slime block). On the right, after a gap, sit **Teleport**
+(amethyst shard) and the session controls: **Undo / Redo** (arrow), **Apply** (dye), and **Exit** (barrier).
+The layout is the same in every shape editor. A tool that makes no sense for the shape leaves its slot empty
+instead of shifting the others, so a sphere simply has no rotate tool and every other slot stays where your
+hand expects it.
+
+Everything the tools change stages into the live preview and is only saved when you click **Apply**. The boss
+bar follows the tool you are holding with its controls and current values, and closing the editor without
+applying throws the changes away. The exit item guards against fat fingers: with unapplied changes, the first
+click only warns, and a second click shortly after actually exits and discards.
+
+## Three gestures you only learn once
+
+They work the same on every tool:
+
+- **Sneak and scroll** makes fine adjustments: slide the origin in 0.25 block steps, rotate in 5 degree
+  steps, move the aimed face in 0.25 steps. Clicking stays for the bigger steps.
+- **F** (the swap hands key) cycles the tool's mode. On the move tool it locks the axis (Auto, X, Y, Z; shown
+  in the item name and the guide color). On the rotate tool it switches between yaw and tilt, and on the
+  polygon wand it selects the aimed corner and lets it go.
+- **Q** (the drop key) undoes the held tool's last change, so it only touches what that tool did. **Sneak Q**
+  redoes it, so overshooting an undo is one press away from repair.
+
+Each action plays a pitched click (up for grow, down for shrink), sweeps a short cooldown flash over the
+item, and shows the new value in the action bar. The move and rotate tools also render a glowing guide in the
+world showing exactly what the next step would do: a thick line along the move direction colored per axis (X
+red, Y green, Z blue) and capped with an arrowhead pointing the way it moves, or a gold ring in the rotation
+plane. Both guides size themselves to the region they belong to, so a guide on a tiny region is never too
+short to notice and a guide on a huge one never stretches out of sight. They are drawn with the same glowing
+display lines as the preview, so they stay readable through terrain.
+
+## Carrying the region
+
+**Right click** with the move tool to pick the region up. While carried, the region hangs on your crosshair
+and follows it, landing on whatever surface you point at or floating at a fixed distance in the air. Scroll
+to push it further away or pull it closer. It snaps to the half block grid so placements stay clean; hold
+sneak for free placement. Right click again to place it, left click to put it back where it was.
+
+For small corrections, left click nudges the region 0.5 blocks the way you are looking (2 blocks while
+sneaking), and sneak scrolling slides it in 0.25 block steps along the locked axis.
+
+You can rotate the region while it hangs on your crosshair: switch to the clock and click, and it turns in
+place. The wand and the resize tool wait until the region is placed down, so a carry and a capture can never
+talk over each other in the undo history.
+
+## Resizing by grabbing faces
+
+The resize tool works on the region's **faces**. Aim at the region and a glowing panel highlights the face
+under your crosshair: a side of a box, a single wall of a polygon, the base or the flank of a cone, the
+surface of a sphere. Then:
+
+- **Right click** grabs the face. It follows your view along its own normal, moving smoothly while the whole
+  shape reshapes live (sneak to snap to quarter blocks). Right click again to keep it, left click to put it
+  back.
+- **Left click** pushes the face 0.5 away from you, whichever side of the region you stand on; **sneak
+  left click** pulls it toward you. Sneak and scroll for 0.25 steps along the face's own outward direction.
+
+Faces move **one side at a time**: pushing the +X face of a box out grows the box on that side only, and the
+opposite face stays exactly where it was. That also means the polygon's walls, the cone's apex, and a
+capsule's caps are each edited on their own, so fitting a region against a building becomes push and pull
+instead of resize and recenter.
+
+## Teleporting
+
+The amethyst shard solves editing far away regions. Right click teleports you to the region, lifting you to
+the nearest free spot, and sneak right click teleports to the border you are looking at instead, which is the
+faster way to reach the exact wall you want to nudge. It works from inside the region too, since your view
+ray still exits through the border you are facing; with nothing in your aim it falls back to the nearest
+point on the border and says so on the action bar. Left click brings you back to where you were, and clicking
+back and forth bounces between the two spots, which is the easiest way to compare the before and after of a
+move.
+
+## Undo and redo
+
+Every change lands in a session history: wand marks, nudges, rotations, face moves, carries. The history
+knows which tool made each change, which is what powers the **Q** gesture. Undoing the resize tool's work
+never reverts the rotation you dialed in between, and **sneak Q** brings the last undone change back. When a
+newer change overlaps what Q would undo (marking again moves the origin, say), the editor keeps the history
+intact and points you to the arrow instead.
+
+The arrow item walks the whole session: left click undoes, right click redoes, and **sneak clicking** undoes or
+redoes everything at once. The item itself mirrors the history state: a feather while there is nothing to
+undo yet, an arrow whose stack size grows with the undoable steps, and a spectral arrow counting the redos
+once everything is undone, so the hotbar tells you where you are. A quick scroll burst counts as a single
+step so undoing it does not take twenty clicks; a long fine tune splits into a step every few seconds.
+
+## Putting it together
+
+A quick workflow for the market square: mark the rough sphere with the wand, pick it up with the move tool
+and drop it exactly on the fountain, then grab the sphere's surface with the resize tool and drag it until
+the whole square is covered. Click **Apply** once the readout shows what you want.
+
+{/* TODO: Add video: nudging and resizing the market square with the transform tools. */}

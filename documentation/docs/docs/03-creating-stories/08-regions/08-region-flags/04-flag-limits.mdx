@@ -1,0 +1,61 @@
+---
+difficulty: Normal
+---
+
+# Limits and Gaps
+
+Flags resolve against a player wherever they can, and a few of them cannot always find one. This page
+collects where a flag abstains, and what no flag sees at all.
+
+## Flags with no player behind them
+
+`Region Piston Modifier`, `Region Redstone Modifier`, `Region Fire Spread Modifier`,
+`Region Fluid Flow Modifier`, `Region Explosion Modifier`, `Region Mob Spawn Modifier`, and
+`Region Mob Grief Modifier` all decide about events with no player behind them. That has one consequence
+worth knowing: none of these seven flags can apply to a region whose placement follows a variable.
+
+A variable placement region only exists per viewer. Typewriter resolves where it is by asking for a specific
+player, and without a player there is nothing to resolve against. The seven flags above never have one to
+ask.
+
+Most of the remaining flags have a player behind them nearly always, and behind some of their events never.
+`Region Block Place Modifier` also decides about crops growing and vines spreading, `Region Block Break
+Modifier` about ice melting and leaves decaying, `Region Block Interact Modifier` about a hopper pulling from
+a locked chest, and `Region Bucket Modifier`, `Region Ignite Modifier`, `Region Trample Modifier` and
+`Region Entity Damage Modifier` each about a dispenser or a mob doing the same thing a player would. On a
+variable placement region those cases have no player to resolve with, so the flag applies to what players do
+and not to the rest.
+
+There is a third case, and it is the one that catches people out. Binding a flag's own `Allowed` field to a
+variable, rather than the region's placement, has the same problem from the other side: a fact needs a player
+to read, and a crop growing has none. Such a flag abstains for those events and whatever region sits below
+it decides instead. So a farm region whose `Allowed` reads "is a member" does not stop its own wheat from
+growing, and does not protect it either; put a second region under it with a constant `Allowed` if the
+world's own changes need a rule too.
+
+None of the three throws an error, and none of them fails silently either. Typewriter logs a console warning
+naming the region and the flag, once at startup and again on every reload, so you find out instead of wondering why the
+flag never seems to apply. Give the region a constant placement, or the flag a constant `Allowed`, or accept
+the gap the warning describes.
+
+## What the flags do not cover
+
+A few things still happen inside a region that no flag sees, and it is better to know the edges than to
+discover them:
+
+- Damage nobody dealt directly. `Region Pvp Modifier` covers what a player did, including their TNT,
+  their lingering potion and their pet. It cannot cover a player setting you on fire and walking away, or
+  shoving you into lava: those land later as fire or fall damage with nobody attached, and only
+  `Region Player Damage Modifier` sees them.
+- What an explosion takes that is not a block. `Region Explosion Modifier` filters the block list, so a
+  creeper proof town keeps its walls and still loses the item frames, paintings and armour stands hanging on
+  them. Carry `Region Entity Damage Modifier` as well when the decoration matters.
+- A region boundary that cuts through a player. The block flags decide on the block's own center, so a
+  block is inside or outside and nothing in between. The combat flags decide on the victim's feet, while
+  region membership (events, audiences, displays) counts a player as inside as soon as any part of them
+  overlaps. A player leaning over the boundary can be a member of the region and still stand outside it as
+  far as the combat flags are concerned. Keep protected areas a block or two larger than the thing they
+  protect and the difference never comes up.
+
+When a flag does not do what you expected somewhere, [`/tw region flags`](../09-commands.mdx#inspecting-flags)
+reports which region decided it there.

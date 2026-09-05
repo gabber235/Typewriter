@@ -1,0 +1,121 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import EntryDisplay from '@site/src/components/EntryDisplay';
+import ActionButton from '@site/src/components/ActionButtons';
+
+# Region Events
+
+Event entries live on **sequence** pages and fire your triggers when a player crosses a region's boundary.
+
+<EntrySearch entryName='region_enter_event' />
+
+`Region Exit Event` is the mirror image, and `Region Proximity Event` fires when a player crosses into or out
+of a band around the boundary, for example within 5 blocks of it.
+
+A crossing uses the body based check from
+[Defining Regions](./01-defining-regions.mdx#when-is-a-player-inside): the enter fires as soon as any part of
+the player's body overlaps the region, and the exit fires once no part does.
+
+## Fields all three share
+
+`Causes` filters which kinds of crossing fire the entry. `PLAYER_MOVED` is walking or riding across,
+`TELEPORTED` is a teleport across, `ENGULFED` means the region itself moved over a stationary player, and
+`DISCONNECTED` is a member logging out inside the region. An empty list reacts to all four, so an exit event
+left on the default also fires on logout, where most actions have nobody left to act on. Tick the three you
+want when that matters. `DISCONNECTED` is only ever a leave, so ticking it on an enter event fires nothing.
+
+`Boundary Inset` is a [hysteresis](https://en.wikipedia.org/wiki/Hysteresis) distance. The enter always fires
+the moment the player touches the region; the inset only delays the exit, which fires once the player is
+clear of the region by more than this distance. A player walking exactly along the edge therefore enters once
+and stays a member instead of spamming enters and exits.
+
+`Cancel` blocks the movement that caused the crossing. Use it on an enter event to keep players out, or on an
+exit event to lock players in. It only works where there is a movement to refuse: an `ENGULFED` crossing has
+none, and neither does a player arriving on a horse, a boat or a minecart, because the server does not let a
+vehicle's movement be refused. Pair it with a barrier to cover those.
+
+## Example: a welcome message
+
+We will greet players when they walk into the `market_square` region from
+[Defining Regions](./01-defining-regions.mdx).
+
+1. Open a **sequence** page.
+2. Add a `Region Enter Event` entry and name it `on_market_enter`.
+3. In the inspector, set the `Region` field to a reference and select `market_square`.
+4. Leave `Causes` empty so walking and teleporting both count.
+5. Right click the entry, click on `+ link with ...`, and add a `Timed Dialogue` entry.
+6. Set its text to `Welcome to the market!`, a typing duration of `0.8s`, and a wait duration of `1.5s`, so
+   the message plays and clears itself without the player having to confirm anything.
+
+The finished setup looks like this in the panel:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/market/sequence.json"),
+    require("../../assets/regions/market/static.json"),
+]} />
+
+{/* TODO: Add video: walking into the market square and receiving the welcome message. */}
+
+Walk into the sphere and the message plays. It plays on every entry. To greet each player only once, give the
+dialogue a permanent fact with modifier `= 1` and criteria `= 0`. Read the [Facts](../03-facts/index.mdx)
+documentation for more on this pattern.
+
+## Example: a proximity warning
+
+`Region Proximity Event` is the right tool when something should happen near a region rather than inside it.
+To warn players approaching a minefield:
+
+1. Create a `Cuboid Region Definition` named `minefield` covering the field.
+2. On a sequence page, add a `Region Proximity Event` with its `Region` reference set to `minefield` and its
+   `Distance` set to `8`.
+3. Link a `Timed Dialogue` with the text `Careful, mines ahead!`.
+
+The event fires once when the player comes within 8 blocks of the boundary, and once again when they move
+away, with the same triggers both times. Nothing on the entry tells the two apart, so write the line so it
+reads either way, or use a `Boundary Inset` to keep someone pacing the edge from setting it off repeatedly.
+Where the difference really matters, put a `Region Enter Event` on a second, larger region instead: an enter
+fires only on the way in.
+
+## Example: sealing a vault
+
+To keep players out of an area entirely, cancel the crossing:
+
+1. Create a `Cuboid Region Definition` named `vault` and capture the vault room.
+2. On a sequence page, add a `Region Enter Event` with its `Region` reference set to `vault`.
+3. Enable `Cancel`.
+4. Optionally link a dialogue like `The vault is sealed.` so players know why they bounced off.
+
+The move that would take a player inside is cancelled, so the player is held at the boundary.
+
+{/* TODO: Add video: a player bouncing off the sealed vault boundary. */}
+
+### Sealing conditionally
+
+Region events do not have criteria. To seal the vault only under some condition, make the `Cancel` field
+itself conditional: click the <ActionButton button='dynamic-variable'/> icon on the `Cancel` field and create
+a `Meet Criteria Variable`, a boolean variable from the Basic Extension that is `true` while the player meets
+its criteria.
+
+<EntrySearch entryName='meet_criteria_variable' />
+
+Set the variable's criteria to `vault_opened_fact == 0`. Now the crossing is cancelled while the vault is
+closed, and players walk in freely once the fact flips to `1`. This pattern works for every variable field on
+the event entries.
+
+:::tip[When cancel is not enough]
+Cancelling stops walking and teleporting, but not an `ENGULFED` crossing, which has no movement to cancel,
+and not a player riding in: a vehicle's movement cannot be refused, so a horse or a boat carries its rider
+straight through. When either of those can happen, or you want a softer effect, use the barrier from
+[Region Audiences](./04-region-audiences.mdx) or the push action below.
+:::
+
+## Pushing players out
+
+<EntrySearch entryName='region_boundary_push' />
+
+`Region Boundary Push` is an action that launches the player away from the boundary along the nearest outward
+direction. Pair it with an enter event as a fallback for crossings that cannot be cancelled, like the
+`ENGULFED` crossings of a [dynamic region](./07-dynamic-regions.mdx).

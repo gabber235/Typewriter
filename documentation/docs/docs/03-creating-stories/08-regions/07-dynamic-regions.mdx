@@ -1,0 +1,192 @@
+---
+difficulty: Hard
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import EntryDisplay from '@site/src/components/EntryDisplay';
+import ActionButton from '@site/src/components/ActionButtons';
+
+# Dynamic Regions
+
+Every placement field of a definition is a variable, which turns a region into a moving part of your story.
+This page explains how that works and then walks through a complete example: a patrolling guard with a vision
+cone.
+
+## How a region becomes dynamic
+
+A definition has five placement fields: `origin`, `offset`, `yaw`, `pitch`, and `roll`. Each of them accepts
+either a constant value or a variable. The moment any placement field is backed by a variable, the region is
+dynamic: Typewriter resolves the placement again at the definition's refresh rate and moves the region
+accordingly. Events, audiences, facts, displays, and barriers all keep working; none of them care whether the
+region moves.
+
+There is one more rotation control. When `Rotate With Origin` is enabled, the yaw and pitch of the origin
+position itself are added to the region's rotation. Anchor the origin to an entity's position variable and
+the region follows the entity and turns with its facing. That is what a vision cone is built on.
+
+### Shared or per player
+
+How a region is tracked depends on whether its placement fields hold plain values or variables:
+
+- A region whose origin, offset, yaw, pitch and roll are all typed in directly is tracked once and shared by
+  every player.
+- A region with a variable in any of those fields is tracked separately for each viewer, even when the
+  variable resolves to the same place for everyone. Typewriter cannot know in advance that it will, so a
+  guard's vision cone costs one tracker per online player just like a bubble around each player does.
+
+:::warning[Per player regions]
+Per player tracking is exactly what you want for personal bubbles, but every viewer pays for their own copy,
+so make sure to keep the number of such regions reasonable.
+:::
+
+### Crossing causes
+
+A dynamic region introduces a crossing that static regions never produce: the region itself can move over a
+player who is standing still. The event entries report this as the `ENGULFED` cause. Two things are special
+about it:
+
+- `Cancel` does nothing for `ENGULFED` crossings, because there is no player movement to cancel. Use the
+  barrier or the push action to keep players out of a moving region.
+- Walking into a moving region still counts as `PLAYER_MOVED`. The cause describes who moved, not what kind
+  of region it is.
+
+### Refresh rate
+
+The `Refresh Rate Ticks` field controls how often a dynamic region evaluates its placement again. `1` moves the
+region every tick, which is right for anything players watch, like a vision cone. Raise it for regions that
+move slowly or rarely, like a zone around a drifting airship, to save resources.
+
+## Tutorial: a guard with a vision cone
+
+We will build a guard that patrols a wall, sweeps a vision cone in front of him, and calls out any player the
+cone touches. This combines the Entity Extension with a dynamic cone region.
+
+:::warning[Before starting]
+This tutorial requires a working NPC. Follow the [Entity Extension](../04-entity-extension/index.mdx) guide
+to create one, and the [Activities](../04-entity-extension/04-activities.mdx) guide for the patrol.
+:::
+
+### 1. Create the patrolling guard
+
+Create an entity definition for the guard, for example a player skin NPC named `Guard`. Give its instance a
+`Patrol Activity` with a few nodes along the wall so the guard walks a route.
+
+<EntrySearch entryName='patrol_activity' />
+
+The important part for this tutorial is the guard's **instance** entry on your manifest page. The region will
+be anchored to it.
+
+### 2. Create the cone definition
+
+On a **manifest** page, add a `Cone Region Definition` named `guard_vision`:
+
+<EntrySearch entryName='cone_region_definition' />
+
+Set the plain fields first:
+
+- `Offset`: `(0, 1.6, 0)` so the cone starts at eye height instead of at the guard's feet.
+- `Rotate With Origin`: enabled. Once the origin is anchored to the guard, the position carries the guard's
+  facing, and the cone turns with the guard's head.
+- `Length`: `12` and `Half Angle Degrees`: `30`, a 12 block cone with a 60 degree opening.
+- `Refresh Rate Ticks`: `1` so the sweep is smooth.
+
+### 3. Anchor the origin to the guard
+
+The cone still needs to know where the guard is. Variables are not added to a page like other entries; they
+are created on the field that uses them. In the inspector of `guard_vision`, click the
+<ActionButton button='dynamic-variable'/> icon on the `Origin` field. In the dialog that opens, create a
+new `Entity Instance Position Variable` and name it `guard_position`. Then, in the variable data shown on the
+field, set `Instance` to the guard's instance entry.
+
+The variable resolves to the current position of the entity instance, including which way the entity is
+facing, and that facing is what `Rotate With Origin` uses.
+
+The configured definition looks like this; click the entry to see the anchored origin and the enabled
+`Rotate With Origin` in the inspector:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/guard/static.json"),
+]} referencePages={[
+    require("../../assets/regions/guard/entities.json"),
+    require("../../assets/regions/guard/variables.json"),
+]} />
+
+### 4. Watch it move
+
+Publish your pages, then run:
+
+```
+/tw region visualize guard_vision
+```
+
+The cone renders as glowing edge lines in the region's color and sweeps along with the patrolling guard,
+readable even through terrain. Run the command again to hide it. This is the fastest way to tune the length
+and the angle until the cone feels right.
+
+{/* TODO: Add video: the visualized cone sweeping along with the patrolling guard. */}
+
+### 5. React to players who are spotted
+
+On a **sequence** page, add a `Region Enter Event` named `on_spotted`:
+
+<EntrySearch entryName='region_enter_event' />
+
+- `Region`: reference `guard_vision`.
+- `Causes`: leave empty. A player walking into the cone is `PLAYER_MOVED`, and the cone sweeping over a
+  standing player is `ENGULFED`. A guard should spot both.
+- Link it to whatever being spotted means in your story: a dialogue `Hey! You there!`, a fact that raises an
+  alarm level, or a trigger that starts a chase cinematic.
+
+Because region membership uses the player's whole body, the guard also spots a player whose head or shoulder
+pokes into the edge of the cone, even right in front of the apex where the cone is at its narrowest.
+
+The sequence looks like this in the panel:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/guard/sequence.json"),
+    require("../../assets/regions/guard/static.json"),
+]} referencePages={[
+    require("../../assets/regions/guard/entities.json"),
+    require("../../assets/regions/guard/variables.json"),
+]} />
+
+{/* TODO: Add video: sneaking up on the guard, getting caught in the cone, and the guard shouting. */}
+
+### 6. Optional polish
+
+- Add a `Region Proximity Audience` with a `Region Boundary Particle` child so players trying to slip past
+  can see the cone they must avoid.
+- Use a `Region Inside Fact` on `guard_vision` as criteria, so dialogue changes while the player stands in
+  the guard's sight.
+- Give the event a `Boundary Inset` of `0.5` so a player hovering exactly at the cone's edge does not trigger
+  it repeatedly. The inset never delays getting spotted; it only makes the player back off half a block
+  before the guard loses them.
+
+:::tip[When the cone does not trigger]
+Run `/tw region debug guard_vision` and walk into the cone. The debugger puts the membership check and the
+event on your HUD, and whichever of the two is not what you expect points straight at the broken link, for
+example a region reference on the event pointing at a different definition, or the origin variable not
+resolving. See [Region Commands](./09-commands.mdx#debugging-a-region) for what it shows.
+:::
+
+## A personal earshot bubble
+
+Per player regions have one classic use above all others: knowing who is close enough to hear you. That
+single check powers secret dialogue that only plays when no one is listening, companions that pause their
+banter when a stranger walks up, a whisper that only nearby players receive, and a heist step that requires
+splitting the party.
+
+Anchor a `Sphere Region Definition`'s origin to a `Relative Position Variable` with coordinate `(0, 0, 0)`,
+created on the origin field just like in the tutorial above:
+
+<EntrySearch entryName='relative_position_variable' />
+
+The sphere now follows each player separately, and its radius is the earshot range. Add a
+`Region Player Count Fact` on it, named `players_in_earshot`, and read it from criteria:
+
+- `players_in_earshot = 1` means the player is alone (players count themselves), so the informant shares the
+  secret passphrase only when nobody else can overhear it.
+- `players_in_earshot >= 4` means a crowd has gathered, so the street performer starts the show.
+
+Since the region is a real region, everything else works too: a `Region Enter Event` on the bubble fires when
+someone steps into earshot, which is all an eavesdropping mechanic needs.

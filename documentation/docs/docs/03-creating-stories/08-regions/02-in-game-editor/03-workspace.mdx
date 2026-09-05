@@ -1,0 +1,45 @@
+---
+difficulty: Normal
+---
+
+# The Workspace
+
+Run the editor command without a region and you get the workspace instead of a single region's editor:
+
+```
+/tw region edit
+```
+
+Every statically placed region within 64 blocks renders at once, each outlined in its own color with a
+floating name tag, so a hub full of triggers becomes readable in one glance. The boss bar counts every region
+in range; when there are more than the six the workspace draws at once, it says so and renders the six
+closest. Regions with variable bound placement resolve per player and have no fixed home in the world, so
+they are not listed.
+
+Aim at a region and its outline swells and settles in a steady beat, which keeps the selection readable from
+across the plaza. Left click the compass to cycle through the regions instead (**F** unlocks the aim again),
+and **right click** the compass to open the selected region's full editor. Applying or exiting drops you back
+into the workspace to pick the next one. The amethyst shard works the same as in the editor: right click
+teleports to the selected region, sneak right click to the border you are looking at, and left click brings
+you back.
+
+## Filtering what you see
+
+Two hotbar toggles decide what the workspace lists. The **book** shows or hides the named region entries, and
+the **item frame** shows or hides inline regions, the ones defined inside another entry's field. An inline
+region renders with an `inline definition` tag under its name, and opening it edits the owning entry's field
+through the same shape editor, staged and applied exactly like a named region. Hide the named regions when a
+plaza full of them buries the one inline barrier you are after.
+
+## Editing together
+
+The editor is multiplayer aware. A region belongs to one editor at a time. Opening its editor locks it, and
+anyone else trying gets told who is working on it: a `✎ name is editing` badge on the region's tag in the
+workspace, a message on the command, and the same message when clicking the compass. Different regions edit
+in parallel without stepping on each other.
+
+While someone edits, every other player with the edit permission who is inside a content editor themselves
+and within 64 blocks watches the session live. The working preview renders with a name tag saying who is
+editing, and it follows every carry, drag, and undo in real time. The published boundary hides for watchers
+while the live preview is shown, so there is never a stale outline underneath the one that is moving. Outside
+an editor, staff see only the published boundary.

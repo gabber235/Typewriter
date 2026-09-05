@@ -1,0 +1,23 @@
+{
+  "id": "rgFactsStatic01",
+  "name": "region_facts",
+  "type": "static",
+  "entries": [
+    {
+      "id": "rgPlatformCount",
+      "name": "players_on_platform",
+      "comment": "",
+      "group": "",
+      "region": {
+        "case": "region_reference",
+        "value": {
+          "definition": "rgBossPlatform1"
+        }
+      },
+      "type": "region_player_count_fact"
+    }
+  ],
+  "chapter": "",
+  "priority": 0,
+  "version": "0.9.0"
+}

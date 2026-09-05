@@ -1,0 +1,115 @@
+{
+    "id": "rgAudienceManif",
+    "name": "region_audiences",
+    "type": "manifest",
+    "entries": [
+        {
+            "id": "rgArenaDefinit1",
+            "name": "arena",
+            "origin": {
+                "world": "world",
+                "x": 128.5,
+                "y": 64.0,
+                "z": -64.5,
+                "yaw": 0.0,
+                "pitch": 0.0
+            },
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "yaw": 0.0,
+            "pitch": 0.0,
+            "roll": 0.0,
+            "rotateWithOrigin": false,
+            "color": 0,
+            "priorityOverride": {
+                "enabled": false,
+                "value": 0
+            },
+            "modifiers": [],
+            "halfX": 12.0,
+            "halfY": 12.0,
+            "halfZ": 12.0,
+            "refreshRateTicks": 1,
+            "type": "cuboid_region_definition"
+        },
+        {
+            "id": "rgBuildSiteDef1",
+            "name": "build_site",
+            "origin": {
+                "world": "world",
+                "x": 240.5,
+                "y": 70.0,
+                "z": 96.5,
+                "yaw": 0.0,
+                "pitch": 0.0
+            },
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "yaw": 0.0,
+            "pitch": 0.0,
+            "roll": 0.0,
+            "rotateWithOrigin": false,
+            "color": 0,
+            "priorityOverride": {
+                "enabled": false,
+                "value": 0
+            },
+            "modifiers": [],
+            "halfX": 16.0,
+            "halfY": 16.0,
+            "halfZ": 16.0,
+            "refreshRateTicks": 1,
+            "type": "cuboid_region_definition"
+        },
+        {
+            "id": "rgInsideArena01",
+            "name": "inside_arena",
+            "children": [
+                "rgArenaSidebar1"
+            ],
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgArenaDefinit1"
+                }
+            },
+            "inverted": false,
+            "type": "region_inside_audience"
+        },
+        {
+            "id": "rgArenaSidebar1",
+            "name": "arena_sidebar",
+            "children": [],
+            "title": "<gold><b>Arena",
+            "priorityOverride": {
+                "enabled": false,
+                "value": 0
+            },
+            "type": "sidebar"
+        },
+        {
+            "id": "rgBuildBarrier1",
+            "name": "build_site_barrier",
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgBuildSiteDef1"
+                }
+            },
+            "mode": "KEEP_OUT",
+            "strength": 0.6,
+            "activationDistance": 1.5,
+            "distanceMode": "FULL",
+            "type": "region_barrier_audience"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

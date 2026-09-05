@@ -27,3 +27,7 @@ An entry argument accepts the entry identifier and the entry name.
 | `/tw quest track <questEntry> [player]`          | Start following a quest for a player.                  | typewriter.quest.track          |
 | `/tw untrack [player]`                           | Unfollow the quest of a player.                        | typewriter.quest.untrack        |
 | `/tw roadNetwork edit <roadNetworkEntry>`        | Edit a roadNetwork.                                    | typewriter.roadNetwork.edit     |
+| `/tw region visualize [definitionEntry] [single/multiple] [seconds]` | Shows a region's boundary; without a region it hides all shown boundaries. | typewriter.region.visualize     |
+| `/tw region edit [definitionEntry]`              | Open the in-game region editor, or the multi region workspace without an entry. | typewriter.region.edit          |
+| `/tw region debug <definitionEntry>`             | Open the region debugger HUD for a region.             | typewriter.region.debug         |
+| `/tw region flags [seconds]`                     | Reports the region flags where you stand and are looking, and highlights the judged block. | typewriter.region.flags         |

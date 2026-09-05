@@ -1,0 +1,23 @@
+{
+  "id": "rgGuardVarPage1",
+  "name": "guard_variables",
+  "type": "static",
+  "entries": [
+    {
+      "id": "rgGuardPosVar01",
+      "name": "guard_position",
+      "default": {
+        "world": "",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "yaw": 0.0,
+        "pitch": 0.0
+      },
+      "type": "entity_instance_position_variable"
+    }
+  ],
+  "chapter": "",
+  "priority": 0,
+  "version": "0.9.0"
+}

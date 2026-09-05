@@ -1,0 +1,42 @@
+---
+difficulty: Easy
+---
+
+# Regions
+
+:::warning[Early Access]
+The Region Extension is in early access, available to [sponsors](https://github.com/sponsors/gabber235).
+:::
+:::danger[Required Extensions]
+You must have installed the Region Extension before starting this section.
+:::
+:::info[Before starting]
+Make sure you have read the [layout](../../02-getting-started/02-layout.mdx) documentation and know how to
+create static, sequence, and manifest pages.
+:::
+
+A region is a 3D volume in your world. You define it once on a manifest page in one of six shapes, and every
+other entry that needs it points back at that single definition.
+
+With a region in place you can fire triggers when a player crosses its boundary, filter an audience by it,
+read facts about it, draw its edge with particles or blocks, hold players inside or outside of it, and give
+it flags that rule what may happen to the blocks and players in it.
+
+Regions do not have to stand still. Anchor one to an NPC or to the player and the whole volume travels along;
+events, audiences, facts, displays and flags keep working while it moves.
+
+## What is in this section
+
+| Page | What it covers |
+| ---- | -------------- |
+| [Defining Regions](./01-defining-regions.mdx) | The six shape entries and their placement fields |
+| [The In Game Editor](./02-in-game-editor/index.mdx) | Marking a shape in game and the transform tools |
+| [Region Events](./03-region-events.mdx) | Reacting to crossings, blocking them, pushing players out |
+| [Region Audiences](./04-region-audiences.mdx) | Filtering an audience by a region, and the barrier |
+| [Boundary Displays](./05-boundary-displays.mdx) | Showing the boundary with particles, blocks, or entities |
+| [Facts and Variables](./06-facts-and-variables.mdx) | Reading region state, and sharing facts inside one |
+| [Dynamic Regions](./07-dynamic-regions.mdx) | Regions that move, with a guard vision cone tutorial |
+| [Region Flags](./08-region-flags/index.mdx) | Rules about what may happen inside, and how priority works |
+| [Region Commands](./09-commands.mdx) | Editing, visualizing, debugging and inspecting from chat |
+
+Start with [Defining Regions](./01-defining-regions.mdx); everything else builds on it.

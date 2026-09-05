@@ -1,0 +1,66 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+
+# Combat Flags
+
+Four flags decide who and what may be hurt inside a region.
+
+<EntrySearch entryName='region_pvp_modifier' />
+
+- `Region Pvp Modifier`: whether players may hurt each other inside the region, including with a projectile
+  they shot.
+- `Region Mob Damage Modifier`: whether mobs may hurt the players inside the region. A player hurting a
+  player is the Pvp flag's business, not this one.
+- `Region Player Damage Modifier`: whether the players inside the region may be hurt at all: falls, fire,
+  drowning, mobs, and other players alike. This is the blunt one; reach for Pvp or Mob Damage instead when
+  you only want to stop one kind of attacker. It also takes a `Causes` field, covered below, that narrows
+  which damage causes it decides about.
+- `Region Entity Damage Modifier`: whether the non player entities inside the region may be damaged or
+  destroyed: item frames, paintings, armour stands, boats, minecarts, and mobs. These are entities, not
+  blocks, so Block Break never protects them; a player denied Block Break could still punch an item frame off
+  a fully protected region's wall or kill every animal in a safe zone. A player hurting another player is the
+  Pvp and Mob Damage flags' business, not this one.
+
+Pvp, Mob Damage, and Player Damage are all decided by the **victim's** location, never the attacker's. An
+attacker standing outside a protected region cannot shoot an arrow, throw a trident, or otherwise reach in
+and hurt someone standing inside it, because the region that matters is wherever the victim is.
+`Region Entity Damage Modifier` follows the same rule for the entity being hurt: its own location decides,
+not the attacker's.
+
+A player is always behind Pvp, Mob Damage, and Player Damage's events, so their `Allowed` accepts a variable
+the same way the block flags do: a fact can drive it, so a hub can go from a truce to a free for all the
+moment an event starts. Entity Damage's `Allowed` accepts one too, though it does not need a player behind
+the damage to resolve: a constant value still protects a mob attacked by another mob.
+
+## Player Damage and the specific flags
+
+`EntityDamageByEntityEvent` is a subclass of `EntityDamageEvent`, so `Region Player Damage Modifier` sees
+every hit that `Region Pvp Modifier` and `Region Mob Damage Modifier` see too: a punch is damage, and so is
+falling off a cliff. Left alone, that means a hub denying Player Damage would cancel a fight inside its own
+arena even when the arena's Pvp flag allowed it.
+
+To avoid that, damage is classified first. A player behind it, including a projectile they shot, makes it
+Pvp; any other entity behind it makes it Mob Damage; anything else, a fall, fire, or drowning, is
+environmental and only Player Damage ever sees it. Both the specific flag that matches (Pvp or Mob Damage)
+and the general Player Damage flag are then resolved, and the higher priority decision wins. When the same
+region carries both, the specific one wins, because a region carrying "Pvp allowed" and "Player Damage
+denied" means exactly what it says: fight here, but do not fall to your death.
+
+`Causes` narrows what Player Damage decides about instead of it always being the blunt version. Leave it
+empty and it decides about every cause; list only `FALL`, `FIRE`, and `DROWNING`, for example, and a hub
+denies those without touching combat at all, leaving Pvp and Mob Damage free to decide fighting on their own.
+
+:::tip[Worked examples]
+- A hub at priority 0 denies Player Damage, and an arena at priority 10 inside it allows Pvp. Fighting is
+  allowed in the arena, because the higher priority Pvp decision wins there, but falling still kills you
+  there too: Pvp has nothing to say about a fall, so the hub's lower priority Player Damage denial is the
+  only decision left for it.
+- Reverse it: an arena at priority 10 denies Player Damage inside a hub at priority 0 that allows Pvp. The
+  arena's blunt rule wins inside its own bounds, because priority is checked before specificity: the higher
+  priority general flag beats the lower priority specific one.
+- One region carries both Pvp allowed and Player Damage denied. There is no priority difference to break the
+  tie, so the specific flag wins: fight here, but do not fall to your death here.
+:::

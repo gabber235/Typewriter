@@ -1,0 +1,92 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+
+# Region Flags
+
+A flag is a rule a region carries about what may happen inside it: whether its blocks may be broken, placed,
+or used, whether mobs may spawn, whether players may hurt each other. Flags are entries of their own, added
+to a definition's `Modifiers` field, so one flag entry can be shared by as many regions as need the same
+rule.
+
+<EntrySearch entryName='region_block_break_modifier' />
+
+A region either carries a flag of a given kind, and then it decides, or it does not carry that flag, and then
+the next region down in priority decides instead. A region with none of the flags never decides anything for
+that action; it is invisible to the check, and whichever other region does carry the flag decides as if it
+were not there at all.
+
+Every flag has a single `Allowed` field, off by default. A region carrying the flag with `Allowed` off blocks
+the action; with `Allowed` on it permits it, which only matters where a lower priority region would otherwise
+have forbidden it. On some flags that field accepts a variable, so a fact can drive it; the pages below say
+which.
+
+## Which flags exist
+
+| Page | Flags |
+| ---- | ----- |
+| [Block Flags](./01-block-flags.mdx) | Break, Place, Interact, Entity Interact, Bucket, Trample, Ignite |
+| [World Flags](./02-world-flags.mdx) | Piston, Redstone, Fire Spread, Fluid Flow, Explosion, Mob Spawn, Mob Grief |
+| [Combat Flags](./03-combat-flags.mdx) | Pvp, Mob Damage, Player Damage, Entity Damage |
+| [Limits and Gaps](./04-flag-limits.mdx) | Where flags abstain, and what they never see |
+
+## Priority
+
+Every region has a priority. Unless the definition's `Priority Override` field is set, a region's priority is
+simply the priority of the page it is declared on. Flags have no priority of their own: they inherit whatever
+priority the region that lists them has, so a region's rules always move together.
+
+Where two regions carrying the same flag overlap, the one with the higher priority decides, and the other is
+not consulted at all. That is how an arena inside a protected city can allow what the city forbids. Give
+the city a flag that denies the action, and give the arena the same kind of flag with `Allowed` on and a
+higher priority than the city's, either by raising the arena's page priority or by setting `Priority
+Override` directly on the arena's definition. Inside the arena the higher priority region wins; everywhere
+else in the city the lower priority region's ban still holds.
+
+:::tip[Breaking a tie]
+When two overlapping regions carrying the same flag also share the same priority, one of them wins and it is
+always the same one, but which one is not something you can predict or read off the page. Give one of them an
+explicit `Priority Override` whenever it matters which rule applies.
+:::
+
+## What decides, and where
+
+Flags are resolved at the thing being acted on, never at the player doing it. Breaking, placing, interacting,
+filling a bucket, trampling a crop and lighting a fire resolve at the target block; the combat flags resolve
+at the victim; a spawn resolves where the mob appears. A player camped just outside a protected region cannot
+reach in and act on anything inside it by aiming across the boundary.
+
+## Flags protect the place, audiences protect the player
+
+[Region Audiences](../04-region-audiences.mdx) covers `Prevent Block Break Audience` and
+`Prevent Block Place Audience` from the Basic extension. Those are about the player, wherever they are
+standing: put one under a `Region Inside Audience` and a player inside the region loses the ability to break
+or place blocks anywhere on the server, not only inside that region, while a player standing outside keeps
+mining and building into it freely.
+
+A flag is the other way around. It does not care who the player is or where they stand; it only cares where
+the block is. Reach for the Basic audiences when you want to take an ability away from specific players.
+Reach for a flag when you want to protect the place itself from everyone, including someone who never set
+foot inside it.
+
+## Example: an arena inside a protected city
+
+Region definitions and flags both live on **manifest** pages (see
+[Manifest Entries](../../../04-concepts/03-Manifest/index.mdx)).
+
+1. On a **manifest** page, add a `Region Block Break Modifier` entry named `city_no_breaking` and leave
+   `Allowed` off.
+2. Add your city's region definition, for example a `Polygon Region Definition` named `city_bounds` walking
+   the city walls, and add `city_no_breaking` to its `Modifiers` field.
+3. Add a second `Region Block Break Modifier` entry named `arena_breaking_allowed` with `Allowed` on.
+4. Add a `Cuboid Region Definition` named `arena` covering the arena floor, add `arena_breaking_allowed` to
+   its `Modifiers` field, and set its `Priority Override` higher than `city_bounds`'s priority.
+5. Publish.
+
+Breaking is now blocked everywhere inside `city_bounds`, except inside `arena`, where the higher priority
+region's flag takes over and allows it again.
+
+To check what applies where, run [`/tw region flags`](../09-commands.mdx#inspecting-flags) standing in the
+spot in question.

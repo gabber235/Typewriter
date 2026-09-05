@@ -1,0 +1,121 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import EntryDisplay from '@site/src/components/EntryDisplay';
+
+# Boundary Displays
+
+Five display entries render the boundary of a region to their audience, so players can actually see it. They
+live on **manifest** pages.
+
+## The full boundary surface
+
+Three of the five draw the whole surface:
+
+<EntrySearch entryName='region_boundary_particle' />
+
+- `Region Boundary Particle` emits particles along the boundary, once per its `Delay` (50ms by default). It
+  shares the familiar particle fields: `Count`, `Offset`, and `Speed`.
+- `Region Boundary Fake Block` builds a client side wall out of fake blocks and restores the real blocks when
+  the player leaves the audience. It only replaces blocks a player could pass through, so air, water, lava,
+  and plants become wall, while existing terrain stays visible. Punching or clicking a fake block cannot make
+  it disappear; the wall reappears immediately, and it survives walking out of render distance and
+  back. `Block` picks the material, barrier blocks by default, and `Density` thins the wall out or fills it
+  in.
+- `Region Boundary Entity` places fake entities along the boundary, built from an entity definition of the
+  [Entity Extension](../04-entity-extension/index.mdx). The definition's data (skin, equipment, pose) is
+  applied, and every entity faces outward, away from the region. Keep the density low, every sample is a
+  whole entity.
+
+## A line on the ground
+
+The other two draw only where the region meets the ground: the lowest walkable surface inside the region's
+vertical span, right where the footprint ends. The line hugs the exact footprint edge, corners included, and
+follows hills, floors, and cliff edges, so it reads as a border painted on the terrain instead of a wall in
+the air. Tree canopies, overhangs, and roofs inside the span stay above the line rather than capturing it. A
+region hovering above the ground shows nothing.
+
+<EntrySearch entryName='region_boundary_ground_particle' />
+
+- `Region Boundary Ground Particle` emits particles along the ground line, one emission point per block, with
+  the same `Count`, `Offset`, `Speed`, and `Delay` fields as the boundary particle display.
+- `Region Boundary Ground Entity` spawns fake entities standing on the terrain along the line. `Spacing`
+  controls the blocks between entities: they are spread out evenly, every gap identical.
+
+Both ground displays share an `Animation` field, and each has one field of its own:
+
+| Field | Options | Applies to |
+| ----- | ------- | ---------- |
+| `Animation` | `Static` (default) holds the line in place. `Clockwise` and `Counter Clockwise` flow it around the region at a speed in blocks per second, clockwise as seen from above. | Both displays |
+| `Facing` | `Outward` (default), `Inward`, `Along Line` or `Against Line`. Along and against follow the direction of travel, so they turn around when the flow direction flips. | Entity display |
+| `Pattern` | `Solid` (default) or `Dashed`, with a dash and a gap length in blocks (4 and 3 by default). | Particle display |
+
+A static entity line puts an entity on every corner of the footprint. A flowing one trades those corner
+pickets for even gaps all the way round, since an entity that keeps moving cannot hold a corner. The particle
+display keeps its emission points on every corner whatever the animation; only the dash phase moves.
+
+Dashes are also what makes a flowing particle line visible. Particles do not persist between emissions, so a
+solid flowing line looks the same as a still one however fast it moves. The lit and dark stretches of a dashed
+line slide past a fixed point as it flows.
+
+The terrain is resampled every couple of seconds, and immediately when the region moves, so the line adapts
+when someone builds or digs at the border.
+
+## Full or near boundary
+
+Every display, ground lines included, has an `Area` field with two options. `Full Boundary` renders the
+entire boundary and has nothing to configure. `Near Boundary` renders only the part of the boundary within
+its `Radius` blocks of the player, a spherical window that follows them; the radius field only appears once
+you pick it. Near is the right choice for large regions: the player still sees the wall exactly where they could run into it, without paying for the
+far side.
+
+Full is the default everywhere except `Region Boundary Fake Block`, which defaults to a 6 block near window.
+A fake block wall is rebuilt against the real world block by block, so drawing all of it for a region larger
+than a room costs far more than it shows.
+
+## Example: a visible arena edge
+
+1. On a **manifest** page, add a `Region Proximity Audience`, set its region, and set a distance of `16`.
+2. Add a `Region Boundary Particle` entry as its child, pointing at the same region.
+3. Pick a particle and a density; the default `ELECTRIC_SPARK` at `0.5` is a good start.
+4. Set the display's `Area` to `Near Boundary` so each player only sees the stretch of wall around them.
+5. Publish. Players within 16 blocks of the edge see the particle wall; everyone else pays no cost.
+
+The region and the two entries pointing at it look like this:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/displays/manifest.json"),
+]} />
+
+{/* TODO: Add video: approaching the arena edge and the particle wall fading into view. */}
+
+:::warning[Only render near the boundary]
+The proximity audience and the near boundary area solve two different problems, and big regions want both.
+The audience decides **who** gets the display at all, so far away players cost nothing. The near area decides
+**how much** of the boundary each of those players sees.
+:::
+
+## Example: honey bottle pickets
+
+For a softer look than a particle wall, mark the boundary with entities:
+
+1. Create an entity definition for the marker, for example an item display showing a honey bottle.
+2. On a **manifest** page, add a `Region Boundary Entity` display, set its region, and select the definition
+   in `Entity Definition`.
+3. Keep the default density of `0.05` and raise it only if the markers are too sparse.
+
+Because the entities face outward, directional definitions (an armor stand pointing, a player skin NPC) read
+as guards watching approaching players.
+
+:::tip[Lingering particles]
+Prefer short lived particles for boundaries: `ELECTRIC_SPARK`, `HAPPY_VILLAGER`, or `COMPOSTER`. Long lived
+drifting particles like `END_ROD` leave trails behind a [dynamic region](./07-dynamic-regions.mdx) when it
+moves.
+:::
+
+:::tip[Just checking a region?]
+If you only want to see a region yourself while building, you do not need a display entry. Use the
+`/tw region visualize` command from [Region Commands](./09-commands.mdx).
+:::

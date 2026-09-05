@@ -1,0 +1,31 @@
+---
+difficulty: Normal
+---
+
+# Editing Through Walls
+
+Blocks inside walls are hard to click. Switch to spectator mode (`F3 + N` or `/gamemode spectator`) without
+leaving the editor: the tool you were holding stays active as your **ghost tool**, named in the boss bar.
+
+A spectator client sends no left clicks, drops, or hotbar keys to the server, but right clicks do arrive. The
+editor therefore gives right click the click duties and listens to the movement keys for everything else. On
+the polygon wand, **right click** adds a corner at the block you occupy and **sneak right click** removes
+the corner under your crosshair, no lock needed.
+
+Fly to the spot and press **jump + sneak together** to lock in place. Your camera stays free, but the keys
+now drive the tool instead of moving you:
+
+- **Wand (two mark shapes)**: WASD, space and shift move the glowing selection cube block by block, straight
+  through any wall; **ctrl** marks it, exactly like a left click. The marks fill primary then secondary, then
+  replace whichever is closer.
+- **Wand (polygon)**: aim at a corner and **WASD** nudge it half a block along the yaw cardinals, exactly
+  like the resize tool drives faces. **Space** pins the aimed corner so the keys keep driving it while you
+  look around; space again releases it.
+- **Move**: WASD, space and shift nudge the whole region one block the way you face.
+- **Rotate**: A/D turn the yaw; W tilts the region away from you, S pulls it back, in 15° steps, as a clean
+  pitch or roll depending on which side you look from.
+- **Resize**: aim at a face, W pushes it away from you, S pulls it toward you. **Space** pins the aimed face,
+  so the keys keep driving it even when another face of the region slides in front of your view; space again
+  releases it.
+
+Press **jump + sneak** again to release and fly freely.

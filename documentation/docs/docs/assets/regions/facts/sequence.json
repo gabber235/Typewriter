@@ -1,0 +1,46 @@
+{
+    "id": "rgFactsSequence",
+    "name": "boss_door",
+    "type": "sequence",
+    "entries": [
+        {
+            "id": "rgOnPlatformEnt",
+            "name": "on_platform_enter",
+            "triggers": [
+                "rgDoorAnnounce1"
+            ],
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgBossPlatform1"
+                }
+            },
+            "causes": [],
+            "boundaryInset": 0.0,
+            "cancel": false,
+            "type": "region_enter_event"
+        },
+        {
+            "id": "rgDoorAnnounce1",
+            "name": "door_opens",
+            "criteria": [
+                {
+                    "fact": "rgPlatformCount",
+                    "operator": ">=",
+                    "value": 3
+                }
+            ],
+            "modifiers": [],
+            "triggers": [],
+            "speaker": "",
+            "text": "The ancient door rumbles open!",
+            "typingDuration": 800,
+            "waitDuration": 1500,
+            "allowSkip": true,
+            "type": "timed_dialogue"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

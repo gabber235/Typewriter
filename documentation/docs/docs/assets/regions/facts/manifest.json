@@ -1,0 +1,42 @@
+{
+    "id": "rgFactsManifest1",
+    "name": "region_definitions",
+    "type": "manifest",
+    "entries": [
+        {
+            "id": "rgBossPlatform1",
+            "name": "boss_platform",
+            "origin": {
+                "world": "world",
+                "x": -300.5,
+                "y": 80.0,
+                "z": 512.5,
+                "yaw": 0.0,
+                "pitch": 0.0
+            },
+            "offset": {
+                "x": 0.0,
+                "y": 1.5,
+                "z": 0.0
+            },
+            "yaw": 0.0,
+            "pitch": 0.0,
+            "roll": 0.0,
+            "rotateWithOrigin": false,
+            "color": 0,
+            "priorityOverride": {
+                "enabled": false,
+                "value": 0
+            },
+            "modifiers": [],
+            "halfX": 4.0,
+            "halfY": 1.5,
+            "halfZ": 4.0,
+            "refreshRateTicks": 1,
+            "type": "cuboid_region_definition"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

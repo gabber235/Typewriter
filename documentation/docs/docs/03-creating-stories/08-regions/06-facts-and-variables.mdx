@@ -1,0 +1,97 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import EntryDisplay from '@site/src/components/EntryDisplay';
+
+# Region Facts and Variables
+
+On **static** pages, you can read region state through facts:
+
+<EntrySearch entryName='region_inside_fact' />
+
+- `Region Inside Fact` is `1` when the player is inside the region and `0` otherwise. Like the events, it
+  uses the body based check: any part of the player overlapping the region counts.
+- `Region Player Count Fact` is the number of online players currently inside the region.
+- `Region Boundary Distance Fact` is the player's signed distance from the boundary in **centimeters**:
+  negative inside, positive outside. The unit is centimeters because facts store whole numbers.
+- `Region Boundary Distance Variable` is the same distance as a full precision `Double` in **blocks**, for
+  `Var<Double>` fields.
+
+One example per entry:
+
+- Put the criteria `in_market == 1` from a `Region Inside Fact` on a `Give Item Action`, so a merchant only
+  hands over goods while the player stands in the market.
+- Show a sidebar line `Fighters: %typewriter_players_in_arena%` from a `Region Player Count Fact`, or gate a
+  boss spawn on `players_in_arena >= 2`.
+- Damage players outside the safe zone with the criteria `safe_zone_distance > 0` on a
+  `Region Boundary Distance Fact`, or only when they stray far with `safe_zone_distance > 500`, which is 5
+  blocks out.
+- Bind a sound's volume variable to a `Region Boundary Distance Variable`, so a warning hum gets louder the
+  closer the player walks to the boundary.
+
+## Distance and the floor
+
+The boundary of a region includes its floor and ceiling. When a region's bottom face lies on the ground, a
+player walking inside is never more than about one block away from that face, so the distance fact reads
+around `-100` everywhere inside, no matter how close the walls are. This is correct, just rarely what you
+want.
+
+For that case, both distance entries and the proximity band entries have a `Distance Mode` field. The default
+`FULL` measures against the whole boundary. `HORIZONTAL` measures horizontally only: it ignores floor and
+ceiling and measures against the walls, as if the region extended infinitely up and down. A grounded arena
+with `HORIZONTAL` reports how far the player is from the edge, which is usually the number you wanted.
+
+## Shared facts with a region group
+
+<EntrySearch entryName='region_members_group' />
+
+Facts in Typewriter belong to a group, and by default every player is their own group. A
+`Region Members Group` groups players by the region they are currently inside: everyone in the same region
+reads and writes the same fact value, and a player in none of the configured regions has no group, so the
+fact does nothing for them.
+
+1. On a **static** page, add a `Region Members Group` and select your region definitions in `Definitions`.
+2. On the fact you want shared, set its `Group` field to the region group. It has to be a fact something
+   writes to, like a counter or a phase number. The region's own facts read the world for whoever asks and
+   have no stored value to share, so a group changes nothing on them.
+
+Now a "levers pulled" fact counts pulls from the whole party standing in the puzzle room, and a boss phase
+fact set by one player's trigger is seen by everyone in the arena. A player inside several of the configured
+regions belongs to the first one in the list.
+
+## Example: a door that needs three players
+
+We will make a sealed door react when three players stand on the pressure platform in front of it.
+
+1. On a **manifest** page, create a `Cuboid Region Definition` named `boss_platform` covering the platform.
+2. On a static page, add a `Region Player Count Fact` named `players_on_platform` with its `Region` reference
+   set to `boss_platform`.
+
+<EntrySearch entryName='region_player_count_fact' />
+
+3. On a **sequence** page, add a `Region Enter Event` on `boss_platform`, so the check runs exactly when
+   another player steps on.
+4. Link it to the entry that plays your door opening payoff, with the criteria `players_on_platform >= 3` on
+   that entry. In this example a dialogue announces the rumbling door; in a real story this is where you
+   trigger the cinematic, sound, or command that actually opens it.
+
+The three pages together look like this:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/facts/manifest.json"),
+    require("../../assets/regions/facts/static.json"),
+    require("../../assets/regions/facts/sequence.json"),
+]} />
+
+The count is evaluated when the criteria is checked. The first two players step on and nothing happens; when
+the third enters, the criteria passes and the door sequence fires.
+
+## When is the state updated?
+
+Region facts are computed at the moment they are read; nothing is stored when a player crosses a boundary.
+The triggered entries of an enter or leave event run right after the movement is applied, so by the time your
+sequence reads a `Region Inside Fact` or a `Region Player Count Fact`, the value already reflects the
+crossing that fired the event. In the door example above, the third player's enter event sees a count of `3`,
+themselves included.

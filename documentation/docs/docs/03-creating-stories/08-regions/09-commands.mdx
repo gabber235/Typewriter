@@ -1,0 +1,89 @@
+---
+difficulty: Easy
+---
+
+# Region Commands
+
+Every region command sits under `/tw region` and carries its own permission, all below `typewriter.region`.
+
+## Editing a region
+
+```
+/tw region edit <definition>
+```
+
+opens the [in game editor](./02-in-game-editor/index.mdx) for one definition, the same editor the capture
+icon on the panel opens. Run it without a definition and you get the
+[workspace](./02-in-game-editor/03-workspace.mdx) instead, which renders every statically placed region
+around you. It requires the `typewriter.region.edit` permission.
+
+## Visualizing a region
+
+```
+/tw region visualize <definition> [single/multiple] [seconds]
+```
+
+shows a saved definition without opening the editor. It requires the `typewriter.region.visualize`
+permission.
+
+The boundary is rendered as glowing solid lines in the region's color, tracing the characteristic edges. A
+cone shows its rim and lines running from the apex to it, so its direction is followable at a glance. The
+lines are display entities, not particles: they read through terrain, glide along with a moving region
+instead of leaving a trail behind it, and cost nothing while nothing changes.
+
+Without a duration the command toggles: run it once to show the region, run it again to hide it. With a
+duration it stops on its own.
+
+A region small enough draws its whole outline no matter how far you stand from it. A region too big for that
+instead renders only the stretch of border within `region.outline.render_distance` blocks of you, nearest
+first, and follows you as you walk along the edge, so you always see the part you are next to instead of
+nothing at all. The default is 64 blocks.
+
+By default visualizations stack, so you can show several regions at the same time and compare them. Pass
+`single` to automatically hide whatever you were viewing before, or `multiple` to stack explicitly. The
+default comes from the `region.visualize.mode` snippet, which accepts exactly two values: `multiple` (the
+default) and `single` for the one region at a time workflow without typing the mode. Running the command
+without a region hides everything you are currently visualizing in one go:
+
+```
+/tw region visualize
+```
+
+The preview follows the region, which makes this the fastest way to inspect
+[dynamic regions](./07-dynamic-regions.mdx), like a vision cone attached to a moving guard.
+
+{/* TODO: Add video: visualizing a region with the command, showing the toggle on and off. */}
+
+## Debugging a region
+
+```
+/tw region debug <definition>
+```
+
+answers why a region is not firing what you expected. It requires the `typewriter.region.debug` permission.
+
+The debugger takes over your HUD instead of spamming chat. The boss bar answers whether your body counts as
+inside and whether the enter event actually fired; it turns red the moment those two disagree, and purple
+when a placement variable does not resolve. The region itself draws as a glowing outline in its color. When
+you need the exact numbers, the blaze rod toggles the signed distances onto the action bar. Whichever value
+is not what you expect points straight at the broken link, for example a region reference on the event
+pointing at a different definition, or an origin variable that never resolves. The exit item, or
+double sneaking, closes the debugger.
+
+## Inspecting flags
+
+```
+/tw region flags [seconds]
+```
+
+answers "why can this not be broken" without you having to trace priorities by hand. Run it standing where
+you want to check, looking at the block in question. It requires the `typewriter.region.flags` permission.
+
+It first lists every flagged region you are standing in and the flags each one carries, so you can see every
+region's own opinion, not only the one that wins. It then ray traces the block you are looking at and
+reports, flag by flag, the value in force there and which region decided it. A flag no region decides there
+is reported as undecided.
+
+The judged block glows in a wireframe outline for a few seconds, five by default, so there is never any doubt
+about which block the report is about. Add a number of seconds, `/tw region flags 15` for example, to keep
+the outline up longer while you compare it against neighbouring regions.

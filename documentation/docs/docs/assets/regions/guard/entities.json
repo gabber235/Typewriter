@@ -1,0 +1,58 @@
+{
+  "id": "rgGuardEntity01",
+  "name": "guard_entities",
+  "type": "manifest",
+  "entries": [
+    {
+      "id": "rgGuardDefine01",
+      "name": "guard",
+      "displayName": "Guard",
+      "sound": {
+        "soundId": {
+          "type": "default",
+          "value": ""
+        },
+        "soundSource": {
+          "type": "self",
+          "entryId": "",
+          "location": {
+            "world": "",
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "yaw": 0.0,
+            "pitch": 0.0
+          }
+        },
+        "track": "MASTER",
+        "volume": 0.0,
+        "pitch": 0.0
+      },
+      "skin": {
+        "texture": "",
+        "signature": ""
+      },
+      "data": [],
+      "type": "npc_definition"
+    },
+    {
+      "id": "rgGuardInstance",
+      "name": "guard_instance",
+      "definition": "rgGuardDefine01",
+      "spawnLocation": {
+        "world": "",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "yaw": 0.0,
+        "pitch": 0.0
+      },
+      "data": [],
+      "activity": "",
+      "type": "npc_instance"
+    }
+  ],
+  "chapter": "",
+  "priority": 0,
+  "version": "0.9.0"
+}

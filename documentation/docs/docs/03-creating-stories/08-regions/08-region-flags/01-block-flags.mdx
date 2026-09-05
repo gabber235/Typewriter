@@ -1,0 +1,72 @@
+---
+difficulty: Normal
+---
+
+# Block Flags
+
+Seven flags exist so far, one per way a block or an entity can be touched. Each takes the `Allowed` field described in
+[Region Flags](./index.mdx), and each accepts a variable there.
+
+- `Region Block Break Modifier`: whether blocks inside the region may be broken.
+- `Region Block Place Modifier`: whether blocks may be placed inside the region.
+- `Region Block Interact Modifier`: whether blocks inside the region may be used: chests, doors, buttons,
+  levers, and anything else a right click opens or toggles. Pressure plates and tripwires count as well,
+  whether a player steps on one or an arrow, a dropped item or a wandering mob sets it off, since a room
+  whose levers are locked is not locked while its plates still fire.
+- `Region Entity Interact Modifier`: whether entities inside the region may be used: taking the armour off
+  an armour stand, rotating an item frame, opening a chest minecart, and every other right click on an
+  entity, so trading with a villager, mounting a horse, feeding an animal and putting a lead on one stop as
+  well. Block Interact never sees an entity, which is why a museum that only denies it still has its frames
+  turned and its stands stripped.
+- `Region Bucket Modifier`: whether buckets may be emptied or filled inside the region: lava, water, milk and
+  powder snow alike. Emptying a bucket is not placing a block, and filling one is not breaking one, so Block
+  Place and Block Break never see a bucket at all; without this flag a player denied both could still pour
+  lava into a fully protected region. Scooping a fish, an axolotl or a tadpole is a bucket fill too, so this
+  is the flag that keeps an aquarium's inhabitants where they are.
+- `Region Trample Modifier`: whether farmland and turtle eggs inside the region may be trampled by walking or
+  jumping on them. Those two blocks are left out of Block Interact on purpose, so a farm can be protected
+  from boots without locking every door around it.
+- `Region Ignite Modifier`: whether a player may light a fire inside the region with flint and steel, a fire
+  charge, a flaming arrow or an end crystal. This is the only flag that covers lighting a fire on purpose:
+  Block Interact refuses the block that was clicked, and flint and steel is not a block, so it goes on
+  working on a locked wall. Fire arriving on its own stays the `Region Fire Spread Modifier`'s business.
+
+## Which block the flag decides for
+
+A block belongs to a region when its **center** is inside. A boundary that cuts through a block, easy to get
+with a polygon wall or a rotated region, can leave a block's corner outside while most of the block is
+visibly covered. The center matches what a builder sees, so a floor the region covers is protected block for
+block along the actual boundary line.
+
+All seven resolve at the **target's** location, never the player's. A player camped just outside a
+protected region cannot reach in and act on anything inside it by aiming across the boundary. Where the
+target is an entity rather than a block, an item frame or a bucketed fish, the entity's own position decides
+in exactly the same way.
+
+## The world's own changes count too
+
+A protected place stays the way it was built, and half of what changes a build has nobody behind it. So three
+of the block flags also decide about the world acting on itself:
+
+- `Region Block Place Modifier` covers a block appearing where none was: crops and saplings growing, grass,
+  vines, kelp, bamboo and sculk spreading, ice and snow forming, a tree grown outside branching in, bone meal
+  being used, and a falling block landing.
+- `Region Block Break Modifier` covers a block disappearing on its own: ice and snow melting, farmland drying
+  out, and leaves decaying once their logs are gone. Every one of those can be provoked from outside the
+  region, by placing a torch or by cutting the tree the canopy hangs from.
+- `Region Block Interact Modifier` covers a hopper or dropper moving items into or out of a container inside
+  the region, which is what locking that container is for.
+
+:::warning[A no build region freezes farms]
+Because growth is a Block Place decision, a region carrying Block Place denied stops wheat maturing, saplings
+growing and bone meal working inside it. That is what protecting a city center should do, and it is not what
+you want over a farm. Give the farm its own region with Block Place `Allowed` on and a higher priority than
+the region around it, exactly like the arena inside the city.
+:::
+
+A tree growing and bone meal spreading are all or nothing: Minecraft offers the whole set of blocks in one
+event, so a sapling whose canopy would reach a single protected block does not grow at all, rather than
+growing a clipped version of itself.
+
+Binding one of these flags' `Allowed` to a variable changes what they cover, since the world's own changes
+have no player for a fact to read. [Limits and Gaps](./04-flag-limits.mdx) explains what happens then.

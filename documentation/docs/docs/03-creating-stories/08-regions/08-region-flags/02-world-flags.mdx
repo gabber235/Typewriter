@@ -1,0 +1,51 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+
+# World Flags
+
+These flags decide about the world acting on itself, with no player behind the event at all. Each takes the
+`Allowed` field described in [Region Flags](./index.mdx), off by default. None of them accepts a variable
+there: no player is behind any of these events, so there is no one for a fact to key off.
+
+## Mechanical flags
+
+<EntrySearch entryName='region_piston_modifier' />
+
+- `Region Piston Modifier`: whether a piston may move blocks inside the region.
+- `Region Redstone Modifier`: whether redstone may power up inside the region. Powering down is always
+  allowed, so a circuit already running when the flag goes up can still settle instead of being frozen on.
+- `Region Fire Spread Modifier`: whether fire may spread to, and burn, blocks inside the region. This is fire
+  arriving on its own: spreading flames, lava, lightning, an explosion, and the fireball of a ghast that
+  nobody is answerable for. A fire a player lights, including one they throw as a fire charge, belongs to the
+  `Region Ignite Modifier` instead.
+- `Region Fluid Flow Modifier`: whether water and lava may flow into the region. The block the fluid flows
+  into decides, so a source outside the region is stopped right at the border.
+- `Region Explosion Modifier`: whether an explosion may break blocks inside the region. Creepers, TNT, beds
+  in the nether, anything that explodes.
+
+Piston and Explosion look similar and are decided differently on purpose. `Region Piston Modifier` cancels
+the whole move: a piston moves all of its blocks or none of them, so a push that touches a single protected
+block is stopped entirely, wherever the piston itself stands. `Region Explosion Modifier` instead filters the
+block list, taking only the protected blocks out of the explosion and leaving the rest to break. A creeper on
+the border of a protected town craters the field outside it and leaves the town standing, because an
+explosion, unlike a piston, can spare some blocks and break others in the same event.
+
+## Mob flags
+
+<EntrySearch entryName='region_mob_spawn_modifier' />
+
+- `Region Mob Spawn Modifier`: whether mobs may spawn inside the region, every spawn reason counted: natural
+  spawns, spawners, breeding, spawn eggs, and the rest. Only `/summon` is exempt, since that is an operator
+  asking for a mob on purpose. The spawn location decides this, so the flag stops mobs from appearing inside
+  the region; it does nothing to a mob that walks in from outside. Another plugin spawning an entity counts
+  as a spawn like any other, so a region denying this silently stops whatever that plugin was trying to
+  place there.
+- `Region Mob Grief Modifier`: whether mobs may change blocks inside the region: endermen picking blocks up,
+  sheep eating grass, zombies breaking doors. A player is never this flag's business, a creeper's crater is
+  the Explosion flag's business, and a falling sand block coming to rest is the Block Place flag's.
+
+Because none of these seven flags ever has a player behind it, none of them can apply to a region whose
+placement follows a variable. [Limits and Gaps](./04-flag-limits.mdx) covers that.

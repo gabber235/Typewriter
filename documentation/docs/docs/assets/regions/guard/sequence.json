@@ -1,0 +1,38 @@
+{
+    "id": "rgGuardSequence",
+    "name": "guard_spotting",
+    "type": "sequence",
+    "entries": [
+        {
+            "id": "rgOnSpotted0001",
+            "name": "on_spotted",
+            "triggers": [
+                "rgGuardShout001"
+            ],
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgGuardVision01"
+                }
+            },
+            "causes": [],
+            "boundaryInset": 0.5,
+            "cancel": false,
+            "type": "region_enter_event"
+        },
+        {
+            "id": "rgGuardShout001",
+            "name": "guard_shout",
+            "criteria": [],
+            "modifiers": [],
+            "triggers": [],
+            "speaker": "",
+            "text": "Hey! You there!",
+            "duration": 1500,
+            "type": "spoken"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

@@ -1,0 +1,85 @@
+{
+    "id": "rgDisplayManif1",
+    "name": "arena_edge",
+    "type": "manifest",
+    "entries": [
+        {
+            "id": "rgArenaEdgeDef1",
+            "name": "arena",
+            "origin": {
+                "world": "world",
+                "x": 128.5,
+                "y": 64.0,
+                "z": -64.5,
+                "yaw": 0.0,
+                "pitch": 0.0
+            },
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "yaw": 0.0,
+            "pitch": 0.0,
+            "roll": 0.0,
+            "rotateWithOrigin": false,
+            "color": 0,
+            "priorityOverride": {
+                "enabled": false,
+                "value": 0
+            },
+            "modifiers": [],
+            "halfX": 12.0,
+            "halfY": 12.0,
+            "halfZ": 12.0,
+            "refreshRateTicks": 1,
+            "type": "cuboid_region_definition"
+        },
+        {
+            "id": "rgNearArenaEdge",
+            "name": "near_arena_edge",
+            "children": [
+                "rgArenaParticle"
+            ],
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgArenaEdgeDef1"
+                }
+            },
+            "distance": 16.0,
+            "distanceMode": "FULL",
+            "type": "region_proximity_audience"
+        },
+        {
+            "id": "rgArenaParticle",
+            "name": "arena_edge_particles",
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgArenaEdgeDef1"
+                }
+            },
+            "density": 0.5,
+            "particle": "ELECTRIC_SPARK",
+            "count": 1,
+            "offset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "speed": 0.0,
+            "delay": 50,
+            "area": {
+                "case": "near_boundary",
+                "value": {
+                    "radius": 6.0
+                }
+            },
+            "type": "region_boundary_particle"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

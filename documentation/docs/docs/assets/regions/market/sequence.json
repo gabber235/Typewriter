@@ -1,0 +1,40 @@
+{
+    "id": "rgMarketSequenc",
+    "name": "market_welcome",
+    "type": "sequence",
+    "entries": [
+        {
+            "id": "rgOnMarketEnter",
+            "name": "on_market_enter",
+            "triggers": [
+                "rgMarketWelcome"
+            ],
+            "region": {
+                "case": "region_reference",
+                "value": {
+                    "definition": "rgMarketSquare1"
+                }
+            },
+            "causes": [],
+            "boundaryInset": 0.0,
+            "cancel": false,
+            "type": "region_enter_event"
+        },
+        {
+            "id": "rgMarketWelcome",
+            "name": "welcome_message",
+            "criteria": [],
+            "modifiers": [],
+            "triggers": [],
+            "speaker": "",
+            "text": "Welcome to the market!",
+            "typingDuration": 800,
+            "waitDuration": 1500,
+            "allowSkip": true,
+            "type": "timed_dialogue"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

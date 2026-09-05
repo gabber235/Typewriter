@@ -1,0 +1,82 @@
+---
+difficulty: Easy
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import ActionButton from '@site/src/components/ActionButtons';
+
+# Defining Regions
+
+A region definition holds the shape of a region and where that shape sits in the world. Definitions live on
+**manifest** pages. You define a region once and reference it from as many other entries as you like.
+
+## Picking a shape
+
+There is one definition entry per shape:
+
+| Shape | Entry | Good for |
+| ----- | ----- | -------- |
+| Sphere | `Sphere Region Definition` | Zones around a single point |
+| Cuboid | `Cuboid Region Definition` | Rooms, buildings, rectangular areas |
+| Ellipsoid | `Ellipsoid Region Definition` | Wide flat zones or tall narrow columns |
+| Capsule | `Capsule Region Definition` | Bubbles around a player or NPC |
+| Cone | `Cone Region Definition` | Vision cones in front of an NPC |
+| Polygon | `Polygon Region Definition` | Irregular outlines that no box fits |
+
+## Creating your first region
+
+For this example we create a spherical zone around a market square.
+
+1. Open a **manifest** page.
+2. Click on the + icon in the top right corner of the panel and search for `Sphere Region Definition`. Add
+   it to your page by clicking on the + icon.
+3. Name the entry `market_square`.
+
+<EntrySearch entryName='sphere_region_definition' />
+
+## Placement fields
+
+Every definition shares the same placement fields: an `origin` position the region is anchored to, an
+`offset` from that origin, a `yaw`, `pitch` and `roll` rotation, and a `Rotate With Origin` toggle explained
+in [Dynamic Regions](./07-dynamic-regions.mdx). Each shape adds its own size fields on top, like the sphere's
+`radius`. You rarely type pitch and roll yourself; the rotate tool's tilt mode writes whichever of the two
+matches the side you tilt from.
+
+`Color` decides how the region is drawn in every editor preview, visualization and debug view. Left fully
+transparent, Typewriter picks a stable color per region, which is enough to tell overlapping regions apart.
+Set it yourself when you want your own color coding, like red for danger zones and blue for shops.
+
+The definition also carries a `Priority Override` field. It does nothing on its own and only settles which
+region wins where two of them overlap, so it is covered in [Region Flags](./08-region-flags/index.mdx).
+
+## Capturing the shape in game
+
+You do not have to type coordinates by hand. Two capture icons sit next to the `Origin` field. The right one
+writes your current in game location into the field, which is the fastest way to anchor a region where you
+stand. The left <ActionButton button='capture'/> icon opens the
+[in game editor](./02-in-game-editor/index.mdx), where you mark the shape with a golden axe, nudge it into
+place with the transform tools, and apply it back to the entry.
+
+Whichever way you set the values, the region only goes live once you **publish on the web panel**.
+
+## Referenced or inline
+
+Every entry that uses a region has a `region` field with two options. A **reference** points at a definition
+entry, which is right when several entries share one region. An **inline definition** keeps the shape inside
+the entry itself, which is right for a one off region that nothing else needs.
+
+An inline definition captures exactly like a definition entry does. The <ActionButton button='capture'/> icon
+next to its `Origin` opens the same editor, with the same tools, undo history and edit lock, for whichever
+shape you picked in the inline `Shape` field. Applying writes back into the entry that holds the region.
+Inline regions also show up in the [workspace](./02-in-game-editor/03-workspace.mdx), listed as
+`Entry Name (field)` with an `inline definition` tag, so you can edit a one off region in game without
+hunting down its owning entry on the panel.
+
+## When is a player inside?
+
+A player counts as inside a region as soon as any part of their body overlaps it, not just the point they
+stand on. A cone brushing a player's shoulder counts, and so does a thin wall region passing through their
+head. Events, audience filters, and the in region facts all use this body based check.
+
+Distance based features measure from the player's position instead, since they report a number rather than a
+yes or no. That covers the boundary distance fact, the boundary distance variable, and the proximity bands.

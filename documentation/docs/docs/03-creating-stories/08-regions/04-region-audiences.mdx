@@ -1,0 +1,116 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from '@site/src/components/EntrySearch';
+import EntryDisplay from '@site/src/components/EntryDisplay';
+
+# Region Audiences
+
+On [manifest](../../04-concepts/03-Manifest/index.mdx) pages, you can gate any
+[audience](../../04-concepts/04-Audience/index.mdx) on a region:
+
+<EntrySearch entryName='region_inside_audience' />
+
+`Region Inside Audience` passes only players inside the region, and can be inverted to pass only players
+outside. `Region Proximity Audience` passes players within a distance of the boundary, on either side.
+
+Any audience entry can be a child of these filters. Ambient sounds that only play inside a cave region, a
+sidebar that only shows in the arena, or a [boundary display](./05-boundary-displays.mdx) that only renders
+near the edge are all the same pattern: put the entry under the region audience.
+
+## Example: cave ambience
+
+1. Create a `Polygon Region Definition` named `crystal_cave` and walk its outline in the capture editor.
+2. On a **manifest** page, add a `Region Inside Audience` with its `Region` reference set to `crystal_cave`.
+3. Add your ambient sound entry as its child.
+
+Players hear the ambience while any part of their body is inside the cave region, and it stops the moment
+they leave. Invert the filter and the same pattern drives everything players should only get outside an area,
+like a compass pointing back to town.
+
+## Protecting players inside a region
+
+Six entries from the Basic extension cover common protection cases. None of them know what a region is; each
+one only filters whoever is already in the audience it sits in. Put one under a `Region Inside Audience` and
+it applies to whoever is standing inside the region, the same pattern as the ambience example above.
+
+- `Prevent Eating Audience` stops players from consuming anything, food, potions, or milk.
+- `Prevent Damage Audience` makes players immune to every damage source. The damage never lands, so there is
+  no hurt animation and no knockback.
+- `Lock Health Audience` holds health at a configurable value, defaulting to 20. Damage does land, so the
+  hurt animation, sound, and knockback still play, and the health is put back right after. Values above the
+  player's maximum are clamped.
+- `Prevent Hunger Loss Audience` keeps the hunger bar from dropping. Eating still fills it.
+- `Prevent Block Place Audience` stops players from placing blocks anywhere.
+- `Prevent Block Break Audience` stops players from breaking blocks anywhere.
+
+`Prevent Damage Audience` and `Lock Health Audience` take opposite routes to invincibility. Prevent Damage
+stops the hit before it lands, so nothing plays. Lock Health lets the hit land and puts the health back
+immediately after, so the hurt animation, sound, and knockback still play even though the player never
+actually loses health. Reach for Prevent Damage when you want true invincibility, and for Lock Health when
+you want the combat feedback to stay believable.
+
+`Prevent Block Place Audience` and `Prevent Block Break Audience` are about the player, wherever they are
+standing. A player in the audience cannot place or break blocks anywhere on the server, not only inside the
+region. Protecting a region's own blocks from everyone, including a player standing outside it and mining
+inward, is a region flag instead. See [Region Flags](./08-region-flags/index.mdx).
+
+## Holding players back with a barrier
+
+<EntrySearch entryName='region_barrier_audience' />
+
+The barrier watches every audience player each tick and applies a velocity push toward the allowed side.
+`KEEP_IN` pushes players back into the region and `KEEP_OUT` pushes them away from it. The push ramps up
+across the last `Activation Distance` blocks on the side the player is allowed to be, reaching the full
+`Strength` at the boundary and staying there beyond it, so the push grows as a player approaches the
+edge. The barrier never drives a player away faster than 1 block per tick, so a `Strength` above
+`1` behaves the same as `1`. Below it the number is felt: the default `0.6` is a firm nudge, and a barrier
+that should shove harder wants both a higher `Strength` and a longer `Activation Distance` to build it up
+over.
+
+Concretely, this is what the barrier does and does not do:
+
+- It does **not** block movement. A sprinting or flying player can push a short way past the line; the
+  current keeps working against them the whole time.
+- It does **not** prevent teleports. A player teleported to the wrong side is not snapped back.
+- It does **not** ramp against a face underfoot. A region resting on the terrain has its floor face exactly
+  where everyone stands, so a player the ground or their own flight is holding up on the allowed side is left
+  alone while the shortest way out points upward. A falling player is still caught by it, and a player who
+  has crossed is still pushed back.
+- It **does** keep pushing players on the wrong side, however they got there. A teleported or engulfed player is
+  steadily carried back across the boundary. When they stand on the ground and the shortest way out points
+  into the floor or ceiling, the push is redirected toward the nearest wall, so they are walked out sideways
+  instead of being pinned in place.
+- It works on [dynamic regions](./07-dynamic-regions.mdx). When a moving region catches up to a player, the
+  current pushes them along ahead of it.
+- It leaves region editors alone. A player inside a region content mode (editor, workspace, or debugger) is
+  never pushed, so the barrier cannot fight the person shaping the region.
+
+`Distance Mode` picks the boundary the barrier measures against. `FULL`, the default, uses the whole
+boundary, floor and ceiling included. `HORIZONTAL` uses only the region's vertical silhouette: those two
+faces stop counting altogether, so nobody is caught falling through the floor and only the walls push.
+
+If the barrier alone is not what you want, combine it:
+
+- You want walking blocked outright: use `Cancel` on a `Region Enter Event` or `Region Exit Event` from
+  [Region Events](./03-region-events.mdx). The barrier is the fallback for what cancel cannot stop.
+- You want teleports blocked: use a `Region Enter Event` with `Causes` set to `TELEPORTED` and `Cancel`
+  enabled.
+- You want an instant eject instead of a current: use the `Region Boundary Push` action on an enter event.
+- You want players to see the line: add a [boundary display](./05-boundary-displays.mdx) on the same region.
+
+### Example: fencing off a build site
+
+1. Create a definition for the area, for example a `Cuboid Region Definition` named `build_site`.
+2. On a **manifest** page, add a `Region Barrier Audience` entry.
+3. Set its `Region` reference to `build_site` and its mode to `KEEP_OUT`.
+4. Publish. Players walking toward the site are pushed back before they reach it.
+
+A manifest page with the barrier, and a sidebar that only shows inside an arena region, looks like this:
+
+<EntryDisplay pages={[
+    require("../../assets/regions/audiences/manifest.json"),
+]} />
+
+{/* TODO: Add video: a player being pushed back by the KEEP_OUT barrier at the build site. */}
