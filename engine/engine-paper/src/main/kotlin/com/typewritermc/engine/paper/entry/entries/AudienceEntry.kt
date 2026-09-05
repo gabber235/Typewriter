@@ -68,11 +68,14 @@ enum class AudienceDisplayState(val displayName: String, val color: String) {
 abstract class AudienceDisplay : Listener {
     var isActive = false
         private set
-    private val playerIds: MutableSet<UUID> = Sets.newConcurrentHashSet()
-    open val players: List<Player> get() = playerIds.mapNotNull { server.getPlayer(it) }
+    private val memberIds: MutableSet<UUID> = Sets.newConcurrentHashSet()
+
+    /** The ids of the players in the audience, as a live view that allocates nothing. */
+    open val playerIds: Set<UUID> get() = memberIds
+    open val players: List<Player> get() = memberIds.mapNotNull { server.getPlayer(it) }
 
     open fun displayState(player: Player): AudienceDisplayState {
-        if (player.uniqueId in playerIds) return AudienceDisplayState.IN_AUDIENCE
+        if (player.uniqueId in memberIds) return AudienceDisplayState.IN_AUDIENCE
         return AudienceDisplayState.NOT_CONSIDERED
     }
 
@@ -90,22 +93,22 @@ abstract class AudienceDisplay : Listener {
     }
 
     fun addPlayer(player: Player) {
-        if (playerIds.isEmpty()) initialize()
-        if (!playerIds.add(player.uniqueId)) return
+        if (memberIds.isEmpty()) initialize()
+        if (!memberIds.add(player.uniqueId)) return
         onPlayerAdd(player)
     }
 
     fun removePlayer(player: Player) {
-        if (!playerIds.remove(player.uniqueId)) return
+        if (!memberIds.remove(player.uniqueId)) return
         onPlayerRemove(player)
-        if (playerIds.isEmpty()) dispose()
+        if (memberIds.isEmpty()) dispose()
     }
 
     abstract fun onPlayerAdd(player: Player)
     abstract fun onPlayerRemove(player: Player)
 
-    open operator fun contains(player: Player): Boolean = player.uniqueId in playerIds
-    open operator fun contains(uuid: UUID): Boolean = uuid in playerIds
+    open operator fun contains(player: Player): Boolean = player.uniqueId in memberIds
+    open operator fun contains(uuid: UUID): Boolean = uuid in memberIds
 }
 
 class PassThroughDisplay : AudienceDisplay() {
@@ -119,6 +122,7 @@ abstract class AudienceFilter(
 ) : AudienceDisplay() {
     private val inverted = (ref.get() as? Invertible)?.inverted == true
     private val filteredPlayers: MutableSet<UUID> = Sets.newConcurrentHashSet()
+    override val playerIds: Set<UUID> get() = filteredPlayers
     override val players: List<Player> get() = filteredPlayers.mapNotNull { server.getPlayer(it) }
 
     protected val consideredPlayers: List<Player> get() = super.players
