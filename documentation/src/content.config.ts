@@ -12,8 +12,6 @@ export const collections = {
 			extend: z.object({
 				/** Badge variant: new, experimental, or deprecated */
 				badge: badgeSchema,
-				/** Set to false to disable glossary term linking on this page */
-				glossary: z.boolean().optional(),
 			}),
 		}),
 	}),

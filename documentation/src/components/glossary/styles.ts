@@ -4,7 +4,7 @@ export const glossaryStyles = {
 	// Hover card: tinted border + deep shadow so it reads as an overlay, not
 	// part of the page. `starting:` animates the reveal when `hidden` is
 	// removed (@starting-style; older browsers just show it).
-	card: "fixed z-50 w-max max-w-[24rem] max-h-[60vh] overflow-y-auto rounded-xl border border-[rgba(var(--color-primary-rgb),0.3)] bg-[var(--surface-container)] p-5 shadow-xl shadow-primary/5 text-sm transition-[opacity,transform] duration-200 ease-out starting:opacity-0 starting:translate-y-1",
+	card: "fixed z-50 w-max max-w-[min(24rem,calc(100vw-1rem))] max-h-[60vh] overflow-y-auto rounded-xl border border-[rgba(var(--color-primary-rgb),0.3)] bg-[var(--surface-container)] p-5 shadow-xl shadow-primary/5 text-sm transition-[opacity,transform] duration-200 ease-out starting:opacity-0 starting:translate-y-1",
 	cardTitle:
 		"mb-1 pb-1 border-b border-[var(--sl-color-hairline-shade)] text-base font-bold text-primary",
 	cardBody: "text-[var(--sl-color-text)] leading-relaxed text-xs",
