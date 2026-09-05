@@ -83,6 +83,12 @@ pub async fn handle_panel_user(
                     &mut allow_publish,
                     &mut allow_subscribe,
                 );
+                add_organization_presence_permissions(
+                    &user_id,
+                    org_id,
+                    &mut allow_publish,
+                    &mut allow_subscribe,
+                );
                 main_attribute!(
                     "auth.permissions.category.roles" = true,
                     "auth.permissions.category.members" = true,
@@ -328,34 +334,17 @@ fn add_organization_realm_permissions(
         "shared.blob.begin",
         "shared.blob.write",
         "shared.blob.complete",
-        "book.watch",
-        "book.resource.watch",
-        "book.create",
-        "book.update",
-        "page.search",
-        "page.watch",
-        "page.create",
-        "page.update",
-        "page.delete",
-        "pages.chapters",
-        "tag.watch",
-        "tag.resource.watch",
-        "tag.create",
-        "tag.update",
-        "tag.delete",
-        "tag.move",
-        "tag.resize",
+        "library.authoring.snapshot.get",
+        "library.authoring.batch.apply",
+        "compiled.content.watch",
     ] {
         allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
     }
     for suffix in [
         "editor.catalog.invalidate",
         "editor.presentation.search",
-        "book.watch",
-        "book.resource.watch",
-        "page.watch",
-        "tag.watch",
-        "tag.resource.watch",
+        "library.authoring.changed",
+        "compiled.content.watch",
     ] {
         allow_subscribe.push(format!(
             "service.from.*.organization.{org_id}.realm.{suffix}",
@@ -363,9 +352,21 @@ fn add_organization_realm_permissions(
     }
 }
 
+fn add_organization_presence_permissions(
+    user_id: &str,
+    org_id: &str,
+    allow_publish: &mut Vec<String>,
+    allow_subscribe: &mut Vec<String>,
+) {
+    allow_publish.push(format!(
+        "typewriter.presence.organization.{org_id}.user.{user_id}"
+    ));
+    allow_subscribe.push(format!("typewriter.presence.organization.{org_id}.user.*"));
+}
+
 #[cfg(test)]
 mod tests {
-    use super::add_organization_members_permissions;
+    use super::{add_organization_members_permissions, add_organization_presence_permissions};
     use rstest::rstest;
 
     #[rstest]
@@ -415,5 +416,27 @@ mod tests {
                 .all(|subject| !subject.ends_with(".role.assign"))
         );
         assert!(publish.iter().all(|subject| !subject.ends_with(".reject")));
+    }
+
+    #[test]
+    fn presence_publish_is_bound_to_authenticated_user() {
+        let mut publish = Vec::new();
+        let mut subscribe = Vec::new();
+
+        add_organization_presence_permissions(
+            "trusted-user",
+            "trusted-org",
+            &mut publish,
+            &mut subscribe,
+        );
+
+        assert_eq!(
+            publish,
+            ["typewriter.presence.organization.trusted-org.user.trusted-user"]
+        );
+        assert_eq!(
+            subscribe,
+            ["typewriter.presence.organization.trusted-org.user.*"]
+        );
     }
 }

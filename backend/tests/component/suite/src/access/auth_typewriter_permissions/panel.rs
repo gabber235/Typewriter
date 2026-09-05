@@ -153,9 +153,10 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.shared.catalog.fetch",
         "service.to.*.organization.writers.realm.shared.publish",
         "service.to.*.organization.writers.realm.shared.blob.read",
-        "service.to.*.organization.writers.realm.book.create",
-        "service.to.*.organization.writers.realm.pages.chapters",
-        "service.to.*.organization.writers.realm.tag.resize",
+        "service.to.*.organization.writers.realm.library.authoring.snapshot.get",
+        "service.to.*.organization.writers.realm.library.authoring.batch.apply",
+        "service.to.*.organization.writers.realm.compiled.content.watch",
+        "typewriter.presence.organization.writers.user.panel_user",
     ] {
         assert!(publish.iter().any(|subject| subject == required));
     }
@@ -168,9 +169,9 @@ async fn member_receives_all_organization_capabilities(
         "cloud.from.organization.writers.realm.list",
         "service.from.*.organization.writers.realm.editor.catalog.invalidate",
         "service.from.*.organization.writers.realm.editor.presentation.search",
-        "service.from.*.organization.writers.realm.book.resource.watch",
-        "service.from.*.organization.writers.realm.page.watch",
-        "service.from.*.organization.writers.realm.tag.resource.watch",
+        "service.from.*.organization.writers.realm.library.authoring.changed",
+        "service.from.*.organization.writers.realm.compiled.content.watch",
+        "typewriter.presence.organization.writers.user.*",
     ] {
         assert!(subscribe.iter().any(|subject| subject == required));
     }
