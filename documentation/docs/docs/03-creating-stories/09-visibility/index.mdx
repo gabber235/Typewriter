@@ -1,0 +1,116 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Visibility
+
+:::warning[Early Access]
+The Visibility Extension is in early access, available to [sponsors](https://github.com/sponsors/gabber235).
+:::
+:::danger[Required Extensions]
+You must have installed the Visibility Extension before starting this tutorial.
+:::
+
+Not every player has to see the same world. The Visibility Extension changes how one player is
+rendered on another player's screen, without changing anything on the server. A staff member can be
+invisible to the players but not to other staff, the player carrying the relic can glow for the team
+hunting them, and someone walking the spirit world can look like a translucent ghost to the few
+players who can perceive them.
+
+Both sides of every rule are players. NPCs are entities from the Entity Extension, and who sees them
+is decided by the audience on their definition, not by a visibility rule.
+
+## Viewers and targets
+
+Every visibility change is about a pair of players.
+
+- The **viewer** is the player whose screen changes.
+- The **target** is the player who looks different.
+
+A rule picks a group of viewers and a group of targets, and applies one effect to every combination
+of the two. The target itself does not change: they keep their real skin, their real name and their
+real position, and every player outside the rule keeps seeing them the way they always did.
+
+Because a rule works on pairs, the same target can look different to different viewers at the same
+time. That is what the extension is for.
+
+A player is never their own target, so a rule that hides everyone from everyone does not hide you
+from yourself. Some effects can change your view of yourself, but only when you turn that on. See
+[seeing yourself](./01-effects.mdx#seeing-yourself).
+
+## Your first rule
+
+This first rule hides one player from the whole server.
+
+Visibility rules live on a `Manifest` page. Click **add page**, choose the **Manifest** type and give
+it a name like `Visibility`. If you need more information on how to create a page, see the
+[Layout](../../02-getting-started/02-layout.mdx) section.
+
+#### 1. Add the effect
+
+Search for `Hide Visibility Effect` and add it to the page. Rename it to `Vanish`.
+
+<EntrySearch entryName='hide_visibility_effect' />
+
+This entry describes what the change looks like, not who it happens to.
+
+#### 2. Add the rule
+
+Now add a `Visibility Rule` to the same page.
+
+<EntrySearch entryName='visibility_rule' />
+
+#### 3. Fill in the three fields
+
+| Field | Set it to |
+| --- | --- |
+| **Viewers** | `everyone` |
+| **Targets** | `specific player`, and type the player's name |
+| **Effect** | the `Vanish` entry you just made |
+
+That is the whole rule. The named player is now gone from every other client, while their own screen
+stays normal.
+
+Hiding one player by name is rarely what a story needs, so the next step is usually to swap the
+target selector for an audience.
+
+## Choosing viewers and targets
+
+Both selectors offer the same two basic choices, and targets get two more.
+
+| Selector | Available for | Selects |
+| --- | --- | --- |
+| **Everyone** | viewers, targets | Every player online. |
+| **Audience** | viewers, targets | The players currently in the referenced [audience](../../04-concepts/04-Audience/index.mdx). |
+| **Specific player** | targets | One player, by exact name or uuid. |
+| **Radius** | targets | The players standing near the viewer. |
+
+The radius selector measures from whoever is looking, so every viewer gets their own set of targets.
+A player has to walk a block past the radius before they are dropped again, which keeps someone
+standing exactly on the edge from flickering in and out.
+
+## Rules that read their viewers from an audience
+
+When the viewers are already the members of an audience, there is a shorter way than pointing a
+selector back at that audience.
+
+<EntrySearch entryName='audience_visibility_rule' />
+
+Put this entry under an audience and every player in that audience becomes a viewer of the rule. It
+only asks for targets and an effect. Say a quest grants spirit sight through an audience: hang this
+entry under that audience and the players who unlocked the sight see the spirit players glow.
+
+Children of this entry behave like a normal audience and are shown to all of its members.
+
+## Where to go next
+
+- [Effects](./01-effects.mdx) walks through every change you can make to a target, and how to bundle
+  several of them together.
+- [Priority](./02-priority.mdx) is what decides between two rules that pick the same pair, and how
+  you write "everyone, except these players".
+- [Hiding players during cinematics](./03-hiding-players-during-cinematics.mdx) rebuilds the
+  automatic hiding that the camera and the lock interaction bound used to do.
+- [Reacting to visibility](./04-reacting-to-visibility.mdx) has the two facts that count what is
+  currently visible.

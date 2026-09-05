@@ -1,0 +1,30 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Reacting to visibility
+
+Two facts let a story read what is currently visible, so an interaction can behave differently
+depending on who can see whom.
+
+<EntrySearch entryName='visibility_targets_count_fact' />
+
+This counts how many other players this player currently sees with an effect on them. Use it to check
+whether someone's detection power is finding anything, or to trigger dialogue the first time a player
+can see a hidden spirit.
+
+<EntrySearch entryName='visibility_viewers_count_fact' />
+
+The second one counts the other direction: how many players currently see this player with an effect.
+Use it to check whether a vanished player really is hidden from the whole server, or to count how
+many players a disguise is fooling.
+
+Both facts have a **Rule Entry** field. Leave it empty and the fact counts every rule that is
+currently active. Point it at one visibility rule entry and it counts only the pairs that rule
+created, which is what you want when several rules are running at once and you only care about one of
+them.
+
+An effect a player has on their own view of themselves is never counted, so the viewers count still
+reaches zero while a player sees themselves changed.

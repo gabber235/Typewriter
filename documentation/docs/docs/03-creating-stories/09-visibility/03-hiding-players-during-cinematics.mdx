@@ -1,0 +1,123 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Hiding players during cinematics
+
+:::info[Before starting]
+This guide builds on [Visibility](./index.mdx) and assumes you know how a visibility rule picks its
+viewers and targets.
+:::
+
+A camera cinematic or a locked camera is a private moment, and other players walking through the shot
+break it. Neither hides anyone on its own: hiding is a visibility rule, so you decide per story
+whether it happens, and to whom.
+
+The recipe is the same in both cases:
+
+1. Get an audience that holds exactly the players who are in the moment.
+2. Hide everyone from those players.
+3. Hide those players from everyone.
+
+Steps 2 and 3 are separate rules, because a rule only works in one direction.
+
+## During a camera cinematic
+
+<EntrySearch entryName='camera_cinematic' />
+
+#### 1. The audience
+
+Make a `Manifest` page called something like `Cinematic Visibility` and add a cinematic audience to
+it.
+
+<EntrySearch entryName='cinematic_audience' />
+
+Leave the **Cinematic** field empty and the audience holds every player who is in any cinematic. Point
+it at a cinematic page instead and it holds only the players watching that one, which is what you
+want when a single cutscene needs the treatment and the rest do not.
+
+This entry needs no parent. An audience entry without parents starts with every player on the server,
+and the filter narrows it down from there.
+
+#### 2. The effect
+
+Add a hide effect to the same page and rename it to `Cinematic Hide`.
+
+<EntrySearch entryName='hide_visibility_effect' />
+
+#### 3. Hide the world from the player in the cinematic
+
+Add a visibility rule, set its viewers to the cinematic audience, its targets to `everyone`, and its
+effect to `Cinematic Hide`.
+
+<EntrySearch entryName='visibility_rule' />
+
+The player watching the cinematic now has an empty world in front of the camera. They are not hidden
+from themselves, since a player is never their own target.
+
+#### 4. Hide the player in the cinematic from the world
+
+Add a second visibility rule, this time with `everyone` as the viewers and the cinematic audience as
+the targets. Point it at the same `Cinematic Hide` effect.
+
+Both rules stop the moment the cinematic ends and the player leaves the audience.
+
+:::tip[One entry less]
+Step 3 can also be an `Audience Visibility Rule` placed under the cinematic audience, which takes its
+viewers from the audience it sits in and only asks for targets and an effect.
+
+<EntrySearch entryName='audience_visibility_rule' />
+:::
+
+## During a lock interaction bound
+
+<EntrySearch entryName='lock_interaction_bound' />
+
+There is no built in audience for "this player is inside a locked bound", so mark the moment with a
+fact and filter on it. If the locked interaction is a dialogue, you can skip the fact and use a
+`Dialogue Audience` instead.
+
+#### 1. A fact for the moment
+
+On a `Static` page, add a permanent fact called `In Locked Interaction` and give it the player group.
+
+<EntrySearch entryName='permanent_fact' />
+
+#### 2. Set it while the bound runs
+
+Select the `Lock Interaction Bound` entry and add a modifier that sets `In Locked Interaction` to
+`1`. Modifiers run when the entry is triggered, which is the moment the bound starts.
+
+Clearing it again takes two places, because an interaction can end in two ways:
+
+- Add a modifier that sets the fact back to `0` on the last entry of the sequence, for the run where
+  the player sees the interaction through.
+- Link an action that does the same to the bound's **Interrupt Triggers**, for the run where the
+  player leaves early.
+
+#### 3. Turn the fact into an audience
+
+Back on your manifest page, add a criteria audience with the criterion `In Locked Interaction == 1`.
+
+<EntrySearch entryName='criteria_audience' />
+
+#### 4. The same two rules
+
+Add the same two visibility rules as in the cinematic recipe, pointed at this audience instead of the
+cinematic one. Both use a hide effect.
+
+| Rule | Viewers | Targets |
+| --- | --- | --- |
+| Hide the world from the locked player | the criteria audience | `everyone` |
+| Hide the locked player from the world | `everyone` | the criteria audience |
+
+## Things to watch
+
+Give the page holding these rules a high priority. Hiding during a cutscene should beat cosmetic
+rules like glow or ghost, and priority decides that. See [Priority](./02-priority.mdx).
+
+These rules only cover players. NPCs and other entities are not part of the visibility extension, so
+an NPC standing in the shot stays there. Use the entity extension's
+[conditional showing](../04-entity-extension/03-conditional-showing.mdx) for those.

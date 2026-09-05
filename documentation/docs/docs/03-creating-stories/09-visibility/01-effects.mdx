@@ -1,0 +1,160 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Effects
+
+An effect entry describes one visual change. It sits on the same `Manifest` page as the rule that
+uses it, and the rule points at it through its **Effect** field. Any number of rules can share the
+same effect.
+
+## Hiding and showing
+
+<EntrySearch entryName='hide_visibility_effect' />
+
+Hide removes the target from the viewer's client completely, as if they were never there. Use it for
+vanished staff, or for players who belong to a different arena.
+
+<EntrySearch entryName='show_visibility_effect' />
+
+Show renders the target the way vanilla would, which on its own does nothing. It exists for one
+case: a higher priority rule with this effect reveals a target that a lower priority rule hides. See [Priority](./02-priority.mdx).
+
+## Changing how a player looks
+
+### Glow
+
+<EntrySearch entryName='glow_visibility_effect' />
+
+The target gets a colored outline that only this viewer sees, visible through walls. Minecraft only
+has team colors to work with, so the outline uses the closest team color to the one you pick.
+
+The glow also colors the target's nametag, which is what vanilla does for any glowing entity.
+
+### Ghost
+
+<EntrySearch entryName='ghost_visibility_effect' />
+
+The target's body turns semi transparent, the same way a teammate under an invisibility potion looks.
+Armor and held items keep rendering, so bundle an [armor effect](#armor) with it when you want a
+fully translucent figure.
+
+This one leans on a client side team, and every ghost a viewer sees ends up in the same one. That
+limits how far you can mix it with glow and nametag changes. See
+[things that can catch you out](#things-that-can-catch-you-out).
+
+### Invisibility
+
+<EntrySearch entryName='invisibility_visibility_effect' />
+
+The target's body disappears while their armor and held items keep rendering, like the vanilla
+invisibility potion. Where the ghost effect leaves a translucent shape, this leaves a floating set of
+gear.
+
+### Armor
+
+<EntrySearch entryName='armor_visibility_effect' />
+
+Choose `hidden` to strip the armor the viewer sees, or `replaced` to fill in a helmet, chestplate,
+leggings and boots of your own. Typewriter never touches the target's real inventory, and everyone
+else keeps seeing their real gear.
+
+### Skin
+
+<EntrySearch entryName='skin_visibility_effect' />
+
+The viewer sees a different skin on the target, in the world and in the tab list. The skin field
+takes a texture and signature pair, and can be fetched from a url or a player uuid the same way an
+NPC skin is.
+
+### Name
+
+<EntrySearch entryName='name_visibility_effect' />
+
+The viewer reads a different name on the target, above their head and in the tab list. Leave the name
+empty to keep the real one and only change the prefix and suffix around it.
+
+Chat, commands and death messages still use the real name, since those go through the server rather
+than the viewer's client.
+
+### Nametag
+
+<EntrySearch entryName='nametag_visibility_effect' />
+
+Three things you can do to the tag above a target's head:
+
+- `hidden` removes it.
+- `replaced` swaps it for text of your own, with placeholders and formatting.
+- `text_above` keeps the real name and hangs an extra line above or below it. The offset field moves
+  that line up or down in blocks if it does not sit where you want.
+
+### Pose
+
+<EntrySearch entryName='pose_visibility_effect' />
+
+The target is locked into one pose for this viewer, no matter what they are doing. You can pick
+standing, sneaking, swimming, gliding, riptide, sleeping or dying.
+
+### Scale
+
+<EntrySearch entryName='scale_visibility_effect' />
+
+The target is rendered larger or smaller. `1.0` is the normal size, so `0.5` is half height and `2.0`
+is twice as tall. Everyone outside the rule keeps seeing them at their real size, and the target's
+hitbox on the server does not change.
+
+### Disguise
+
+<EntrySearch entryName='disguise_visibility_effect' />
+
+The viewer sees an entity from an entity definition instead of the target. The real player is hidden
+and the definition entity follows their movement. Any definition works, a zombie as easily as an NPC
+with a different skin. Use this when a player has to stop looking like a player.
+
+:::info[Values are read once]
+The glow color, the replacement armor, the nametag text and the scale are resolved for the viewer at
+the moment the effect starts, and stay that way until the rule stops applying. A placeholder that
+changes while the effect is running does not update the target's appearance.
+:::
+
+## Seeing yourself
+
+Glow, ghost, invisibility, pose and scale each have an **Also apply to the target's own view of
+themselves** toggle.
+
+Your own view follows the target selection alone, so a selected target sees the effect on themselves
+even when the rule's viewer selector matches nobody. A player who is shrunk for everyone else can
+therefore also be shrunk in their own view, or stay their normal size, whichever you configure.
+
+The other effects cannot do this. A client reads its own name and skin from the session it logged in
+with, so those cannot be changed for the player themselves.
+
+## Combining effects
+
+A pair of players only ever has one active effect. To apply several changes at once, bundle them.
+
+<EntrySearch entryName='multiple_visibility_effect' />
+
+Reference the bundle from the rule instead of an individual effect. A ghost that also glows, or a
+disguise that hides the nametag, is built this way. If one effect in the bundle fails to start, the
+whole bundle is rolled back, so a player is never left half changed.
+
+## Things that can catch you out
+
+:::warning[One team per player]
+Minecraft clients place each player in at most one scoreboard team. The glow color, the hidden
+nametag and the ghost transparency all rely on that team, so a viewer with several ghost targets
+shares one color and one nametag setting across all of them. Typewriter logs a warning naming the
+viewer when the ghost rules of one viewer disagree.
+:::
+
+:::warning[Names must look like names]
+A name given by the Name effect has to be at most 16 characters, and must not be the name of a player
+who is on the server when the effect starts. Colors belong in the prefix and the suffix rather than in
+the name itself. Typewriter logs a warning and keeps the real name when a name cannot be used.
+:::
+
+Armor and held items keep rendering under the Ghost and Invisibility effects, which is what vanilla
+does. Bundle an Armor effect with them to hide those too.

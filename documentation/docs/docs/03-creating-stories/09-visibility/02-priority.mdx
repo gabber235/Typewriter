@@ -1,0 +1,62 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+
+# Priority
+
+Two rules can easily pick the same pair of players. When that happens only one of them applies: the
+one with the highest priority. The losing rule is not thrown away, it waits underneath, and the
+moment the winner stops applying it takes over on its own.
+
+A rule takes its priority from the page it sits on. Right click the page, select `Change Priority`
+and set a number. When one entry on that page needs to differ, set its **Priority Override** field
+instead.
+
+## Writing an exception
+
+With priority you can write "everyone, except these players". The classic case is vanished staff who
+still see each other.
+
+You need two audiences for this: one holding the vanished players, one holding the staff. How you
+build those is up to your story. A [Criteria Audience](../../04-concepts/04-Audience/index.mdx) on a
+permanent fact works fine for both.
+
+#### 1. The broad rule
+
+On a manifest page with priority `0`, add a `Hide Visibility Effect` and a rule that uses it.
+
+<EntrySearch entryName='visibility_rule' />
+
+Set the viewers to `everyone` and the targets to the audience of vanished players. Every online
+player now loses sight of everyone who is vanished, including the other staff.
+
+#### 2. The exception
+
+Make a second manifest page and set its priority to `1`. Add a `Show Visibility Effect` and a rule
+that uses it.
+
+<EntrySearch entryName='show_visibility_effect' />
+
+Set the viewers to the staff audience and the targets to the same vanished audience.
+
+For a staff viewer both rules now match, and the one on the higher priority page wins, so staff see
+each other while everyone else sees nobody. When a staff member drops out of the staff audience, the
+hide rule underneath takes over immediately.
+
+:::tip[Equal priorities]
+Two rules from different entries with the same priority for the same pair is almost always a mistake,
+since which one wins comes down to whichever was added last. Typewriter logs a warning naming both
+entries when this happens.
+:::
+
+## Stacking exceptions
+
+Nothing stops you from going further. A third page with priority `2` and a `Ghost Visibility Effect`
+could show vanished staff as translucent to players who bought a spectator perk, while the priority
+`1` rule keeps them fully visible to staff and the priority `0` rule keeps them hidden from the rest
+of the server.
+
+Keep the numbers spread out while you build. Jumping by tens instead of ones leaves room to slide a
+rule in between later without renumbering the pages around it.
