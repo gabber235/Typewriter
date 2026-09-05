@@ -185,43 +185,64 @@ async fn handle_bound_binding(
     }
 
     if let Some(realm) = scope.owned_realm.as_ref().map(record_key).transpose()? {
-        allow_subscribe.push(format!("service.to.{realm}.organization.{org_id}.realm.>"));
-        allow_subscribe.push(format!(
-            "typewriter.organization.{org_id}.realm.{realm}.hosts.state"
-        ));
-        allow_publish.push(format!(
-            "service.from.{realm}.organization.{org_id}.realm.>"
-        ));
-        for suffix in ["probe", "command", "status"] {
-            allow_publish.push(format!(
-                "typewriter.organization.{org_id}.realm.{realm}.hosts.{suffix}"
-            ));
-        }
-        allow_publish.push(format!(
-            "typewriter.organization.{org_id}.realm.{realm}.shared.changed"
-        ));
+        add_realm_coordinator_permissions(&org_id, &realm, allow_publish, allow_subscribe);
+        add_realm_participant_permissions(&org_id, &realm, allow_publish, allow_subscribe);
     }
 
     if let Some(realm) = scope.attached_realm.as_ref().map(record_key).transpose()? {
-        for suffix in ["probe", "command", "status"] {
-            allow_subscribe.push(format!(
-                "typewriter.organization.{org_id}.realm.{realm}.hosts.{suffix}"
-            ));
-        }
-        allow_subscribe.push(format!(
-            "typewriter.organization.{org_id}.realm.{realm}.shared.changed"
-        ));
-        allow_publish.push(format!(
-            "typewriter.organization.{org_id}.realm.{realm}.hosts.state"
-        ));
-        for suffix in SHARED_REQUEST_SUFFIXES {
-            allow_publish.push(format!(
-                "service.to.{realm}.organization.{org_id}.realm.{suffix}"
-            ));
-        }
+        add_realm_participant_permissions(&org_id, &realm, allow_publish, allow_subscribe);
     }
 
     Ok(())
+}
+
+fn add_realm_coordinator_permissions(
+    organization_id: &str,
+    realm_id: &str,
+    allow_publish: &mut Vec<String>,
+    allow_subscribe: &mut Vec<String>,
+) {
+    allow_subscribe.push(format!(
+        "service.to.{realm_id}.organization.{organization_id}.realm.>"
+    ));
+    allow_subscribe.push(format!(
+        "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.state"
+    ));
+    allow_publish.push(format!(
+        "service.from.{realm_id}.organization.{organization_id}.realm.>"
+    ));
+    for suffix in ["probe", "command", "status"] {
+        allow_publish.push(format!(
+            "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.{suffix}"
+        ));
+    }
+    allow_publish.push(format!(
+        "typewriter.organization.{organization_id}.realm.{realm_id}.shared.changed"
+    ));
+}
+
+fn add_realm_participant_permissions(
+    organization_id: &str,
+    realm_id: &str,
+    allow_publish: &mut Vec<String>,
+    allow_subscribe: &mut Vec<String>,
+) {
+    for suffix in ["probe", "command", "status"] {
+        allow_subscribe.push(format!(
+            "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.{suffix}"
+        ));
+    }
+    allow_subscribe.push(format!(
+        "typewriter.organization.{organization_id}.realm.{realm_id}.shared.changed"
+    ));
+    allow_publish.push(format!(
+        "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.state"
+    ));
+    for suffix in SHARED_REQUEST_SUFFIXES {
+        allow_publish.push(format!(
+            "service.to.{realm_id}.organization.{organization_id}.realm.{suffix}"
+        ));
+    }
 }
 
 const SHARED_REQUEST_SUFFIXES: &[&str] = &[

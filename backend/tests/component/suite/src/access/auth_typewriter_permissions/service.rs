@@ -170,11 +170,29 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     assert!(subscribe.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
     assert!(publish.contains(&"service.from.quests.organization.writers.realm.>".into()));
     for suffix in ["probe", "command", "status"] {
+        assert!(subscribe.contains(&format!(
+            "typewriter.organization.writers.realm.quests.hosts.{suffix}"
+        )));
         assert!(publish.contains(&format!(
             "typewriter.organization.writers.realm.quests.hosts.{suffix}"
         )));
     }
+    assert!(publish.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
+    assert!(subscribe.contains(&"typewriter.organization.writers.realm.quests.shared.changed".into()));
     assert!(publish.contains(&"typewriter.organization.writers.realm.quests.shared.changed".into()));
+    for suffix in [
+        "shared.catalog.fetch",
+        "shared.publish",
+        "shared.blob.metadata",
+        "shared.blob.read",
+        "shared.blob.begin",
+        "shared.blob.write",
+        "shared.blob.complete",
+    ] {
+        assert!(publish.contains(&format!(
+            "service.to.quests.organization.writers.realm.{suffix}"
+        )));
+    }
     assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
     assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
     Ok(())
