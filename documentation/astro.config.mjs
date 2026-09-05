@@ -8,10 +8,22 @@ import remarkDirective from "remark-directive";
 import starlightDotMd from "starlight-dot-md";
 import starlightLlmsTxt from "starlight-llms-txt";
 import { remarkAside } from "./src/components/aside/remark-aside";
-import { rehypeGlossary } from "./src/components/glossary/rehype-glossary";
+import { remarkCmd } from "./src/components/cmd/remark-cmd";
+import { remarkCompare } from "./src/components/compare/remark-compare";
+import { remarkDetails } from "./src/components/details/remark-details";
+import { remarkTerm } from "./src/components/glossary/remark-term";
+import { remarkHighlight } from "./src/components/highlight/remark-highlight";
+import { remarkHotspots } from "./src/components/hotspots/remark-hotspots";
+import { remarkKbd } from "./src/components/kbd/remark-kbd";
+import { ecLog } from "./src/components/log/ec-log";
+import { remarkSpoiler } from "./src/components/spoiler/remark-spoiler";
+import { remarkTldr } from "./src/components/tldr/remark-tldr";
+import { remarkVariables } from "./src/components/variables/remark-variables";
+import { remarkWizard } from "./src/components/wizard/remark-wizard";
 import { BASE_PATH } from "./src/lib/base-path";
 import { EDIT_BASE_URL } from "./src/lib/edit-url";
 import { rehypeBaseLinks } from "./src/plugins/rehype-base-links";
+import { remarkMdLinks } from "./src/plugins/remark-md-links";
 
 // https://astro.build/config
 export default defineConfig({
@@ -98,19 +110,32 @@ export default defineConfig({
 				Footer: "./src/components/footer/Footer.astro",
 			},
 			plugins: [starlightLlmsTxt(), starlightDotMd()],
+			expressiveCode: {
+				plugins: [ecLog()],
+			},
 		}),
 	],
 
 	markdown: {
-		remarkPlugins: [remarkDirective, remarkAside],
-		// mode: "all" | "first-per-page" | "first-per-section"
-		// "first-per-page" links each term only once per page — with a growing
-		// glossary, linking every occurrence turned term-dense pages into a wall
-		// of underlines.
-		rehypePlugins: [
-			[rehypeGlossary, { mode: "first-per-page" }],
-			rehypeBaseLinks,
+		// Order matters: remarkDirective parses `:x[]` / `::x` / `:::x` syntax,
+		// remarkVariables resolves `:var[]` before the other directives see it.
+		remarkPlugins: [
+			remarkDirective,
+			remarkVariables,
+			remarkMdLinks,
+			remarkTerm,
+			remarkAside,
+			remarkKbd,
+			remarkCmd,
+			remarkHighlight,
+			remarkDetails,
+			remarkTldr,
+			remarkSpoiler,
+			remarkWizard,
+			remarkHotspots,
+			remarkCompare,
 		],
+		rehypePlugins: [rehypeBaseLinks],
 	},
 
 	vite: {

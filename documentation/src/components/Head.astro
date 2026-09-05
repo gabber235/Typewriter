@@ -5,9 +5,23 @@
 // `astro:page-load` listeners across the site actually fire.
 import { ClientRouter } from "astro:transitions";
 import Default from "@astrojs/starlight/components/Head.astro";
+import CmdRuntime from "./cmd/CmdRuntime.astro";
+import CompareRuntime from "./compare/CompareRuntime.astro";
+import DetailsRuntime from "./details/DetailsRuntime.astro";
 import GlossaryPopover from "./glossary/GlossaryPopover.astro";
+import HotspotsRuntime from "./hotspots/HotspotsRuntime.astro";
+import LogRuntime from "./log/LogRuntime.astro";
+import SpoilerRuntime from "./spoiler/SpoilerRuntime.astro";
+import WizardRuntime from "./wizard/WizardRuntime.astro";
 ---
 
 <Default><slot /></Default>
 <ClientRouter />
 <GlossaryPopover />
+<CmdRuntime />
+<CompareRuntime />
+<DetailsRuntime />
+<HotspotsRuntime />
+<LogRuntime />
+<SpoilerRuntime />
+<WizardRuntime />
