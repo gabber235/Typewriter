@@ -1,0 +1,57 @@
+{
+    "id": "qiManifestPage1",
+    "name": "quest_items",
+    "type": "manifest",
+    "entries": [
+        {
+            "id": "qiHasKeyQuest01",
+            "name": "has_cellar_key_quest",
+            "children": [
+                "qiCellarKey0001"
+            ],
+            "criteria": [
+                {
+                    "fact": "qiCellarKeyFact",
+                    "operator": "==",
+                    "value": 1
+                }
+            ],
+            "inverted": false,
+            "type": "criteria_audience"
+        },
+        {
+            "id": "qiCellarKey0001",
+            "name": "cellar_key",
+            "item": {
+                "case": "custom_item",
+                "value": {
+                    "components": [
+                        {
+                            "case": "material",
+                            "value": {
+                                "material": "TRIPWIRE_HOOK"
+                            }
+                        },
+                        {
+                            "case": "item_name",
+                            "value": {
+                                "name": "<gold>Cellar Key"
+                            }
+                        },
+                        {
+                            "case": "lore",
+                            "value": {
+                                "lore": "<gray>Opens the door under the tavern."
+                            }
+                        }
+                    ]
+                }
+            },
+            "inventoryFull": "WAIT_FOR_SPACE",
+            "type": "quest_item_audience"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

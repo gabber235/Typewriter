@@ -16675,6 +16675,2051 @@
                     "audience",
                     "manifest"
                 ]
+            },
+            {
+                "name": "quest_item_audience",
+                "description": "Gives players an item they cannot lose",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "item": {
+                            "kind": "custom",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "The item the player has to carry."
+                                }
+                            ],
+                            "default": {
+                                "case": "custom_item",
+                                "value": {}
+                            },
+                            "editor": "var",
+                            "shape": {
+                                "kind": "custom",
+                                "modifiers": [
+                                    {
+                                        "name": "contentMode",
+                                        "data": "com.typewritermc.engine.paper.content.modes.custom.HoldingItemContentMode"
+                                    }
+                                ],
+                                "default": {
+                                    "case": "custom_item",
+                                    "value": {}
+                                },
+                                "editor": "item",
+                                "shape": {
+                                    "kind": "algebraic",
+                                    "cases": {
+                                        "custom_item": {
+                                            "kind": "object",
+                                            "modifiers": [
+                                                {
+                                                    "name": "color",
+                                                    "data": "#1E88E5"
+                                                },
+                                                {
+                                                    "name": "icon",
+                                                    "data": "mdi:shape"
+                                                }
+                                            ],
+                                            "fields": {
+                                                "components": {
+                                                    "kind": "list",
+                                                    "type": {
+                                                        "kind": "algebraic",
+                                                        "cases": {
+                                                            "amount": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:hashtag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "amount": {
+                                                                        "kind": "custom",
+                                                                        "default": 1,
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "min",
+                                                                                    "data": 0
+                                                                                }
+                                                                            ],
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "custom_model_data": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#4CAF50"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:shapes"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "customModelData": {
+                                                                        "kind": "custom",
+                                                                        "default": {
+                                                                            "case": "boolean_array",
+                                                                            "value": {}
+                                                                        },
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "algebraic",
+                                                                            "cases": {
+                                                                                "boolean_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "boolean",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "color_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "custom",
+                                                                                                "default": 4294967295,
+                                                                                                "editor": "color",
+                                                                                                "shape": {
+                                                                                                    "kind": "primitive",
+                                                                                                    "type": "integer",
+                                                                                                    "modifiers": []
+                                                                                                },
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "float_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "double",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "legacy_int": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "string_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "flag": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "material-symbols:flag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "flag": {
+                                                                        "kind": "enum",
+                                                                        "values": [
+                                                                            "HIDE_ENCHANTS",
+                                                                            "HIDE_ATTRIBUTES",
+                                                                            "HIDE_UNBREAKABLE",
+                                                                            "HIDE_DESTROYS",
+                                                                            "HIDE_PLACED_ON",
+                                                                            "HIDE_ADDITIONAL_TOOLTIP",
+                                                                            "HIDE_DYE",
+                                                                            "HIDE_ARMOR_TRIM",
+                                                                            "HIDE_STORED_ENCHANTS"
+                                                                        ],
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "jukebox_playable": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#D32F2F"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:music"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "sound": {
+                                                                        "kind": "custom",
+                                                                        "default": {},
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "object",
+                                                                            "fields": {
+                                                                                "soundId": {
+                                                                                    "kind": "custom",
+                                                                                    "default": {
+                                                                                        "type": "default",
+                                                                                        "value": ""
+                                                                                    },
+                                                                                    "editor": "soundId",
+                                                                                    "shape": {
+                                                                                        "kind": "object",
+                                                                                        "fields": {
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "value": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            }
+                                                                                        },
+                                                                                        "modifiers": []
+                                                                                    },
+                                                                                    "modifiers": []
+                                                                                },
+                                                                                "soundSource": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "The source of the location to play the sound from. (Defaults to player's location)"
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": {
+                                                                                        "type": "self",
+                                                                                        "entryId": "",
+                                                                                        "location": {
+                                                                                            "world": "",
+                                                                                            "x": 0.0,
+                                                                                            "y": 0.0,
+                                                                                            "z": 0.0,
+                                                                                            "yaw": 0.0,
+                                                                                            "pitch": 0.0
+                                                                                        }
+                                                                                    },
+                                                                                    "editor": "soundSource",
+                                                                                    "shape": {
+                                                                                        "kind": "object",
+                                                                                        "fields": {
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "entryId": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "location": {
+                                                                                                "kind": "object",
+                                                                                                "fields": {
+                                                                                                    "world": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "string",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "x": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "y": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "z": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "yaw": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "pitch": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    }
+                                                                                                },
+                                                                                                "modifiers": []
+                                                                                            }
+                                                                                        },
+                                                                                        "modifiers": []
+                                                                                    }
+                                                                                },
+                                                                                "track": {
+                                                                                    "kind": "enum",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "Corresponds to the Minecraft sound category"
+                                                                                        }
+                                                                                    ],
+                                                                                    "values": [
+                                                                                        "MASTER",
+                                                                                        "MUSIC",
+                                                                                        "RECORD",
+                                                                                        "WEATHER",
+                                                                                        "BLOCK",
+                                                                                        "HOSTILE",
+                                                                                        "NEUTRAL",
+                                                                                        "PLAYER",
+                                                                                        "AMBIENT",
+                                                                                        "VOICE",
+                                                                                        "UI"
+                                                                                    ]
+                                                                                },
+                                                                                "volume": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "A value of 1.0 is normal volume."
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": 1.0,
+                                                                                    "editor": "var",
+                                                                                    "shape": {
+                                                                                        "kind": "primitive",
+                                                                                        "modifiers": [
+                                                                                            {
+                                                                                                "name": "min",
+                                                                                                "data": 0
+                                                                                            }
+                                                                                        ],
+                                                                                        "type": "double"
+                                                                                    }
+                                                                                },
+                                                                                "pitch": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "A value of 1.0 is normal pitch."
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": 1.0,
+                                                                                    "editor": "var",
+                                                                                    "shape": {
+                                                                                        "kind": "primitive",
+                                                                                        "modifiers": [
+                                                                                            {
+                                                                                                "name": "min",
+                                                                                                "data": 0
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "max",
+                                                                                                "data": 2
+                                                                                            }
+                                                                                        ],
+                                                                                        "type": "double"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "lore": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#F57C00"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "flowbite:file-lines-solid"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "lore": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "colored",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "multiline",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "placeholder",
+                                                                                    "data": null
+                                                                                }
+                                                                            ],
+                                                                            "type": "string"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "material": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:cube"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "material": {
+                                                                        "kind": "custom",
+                                                                        "default": "AIR",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "custom",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "material_properties",
+                                                                                    "data": "item"
+                                                                                }
+                                                                            ],
+                                                                            "default": "AIR",
+                                                                            "editor": "material",
+                                                                            "shape": {
+                                                                                "kind": "primitive",
+                                                                                "type": "string",
+                                                                                "modifiers": []
+                                                                            }
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "item_model": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:layer-group"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "modelKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "item_name": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#F57C00"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:tag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "name": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "colored",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "placeholder",
+                                                                                    "data": null
+                                                                                }
+                                                                            ],
+                                                                            "type": "string"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "persistent_data_container": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#5843e6"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:database"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "dataKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    },
+                                                                    "data": {
+                                                                        "kind": "custom",
+                                                                        "default": {
+                                                                            "case": "boolean",
+                                                                            "value": {}
+                                                                        },
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "algebraic",
+                                                                            "cases": {
+                                                                                "boolean": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "boolean",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "byte_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "modifiers": [
+                                                                                                    {
+                                                                                                        "name": "min",
+                                                                                                        "data": 0
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "name": "max",
+                                                                                                        "data": 255
+                                                                                                    }
+                                                                                                ],
+                                                                                                "type": "integer"
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "byte": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "modifiers": [
+                                                                                                {
+                                                                                                    "name": "min",
+                                                                                                    "data": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "max",
+                                                                                                    "data": 255
+                                                                                                }
+                                                                                            ],
+                                                                                            "type": "integer"
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "double": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "double",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "float": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "double",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "int_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "integer",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "int": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "long_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "integer",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "long": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "short": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "object",
+                                                                                            "fields": {},
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "persistent_data_string": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "string",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "tooltip_style": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#0abab5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:palette"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "styleKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "modifiers": []
+                                                }
+                                            }
+                                        },
+                                        "serialized_item": {
+                                            "kind": "custom",
+                                            "modifiers": [
+                                                {
+                                                    "name": "color",
+                                                    "data": "#F57C00"
+                                                },
+                                                {
+                                                    "name": "icon",
+                                                    "data": "mingcute:file-code-fill"
+                                                }
+                                            ],
+                                            "default": {},
+                                            "editor": "serialized_item",
+                                            "shape": {
+                                                "kind": "object",
+                                                "fields": {
+                                                    "material": {
+                                                        "kind": "custom",
+                                                        "default": "AIR",
+                                                        "editor": "material",
+                                                        "shape": {
+                                                            "kind": "primitive",
+                                                            "type": "string",
+                                                            "modifiers": []
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "name": {
+                                                        "kind": "primitive",
+                                                        "type": "string",
+                                                        "modifiers": []
+                                                    },
+                                                    "amount": {
+                                                        "kind": "custom",
+                                                        "default": 1,
+                                                        "editor": "var",
+                                                        "shape": {
+                                                            "kind": "primitive",
+                                                            "type": "integer",
+                                                            "modifiers": []
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "bytes": {
+                                                        "kind": "primitive",
+                                                        "type": "string",
+                                                        "modifiers": []
+                                                    }
+                                                },
+                                                "modifiers": []
+                                            }
+                                        }
+                                    },
+                                    "modifiers": []
+                                }
+                            }
+                        },
+                        "inventoryFull": {
+                            "kind": "enum",
+                            "modifiers": [
+                                {
+                                    "name": "help",
+                                    "data": "What to do when the player's inventory is full."
+                                }
+                            ],
+                            "values": [
+                                "WAIT_FOR_SPACE",
+                                "DROP",
+                                "REPLACE"
+                            ]
+                        }
+                    },
+                    "modifiers": []
+                },
+                "color": "#4CAF50",
+                "icon": "mdi:treasure-chest",
+                "tags": [
+                    "audience",
+                    "manifest",
+                    "placeholder",
+                    "entry",
+                    "entry"
+                ]
+            },
+            {
+                "name": "item_slot_binder_audience",
+                "description": "Forces a specific item in a specific slot for players in the audience",
+                "adapter": "Basic",
+                "fields": {
+                    "kind": "object",
+                    "fields": {
+                        "id": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "name": {
+                            "kind": "primitive",
+                            "type": "string",
+                            "modifiers": []
+                        },
+                        "slot": {
+                            "kind": "custom",
+                            "default": 0,
+                            "editor": "var",
+                            "shape": {
+                                "kind": "primitive",
+                                "modifiers": [
+                                    {
+                                        "name": "min",
+                                        "data": 0
+                                    },
+                                    {
+                                        "name": "max",
+                                        "data": 40
+                                    }
+                                ],
+                                "type": "integer"
+                            },
+                            "modifiers": []
+                        },
+                        "item": {
+                            "kind": "custom",
+                            "default": {
+                                "case": "custom_item",
+                                "value": {}
+                            },
+                            "editor": "var",
+                            "shape": {
+                                "kind": "custom",
+                                "modifiers": [
+                                    {
+                                        "name": "contentMode",
+                                        "data": "com.typewritermc.engine.paper.content.modes.custom.HoldingItemContentMode"
+                                    }
+                                ],
+                                "default": {
+                                    "case": "custom_item",
+                                    "value": {}
+                                },
+                                "editor": "item",
+                                "shape": {
+                                    "kind": "algebraic",
+                                    "cases": {
+                                        "custom_item": {
+                                            "kind": "object",
+                                            "modifiers": [
+                                                {
+                                                    "name": "color",
+                                                    "data": "#1E88E5"
+                                                },
+                                                {
+                                                    "name": "icon",
+                                                    "data": "mdi:shape"
+                                                }
+                                            ],
+                                            "fields": {
+                                                "components": {
+                                                    "kind": "list",
+                                                    "type": {
+                                                        "kind": "algebraic",
+                                                        "cases": {
+                                                            "amount": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:hashtag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "amount": {
+                                                                        "kind": "custom",
+                                                                        "default": 1,
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "min",
+                                                                                    "data": 0
+                                                                                }
+                                                                            ],
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "custom_model_data": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#4CAF50"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:shapes"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "customModelData": {
+                                                                        "kind": "custom",
+                                                                        "default": {
+                                                                            "case": "boolean_array",
+                                                                            "value": {}
+                                                                        },
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "algebraic",
+                                                                            "cases": {
+                                                                                "boolean_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "boolean",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "color_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "custom",
+                                                                                                "default": 4294967295,
+                                                                                                "editor": "color",
+                                                                                                "shape": {
+                                                                                                    "kind": "primitive",
+                                                                                                    "type": "integer",
+                                                                                                    "modifiers": []
+                                                                                                },
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "float_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "double",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "legacy_int": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "string_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#4CAF50"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:shapes"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "flag": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "material-symbols:flag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "flag": {
+                                                                        "kind": "enum",
+                                                                        "values": [
+                                                                            "HIDE_ENCHANTS",
+                                                                            "HIDE_ATTRIBUTES",
+                                                                            "HIDE_UNBREAKABLE",
+                                                                            "HIDE_DESTROYS",
+                                                                            "HIDE_PLACED_ON",
+                                                                            "HIDE_ADDITIONAL_TOOLTIP",
+                                                                            "HIDE_DYE",
+                                                                            "HIDE_ARMOR_TRIM",
+                                                                            "HIDE_STORED_ENCHANTS"
+                                                                        ],
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "jukebox_playable": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#D32F2F"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:music"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "sound": {
+                                                                        "kind": "custom",
+                                                                        "default": {},
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "object",
+                                                                            "fields": {
+                                                                                "soundId": {
+                                                                                    "kind": "custom",
+                                                                                    "default": {
+                                                                                        "type": "default",
+                                                                                        "value": ""
+                                                                                    },
+                                                                                    "editor": "soundId",
+                                                                                    "shape": {
+                                                                                        "kind": "object",
+                                                                                        "fields": {
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "value": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            }
+                                                                                        },
+                                                                                        "modifiers": []
+                                                                                    },
+                                                                                    "modifiers": []
+                                                                                },
+                                                                                "soundSource": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "The source of the location to play the sound from. (Defaults to player's location)"
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": {
+                                                                                        "type": "self",
+                                                                                        "entryId": "",
+                                                                                        "location": {
+                                                                                            "world": "",
+                                                                                            "x": 0.0,
+                                                                                            "y": 0.0,
+                                                                                            "z": 0.0,
+                                                                                            "yaw": 0.0,
+                                                                                            "pitch": 0.0
+                                                                                        }
+                                                                                    },
+                                                                                    "editor": "soundSource",
+                                                                                    "shape": {
+                                                                                        "kind": "object",
+                                                                                        "fields": {
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "entryId": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "string",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "location": {
+                                                                                                "kind": "object",
+                                                                                                "fields": {
+                                                                                                    "world": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "string",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "x": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "y": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "z": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "yaw": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    },
+                                                                                                    "pitch": {
+                                                                                                        "kind": "primitive",
+                                                                                                        "type": "double",
+                                                                                                        "modifiers": []
+                                                                                                    }
+                                                                                                },
+                                                                                                "modifiers": []
+                                                                                            }
+                                                                                        },
+                                                                                        "modifiers": []
+                                                                                    }
+                                                                                },
+                                                                                "track": {
+                                                                                    "kind": "enum",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "Corresponds to the Minecraft sound category"
+                                                                                        }
+                                                                                    ],
+                                                                                    "values": [
+                                                                                        "MASTER",
+                                                                                        "MUSIC",
+                                                                                        "RECORD",
+                                                                                        "WEATHER",
+                                                                                        "BLOCK",
+                                                                                        "HOSTILE",
+                                                                                        "NEUTRAL",
+                                                                                        "PLAYER",
+                                                                                        "AMBIENT",
+                                                                                        "VOICE",
+                                                                                        "UI"
+                                                                                    ]
+                                                                                },
+                                                                                "volume": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "A value of 1.0 is normal volume."
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": 1.0,
+                                                                                    "editor": "var",
+                                                                                    "shape": {
+                                                                                        "kind": "primitive",
+                                                                                        "modifiers": [
+                                                                                            {
+                                                                                                "name": "min",
+                                                                                                "data": 0
+                                                                                            }
+                                                                                        ],
+                                                                                        "type": "double"
+                                                                                    }
+                                                                                },
+                                                                                "pitch": {
+                                                                                    "kind": "custom",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "help",
+                                                                                            "data": "A value of 1.0 is normal pitch."
+                                                                                        }
+                                                                                    ],
+                                                                                    "default": 1.0,
+                                                                                    "editor": "var",
+                                                                                    "shape": {
+                                                                                        "kind": "primitive",
+                                                                                        "modifiers": [
+                                                                                            {
+                                                                                                "name": "min",
+                                                                                                "data": 0
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "max",
+                                                                                                "data": 2
+                                                                                            }
+                                                                                        ],
+                                                                                        "type": "double"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "lore": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#F57C00"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "flowbite:file-lines-solid"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "lore": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "colored",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "multiline",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "placeholder",
+                                                                                    "data": null
+                                                                                }
+                                                                            ],
+                                                                            "type": "string"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "material": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:cube"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "material": {
+                                                                        "kind": "custom",
+                                                                        "default": "AIR",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "custom",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "material_properties",
+                                                                                    "data": "item"
+                                                                                }
+                                                                            ],
+                                                                            "default": "AIR",
+                                                                            "editor": "material",
+                                                                            "shape": {
+                                                                                "kind": "primitive",
+                                                                                "type": "string",
+                                                                                "modifiers": []
+                                                                            }
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "item_model": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#1E88E5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:layer-group"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "modelKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "item_name": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#F57C00"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:tag"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "name": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "modifiers": [
+                                                                                {
+                                                                                    "name": "colored",
+                                                                                    "data": null
+                                                                                },
+                                                                                {
+                                                                                    "name": "placeholder",
+                                                                                    "data": null
+                                                                                }
+                                                                            ],
+                                                                            "type": "string"
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "persistent_data_container": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#5843e6"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:database"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "dataKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    },
+                                                                    "data": {
+                                                                        "kind": "custom",
+                                                                        "default": {
+                                                                            "case": "boolean",
+                                                                            "value": {}
+                                                                        },
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "algebraic",
+                                                                            "cases": {
+                                                                                "boolean": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "boolean",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "byte_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "modifiers": [
+                                                                                                    {
+                                                                                                        "name": "min",
+                                                                                                        "data": 0
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "name": "max",
+                                                                                                        "data": 255
+                                                                                                    }
+                                                                                                ],
+                                                                                                "type": "integer"
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "byte": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "modifiers": [
+                                                                                                {
+                                                                                                    "name": "min",
+                                                                                                    "data": 0
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "max",
+                                                                                                    "data": 255
+                                                                                                }
+                                                                                            ],
+                                                                                            "type": "integer"
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "double": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "double",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "float": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "double",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "int_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "integer",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "int": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "long_array": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "list",
+                                                                                            "type": {
+                                                                                                "kind": "primitive",
+                                                                                                "type": "integer",
+                                                                                                "modifiers": []
+                                                                                            },
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "long": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "integer",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "short": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "object",
+                                                                                            "fields": {},
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                },
+                                                                                "persistent_data_string": {
+                                                                                    "kind": "object",
+                                                                                    "modifiers": [
+                                                                                        {
+                                                                                            "name": "color",
+                                                                                            "data": "#5843e6"
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "icon",
+                                                                                            "data": "fa6-solid:database"
+                                                                                        }
+                                                                                    ],
+                                                                                    "fields": {
+                                                                                        "value": {
+                                                                                            "kind": "primitive",
+                                                                                            "type": "string",
+                                                                                            "modifiers": []
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            },
+                                                            "tooltip_style": {
+                                                                "kind": "object",
+                                                                "modifiers": [
+                                                                    {
+                                                                        "name": "color",
+                                                                        "data": "#0abab5"
+                                                                    },
+                                                                    {
+                                                                        "name": "icon",
+                                                                        "data": "fa6-solid:palette"
+                                                                    }
+                                                                ],
+                                                                "fields": {
+                                                                    "styleKey": {
+                                                                        "kind": "custom",
+                                                                        "default": "",
+                                                                        "editor": "var",
+                                                                        "shape": {
+                                                                            "kind": "primitive",
+                                                                            "type": "string",
+                                                                            "modifiers": []
+                                                                        },
+                                                                        "modifiers": []
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "modifiers": []
+                                                }
+                                            }
+                                        },
+                                        "serialized_item": {
+                                            "kind": "custom",
+                                            "modifiers": [
+                                                {
+                                                    "name": "color",
+                                                    "data": "#F57C00"
+                                                },
+                                                {
+                                                    "name": "icon",
+                                                    "data": "mingcute:file-code-fill"
+                                                }
+                                            ],
+                                            "default": {},
+                                            "editor": "serialized_item",
+                                            "shape": {
+                                                "kind": "object",
+                                                "fields": {
+                                                    "material": {
+                                                        "kind": "custom",
+                                                        "default": "AIR",
+                                                        "editor": "material",
+                                                        "shape": {
+                                                            "kind": "primitive",
+                                                            "type": "string",
+                                                            "modifiers": []
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "name": {
+                                                        "kind": "primitive",
+                                                        "type": "string",
+                                                        "modifiers": []
+                                                    },
+                                                    "amount": {
+                                                        "kind": "custom",
+                                                        "default": 1,
+                                                        "editor": "var",
+                                                        "shape": {
+                                                            "kind": "primitive",
+                                                            "type": "integer",
+                                                            "modifiers": []
+                                                        },
+                                                        "modifiers": []
+                                                    },
+                                                    "bytes": {
+                                                        "kind": "primitive",
+                                                        "type": "string",
+                                                        "modifiers": []
+                                                    }
+                                                },
+                                                "modifiers": []
+                                            }
+                                        }
+                                    },
+                                    "modifiers": []
+                                }
+                            },
+                            "modifiers": []
+                        },
+                        "replacementStrategy": {
+                            "kind": "enum",
+                            "values": [
+                                "MOVE_OR_DROP",
+                                "MOVE_OR_REPLACE",
+                                "REPLACE"
+                            ],
+                            "modifiers": []
+                        }
+                    },
+                    "modifiers": []
+                },
+                "color": "#4CAF50",
+                "icon": "mdi:archive-lock",
+                "tags": [
+                    "audience_filter",
+                    "audience",
+                    "manifest",
+                    "placeholder",
+                    "entry",
+                    "entry"
+                ]
             }
         ]
     },

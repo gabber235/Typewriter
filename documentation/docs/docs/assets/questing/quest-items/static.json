@@ -1,0 +1,22 @@
+{
+    "id": "qiStaticPage001",
+    "name": "quest_item_facts",
+    "type": "static",
+    "entries": [
+        {
+            "id": "qiPlayerGroup01",
+            "name": "player_group",
+            "type": "player_group"
+        },
+        {
+            "id": "qiCellarKeyFact",
+            "name": "cellar_key_quest",
+            "comment": "0 not started, 1 carrying the key, 2 door opened",
+            "group": "qiPlayerGroup01",
+            "type": "permanent_fact"
+        }
+    ],
+    "chapter": "",
+    "priority": 0,
+    "version": "0.9.0"
+}

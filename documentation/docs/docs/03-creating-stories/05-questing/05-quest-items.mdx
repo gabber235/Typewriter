@@ -1,0 +1,153 @@
+---
+difficulty: Normal
+---
+
+import EntrySearch from "@site/src/components/EntrySearch";
+import EntryDisplay from "@site/src/components/EntryDisplay";
+
+# Quest Items
+
+:::info[Before starting]
+This guide builds on [Questing](./index.mdx) and on [Audiences](../../04-concepts/04-Audience/index.mdx). The entry
+ships with the Basic Extension, so it also works without the Quest Extension.
+:::
+
+Some items only make sense while a quest is running, like the key to the cellar door or the relic that has to reach
+the temple. A player who drops the key in lava or leaves it in a chest three villages back is stuck. A player who
+still has it after the door is open carries clutter for the rest of the story.
+
+The `Quest Item Audience` covers both. Every player in the audience is handed the item, they cannot get rid of it
+while they stay in the audience, and it is taken back the moment they leave.
+
+<EntrySearch entryName='quest_item_audience' />
+
+## How it works
+
+The audience is what gives the item and what takes it back. Nothing else in the story has to hand it out or clean
+it up.
+
+- When a player **enters** the audience, the item is put in their inventory.
+- While they are **in** the audience, the item cannot leave the inventory. It can still be moved around inside it.
+- When they **leave** the audience, every copy is taken back.
+
+Since entering and leaving are what matter, the parent of the entry decides when a player has the item. A
+`Criteria Audience` on a quest fact is the usual choice: the key exists while the fact says the quest is running,
+and disappears when the fact moves on.
+
+The entry tags every item it hands out with the entry it belongs to and the player it was given to. That tag is
+what makes it a quest item. The same item obtained some other way, for example from a `Give Item` action, is an
+ordinary item and can be lost like any other.
+
+## Setting up a quest item
+
+This example gives players a cellar key while their `cellar_key_quest` fact is `1`.
+
+#### 1. The fact
+
+On a `Static` page, add a `Permanent Fact` called `cellar_key_quest` with the player group. Your quest sets it to
+`1` when the key is handed over and to `2` when the door is opened.
+
+<EntrySearch entryName='permanent_fact' />
+
+#### 2. The audience for the quest step
+
+On a `Manifest` page, add a `Criteria Audience` named `has_cellar_key_quest` with the criterion
+`cellar_key_quest == 1`.
+
+<EntrySearch entryName='criteria_audience' />
+
+#### 3. The quest item
+
+Add a `Quest Item Audience` as a child of the criteria audience and name it `cellar_key`. In the **Item** field,
+pick a custom item with a `Tripwire Hook` material and the name `<gold>Cellar Key`. Leave **Inventory Full** on
+`Wait For Space`.
+
+Publish. As soon as a player's `cellar_key_quest` fact is `1`, the key is in their inventory within half a second.
+When it moves on to `2`, the key is gone again.
+
+<EntryDisplay pages={[
+    require("../../assets/questing/quest-items/manifest.json"),
+    require("../../assets/questing/quest-items/static.json"),
+]} />
+
+{/* TODO: Add video: the key appearing when the fact turns 1, refusing to be dropped, and vanishing at 2. */}
+
+## What the player can and cannot do
+
+The entry enforces one rule: a quest item may go anywhere in the player's own inventory, and nowhere else.
+
+| Allowed | Blocked |
+| --- | --- |
+| Move it between the hotbar and the storage rows | Drop it, with the drop key or by dragging it out of the inventory |
+| Hold it in the offhand | Put it in a chest, a crafting grid, an anvil, or any other container |
+| Wear it, when the item is armor | Put it in a bundle, an item frame, or on an armor stand |
+| Split and restack it | Eat, drink, throw, or place it |
+| | Use it as a bucket, or sign it when it is a book |
+
+A few situations get special treatment:
+
+- The item stays in the inventory through death and respawn. It is never among the drops.
+- It never takes damage, so a quest tool or weapon cannot break.
+- It cannot be put into a bundle. One that arrives inside a bundle anyway is taken out and put back into the
+  inventory on its own.
+- Anything else that removes the item, like `/clear`, another plugin, or a use the entry does not refuse such as
+  feeding an animal with it, is undone within half a second, the next time the entry checks the inventory.
+- If a copy does end up on the floor, only the player it belongs to can pick it up.
+- In the creative inventory screen the item cannot be moved at all. A creative client edits those slots itself,
+  and moving an item there looks the same as deleting one and creating another, so the entry refuses both. With a
+  chest open, a creative player moves it around their own inventory like anyone else.
+
+## When the inventory is full
+
+The **Inventory Full** field decides what happens when a player is handed a quest item and has no free slot.
+
+| Strategy | What happens |
+| --- | --- |
+| **Wait For Space** | Nothing is taken. The player is asked in chat to make room and gets the item once they do. |
+| **Drop** | An item is dropped on the floor to make room. |
+| **Replace** | An item is taken to make room and kept aside. It comes back once a slot is free, or when they leave. |
+
+Drop and Replace take the last slot of the storage rows first, so the hotbar is the last place to lose something.
+Armor and the offhand are never touched, and a slot that already holds a quest item is skipped. A replaced item is
+handed back as soon as the player frees a slot, and at the latest when they leave the audience.
+
+The chat reminder for Wait For Space is a [snippet](../../05-helpful-features/05-snippets.mdx), sent once every
+ten seconds:
+
+```yaml title="plugin/Typewriter/snippets.yml"
+quest_item:
+  inventory_full: <gray>Make room in your inventory, you are missing a quest item.
+```
+
+## Items that change
+
+The **Item** field is a variable, so the item can differ per player or change over time. When it changes, the
+copies a player carries are rewritten where they are, in the slot the player left them in. When it resolves to
+nothing for a player, their copies are taken back until it resolves to an item again.
+
+The amount is part of the item. A quest item with an amount of `3` keeps the player at exactly three: a missing one
+is handed out again, and a fourth one is removed.
+
+## Quest Item Audience or Item Slot Binder Audience?
+
+Both hand a player an item for as long as they are in the audience. The difference is whether the item has a fixed
+place.
+
+<EntrySearch entryName='item_slot_binder_audience' />
+
+- Use the **Quest Item Audience** when the player may keep the item wherever they like, and the point is that it
+  cannot be lost.
+- Use the **Item Slot Binder Audience** when the item belongs in one slot, like a server menu in the last hotbar
+  slot or a quest book that always sits in the first.
+
+## Things to watch
+
+- Do not give the item with a `Give Item` action as well. The audience already does, and the extra copy is an
+  ordinary item that can be lost.
+- Entries that look for an item, such as the `Item In Inventory Audience`, match a quest item when they describe it
+  as a custom item. A captured item does not match, because the tag the entry adds is part of what a captured item
+  compares.
+- A server crash, a deleted entry, or an audience left while the player was offline can leave a tagged item in an
+  inventory. It is cleaned up the next time any quest item audience checks that player. An item that Replace set
+  aside is only remembered in memory, so a crash loses it; a normal restart or publish hands it back.
+- An entry whose **Item** is empty hands out nothing and writes a warning to the console once.

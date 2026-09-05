@@ -427,7 +427,7 @@ function CustomFieldInspector({
     if (editor === "entryReference") {
         return <EntryReferenceField entryId={value} pages={pages} path={path} />;
     }
-    if (editor === "item") {
+    if (editor === "item" && isFlatItem(value)) {
         return <ItemField {...value} path={path} />;
     }
     if (editor === "location" || editor === "vector" || editor === "position") {
@@ -486,6 +486,11 @@ function CustomFieldInspector({
             Unknown custom editor: {editor}
         </div>
     );
+}
+
+/** Older pages store an item as flat properties; newer ones store the custom or serialized case. */
+function isFlatItem(value: any): boolean {
+    return value == null || typeof value !== "object" || !("case" in value);
 }
 
 function isBackedVar(value: any): boolean {
