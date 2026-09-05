@@ -34,79 +34,81 @@ import skirout.service.v1.artifact.SharedArtifactProvenance as SkirSharedArtifac
 class StableRealmArtifactRoutes(
     private val artifacts: SharedArtifactAccess,
 ) {
-    fun register(builder: CommunicatorRoutesBuilder) =
-        with(builder) {
-            unary(sharedContracts.catalog) {
-                val catalog = artifacts.catalog()
-                FetchSharedArtifactCatalogResponse.createSuccess(
-                    revision = catalog.revision.value,
-                    artifacts = catalog.artifacts.map(SharedArtifactDescriptor::toSkir),
-                )
+    fun register(
+        builder: CommunicatorRoutesBuilder,
+        address: RealmArtifactAddress,
+    ) = with(builder) {
+        unaryAt(sharedContracts.catalog, address) {
+            val catalog = artifacts.catalog()
+            FetchSharedArtifactCatalogResponse.createSuccess(
+                revision = catalog.revision.value,
+                artifacts = catalog.artifacts.map(SharedArtifactDescriptor::toSkir),
+            )
+        }
+        unaryAt(sharedContracts.publish, address) { call -> publish(call.request) }
+        unaryAt(blobContracts.metadata, address) { call ->
+            when (val result = artifacts.metadata(call.request.digest.toApi())) {
+                is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
+                BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFound()
+                is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
+                is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
             }
-            unary(sharedContracts.publish) { call -> publish(call.request) }
-            unary(blobContracts.metadata) { call ->
-                when (val result = artifacts.metadata(call.request.digest.toApi())) {
-                    is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
-                    BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFound()
-                    is BlobResult.Invalid -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
-                    is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
+        }
+        unaryAt(blobContracts.read, address) { call ->
+            when (val result = artifacts.read(call.request.digest.toApi(), call.request.offset, call.request.maximumBytes)) {
+                is BlobResult.Success -> {
+                    ReadArtifactBlobResponse.createSuccess(
+                        offset = result.value.offset,
+                        bytes = result.value.bytes.toByteString(),
+                        complete = result.value.complete,
+                    )
                 }
-            }
-            unary(blobContracts.read) { call ->
-                when (val result = artifacts.read(call.request.digest.toApi(), call.request.offset, call.request.maximumBytes)) {
-                    is BlobResult.Success -> {
-                        ReadArtifactBlobResponse.createSuccess(
-                            offset = result.value.offset,
-                            bytes = result.value.bytes.toByteString(),
-                            complete = result.value.complete,
-                        )
-                    }
 
-                    BlobResult.NotFound -> {
-                        ReadArtifactBlobResponse.createNotFound()
-                    }
+                BlobResult.NotFound -> {
+                    ReadArtifactBlobResponse.createNotFound()
+                }
 
-                    is BlobResult.Invalid -> {
-                        ReadArtifactBlobResponse.createInvalid(reason = result.reason)
-                    }
+                is BlobResult.Invalid -> {
+                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
+                }
 
-                    is BlobResult.Conflict -> {
-                        ReadArtifactBlobResponse.createInvalid(reason = result.reason)
-                    }
-                }
-            }
-            unary(blobContracts.begin) { call ->
-                when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
-                    is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
-                    BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalid(reason = "Transfer was not found.")
-                    is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                    is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflict(reason = result.reason)
-                }
-            }
-            unary(blobContracts.write) { call ->
-                when (
-                    val result =
-                        artifacts.write(
-                            TransferId(call.request.transferId),
-                            call.request.offset,
-                            call.request.bytes.toByteArray(),
-                        )
-                ) {
-                    is BlobResult.Success -> WriteArtifactBlobChunkResponse.createAccepted(offset = result.value)
-                    BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFound()
-                    is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalid(reason = result.reason)
-                    is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflict(reason = result.reason)
-                }
-            }
-            unary(blobContracts.complete) { call ->
-                when (val result = artifacts.complete(TransferId(call.request.transferId))) {
-                    is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
-                    BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFound()
-                    is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalid(reason = result.reason)
-                    is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflict(reason = result.reason)
+                is BlobResult.Conflict -> {
+                    ReadArtifactBlobResponse.createInvalid(reason = result.reason)
                 }
             }
         }
+        unaryAt(blobContracts.begin, address) { call ->
+            when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
+                is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
+                BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalid(reason = "Transfer was not found.")
+                is BlobResult.Invalid -> BeginArtifactBlobWriteResponse.createInvalid(reason = result.reason)
+                is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflict(reason = result.reason)
+            }
+        }
+        unaryAt(blobContracts.write, address) { call ->
+            when (
+                val result =
+                    artifacts.write(
+                        TransferId(call.request.transferId),
+                        call.request.offset,
+                        call.request.bytes.toByteArray(),
+                    )
+            ) {
+                is BlobResult.Success -> WriteArtifactBlobChunkResponse.createAccepted(offset = result.value)
+                BlobResult.NotFound -> WriteArtifactBlobChunkResponse.createNotFound()
+                is BlobResult.Invalid -> WriteArtifactBlobChunkResponse.createInvalid(reason = result.reason)
+                is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflict(reason = result.reason)
+            }
+        }
+        unaryAt(blobContracts.complete, address) { call ->
+            when (val result = artifacts.complete(TransferId(call.request.transferId))) {
+                is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
+                BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFound()
+                is BlobResult.Invalid -> CompleteArtifactBlobWriteResponse.createInvalid(reason = result.reason)
+                is BlobResult.Conflict -> CompleteArtifactBlobWriteResponse.createConflict(reason = result.reason)
+            }
+        }
+    }
 
     private suspend fun publish(request: PublishSharedArtifactRequest): PublishSharedArtifactResponse {
         val provenance = request.provenance.toApi()

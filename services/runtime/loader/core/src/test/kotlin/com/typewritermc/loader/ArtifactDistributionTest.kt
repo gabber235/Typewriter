@@ -22,10 +22,12 @@ import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactDigest
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
+import com.typewritermc.loader.artifact.BlobContracts
 import com.typewritermc.loader.artifact.BlobMetadata
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.artifact.SharedContracts
 import com.typewritermc.loader.artifact.TransferId
 import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
@@ -55,6 +57,7 @@ import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
 import com.typewritermc.loader.rollout.toArtifactHostAssignment
 import com.typewritermc.loader.rollout.toChildRuntimeState
+import com.typewritermc.loader.rollout.toReadyTopology
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
 import de.infix.testBalloon.framework.core.testSuite
@@ -62,9 +65,11 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.topology.ChildRuntimeState
@@ -86,6 +91,42 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
 val ArtifactDistributionTest by testSuite {
+    test("Realm topology waits for one unambiguous Realm host and a primary engine") {
+        val realmId = RealmId("realm")
+        val host = HostId("combined")
+        val probe = ProbeRealmHosts(realmId)
+        val realmOnly =
+            RealmHostPresence(
+                probe.probeId,
+                host,
+                ArtifactVersion("1.0.0"),
+                setOf(RuntimePlacement.REALM),
+                null,
+            )
+        val combined = realmOnly.copy(assignedRoles = RuntimePlacement.entries.toSet())
+
+        emptyList<RealmHostPresence>().toReadyTopology() shouldBe null
+        listOf(realmOnly).toReadyTopology() shouldBe null
+        listOf(realmOnly, combined).toReadyTopology() shouldBe null
+        listOf(combined).toReadyTopology() shouldBe
+            RealmTopology(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
+    }
+
+    test("shared artifact contracts use valid telemetry slugs") {
+        val contracts = SharedContracts()
+        contracts.catalog.failureSlug.value shouldBe "shared-catalog-fetch"
+        contracts.publish.failureSlug.value shouldBe "shared-publish"
+    }
+
+    test("blob contracts use valid telemetry slugs") {
+        val contracts = BlobContracts()
+        contracts.metadata.failureSlug.value shouldBe "shared-blob-metadata"
+        contracts.read.failureSlug.value shouldBe "shared-blob-read"
+        contracts.begin.failureSlug.value shouldBe "shared-blob-begin"
+        contracts.write.failureSlug.value shouldBe "shared-blob-write"
+        contracts.complete.failureSlug.value shouldBe "shared-blob-complete"
+    }
+
     test("Realm service addresses preserve the established authority family") {
         val address = RealmServiceAddress(realmId = "quests", organizationId = "writers")
 
@@ -216,6 +257,7 @@ val ArtifactDistributionTest by testSuite {
             val commands = mutableListOf<RolloutEnvelope>()
             var currentStatus: ParticipantStatus? = null
             var activeProjection: ActiveProjectionReference? = null
+            var rejectCommit = false
             val messenger =
                 object : RolloutMessenger {
                     override suspend fun discover(
@@ -237,6 +279,7 @@ val ArtifactDistributionTest by testSuite {
                         timeout: Duration,
                     ): List<CommandAcceptance> {
                         commands += envelope
+                        withTimeout(timeout) { delay(6.seconds) }
                         val reference = envelope.projections.getValue(host)
                         currentStatus =
                             when (envelope.command) {
@@ -283,7 +326,7 @@ val ArtifactDistributionTest by testSuite {
                                 }
                             }
                         state.record(ParticipantStateChanged(realmId, requireNotNull(currentStatus)))
-                        return listOf(CommandAcceptance(host, true))
+                        return listOf(CommandAcceptance(host, !(rejectCommit && envelope.command == RolloutCommand.Commit)))
                     }
 
                     override suspend fun statuses(
@@ -320,6 +363,19 @@ val ArtifactDistributionTest by testSuite {
 
             commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
             commands.forEach { it.participants shouldBe setOf(host) }
+
+            rejectCommit = true
+            for (reconcile in listOf(false, true)) {
+                commands.clear()
+                activeProjection = null
+                shouldThrow<IllegalArgumentException> {
+                    if (reconcile) rollout.reconcileCommitted(committed) else rollout.rollOut(snapshot)
+                }
+                val rollback = commands.last().command as RolloutCommand.Rollback
+                rollback.targets.getValue(host) shouldBe com.typewritermc.loader.rollout.RollbackTarget.Empty
+                currentStatus shouldBe ParticipantStatus.Idle(commands.last().attempt, host)
+                state.current() shouldBe committed
+            }
         }
     }
 

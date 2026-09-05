@@ -225,7 +225,7 @@ internal class BlobContracts {
             OperationName.of(suffix),
             blobAddress(suffix),
             ResponsePolicy(unavailable, unavailableClassifier()),
-            ErrorSlug.of(suffix.replace('.', '_')),
+            ErrorSlug.of(suffix.replace('.', '-')),
         )
 }
 

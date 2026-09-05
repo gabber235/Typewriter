@@ -257,11 +257,20 @@ class HostRolloutParticipant(
         rejectUnless(active != null) { "There is no active projection to roll back." }
         requireNotNull(active)
         rejectUnless(active.reference == failedReference) { "The rollback command does not identify the active projection." }
+        when (target) {
+            RollbackTarget.Empty -> {
+                rejectUnless(active.retained == null) { "Rollback target is empty while a retained projection exists." }
+            }
+
+            is RollbackTarget.Projection -> {
+                rejectUnless(active.retained != null) { "The requested rollback projection is not retained." }
+                rejectUnless(active.retained?.reference == target.reference) { "Retained projection differs from the rollback target." }
+            }
+        }
         publish(ParticipantStatus.RollingBack(attempt, hostId, failedReference, target))
         stopHealthMonitor()
         when (target) {
             RollbackTarget.Empty -> {
-                require(active.retained == null) { "Rollback target is empty while a retained projection exists." }
                 try {
                     active.projection.quiesce()
                 } catch (failure: Throwable) {
@@ -278,8 +287,7 @@ class HostRolloutParticipant(
             }
 
             is RollbackTarget.Projection -> {
-                val retained = requireNotNull(active.retained) { "The requested rollback projection is not retained." }
-                require(retained.reference == target.reference) { "Retained projection differs from the rollback target." }
+                val retained = requireNotNull(active.retained)
                 try {
                     active.projection.quiesce()
                     retained.projection.resume()

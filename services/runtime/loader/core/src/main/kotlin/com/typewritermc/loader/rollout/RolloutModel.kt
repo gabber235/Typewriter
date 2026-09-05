@@ -28,10 +28,21 @@ data class ProbeParticipantStatus(
 )
 
 @Serializable
-data class ParticipantStatusReply(
-    val hostId: HostId,
-    val status: ParticipantStatus,
-)
+sealed interface ParticipantStatusReply {
+    val hostId: HostId
+
+    @Serializable
+    data class Status(
+        override val hostId: HostId,
+        val status: ParticipantStatus,
+    ) : ParticipantStatusReply
+
+    @Serializable
+    data class InternalFailure(
+        override val hostId: HostId,
+        val reason: String,
+    ) : ParticipantStatusReply
+}
 
 @Serializable
 data class ProjectionReference(

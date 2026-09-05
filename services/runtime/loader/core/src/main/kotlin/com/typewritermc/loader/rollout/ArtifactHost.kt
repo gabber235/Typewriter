@@ -11,6 +11,7 @@ import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.DigestProtectionState
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
+import com.typewritermc.loader.artifact.RealmArtifactAddress
 import com.typewritermc.loader.artifact.ReconnectingSharedArtifactAccess
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.VerifiedArtifactCache
@@ -103,7 +104,7 @@ class ArtifactHost(
                                 communicator = service.communicatorFor(it.connectionGeneration).requireSuccess(),
                             )
                         }
-                    if (session == null && state !is RegistrarState.Failed && state !is RegistrarState.Stopped) {
+                    if (session == null && !state.invalidatesHostedMessagingSession()) {
                         return@collect
                     }
                     while (true) {
@@ -208,6 +209,9 @@ class ArtifactHost(
     }
 }
 
+internal fun RegistrarState.invalidatesHostedMessagingSession(): Boolean =
+    this is RegistrarState.DegradedAfterReady || this is RegistrarState.Failed || this is RegistrarState.Stopped
+
 internal class AssignmentRuntime(
     val assignment: ArtifactHostAssignment,
     private val hostId: HostId,
@@ -279,6 +283,8 @@ internal class AssignmentRuntime(
     }
 
     private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
+        val broadcastAddress = RealmBroadcastAddress(session.organizationId, assignment.realmId)
+        val artifactAddress = RealmArtifactAddress(assignment.realmId.value, session.organizationId)
         val routes =
             communicatorRoutes {
                 RolloutHostRoutes(
@@ -296,10 +302,10 @@ internal class AssignmentRuntime(
                         }
                     },
                     participant = participant,
-                ).register(this)
-                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this) }
+                ).register(this, broadcastAddress)
+                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, broadcastAddress) }
                 if (RuntimePlacement.REALM in assignment.roles) {
-                    StableRealmArtifactRoutes(sharedArtifacts).register(this)
+                    StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
                 }
             }
         return session.communicator.createRouter(routes, scope)
@@ -314,6 +320,10 @@ internal class AssignmentRuntime(
         val messenger = CommunicatorRolloutMessenger(session.organizationId, session.communicator)
         while (true) {
             val topology = discoverTopology(assignment.realmId, messenger)
+            if (topology == null) {
+                delay(1.seconds)
+                continue
+            }
             val resolution =
                 telemetry.artifactSpan(
                     "artifact.deployment.resolve",
@@ -365,25 +375,13 @@ internal class AssignmentRuntime(
     private suspend fun discoverTopology(
         realmId: RealmId,
         messenger: RolloutMessenger,
-    ): RealmTopology {
+    ): RealmTopology? {
         val probe = ProbeRealmHosts(realmId)
-        val active =
+        val responses =
             messenger
                 .discover(probe, emptySet(), 5.seconds)
                 .filter { it.probeId == probe.probeId }
-                .associateBy(RealmHostPresence::hostId)
-        val realmHosts = active.values.filter { RuntimePlacement.REALM in it.assignedRoles }
-        require(realmHosts.size == 1) { "Exactly one active Realm host must answer the presence probe." }
-        val primaryHosts =
-            active.values
-                .filter { RuntimePlacement.PRIMARY_ENGINE in it.assignedRoles }
-                .mapTo(linkedSetOf(), RealmHostPresence::hostId)
-        require(primaryHosts.isNotEmpty()) { "At least one active primary engine host must answer the presence probe." }
-        return RealmTopology(
-            realmHost = realmHosts.single().hostId,
-            primaryEngineHosts = primaryHosts,
-            hostApis = active.mapValues { it.value.hostApi },
-        )
+        return responses.toReadyTopology()
     }
 
     suspend fun close() {
@@ -429,6 +427,24 @@ internal class AssignmentRuntime(
             }
         }
     }
+}
+
+internal fun List<RealmHostPresence>.toReadyTopology(): RealmTopology? {
+    val responsesByHost = groupBy(RealmHostPresence::hostId)
+    if (responsesByHost.values.any { it.size != 1 }) return null
+    val active = responsesByHost.mapValues { it.value.single() }
+    val realmHosts = active.values.filter { RuntimePlacement.REALM in it.assignedRoles }
+    if (realmHosts.size != 1) return null
+    val primaryHosts =
+        active.values
+            .filter { RuntimePlacement.PRIMARY_ENGINE in it.assignedRoles }
+            .mapTo(linkedSetOf(), RealmHostPresence::hostId)
+    if (primaryHosts.isEmpty()) return null
+    return RealmTopology(
+        realmHost = realmHosts.single().hostId,
+        primaryEngineHosts = primaryHosts,
+        hostApis = active.mapValues { it.value.hostApi },
+    )
 }
 
 private class ReconnectingParticipantStatePublisher(

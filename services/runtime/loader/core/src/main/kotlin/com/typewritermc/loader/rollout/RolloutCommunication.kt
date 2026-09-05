@@ -90,18 +90,16 @@ val ParticipantStatusContract =
         cborCodec(ProbeParticipantStatus.serializer()),
         cborCodec(ParticipantStatusReply.serializer()),
         ResponsePolicy(
-            ParticipantStatusReply(
+            ParticipantStatusReply.InternalFailure(
                 HostId("unknown"),
-                ParticipantStatus.Idle(
-                    RolloutAttempt(
-                        1,
-                        com.typewritermc.loader.deployment
-                            .DeploymentGeneration(1),
-                    ),
-                    HostId("unknown"),
-                ),
+                "Internal participant status failure",
             ),
-        ) { success("status") },
+        ) { response ->
+            when (response) {
+                is ParticipantStatusReply.Status -> success("status")
+                is ParticipantStatusReply.InternalFailure -> internal("failed")
+            }
+        },
         ErrorSlug.of("realm-host-status-failed"),
     )
 
@@ -160,23 +158,26 @@ class CommunicatorRolloutMessenger(
                 probe,
                 ScatterPolicy(timeout) { replies -> replies.map(ParticipantStatusReply::hostId).containsAll(expected) },
             ).successfulValues()
-            .associate { it.hostId to it.status }
+            .associate { it.hostId to it.requireStatus() }
 }
 
 class RolloutHostRoutes(
     private val presence: suspend (ProbeRealmHosts) -> RealmHostPresence?,
     private val participant: HostRolloutParticipant,
 ) {
-    fun register(builder: CommunicatorRoutesBuilder) {
-        builder.scatter(ProbeRealmHostsContract) { call ->
+    fun register(
+        builder: CommunicatorRoutesBuilder,
+        address: RealmBroadcastAddress,
+    ) {
+        builder.scatterAt(ProbeRealmHostsContract, address) { call ->
             presence(call.request)?.let(PresenceReply::Present)
         }
-        builder.scatter(RolloutCommandContract) { call ->
+        builder.scatterAt(RolloutCommandContract, address) { call ->
             if (participant.accepts(call.request)) participant.handle(call.request) else null
         }
-        builder.scatter(ParticipantStatusContract) { call ->
+        builder.scatterAt(ParticipantStatusContract, address) { call ->
             if (call.request.realmId == participant.realmId) {
-                ParticipantStatusReply(participant.hostId, participant.currentStatus(call.request.attempt))
+                ParticipantStatusReply.Status(participant.hostId, participant.currentStatus(call.request.attempt))
             } else {
                 null
             }
@@ -187,8 +188,11 @@ class RolloutHostRoutes(
 class RolloutCoordinatorRoutes(
     private val state: RolloutStateRepository,
 ) {
-    fun register(builder: CommunicatorRoutesBuilder) {
-        builder.event(ParticipantStateChangedContract) { call ->
+    fun register(
+        builder: CommunicatorRoutesBuilder,
+        address: RealmBroadcastAddress,
+    ) {
+        builder.eventAt(ParticipantStateChangedContract, address) { call ->
             state.record(call.event)
         }
     }
@@ -213,6 +217,12 @@ private suspend fun <Value : Any> kotlinx.coroutines.flow.Flow<CommunicationResu
     filterIsInstance<CommunicationResult.Success<Value>>()
         .map { it.value }
         .toList()
+
+private fun ParticipantStatusReply.requireStatus(): ParticipantStatus =
+    when (this) {
+        is ParticipantStatusReply.Status -> status
+        is ParticipantStatusReply.InternalFailure -> error("Internal failure reached successful participant statuses: $reason")
+    }
 
 private fun realmBroadcastAddress(suffix: String): AddressTemplate<RealmBroadcastAddress> =
     addressTemplate(

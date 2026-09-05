@@ -63,6 +63,7 @@ class CoordinatedRollout(
     private val state: RolloutStateRepository,
     private val currentTopology: suspend () -> RealmTopology = { topology },
     private val requestTimeout: Duration = 5.seconds,
+    private val commandTimeout: Duration = 5.minutes,
     private val participantDeadline: Duration = 5.minutes,
     private val healthyDuration: Duration = 30.seconds,
     private val telemetry: ServiceTelemetry? = null,
@@ -82,17 +83,16 @@ class CoordinatedRollout(
 
     private suspend fun rollOutContents(snapshot: DeploymentSnapshot) {
         val attempt = state.nextAttempt(snapshot.generation)
-        val previous = state.committed()
-        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.PROPOSED, emptyMap(), previous?.projections.orEmpty())
+        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.PROPOSED, emptyMap(), emptyMap())
         state.persist(persisted)
         try {
             persisted = persisted.copy(phase = RolloutPhase.DISCOVERING)
             state.persist(persisted)
             val active = discover()
             val references = publishProjections(snapshot, active.keys)
-            persisted = persisted.copy(phase = RolloutPhase.STAGING, projections = references)
+            persisted = persisted.copy(phase = RolloutPhase.STAGING, projections = references, previous = active.baselines())
             state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), requestTimeout), active.keys)
+            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout), active.keys)
             awaitStatuses(attempt, references.keys) { host, status ->
                 status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
             }
@@ -100,7 +100,7 @@ class CoordinatedRollout(
 
             persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
             state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), requestTimeout), active.keys)
+            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout), active.keys)
             persisted = persisted.copy(phase = RolloutPhase.STABILIZING)
             state.persist(persisted)
             awaitStableHealthy(attempt, references)
@@ -126,17 +126,17 @@ class CoordinatedRollout(
 
         val attempt = state.nextAttempt(deployment.snapshot.generation)
         val references = expected.filterKeys { it in stale }
-        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.STAGING, references, deployment.projections)
+        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.STAGING, references, active.filterKeys { it in stale }.baselines())
         state.persist(persisted)
         try {
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), requestTimeout), stale)
+            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout), stale)
             awaitStatuses(attempt, stale) { host, status ->
                 status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
             }
             require(currentTopology() == topology) { "Realm topology changed while participants reconciled." }
             persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
             state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), requestTimeout), stale)
+            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout), stale)
             persisted = persisted.copy(phase = RolloutPhase.STABILIZING)
             state.persist(persisted)
             awaitStableHealthy(attempt, references)
@@ -159,7 +159,7 @@ class CoordinatedRollout(
         }
         if (rollout.phase < RolloutPhase.COMMITTING) {
             state.persist(rollout.copy(phase = RolloutPhase.ABORTING, failure = failure.message))
-            messenger.command(envelope(rollout.attempt, rollout.projections, RolloutCommand.Abort), requestTimeout)
+            messenger.command(envelope(rollout.attempt, rollout.projections, RolloutCommand.Abort), commandTimeout)
         } else {
             val targets =
                 participants.associateWith { host ->
@@ -168,7 +168,7 @@ class CoordinatedRollout(
             state.persist(rollout.copy(phase = RolloutPhase.ROLLING_BACK, failure = failure.message))
             messenger.command(
                 envelope(rollout.attempt, rollout.projections, RolloutCommand.Rollback(targets)),
-                requestTimeout,
+                commandTimeout,
             )
         }
         awaitRecovered(rollout.attempt, rollout.previous, participants)
@@ -215,6 +215,9 @@ class CoordinatedRollout(
         references: Map<HostId, ProjectionReference>,
         command: RolloutCommand,
     ) = RolloutEnvelope(realmId, attempt, references.keys, references, command)
+
+    private fun Map<HostId, RealmHostPresence>.baselines(): Map<HostId, ProjectionReference> =
+        mapNotNull { (host, presence) -> presence.activeProjection?.projection?.let { host to it } }.toMap()
 
     private fun requireAccepted(
         replies: List<CommandAcceptance>,

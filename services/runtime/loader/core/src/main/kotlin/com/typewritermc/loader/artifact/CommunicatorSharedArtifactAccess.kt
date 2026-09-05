@@ -268,7 +268,7 @@ internal class SharedContracts {
                     ResponseVariant.of(if (failed) "unavailable" else "success"),
                 )
             },
-            ErrorSlug.of(suffix.replace('.', '_')),
+            ErrorSlug.of(suffix.replace('.', '-')),
         )
 }
 
