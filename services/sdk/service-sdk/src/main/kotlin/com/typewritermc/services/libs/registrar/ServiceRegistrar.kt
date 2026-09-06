@@ -222,10 +222,16 @@ class ServiceRegistrar(
     }
 
     private suspend fun releaseAuthorizationRotationOwned(connectionGeneration: Long): RegistrarResult<Unit> {
-        val retired = retiredRuntimes.remove(connectionGeneration) ?: return RegistrarResult.Success(Unit)
+        val retired = retiredRuntimes[connectionGeneration] ?: return RegistrarResult.Success(Unit)
         return when (val result = retired.close()) {
-            RuntimeCloseResult.Success -> RegistrarResult.Success(Unit)
-            is RuntimeCloseResult.Failure -> RegistrarResult.Failure(RegistrarFailure.Internal("authorization_rotation_cleanup_failed"))
+            RuntimeCloseResult.Success -> {
+                retiredRuntimes.remove(connectionGeneration)
+                RegistrarResult.Success(Unit)
+            }
+
+            is RuntimeCloseResult.Failure -> {
+                RegistrarResult.Failure(RegistrarFailure.Internal("authorization_rotation_cleanup_failed"))
+            }
         }
     }
 

@@ -418,8 +418,12 @@ val ServiceRegistrarLifecycleTest by testSuite {
                 replacementLedger.actions.count { it == RegistrarAction.Heartbeat } shouldBe 1
                 f.registrar.communicatorFor(2).shouldBeInstanceOf<RegistrarResult.Success<Communicator>>()
 
+                f.runtime.closeResult = RuntimeCloseResult.Failure(listOf(RegistrarStopFailure.Internal("close")))
+                f.registrar.releaseAuthorizationRotation(2).shouldBeInstanceOf<RegistrarResult.Failure>()
+                f.runtime.closeResult = RuntimeCloseResult.Success
                 f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
-                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 1
+                f.registrar.releaseAuthorizationRotation(2) shouldBe RegistrarResult.Success(Unit)
+                f.ledger.actions.count { it == RegistrarAction.Close } shouldBe 2
             }
         }
     }
