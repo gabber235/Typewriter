@@ -309,6 +309,7 @@ class CommunicatorRouter internal constructor(
     private val lifecycle = Mutex()
     private val mutableState = MutableStateFlow(RouterState.NEW)
     private var runtimes = emptyList<Runtime>()
+    private val pendingSubscriptions = mutableMapOf<TransportSubscription, Route>()
     private var completion: CompletableDeferred<RouterResult>? = null
 
     /** Thread-safe lifecycle state stream. */
@@ -327,8 +328,14 @@ class CommunicatorRouter internal constructor(
         return try {
             for (route in definitions) {
                 when (val result = transport.subscribe(route.pattern, SubscriptionOptions(route.group))) {
-                    is TransportResult.Success -> acquired += route to result.value
-                    is TransportResult.Failure -> throw StartupFailure(transportException(result.error))
+                    is TransportResult.Success -> {
+                        acquired += route to result.value
+                        lifecycle.withLock { pendingSubscriptions[result.value] = route }
+                    }
+
+                    is TransportResult.Failure -> {
+                        throw StartupFailure(transportException(result.error))
+                    }
                 }
             }
             lifecycle.withLock {
@@ -344,6 +351,7 @@ class CommunicatorRouter internal constructor(
                         acquired.mapNotNull { (_, subscription) ->
                             try {
                                 subscription.close()
+                                lifecycle.withLock { pendingSubscriptions.remove(subscription) }
                                 null
                             } catch (cleanup: Throwable) {
                                 cleanup
@@ -363,7 +371,10 @@ class CommunicatorRouter internal constructor(
         }
     }
 
-    /** Closes subscriptions and drains accepted messages within the configured timeout. */
+    /**
+     * Closes subscriptions and drains accepted messages within the configured timeout.
+     * Ordinary cleanup failures retain subscriptions for a later stop attempt. Successful stop remains idempotent.
+     */
     suspend fun stop(): RouterResult {
         val (owned, result) = beginShutdown()
         if (owned) performShutdown(result, drain = true)
@@ -373,7 +384,7 @@ class CommunicatorRouter internal constructor(
     private suspend fun beginShutdown(): Pair<Boolean, CompletableDeferred<RouterResult>> =
         lifecycle.withLock {
             completion?.let { return@withLock false to it }
-            check(state == RouterState.RUNNING) { "Router is not running" }
+            check(state != RouterState.STARTING) { "Router is starting" }
             mutableState.value = RouterState.STOPPING
             val deferred = CompletableDeferred<RouterResult>()
             completion = deferred
@@ -389,17 +400,19 @@ class CommunicatorRouter internal constructor(
         try {
             withContext(NonCancellable) {
                 val snapshot = lifecycle.withLock { runtimes }
-                val closeFailures = java.util.Collections.synchronizedList(mutableListOf<Pair<Runtime, Throwable>>())
+                val subscriptions = lifecycle.withLock { pendingSubscriptions.toList() }
+                val closeFailures = java.util.Collections.synchronizedList(mutableListOf<Pair<Route, Throwable>>())
                 val drained =
                     withTimeoutOrNull(options.shutdownTimeout) {
                         coroutineScope {
-                            snapshot
-                                .map { runtime ->
+                            subscriptions
+                                .map { (subscription, route) ->
                                     async {
                                         try {
-                                            runtime.subscription.close()
+                                            subscription.close()
+                                            lifecycle.withLock { pendingSubscriptions.remove(subscription) }
                                         } catch (failure: Throwable) {
-                                            if (currentCoroutineContext().isActive) closeFailures += runtime to failure
+                                            if (currentCoroutineContext().isActive) closeFailures += route to failure
                                         }
                                     }
                                 }.joinAll()
@@ -418,7 +431,7 @@ class CommunicatorRouter internal constructor(
                 val ordinaryCloseFailures =
                     closeFailures
                         .filter { exceptionalCause(it.second) == null }
-                        .map { (runtime, failure) -> sluggedClose(runtime.route, failure) }
+                        .map { (route, failure) -> sluggedClose(route, failure) }
                 var closeFailure: Throwable? = null
                 ordinaryCloseFailures.forEach { closeFailure = aggregate(closeFailure, it) }
                 exceptional?.let { primary ->
@@ -438,7 +451,10 @@ class CommunicatorRouter internal constructor(
         } finally {
             withContext(NonCancellable) {
                 job.cancel()
-                lifecycle.withLock { mutableState.value = RouterState.STOPPED }
+                lifecycle.withLock {
+                    mutableState.value = RouterState.STOPPED
+                    if (exceptional == null && final is RouterResult.Failure) completion = null
+                }
                 if (exceptional != null) {
                     result.completeExceptionally(requireNotNull(exceptional))
                 } else {

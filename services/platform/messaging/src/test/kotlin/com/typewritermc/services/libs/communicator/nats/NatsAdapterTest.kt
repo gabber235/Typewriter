@@ -204,6 +204,12 @@ val NatsAdapterTest by testSuite {
         val failure = connection.shutdown() as NatsLifecycleResult.Failure
         failure.error.cause shouldBe drain
         drain.suppressed.toList() shouldContainExactly listOf(disconnect)
+        connection.state.value shouldBe NatsConnectionState.ShuttingDown
+        client.drainFailure = null
+        client.disconnectFailure = null
+        connection.shutdown() shouldBe NatsLifecycleResult.Success
+        connection.shutdown() shouldBe NatsLifecycleResult.Success
+        client.events.shouldContainExactly("connect", "drain", "disconnect", "drain", "disconnect")
         connection.state.value shouldBe NatsConnectionState.Disconnected
     }
 
@@ -388,8 +394,8 @@ private class FakeClient(
     private val requestFailure: Throwable? = null,
     private val subscription: FakeSubscription = FakeSubscription(flowOf()),
     private val flushFailure: Throwable? = null,
-    private val drainFailure: Throwable? = null,
-    private val disconnectFailure: Throwable? = null,
+    var drainFailure: Throwable? = null,
+    var disconnectFailure: Throwable? = null,
 ) : NatsClientAdapter {
     override val connectivity = MutableStateFlow(NatsClientConnectivity.Connected)
     val events = mutableListOf<String>()

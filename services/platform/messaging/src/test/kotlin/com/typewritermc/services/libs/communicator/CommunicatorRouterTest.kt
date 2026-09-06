@@ -457,6 +457,27 @@ val CommunicatorRouterTest by testSuite {
         }
     }
 
+    test("ordinary subscription cleanup failure can be retried without reclosing successful subscriptions") {
+        runTest {
+            val fixture = routerFixture(twoEventRoutes(), this)
+            fixture.use { fixture ->
+                var firstCloses = 0
+                var secondCloses = 0
+                fixture.fake.closeSubscriptionWith(1) {
+                    firstCloses++
+                    if (firstCloses == 1) error("Temporary close failure")
+                }
+                fixture.fake.closeSubscriptionWith(2) { secondCloses++ }
+                fixture.router.start()
+                (fixture.router.stop() is RouterResult.Failure) shouldBe true
+                fixture.router.stop() shouldBe RouterResult.Success
+                fixture.router.stop() shouldBe RouterResult.Success
+                firstCloses shouldBe 2
+                secondCloses shouldBe 1
+            }
+        }
+    }
+
     test("cancelled stop owner finalizes shared shutdown") {
         runTest {
             val fixture = routerFixture(communicatorRoutes { event(routerEvent) { } }, this)

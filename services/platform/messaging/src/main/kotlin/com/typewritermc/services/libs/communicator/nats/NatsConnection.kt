@@ -109,7 +109,7 @@ class NatsConnection internal constructor(
             connectNew(NatsConnectionState.Reconnecting)
         }
 
-    /** Drains by the configured deadline, always disconnects, and leaves the connection reusable. */
+    /** Drains and disconnects. A failed disconnect retains the client for a later shutdown attempt. */
     suspend fun shutdown(): NatsLifecycleResult =
         lifecycle.withLock {
             val client = activeClient ?: return@withLock NatsLifecycleResult.Success
@@ -124,10 +124,9 @@ class NatsConnection internal constructor(
             }
             try {
                 withContext(NonCancellable) { client.disconnect() }
+                clearConnection()
             } catch (failure: Throwable) {
                 primary = combineFailures(primary, failure)
-            } finally {
-                clearConnection()
             }
             primary?.let {
                 exceptionalCause(it)?.let { exceptional -> throw exceptional }
