@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /** Receives loader telemetry for formatting on the logging surface owned by a host entrypoint. */
@@ -43,6 +44,7 @@ internal fun loaderOpenTelemetry(
                 .builder()
                 .put(ServiceAttributes.SERVICE_NAME, "loader")
                 .put(ServiceAttributes.SERVICE_VERSION, LOADER_VERSION)
+                .put(ServiceAttributes.SERVICE_INSTANCE_ID, UUID.randomUUID().toString())
                 .build(),
         )
     val tracerProvider =
