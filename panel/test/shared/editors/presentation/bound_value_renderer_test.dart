@@ -7,6 +7,30 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("empty select options preserve custom value entry", (
+    tester,
+  ) async {
+    await tester.pumpTestApp(
+      child: _renderer(
+        value: const StringValue("custom"),
+        presentation: const PresentationNode(
+          id: "emptySelect",
+          element: SelectInputElement(
+            control: BoundControl(binding: _rootBinding),
+            allowCustomValue: true,
+            options: [],
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text("No options available"), findsOneWidget);
+    expect(
+      tester.widget<EditorTextField>(find.byType(EditorTextField)).text,
+      "custom",
+    );
+  });
+
   testWidgets("hides the binding id from a custom select editor", (
     tester,
   ) async {

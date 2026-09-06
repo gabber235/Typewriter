@@ -111,6 +111,8 @@ import 'package:widgetbook_workspace/stories/shared/selectables/operations/delet
     as _widgetbook_workspace_stories_shared_selectables_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/shared/selectables/presentation/selector.stories.dart'
     as _widgetbook_workspace_stories_shared_selectables_presentation_selector_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/adaptive_choice_control.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/blur_reveal.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_blur_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/countdown_badge.stories.dart'
@@ -1667,6 +1669,17 @@ final directories = <_widgetbook.WidgetbookNode>[
           _widgetbook.WidgetbookFolder(
             name: 'components',
             children: [
+              _widgetbook.WidgetbookComponent(
+                name: 'AdaptiveChoiceControl<Object>',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Empty and available choices',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories
+                            .adaptiveChoiceControlUseCase,
+                  ),
+                ],
+              ),
               _widgetbook.WidgetbookComponent(
                 name: 'BlurReveal',
                 useCases: [
