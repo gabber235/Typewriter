@@ -273,6 +273,7 @@ mod tests {
             "kernel/id.surql",
             "service/functions.surql",
             "service/service.surql",
+            "service/topology.surql",
         ];
         let organization = vec![
             "kernel/id.surql",
@@ -290,6 +291,7 @@ mod tests {
             "kernel/id.surql",
             "service/functions.surql",
             "service/service.surql",
+            "service/topology.surql",
             "kernel/color.surql",
             "kernel/url.surql",
             "user.surql",
