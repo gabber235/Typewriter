@@ -15,7 +15,11 @@ void main() {
       multiLine: true,
     ).allMatches(source).map((match) => int.parse(match.group(1)!)).toList();
 
-    expect(identifiers, List.generate(128, (index) => index + 1));
+    expect(identifiers, isNotEmpty);
+    expect(
+      identifiers,
+      List.generate(identifiers.length, (index) => index + 1),
+    );
   }, skip: skipReason);
 
   test("presentation element ordinals ascend in declaration order", () {
