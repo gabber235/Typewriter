@@ -25,7 +25,7 @@ class TypewriterLoaderPlugin : JavaPlugin() {
 
     override fun onEnable() {
         scope.launch {
-            val createdApplication = loaderApplication { logger.info(it) }
+            val createdApplication = loaderApplication(PaperLogOutput(logger))
             application = createdApplication
             host = createdApplication.bootstrap.start(HostEntrypoint.PAPER, dataFolder.toPath(), scope)
         }

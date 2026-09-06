@@ -3,6 +3,7 @@
 package com.typewritermc.loader.standalone.shell
 
 import com.typewritermc.loader.LoaderLogOutput
+import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecord
 import org.jline.reader.LineReader
 
 /**
@@ -22,7 +23,8 @@ class LoaderConsoleLogOutput : LoaderLogOutput {
         reader = null
     }
 
-    override fun write(line: String) {
+    override fun write(record: ConsoleLogRecord) {
+        val line = record.format()
         reader?.printAbove(line) ?: System.err.println(line)
     }
 }

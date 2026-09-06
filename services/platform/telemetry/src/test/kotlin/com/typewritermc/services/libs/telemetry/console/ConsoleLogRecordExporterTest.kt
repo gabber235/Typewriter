@@ -12,7 +12,8 @@ import java.time.Instant
 
 val ConsoleLogRecordExporterTest by testSuite {
     test("formats informational record as one plain line") {
-        val exporter = ConsoleLogRecordExporter(ConsoleLogOutput {})
+        val records = mutableListOf<ConsoleLogRecord>()
+        val exporter = ConsoleLogRecordExporter { records.add(it) }
         val record =
             TestLogRecordData
                 .builder()
@@ -21,11 +22,15 @@ val ConsoleLogRecordExporterTest by testSuite {
                 .setBody("Realm is ready")
                 .build()
 
-        exporter.format(record) shouldBe "2026-08-04T06:33:12Z INFO  Realm is ready"
+        exporter.export(listOf(record)).isSuccess shouldBe true
+        records.single().severity shouldBe record.severity
+        records.single().timestamp shouldBe Instant.parse("2026-08-04T06:33:12Z")
+        records.single().format() shouldBe "2026-08-04T06:33:12Z INFO  Realm is ready"
     }
 
     test("adds event reference to warning") {
-        val exporter = ConsoleLogRecordExporter(ConsoleLogOutput {})
+        val records = mutableListOf<ConsoleLogRecord>()
+        val exporter = ConsoleLogRecordExporter { records.add(it) }
         val record =
             TestLogRecordData
                 .builder()
@@ -35,12 +40,16 @@ val ConsoleLogRecordExporterTest by testSuite {
                 .setBody("Messaging is unavailable")
                 .build()
 
-        exporter.format(record) shouldBe
+        exporter.export(listOf(record)).isSuccess shouldBe true
+        records.single().severity shouldBe record.severity
+        records.single().timestamp shouldBe Instant.parse("2026-08-04T06:33:12Z")
+        records.single().format() shouldBe
             "2026-08-04T06:33:12Z WARN  Messaging is unavailable [registrar.state.changed]"
     }
 
     test("adds an exception slug to an error once") {
-        val exporter = ConsoleLogRecordExporter(ConsoleLogOutput {})
+        val records = mutableListOf<ConsoleLogRecord>()
+        val exporter = ConsoleLogRecordExporter { records.add(it) }
         val record =
             TestLogRecordData
                 .builder()
@@ -50,12 +59,15 @@ val ConsoleLogRecordExporterTest by testSuite {
                 .setAttributes(Attributes.of(AttributeKey.stringKey("exception.slug"), "realm-start-failed"))
                 .build()
 
-        exporter.format(record) shouldBe
+        exporter.export(listOf(record)).isSuccess shouldBe true
+        records.single().severity shouldBe record.severity
+        records.single().timestamp shouldBe Instant.parse("2026-08-04T06:33:12Z")
+        records.single().format() shouldBe
             "2026-08-04T06:33:12Z ERROR Realm startup failed [realm-start-failed]"
     }
 
     test("output failure is reported as exporter failure") {
-        val exporter = ConsoleLogRecordExporter(ConsoleLogOutput { error("console unavailable") })
+        val exporter = ConsoleLogRecordExporter { error("console unavailable") }
         val record = TestLogRecordData.builder().setBody("message").build()
 
         exporter.export(listOf(record)).isSuccess shouldBe false

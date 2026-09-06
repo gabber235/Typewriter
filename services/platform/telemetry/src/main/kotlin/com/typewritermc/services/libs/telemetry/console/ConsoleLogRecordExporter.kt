@@ -18,12 +18,27 @@ fun interface ConsoleLogOutput {
     fun write(line: String)
 }
 
+/** Carries display metadata separately so the host can supply its own log prefix. */
+data class ConsoleLogRecord(
+    val timestamp: Instant,
+    val severity: Severity,
+    val message: String,
+) {
+    fun format(): String = formatConsoleLine(timestamp, severity.name, message)
+}
+
+/**
+ * Projects OpenTelemetry log records into host display records.
+ *
+ * Warnings and errors append a stable slug or event reference when available. Output failure fails the export
+ * batch. Flush and shutdown do not close the host output callback.
+ */
 class ConsoleLogRecordExporter(
-    private val output: ConsoleLogOutput,
+    private val output: (ConsoleLogRecord) -> Unit,
 ) : LogRecordExporter {
     override fun export(logs: Collection<LogRecordData>): CompletableResultCode =
         runCatching {
-            logs.forEach { output.write(format(it)) }
+            logs.forEach { output(record(it)) }
         }.fold(
             onSuccess = { CompletableResultCode.ofSuccess() },
             onFailure = { CompletableResultCode.ofFailure() },
@@ -33,10 +48,10 @@ class ConsoleLogRecordExporter(
 
     override fun shutdown(): CompletableResultCode = CompletableResultCode.ofSuccess()
 
-    internal fun format(log: LogRecordData): String {
+    private fun record(log: LogRecordData): ConsoleLogRecord {
         val timestamp = instant(log.timestampEpochNanos)
         val body = log.bodyValue?.asString().orEmpty()
-        return formatConsoleLine(timestamp, log.severity.name, body, reference(log))
+        return ConsoleLogRecord(timestamp, log.severity, body + reference(log))
     }
 
     private fun reference(log: LogRecordData): String {

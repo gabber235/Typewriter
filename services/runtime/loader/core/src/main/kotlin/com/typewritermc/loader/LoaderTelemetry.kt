@@ -1,6 +1,6 @@
 package com.typewritermc.loader
 
-import com.typewritermc.services.libs.telemetry.console.ConsoleLogOutput
+import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecord
 import com.typewritermc.services.libs.telemetry.console.ConsoleLogRecordExporter
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator
@@ -20,9 +20,9 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import io.opentelemetry.semconv.ServiceAttributes
 import java.util.concurrent.TimeUnit
 
-/** Receives formatted loader telemetry on the logging surface owned by a host entrypoint. */
+/** Receives loader telemetry for formatting on the logging surface owned by a host entrypoint. */
 fun interface LoaderLogOutput {
-    fun write(line: String)
+    fun write(record: ConsoleLogRecord)
 }
 
 /**
@@ -52,7 +52,7 @@ internal fun loaderOpenTelemetry(
             .builder()
             .setResource(resource)
             .addLogRecordProcessor(
-                SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(ConsoleLogOutput(logOutput::write))),
+                SimpleLogRecordProcessor.create(ConsoleLogRecordExporter(logOutput::write)),
             )
 
     configuration.otlpEndpoint?.let { endpoint ->
