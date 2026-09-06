@@ -242,6 +242,7 @@ internal class MainScope(
     private val counters = ConcurrentHashMap<String, Long>()
     private val mutation = SpanMutation { action -> mutate(action) }
     private val startedAt = System.nanoTime()
+    private var outcome = "failed"
 
     init {
         val spanContext = span.spanContext
@@ -274,6 +275,7 @@ internal class MainScope(
     }
 
     fun recordCompleted() {
+        outcome = "completed"
         val visible = presentation ?: return
         event(
             name = "operation.completed",
@@ -286,6 +288,7 @@ internal class MainScope(
     }
 
     fun recordCancelled() {
+        outcome = "cancelled"
         val visible = presentation ?: return
         event(
             name = "operation.cancelled",
@@ -340,6 +343,7 @@ internal class MainScope(
         synchronized(lock) {
             if (!active) return
             active = false
+            telemetry.recordOperation(spanName, outcome, (System.nanoTime() - startedAt).coerceAtLeast(0) / 1e9)
             span.end()
         }
     }

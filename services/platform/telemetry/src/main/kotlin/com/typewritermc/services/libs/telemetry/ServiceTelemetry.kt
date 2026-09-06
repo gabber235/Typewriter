@@ -3,6 +3,7 @@
 package com.typewritermc.services.libs.telemetry
 
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.logs.Logger
 import io.opentelemetry.api.trace.Tracer
 
@@ -22,7 +23,7 @@ data class InstrumentationScope(
 }
 
 /**
- * Provides tracing and log emission under one instrumentation scope.
+ * Provides tracing, operation metrics, and log emission under one instrumentation scope.
  *
  * Use the span boundary helpers to create owned operation scopes and correlate projected logs. The supplied
  * OpenTelemetry instance remains externally owned; this facade does not shut down exporters.
@@ -31,6 +32,16 @@ class ServiceTelemetry(
     openTelemetry: OpenTelemetry,
     instrumentation: InstrumentationScope,
 ) {
+    private val meter = openTelemetry.meterBuilder(instrumentation.name).build()
+    private val operations = meter.counterBuilder("typewriter.operation.completed").setUnit("{operation}").build()
+    private val duration = meter.histogramBuilder("typewriter.operation.duration").setUnit("s").build()
+
+    internal fun recordOperation(name: String, outcome: String, durationSeconds: Double) {
+        val attributes = Attributes.builder().put("operation.name", name).put("operation.outcome", outcome).build()
+        operations.add(1, attributes)
+        duration.record(durationSeconds, attributes)
+    }
+
     internal val tracer: Tracer =
         openTelemetry
             .tracerBuilder(instrumentation.name)

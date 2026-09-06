@@ -8,11 +8,14 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.context.propagation.TextMapPropagator
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter
+import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.logs.SdkLoggerProvider
 import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor
+import io.opentelemetry.sdk.metrics.SdkMeterProvider
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
@@ -27,7 +30,7 @@ fun interface LoaderLogOutput {
 
 /**
  * Creates the loader owned telemetry SDK with W3C context propagation and host directed console logging.
- * Configured OTLP endpoints add batched span and log exporters; console records use a synchronous processor. The
+ * Configured OTLP endpoints add batched span, metric, and log exporters; console records use a synchronous processor. The
  * caller must flush and shut down this SDK after dependent runtimes stop.
  */
 internal fun loaderOpenTelemetry(
@@ -47,6 +50,7 @@ internal fun loaderOpenTelemetry(
             .builder()
             .setResource(resource)
             .setSampler(loaderSampler(configuration.sampler))
+    val meterProvider = SdkMeterProvider.builder().setResource(resource)
     val loggerProvider =
         SdkLoggerProvider
             .builder()
@@ -56,6 +60,12 @@ internal fun loaderOpenTelemetry(
             )
 
     configuration.otlpEndpoint?.let { endpoint ->
+        meterProvider.registerMetricReader(
+            PeriodicMetricReader
+                .builder(OtlpGrpcMetricExporter.builder().setEndpoint(endpoint).build())
+                .setInterval(30, TimeUnit.SECONDS)
+                .build(),
+        )
         val spanExporter = OtlpGrpcSpanExporter.builder().setEndpoint(endpoint).build()
         tracerProvider.addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
         val logExporter = OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build()
@@ -73,18 +83,20 @@ internal fun loaderOpenTelemetry(
         .builder()
         .setTracerProvider(tracerProvider.build())
         .setLoggerProvider(loggerProvider.build())
+        .setMeterProvider(meterProvider.build())
         .setPropagators(propagators)
         .build()
 }
 
 /**
- * Flushes trace and log providers before requesting SDK shutdown, waiting up to ten seconds at each stage. Foreign
+ * Flushes trace, metric, and log providers before requesting SDK shutdown, waiting up to ten seconds at each stage. Foreign
  * OpenTelemetry implementations are ignored. Timeout completion is not inspected here, so returning does not
  * guarantee that every record reached an exporter.
  */
 internal fun closeLoaderOpenTelemetry(openTelemetry: OpenTelemetry) {
     val sdk = openTelemetry as? OpenTelemetrySdk ?: return
     sdk.sdkTracerProvider.forceFlush().join(10, TimeUnit.SECONDS)
+    sdk.sdkMeterProvider.forceFlush().join(10, TimeUnit.SECONDS)
     sdk.sdkLoggerProvider.forceFlush().join(10, TimeUnit.SECONDS)
     sdk.shutdown().join(10, TimeUnit.SECONDS)
 }
