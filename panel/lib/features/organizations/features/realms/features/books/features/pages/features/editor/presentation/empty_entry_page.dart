@@ -105,10 +105,10 @@ Future<void> showAddEntryDialog(
     builder: (context) => SimpleDialog(
       title: const Text("Add entry"),
       children: definitions.isEmpty
-          ? const [
+          ? [
               Padding(
-                padding: EdgeInsets.all(16),
-                child: Text("No compatible entry types"),
+                padding: EdgeInsets.all(context.spacing.space4),
+                child: const Text("No compatible entry types"),
               ),
             ]
           : [

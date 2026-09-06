@@ -28,18 +28,22 @@ class PageDiagnosticsBanner extends ConsumerWidget {
     final message = health.diagnostics.isEmpty
         ? "Compilation is blocked. The engine keeps the last valid version."
         : health.diagnostics.join("\n");
+    final theme = Theme.of(context);
     return SafeArea(
-      minimum: const EdgeInsets.all(12),
+      minimum: EdgeInsets.all(context.spacing.space3),
       child: Material(
-        color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.errorContainer,
+        borderRadius: context.shapes.mediumBorderRadius,
         elevation: 2,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.spacing.space3,
+            vertical: context.spacing.space2,
+          ),
           child: Text(
             message,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onErrorContainer,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onErrorContainer,
             ),
           ),
         ),
